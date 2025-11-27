@@ -63,7 +63,8 @@ def tenant_url(path=None):
         domain = 'example.com'
 
     if domain.endswith("localhost"):
-        url = "http://{0}:8000".format(domain)
+        lang = get_current_language()
+        url = "http://{0}:3000/{1}".format(domain, lang.code)
     else:
         url = "https://{0}".format(domain)
 

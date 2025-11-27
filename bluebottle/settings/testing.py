@@ -6,10 +6,10 @@ SECRET_KEY = '1, 2, this is just a test!'
 RECAPTCHA_PRIVATE_KEY = 'test-private-key'
 RECAPTCHA_PUBLIC_KEY = 'test-public-key'
 
-from .base import *
-
-import warnings
 import logging
+import warnings
+
+from .base import *
 
 # Raise exception on naive datetime...
 warnings.filterwarnings(
@@ -419,4 +419,15 @@ DISABLE_TWO_FACTOR = True
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale/'),
     os.path.join(BASE_DIR, 'bluebottle/notifications/tests/locale/'),
+)
+
+LANGUAGES = (
+    ('en', gettext_noop('English')),
+    ('nl', gettext_noop('Dutch')),
+    ('fr', gettext_noop('French')),
+    ('es', gettext_noop('Spanish')),
+    ('de', gettext_noop('German')),
+    ('pt', gettext_noop('Portuguese')),
+    ('hu', gettext_noop('Hungarian')),
+    ('bg', gettext_noop('Bulgarian')),
 )

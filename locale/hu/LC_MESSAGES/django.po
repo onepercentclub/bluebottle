@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-17 08:50+0100\n"
-"PO-Revision-Date: 2025-11-17 07:52\n"
+"POT-Creation-Date: 2025-11-27 11:02+0100\n"
+"PO-Revision-Date: 2025-11-27 10:03\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #: bluebottle/activities/admin.py:119 bluebottle/activities/admin.py:967
 #: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:228
-#: bluebottle/fsm/admin.py:236 bluebottle/utils/models.py:166
+#: bluebottle/fsm/admin.py:236 bluebottle/utils/models.py:202
 msgid "status"
 msgstr "állapot"
 
@@ -42,8 +42,8 @@ msgstr "Részletek"
 
 #: bluebottle/activities/admin.py:213 bluebottle/activities/admin.py:336
 #: bluebottle/activities/admin.py:771 bluebottle/funding/admin.py:228
-#: bluebottle/funding/admin.py:467 bluebottle/funding/admin.py:645
-#: bluebottle/funding/admin.py:829 bluebottle/funding_stripe/admin.py:245
+#: bluebottle/funding/admin.py:474 bluebottle/funding/admin.py:652
+#: bluebottle/funding/admin.py:860 bluebottle/funding_stripe/admin.py:245
 #: bluebottle/grant_management/admin.py:280
 #: bluebottle/grant_management/admin.py:535 bluebottle/initiatives/admin.py:220
 #: bluebottle/time_based/admin.py:308 bluebottle/time_based/admin.py:438
@@ -157,7 +157,7 @@ msgid "Office"
 msgstr "Iroda"
 
 #: bluebottle/activities/admin.py:761 bluebottle/funding/admin.py:233
-#: bluebottle/grant_management/admin.py:540 bluebottle/members/admin.py:561
+#: bluebottle/grant_management/admin.py:540 bluebottle/members/admin.py:642
 #: bluebottle/settings/admin_dashboard.py:174
 msgid "Segments"
 msgstr "Szegmensek"
@@ -673,7 +673,7 @@ msgstr "Átirányítás lépés leírás"
 msgid "A description to explain what the next step is"
 msgstr "Leírás, hogy elmagyarázza, mi a következő lépés"
 
-#: bluebottle/activities/models.py:172 bluebottle/members/models.py:340
+#: bluebottle/activities/models.py:172 bluebottle/members/models.py:418
 msgid "Segment"
 msgstr "Szegmens"
 
@@ -1051,7 +1051,7 @@ msgstr "Az aktivitás lemondásra kerül, mert senki sem jelentkezett a regisztr
 
 #: bluebottle/activities/states.py:359
 #: bluebottle/bluebottle_dashboard/templates/admin/submit_line.html:7
-#: bluebottle/initiatives/states.py:195 bluebottle/members/models.py:248
+#: bluebottle/initiatives/states.py:195 bluebottle/members/models.py:321
 msgid "Delete"
 msgstr "Töröl"
 
@@ -1792,15 +1792,15 @@ msgstr "Köszönjük, hogy használod az oldalunkat!"
 msgid "The %(site_name)s team"
 msgstr "A %(site_name)s csapat"
 
-#: bluebottle/auth/views.py:40
+#: bluebottle/auth/views.py:37
 msgid "Authentication was cancelled"
-msgstr ""
+msgstr "Az autentikációt lemondták"
 
-#: bluebottle/auth/views.py:47
+#: bluebottle/auth/views.py:44
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
 msgstr "Kérjük, engedélyezze a Facebook hozzáférést az e-mail címéhez, ha szeretne regisztrálni/bejelentkezni a Facebook segítségével."
 
-#: bluebottle/auth/views.py:51
+#: bluebottle/auth/views.py:48
 msgid "User account is disabled"
 msgstr "A felhasználói fiók le van tiltva"
 
@@ -1852,8 +1852,8 @@ msgstr "Iskola"
 msgid "Club / association"
 msgstr "Klub / egyesület"
 
-#: bluebottle/bb_accounts/models.py:113 bluebottle/members/admin.py:334
-#: bluebottle/members/models.py:173
+#: bluebottle/bb_accounts/models.py:113 bluebottle/members/admin.py:405
+#: bluebottle/members/models.py:246
 msgid "email address"
 msgstr "e-mail cím"
 
@@ -1973,7 +1973,7 @@ msgstr "A weboldal és az e-mailek számára használt nyelv."
 
 #: bluebottle/bb_accounts/models.py:194
 msgid "Translate user content"
-msgstr ""
+msgstr "Felhasználói tartalom fordítása"
 
 #: bluebottle/bb_accounts/models.py:198
 msgid "share time and knowledge"
@@ -2078,15 +2078,15 @@ msgstr "Jelszó visszaállítása"
 msgid "Password reset for %(site_name)s"
 msgstr "Jelszó visszaállítása a %(site_name)s-nél"
 
-#: bluebottle/bb_accounts/views.py:274
+#: bluebottle/bb_accounts/views.py:275
 msgid "The link to activate your account has already been used."
 msgstr "Az aktiváló linket már használták."
 
-#: bluebottle/bb_accounts/views.py:277
+#: bluebottle/bb_accounts/views.py:278
 msgid "The link to activate your account has expired. Please sign up again."
 msgstr "Az aktiváló link lejárt. Kérlek, regisztrálj újra."
 
-#: bluebottle/bb_accounts/views.py:279
+#: bluebottle/bb_accounts/views.py:280
 msgid "Something went wrong on our side. Please sign up again."
 msgstr "Valami hiba történt a mi oldalunkon. Kérlek, regisztrálj újra."
 
@@ -2181,7 +2181,7 @@ msgstr "Felhasználók"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
 #: bluebottle/initiatives/admin.py:370 bluebottle/initiatives/models.py:175
-#: bluebottle/members/admin.py:198 bluebottle/members/admin.py:738
+#: bluebottle/members/admin.py:218 bluebottle/members/admin.py:819
 msgid "Initiatives"
 msgstr "Kezdeményezések"
 
@@ -2259,7 +2259,7 @@ msgid "Merge"
 msgstr "Összevonás"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:7
-#: bluebottle/members/admin.py:529
+#: bluebottle/members/admin.py:610
 msgid "Search"
 msgstr "Keresés"
 
@@ -2450,7 +2450,7 @@ msgid "If your primary method is not available, we are able to send backup token
 msgstr "Ha az elsődleges módszer nem érhető el, akkor a listázott telefonszámokra tudunk biztonsági tokeneket küldeni."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:21
-#: bluebottle/members/admin.py:301 bluebottle/notifications/admin.py:81
+#: bluebottle/members/admin.py:372 bluebottle/notifications/admin.py:81
 msgid "Are you sure?"
 msgstr "Biztos vagy benne?"
 
@@ -2648,7 +2648,7 @@ msgstr "Jelen kell lennie a jogosultságnak a link eléréséhez?"
 msgid "Site links"
 msgstr "Weboldal linkek"
 
-#: bluebottle/cms/models.py:116 bluebottle/members/admin.py:486
+#: bluebottle/cms/models.py:116 bluebottle/members/admin.py:567
 msgid "Main"
 msgstr "Fő"
 
@@ -2742,7 +2742,7 @@ msgstr "Online események"
 msgid "Funding activities online"
 msgstr "Online finanszírozási tevékenységek"
 
-#: bluebottle/cms/models.py:171 bluebottle/funding/admin.py:302
+#: bluebottle/cms/models.py:171 bluebottle/funding/admin.py:307
 #: bluebottle/funding/models.py:579 bluebottle/statistics/models.py:94
 msgid "Donations"
 msgstr "Adományok"
@@ -2807,7 +2807,7 @@ msgstr "Szerep"
 msgid "Email"
 msgstr "E-mail"
 
-#: bluebottle/cms/models.py:225 bluebottle/members/models.py:206
+#: bluebottle/cms/models.py:225 bluebottle/members/models.py:279
 msgid "Phone number"
 msgstr "Telefonszám"
 
@@ -3228,7 +3228,7 @@ msgid "\n"
 msgstr "\n"
 "Gyűjtés {type}"
 
-#: bluebottle/collect/models.py:168 bluebottle/members/admin.py:833
+#: bluebottle/collect/models.py:168 bluebottle/members/admin.py:914
 msgid "Collect contributor"
 msgstr "Gyűjtő hozzájáruló"
 
@@ -3472,7 +3472,7 @@ msgstr "Folyamatban"
 msgid "Closed"
 msgstr "Lezárva"
 
-#: bluebottle/contact/models.py:29 bluebottle/utils/models.py:181
+#: bluebottle/contact/models.py:29 bluebottle/utils/models.py:217
 msgid "author"
 msgstr "szerző"
 
@@ -3481,12 +3481,12 @@ msgid "Message"
 msgstr "Üzenet"
 
 #: bluebottle/contact/models.py:35 bluebottle/statistics/models.py:248
-#: bluebottle/utils/models.py:185
+#: bluebottle/utils/models.py:221
 msgid "creation date"
 msgstr "létrehozás dátuma"
 
 #: bluebottle/contact/models.py:36 bluebottle/statistics/models.py:249
-#: bluebottle/utils/models.py:186
+#: bluebottle/utils/models.py:222
 msgid "last modification"
 msgstr "utolsó módosítás"
 
@@ -3809,12 +3809,12 @@ msgstr "A modell létrejött"
 msgid "Model has changed status"
 msgstr "A modell státusza megváltozott"
 
-#: bluebottle/funding/admin.py:94
+#: bluebottle/funding/admin.py:96
 msgid "Payment"
 msgstr "Fizetés"
 
-#: bluebottle/funding/admin.py:122 bluebottle/funding/filters.py:39
-#: bluebottle/funding_stripe/models.py:290
+#: bluebottle/funding/admin.py:123 bluebottle/funding/filters.py:39
+#: bluebottle/funding_stripe/models.py:292
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:22
 msgid "Currency"
 msgstr "Pénznem"
@@ -3828,29 +3828,29 @@ msgstr "A határidőt nem lehet későbbre kitolni, mint 75 nap az első adomán
 msgid "Date & amount"
 msgstr "Dátum és összeg"
 
-#: bluebottle/funding/admin.py:260
+#: bluebottle/funding/admin.py:261
 #, no-python-format
 msgid "% donated"
 msgstr "% adományozva"
 
-#: bluebottle/funding/admin.py:268
+#: bluebottle/funding/admin.py:270
 #, no-python-format
 msgid "% matching"
 msgstr "% egyezés"
 
-#: bluebottle/funding/admin.py:272
+#: bluebottle/funding/admin.py:275
 msgid "amount donated + matched"
 msgstr "adományozott összeg + egyeztetett"
 
-#: bluebottle/funding/admin.py:276
+#: bluebottle/funding/admin.py:280
 msgid "amount donated"
 msgstr "adományozott összeg"
 
-#: bluebottle/funding/admin.py:301
+#: bluebottle/funding/admin.py:305
 msgid "donations"
 msgstr "adományok"
 
-#: bluebottle/funding/admin.py:392 bluebottle/funding/models.py:348
+#: bluebottle/funding/admin.py:398 bluebottle/funding/models.py:348
 #: bluebottle/funding/templates/dashboard/grant_applications_ready_for_review.html:14
 #: bluebottle/funding/templates/dashboard/grantpayouts_ready_for_approval.html:14
 #: bluebottle/funding/templates/dashboard/payouts_ready_for_approval.html:14
@@ -3860,39 +3860,39 @@ msgstr "adományok"
 msgid "Amount"
 msgstr "Összeg"
 
-#: bluebottle/funding/admin.py:397
+#: bluebottle/funding/admin.py:404
 msgid "Payout amount"
 msgstr "Kifizetési összeg"
 
-#: bluebottle/funding/admin.py:409
+#: bluebottle/funding/admin.py:416
 msgid "User"
 msgstr "Felhasználó"
 
-#: bluebottle/funding/admin.py:449
+#: bluebottle/funding/admin.py:456
 msgid "Sync donation with payment."
 msgstr "Adomány szinkronizálása a kifizetéssel."
 
-#: bluebottle/funding/admin.py:463 bluebottle/funding/admin.py:640
-#: bluebottle/funding/admin.py:825 bluebottle/funding_stripe/admin.py:241
+#: bluebottle/funding/admin.py:470 bluebottle/funding/admin.py:647
+#: bluebottle/funding/admin.py:856 bluebottle/funding_stripe/admin.py:241
 msgid "Basic"
 msgstr "Alapvető"
 
-#: bluebottle/funding/admin.py:595 bluebottle/funding/admin.py:614
-#: bluebottle/members/admin.py:736 bluebottle/members/admin.py:764
-#: bluebottle/members/admin.py:806 bluebottle/members/admin.py:821
+#: bluebottle/funding/admin.py:602 bluebottle/funding/admin.py:621
+#: bluebottle/members/admin.py:817 bluebottle/members/admin.py:845
+#: bluebottle/members/admin.py:887 bluebottle/members/admin.py:902
 msgid "None"
 msgstr "Nincs"
 
-#: bluebottle/funding/admin.py:597
+#: bluebottle/funding/admin.py:604
 msgid "Funding activities"
 msgstr "Finanszírozási tevékenységek"
 
-#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:418
-#: bluebottle/members/admin.py:823
+#: bluebottle/funding/admin.py:623 bluebottle/grant_management/models.py:418
+#: bluebottle/members/admin.py:904
 msgid "Grant applications"
 msgstr "Támogatási kérelmek"
 
-#: bluebottle/funding/admin.py:641 bluebottle/funding/filters.py:11
+#: bluebottle/funding/admin.py:648 bluebottle/funding/filters.py:11
 #: bluebottle/pages/admin.py:179 bluebottle/time_based/admin.py:242
 #: bluebottle/time_based/admin.py:331 bluebottle/time_based/admin.py:374
 #: bluebottle/time_based/admin.py:484 bluebottle/time_based/admin.py:542
@@ -5848,89 +5848,89 @@ msgstr "Nyissa meg a szüneteltetett tevékenységeket"
 msgid "Update business type at stripe"
 msgstr "Frissítse az üzleti típust a Stripe-nál"
 
-#: bluebottle/funding_stripe/models.py:241
+#: bluebottle/funding_stripe/models.py:243
 msgid "Country of primary stripe account"
 msgstr "A fő stripe fiók országa"
 
-#: bluebottle/funding_stripe/models.py:243
+#: bluebottle/funding_stripe/models.py:245
 msgid "Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. "
 msgstr "Általában ez NL, de a stripe kulcs felülbírálásával másik fő stripe fiókot lehet választani. "
 
-#: bluebottle/funding_stripe/models.py:251
+#: bluebottle/funding_stripe/models.py:253
 msgid "Stripe publishable key"
 msgstr "Stripe publikálási kulcs"
 
-#: bluebottle/funding_stripe/models.py:252
-#: bluebottle/funding_stripe/models.py:260
+#: bluebottle/funding_stripe/models.py:254
+#: bluebottle/funding_stripe/models.py:262
 msgid "This is only needed if you want to use a specific Stripe account."
 msgstr "Ez csak akkor szükséges, ha szeretne egy adott Stripe fiókot használni."
 
-#: bluebottle/funding_stripe/models.py:259
+#: bluebottle/funding_stripe/models.py:261
 msgid "Stripe secret key"
 msgstr "Stripe titkos kulcs"
 
-#: bluebottle/funding_stripe/models.py:267
+#: bluebottle/funding_stripe/models.py:269
 msgid "Stripe connect webhook secret"
 msgstr "Stripe connect webhook titkos kulcs"
 
-#: bluebottle/funding_stripe/models.py:268
+#: bluebottle/funding_stripe/models.py:270
 msgid "The secret for connect webhook."
 msgstr "A titok a connect webhookhoz."
 
-#: bluebottle/funding_stripe/models.py:275
+#: bluebottle/funding_stripe/models.py:277
 msgid "Stripe payment intents webhook secret"
 msgstr "Stripe fizetési szándékok webhook titkos kulcs"
 
-#: bluebottle/funding_stripe/models.py:276
+#: bluebottle/funding_stripe/models.py:278
 msgid "The secret for payment intents webhook."
 msgstr "A titok a fizetési szándékok webhookhoz."
 
-#: bluebottle/funding_stripe/models.py:283
+#: bluebottle/funding_stripe/models.py:285
 msgid "Stripe payment checkout session webhook secret"
 msgstr "Stripe kifizetési folyamat szekció webhook titkos"
 
-#: bluebottle/funding_stripe/models.py:284
+#: bluebottle/funding_stripe/models.py:286
 msgid "The secret for payment checkout session webhook."
 msgstr "A titkos kód a kifizetési folyamat webhookhoz."
 
-#: bluebottle/funding_stripe/models.py:291
+#: bluebottle/funding_stripe/models.py:293
 msgid "The currency for the global account."
 msgstr "A valuta a globális fiók számára."
 
-#: bluebottle/funding_stripe/models.py:336
+#: bluebottle/funding_stripe/models.py:338
 msgid "Personal"
 msgstr "Személyes"
 
-#: bluebottle/funding_stripe/models.py:341
+#: bluebottle/funding_stripe/models.py:343
 msgid "Starts with 'acct_...'"
 msgstr "\"acct_...\"-val kezdődik..."
 
-#: bluebottle/funding_stripe/models.py:344
+#: bluebottle/funding_stripe/models.py:346
 msgid "Verification type"
 msgstr "Az ellenőrzés típusa"
 
-#: bluebottle/funding_stripe/models.py:416
+#: bluebottle/funding_stripe/models.py:418
 #, python-format
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Nem alkalmazható - jótékonysági projekt finanszírozása a %(platform)s platformon, egy GoodUp platform."
 
-#: bluebottle/funding_stripe/models.py:617
+#: bluebottle/funding_stripe/models.py:632
 msgid "stripe payout account"
 msgstr "stripe kifizetési fiók"
 
-#: bluebottle/funding_stripe/models.py:618
+#: bluebottle/funding_stripe/models.py:633
 msgid "stripe payout accounts"
 msgstr "stripe kifizetési fiókok"
 
-#: bluebottle/funding_stripe/models.py:629
+#: bluebottle/funding_stripe/models.py:644
 msgid "Starts with 'ba_...'"
 msgstr "\"ba_...\"-val kezdődik..."
 
-#: bluebottle/funding_stripe/models.py:677
+#: bluebottle/funding_stripe/models.py:692
 msgid "Bank account"
 msgstr "Banki számla"
 
-#: bluebottle/funding_stripe/models.py:678
+#: bluebottle/funding_stripe/models.py:693
 msgid "Bank accounts"
 msgstr "Banki számlák"
 
@@ -5996,7 +5996,7 @@ msgid "Bank name"
 msgstr "Bank neve"
 
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/detail_fields.html:4
-#: bluebottle/members/models.py:50
+#: bluebottle/members/models.py:53
 msgid "First name"
 msgstr "Keresztnév"
 
@@ -6181,7 +6181,7 @@ msgid "Province"
 msgstr "Vármegye"
 
 #: bluebottle/geo/models.py:217 bluebottle/geo/models.py:262
-#: bluebottle/members/models.py:201
+#: bluebottle/members/models.py:274
 msgid "Address"
 msgstr "Cím"
 
@@ -7211,7 +7211,7 @@ msgstr "Ütemezett tevékenység"
 msgid "Periodic Activity"
 msgstr "Időszakos tevékenység"
 
-#: bluebottle/initiatives/models.py:320 bluebottle/members/admin.py:794
+#: bluebottle/initiatives/models.py:320 bluebottle/members/admin.py:875
 #: bluebottle/time_based/models.py:886
 msgid "Past date activity"
 msgstr "Történeti dátumú tevékenység"
@@ -7371,7 +7371,7 @@ msgid "Email is required"
 msgstr "E-mail megadása kötelező"
 
 #: bluebottle/initiatives/states.py:19 bluebottle/pages/models.py:229
-#: bluebottle/slides/models.py:25 bluebottle/utils/models.py:161
+#: bluebottle/slides/models.py:25 bluebottle/utils/models.py:197
 msgid "Draft"
 msgstr "Pályázat"
 
@@ -7416,7 +7416,7 @@ msgstr "Törölve"
 msgid "The initiative is not executed. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
 msgstr "A kezdeményezés nem kerül végrehajtásra. A kezdeményezés nem jelenik meg a front-end keresési oldalon, de számít a jelentésben. A kezdeményezést a kezdeményező nem tudja szerkeszteni."
 
-#: bluebottle/initiatives/states.py:54 bluebottle/members/admin.py:419
+#: bluebottle/initiatives/states.py:54 bluebottle/members/admin.py:490
 msgid "Deleted"
 msgstr "Törölve"
 
@@ -7651,162 +7651,174 @@ msgstr "Looker azonosító"
 msgid "mail platform settings"
 msgstr "mail platform beállítások"
 
-#: bluebottle/members/admin.py:98
+#: bluebottle/members/admin.py:100
 msgid "A user with that email already exists."
 msgstr "Ezzel az e-mail címmel már létezik felhasználó."
 
-#: bluebottle/members/admin.py:100
+#: bluebottle/members/admin.py:102
 msgid "Email address"
 msgstr "E-mail cím"
 
-#: bluebottle/members/admin.py:101 bluebottle/members/admin.py:335
+#: bluebottle/members/admin.py:103 bluebottle/members/admin.py:406
 msgid "A valid, unique email address."
 msgstr "Érvényes, egyedi e-mail cím."
 
-#: bluebottle/members/admin.py:103 bluebottle/segments/models.py:59
+#: bluebottle/members/admin.py:105 bluebottle/segments/models.py:59
 msgid "Is active"
 msgstr "Aktív"
 
-#: bluebottle/members/admin.py:132
+#: bluebottle/members/admin.py:137
 msgid "Quarterly emails will only be sent at the beginning of each quarter if the impact hours are set. Users will only receive the emails if they have not spent all the set hours."
 msgstr "A negyedéves e-mailek csak a negyedévek elején kerülnek elküldésre, ha a hatásidők be vannak állítva. A felhasználók csak akkor kapják meg az e-maileket, ha nem költötték el az összes beállított órát."
 
-#: bluebottle/members/admin.py:139
+#: bluebottle/members/admin.py:144
 msgid "The impact hours feature will show the amount of hours users are encouraged to spend making an impact each year."
 msgstr "A hatásidők funkció megmutatja, mennyi órát ösztönöznek a felhasználók arra, hogy hatást gyakoroljanak évente."
 
-#: bluebottle/members/admin.py:145
+#: bluebottle/members/admin.py:151
+msgid "If you allow people to request access, use the fields below to explain how they can do this."
+msgstr "Ha engeded, hogy az emberek kérelmezzék a hozzáférést, használd az alábbi mezőket, hogy elmagyarázd, hogyan tehetik ezt meg."
+
+#: bluebottle/members/admin.py:157
 msgid "Login"
 msgstr "Bejelentkezés"
 
-#: bluebottle/members/admin.py:154 bluebottle/members/admin.py:506
+#: bluebottle/members/admin.py:174 bluebottle/members/admin.py:587
 msgid "Profile"
 msgstr "Profil"
 
-#: bluebottle/members/admin.py:163
+#: bluebottle/members/admin.py:183
 msgid "Translations"
-msgstr ""
+msgstr "Fordítások"
 
-#: bluebottle/members/admin.py:171
+#: bluebottle/members/admin.py:191
 msgid "Privacy"
 msgstr "Adatvédelem"
 
-#: bluebottle/members/admin.py:183 bluebottle/members/models.py:65
+#: bluebottle/members/admin.py:203 bluebottle/members/models.py:84
 msgid "Impact hours"
 msgstr "Hatásidők"
 
-#: bluebottle/members/admin.py:206
+#: bluebottle/members/admin.py:226
 msgid "User data"
 msgstr "Felhasználói adatok"
 
-#: bluebottle/members/admin.py:208
+#: bluebottle/members/admin.py:228
 msgid "User data can be anonymised and/or deleted after a set number of months from the time it was created to comply with company policies and local laws. User data includes names, contributions and wall posts. Please contact the support team at GoodUp for more information."
 msgstr "A felhasználói adatokat anonim módon kezelhetjük és/vagy törölhetjük, egy meghatározott hónap elteltével, a létrehozástól számítva, hogy megfeleljünk a vállalati irányelveknek és a helyi törvényeknek. A felhasználói adatok magukban foglalják a neveket, hozzájárulásokat és a fali bejegyzéseket. Kérjük, lépjen kapcsolatba a GoodUp támogató csapatával további információért."
 
-#: bluebottle/members/admin.py:240
+#: bluebottle/members/admin.py:265
 msgid "Members are required to fill out the fields listed below after log in or when contributing to an activity."
 msgstr "A tagoknak ki kell tölteniük az alábbi mezőket bejelentkezés után vagy amikor egy tevékenységhez hozzájárulnak."
 
-#: bluebottle/members/admin.py:243
+#: bluebottle/members/admin.py:268
 msgid "Members are required to fill out the fields listed below when contributing to an activity."
 msgstr "A tagoknak ki kell tölteniük az alábbi mezőket, amikor hozzájárulnak egy tevékenységhez."
 
-#: bluebottle/members/admin.py:247
+#: bluebottle/members/admin.py:272
 msgid "Required fields"
 msgstr "Kötelező mezők"
 
-#: bluebottle/members/admin.py:518
+#: bluebottle/members/admin.py:311
+msgid "Access link"
+msgstr "Hozzáférési link"
+
+#: bluebottle/members/admin.py:345
+msgid "Access code has been renewed successfully."
+msgstr "A hozzáférési kódot sikeresen megújították."
+
+#: bluebottle/members/admin.py:599
 msgid "Permissions"
 msgstr "Engedélyek"
 
-#: bluebottle/members/admin.py:522
+#: bluebottle/members/admin.py:603
 msgid "Engagement"
 msgstr "Elköteleződés"
 
-#: bluebottle/members/admin.py:643
+#: bluebottle/members/admin.py:724
 #, python-brace-format
 msgid "Only data from the last {months} months is shown."
 msgstr "Csak az utolsó {months} hónap adatai jelennek meg."
 
-#: bluebottle/members/admin.py:649
+#: bluebottle/members/admin.py:730
 msgid "Hours spent this year"
 msgstr "Órák ezen a napon"
 
-#: bluebottle/members/admin.py:654
+#: bluebottle/members/admin.py:735
 msgid "Hours planned this year"
 msgstr "Órák tervezve idén"
 
-#: bluebottle/members/admin.py:658
+#: bluebottle/members/admin.py:739
 msgid "Show all contributions"
 msgstr "Minden hozzájárulás megjelenítése"
 
-#: bluebottle/members/admin.py:660
+#: bluebottle/members/admin.py:741
 msgid "All contributions"
 msgstr "Minden hozzájárulás"
 
-#: bluebottle/members/admin.py:769 bluebottle/time_based/models.py:253
+#: bluebottle/members/admin.py:850 bluebottle/time_based/models.py:253
 msgid "Activity on a date"
 msgstr "Tevékenység egy napon"
 
-#: bluebottle/members/admin.py:774 bluebottle/time_based/models.py:784
+#: bluebottle/members/admin.py:855 bluebottle/time_based/models.py:784
 msgid "Recurring activity"
 msgstr "Ismétlődő tevékenység"
 
-#: bluebottle/members/admin.py:779 bluebottle/time_based/models.py:637
+#: bluebottle/members/admin.py:860 bluebottle/time_based/models.py:637
 msgid "Flexible activity"
 msgstr "Rugalmas tevékenység"
 
-#: bluebottle/members/admin.py:784 bluebottle/time_based/models.py:733
+#: bluebottle/members/admin.py:865 bluebottle/time_based/models.py:733
 msgid "Schedule activity"
 msgstr "Tevékenység ütemezése"
 
-#: bluebottle/members/admin.py:789
+#: bluebottle/members/admin.py:870
 msgid "Team schedule activity"
 msgstr "Csapat ütemezett tevékenység"
 
-#: bluebottle/members/admin.py:808
+#: bluebottle/members/admin.py:889
 msgid "Funding donations"
 msgstr "Finanszírozási adományok"
 
-#: bluebottle/members/admin.py:828
+#: bluebottle/members/admin.py:909
 msgid "Deed participation"
 msgstr "Cselekvés részvétele"
 
-#: bluebottle/members/admin.py:840
+#: bluebottle/members/admin.py:921
 msgid "Following"
 msgstr "Követés"
 
-#: bluebottle/members/admin.py:848
+#: bluebottle/members/admin.py:929
 msgid "Send reset password mail"
 msgstr "Jelszó visszaállító e-mail küldése"
 
-#: bluebottle/members/admin.py:855
+#: bluebottle/members/admin.py:936
 msgid "Resend welcome email"
 msgstr "Üdvözlő e-mail újraküldése"
 
-#: bluebottle/members/admin.py:866
+#: bluebottle/members/admin.py:947
 msgid "accounts"
 msgstr "számlák"
 
-#: bluebottle/members/admin.py:869
+#: bluebottle/members/admin.py:950
 msgid "KYC accounts"
 msgstr "KYC számlák"
 
-#: bluebottle/members/admin.py:924
+#: bluebottle/members/admin.py:1005
 #, python-brace-format
 msgid "User {name} will receive an email to reset password."
 msgstr "A \"{name}\" felhasználó e-mailt fog kapni a jelszó visszaállításához."
 
-#: bluebottle/members/admin.py:939
+#: bluebottle/members/admin.py:1020
 #, python-brace-format
 msgid "User {name} will receive an welcome email."
 msgstr "A \"{name}\" felhasználó üdvözlő e-mailt fog kapni."
 
-#: bluebottle/members/admin.py:960
+#: bluebottle/members/admin.py:1041
 msgid "Login as user"
 msgstr "Bejelentkezés felhasználóként"
 
-#: bluebottle/members/admin.py:963 bluebottle/members/forms.py:6
+#: bluebottle/members/admin.py:1044 bluebottle/members/forms.py:6
 #: bluebottle/members/templates/admin/members/login_as.html:9
 msgid "Login as"
 msgstr "Bejelentkezés"
@@ -7835,311 +7847,388 @@ msgctxt "email"
 msgid "Activate your account for {site_name}"
 msgstr "Aktiváld a fiókodat a {site_name} oldalon"
 
-#: bluebottle/members/models.py:28 bluebottle/notifications/models.py:55
+#: bluebottle/members/models.py:31 bluebottle/notifications/models.py:55
 msgid "Facebook"
 msgstr "Facebook"
 
-#: bluebottle/members/models.py:29
+#: bluebottle/members/models.py:32
 msgid "Google"
-msgstr ""
+msgstr "Google"
 
-#: bluebottle/members/models.py:37
+#: bluebottle/members/models.py:40
 msgid "Platform"
-msgstr ""
+msgstr "Platform"
 
-#: bluebottle/members/models.py:38
+#: bluebottle/members/models.py:41
 msgid "Secret"
-msgstr ""
+msgstr "Titok"
 
-#: bluebottle/members/models.py:39
+#: bluebottle/members/models.py:42
 msgid "Client id"
-msgstr ""
+msgstr "Klient azonosító"
 
-#: bluebottle/members/models.py:44
+#: bluebottle/members/models.py:47
 msgid "Email/password combination"
 msgstr "E-mail/jelszó kombináció"
 
-#: bluebottle/members/models.py:45
+#: bluebottle/members/models.py:48
 msgid "Company SSO"
 msgstr "Cég SSO"
 
-#: bluebottle/members/models.py:49
+#: bluebottle/members/models.py:52
 msgid "Full name"
 msgstr "Teljes név"
 
-#: bluebottle/members/models.py:54
+#: bluebottle/members/models.py:57
 msgid "After log in"
 msgstr "A bejelentkezés után"
 
-#: bluebottle/members/models.py:55
+#: bluebottle/members/models.py:58
 msgid "When making a contribution"
 msgstr "Hozzájáruláskor"
 
-#: bluebottle/members/models.py:59 bluebottle/utils/transitions.py:14
-msgid "closed"
-msgstr "lezárva"
-
-#: bluebottle/members/models.py:59
-msgid "Require login before accessing the platform"
-msgstr "Kérj bejelentkezést a platform eléréséhez"
-
 #: bluebottle/members/models.py:62
+msgid "Anyone can create an account"
+msgstr "Bárki létrehozhat egy fiókot"
+
+#: bluebottle/members/models.py:63
+msgid "Only people with a whitelisted email domain can create an account"
+msgstr "Csak azok az emberek hozhatnak létre fiókot, akiknek fehérlistás e-mail domainja van"
+
+#: bluebottle/members/models.py:66
+msgid "People with a whitelisted domain can create an account; all others can request access"
+msgstr "Azok az emberek, akiknek fehérlistás domainjük van, létrehozhatnak fiókot; mindenki más kérelmezheti a hozzáférést"
+
+#: bluebottle/members/models.py:71
+msgid "People request access by entering their email address"
+msgstr "Az emberek az e-mail címük megadásával kérhetik a hozzáférést"
+
+#: bluebottle/members/models.py:72
+msgid "People request access by following your instructions"
+msgstr "Az emberek a te utasításaid követésével kérelmezhetik a hozzáférést"
+
+#: bluebottle/members/models.py:76
+msgid "Platform access"
+msgstr "Platformhozzáférés"
+
+#: bluebottle/members/models.py:77
+msgid "Require log in before accessing the platform"
+msgstr "Kérjük, lépj be a platform használatához"
+
+#: bluebottle/members/models.py:78
+msgid "Only logged-in users can view the platform."
+msgstr "Csak a bejelentkezett felhasználók láthatják a platformot."
+
+#: bluebottle/members/models.py:81
 msgid "create initiatives"
 msgstr "kezdeményezések létrehozása"
 
-#: bluebottle/members/models.py:62
+#: bluebottle/members/models.py:81
 msgid "Members can create initiatives"
 msgstr "A tagok kezdeményezéseket hozhatnak létre"
 
-#: bluebottle/members/models.py:67
+#: bluebottle/members/models.py:86
 msgid "Leave empty if this feature won't be used."
 msgstr "Hagyd üresen, ha ezt a funkciót nem fogják használni."
 
-#: bluebottle/members/models.py:70
+#: bluebottle/members/models.py:89
 msgid "Fiscal year offset"
 msgstr "Költségvetési év eltolás"
 
-#: bluebottle/members/models.py:72
+#: bluebottle/members/models.py:91
 msgid "Set how many months earlier your fiscal year starts compared to January. For example, if your fiscal year starts in September (which is 4 months before January), enter 4. This also affects how impact metrics are displayed on the homepage."
 msgstr "Állítsa be, hány hónappal korábban kezdődik a pénzügyi éve januárhoz képest. Például, ha a pénzügyi éve szeptemberben kezdődik (ami 4 hónappal január előtt van), írjon be 4-et. Ez hatással van az impact metrikák megjelenítésére a kezdőoldalon is."
 
-#: bluebottle/members/models.py:79
+#: bluebottle/members/models.py:98
 msgid "Reminder Q1"
 msgstr "Emlékeztető I. negyedév"
 
-#: bluebottle/members/models.py:83
+#: bluebottle/members/models.py:102
 msgid "Reminder Q2"
 msgstr "Emlékeztető II. negyedév"
 
-#: bluebottle/members/models.py:87
+#: bluebottle/members/models.py:106
 msgid "Reminder Q3"
 msgstr "Emlékeztető III. negyedév"
 
-#: bluebottle/members/models.py:91
+#: bluebottle/members/models.py:110
 msgid "Reminder Q4"
 msgstr "Emlékeztető IV. negyedév"
 
-#: bluebottle/members/models.py:95
+#: bluebottle/members/models.py:115
 msgid "login methods"
 msgstr "bejelentkezési módok"
 
-#: bluebottle/members/models.py:97
-msgid "confirm signup"
-msgstr "regisztráció megerősítése"
+#: bluebottle/members/models.py:117
+msgid "People can use any selected method to sign up or log in. For social log in options, see the ‘Social log in’ tab."
+msgstr "Az emberek bármelyik választott módszert használhatják a regisztrációhoz vagy a bejelentkezéshez. A közösségi bejelentkezési lehetőségekhez lásd a „Közösségi bejelentkezés” fület."
 
-#: bluebottle/members/models.py:97
-msgid "Require verifying the user's email before signup"
-msgstr "Kérjék meg a felhasználót, hogy az aláírása előtt ellenőrizze az e-mail címét"
+#: bluebottle/members/models.py:125
+msgid "verify email on sign up"
+msgstr "e-mail megerősítése a regisztrációnál"
 
-#: bluebottle/members/models.py:100
-msgid "email domains"
-msgstr "e-mail domainek"
+#: bluebottle/members/models.py:127
+msgid "Require users to verify their email on sign-up"
+msgstr "Kérjük, hogy a felhasználók megerősítsék az e-mail címüket a regisztráció során"
 
-#: bluebottle/members/models.py:102
-msgid "Domain that all email should belong to"
-msgstr "A tartomány, amelybe minden e-mail tartoznia kell"
+#: bluebottle/members/models.py:128 bluebottle/members/models.py:133
+msgid "This rule only applies to email + password sign-ups."
+msgstr "Ez a szabály csak az e-mail + jelszó regisztrációkra vonatkozik."
 
-#: bluebottle/members/models.py:106
+#: bluebottle/members/models.py:132
+msgid "account creation rules"
+msgstr "fiók létrehozási szabályok"
+
+#: bluebottle/members/models.py:140
+msgid "Whitelisted email domains"
+msgstr "Fehérlistás e-mail domainok"
+
+#: bluebottle/members/models.py:146
 msgid "session only"
 msgstr "csak ülés"
 
-#: bluebottle/members/models.py:108
+#: bluebottle/members/models.py:148
 msgid "Limit user session to browser session"
 msgstr "Korreláld a felhasználói munkamenetet a böngésző munkamenetéhez"
 
-#: bluebottle/members/models.py:112
+#: bluebottle/members/models.py:152
+msgid "request access method"
+msgstr "hozzáférés kérelmezési módszer"
+
+#: bluebottle/members/models.py:153
+msgid "This rule only applies when requesting access is allowed."
+msgstr "Ez a szabály csak akkor vonatkozik, ha a hozzáférés kérését engedélyezik."
+
+#: bluebottle/members/models.py:160
+msgid "request access instructions"
+msgstr "hozzáférés kérelmezési utasítások"
+
+#: bluebottle/members/models.py:161
+msgid "Explain how people can request access to the platform."
+msgstr "Magyarázd el, hogyan kérhetik az emberek a hozzáférést a platformhoz."
+
+#: bluebottle/members/models.py:169
+msgid "Request access mail to address"
+msgstr "Hozzáférés kérelmezése e-mail címre"
+
+#: bluebottle/members/models.py:170
+msgid "Enter the email address where people should send their access request."
+msgstr "Add meg azt az e-mail címet, ahová az emberek küldhetik a hozzáférési kérelmüket."
+
+#: bluebottle/members/models.py:176
+msgid "Request access code"
+msgstr "Hozzáférési kód kérése"
+
+#: bluebottle/members/models.py:177
+msgid "With this code people can sign-up without a white-listed email address."
+msgstr "Ezzel a kóddal az emberek regisztrálhatnak fehérlistás e-mail cím nélkül."
+
+#: bluebottle/members/models.py:184
 msgid "required questions location"
 msgstr "kért kérdések helye"
 
-#: bluebottle/members/models.py:117
+#: bluebottle/members/models.py:189
 msgid "When should the user be asked to complete their required profile fields?"
 msgstr "Mikor kell a felhasználónak kitöltenie a kötelező profilmezőit?"
 
-#: bluebottle/members/models.py:122
+#: bluebottle/members/models.py:194
 msgid "consent link"
 msgstr "hozzájárulási link"
 
-#: bluebottle/members/models.py:124
+#: bluebottle/members/models.py:196
 msgid "Link more information about the platforms cookie policy"
 msgstr "Linkelj több információt a platform sütikre vonatkozó politikájáról"
 
-#: bluebottle/members/models.py:129
+#: bluebottle/members/models.py:201
 msgid "disable cookie consent"
 msgstr "cookie hozzájárulás letiltása"
 
-#: bluebottle/members/models.py:132
+#: bluebottle/members/models.py:204
 msgid "Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)"
 msgstr "Kezeld a süti hozzájárulást külsőleg (pl. Cookiebot) - (Kötelező, ha a GTM be van adva.)"
 
-#: bluebottle/members/models.py:137
+#: bluebottle/members/models.py:209
 msgid "gtm code"
 msgstr "gtm kód"
 
-#: bluebottle/members/models.py:138
+#: bluebottle/members/models.py:210
 msgid "Adding the GTM script to your platform allows you to manage and deploy third-party tools."
 msgstr "A GTM script hozzáadása a platformhoz lehetővé teszi a harmadik féltől származó eszközök kezelését és telepítését."
 
-#: bluebottle/members/models.py:144
-msgid "background"
-msgstr "háttér"
+#: bluebottle/members/models.py:216
+msgid "Sign up image"
+msgstr "Regisztrációs kép"
 
-#: bluebottle/members/models.py:155
+#: bluebottle/members/models.py:217
+msgid "This image will be displayed on the sign up and log in pages."
+msgstr "Ez a kép meg fog jelenni a regisztrációs és bejelentkezési oldalakon."
+
+#: bluebottle/members/models.py:228
 msgid "translate user content"
-msgstr ""
+msgstr "felhasználói tartalom fordítása"
 
-#: bluebottle/members/models.py:156
+#: bluebottle/members/models.py:229
 msgid "Give users the option to translate user generated content."
-msgstr ""
+msgstr "Adj lehetőséget a felhasználóknak, hogy lefordítsák a felhasználók által generált tartalmakat."
 
-#: bluebottle/members/models.py:161
+#: bluebottle/members/models.py:234
 msgid "enable gender"
 msgstr "nemek engedélyezése"
 
-#: bluebottle/members/models.py:163
+#: bluebottle/members/models.py:236
 msgid "Show gender question in profile form"
 msgstr "Mutasd meg a nem kérdést a profil űrlapjában"
 
-#: bluebottle/members/models.py:167
+#: bluebottle/members/models.py:240
 msgid "enable birthday"
 msgstr "születésnap engedélyezése"
 
-#: bluebottle/members/models.py:169
+#: bluebottle/members/models.py:242
 msgid "Show birthdate question in profile form"
 msgstr "Mutasd meg a születési dátum kérdését a profil űrlapjában"
 
-#: bluebottle/members/models.py:175
+#: bluebottle/members/models.py:248
 msgid "Show address question in profile form"
 msgstr "Mutasd meg a cím kérdését a profil űrlapjában"
 
-#: bluebottle/members/models.py:179
+#: bluebottle/members/models.py:252
 msgid "create segments"
 msgstr "szegmensek létrehozása"
 
-#: bluebottle/members/models.py:182
+#: bluebottle/members/models.py:255
 msgid "Create new segments when a user logs in. Leave unchecked if only priorly specified ones should be used."
 msgstr "Új szegmensek létrehozása, amikor a felhasználó bejelentkezik. Hagyd üresen, ha csak az előre megadottakat akarod használni."
 
-#: bluebottle/members/models.py:187
+#: bluebottle/members/models.py:260
 msgid "create locations"
 msgstr "helyek létrehozása"
 
-#: bluebottle/members/models.py:190
+#: bluebottle/members/models.py:263
 msgid "Create new office locations when a user logs in. Leave unchecked if only priorly specified ones should be used."
 msgstr "Új irodai helyszínek létrehozása, amikor a felhasználó bejelentkezik. Hagyd üresen, ha csak az előre megadottakat akarod használni."
 
-#: bluebottle/members/models.py:196
+#: bluebottle/members/models.py:269
 msgid "Office location"
 msgstr "Irodahely"
 
-#: bluebottle/members/models.py:198
+#: bluebottle/members/models.py:271
 msgid "Require members to enter their office location."
 msgstr "Kérjük, kérje a tagokat, hogy adják meg az irodájuk helyét."
 
-#: bluebottle/members/models.py:203
+#: bluebottle/members/models.py:276
 msgid "Require members to enter their address."
 msgstr "Kérjük, kérje a tagokat, hogy adják meg a címüket."
 
-#: bluebottle/members/models.py:208
+#: bluebottle/members/models.py:281
 msgid "Require members to enter their phone number."
 msgstr "Kérjük, kérje a tagokat, hogy adják meg a telefonszámukat."
 
-#: bluebottle/members/models.py:211
+#: bluebottle/members/models.py:284
 msgid "Birthdate"
 msgstr "Születési dátum"
 
-#: bluebottle/members/models.py:213
+#: bluebottle/members/models.py:286
 msgid "Require members to enter their date of birth."
 msgstr "Kérjük, hogy a tagok adják meg születési dátumukat."
 
-#: bluebottle/members/models.py:217
+#: bluebottle/members/models.py:290
 msgid "Verify SSO data office location"
 msgstr "Ellenőrizze az SSO adatok hivatalának helyét"
 
-#: bluebottle/members/models.py:219
+#: bluebottle/members/models.py:292
 msgid "Require members to verify their office location once if it is filled via SSO."
 msgstr "Kérjük, hogy a tagok egyszer ellenőrizzék hivataluk helyét, ha az SSO-n keresztül van kitöltve."
 
-#: bluebottle/members/models.py:223
+#: bluebottle/members/models.py:296
 msgid "Display member names"
 msgstr "Tagok neveinek megjelenítése"
 
-#: bluebottle/members/models.py:228
+#: bluebottle/members/models.py:301
 msgid "How names of members will be displayed for visitors and other members.If first name is selected, then the names of initiators and activity manager will remain displayed in full and Activity managers and initiators will see the full names of their participants. And staff members will see all names in full."
 msgstr "A tagok nevei hogyan fognak megjelenni a látogatók és más tagok számára. Ha a keresztnevet választják, akkor az iniciátorok és az aktivitáskezelők nevei teljes egészében megmaradnak, és az aktivitáskezelők és az iniciátorok láthatják a résztvevőik teljes nevét. A munkatársak teljes néven fogják látni az összes nevet."
 
-#: bluebottle/members/models.py:236
+#: bluebottle/members/models.py:309
 msgid "Anonymise"
 msgstr "Anonimizálás"
 
-#: bluebottle/members/models.py:241
+#: bluebottle/members/models.py:314
 msgid "Set the number of months after which user data will be anonymised. Leave the field empty or with ‘0’ if you do not wish to anonymise user data."
 msgstr "Állítsd be, hány hónap után anonymizáljuk a felhasználói adatokat. Hagyj üresen vagy '0'-t írj, ha nem szeretnéd anonimizálni a felhasználói adatokat."
 
-#: bluebottle/members/models.py:253
+#: bluebottle/members/models.py:326
 msgid "Set the number of months after which user data will be deleted. Leave the field empty or with ‘0’ if you do not wish to delete user data."
 msgstr "Állítsd be, hány hónap után töröljük a felhasználói adatokat. Hagyj üresen vagy '0'-t írj, ha nem szeretnéd törölni a felhasználói adatokat."
 
-#: bluebottle/members/models.py:281 bluebottle/members/models.py:282
+#: bluebottle/members/models.py:354 bluebottle/members/models.py:355
 msgid "member platform settings"
 msgstr "tag platform beállításai"
 
-#: bluebottle/members/models.py:287
+#: bluebottle/members/models.py:360
 msgid "Was verified for voting by recaptcha."
 msgstr "ReCAPTCHA által ellenőrizve a szavazáshoz."
 
-#: bluebottle/members/models.py:289
+#: bluebottle/members/models.py:362
+#: bluebottle/time_based/states/registrations.py:18
+msgid "Accepted"
+msgstr "Elfogadva"
+
+#: bluebottle/members/models.py:364
+msgid "Was approved by platform manager."
+msgstr "Platform menedzsere jóváhagyta."
+
+#: bluebottle/members/models.py:367
 msgid "Matching"
 msgstr "Képzés"
 
-#: bluebottle/members/models.py:291
+#: bluebottle/members/models.py:369
 msgid "Monthly overview of activities that match this person's profile"
 msgstr "Havi áttekintés azokról az aktivitásokról, amelyek megfelelnek ennek a személynek a profiljának"
 
-#: bluebottle/members/models.py:294
+#: bluebottle/members/models.py:372
 msgid "Receive reminder emails"
 msgstr "Emlékeztető e-mailek fogadása"
 
-#: bluebottle/members/models.py:296
+#: bluebottle/members/models.py:374
 msgid "User receives emails reminding them about their do good hours"
 msgstr "A felhasználó e-maileket kap, amelyek emlékeztetik őt a hasznos óráira"
 
-#: bluebottle/members/models.py:299 bluebottle/token_auth/tests/models.py:12
+#: bluebottle/members/models.py:377 bluebottle/token_auth/tests/models.py:12
 msgid "remote_id"
 msgstr "távoli_azonosító"
 
-#: bluebottle/members/models.py:303
+#: bluebottle/members/models.py:381
 msgid "Last Logout"
 msgstr "Utolsó kijelentkezés"
 
-#: bluebottle/members/models.py:306
+#: bluebottle/members/models.py:384
 msgid "external SCIM id"
 msgstr "külső SCIM azonosító"
 
-#: bluebottle/members/models.py:316
+#: bluebottle/members/models.py:394
 msgid "Office groups managed"
 msgstr "Iroda csoportok kezelve"
 
-#: bluebottle/members/models.py:318
+#: bluebottle/members/models.py:396
 msgid "Select one or more groups to filter on. The user will only see data related to those selected groups. Leave empty to show all data."
 msgstr "Válasszon ki egy vagy több csoportot a szűréshez. A felhasználó csak a kiválasztott csoportokkal kapcsolatos adatokat fogja látni. Ha üresen hagyja, minden adatot meg fog jeleníteni."
 
-#: bluebottle/members/models.py:326
+#: bluebottle/members/models.py:404
 msgid "Segments managed"
 msgstr "Kezelt szegmensek"
 
-#: bluebottle/members/models.py:328
+#: bluebottle/members/models.py:406
 msgid "Select one or more segments to filter on. The user will only get updates for activities with the selected segments."
 msgstr "Válassz egy vagy több szegmenst a szűréshez. A felhasználó csak a választott szegmensekhez tartozó tevékenységekről kap frissítéseket."
 
-#: bluebottle/members/models.py:335
+#: bluebottle/members/models.py:413
 msgid "When the user updated their matching preferences."
 msgstr "Amikor a felhasználó frissítette a párkapcsolati preferenciáit."
 
-#: bluebottle/members/models.py:483
+#: bluebottle/members/models.py:561
 msgid "User activity"
 msgstr "Felhasználói aktivitás"
 
-#: bluebottle/members/models.py:484
+#: bluebottle/members/models.py:562
 msgid "User activities"
 msgstr "Felhasználói aktivitások"
 
@@ -8156,41 +8245,81 @@ msgstr "Nem lehet bejelentkezni a megadott hitelesítő adatokkal."
 msgid "Must include \"{username_field}\" and \"password\"."
 msgstr "Kötelező megadni a \"{username_field}\" és a \"jelszó\" mezőket."
 
-#: bluebottle/members/serializers.py:552
+#: bluebottle/members/serializers.py:524
+msgid "The access link you supplied is invalid. Please contact us to request a new access link."
+msgstr "A megadott hozzáférési link érvénytelen. Kérlek, lépj velünk kapcsolatba, hogy új hozzáférési linket kérj."
+
+#: bluebottle/members/serializers.py:530
+msgid "This email is not whitelisted, please contact us to request access."
+msgstr "Ez az e-mail nincs fehérlistázva, kérlek, lépj velünk kapcsolatba a hozzáférés kéréséhez."
+
+#: bluebottle/members/serializers.py:535
+msgid "Only emails for specified domains are allowed. Please use your work e-mail address."
+msgstr "Csak meghatározott domainekhez tartozó e-mailek engedélyezettek. Kérlek, használd a munkahelyi e-mail címedet."
+
+#: bluebottle/members/serializers.py:592
 msgid "A user with this email address already exists"
 msgstr "Ezzel az e-mail címmel már létezik felhasználó"
 
-#: bluebottle/members/serializers.py:592
+#: bluebottle/members/serializers.py:632
 msgid "Signup requires a confirmation token."
 msgstr "A regisztrációhoz megerősítő token szükséges."
 
-#: bluebottle/members/serializers.py:597
+#: bluebottle/members/serializers.py:637
 msgid "The platform is closed."
 msgstr "A platform zárva van."
 
-#: bluebottle/members/serializers.py:627
+#: bluebottle/members/serializers.py:667
 msgid "email_confirmation"
 msgstr "e-mail_megerősítés"
 
-#: bluebottle/members/serializers.py:671
+#: bluebottle/members/serializers.py:711
 msgid "Email confirmation mismatch"
 msgstr "E-mail megerősítési eltérés"
 
-#: bluebottle/members/serializers.py:678
+#: bluebottle/members/serializers.py:718
 msgid "Signup requires a confirmation token"
 msgstr "A regisztrációhoz megerősítő token szükséges"
 
-#: bluebottle/members/serializers.py:784
+#: bluebottle/members/serializers.py:824
 msgid "Password does not match"
 msgstr "A jelszavak nem egyeznek."
 
-#: bluebottle/members/serializers.py:847
+#: bluebottle/members/serializers.py:887
 msgid "The two password fields didn't match."
 msgstr "A két jelszómező nem egyezett."
 
 #: bluebottle/members/templates/admin/members/password_reset.html:9
 msgid "Send reset password mail to"
 msgstr "Állítson be jelszót"
+
+#: bluebottle/members/templates/admin/members/request_access_code_display.html:11
+msgid "Copy"
+msgstr "Másolás"
+
+#: bluebottle/members/templates/admin/members/request_access_code_display.html:16
+msgid "Are you sure you want to generate a new access code? The old code will no longer work."
+msgstr "Biztos vagy benne, hogy új hozzáférési kódot akarsz generálni? A régi kód már nem lesz érvényes."
+
+#: bluebottle/members/templates/admin/members/request_access_code_display.html:17
+msgid "Re-new link"
+msgstr "Link megújítása"
+
+#: bluebottle/members/templates/admin/members/request_access_code_display.html:26
+msgid "Copied!"
+msgstr "Másolva!"
+
+#: bluebottle/members/templates/admin/members/request_access_code_display.html:36
+msgid "Failed to copy to clipboard"
+msgstr "Sikertelen másolás a vágólapra"
+
+#: bluebottle/members/templates/admin/members/request_access_code_display.html:41
+msgid "Share this link with people who are allowed to get access."
+msgstr "Oszd meg ezt a linket azokkal, akik jogosultak a hozzáférésre."
+
+#: bluebottle/members/templates/admin/members/request_access_code_display.html:47
+msgid "Generate link"
+msgstr "Link generálása"
 
 #: bluebottle/members/templates/admin/members/resend_welcome_mail.html:9
 msgid "Resend welcome mail to"
@@ -8319,11 +8448,11 @@ msgstr "Hozza létre jelszavát"
 
 #: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:27
 msgid "JSON file"
-msgstr ""
+msgstr "JSON fájl"
 
 #: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:27
 msgid "Select a JSON file exported from another platform"
-msgstr ""
+msgstr "Válassz egy JSON fájlt, amelyet egy másik platformról exportáltál"
 
 #: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:52
 #: bluebottle/slides/admin.py:39
@@ -8349,26 +8478,26 @@ msgstr "A kiválasztott bejegyzések megjelölése közzéteszéseként"
 
 #: bluebottle/news/admin.py:168
 msgid "No news items were selected."
-msgstr ""
+msgstr "Nem választottál hír elemeket."
 
 #: bluebottle/news/admin.py:180
 msgid "Export selected news items"
-msgstr ""
+msgstr "Exportáld a kiválasztott hír elemeket"
 
 #: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:264
 msgid "Invalid JSON file. Please check the file format."
-msgstr ""
+msgstr "Érvénytelen JSON fájl. Kérlek, ellenőrizd a fájlformátumot."
 
 #: bluebottle/news/admin.py:234
 #, python-brace-format
 msgid "Error importing news items: {0}"
-msgstr ""
+msgstr "Hiba a hírek importálásakor: {0}"
 
 #: bluebottle/news/admin.py:245
 #: bluebottle/news/templates/admin/news/newsitem/change_list.html:8
 #: bluebottle/news/templates/admin/news/newsitem/import.html:9
 msgid "Import news items"
-msgstr ""
+msgstr "Hírek importálása"
 
 #: bluebottle/news/models.py:27
 msgid "Main image"
@@ -8426,16 +8555,16 @@ msgstr "most"
 
 #: bluebottle/news/templates/admin/news/newsitem/change_form.html:7
 msgid "Export news item"
-msgstr ""
+msgstr "Hír elem exportálása"
 
 #: bluebottle/news/templates/admin/news/newsitem/import.html:14
 msgid "Upload a JSON file exported from another platform to import news items."
-msgstr ""
+msgstr "Tölts fel egy JSON fájlt, amelyet egy másik platformról exportáltál, hogy híreket importálhass."
 
 #: bluebottle/news/templates/admin/news/newsitem/import.html:38
 #: bluebottle/pages/templates/admin/pages/page/import.html:38
 msgid "Import"
-msgstr ""
+msgstr "Importálás"
 
 #: bluebottle/news/templates/admin/news/newsitem/import_message.html:5
 #, python-format
@@ -8445,8 +8574,12 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s news items were imported\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 hír elem importálva volt\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s hír elem importálva volt\n"
+"        "
 
 #: bluebottle/news/templates/admin/news/newsitem/import_message.html:12
 #, python-format
@@ -8456,12 +8589,16 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s news items were updated\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 hír elem frissítve volt\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s hír elem frissítve volt\n"
+"        "
 
 #: bluebottle/news/templates/admin/news/newsitem/import_message.html:19
 msgid "No news items were imported or updated."
-msgstr ""
+msgstr "Nem importáltak vagy frissítettek hír elemeket."
 
 #: bluebottle/notifications/admin.py:141
 msgid "URL of the platform"
@@ -8709,22 +8846,22 @@ msgstr "Telefonszám"
 
 #: bluebottle/pages/admin.py:200
 msgid "No pages were selected."
-msgstr ""
+msgstr "Nem választottál oldalakat."
 
 #: bluebottle/pages/admin.py:212
 msgid "Export selected pages"
-msgstr ""
+msgstr "Válaszd ki a látogatott oldalakat"
 
 #: bluebottle/pages/admin.py:266
 #, python-brace-format
 msgid "Error importing pages: {0}"
-msgstr ""
+msgstr "Hiba az oldalak importálásakor: {0}"
 
 #: bluebottle/pages/admin.py:277
 #: bluebottle/pages/templates/admin/pages/page/change_list.html:8
 #: bluebottle/pages/templates/admin/pages/page/import.html:9
 msgid "Import pages"
-msgstr ""
+msgstr "Oldalak importálása"
 
 #: bluebottle/pages/models.py:27
 msgid "Link title"
@@ -8789,7 +8926,7 @@ msgid "Text + Scaled Image"
 msgstr "Szöveg + Méretezett Kép"
 
 #: bluebottle/pages/models.py:228 bluebottle/slides/models.py:24
-#: bluebottle/utils/models.py:160
+#: bluebottle/utils/models.py:196
 msgid "Published"
 msgstr "Megjelent"
 
@@ -8807,11 +8944,11 @@ msgstr "Mutassa ennek az oldalnak a címét a fejlécben"
 
 #: bluebottle/pages/templates/admin/pages/page/change_form.html:7
 msgid "Export page"
-msgstr ""
+msgstr "Oldal exportálása"
 
 #: bluebottle/pages/templates/admin/pages/page/import.html:14
 msgid "Upload a JSON file exported from another platform to import pages."
-msgstr ""
+msgstr "Tölts fel egy JSON fájlt, amelyet egy másik platformról exportáltál, hogy oldalakat importálhass."
 
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:5
 #, python-format
@@ -8821,8 +8958,12 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s pages were imported\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 oldal importálva volt\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s oldal importálva volt\n"
+"        "
 
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:12
 #, python-format
@@ -8832,12 +8973,16 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s pages were updated\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 oldal frissítve volt\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s oldal frissítve volt\n"
+"        "
 
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:19
 msgid "No pages were imported or updated."
-msgstr ""
+msgstr "Nem importáltak vagy frissítettek oldalakat."
 
 #: bluebottle/redirects/models.py:8
 msgid "redirect from"
@@ -9097,7 +9242,7 @@ msgstr "Fejléc és lábléc"
 msgid "Email templates"
 msgstr "Email sablonok"
 
-#: bluebottle/settings/admin_dashboard.py:254 bluebottle/utils/models.py:149
+#: bluebottle/settings/admin_dashboard.py:254 bluebottle/utils/models.py:185
 msgid "Settings"
 msgstr "Beállítások"
 
@@ -9105,7 +9250,8 @@ msgstr "Beállítások"
 msgid "Manage Reporting"
 msgstr "Jelentéskezelés"
 
-#: bluebottle/settings/local.py:725 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:425
+#: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9137,10 +9283,11 @@ msgstr "Jelentéskezelés"
 msgid "English"
 msgstr "Angol"
 
-#: bluebottle/settings/local.py:726 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
-#: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
-#: tenants/bedrijven-voor-amsterdam/settings.py:26
+#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:426
+#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
+#: tenants/almelo/settings.py:25 tenants/apg/settings.py:26
+#: tenants/athlon/settings.py:26
+#: tenants/bedrijven-voor-amsterdam/settings.py:26 tenants/bmw/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
 #: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
 #: tenants/crowdfunding-voornatuur/settings.py:26
@@ -9171,20 +9318,32 @@ msgstr "Angol"
 msgid "Dutch"
 msgstr "Holland"
 
-#: bluebottle/settings/local.py:727 tenants/mars/settings.py:28
+#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:427
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+msgid "French"
+msgstr "Francia"
+
+#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:428
+#: tenants/mars/settings.py:28
 msgid "Spanish"
-msgstr ""
+msgstr "Spanyol"
 
-#: bluebottle/settings/local.py:728 tenants/mars/settings.py:29
+#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:429
+#: tenants/mars/settings.py:29
 msgid "German"
-msgstr ""
+msgstr "Német"
 
-#: bluebottle/settings/local.py:729
-msgid "Bulgarian"
-msgstr ""
+#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:430
+msgid "Portuguese"
+msgstr "Portugál"
 
-#: bluebottle/settings/local.py:730 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:431
+#: tenants/mars/settings.py:30
 msgid "Hungarian"
+msgstr "Magyar"
+
+#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:432
+msgid "Bulgarian"
 msgstr ""
 
 #: bluebottle/slides/admin.py:34
@@ -10689,7 +10848,7 @@ msgid "Registration for this user already exists on this activity."
 msgstr "A regisztráció ennél a felhasználónál már létezik ezen a tevékenységen."
 
 #: bluebottle/time_based/serializers/registrations.py:102
-#: bluebottle/utils/fields.py:330
+#: bluebottle/utils/fields.py:377
 msgid "This field is required"
 msgstr "Ez a mező kötelező"
 
@@ -10911,10 +11070,6 @@ msgstr "A résztvevő csatlakozik a csapat helyéhez."
 #: bluebottle/time_based/states/registrations.py:15
 msgid "This person has applied and must be reviewed."
 msgstr "Ez a személy jelentkezett, és felül kell vizsgálni."
-
-#: bluebottle/time_based/states/registrations.py:18
-msgid "Accepted"
-msgstr "Elfogadva"
 
 #: bluebottle/time_based/states/registrations.py:20
 msgid "This person is accepted to take part in the activity."
@@ -13162,15 +13317,15 @@ msgstr "Válasz megtekintése"
 msgid "Transition"
 msgstr "Átmenet"
 
-#: bluebottle/utils/models.py:170
+#: bluebottle/utils/models.py:206
 msgid "publication date"
 msgstr "publikációs dátum"
 
-#: bluebottle/utils/models.py:173
+#: bluebottle/utils/models.py:209
 msgid "To go live, status must be 'Published'."
 msgstr "Ahhoz, hogy éljen, a státuszának \"Megjelent\"-nek kell lennie."
 
-#: bluebottle/utils/models.py:175
+#: bluebottle/utils/models.py:211
 msgid "publication end date"
 msgstr "publikációs végdátum"
 
@@ -13260,6 +13415,10 @@ msgstr "Válasz"
 msgid "All dates"
 msgstr "Minden időpont"
 
+#: bluebottle/utils/transitions.py:14
+msgid "closed"
+msgstr "lezárva"
+
 #: bluebottle/utils/validators.py:46
 #, python-format
 msgid "File extension '%(extension)s' is not allowed. Allowed extensions are: '%(allowed_extensions)s'."
@@ -13279,19 +13438,19 @@ msgstr "A Mime típus '%(mimetype)s' nem felel meg a fájlnevek kiterjesztésén
 msgid "File is infected with malware."
 msgstr "A fájl vírussal fertőzött."
 
-#: bluebottle/utils/widgets.py:50
+#: bluebottle/utils/widgets.py:70
 msgid "Hour"
 msgid_plural "Hours"
 msgstr[0] "Óra"
 msgstr[1] "Órák"
 
-#: bluebottle/utils/widgets.py:52
+#: bluebottle/utils/widgets.py:72
 msgid "Minute"
 msgid_plural "Minutes"
 msgstr[0] "Perc"
 msgstr[1] "Perc"
 
-#: bluebottle/utils/widgets.py:54
+#: bluebottle/utils/widgets.py:74
 msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Másodperc"
@@ -13299,9 +13458,5 @@ msgstr[1] "Másodpercek"
 
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
-msgstr ""
-
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
-msgid "French"
-msgstr "Francia"
+msgstr "Holland"
 

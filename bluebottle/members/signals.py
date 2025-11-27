@@ -1,10 +1,10 @@
 import logging
 
-from django.db.models.signals import post_save, m2m_changed
 from django.contrib.auth.models import Group
+from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
-from bluebottle.members.models import Member
 
+from bluebottle.members.models import Member
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def segments_changed(sender, instance, action, pk_set, *args, **kwargs):
     All closed or succeeded activities remain untouched, so that historical data
     will stay accurate.
     """
-    open_statuses = ('draft', 'needs_work', 'submitted', 'open', 'running', 'full', )
+    open_statuses = ('draft', 'needs_work', 'submitted', 'open', 'running', 'full',)
     if action == 'post_add':
         for activity in instance.activities.filter(
             status__in=open_statuses

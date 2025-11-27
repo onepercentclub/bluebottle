@@ -1,26 +1,23 @@
 from datetime import timedelta
 
 from django import forms
+from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.tokens import default_token_generator
+from django.db import connection
+from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
+from django.template.response import TemplateResponse
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
-from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth.forms import PasswordResetForm
-from django.db import connection
-from django.utils.safestring import mark_safe
-from django.urls import reverse
-from django.http import HttpResponseRedirect
-from django.template.response import TemplateResponse
-
+from rest_framework.exceptions import AuthenticationFailed
 from social_core.exceptions import AuthCanceled
 from social_core.utils import get_strategy
 from social_django.utils import psa, STORAGE
-
-from rest_framework.exceptions import AuthenticationFailed
-
 from two_factor.views import SetupView
 
 from bluebottle.auth.serializers import SocialLoginSerializer
@@ -69,15 +66,18 @@ class SocialLoginView(JsonApiViewMixin, CreateAPIView):
 
 
 @csrf_protect
-def admin_password_reset(request, is_admin_site=False,
-                         template_name='registration/password_reset_form.html',
-                         email_template_name='registration/password_reset_email.html',
-                         subject_template_name='registration/password_reset_subject.txt',
-                         password_reset_form=PasswordResetForm,
-                         token_generator=default_token_generator,
-                         post_reset_redirect=None,
-                         from_email=None,
-                         extra_context=None):
+def admin_password_reset(
+    request,
+    is_admin_site=False,
+    template_name='registration/password_reset_form.html',
+    email_template_name='registration/password_reset_email.html',
+    subject_template_name='registration/password_reset_subject.txt',
+    password_reset_form=PasswordResetForm,
+    token_generator=default_token_generator,
+    post_reset_redirect=None,
+    from_email=None,
+    extra_context=None
+):
     """
     This is a copy of django.contrib.auth.views.password_reset but this
     forces the domain to the one specified in current tenant.

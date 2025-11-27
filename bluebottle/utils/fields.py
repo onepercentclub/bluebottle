@@ -22,6 +22,53 @@ from rest_framework_json_api.relations import (
 )
 
 from .utils import clean_html
+from .widgets import CheckboxWithInlineLabelWidget
+
+
+class CheckboxFormField(forms.BooleanField):
+    """Custom BooleanField that supports an inline label next to the checkbox."""
+
+    def __init__(self, *args, inline_label='', **kwargs):
+        self.inline_label = inline_label
+        # Set the custom widget
+        if 'widget' not in kwargs:
+            kwargs['widget'] = CheckboxWithInlineLabelWidget(inline_label=inline_label)
+        super().__init__(*args, **kwargs)
+
+
+class CheckboxField(models.BooleanField):
+    """
+    Custom BooleanField that supports an inline label for Django admin.
+    The inline label appears next to the checkbox, while help_text appears below.
+
+    Usage:
+        closed = CheckboxField(
+            'closed',
+            default=False,
+            help_text='Require login before accessing the platform.',
+            inline_label='Only allow users with approved email domains'
+        )
+    """
+
+    def __init__(self, *args, inline_label='', **kwargs):
+        self.inline_label = inline_label
+        super().__init__(*args, **kwargs)
+
+    def deconstruct(self):
+        """Support for Django migrations."""
+        name, path, args, kwargs = super().deconstruct()
+        if self.inline_label:
+            kwargs['inline_label'] = self.inline_label
+        return name, path, args, kwargs
+
+    def formfield(self, **kwargs):
+        """Return a form field with the custom widget."""
+        defaults = {
+            'form_class': CheckboxFormField,
+            'inline_label': self.inline_label,
+        }
+        defaults.update(kwargs)
+        return super().formfield(**defaults)
 
 
 class MoneyFormField(DjangoMoneyFormField):

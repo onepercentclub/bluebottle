@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
-from parler.models import TranslatableModel
 
 
 class Migration(migrations.Migration):
@@ -43,7 +42,6 @@ class Migration(migrations.Migration):
                 'verbose_name': 'member platform settings',
                 'verbose_name_plural': 'member platform settings',
             },
-            bases=(TranslatableModel,)
         ),
         migrations.AddField(
             model_name='custommemberfieldsettings',

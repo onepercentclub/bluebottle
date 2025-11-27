@@ -495,12 +495,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
         model = BB_USER_MODEL
         fields = ('id', 'email', 'url', 'segment_id', 'accepted', 'access_code')
 
-    def validate(self, attrs):
-        email = attrs.get('email', '')
-        access_code = attrs.get('access_code', '')
-        settings = MemberPlatformSettings.objects.get()
-        email_domain = email.split('@')[1]
-        email_domains = settings.email_domains
+    def validate_email(self, email):
         member = Member.objects.filter(email__iexact=email).first()
         if member:
             if member.is_active:
@@ -508,6 +503,14 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
                     'A member with this email address already exists.',
                     code='email_in_use',
                 )
+        return email
+
+    def validate(self, attrs):
+        email = attrs.get('email', '')
+        access_code = attrs.get('access_code', '')
+        settings = MemberPlatformSettings.objects.get()
+        email_domain = email.split('@')[1]
+        email_domains = settings.email_domains
 
         if (
             settings.account_creation_rules in ['whitelist', 'whitelist_and_request']
@@ -922,7 +925,6 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'disable_cookie_consent',
             'gtm_code',
             'closed',
-            'email_domain',
             'email_domains',
             'session_only',
             'confirm_signup',

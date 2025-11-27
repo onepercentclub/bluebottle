@@ -1,8 +1,8 @@
 import munch
+import stripe
 from django.core import mail
 from djmoney.money import Money
 from mock import patch
-import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
 from bluebottle.funding_stripe.models import StripePayoutAccount
@@ -131,6 +131,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
             {
                 "country": "NL",
                 "charges_enabled": True,
+                "business_type": "individual",
                 "individual": munch.munchify(
                     {
                         "email": "jhon@example.com",

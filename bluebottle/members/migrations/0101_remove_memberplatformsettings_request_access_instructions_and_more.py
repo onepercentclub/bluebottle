@@ -4,6 +4,54 @@ import django.db.models.deletion
 import parler.fields
 import parler.models
 from django.db import migrations, models
+from django.db.migrations.operations.base import Operation
+from django.db.migrations.state import ModelState
+from parler.models import TranslatableModel
+
+
+class AlterModelBases(Operation):
+    """
+    State-only operation: change model bases in the migration state,
+    but don't touch the database.
+    """
+
+    reduces_to_sql = False
+    reversible = True
+
+    def __init__(self, name, bases):
+        self.name = name
+        self.bases = bases  # tuple of strings
+
+    def state_forwards(self, app_label, state):
+        key = (app_label, self.name.lower())
+        model_state = state.models[key]
+
+        state.models[key] = ModelState(
+            app_label=model_state.app_label,
+            name=model_state.name,
+            fields=model_state.fields,
+            options=model_state.options,
+            bases=self.bases,
+            managers=model_state.managers,
+        )
+
+    def database_forwards(self, app_label, schema_editor, from_state, to_state):
+        # No DB changes
+        pass
+
+    def database_backwards(self, app_label, schema_editor, from_state, to_state):
+        # If you ever need to reverse, you could restore the old bases here
+        pass
+
+    def describe(self):
+        return f"Alter bases for {self.name}"
+
+    def deconstruct(self):
+        return (
+            self.__class__.__name__,
+            [],
+            {"name": self.name, "bases": self.bases},
+        )
 
 
 class Migration(migrations.Migration):
@@ -17,6 +65,12 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='memberplatformsettings',
             name='request_access_instructions',
+        ),
+        AlterModelBases(
+            name="MemberPlatformSettings",
+            bases=(
+                TranslatableModel,
+            ),
         ),
         migrations.CreateModel(
             name='MemberPlatformSettingsTranslation',

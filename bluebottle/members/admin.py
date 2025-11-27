@@ -148,8 +148,7 @@ class MemberPlatformSettingsAdmin(
     def request_access_info(self, obj):
         return admin_info_box(
             _(
-                'If at "Account creation rules" you selected that people can request access '
-                'to the platform, you have fill out instructions how to do so in the next section.'
+                'If you allow people to request access, use the fields below to explain how they can do this.'
             )
         )
 
@@ -159,10 +158,10 @@ class MemberPlatformSettingsAdmin(
             {
                 'fields': (
                     'closed',
+                    'background',
                     'login_methods',
                     'confirm_signup',
                     'explicit_terms',
-                    'background',
                     'account_creation_rules',
                     'email_domains',
                     'request_access_info',

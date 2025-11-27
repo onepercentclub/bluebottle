@@ -681,6 +681,20 @@ class PageSerializer(BaseCMSSerializer):
         resource_name = 'pages'
 
 
+class PlatformPageSerializer(BaseCMSSerializer):
+    id = serializers.CharField(source='slug', read_only=True)
+
+    def get_blocks(self, obj):
+        return obj.body.contentitems.all().translated()
+
+    class Meta(BaseCMSSerializer.Meta):
+        model = Page
+        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
+
+    class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
+        resource_name = 'pages'
+
+
 class NewsItemSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     main_image = SorlImageField('1920')

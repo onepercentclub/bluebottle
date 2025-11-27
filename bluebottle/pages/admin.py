@@ -1,6 +1,8 @@
 import json
 
+from adminsortable.admin import NonSortableParentAdmin
 from django import forms
+
 from django.conf import settings
 from django.contrib import admin
 from django.contrib import messages
@@ -18,8 +20,9 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
+from parler.admin import TranslatableAdmin
 
-from .models import Page
+from .models import Page, PlatformPage
 from .utils import export_page_to_dict, import_pages_from_data
 
 
@@ -27,6 +30,7 @@ class PageImportForm(Form):
     json_file = forms.FileField(label=_('JSON file'), help_text=_('Select a JSON file exported from another platform'))
 
 
+@admin.register(Page)
 class PageAdmin(PlaceholderFieldAdmin):
     model = Page
     list_display = ('title', 'slug', 'online', 'status',
@@ -194,7 +198,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         """Export selected pages to JSON file."""
         export_data = []
         for page in queryset:
-            export_data.append(export_page_to_dict(page, request=request))
+            export_data.append(export_page_to_dict(page))
 
         if not export_data:
             self.message_user(request, _("No pages were selected."), messages.WARNING)
@@ -287,4 +291,10 @@ class PageAdmin(PlaceholderFieldAdmin):
         return super(PageAdmin, self).changelist_view(request, extra_context)
 
 
-admin.site.register(Page, PageAdmin)
+@admin.register(PlatformPage)
+class PlatformPageAdmin(TranslatableAdmin, PlaceholderFieldAdmin, NonSortableParentAdmin):
+    model = Page
+    list_display = ('slug', 'title',)
+    fields = ['title', 'slug', 'body']
+
+    empty_value_display = '-empty-'

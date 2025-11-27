@@ -924,7 +924,6 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'disable_cookie_consent',
             'gtm_code',
             'closed',
-            'email_domain',
             'email_domains',
             'session_only',
             'confirm_signup',

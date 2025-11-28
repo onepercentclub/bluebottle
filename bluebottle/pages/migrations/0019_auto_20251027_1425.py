@@ -18,16 +18,23 @@ def migrate_start_page(apps, schema_editor):
 
     slugs = ['start', 'privacy', 'terms']
 
+    mapping = {
+        ('start', 'start'),
+        ('terms', 'terms'),
+        ('privacy', 'privacy'),
+        ('terms-and-conditions', 'terms'),
+        ('privacy-policy', 'privacy'),
+        ('algemene-voorwaarden', 'terms'),
+        ('impact-fonds', 'start'),
+    }
+
     tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
 
     with LocalTenant(tenant):
-        for new_slug in slugs:
+        for old_slug, new_slug in mapping:
             new_page, _ = PlatformPage.objects.get_or_create(slug=new_slug)
             for lang in Language.objects.all():
                 lang_code = lang.code
-                old_slug = new_slug
-                if new_slug == 'terms':
-                    old_slug = 'terms-and-conditions'
                 if new_slug == 'start':
                     settings, _ = SitePlatformSettings.objects.get_or_create()
                     settings_trans = SitePlatformSettingsTrans.objects.filter(master_id=settings.id,
@@ -71,6 +78,14 @@ def migrate_start_page(apps, schema_editor):
                     new_item = item.copy_to_placeholder(dst_ph)
                     new_item.language_code = lang_code
                     new_item.save()
+        PlatformPage.objects.filter(title='Terms and conditions').update(title='Terms of service')
+
+        if not PlatformPage.objects.filter(slug='terms').exists():
+            PlatformPage.objects.create(slug='terms', title='Terms of service')
+        if not PlatformPage.objects.filter(slug='privacy').exists():
+            PlatformPage.objects.create(slug='privacy', title='Privacy policy')
+        if not PlatformPage.objects.filter(slug='start').exists():
+            PlatformPage.objects.create(slug='start', title='Start')
 
 
 class Migration(migrations.Migration):

@@ -22,7 +22,7 @@ from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 from parler.admin import TranslatableAdmin
 
-from .models import Page
+from .models import Page, PageTypeChoices
 from .models import PlatformPage
 from .utils import export_page_to_dict, import_pages_from_data
 
@@ -324,7 +324,17 @@ class PageAdmin(PlaceholderFieldAdmin):
 @admin.register(PlatformPage)
 class PlatformPageAdmin(TranslatableAdmin, PlaceholderFieldAdmin, NonSortableParentAdmin):
     model = Page
-    list_display = ('slug', 'title',)
-    fields = ['title', 'slug', 'body']
+    readonly_fields = ('slug',)
+    list_display = ('title',)
+    fields = ['slug', 'title', 'body']
 
     empty_value_display = '-empty-'
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        if PlatformPage.objects.count() >= len(PageTypeChoices.choices):
+            return False
+        return True
+

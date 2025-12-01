@@ -346,6 +346,10 @@ class GrantPayout(TriggerMixin, models.Model):
             return Money(self.grants.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
         return self.grants.aggregate(total=Sum('amount'))['total']
 
+    @property
+    def grant(self):
+        return self.grants.first()
+
     class Meta(object):
         verbose_name = _('Grant payout')
         verbose_name_plural = _('Grant payouts')

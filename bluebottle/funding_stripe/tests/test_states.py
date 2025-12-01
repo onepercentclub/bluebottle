@@ -206,7 +206,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         self.account.update(self.stripe_account)
 
     def test_initial(self):
-        self.assertEqual(self.account.status, 'new')
+        self.assertEqual(self.account.status, 'incomplete')
 
     def test_pending(self):
         self.simulate_webhook([])

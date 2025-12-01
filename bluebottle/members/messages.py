@@ -5,7 +5,7 @@ from bluebottle.notifications.messages import TransitionMessage
 
 
 class AccountActivationMessage(TransitionMessage):
-    subject = pgettext('email', u'Welcome to {site_name}!')
+    subject = pgettext('email', u'Activate your {site_name} account')
     template = 'messages/account_activation'
 
     def get_recipients(self):

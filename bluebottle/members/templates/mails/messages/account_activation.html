@@ -8,10 +8,13 @@
 {% else %}
 {% blocktrans %}
 <h1>Welcome {{ first_name }}</h1>
-<p class="lead">You’re now officially part of the {{ site_name }} community. Connect, share and work with others on initiatives that you care about.</p>
+<p class="lead">Welcome to {{ site_name }}, great to have you here.</p>
 {% endblocktrans %}
 {% blocktrans %}
-<p>If you have any questions please don’t hesitate to contact {{ contact_email }}</p>
+<p>To get started, activate your account by setting your password and completing your profile.</p>
+{% endblocktrans %}
+{% blocktrans %}
+<p>The link below is valid for 24 hours.</p>
 {% endblocktrans %}
 {% endif %}
 {% endblock %}
@@ -21,7 +24,7 @@
 
 {% with url='/auth/set-password/?token='|add:uid|add:'-'|add:token %}
 <a href={% message_url url %}"
-       class="action-email">{% trans 'Set password' context 'email' %}</a>
+       class="action-email">{% trans 'Activate account' context 'email' %}</a>
 {% endwith %}
 {% else %}
     <a href="{% message_url %}"

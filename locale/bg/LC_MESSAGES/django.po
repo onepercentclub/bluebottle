@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-17 08:50+0100\n"
-"PO-Revision-Date: 2025-11-17 07:52\n"
+"POT-Creation-Date: 2025-12-01 08:50+0100\n"
+"PO-Revision-Date: 2025-12-01 07:55\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -42,8 +42,8 @@ msgstr "Детайли"
 
 #: bluebottle/activities/admin.py:213 bluebottle/activities/admin.py:336
 #: bluebottle/activities/admin.py:771 bluebottle/funding/admin.py:228
-#: bluebottle/funding/admin.py:467 bluebottle/funding/admin.py:645
-#: bluebottle/funding/admin.py:829 bluebottle/funding_stripe/admin.py:245
+#: bluebottle/funding/admin.py:474 bluebottle/funding/admin.py:652
+#: bluebottle/funding/admin.py:860 bluebottle/funding_stripe/admin.py:245
 #: bluebottle/grant_management/admin.py:280
 #: bluebottle/grant_management/admin.py:535 bluebottle/initiatives/admin.py:220
 #: bluebottle/time_based/admin.py:308 bluebottle/time_based/admin.py:438
@@ -908,7 +908,7 @@ msgstr "Подай"
 
 #: bluebottle/activities/states.py:194 bluebottle/funding/states.py:167
 #: bluebottle/funding/states.py:604 bluebottle/funding/states.py:684
-#: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:203
+#: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:217
 #: bluebottle/grant_management/states.py:109
 #: bluebottle/grant_management/states.py:285
 #: bluebottle/grant_management/states.py:365
@@ -1005,7 +1005,7 @@ msgstr "Автоматична отмяна"
 
 #: bluebottle/activities/states.py:303
 msgid "Cancel the activity automatically, because the initiative is cancelled."
-msgstr ""
+msgstr "Автоматично анулирайте активността, защото инициативата е отменена."
 
 #: bluebottle/activities/states.py:318 bluebottle/initiatives/states.py:207
 #: bluebottle/time_based/states/participants.py:198
@@ -1117,7 +1117,7 @@ msgstr "Приносът не успя."
 #: bluebottle/activities/states.py:404 bluebottle/activities/states.py:436
 #: bluebottle/funding/states.py:415 bluebottle/funding/states.py:508
 #: bluebottle/funding/states.py:589 bluebottle/funding/states.py:660
-#: bluebottle/funding_stripe/states.py:193
+#: bluebottle/funding_stripe/states.py:207
 #: bluebottle/grant_management/states.py:189
 #: bluebottle/grant_management/states.py:270
 #: bluebottle/grant_management/states.py:341
@@ -1794,7 +1794,7 @@ msgstr "Екипът на %(site_name)s"
 
 #: bluebottle/auth/views.py:40
 msgid "Authentication was cancelled"
-msgstr ""
+msgstr "Аутентификацията беше отменена"
 
 #: bluebottle/auth/views.py:47
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
@@ -1973,7 +1973,7 @@ msgstr "Език, използван за сайта и имейлите."
 
 #: bluebottle/bb_accounts/models.py:194
 msgid "Translate user content"
-msgstr ""
+msgstr "Преведете съдържанието на потребителя"
 
 #: bluebottle/bb_accounts/models.py:198
 msgid "share time and knowledge"
@@ -2743,7 +2743,7 @@ msgstr "Онлайн събития"
 msgid "Funding activities online"
 msgstr "Онлайн финансиращи активности"
 
-#: bluebottle/cms/models.py:171 bluebottle/funding/admin.py:302
+#: bluebottle/cms/models.py:171 bluebottle/funding/admin.py:307
 #: bluebottle/funding/models.py:579 bluebottle/statistics/models.py:94
 msgid "Donations"
 msgstr "Дарения"
@@ -3812,12 +3812,12 @@ msgstr "Моделът е създаден"
 msgid "Model has changed status"
 msgstr "Моделът е променил статуса"
 
-#: bluebottle/funding/admin.py:94
+#: bluebottle/funding/admin.py:96
 msgid "Payment"
 msgstr "Плащане"
 
-#: bluebottle/funding/admin.py:122 bluebottle/funding/filters.py:39
-#: bluebottle/funding_stripe/models.py:290
+#: bluebottle/funding/admin.py:123 bluebottle/funding/filters.py:39
+#: bluebottle/funding_stripe/models.py:292
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:22
 msgid "Currency"
 msgstr "Валута"
@@ -3831,29 +3831,29 @@ msgstr "Не можете да удължите срок до повече от 
 msgid "Date & amount"
 msgstr "Дата и сума"
 
-#: bluebottle/funding/admin.py:260
+#: bluebottle/funding/admin.py:261
 #, no-python-format
 msgid "% donated"
 msgstr "% дарено"
 
-#: bluebottle/funding/admin.py:268
+#: bluebottle/funding/admin.py:270
 #, no-python-format
 msgid "% matching"
 msgstr "% съвпадение"
 
-#: bluebottle/funding/admin.py:272
+#: bluebottle/funding/admin.py:275
 msgid "amount donated + matched"
 msgstr "сума дарена + съвпаднала"
 
-#: bluebottle/funding/admin.py:276
+#: bluebottle/funding/admin.py:280
 msgid "amount donated"
 msgstr "сума дарена"
 
-#: bluebottle/funding/admin.py:301
+#: bluebottle/funding/admin.py:305
 msgid "donations"
 msgstr "дарения"
 
-#: bluebottle/funding/admin.py:392 bluebottle/funding/models.py:348
+#: bluebottle/funding/admin.py:398 bluebottle/funding/models.py:348
 #: bluebottle/funding/templates/dashboard/grant_applications_ready_for_review.html:14
 #: bluebottle/funding/templates/dashboard/grantpayouts_ready_for_approval.html:14
 #: bluebottle/funding/templates/dashboard/payouts_ready_for_approval.html:14
@@ -3863,39 +3863,39 @@ msgstr "дарения"
 msgid "Amount"
 msgstr "Сума"
 
-#: bluebottle/funding/admin.py:397
+#: bluebottle/funding/admin.py:404
 msgid "Payout amount"
 msgstr "Сума на плащането"
 
-#: bluebottle/funding/admin.py:409
+#: bluebottle/funding/admin.py:416
 msgid "User"
 msgstr "Потребител"
 
-#: bluebottle/funding/admin.py:449
+#: bluebottle/funding/admin.py:456
 msgid "Sync donation with payment."
 msgstr "Синхронизиране на дарението с плащането."
 
-#: bluebottle/funding/admin.py:463 bluebottle/funding/admin.py:640
-#: bluebottle/funding/admin.py:825 bluebottle/funding_stripe/admin.py:241
+#: bluebottle/funding/admin.py:470 bluebottle/funding/admin.py:647
+#: bluebottle/funding/admin.py:856 bluebottle/funding_stripe/admin.py:241
 msgid "Basic"
 msgstr "Основен"
 
-#: bluebottle/funding/admin.py:595 bluebottle/funding/admin.py:614
+#: bluebottle/funding/admin.py:602 bluebottle/funding/admin.py:621
 #: bluebottle/members/admin.py:736 bluebottle/members/admin.py:764
 #: bluebottle/members/admin.py:806 bluebottle/members/admin.py:821
 msgid "None"
 msgstr "Няма"
 
-#: bluebottle/funding/admin.py:597
+#: bluebottle/funding/admin.py:604
 msgid "Funding activities"
 msgstr "Активности по финансиране"
 
-#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:418
+#: bluebottle/funding/admin.py:623 bluebottle/grant_management/models.py:418
 #: bluebottle/members/admin.py:823
 msgid "Grant applications"
 msgstr "Заявления за грантове"
 
-#: bluebottle/funding/admin.py:641 bluebottle/funding/filters.py:11
+#: bluebottle/funding/admin.py:648 bluebottle/funding/filters.py:11
 #: bluebottle/pages/admin.py:179 bluebottle/time_based/admin.py:242
 #: bluebottle/time_based/admin.py:331 bluebottle/time_based/admin.py:374
 #: bluebottle/time_based/admin.py:484 bluebottle/time_based/admin.py:542
@@ -4078,110 +4078,110 @@ msgstr "Можете да предоставите персонализиран�
 #: bluebottle/funding/messages/funding/activity_manager.py:31
 msgctxt "email"
 msgid "You have a new donation!💰"
-msgstr ""
+msgstr "Имате нова дарение!💰"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:47
 msgctxt "email"
 msgid "Your crowdfunding campaign deadline passed"
-msgstr ""
+msgstr "Срокът на вашата кампания за финансиране изтече"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:55
 #, python-brace-format
 msgctxt "email"
 msgid "Your campaign \"{title}\" has been successfully completed! 🎉"
-msgstr ""
+msgstr "Вашата кампания \"{title}\" беше успешно завършена! 🎉"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:63
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been rejected"
-msgstr ""
+msgstr "Вашата кампания за финансиране на {site_name} беше отхвърлена"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:71
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted a crowdfunding campaign on {site_name}"
-msgstr ""
+msgstr "Вие подадохте кампания за финансиране на {site_name}"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:79
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} needs work"
-msgstr ""
+msgstr "Вашата кампания за финансиране на {site_name} се нуждае от работа"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:87
 msgctxt "email"
 msgid "Your crowdfunding campaign has expired"
-msgstr ""
+msgstr "Вашата кампания за финансиране е изтекла"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:95
 #, python-brace-format
 msgctxt "email"
 msgid "The donations received for your campaign \"{title}\" will be refunded"
-msgstr ""
+msgstr "Даренията, получени за вашата кампания \"{title}\", ще бъдат върнати"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:103
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been approved!"
-msgstr ""
+msgstr "Вашата кампания за финансиране на {site_name} беше одобрена!"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:111
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" is open for new donations 💸"
-msgstr ""
+msgstr "Вашата кампания за финансиране \"{title}\" е отворена за нови дарения 💸"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:119
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" has been cancelled"
-msgstr ""
+msgstr "Вашата кампания за финансиране \"{title}\" беше отменена"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:148
 #: bluebottle/funding/messages/funding/activity_manager.py:156
 msgctxt "email"
 msgid "Action required for your crowdfunding campaign"
-msgstr ""
+msgstr "Изисква се действие за вашата кампания за финансиране"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:164
 #: bluebottle/funding/messages/funding/activity_manager.py:188
 #, python-brace-format
 msgctxt "email"
 msgid "Your identity has been verified on {site_name}"
-msgstr ""
+msgstr "Вашата идентичност беше потвърдена на {site_name}"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:172
 msgctxt "email"
 msgid "Action required for your identity verification"
-msgstr ""
+msgstr "Изисква се действие за потвърждение на идентичността"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:180
 msgctxt "email"
 msgid "Action required for identity verification"
-msgstr ""
+msgstr "Изисква се действие за потвърждение на идентичността"
 
 #: bluebottle/funding/messages/funding/contributor.py:8
 msgctxt "email"
 msgid "Thanks for your donation!"
-msgstr ""
+msgstr "Благодарим за вашето дарение!"
 
 #: bluebottle/funding/messages/funding/contributor.py:24
 #: bluebottle/funding/messages/funding/contributor.py:40
 #, python-brace-format
 msgctxt "email"
 msgid "Your donation for the campaign \"{title}\" will be refunded"
-msgstr ""
+msgstr "Вашето дарение за кампанията \"{title}\" ще бъде върнато"
 
 #: bluebottle/funding/messages/funding/platform_manager.py:12
 msgctxt "email"
 msgid "Live campaign identity verification failed!"
-msgstr ""
+msgstr "Потвърждението на идентичността по време на кампанията се провали!"
 
 #: bluebottle/funding/messages/funding/platform_manager.py:34
 msgctxt "email"
 msgid "Incomplete payout account for running campaign"
-msgstr ""
+msgstr "Непълна информация за плащане за текуща кампания"
 
 #: bluebottle/funding/messages/funding/reviewer.py:12
 #, python-brace-format
@@ -4320,95 +4320,95 @@ msgstr "прегледан"
 msgid "Public payout account"
 msgstr "Публична сметка за изплащане"
 
-#: bluebottle/funding/models.py:718
+#: bluebottle/funding/models.py:723
 msgid "IP address"
 msgstr "IP адрес"
 
-#: bluebottle/funding/models.py:725
+#: bluebottle/funding/models.py:730
 msgid "Plain KYC account"
 msgstr "Обикновена KYC сметка"
 
-#: bluebottle/funding/models.py:726
+#: bluebottle/funding/models.py:731
 msgid "Plain KYC accounts"
 msgstr "Обикновени KYC сметки"
 
-#: bluebottle/funding/models.py:806
+#: bluebottle/funding/models.py:811
 msgid "Individual person"
 msgstr "Индивидуално лице"
 
-#: bluebottle/funding/models.py:810
+#: bluebottle/funding/models.py:815
 msgid "Non-profit organization"
 msgstr "Неправителствена организация"
 
-#: bluebottle/funding/models.py:815
+#: bluebottle/funding/models.py:820
 msgid "Commercial company"
 msgstr "Търговска компания"
 
-#: bluebottle/funding/models.py:822
+#: bluebottle/funding/models.py:827
 msgid "Hide names from all donations"
 msgstr "Скрийте имената от всички дарения"
 
-#: bluebottle/funding/models.py:825
+#: bluebottle/funding/models.py:830
 msgid "Allow guests to donate rewards"
 msgstr "Позволи на гостите да дарят награди"
 
-#: bluebottle/funding/models.py:829
+#: bluebottle/funding/models.py:834
 msgid "Crowdfunding for verified organisations"
 msgstr "Краудфандинг за проверени организации"
 
-#: bluebottle/funding/models.py:832
+#: bluebottle/funding/models.py:837
 msgid "When enabled, campaign initiators must select from a list of organisations with a public payout account that will receive the raised money, rather than providing the bank account details themselves."
 msgstr "При активиране, инициаторите на кампании трябва да избират от списък с организации, които имат публична банкова сметка, за да получат събраните средства, вместо да предоставят банковите данни сами."
 
-#: bluebottle/funding/models.py:839
+#: bluebottle/funding/models.py:844
 msgid "Do IBAN bank account number vs. name checks"
 msgstr "Проверете IBAN номера на банковата сметка срещу име"
 
-#: bluebottle/funding/models.py:842
+#: bluebottle/funding/models.py:847
 msgid "In the KYC flow do a check to see if bank account number and name match. This will be done by the Surepay API, and only Dutch IBANs are supported. "
-msgstr "В процеса на KYC направете проверка дали IBAN номерът на банковата сметка и името съвпадат. Това ще бъде направено от API на Surepay и само холандските IBAN са поддържани."
+msgstr "В процеса на KYC направете проверка дали IBAN номерът на банковата сметка и името съвпадат. Това ще бъде направено от API на Surepay и само холандските IBAN са поддържани. "
 
-#: bluebottle/funding/models.py:848
+#: bluebottle/funding/models.py:853
 msgid "Name to use for match funding"
 msgstr "Име, което да се използва за съвпадение на финансирането"
 
-#: bluebottle/funding/models.py:852
+#: bluebottle/funding/models.py:857
 msgid "Change this if you want to use something else then the platform name for matching amounts."
 msgstr "Променете това, ако искате да използвате нещо друго вместо името на платформата за съвпадение на суми."
 
-#: bluebottle/funding/models.py:856
+#: bluebottle/funding/models.py:861
 msgid "verification types"
 msgstr "типове на проверка"
 
-#: bluebottle/funding/models.py:871 bluebottle/funding/models.py:872
+#: bluebottle/funding/models.py:876 bluebottle/funding/models.py:877
 msgid "funding settings"
 msgstr "настройки за финансиране"
 
-#: bluebottle/funding/models.py:878
+#: bluebottle/funding/models.py:883
 msgid "Match"
 msgstr "Съответствие"
 
-#: bluebottle/funding/models.py:879
+#: bluebottle/funding/models.py:884
 msgid "Mistype"
 msgstr "Грешка в написването"
 
-#: bluebottle/funding/models.py:880
+#: bluebottle/funding/models.py:885
 msgid "Close match"
 msgstr "Близко съвпадение"
 
-#: bluebottle/funding/models.py:881
+#: bluebottle/funding/models.py:886
 msgid "No match"
 msgstr "Няма съответствие"
 
-#: bluebottle/funding/models.py:892
+#: bluebottle/funding/models.py:897
 msgid "Hashed IBAN to check against"
 msgstr "Хеширан IBAN за проверка"
 
-#: bluebottle/funding/models.py:895
+#: bluebottle/funding/models.py:900
 msgid "Result of the IBAN check"
 msgstr "Резултат от проверката на IBAN"
 
-#: bluebottle/funding/models.py:903
+#: bluebottle/funding/models.py:908
 msgid "Name of the account holder"
 msgstr "Име на притежателя на сметката"
 
@@ -4803,7 +4803,7 @@ msgstr "Банковата сметка все още трябва да бъде
 msgid "Bank account is rejected"
 msgstr "Банковата сметка е отхвърлена"
 
-#: bluebottle/funding/states.py:590 bluebottle/funding_stripe/states.py:194
+#: bluebottle/funding/states.py:590 bluebottle/funding_stripe/states.py:208
 #: bluebottle/grant_management/states.py:271
 msgid "Bank account details are entered."
 msgstr "Детайлите на банковата сметка са въведени."
@@ -4812,20 +4812,20 @@ msgstr "Детайлите на банковата сметка са въвед�
 msgid "Bank account is missing details"
 msgstr "Банковата сметка липсва детайли"
 
-#: bluebottle/funding/states.py:605 bluebottle/funding_stripe/states.py:204
+#: bluebottle/funding/states.py:605 bluebottle/funding_stripe/states.py:218
 #: bluebottle/grant_management/states.py:286
 msgid "Reject bank account"
 msgstr "Отхвърлете банковата сметка"
 
 #: bluebottle/funding/states.py:612 bluebottle/funding/states.py:675
 #: bluebottle/funding/states.py:710 bluebottle/funding_stripe/states.py:178
-#: bluebottle/funding_stripe/states.py:215
+#: bluebottle/funding_stripe/states.py:229
 #: bluebottle/grant_management/states.py:293
 #: bluebottle/grant_management/states.py:356
 msgid "Verify"
 msgstr "Потвърдете"
 
-#: bluebottle/funding/states.py:613 bluebottle/funding_stripe/states.py:216
+#: bluebottle/funding/states.py:613 bluebottle/funding_stripe/states.py:230
 #: bluebottle/grant_management/states.py:294
 msgid "Verify that the bank account is complete."
 msgstr "Потвърдете, че банковата сметка е пълна."
@@ -4872,11 +4872,13 @@ msgstr "Потвърдете сметката за изплащане."
 msgid "Reject the payout account."
 msgstr "Отхвърлете сметката за изплащане."
 
-#: bluebottle/funding/states.py:692 bluebottle/grant_management/states.py:373
+#: bluebottle/funding/states.py:692 bluebottle/funding_stripe/states.py:191
+#: bluebottle/grant_management/states.py:373
 msgid "Set incomplete"
 msgstr "Задайте непълно"
 
-#: bluebottle/funding/states.py:694 bluebottle/grant_management/states.py:375
+#: bluebottle/funding/states.py:694 bluebottle/funding_stripe/states.py:193
+#: bluebottle/grant_management/states.py:375
 msgid "Mark the payout account as incomplete. The initiator will have to add more information."
 msgstr "Отбележете сметката за изплащане като непълна. Инициаторът ще трябва да добави повече информация."
 
@@ -5061,7 +5063,11 @@ msgid "\n"
 "Your campaign will be live and people can start donating.<br>\n"
 "<br>\n"
 "Share your crowdfunding campaign far and wide to inspire support and attract contributions!\n"
-msgstr ""
+msgstr "\n"
+"Добри новини, ваша кампания с \"%(title)s\" беше одобрена!\n"
+"Вашата кампания ще бъде активна и хората могат да започнат да даряват.<br>\n"
+"<br>\n"
+"Споделете вашата кампания за финансиране широко, за да вдъхновите подкрепа и да привлечете дарения!\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_needs_work.html:5
 #, python-format
@@ -5070,7 +5076,10 @@ msgid "\n"
 "    Your crowdfunding campaign \"%(title)s\" has been reviewed and needs work.\n"
 "    <br><br>\n"
 "    The platform manager will be in contact to help you make some changes to your campaign.\n"
-msgstr ""
+msgstr "\n"
+"Вашата кампания за финансиране \"%(title)s\" беше прегледана и се нуждае от работа.\n"
+"<br><br>\n"
+"Управляващият платформа ще се свърже с вас, за да ви помогне да направите някои промени в кампанията.\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_rejected.html:6
 #, python-format
@@ -5080,7 +5089,11 @@ msgid "\n"
 "            <br /><br />\n"
 "            If you have any questions, you can contact the platform manager at %(contact_email)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"За съжаление, вашата кампания за финансиране \"%(title)s\" беше отхвърлена.\n"
+"<br /><br />\n"
+"Ако имате въпроси, можете да се свържете с управляващия платформа на %(contact_email)s.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_submitted.html:5
 #, python-format
@@ -5101,7 +5114,22 @@ msgid "\n"
 "        </ul>\n"
 "        You will not be able to edit the application when it is in review.\n"
 "    </p>\n"
-msgstr ""
+msgstr "\n"
+"    <p>\n"
+"        Вашата кампания за финансиране \"%(title)s\" беше подадена на %(site_name)s.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        <b>Ето какво следва:</b>\n"
+"        <ul>\n"
+"            <li>\n"
+"                Вашата кампания ще бъде прегледана от управляващия платформа.\n"
+"            </li>\n"
+"            <li>\n"
+"                След одобрение, вашата кампания ще бъде активна и хората могат да започнат да даряват.\n"
+"            </li>\n"
+"        </ul>\n"
+"        Няма да можете да редактирате приложението, когато е в преглед.\n"
+"    </p>\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/donation_success_owner.html:5
 msgctxt "email"
@@ -5159,7 +5187,10 @@ msgid "\n"
 "            Your campaign deadline for <i>%(title)s\"</i> passed. Unfortunately, you didn’t reach your campaign goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Срокът на вашата кампания за <i>%(title)s\"</i> изтече. За съжаление, не постигнахте целта на кампанията в зададения срок.\n"
+"            Ще ви изпратим последващ имейл с още информация скоро.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_realised_owner.html:5
 #, python-format
@@ -5168,7 +5199,10 @@ msgid "\n"
 "        Congratulations, your campaign deadline for \"%(title)s\" has passed and you've successfully reached your campaign goal!<br>\n"
 "        Head over to your campaign page and thank your awesome backers for their donations and support.<br>\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Поздравления, срокът на вашата кампания за \"%(title)s\" изтече и успешно постигнахте целта на кампанията!<br>\n"
+"        Отидете на страницата на вашата кампания и благодарете на невероятните си поддръжници за даренията и подкрепата.<br>\n"
+"    "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_refunded.html:6
 #, python-format
@@ -5237,12 +5271,18 @@ msgid "\n"
 "            <br/><br/>\n"
 "            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Работите по кампания за финансиране \"%(title)s\".\n"
+"            <br/><br/>\n"
+"            Вие подадохте информация за потвърждение на вашата идентичност или на идентичността на организация, но в някои случаи са необходими допълнителни данни за успешна проверка.\n"
+"            <br/><br/>\n"
+"            Моля, предоставете тази информация възможно най-скоро, за да избегнете проблеми с кампанията или да ги разрешите бързо.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_marked_incomplete.html:19
 msgctxt "email"
 msgid "Provide details"
-msgstr ""
+msgstr "Предоставете подробности"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_rejected.html:6
 #, python-format
@@ -5292,7 +5332,19 @@ msgid "\n"
 "                </li>\n"
 "            </ol>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Добри новини, вашата идентичност беше успешно потвърдена и можете да продължите с вашата кампания за финансиране.\n"
+"            <br><br>\n"
+"            <b>Ето какво следва:</b>\n"
+"            <ol>\n"
+"                <li>\n"
+"                    Подайте вашата кампания и тя ще бъде прегледана от управляващия платформа.\n"
+"                </li>\n"
+"                <li>\n"
+"                    След одобрение, вашата кампания ще бъде активна и хората могат да започнат да даряват.\n"
+"                </li>\n"
+"            </ol>\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:6
 #, python-format
@@ -5327,7 +5379,17 @@ msgid "\n"
 "    <br />\n"
 "    <br />\n"
 "    Please do this as soon as possible. "
-msgstr ""
+msgstr "\n"
+"    Потвърждението на идентичността не успя за организация, която управлявате.\n"
+"    <br />\n"
+"    <br />\n"
+"    По-рано беше подадена информация за потвърждение на вашата идентичност, но\n"
+"    за съжаление, това не беше успешно. Това може да се дължи на различни\n"
+"    причини. Моля, проверете връзката по-долу и намерете линк за актуализиране на вашата\n"
+"    информация. Ако все още имате проблеми, свържете се с управляващия платформа на %(contact_email)s.\n"
+"    <br />\n"
+"    <br />\n"
+"    Моля, направете това възможно най-скоро. "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:22
 msgctxt "email"
@@ -5343,7 +5405,12 @@ msgid "\n"
 "            This means that people can now collect funds for your organisation.\n"
 "            These funds will be paid out straight to your organisation once a crowdfudning campaign has come to an end.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Чудесни новини! Вашата идентичност беше успешно потвърдена на %(site_name)s.\n"
+"            <br/>\n"
+"            Това означава, че хората вече могат да събират средства за вашата организация.\n"
+"            Тези средства ще бъдат изплатени директно на вашата организация, след като кампанията за финансиране приключи.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_activity_refunded_donor.html:7
 #, python-format
@@ -5372,7 +5439,12 @@ msgid "\n"
 "            Either you requested this refund or the campaign didn’t reach its campaign goal.\n"
 "            If you have any questions about this refund, please contact %(contact_email)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Здравейте %(recipient_name)s,<br/>\n"
+"            Вашето дарение за \"%(title)s\" ще бъде напълно върнато в срок от 10 дни.\n"
+"            Или вие поискахте това възстановяване, или кампанията не постигна целта си.\n"
+"            Ако имате въпроси относно това възстановяване, моля свържете се с %(contact_email)s.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:8
 #, python-format
@@ -5381,7 +5453,10 @@ msgid "\n"
 "        Hi %(recipient_name)s,<br />\n"
 "        Thanks for your donation!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Здравейте %(recipient_name)s,<br />\n"
+"        Благодарим за вашето дарение!\n"
+"    "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:17
 #, python-format
@@ -5782,89 +5857,89 @@ msgstr "Отвори дейности, които са спряни"
 msgid "Update business type at stripe"
 msgstr "Актуализирай типа на бизнеса в Stripe"
 
-#: bluebottle/funding_stripe/models.py:241
+#: bluebottle/funding_stripe/models.py:243
 msgid "Country of primary stripe account"
 msgstr "Държава на основната сметка в stripe"
 
-#: bluebottle/funding_stripe/models.py:243
+#: bluebottle/funding_stripe/models.py:245
 msgid "Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. "
-msgstr "Обикновено това е Нидерландия, но чрез заместване на ключа на stripe, може да се избере друга основна сметка в stripe."
+msgstr "Обикновено това е Нидерландия, но чрез заместване на ключа на stripe, може да се избере друга основна сметка в stripe. "
 
-#: bluebottle/funding_stripe/models.py:251
+#: bluebottle/funding_stripe/models.py:253
 msgid "Stripe publishable key"
 msgstr "публикуем ключ на Stripe"
 
-#: bluebottle/funding_stripe/models.py:252
-#: bluebottle/funding_stripe/models.py:260
+#: bluebottle/funding_stripe/models.py:254
+#: bluebottle/funding_stripe/models.py:262
 msgid "This is only needed if you want to use a specific Stripe account."
 msgstr "Това е необходимо само ако искаш да използваш конкретна сметка в Stripe."
 
-#: bluebottle/funding_stripe/models.py:259
+#: bluebottle/funding_stripe/models.py:261
 msgid "Stripe secret key"
 msgstr "тайен ключ на Stripe"
 
-#: bluebottle/funding_stripe/models.py:267
+#: bluebottle/funding_stripe/models.py:269
 msgid "Stripe connect webhook secret"
 msgstr "тайна за свързващия webhook на Stripe"
 
-#: bluebottle/funding_stripe/models.py:268
+#: bluebottle/funding_stripe/models.py:270
 msgid "The secret for connect webhook."
 msgstr "Тайна за свързващия webhook."
 
-#: bluebottle/funding_stripe/models.py:275
+#: bluebottle/funding_stripe/models.py:277
 msgid "Stripe payment intents webhook secret"
 msgstr "тайна на Stripe за уебхук на плащанията"
 
-#: bluebottle/funding_stripe/models.py:276
+#: bluebottle/funding_stripe/models.py:278
 msgid "The secret for payment intents webhook."
 msgstr "Тайна за уебхук за плащания."
 
-#: bluebottle/funding_stripe/models.py:283
+#: bluebottle/funding_stripe/models.py:285
 msgid "Stripe payment checkout session webhook secret"
 msgstr "Тайна на уебхука за сесия за плащане Stripe"
 
-#: bluebottle/funding_stripe/models.py:284
+#: bluebottle/funding_stripe/models.py:286
 msgid "The secret for payment checkout session webhook."
 msgstr "Тайната за уебхука на сесията за плащане."
 
-#: bluebottle/funding_stripe/models.py:291
+#: bluebottle/funding_stripe/models.py:293
 msgid "The currency for the global account."
 msgstr "Валутата за глобалната сметка."
 
-#: bluebottle/funding_stripe/models.py:336
+#: bluebottle/funding_stripe/models.py:338
 msgid "Personal"
 msgstr "Личен"
 
-#: bluebottle/funding_stripe/models.py:341
+#: bluebottle/funding_stripe/models.py:343
 msgid "Starts with 'acct_...'"
 msgstr "Започва с 'acct_...'"
 
-#: bluebottle/funding_stripe/models.py:344
+#: bluebottle/funding_stripe/models.py:346
 msgid "Verification type"
 msgstr "Тип проверка"
 
-#: bluebottle/funding_stripe/models.py:416
+#: bluebottle/funding_stripe/models.py:418
 #, python-format
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Не се отнася - набиране на средства за проект с добро намерение на %(platform)s, платформа на GoodUp."
 
-#: bluebottle/funding_stripe/models.py:617
+#: bluebottle/funding_stripe/models.py:634
 msgid "stripe payout account"
 msgstr "сметка за плащания на Stripe"
 
-#: bluebottle/funding_stripe/models.py:618
+#: bluebottle/funding_stripe/models.py:635
 msgid "stripe payout accounts"
 msgstr "сметки за плащания на Stripe"
 
-#: bluebottle/funding_stripe/models.py:629
+#: bluebottle/funding_stripe/models.py:646
 msgid "Starts with 'ba_...'"
 msgstr "Започва с 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:677
+#: bluebottle/funding_stripe/models.py:694
 msgid "Bank account"
 msgstr "Банкова сметка"
 
-#: bluebottle/funding_stripe/models.py:678
+#: bluebottle/funding_stripe/models.py:695
 msgid "Bank accounts"
 msgstr "Банкови сметки"
 
@@ -6283,42 +6358,42 @@ msgstr "Информация за сметката не е налична"
 #, python-brace-format
 msgctxt "email"
 msgid "Your grant application on {site_name} has been rejected"
-msgstr ""
+msgstr "Вашето заявление за грант на {site_name} беше отхвърлено"
 
 #: bluebottle/grant_management/messages/activity_manager.py:42
 #, python-brace-format
 msgctxt "email"
 msgid "You have submitted a grant application on {site_name}"
-msgstr ""
+msgstr "Вие подадохте заявление за грант на {site_name}"
 
 #: bluebottle/grant_management/messages/activity_manager.py:47
 #, python-brace-format
 msgctxt "email"
 msgid "The grant application you submitted on {site_name} needs work"
-msgstr ""
+msgstr "Заявлението за грант, което подадохте на {site_name} се нуждае от работа"
 
 #: bluebottle/grant_management/messages/activity_manager.py:52
 #, python-brace-format
 msgctxt "email"
 msgid "Your grant application on {site_name} has been approved!"
-msgstr ""
+msgstr "Вашето заявление за грант на {site_name} беше одобрено!"
 
 #: bluebottle/grant_management/messages/activity_manager.py:57
 #, python-brace-format
 msgctxt "email"
 msgid "Your grant application on {site_name} has been cancelled"
-msgstr ""
+msgstr "Вашето заявление за грант на {site_name} беше отменено"
 
 #: bluebottle/grant_management/messages/activity_manager.py:62
 #: bluebottle/grant_management/messages/activity_manager.py:71
 msgctxt "email"
 msgid "Action required for your grant application"
-msgstr ""
+msgstr "Изисква се действие за вашето заявление за грант"
 
 #: bluebottle/grant_management/messages/activity_manager.py:80
 msgctxt "email"
 msgid "Your identity has been verified"
-msgstr ""
+msgstr "Вашата идентичност беше потвърдена"
 
 #: bluebottle/grant_management/messages/grant_provider.py:9
 #, python-brace-format
@@ -6983,55 +7058,55 @@ msgstr "Преглед на инициативата"
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted an initiative on {site_name}"
-msgstr ""
+msgstr "Вие подадохте инициатива на {site_name}"
 
 #: bluebottle/initiatives/messages/initiator.py:31
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been approved!"
-msgstr ""
+msgstr "Вашата инициатива на {site_name} беше одобрена!"
 
 #: bluebottle/initiatives/messages/initiator.py:36
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been published!"
-msgstr ""
+msgstr "Вашата инициатива на {site_name} беше публикувана!"
 
 #: bluebottle/initiatives/messages/initiator.py:41
 #, python-brace-format
 msgctxt "email"
 msgid "The initiative you submitted on {site_name} needs work"
-msgstr ""
+msgstr "Инициативата, която подадохте на {site_name} се нуждае от работа"
 
 #: bluebottle/initiatives/messages/initiator.py:46
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been rejected"
-msgstr ""
+msgstr "Вашата инициатива на {site_name} беше отхвърлена"
 
 #: bluebottle/initiatives/messages/initiator.py:51
 #, python-brace-format
 msgctxt "email"
 msgid "The initiative \"{title}\" has been cancelled."
-msgstr ""
+msgstr "Инициативата \"{title}\" беше отменена."
 
 #: bluebottle/initiatives/messages/reviewer.py:41
 #, python-brace-format
 msgctxt "email"
 msgid "A new initiative is ready to be reviewed on {site_name}"
-msgstr ""
+msgstr "Нова инициатива е готова за преглед на {site_name}"
 
 #: bluebottle/initiatives/messages/reviewer.py:46
 #, python-brace-format
 msgctxt "email"
 msgid "A new initiative has been published on {site_name}!"
-msgstr ""
+msgstr "Нова инициатива беше публикувана на {site_name}!"
 
 #: bluebottle/initiatives/messages/reviewer.py:55
 #, python-brace-format
 msgctxt "email"
 msgid "You are assigned to review \"{title}\"."
-msgstr ""
+msgstr "Вие сте назначени да прегледате \"{title}\"."
 
 #: bluebottle/initiatives/models.py:52
 msgid "reviewer"
@@ -7618,7 +7693,7 @@ msgstr "Профил"
 
 #: bluebottle/members/admin.py:163
 msgid "Translations"
-msgstr ""
+msgstr "Преводи"
 
 #: bluebottle/members/admin.py:171
 msgid "Privacy"
@@ -7759,14 +7834,14 @@ msgstr "Изпратете имейл за приветствие"
 #: bluebottle/members/messages.py:8
 #, python-brace-format
 msgctxt "email"
-msgid "Welcome to {site_name}!"
+msgid "Activate your {site_name} account"
 msgstr ""
 
 #: bluebottle/members/messages.py:16
 #, python-brace-format
 msgctxt "email"
 msgid "Activate your account for {site_name}"
-msgstr ""
+msgstr "Активирайте вашия акаунт за {site_name}"
 
 #: bluebottle/members/models.py:28 bluebottle/notifications/models.py:55
 msgid "Facebook"
@@ -7774,19 +7849,19 @@ msgstr "Facebook"
 
 #: bluebottle/members/models.py:29
 msgid "Google"
-msgstr ""
+msgstr "Google"
 
 #: bluebottle/members/models.py:37
 msgid "Platform"
-msgstr ""
+msgstr "Платформа"
 
 #: bluebottle/members/models.py:38
 msgid "Secret"
-msgstr ""
+msgstr "Тайна"
 
 #: bluebottle/members/models.py:39
 msgid "Client id"
-msgstr ""
+msgstr "Идентификатор на клиента"
 
 #: bluebottle/members/models.py:44
 msgid "Email/password combination"
@@ -7814,7 +7889,7 @@ msgstr "затворен"
 
 #: bluebottle/members/models.py:59
 msgid "Require login before accessing the platform"
-msgstr "Изисквайте вход преди достъп до платформата"
+msgstr ""
 
 #: bluebottle/members/models.py:62
 msgid "create initiatives"
@@ -7858,19 +7933,19 @@ msgstr "методи за влизане"
 
 #: bluebottle/members/models.py:97
 msgid "confirm signup"
-msgstr "потвърдете регистрацията"
+msgstr ""
 
 #: bluebottle/members/models.py:97
 msgid "Require verifying the user's email before signup"
-msgstr "Изисквайте потвърдителен имейл на потребителя преди регистрация"
+msgstr ""
 
 #: bluebottle/members/models.py:100
 msgid "email domains"
-msgstr "домейни на имейли"
+msgstr ""
 
 #: bluebottle/members/models.py:102
 msgid "Domain that all email should belong to"
-msgstr "Домен, на който трябва да принадлежат всички имейли"
+msgstr ""
 
 #: bluebottle/members/models.py:106
 msgid "session only"
@@ -7914,15 +7989,15 @@ msgstr "Добавянето на скрипта GTM на платформата
 
 #: bluebottle/members/models.py:144
 msgid "background"
-msgstr "фон"
+msgstr ""
 
 #: bluebottle/members/models.py:155
 msgid "translate user content"
-msgstr ""
+msgstr "превеждайте съдържанието на потребителя"
 
 #: bluebottle/members/models.py:156
 msgid "Give users the option to translate user generated content."
-msgstr ""
+msgstr "Дайте на потребителите опция да преведат генерираното от потребителя съдържание."
 
 #: bluebottle/members/models.py:161
 msgid "enable gender"
@@ -8200,24 +8275,25 @@ msgstr "Да, сигурен съм"
 #, python-format
 msgid "\n"
 "<h1>Welcome %(first_name)s</h1>\n"
-"<p class=\"lead\">You’re now officially part of the %(site_name)s community. Connect, share and work with others on initiatives that you care about.</p>\n"
-msgstr "\n"
-"<h1>Добре дошли %(first_name)s</h1>\n"
-"<p class=\"lead\">Сега вие официално сте част от общността на %(site_name)s. Свържете се, споделете и работете с други по инициативи, които ви интересуват.</p>\n"
+"<p class=\"lead\">Welcome to %(site_name)s, great to have you here.</p>\n"
+msgstr ""
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:13
-#, python-format
 msgid "\n"
-"<p>If you have any questions please don’t hesitate to contact %(contact_email)s</p>\n"
-msgstr "\n"
-"<p>Ако имате въпроси, не се колебайте да се свържете с %(contact_email)s</p>\n"
+"<p>To get started, activate your account by setting your password and completing your profile.</p>\n"
+msgstr ""
 
-#: bluebottle/members/templates/mails/messages/account_activation.html:24
+#: bluebottle/members/templates/mails/messages/account_activation.html:16
+msgid "\n"
+"<p>The link below is valid for 24 hours.</p>\n"
+msgstr ""
+
+#: bluebottle/members/templates/mails/messages/account_activation.html:27
 msgctxt "email"
-msgid "Set password"
-msgstr "Задайте паролата"
+msgid "Activate account"
+msgstr ""
 
-#: bluebottle/members/templates/mails/messages/account_activation.html:28
+#: bluebottle/members/templates/mails/messages/account_activation.html:31
 msgctxt "email"
 msgid "Take me there"
 msgstr "Отведи ме там"
@@ -8250,11 +8326,11 @@ msgstr "Създайте паролата си"
 
 #: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:27
 msgid "JSON file"
-msgstr ""
+msgstr "JSON файл"
 
 #: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:27
 msgid "Select a JSON file exported from another platform"
-msgstr ""
+msgstr "Изберете JSON файл, експортиран от друга платформа"
 
 #: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:52
 #: bluebottle/slides/admin.py:39
@@ -8280,26 +8356,26 @@ msgstr "Маркирайте избраните записи като публи
 
 #: bluebottle/news/admin.py:168
 msgid "No news items were selected."
-msgstr ""
+msgstr "Не са избрани новини."
 
 #: bluebottle/news/admin.py:180
 msgid "Export selected news items"
-msgstr ""
+msgstr "Експортирайте избраните новини"
 
 #: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:264
 msgid "Invalid JSON file. Please check the file format."
-msgstr ""
+msgstr "Невалиден JSON файл. Моля, проверете формата на файла."
 
 #: bluebottle/news/admin.py:234
 #, python-brace-format
 msgid "Error importing news items: {0}"
-msgstr ""
+msgstr "Грешка при импортиране на новини: {0}"
 
 #: bluebottle/news/admin.py:245
 #: bluebottle/news/templates/admin/news/newsitem/change_list.html:8
 #: bluebottle/news/templates/admin/news/newsitem/import.html:9
 msgid "Import news items"
-msgstr ""
+msgstr "Импортирайте новини"
 
 #: bluebottle/news/models.py:27
 msgid "Main image"
@@ -8357,16 +8433,16 @@ msgstr "сега"
 
 #: bluebottle/news/templates/admin/news/newsitem/change_form.html:7
 msgid "Export news item"
-msgstr ""
+msgstr "Експортирайте новинарски елемент"
 
 #: bluebottle/news/templates/admin/news/newsitem/import.html:14
 msgid "Upload a JSON file exported from another platform to import news items."
-msgstr ""
+msgstr "Качете JSON файл, експортиран от друга платформа, за да импортирате новини."
 
 #: bluebottle/news/templates/admin/news/newsitem/import.html:38
 #: bluebottle/pages/templates/admin/pages/page/import.html:38
 msgid "Import"
-msgstr ""
+msgstr "Импортиране"
 
 #: bluebottle/news/templates/admin/news/newsitem/import_message.html:5
 #, python-format
@@ -8376,8 +8452,12 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s news items were imported\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 новинарски елемент беше импортиран\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s новинарски елемента бяха импортирани\n"
+"        "
 
 #: bluebottle/news/templates/admin/news/newsitem/import_message.html:12
 #, python-format
@@ -8387,12 +8467,16 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s news items were updated\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 новинарски елемент беше актуализиран\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s новинарски елемента бяха актуализирани\n"
+"        "
 
 #: bluebottle/news/templates/admin/news/newsitem/import_message.html:19
 msgid "No news items were imported or updated."
-msgstr ""
+msgstr "Не бяха импортирани или актуализирани новини."
 
 #: bluebottle/notifications/admin.py:141
 msgid "URL of the platform"
@@ -8448,7 +8532,7 @@ msgstr "Повдигнете грешка"
 
 #: bluebottle/notifications/management/commands/preview_all_messages.py:727
 msgid "test"
-msgstr ""
+msgstr "тест"
 
 #: bluebottle/notifications/models.py:54
 msgid "Twitter"
@@ -8640,22 +8724,22 @@ msgstr "Телефонен номер"
 
 #: bluebottle/pages/admin.py:200
 msgid "No pages were selected."
-msgstr ""
+msgstr "Не са избрани страници."
 
 #: bluebottle/pages/admin.py:212
 msgid "Export selected pages"
-msgstr ""
+msgstr "Експортирайте избраните страници"
 
 #: bluebottle/pages/admin.py:266
 #, python-brace-format
 msgid "Error importing pages: {0}"
-msgstr ""
+msgstr "Грешка при импортиране на страници: {0}"
 
 #: bluebottle/pages/admin.py:277
 #: bluebottle/pages/templates/admin/pages/page/change_list.html:8
 #: bluebottle/pages/templates/admin/pages/page/import.html:9
 msgid "Import pages"
-msgstr ""
+msgstr "Импортирайте страници"
 
 #: bluebottle/pages/models.py:27
 msgid "Link title"
@@ -8738,11 +8822,11 @@ msgstr "Покажете заглавието на тази страница в 
 
 #: bluebottle/pages/templates/admin/pages/page/change_form.html:7
 msgid "Export page"
-msgstr ""
+msgstr "Експортиране на страница"
 
 #: bluebottle/pages/templates/admin/pages/page/import.html:14
 msgid "Upload a JSON file exported from another platform to import pages."
-msgstr ""
+msgstr "Качете JSON файл, експортиран от друга платформа, за да импортирате страници."
 
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:5
 #, python-format
@@ -8752,8 +8836,12 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s pages were imported\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 страница беше импортирана\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s страници бяха импортирани\n"
+"        "
 
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:12
 #, python-format
@@ -8763,12 +8851,16 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s pages were updated\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 страница беше актуализирана\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s страници бяха актуализирани\n"
+"        "
 
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:19
 msgid "No pages were imported or updated."
-msgstr ""
+msgstr "Не бяха импортирани или актуализирани страници."
 
 #: bluebottle/redirects/models.py:8
 msgid "redirect from"
@@ -9071,7 +9163,7 @@ msgstr "Английски"
 #: bluebottle/settings/local.py:726 tenants/abn/settings.py:26
 #: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
-#: tenants/bedrijven-voor-amsterdam/settings.py:26
+#: tenants/bedrijven-voor-amsterdam/settings.py:26 tenants/bmw/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
 #: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
 #: tenants/crowdfunding-voornatuur/settings.py:26
@@ -9102,20 +9194,29 @@ msgstr "Английски"
 msgid "Dutch"
 msgstr "Холандски"
 
-#: bluebottle/settings/local.py:727 tenants/mars/settings.py:28
+#: bluebottle/settings/local.py:727 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
+msgid "French"
+msgstr "Френски"
+
+#: bluebottle/settings/local.py:728 tenants/mars/settings.py:28
 msgid "Spanish"
-msgstr ""
+msgstr "Испански"
 
-#: bluebottle/settings/local.py:728 tenants/mars/settings.py:29
+#: bluebottle/settings/local.py:729 tenants/mars/settings.py:29
 msgid "German"
-msgstr ""
+msgstr "Немски"
 
-#: bluebottle/settings/local.py:729
-msgid "Bulgarian"
-msgstr ""
+#: bluebottle/settings/local.py:730
+msgid "Portuguese"
+msgstr "Португалски"
 
-#: bluebottle/settings/local.py:730 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:731 tenants/mars/settings.py:30
 msgid "Hungarian"
+msgstr "Унгарски"
+
+#: bluebottle/settings/local.py:732
+msgid "Bulgarian"
 msgstr ""
 
 #: bluebottle/slides/admin.py:34
@@ -10984,7 +11085,7 @@ msgstr "Слотът е отменен."
 #: bluebottle/time_based/states/slots.py:104
 #: bluebottle/time_based/states/slots.py:222
 msgid "The slot was cancelled because the activity was cancelled"
-msgstr ""
+msgstr "Слота беше отменен, защото активността беше отменена"
 
 #: bluebottle/time_based/states/slots.py:113
 msgid "The slot was restored."
@@ -11215,7 +11316,7 @@ msgstr "Вашият екип вече няма да участва в тази 
 
 #: bluebottle/time_based/states/teams.py:109
 msgid "Your team will no longer participate in this activity. "
-msgstr "Вашият екип вече няма да участва в тази активност."
+msgstr "Вашият екип вече няма да участва в тази активност. "
 
 #: bluebottle/time_based/states/teams.py:115
 msgid "Rejoin"
@@ -12819,7 +12920,9 @@ msgctxt "email"
 msgid "\n"
 "<p>Your team was added to the activity \"%(title)s\".</p>\n\n"
 "<p>You can view your team on the activity detail page.</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Вашият екип беше добавен към активността \"%(title)s\".</p>\n\n"
+"<p>Можете да видите вашия екип на страницата с подробности за активността.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_team_removed.html:4
 #, python-format
@@ -13228,9 +13331,5 @@ msgstr[1] "Секунди"
 
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
-msgstr ""
-
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
-msgid "French"
-msgstr ""
+msgstr "Нидерландски"
 

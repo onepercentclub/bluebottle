@@ -551,7 +551,7 @@ class ConfirmSignUpTestCase(BluebottleTestCase):
         )
         self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Welcome to Test!')
+        self.assertEqual(mail.outbox[0].subject, 'Activate your Test account')
 
     def test_confirm_twice(self):
         response = self.client.post(self.url, self.data)

@@ -100,9 +100,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
-        self.assertTrue('Set password' in welcome_email.body)
-        self.assertTrue('test@example.com' in welcome_email.body,
-                        'Tenant contact email should be present.')
+        self.assertTrue('Activate account' in welcome_email.body)
 
     def test_password_mail(self):
         user = BlueBottleUserFactory.create()
@@ -590,7 +588,7 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.bg'])
         # NL translations not set so we should receive default translation
-        self.assertEqual(welcome_email.subject, 'Welcome to Test!')
+        self.assertEqual(welcome_email.subject, 'Activate your Test account')
 
     def test_create_user_language_not_set(self):
         mail.outbox = []

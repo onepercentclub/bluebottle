@@ -337,4 +337,3 @@ class PlatformPageAdmin(TranslatableAdmin, PlaceholderFieldAdmin, NonSortablePar
         if PlatformPage.objects.count() >= len(PageTypeChoices.choices):
             return False
         return True
-

@@ -27,12 +27,6 @@ class TranslatableLabelAdminMixin:
             for field_name in translatable_fields:
                 if field_name in form.base_fields:
                     # Add a CSS class to mark this as translatable
-                    translatable_note = '<span class="translatable-note">{}</span>'.format(_('Translatable'))
-                    if form.base_fields[field_name].help_text:
-                        form.base_fields[
-                            field_name].help_text = f'{form.base_fields[field_name].help_text}<br>{translatable_note}'
-                    else:
-                        form.base_fields[field_name].help_text = translatable_note
                     widget = form.base_fields[field_name].widget
                     if hasattr(widget, 'attrs'):
                         if 'class' in widget.attrs:

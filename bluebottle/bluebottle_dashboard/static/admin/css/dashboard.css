@@ -533,18 +533,11 @@ div.inline.radiolist {
     color: #237c36
 }
 
-input.translatable-field,
-textarea.translatable-field {
-    border-left: #bfe6bf 4px solid !important;
-    color: #237c36;
-}
-
-
-.translatable-note {
-    color: #237c36;
-    font-style: italic;
-}
-
-.translatable-info {
-    background-color: #bfe6bf;
+label.translatable-field:before {
+    content: '🌐';
+    display: inline-block;
+    float: right;
+    margin-top: 6px;
+    margin-left: 6px;
+    vertical-align: middle;
 }

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-26 11:03+0100\n"
-"PO-Revision-Date: 2025-11-26 10:10\n"
+"POT-Creation-Date: 2025-12-02 11:28+0100\n"
+"PO-Revision-Date: 2025-12-02 10:32\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -607,7 +607,7 @@ msgstr "Aantal succesvolle bijdragers verwijderd"
 #: bluebottle/activities/models.py:108 bluebottle/cms/models.py:49
 #: bluebottle/cms/models.py:125 bluebottle/cms/models.py:142
 #: bluebottle/funding/models.py:349 bluebottle/news/models.py:22
-#: bluebottle/pages/models.py:232 bluebottle/pages/models.py:318
+#: bluebottle/pages/models.py:232 bluebottle/pages/models.py:324
 #: bluebottle/slides/models.py:46 bluebottle/statistics/models.py:235
 msgid "Title"
 msgstr "Titel"
@@ -908,7 +908,7 @@ msgstr "Indienen"
 
 #: bluebottle/activities/states.py:194 bluebottle/funding/states.py:167
 #: bluebottle/funding/states.py:604 bluebottle/funding/states.py:684
-#: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:203
+#: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:217
 #: bluebottle/grant_management/states.py:109
 #: bluebottle/grant_management/states.py:285
 #: bluebottle/grant_management/states.py:365
@@ -1117,7 +1117,7 @@ msgstr "De bijdrage is niet gelukt."
 #: bluebottle/activities/states.py:404 bluebottle/activities/states.py:436
 #: bluebottle/funding/states.py:415 bluebottle/funding/states.py:508
 #: bluebottle/funding/states.py:589 bluebottle/funding/states.py:660
-#: bluebottle/funding_stripe/states.py:193
+#: bluebottle/funding_stripe/states.py:207
 #: bluebottle/grant_management/states.py:189
 #: bluebottle/grant_management/states.py:270
 #: bluebottle/grant_management/states.py:341
@@ -4313,95 +4313,95 @@ msgstr "beoordelaar"
 msgid "Public payout account"
 msgstr "Openbare uitbetaling account"
 
-#: bluebottle/funding/models.py:718
+#: bluebottle/funding/models.py:723
 msgid "IP address"
 msgstr "IP adres"
 
-#: bluebottle/funding/models.py:725
+#: bluebottle/funding/models.py:730
 msgid "Plain KYC account"
 msgstr "Standaard KYC account"
 
-#: bluebottle/funding/models.py:726
+#: bluebottle/funding/models.py:731
 msgid "Plain KYC accounts"
 msgstr "Standaard KYC accounts"
 
-#: bluebottle/funding/models.py:806
+#: bluebottle/funding/models.py:811
 msgid "Individual person"
 msgstr "Individuele persoon"
 
-#: bluebottle/funding/models.py:810
+#: bluebottle/funding/models.py:815
 msgid "Non-profit organization"
 msgstr "Non-profit organisatie"
 
-#: bluebottle/funding/models.py:815
+#: bluebottle/funding/models.py:820
 msgid "Commercial company"
 msgstr "Commercieel bedrijf"
 
-#: bluebottle/funding/models.py:822
+#: bluebottle/funding/models.py:827
 msgid "Hide names from all donations"
 msgstr "Verberg namen voor alle donaties"
 
-#: bluebottle/funding/models.py:825
+#: bluebottle/funding/models.py:830
 msgid "Allow guests to donate rewards"
 msgstr "Sta gasten toe om giften te doneren"
 
-#: bluebottle/funding/models.py:829
+#: bluebottle/funding/models.py:834
 msgid "Crowdfunding for verified organisations"
 msgstr "Crowdfunding voor geverifieerde organisaties"
 
-#: bluebottle/funding/models.py:832
+#: bluebottle/funding/models.py:837
 msgid "When enabled, campaign initiators must select from a list of organisations with a public payout account that will receive the raised money, rather than providing the bank account details themselves."
 msgstr "Wanneer ingeschakeld, moeten campagne-initiators kiezen uit een lijst van organisaties met een publieke uitbetalingsaccount die het ingezamelde geld ontvangt, in plaats van zelf de bankgegevens te verstrekken."
 
-#: bluebottle/funding/models.py:839
+#: bluebottle/funding/models.py:844
 msgid "Do IBAN bank account number vs. name checks"
 msgstr "Klopt het IBAN-rekeningnummer bij de naam van de rekeninghouder"
 
-#: bluebottle/funding/models.py:842
+#: bluebottle/funding/models.py:847
 msgid "In the KYC flow do a check to see if bank account number and name match. This will be done by the Surepay API, and only Dutch IBANs are supported. "
 msgstr "Ga in de KYC-verificatie na of het bankrekeningnummer en de naam van de rekeninghouder overeenkomen. Dit gebeurt via de Surepay API en werkt alleen voor Nederlandse IBANs. "
 
-#: bluebottle/funding/models.py:848
+#: bluebottle/funding/models.py:853
 msgid "Name to use for match funding"
 msgstr "Naam om te gebruiken voor match funding"
 
-#: bluebottle/funding/models.py:852
+#: bluebottle/funding/models.py:857
 msgid "Change this if you want to use something else then the platform name for matching amounts."
 msgstr "Verander dit als je iets anders wilt gebruiken dan de platformnaam voor match funding."
 
-#: bluebottle/funding/models.py:856
+#: bluebottle/funding/models.py:861
 msgid "verification types"
 msgstr "verificatietypes"
 
-#: bluebottle/funding/models.py:871 bluebottle/funding/models.py:872
+#: bluebottle/funding/models.py:876 bluebottle/funding/models.py:877
 msgid "funding settings"
 msgstr "crowdfunding instellingen"
 
-#: bluebottle/funding/models.py:878
+#: bluebottle/funding/models.py:883
 msgid "Match"
 msgstr "Match"
 
-#: bluebottle/funding/models.py:879
+#: bluebottle/funding/models.py:884
 msgid "Mistype"
 msgstr "Typefout"
 
-#: bluebottle/funding/models.py:880
+#: bluebottle/funding/models.py:885
 msgid "Close match"
 msgstr "Bijna match"
 
-#: bluebottle/funding/models.py:881
+#: bluebottle/funding/models.py:886
 msgid "No match"
 msgstr "Geen match"
 
-#: bluebottle/funding/models.py:892
+#: bluebottle/funding/models.py:897
 msgid "Hashed IBAN to check against"
 msgstr "Hashed IBAN om tegen te controleren"
 
-#: bluebottle/funding/models.py:895
+#: bluebottle/funding/models.py:900
 msgid "Result of the IBAN check"
 msgstr "Resultaat van de IBAN-check"
 
-#: bluebottle/funding/models.py:903
+#: bluebottle/funding/models.py:908
 msgid "Name of the account holder"
 msgstr "Naam van de rekeninghouder"
 
@@ -4796,7 +4796,7 @@ msgstr "Bankrekening moet nog worden geverifieerd"
 msgid "Bank account is rejected"
 msgstr "Bankrekening is afgewezen"
 
-#: bluebottle/funding/states.py:590 bluebottle/funding_stripe/states.py:194
+#: bluebottle/funding/states.py:590 bluebottle/funding_stripe/states.py:208
 #: bluebottle/grant_management/states.py:271
 msgid "Bank account details are entered."
 msgstr "Bankrekeningdetails zijn ingevoerd."
@@ -4805,20 +4805,20 @@ msgstr "Bankrekeningdetails zijn ingevoerd."
 msgid "Bank account is missing details"
 msgstr "Bankrekening heeft nog ontbrekende gegevens"
 
-#: bluebottle/funding/states.py:605 bluebottle/funding_stripe/states.py:204
+#: bluebottle/funding/states.py:605 bluebottle/funding_stripe/states.py:218
 #: bluebottle/grant_management/states.py:286
 msgid "Reject bank account"
 msgstr "Keur bankrekening af"
 
 #: bluebottle/funding/states.py:612 bluebottle/funding/states.py:675
 #: bluebottle/funding/states.py:710 bluebottle/funding_stripe/states.py:178
-#: bluebottle/funding_stripe/states.py:215
+#: bluebottle/funding_stripe/states.py:229
 #: bluebottle/grant_management/states.py:293
 #: bluebottle/grant_management/states.py:356
 msgid "Verify"
 msgstr "Verifiëer"
 
-#: bluebottle/funding/states.py:613 bluebottle/funding_stripe/states.py:216
+#: bluebottle/funding/states.py:613 bluebottle/funding_stripe/states.py:230
 #: bluebottle/grant_management/states.py:294
 msgid "Verify that the bank account is complete."
 msgstr "Keur de bankrekening goed."
@@ -4865,11 +4865,13 @@ msgstr "Uitbetalingsaccount goedkeuren."
 msgid "Reject the payout account."
 msgstr "Controleer het uitbetalingsaccount."
 
-#: bluebottle/funding/states.py:692 bluebottle/grant_management/states.py:373
+#: bluebottle/funding/states.py:692 bluebottle/funding_stripe/states.py:191
+#: bluebottle/grant_management/states.py:373
 msgid "Set incomplete"
 msgstr "Mist informatie"
 
-#: bluebottle/funding/states.py:694 bluebottle/grant_management/states.py:375
+#: bluebottle/funding/states.py:694 bluebottle/funding_stripe/states.py:193
+#: bluebottle/grant_management/states.py:375
 msgid "Mark the payout account as incomplete. The initiator will have to add more information."
 msgstr "Markeer het uitbetalingsaccount als incompleet. De initiator zal meer informatie moeten verstrekken."
 
@@ -5908,23 +5910,23 @@ msgstr "Verificatietype"
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Niet van toepassing - het werven van geld voor een sociaal project op %(platform)s, een GoodUp platform."
 
-#: bluebottle/funding_stripe/models.py:632
+#: bluebottle/funding_stripe/models.py:634
 msgid "stripe payout account"
 msgstr "stripe uitbetalingsaccount"
 
-#: bluebottle/funding_stripe/models.py:633
+#: bluebottle/funding_stripe/models.py:635
 msgid "stripe payout accounts"
 msgstr "stripe uitbetalingsaccounts"
 
-#: bluebottle/funding_stripe/models.py:644
+#: bluebottle/funding_stripe/models.py:646
 msgid "Starts with 'ba_...'"
 msgstr "Begint met 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:692
+#: bluebottle/funding_stripe/models.py:694
 msgid "Bank account"
 msgstr "Bankrekening"
 
-#: bluebottle/funding_stripe/models.py:693
+#: bluebottle/funding_stripe/models.py:695
 msgid "Bank accounts"
 msgstr "Bankrekeningen"
 
@@ -6996,7 +6998,7 @@ msgstr "Kantoren"
 msgid "Options"
 msgstr "Opties"
 
-#: bluebottle/initiatives/admin.py:329
+#: bluebottle/initiatives/admin.py:329 bluebottle/pages/models.py:300
 msgid "Terms of service"
 msgstr "Gebruiksvoorwaarden"
 
@@ -7866,7 +7868,7 @@ msgstr "gesloten"
 
 #: bluebottle/members/models.py:59
 msgid "Require login before accessing the platform"
-msgstr "Inloggen vereist voor toegang tot het platform"
+msgstr "Gebruikers moeten inloggen om toegang te krijgen tot het platform"
 
 #: bluebottle/members/models.py:62
 msgid "create initiatives"
@@ -7914,7 +7916,7 @@ msgstr "aanmelding bevestigen"
 
 #: bluebottle/members/models.py:97
 msgid "Require verifying the user's email before signup"
-msgstr "Verplicht de gebruiker om zijn e-mail te bevestigen"
+msgstr "Gebruikers moeten hun e-mailadres bevestigen voordat ze kunnen inloggen"
 
 #: bluebottle/members/models.py:100
 msgid "email domains"
@@ -8806,23 +8808,19 @@ msgstr "Toon deze pagina in de volledige breedte en verberg de subnavigatie"
 msgid "Show the title of this page in the header"
 msgstr "Toon de titel van deze pagina als de pagina titel"
 
-#: bluebottle/pages/models.py:325
-msgid "Start initiative/activity"
-msgstr "Start initiatieven/activiteit"
+#: bluebottle/pages/models.py:299
+msgid "Start an initiative"
+msgstr "Initiatief starten"
 
-#: bluebottle/pages/models.py:326
-msgid "Terms and conditions"
-msgstr "Gebruiksvoorwaarden"
-
-#: bluebottle/pages/models.py:327
+#: bluebottle/pages/models.py:301
 msgid "Privacy policy"
 msgstr "Privacybeleid"
 
-#: bluebottle/pages/models.py:330
+#: bluebottle/pages/models.py:331
 msgid "Page type"
 msgstr "Paginatype"
 
-#: bluebottle/pages/models.py:348
+#: bluebottle/pages/models.py:349
 msgid "Platform page"
 msgstr "Platformpagina"
 
@@ -9134,12 +9132,7 @@ msgstr "Instellingen"
 msgid "Manage Reporting"
 msgstr "Rapportage beheren"
 
-#: bluebottle/settings/local.py:725 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
-msgid "French"
-msgstr "Frans"
-
-#: bluebottle/settings/local.py:726 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9171,7 +9164,7 @@ msgstr "Frans"
 msgid "English"
 msgstr "Engels"
 
-#: bluebottle/settings/local.py:727 tenants/abn/settings.py:26
+#: bluebottle/settings/local.py:726 tenants/abn/settings.py:26
 #: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26 tenants/bmw/settings.py:26
@@ -9205,6 +9198,11 @@ msgstr "Engels"
 msgid "Dutch"
 msgstr "Nederlands"
 
+#: bluebottle/settings/local.py:727 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
+msgid "French"
+msgstr "Frans"
+
 #: bluebottle/settings/local.py:728 tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Spaans"
@@ -9217,13 +9215,13 @@ msgstr "Duits"
 msgid "Portuguese"
 msgstr "Portugees"
 
-#: bluebottle/settings/local.py:731
-msgid "Bulgarian"
-msgstr "Bulgaars"
-
-#: bluebottle/settings/local.py:732 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:731 tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Hongaars"
+
+#: bluebottle/settings/local.py:732
+msgid "Bulgarian"
+msgstr "Bulgaars"
 
 #: bluebottle/slides/admin.py:34
 msgid "Contents"

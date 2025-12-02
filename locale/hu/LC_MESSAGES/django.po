@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-26 11:03+0100\n"
-"PO-Revision-Date: 2025-11-26 10:10\n"
+"POT-Creation-Date: 2025-12-02 11:28+0100\n"
+"PO-Revision-Date: 2025-12-02 10:32\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -607,7 +607,7 @@ msgstr "A törölt sikeres hozzájárulók száma"
 #: bluebottle/activities/models.py:108 bluebottle/cms/models.py:49
 #: bluebottle/cms/models.py:125 bluebottle/cms/models.py:142
 #: bluebottle/funding/models.py:349 bluebottle/news/models.py:22
-#: bluebottle/pages/models.py:232 bluebottle/pages/models.py:318
+#: bluebottle/pages/models.py:232 bluebottle/pages/models.py:324
 #: bluebottle/slides/models.py:46 bluebottle/statistics/models.py:235
 msgid "Title"
 msgstr "Cím"
@@ -908,7 +908,7 @@ msgstr "Bead"
 
 #: bluebottle/activities/states.py:194 bluebottle/funding/states.py:167
 #: bluebottle/funding/states.py:604 bluebottle/funding/states.py:684
-#: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:203
+#: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:217
 #: bluebottle/grant_management/states.py:109
 #: bluebottle/grant_management/states.py:285
 #: bluebottle/grant_management/states.py:365
@@ -1117,7 +1117,7 @@ msgstr "A hozzájárulás meghiúsult."
 #: bluebottle/activities/states.py:404 bluebottle/activities/states.py:436
 #: bluebottle/funding/states.py:415 bluebottle/funding/states.py:508
 #: bluebottle/funding/states.py:589 bluebottle/funding/states.py:660
-#: bluebottle/funding_stripe/states.py:193
+#: bluebottle/funding_stripe/states.py:207
 #: bluebottle/grant_management/states.py:189
 #: bluebottle/grant_management/states.py:270
 #: bluebottle/grant_management/states.py:341
@@ -4317,95 +4317,95 @@ msgstr "felülvizsgálva"
 msgid "Public payout account"
 msgstr "Nyilvános kifizetési fiók"
 
-#: bluebottle/funding/models.py:718
+#: bluebottle/funding/models.py:723
 msgid "IP address"
 msgstr "IP cím"
 
-#: bluebottle/funding/models.py:725
+#: bluebottle/funding/models.py:730
 msgid "Plain KYC account"
 msgstr "Egyszerű KYC fiók"
 
-#: bluebottle/funding/models.py:726
+#: bluebottle/funding/models.py:731
 msgid "Plain KYC accounts"
 msgstr "Egyszerű KYC fiókok"
 
-#: bluebottle/funding/models.py:806
+#: bluebottle/funding/models.py:811
 msgid "Individual person"
 msgstr "Magánszemély"
 
-#: bluebottle/funding/models.py:810
+#: bluebottle/funding/models.py:815
 msgid "Non-profit organization"
 msgstr "Non-profit szervezet"
 
-#: bluebottle/funding/models.py:815
+#: bluebottle/funding/models.py:820
 msgid "Commercial company"
 msgstr "Kereskedelmi cég"
 
-#: bluebottle/funding/models.py:822
+#: bluebottle/funding/models.py:827
 msgid "Hide names from all donations"
 msgstr "Ne rejtse el a neveket az összes adományból"
 
-#: bluebottle/funding/models.py:825
+#: bluebottle/funding/models.py:830
 msgid "Allow guests to donate rewards"
 msgstr "Engedélyezze a vendégeknek, hogy jutalmakat adományozzanak"
 
-#: bluebottle/funding/models.py:829
+#: bluebottle/funding/models.py:834
 msgid "Crowdfunding for verified organisations"
 msgstr "Crowdfunding ellenőrzött szervezetek számára"
 
-#: bluebottle/funding/models.py:832
+#: bluebottle/funding/models.py:837
 msgid "When enabled, campaign initiators must select from a list of organisations with a public payout account that will receive the raised money, rather than providing the bank account details themselves."
 msgstr "Ha engedélyezve van, a kampány kezdeményezőinek egy olyan szervezetek listájából kell választaniuk, amelyek nyilvános kifizetési fiókjukkal rendelkeznek és megkapják a begyűjtött pénzt, ahelyett, hogy maguk adnák meg a bankszámlaadatokat."
 
-#: bluebottle/funding/models.py:839
+#: bluebottle/funding/models.py:844
 msgid "Do IBAN bank account number vs. name checks"
 msgstr "IBAN banki számlaszám és név ellenőrzések elvégzése"
 
-#: bluebottle/funding/models.py:842
+#: bluebottle/funding/models.py:847
 msgid "In the KYC flow do a check to see if bank account number and name match. This will be done by the Surepay API, and only Dutch IBANs are supported. "
 msgstr "A KYC folyamat során ellenőrizni kell, hogy a banki számlaszám és a név egyezik-e. Ezt a Surepay API végzi, és csak holland IBAN-ok támogatottak. "
 
-#: bluebottle/funding/models.py:848
+#: bluebottle/funding/models.py:853
 msgid "Name to use for match funding"
 msgstr "Név a párosított finanszírozáshoz"
 
-#: bluebottle/funding/models.py:852
+#: bluebottle/funding/models.py:857
 msgid "Change this if you want to use something else then the platform name for matching amounts."
 msgstr "Módosítsa ezt, ha valami mást szeretne használni a párosított összegekhez a platform neve helyett."
 
-#: bluebottle/funding/models.py:856
+#: bluebottle/funding/models.py:861
 msgid "verification types"
 msgstr "ellenőrzési típusok"
 
-#: bluebottle/funding/models.py:871 bluebottle/funding/models.py:872
+#: bluebottle/funding/models.py:876 bluebottle/funding/models.py:877
 msgid "funding settings"
 msgstr "finanszírozási beállítások"
 
-#: bluebottle/funding/models.py:878
+#: bluebottle/funding/models.py:883
 msgid "Match"
 msgstr "Egyezőség"
 
-#: bluebottle/funding/models.py:879
+#: bluebottle/funding/models.py:884
 msgid "Mistype"
 msgstr "Téves gépelés"
 
-#: bluebottle/funding/models.py:880
+#: bluebottle/funding/models.py:885
 msgid "Close match"
 msgstr "Közel áll"
 
-#: bluebottle/funding/models.py:881
+#: bluebottle/funding/models.py:886
 msgid "No match"
 msgstr "Nincs egyezés"
 
-#: bluebottle/funding/models.py:892
+#: bluebottle/funding/models.py:897
 msgid "Hashed IBAN to check against"
 msgstr "Ellenőrzésre szánt IBAN"
 
-#: bluebottle/funding/models.py:895
+#: bluebottle/funding/models.py:900
 msgid "Result of the IBAN check"
 msgstr "Az IBAN ellenőrzés eredménye"
 
-#: bluebottle/funding/models.py:903
+#: bluebottle/funding/models.py:908
 msgid "Name of the account holder"
 msgstr "A számlatulajdonos neve"
 
@@ -4800,7 +4800,7 @@ msgstr "A bankszámlát még ellenőrizni kell"
 msgid "Bank account is rejected"
 msgstr "A bankszámla elutasított"
 
-#: bluebottle/funding/states.py:590 bluebottle/funding_stripe/states.py:194
+#: bluebottle/funding/states.py:590 bluebottle/funding_stripe/states.py:208
 #: bluebottle/grant_management/states.py:271
 msgid "Bank account details are entered."
 msgstr "A bankszámla adatai be vannak írva."
@@ -4809,20 +4809,20 @@ msgstr "A bankszámla adatai be vannak írva."
 msgid "Bank account is missing details"
 msgstr "A bankszámla hiányos információval rendelkezik"
 
-#: bluebottle/funding/states.py:605 bluebottle/funding_stripe/states.py:204
+#: bluebottle/funding/states.py:605 bluebottle/funding_stripe/states.py:218
 #: bluebottle/grant_management/states.py:286
 msgid "Reject bank account"
 msgstr "Bankszámla elutasítása"
 
 #: bluebottle/funding/states.py:612 bluebottle/funding/states.py:675
 #: bluebottle/funding/states.py:710 bluebottle/funding_stripe/states.py:178
-#: bluebottle/funding_stripe/states.py:215
+#: bluebottle/funding_stripe/states.py:229
 #: bluebottle/grant_management/states.py:293
 #: bluebottle/grant_management/states.py:356
 msgid "Verify"
 msgstr "Ellenőrzés"
 
-#: bluebottle/funding/states.py:613 bluebottle/funding_stripe/states.py:216
+#: bluebottle/funding/states.py:613 bluebottle/funding_stripe/states.py:230
 #: bluebottle/grant_management/states.py:294
 msgid "Verify that the bank account is complete."
 msgstr "Ellenőrizze, hogy a bankszámla teljes-e."
@@ -4869,11 +4869,13 @@ msgstr "Ellenőrizze a kifizetési fiókot."
 msgid "Reject the payout account."
 msgstr "Utasson el a kifizetési fiókot."
 
-#: bluebottle/funding/states.py:692 bluebottle/grant_management/states.py:373
+#: bluebottle/funding/states.py:692 bluebottle/funding_stripe/states.py:191
+#: bluebottle/grant_management/states.py:373
 msgid "Set incomplete"
 msgstr "Állítsa be hiányossá"
 
-#: bluebottle/funding/states.py:694 bluebottle/grant_management/states.py:375
+#: bluebottle/funding/states.py:694 bluebottle/funding_stripe/states.py:193
+#: bluebottle/grant_management/states.py:375
 msgid "Mark the payout account as incomplete. The initiator will have to add more information."
 msgstr "Jelölje meg a kifizetési fiókot hiányosnak. Az kezdeményezőnek további információkat kell hozzáadnia."
 
@@ -5914,23 +5916,23 @@ msgstr "Az ellenőrzés típusa"
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Nem alkalmazható - jótékonysági projekt finanszírozása a %(platform)s platformon, egy GoodUp platform."
 
-#: bluebottle/funding_stripe/models.py:632
+#: bluebottle/funding_stripe/models.py:634
 msgid "stripe payout account"
 msgstr "stripe kifizetési fiók"
 
-#: bluebottle/funding_stripe/models.py:633
+#: bluebottle/funding_stripe/models.py:635
 msgid "stripe payout accounts"
 msgstr "stripe kifizetési fiókok"
 
-#: bluebottle/funding_stripe/models.py:644
+#: bluebottle/funding_stripe/models.py:646
 msgid "Starts with 'ba_...'"
 msgstr "\"ba_...\"-val kezdődik..."
 
-#: bluebottle/funding_stripe/models.py:692
+#: bluebottle/funding_stripe/models.py:694
 msgid "Bank account"
 msgstr "Banki számla"
 
-#: bluebottle/funding_stripe/models.py:693
+#: bluebottle/funding_stripe/models.py:695
 msgid "Bank accounts"
 msgstr "Banki számlák"
 
@@ -7007,7 +7009,7 @@ msgstr "Irodák"
 msgid "Options"
 msgstr "Opciók"
 
-#: bluebottle/initiatives/admin.py:329
+#: bluebottle/initiatives/admin.py:329 bluebottle/pages/models.py:300
 msgid "Terms of service"
 msgstr "Szolgáltatási feltételek"
 
@@ -7827,7 +7829,7 @@ msgstr "Üdvözlő e-mail küldése"
 #, python-brace-format
 msgctxt "email"
 msgid "Welcome to {site_name}!"
-msgstr "Üdvözöljük a {site_name} oldalon!"
+msgstr ""
 
 #: bluebottle/members/messages.py:16
 #, python-brace-format
@@ -7881,7 +7883,7 @@ msgstr "lezárva"
 
 #: bluebottle/members/models.py:59
 msgid "Require login before accessing the platform"
-msgstr "A platform eléréséhez be kell jelentkezni"
+msgstr ""
 
 #: bluebottle/members/models.py:62
 msgid "create initiatives"
@@ -7925,19 +7927,19 @@ msgstr "bejelentkezési módok"
 
 #: bluebottle/members/models.py:97
 msgid "confirm signup"
-msgstr "a regisztrálás megerősítése"
+msgstr ""
 
 #: bluebottle/members/models.py:97
 msgid "Require verifying the user's email before signup"
-msgstr "A felhasználó e-mail címének megerősítése szükséges a regisztrálás előtt"
+msgstr ""
 
 #: bluebottle/members/models.py:100
 msgid "email domains"
-msgstr "e-mail domainek"
+msgstr ""
 
 #: bluebottle/members/models.py:102
 msgid "Domain that all email should belong to"
-msgstr "A domain, amelyhez az összes e-mail tartoznia kell"
+msgstr ""
 
 #: bluebottle/members/models.py:106
 msgid "session only"
@@ -7981,7 +7983,7 @@ msgstr "A GTM script hozzáadása a platformhoz lehetővé teszi a harmadik fél
 
 #: bluebottle/members/models.py:144
 msgid "background"
-msgstr "háttér"
+msgstr ""
 
 #: bluebottle/members/models.py:155
 msgid "translate user content"
@@ -8270,21 +8272,18 @@ msgstr "Igen, biztos vagyok benne"
 msgid "\n"
 "<h1>Welcome %(first_name)s</h1>\n"
 "<p class=\"lead\">You’re now officially part of the %(site_name)s community. Connect, share and work with others on initiatives that you care about.</p>\n"
-msgstr "\n"
-"<h1>Üdvözlünk %(first_name)s</h1>\n"
-"<p class=\"lead\">Mostantól hivatalosan is a %(site_name)s közösség részévé váltál. Kapcsolódj, ossz meg és dolgozz másokkal olyan kezdeményezéseken, amelyekért szenvedélyesen harcolsz.</p>\n"
+msgstr ""
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:13
 #, python-format
 msgid "\n"
 "<p>If you have any questions please don’t hesitate to contact %(contact_email)s</p>\n"
-msgstr "\n"
-"<p>Ha bármilyen kérdésed van, ne habozz kapcsolatba lépni a %(contact_email)s címmel</p>\n"
+msgstr ""
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:24
 msgctxt "email"
 msgid "Set password"
-msgstr "Állítson be jelszót"
+msgstr ""
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:28
 msgctxt "email"
@@ -8717,7 +8716,7 @@ msgstr "Telefonszám"
 
 #: bluebottle/pages/admin.py:171
 msgid "You are trying to create a platform page. Please do so at <a href=\"{}\">Platform pages</a>."
-msgstr "Platform oldal létrehozására próbálsz, kérjük, ezt itt tedd:<a href=\"{}\">Platform oldalak</a>."
+msgstr ""
 
 #: bluebottle/pages/admin.py:234
 msgid "No pages were selected."
@@ -8817,25 +8816,21 @@ msgstr "Mutassa ezt az oldalt teljes szélességben és rejtse el az al-navigác
 msgid "Show the title of this page in the header"
 msgstr "Mutassa ennek az oldalnak a címét a fejlécben"
 
-#: bluebottle/pages/models.py:325
-msgid "Start initiative/activity"
-msgstr "Kezdj el kezdeményezést/tevékenységet"
+#: bluebottle/pages/models.py:299
+msgid "Start an initiative"
+msgstr ""
 
-#: bluebottle/pages/models.py:326
-msgid "Terms and conditions"
-msgstr "Felhasználási feltételek"
-
-#: bluebottle/pages/models.py:327
+#: bluebottle/pages/models.py:301
 msgid "Privacy policy"
-msgstr "Adatvédelmi irányelvek"
+msgstr ""
 
-#: bluebottle/pages/models.py:330
+#: bluebottle/pages/models.py:331
 msgid "Page type"
-msgstr "Oldal típusa"
+msgstr ""
 
-#: bluebottle/pages/models.py:348
+#: bluebottle/pages/models.py:349
 msgid "Platform page"
-msgstr "Platform oldal"
+msgstr ""
 
 #: bluebottle/pages/templates/admin/pages/page/change_form.html:7
 msgid "Export page"
@@ -9145,12 +9140,7 @@ msgstr "Beállítások"
 msgid "Manage Reporting"
 msgstr "Jelentéskezelés"
 
-#: bluebottle/settings/local.py:725 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
-msgid "French"
-msgstr "Francia"
-
-#: bluebottle/settings/local.py:726 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9182,7 +9172,7 @@ msgstr "Francia"
 msgid "English"
 msgstr "Angol"
 
-#: bluebottle/settings/local.py:727 tenants/abn/settings.py:26
+#: bluebottle/settings/local.py:726 tenants/abn/settings.py:26
 #: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26 tenants/bmw/settings.py:26
@@ -9216,6 +9206,11 @@ msgstr "Angol"
 msgid "Dutch"
 msgstr "Holland"
 
+#: bluebottle/settings/local.py:727 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
+msgid "French"
+msgstr "Francia"
+
 #: bluebottle/settings/local.py:728 tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Spanyol"
@@ -9228,13 +9223,13 @@ msgstr "Német"
 msgid "Portuguese"
 msgstr "Portugál"
 
-#: bluebottle/settings/local.py:731
-msgid "Bulgarian"
-msgstr "Bolgár"
-
-#: bluebottle/settings/local.py:732 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:731 tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Magyar"
+
+#: bluebottle/settings/local.py:732
+msgid "Bulgarian"
+msgstr ""
 
 #: bluebottle/slides/admin.py:34
 msgid "Contents"

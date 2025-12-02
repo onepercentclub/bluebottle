@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-02 11:28+0100\n"
-"PO-Revision-Date: 2025-12-02 10:32\n"
+"POT-Creation-Date: 2025-12-02 11:42+0100\n"
+"PO-Revision-Date: 2025-12-02 10:44\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #: bluebottle/activities/admin.py:119 bluebottle/activities/admin.py:967
 #: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:228
-#: bluebottle/fsm/admin.py:236 bluebottle/utils/models.py:166
+#: bluebottle/fsm/admin.py:236 bluebottle/utils/models.py:160
 msgid "status"
 msgstr "статус"
 
@@ -977,6 +977,7 @@ msgstr "Активността се нуждае от промени, преди
 #: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
 #: bluebottle/funding/states.py:121 bluebottle/grant_management/states.py:138
 #: bluebottle/initiatives/states.py:181
+#: bluebottle/pages/templates/admin/pages/page/translate.html:41
 #: bluebottle/time_based/states/participants.py:188
 #: bluebottle/time_based/states/participants.py:473
 #: bluebottle/time_based/states/slots.py:95
@@ -1195,6 +1196,7 @@ msgstr "Организаторът все още е зает с настройв
 #: bluebottle/news/templates/admin/news/newsitem/import.html:6
 #: bluebottle/notifications/templates/admin/change_confirmation.html:14
 #: bluebottle/pages/templates/admin/pages/page/import.html:6
+#: bluebottle/pages/templates/admin/pages/page/translate.html:6
 #: bluebottle/time_based/templates/admin/time_based/bulk_add.html:6
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:6
 #: bluebottle/utils/templates/admin/confirmation.html:9
@@ -3475,7 +3477,7 @@ msgstr "В процес на изпълнение"
 msgid "Closed"
 msgstr "Затворено"
 
-#: bluebottle/contact/models.py:29 bluebottle/utils/models.py:181
+#: bluebottle/contact/models.py:29 bluebottle/utils/models.py:175
 msgid "author"
 msgstr "автор"
 
@@ -3484,12 +3486,12 @@ msgid "Message"
 msgstr "Съобщение"
 
 #: bluebottle/contact/models.py:35 bluebottle/statistics/models.py:248
-#: bluebottle/utils/models.py:185
+#: bluebottle/utils/models.py:179
 msgid "creation date"
 msgstr "дата на създаване"
 
 #: bluebottle/contact/models.py:36 bluebottle/statistics/models.py:249
-#: bluebottle/utils/models.py:186
+#: bluebottle/utils/models.py:180
 msgid "last modification"
 msgstr "последна модификация"
 
@@ -3896,7 +3898,7 @@ msgid "Grant applications"
 msgstr "Заявления за грантове"
 
 #: bluebottle/funding/admin.py:648 bluebottle/funding/filters.py:11
-#: bluebottle/pages/admin.py:213 bluebottle/time_based/admin.py:242
+#: bluebottle/pages/admin.py:254 bluebottle/time_based/admin.py:242
 #: bluebottle/time_based/admin.py:331 bluebottle/time_based/admin.py:374
 #: bluebottle/time_based/admin.py:484 bluebottle/time_based/admin.py:542
 #: bluebottle/time_based/admin.py:919 bluebottle/time_based/admin.py:1132
@@ -7370,17 +7372,17 @@ msgstr "тема"
 msgid "themes"
 msgstr "тематики"
 
-#: bluebottle/initiatives/serializers.py:486
-#: bluebottle/initiatives/serializers.py:503
+#: bluebottle/initiatives/serializers.py:483
+#: bluebottle/initiatives/serializers.py:500
 msgid "Name is required"
 msgstr "Името е задължително"
 
-#: bluebottle/initiatives/serializers.py:504
+#: bluebottle/initiatives/serializers.py:501
 msgid "Email is required"
 msgstr "Имейлът е задължителен"
 
 #: bluebottle/initiatives/states.py:19 bluebottle/pages/models.py:230
-#: bluebottle/slides/models.py:25 bluebottle/utils/models.py:161
+#: bluebottle/slides/models.py:25 bluebottle/utils/models.py:155
 msgid "Draft"
 msgstr "Чернови"
 
@@ -7835,7 +7837,7 @@ msgstr "Изпратете имейл за приветствие"
 #, python-brace-format
 msgctxt "email"
 msgid "Welcome to {site_name}!"
-msgstr ""
+msgstr "Добре дошли в {site_name}!"
 
 #: bluebottle/members/messages.py:16
 #, python-brace-format
@@ -7889,7 +7891,7 @@ msgstr "затворен"
 
 #: bluebottle/members/models.py:59
 msgid "Require login before accessing the platform"
-msgstr ""
+msgstr "Задължително е влизането в профила преди достъпа до платформата"
 
 #: bluebottle/members/models.py:62
 msgid "create initiatives"
@@ -7933,19 +7935,19 @@ msgstr "методи за влизане"
 
 #: bluebottle/members/models.py:97
 msgid "confirm signup"
-msgstr ""
+msgstr "потвърди регистрацията"
 
 #: bluebottle/members/models.py:97
 msgid "Require verifying the user's email before signup"
-msgstr ""
+msgstr "Задължително е потвърждаването на имейла на потребителя преди регистрацията"
 
 #: bluebottle/members/models.py:100
 msgid "email domains"
-msgstr ""
+msgstr "домейни на имейли"
 
 #: bluebottle/members/models.py:102
 msgid "Domain that all email should belong to"
-msgstr ""
+msgstr "Домейн, към който всички имейли трябва да принадлежат"
 
 #: bluebottle/members/models.py:106
 msgid "session only"
@@ -7989,7 +7991,7 @@ msgstr "Добавянето на скрипта GTM на платформата
 
 #: bluebottle/members/models.py:144
 msgid "background"
-msgstr ""
+msgstr "фон"
 
 #: bluebottle/members/models.py:155
 msgid "translate user content"
@@ -8276,18 +8278,21 @@ msgstr "Да, сигурен съм"
 msgid "\n"
 "<h1>Welcome %(first_name)s</h1>\n"
 "<p class=\"lead\">You’re now officially part of the %(site_name)s community. Connect, share and work with others on initiatives that you care about.</p>\n"
-msgstr ""
+msgstr "\n"
+"<h1>Добре дошъл %(first_name)s</h1>\n"
+"<p class=\"lead\">Сега вече официално си част от общността на %(site_name)s. Свързвай се, споделяй и работи с други по инициативи, които те вълнуват.</p>\n"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:13
 #, python-format
 msgid "\n"
 "<p>If you have any questions please don’t hesitate to contact %(contact_email)s</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Ако имаш въпроси, моля не се колебай да се свържеш с %(contact_email)s</p>\n"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:24
 msgctxt "email"
 msgid "Set password"
-msgstr ""
+msgstr "Задай парола"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:28
 msgctxt "email"
@@ -8320,32 +8325,32 @@ msgctxt "email"
 msgid "Create your password"
 msgstr "Създайте паролата си"
 
-#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:31
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:34
 msgid "JSON file"
 msgstr "JSON файл"
 
-#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:31
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:34
 msgid "Select a JSON file exported from another platform"
 msgstr "Изберете JSON файл, експортиран от друга платформа"
 
-#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:60
+#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:88
 #: bluebottle/slides/admin.py:39
 msgid "Publication settings"
 msgstr "Настройки за публикуване"
 
-#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:72
+#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:100
 msgid "Online"
 msgstr "Онлайн"
 
-#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:73
+#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:101
 msgid "Offline"
 msgstr "Офлайн"
 
-#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:75
+#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:103
 msgid "Is this item currently visible online or not."
 msgstr "Този елемент в момента ли е видим онлайн или не."
 
-#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:225
+#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:266
 #: bluebottle/slides/admin.py:111
 msgid "Mark selected entries as published"
 msgstr "Маркирайте избраните записи като публикувани"
@@ -8358,7 +8363,7 @@ msgstr "Не са избрани новини."
 msgid "Export selected news items"
 msgstr "Експортирайте избраните новини"
 
-#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:298
+#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:337
 msgid "Invalid JSON file. Please check the file format."
 msgstr "Невалиден JSON файл. Моля, проверете формата на файла."
 
@@ -8718,28 +8723,58 @@ msgstr "Уебсайт"
 msgid "Phone Number"
 msgstr "Телефонен номер"
 
-#: bluebottle/pages/admin.py:171
-msgid "You are trying to create a platform page. Please do so at <a href=\"{}\">Platform pages</a>."
-msgstr ""
+#: bluebottle/pages/admin.py:39
+msgid "Target Language"
+msgstr "Целеви език"
 
-#: bluebottle/pages/admin.py:234
+#: bluebottle/pages/admin.py:40
+msgid "Select the language to translate this page to"
+msgstr "Избери езика, на който да преведеш тази страница"
+
+#: bluebottle/pages/admin.py:42
+#: bluebottle/pages/templates/admin/pages/page/change_form.html:7
+#: bluebottle/pages/templates/admin/pages/page/translate.html:10
+#: bluebottle/pages/templates/admin/pages/page/translate.html:40
+msgid "Translate page"
+msgstr "Преведи страницата"
+
+#: bluebottle/pages/admin.py:212
+msgid "You are trying to create a platform page. Please do so at <a href=\"{}\">Platform pages</a>."
+msgstr "Опитваш се да създадеш страница на платформата. Моля, направи го в <a href=\"{}\">Страници на платформата</a>."
+
+#: bluebottle/pages/admin.py:275
 msgid "No pages were selected."
 msgstr "Не са избрани страници."
 
-#: bluebottle/pages/admin.py:246
+#: bluebottle/pages/admin.py:287
 msgid "Export selected pages"
 msgstr "Експортирайте избраните страници"
 
-#: bluebottle/pages/admin.py:300
+#: bluebottle/pages/admin.py:339
 #, python-brace-format
 msgid "Error importing pages: {0}"
 msgstr "Грешка при импортиране на страници: {0}"
 
-#: bluebottle/pages/admin.py:311
+#: bluebottle/pages/admin.py:350
 #: bluebottle/pages/templates/admin/pages/page/change_list.html:8
 #: bluebottle/pages/templates/admin/pages/page/import.html:9
 msgid "Import pages"
 msgstr "Импортирайте страници"
+
+#: bluebottle/pages/admin.py:366
+#, python-brace-format
+msgid "A page with slug \"{slug}\" already exists for language {language}."
+msgstr "Страница с идентификатор \"{slug}\" вече съществува за език {language}."
+
+#: bluebottle/pages/admin.py:378
+#, python-brace-format
+msgid "Page \"{title}\" has been translated to {language}."
+msgstr "Страница \"{title}\" е преведена на {language}."
+
+#: bluebottle/pages/admin.py:387
+#, python-brace-format
+msgid "Error translating page: {error}"
+msgstr "Грешка при превода на страницата: {error}"
 
 #: bluebottle/pages/models.py:28
 msgid "Link title"
@@ -8804,7 +8839,7 @@ msgid "Text + Scaled Image"
 msgstr "Текст + Масштабирано изображение"
 
 #: bluebottle/pages/models.py:229 bluebottle/slides/models.py:24
-#: bluebottle/utils/models.py:160
+#: bluebottle/utils/models.py:154
 msgid "Published"
 msgstr "Публикувано"
 
@@ -8822,21 +8857,21 @@ msgstr "Покажете заглавието на тази страница в 
 
 #: bluebottle/pages/models.py:299
 msgid "Start an initiative"
-msgstr ""
+msgstr "Започни инициатива"
 
 #: bluebottle/pages/models.py:301
 msgid "Privacy policy"
-msgstr ""
+msgstr "Политика за поверителност"
 
 #: bluebottle/pages/models.py:331
 msgid "Page type"
-msgstr ""
+msgstr "Тип страница"
 
 #: bluebottle/pages/models.py:349
 msgid "Platform page"
-msgstr ""
+msgstr "Страница на платформата"
 
-#: bluebottle/pages/templates/admin/pages/page/change_form.html:7
+#: bluebottle/pages/templates/admin/pages/page/change_form.html:12
 msgid "Export page"
 msgstr "Експортиране на страница"
 
@@ -8877,6 +8912,28 @@ msgstr[1] "\n"
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:19
 msgid "No pages were imported or updated."
 msgstr "Не бяха импортирани или актуализирани страници."
+
+#: bluebottle/pages/templates/admin/pages/page/translate.html:15
+msgid "Select the target language to translate this page. All blocks will be copied and text fields will be translated using DeepL."
+msgstr "Избери целевия език, на който да преведеш тази страница. Всички блокове ще бъдат копирани, а текстовите полета ще бъдат преведени с DeepL."
+
+#: bluebottle/pages/templates/admin/pages/page/translate.html:16
+msgid "Source page:"
+msgstr "Изходна страница:"
+
+#: bluebottle/pages/templates/admin/pages/page/translate_error_message.html:3
+#, python-format
+msgid "\n"
+"A page with slug \"%(slug)s\" already exists for language %(language)s.\n"
+msgstr "\n"
+"Страница с идентификатор \"%(slug)s\" вече съществува за език %(language)s.\n"
+
+#: bluebottle/pages/templates/admin/pages/page/translate_success_message.html:3
+#, python-format
+msgid "\n"
+"Page \"%(title)s\" has been translated to %(language)s.\n"
+msgstr "\n"
+"Страница \"%(title)s\" е преведена на %(language)s.\n"
 
 #: bluebottle/redirects/models.py:8
 msgid "redirect from"
@@ -9136,7 +9193,7 @@ msgstr "Заглавие и футер"
 msgid "Email templates"
 msgstr "Шаблони за електронна поща"
 
-#: bluebottle/settings/admin_dashboard.py:255 bluebottle/utils/models.py:149
+#: bluebottle/settings/admin_dashboard.py:255 bluebottle/utils/models.py:143
 msgid "Settings"
 msgstr "Настройки"
 
@@ -9233,7 +9290,7 @@ msgstr "Унгарски"
 
 #: bluebottle/settings/local.py:732
 msgid "Bulgarian"
-msgstr ""
+msgstr "Български"
 
 #: bluebottle/slides/admin.py:34
 msgid "Contents"
@@ -13210,15 +13267,15 @@ msgstr "Вижте отговора"
 msgid "Transition"
 msgstr "Преход"
 
-#: bluebottle/utils/models.py:170
+#: bluebottle/utils/models.py:164
 msgid "publication date"
 msgstr "дата на публикуване"
 
-#: bluebottle/utils/models.py:173
+#: bluebottle/utils/models.py:167
 msgid "To go live, status must be 'Published'."
 msgstr "За да влезете в действие, статусът трябва да бъде 'Публикуван'."
 
-#: bluebottle/utils/models.py:175
+#: bluebottle/utils/models.py:169
 msgid "publication end date"
 msgstr "крайна дата на публикуване"
 

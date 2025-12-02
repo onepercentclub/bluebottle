@@ -651,7 +651,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
     def test_payouts_disabled(self):
         self.connect_account.payouts_enabled = False
         self.execute_hook()
-        self.assertEqual(self.payout_account.status, "new")
+        self.assertEqual(self.payout_account.status, "incomplete")
 
     def test_tos_reaccept(self):
         self.payout_account.tos_accepted = True

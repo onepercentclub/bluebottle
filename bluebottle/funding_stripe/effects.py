@@ -74,9 +74,9 @@ class UpdateBusinessTypeEffect(Effect):
         stripe_account = payout_account.retrieve_account()
 
         if (
-            payout_account.pk and
-            payout_account.account_id and
-            stripe_account.business_type != payout_account.business_type
+            payout_account.pk
+            and payout_account.account_id
+            and stripe_account.business_type != payout_account.business_type
         ):
             stripe_account = stripe.Account.modify(
                 payout_account.account_id,

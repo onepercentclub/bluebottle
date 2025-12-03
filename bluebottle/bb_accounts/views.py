@@ -242,14 +242,15 @@ class SignUpToken(JsonApiViewMixin, CreateAPIView):
     def perform_create(self, serializer):
         instance = serializer.save()
         token = TimestampSigner().sign(instance.pk)
-        SignUpTokenMessage(
-            instance,
-            custom_message={
-                'token': token,
-                'url': serializer.validated_data.get('url', ''),
-                'segment_id': serializer.validated_data.get('segment_id', '')
-            },
-        ).compose_and_send()
+        if instance.accepted:
+            SignUpTokenMessage(
+                instance,
+                custom_message={
+                    'token': token,
+                    'url': serializer.validated_data.get('url', ''),
+                    'segment_id': serializer.validated_data.get('segment_id', '')
+                },
+            ).compose_and_send()
         return instance
 
 

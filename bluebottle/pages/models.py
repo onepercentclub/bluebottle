@@ -295,6 +295,12 @@ class Page(PublishableModel):
         return truncatechars(s.get_data(), 200)
 
 
+class PageTypeChoices(DjangoChoices):
+    start = ChoiceItem('start', label=_("Start an initiative"))
+    terms = ChoiceItem('terms', label=_("Terms of service"))
+    privacy = ChoiceItem('privacy', label=_("Privacy policy"))
+
+
 class PlatformPage(TranslatableModel):
     body = PlaceholderField(
         'blog_contents',
@@ -321,11 +327,6 @@ class PlatformPage(TranslatableModel):
     full_page = True
     show_title = True
 
-    class PageTypeChoices(DjangoChoices):
-        start = ChoiceItem('start', label=_("Start initiative/activity"))
-        terms = ChoiceItem('terms', label=_("Terms and conditions"))
-        privacy = ChoiceItem('privacy', label=_("Privacy policy"))
-
     slug = models.CharField(
         _('Page type'),
         choices=PageTypeChoices.choices,
@@ -345,4 +346,4 @@ class PlatformPage(TranslatableModel):
         return f'/platform/{self.slug}'
 
     def __str__(self):
-        return str(self.PageTypeChoices.get_choice(self.slug).label if self.slug else _('Platform page'))
+        return str(PageTypeChoices.get_choice(self.slug).label if self.slug else _('Platform page'))

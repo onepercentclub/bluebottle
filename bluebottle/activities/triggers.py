@@ -5,7 +5,8 @@ from bluebottle.activities.effects import (
 )
 from bluebottle.activities.messages.activity_manager import (
     ActivityPublishedNotification, ActivitySubmittedNotification,
-    ActivityApprovedNotification, ActivityNeedsWorkNotification, TermsOfServiceNotification
+    ActivityApprovedNotification, ActivityNeedsWorkNotification, TermsOfServiceNotification,
+    ActivityCancelledNotification
 )
 from bluebottle.activities.messages.reviewer import (
     ActivitySubmittedReviewerNotification,
@@ -14,7 +15,7 @@ from bluebottle.activities.messages.reviewer import (
 from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine,
-    EffortContributionStateMachine
+    EffortContributionStateMachine, ContributorStateMachine
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -24,7 +25,7 @@ from bluebottle.funding.models import Funding
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.states import ParticipantStateMachine
+from bluebottle.time_based.states import ParticipantStateMachine, SlotStateMachine, DateActivitySlotStateMachine
 
 
 def should_approve_instantly(effect):
@@ -177,6 +178,30 @@ class ActivityTriggers(TriggerManager):
                     OrganizerStateMachine.fail,
                     conditions=[has_organizer]
                 )
+            ]
+        ),
+        TransitionTrigger(
+            ActivityStateMachine.auto_cancel,
+            effects=[
+                NotificationEffect(ActivityCancelledNotification),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                    conditions=[has_organizer]
+                ),
+                RelatedTransitionEffect(
+                    'contributors',
+                    ContributorStateMachine.fail
+                ),
+                RelatedTransitionEffect(
+                    'slots',
+                    SlotStateMachine.auto_cancel
+                ),
+                RelatedTransitionEffect(
+                    'slots',
+                    DateActivitySlotStateMachine.auto_cancel
+                )
+
             ]
         ),
 

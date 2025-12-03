@@ -14,9 +14,9 @@ from rest_framework_json_api.serializers import Serializer, ModelSerializer, Res
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.files.serializers import ImageField
 from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.clients import properties
+from bluebottle.files.serializers import ImageField
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import OldPlaceSerializer
 from bluebottle.initiatives.models import Theme
@@ -220,11 +220,11 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
         representation = BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
         if not (
-                user.is_staff or
-                user.is_superuser
+            user.is_staff or
+            user.is_superuser
         ) and (
-                self.hide_last_name and
-                MemberPlatformSettings.objects.get().display_member_names == 'first_name'
+            self.hide_last_name and
+            MemberPlatformSettings.objects.get().display_member_names == 'first_name'
         ):
             del representation['last_name']
             representation['full_name'] = representation['first_name']
@@ -366,6 +366,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
             'subscribed', 'segments', 'can_pledge', 'can_do_bank_transfer',
+            'translate_user_content',
         )
 
 
@@ -482,8 +483,8 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     def validate_email(self, email):
         settings = MemberPlatformSettings.objects.get()
         if (
-                settings.email_domain and
-                not email.endswith('@{}'.format(settings.email_domain))
+            settings.email_domain and
+            not email.endswith('@{}'.format(settings.email_domain))
         ):
             raise serializers.ValidationError(
                 ('Only emails for the domain {} are allowed').format(
@@ -727,7 +728,7 @@ class MemberProfileSerializer(ModelSerializer):
             'search_distance', 'any_search_distance', 'exclude_online',
             'matching_options_set', 'remote_id', 'avatar',
             'subscribed', 'receive_reminder_emails', 'campaign_notifications',
-            'has_usable_password', 'avatar', 'gender'
+            'has_usable_password', 'avatar', 'gender', 'translate_user_content'
         )
 
     class JSONAPIMeta():
@@ -825,7 +826,7 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
         self.instance.save()
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
-        fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
+        fields = ('new_password',) + PasswordProtectedMemberSerializer.Meta.fields
 
     class JSONAPIMeta:
         resource_name = 'profile-password'
@@ -862,12 +863,19 @@ class UserVerificationSerializer(serializers.Serializer):
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     background = SorlImageField('1408x1080', crop='center')
     read_only_fields = serializers.SerializerMethodField()
+    social_login_methods = serializers.SerializerMethodField()
 
     def get_read_only_fields(self, obj):
         try:
             return properties.TOKEN_AUTH['assertion_mapping'].keys()
         except (AttributeError, IndexError):
             return []
+
+    def get_social_login_methods(self, obj):
+        return [
+            {'key': method.client_id, 'backend': method.backend}
+            for method in obj.social_login_methods.all()
+        ]
 
     class Meta(object):
         model = MemberPlatformSettings
@@ -898,7 +906,9 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'fiscal_year_end',
             'retention_anonymize',
             'retention_delete',
-            'read_only_fields'
+            'read_only_fields',
+            'translate_user_content',
+            'social_login_methods'
         )
 
 

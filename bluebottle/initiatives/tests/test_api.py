@@ -423,12 +423,12 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=now() - datetime.timedelta(weeks=1),
         )
         for registration in DateRegistrationFactory.create_batch(
-                3, activity=date_activity
+            3, activity=date_activity
         ):
             DateParticipantFactory.create(registration=registration, slot=slot)
 
         for registration in DateRegistrationFactory.create_batch(
-                3, activity=date_activity, status="rejected"
+            3, activity=date_activity, status="rejected"
         ):
             DateParticipantFactory.create(registration=registration, slot=slot, status='rejected')
 

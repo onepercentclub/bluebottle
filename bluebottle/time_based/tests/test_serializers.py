@@ -37,6 +37,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             'is_full': True,
             'duration': None,
             'has_multiple': False,
+            'spots_left': None,
             'total': 0
         })
 
@@ -50,6 +51,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             'duration': timedelta(hours=2),
             'is_full': False,
             'has_multiple': False,
+            'spots_left': 10,
             'total': 1
         })
 
@@ -68,6 +70,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             'duration': None,
             'is_full': False,
             'has_multiple': True,
+            'spots_left': 30,
             'total': 3
         })
 
@@ -92,6 +95,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             'duration': None,
             'is_full': True,
             'has_multiple': True,
+            'spots_left': 30,
             'total': 3
         })
 
@@ -110,6 +114,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             'duration': None,
             'is_full': False,
             'has_multiple': True,
+            'spots_left': 30,
             'total': 3
         })
 
@@ -130,6 +135,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'first': min(slot.start.date() for slot in slots),
                 'end': max(slot.end.date() for slot in slots),
                 'has_multiple': True,
+                'spots_left': 20,
                 'total': 2
             },
             {

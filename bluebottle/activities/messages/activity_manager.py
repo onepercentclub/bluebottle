@@ -8,6 +8,10 @@ from django.utils.html import format_html
 
 
 class OwnerActivityNotification(TransitionMessage):
+    """
+    Base class for all notifications to activity managers.
+    """
+
     context = {
         'title': 'title',
     }
@@ -40,8 +44,14 @@ class OwnerActivityNotification(TransitionMessage):
         """activity owner"""
         return [self.obj.owner]
 
+    class Meta:
+        abstract = True
+
 
 class ImpactReminderMessage(OwnerActivityNotification):
+    """
+    Remind the activity manager to add impact results to their activity.
+    """
     subject = pgettext('email', 'Please share the impact results for your activity "{title}".')
     template = 'messages/activity_manager/activity_impact_reminder'
     context = {
@@ -51,7 +61,7 @@ class ImpactReminderMessage(OwnerActivityNotification):
 
 class ActivitySucceededNotification(OwnerActivityNotification):
     """
-    The activity succeeded
+    Notify the activity manager that the activity succeeded.
     """
     subject = pgettext('email', 'Your activity "{title}" has succeeded 🎉')
     template = 'messages/activity_manager/activity_succeeded'
@@ -59,7 +69,7 @@ class ActivitySucceededNotification(OwnerActivityNotification):
 
 class ActivityRestoredNotification(OwnerActivityNotification):
     """
-    The activity was restored
+    Notify the activity manager that the activity was restored
     """
     subject = pgettext('email', 'The activity "{title}" has been restored')
     template = 'messages/activity_manager/activity_restored'
@@ -67,7 +77,7 @@ class ActivityRestoredNotification(OwnerActivityNotification):
 
 class ActivityRejectedNotification(OwnerActivityNotification):
     """
-    The activity was rejected
+    Notify the activity manager that the activity was rejected
     """
     subject = pgettext('email', 'Your activity "{title}" has been rejected')
     template = 'messages/activity_manager/activity_rejected'
@@ -75,7 +85,7 @@ class ActivityRejectedNotification(OwnerActivityNotification):
 
 class ActivityCancelledNotification(OwnerActivityNotification):
     """
-    The activity got cancelled
+    Notify the activity manager that the activity got cancelled
     """
     subject = pgettext('email', 'Your activity "{title}" has been cancelled')
     template = 'messages/activity_manager/activity_cancelled'
@@ -83,7 +93,7 @@ class ActivityCancelledNotification(OwnerActivityNotification):
 
 class ActivityExpiredNotification(OwnerActivityNotification):
     """
-    The activity expired (no sign-ups before registration deadline or start date)
+    Notify the activity manager that the activity expired (no sign-ups before registration deadline or start date)
     """
     subject = pgettext('email', 'The registration deadline for your activity "{title}" has expired')
     template = 'messages/activity_manager/activity_expired'
@@ -91,7 +101,7 @@ class ActivityExpiredNotification(OwnerActivityNotification):
 
 class ActivityPublishedNotification(OwnerActivityNotification):
     """
-    The activity was published
+    Notify the activity manager that the activity was published
     """
     subject = pgettext('email', "Your activity on {site_name} has been published!")
     template = 'messages/activity_manager/activity_published'
@@ -99,7 +109,7 @@ class ActivityPublishedNotification(OwnerActivityNotification):
 
 class ActivitySubmittedNotification(OwnerActivityNotification):
     """
-    The activity was submitted
+    Notify the activity manager that the activity was submitted
     """
     subject = pgettext('email', "You submitted an activity on {site_name}")
     template = 'messages/activity_manager/activity_submitted'
@@ -107,7 +117,7 @@ class ActivitySubmittedNotification(OwnerActivityNotification):
 
 class ActivityApprovedNotification(OwnerActivityNotification):
     """
-    The activity was approved
+    Notify the activity manager that the activity was approved
     """
     subject = pgettext('email', "Your activity on {site_name} has been approved!")
     template = 'messages/activity_manager/activity_approved'
@@ -115,13 +125,16 @@ class ActivityApprovedNotification(OwnerActivityNotification):
 
 class ActivityNeedsWorkNotification(OwnerActivityNotification):
     """
-    The activity needs work
+    Notify the activity manager that the activity needs work
     """
     subject = pgettext('email', "The activity you submitted on {site_name} needs work")
     template = 'messages/activity_manager/activity_needs_work'
 
 
 class PublishActivityReminderNotification(OwnerActivityNotification):
+    """
+    Notify the activity manager that an activity still needs to be published
+    """
     subject = pgettext('email', 'Publish your activity "{title}"')
     template = 'messages/activity_manager/publish_activity_reminder'
     send_once = True
@@ -134,6 +147,10 @@ class PublishActivityReminderNotification(OwnerActivityNotification):
 
 
 class TermsOfServiceNotification(OwnerActivityNotification):
+    """
+    Notify the activity manager about the terms of service they accepted.
+    A BCC will be sent to other email address if configured.
+    """
     subject = pgettext('email', 'Terms of service')
     template = 'messages/activity_manager/terms_of_service'
     send_once = False

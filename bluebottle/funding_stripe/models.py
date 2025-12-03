@@ -562,7 +562,7 @@ class StripePayoutAccount(PayoutAccount):
         ):
             if self.status != self.states.verified.value:
                 self.states.verify()
-        elif self.status != self.states.incomplete.value:
+        elif self.status and self.status != self.states.incomplete.value:
             self.states.set_incomplete()
 
         if self.id and save:

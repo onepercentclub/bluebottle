@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-03 09:39+0100\n"
-"PO-Revision-Date: 2025-12-03 08:43\n"
+"POT-Creation-Date: 2025-12-03 12:59+0100\n"
+"PO-Revision-Date: 2025-12-03 12:05\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -977,6 +977,7 @@ msgstr "Aanpassingen zijn nodig voordat de activiteit kan worden goedgekeurd. Br
 #: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
 #: bluebottle/funding/states.py:121 bluebottle/grant_management/states.py:138
 #: bluebottle/initiatives/states.py:181
+#: bluebottle/pages/templates/admin/pages/page/translate.html:41
 #: bluebottle/time_based/states/participants.py:188
 #: bluebottle/time_based/states/participants.py:473
 #: bluebottle/time_based/states/slots.py:95
@@ -1195,6 +1196,7 @@ msgstr "De organisator is nog bezig met het opzetten van de activiteit."
 #: bluebottle/news/templates/admin/news/newsitem/import.html:6
 #: bluebottle/notifications/templates/admin/change_confirmation.html:14
 #: bluebottle/pages/templates/admin/pages/page/import.html:6
+#: bluebottle/pages/templates/admin/pages/page/translate.html:6
 #: bluebottle/time_based/templates/admin/time_based/bulk_add.html:6
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:6
 #: bluebottle/utils/templates/admin/confirmation.html:9
@@ -3889,7 +3891,7 @@ msgid "Grant applications"
 msgstr "Fondsaanvragen"
 
 #: bluebottle/funding/admin.py:648 bluebottle/funding/filters.py:11
-#: bluebottle/pages/admin.py:213 bluebottle/time_based/admin.py:242
+#: bluebottle/pages/admin.py:254 bluebottle/time_based/admin.py:242
 #: bluebottle/time_based/admin.py:331 bluebottle/time_based/admin.py:374
 #: bluebottle/time_based/admin.py:484 bluebottle/time_based/admin.py:542
 #: bluebottle/time_based/admin.py:919 bluebottle/time_based/admin.py:1132
@@ -7352,12 +7354,12 @@ msgstr "thema"
 msgid "themes"
 msgstr "thema's"
 
-#: bluebottle/initiatives/serializers.py:486
-#: bluebottle/initiatives/serializers.py:503
+#: bluebottle/initiatives/serializers.py:483
+#: bluebottle/initiatives/serializers.py:500
 msgid "Name is required"
 msgstr "Naam is verplicht"
 
-#: bluebottle/initiatives/serializers.py:504
+#: bluebottle/initiatives/serializers.py:501
 msgid "Email is required"
 msgstr "E-mail is verplicht"
 
@@ -8436,32 +8438,32 @@ msgctxt "email"
 msgid "Create your password"
 msgstr "Stel een wachtwoord in"
 
-#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:31
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:34
 msgid "JSON file"
 msgstr "JSON-bestand"
 
-#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:31
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:34
 msgid "Select a JSON file exported from another platform"
 msgstr "Selecteer een JSON-bestand dat van een ander platform is geëxporteerd"
 
-#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:60
+#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:88
 #: bluebottle/slides/admin.py:39
 msgid "Publication settings"
 msgstr "Publicatie instellingen"
 
-#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:72
+#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:100
 msgid "Online"
 msgstr "Online"
 
-#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:73
+#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:101
 msgid "Offline"
 msgstr "Offline"
 
-#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:75
+#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:103
 msgid "Is this item currently visible online or not."
 msgstr "Is dit item momenteel online zichtbaar of niet."
 
-#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:225
+#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:266
 #: bluebottle/slides/admin.py:111
 msgid "Mark selected entries as published"
 msgstr "Markeer geselecteerde items als gepubliceerd"
@@ -8474,7 +8476,7 @@ msgstr "Geen nieuwsitems geselecteerd."
 msgid "Export selected news items"
 msgstr "Exporteer geselecteerde nieuwsitems"
 
-#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:298
+#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:337
 msgid "Invalid JSON file. Please check the file format."
 msgstr "Ongeldig JSON-bestand. Controleer het bestandformaat."
 
@@ -8835,28 +8837,58 @@ msgstr "Website"
 msgid "Phone Number"
 msgstr "Telefoonnummer"
 
-#: bluebottle/pages/admin.py:171
+#: bluebottle/pages/admin.py:39
+msgid "Target Language"
+msgstr "Doeltaal"
+
+#: bluebottle/pages/admin.py:40
+msgid "Select the language to translate this page to"
+msgstr "Selecteer de taal om deze pagina naar te vertalen"
+
+#: bluebottle/pages/admin.py:42
+#: bluebottle/pages/templates/admin/pages/page/change_form.html:7
+#: bluebottle/pages/templates/admin/pages/page/translate.html:10
+#: bluebottle/pages/templates/admin/pages/page/translate.html:40
+msgid "Translate page"
+msgstr "Pagina vertalen"
+
+#: bluebottle/pages/admin.py:212
 msgid "You are trying to create a platform page. Please do so at <a href=\"{}\">Platform pages</a>."
 msgstr "Je probeert een platformpagina te maken. Doe dit alsjeblieft op <a href=\"{}\">Platformpagina’s</a>."
 
-#: bluebottle/pages/admin.py:234
+#: bluebottle/pages/admin.py:275
 msgid "No pages were selected."
 msgstr "Geen pagina's geselecteerd."
 
-#: bluebottle/pages/admin.py:246
+#: bluebottle/pages/admin.py:287
 msgid "Export selected pages"
 msgstr "Exporteer geselecteerde pagina's"
 
-#: bluebottle/pages/admin.py:300
+#: bluebottle/pages/admin.py:339
 #, python-brace-format
 msgid "Error importing pages: {0}"
 msgstr "Fout bij het importeren van pagina's: {0}"
 
-#: bluebottle/pages/admin.py:311
+#: bluebottle/pages/admin.py:350
 #: bluebottle/pages/templates/admin/pages/page/change_list.html:8
 #: bluebottle/pages/templates/admin/pages/page/import.html:9
 msgid "Import pages"
 msgstr "Pagina's importeren"
+
+#: bluebottle/pages/admin.py:366
+#, python-brace-format
+msgid "A page with slug \"{slug}\" already exists for language {language}."
+msgstr "Er bestaat al een pagina met slug \"{slug}\" voor de taal {language}."
+
+#: bluebottle/pages/admin.py:378
+#, python-brace-format
+msgid "Page \"{title}\" has been translated to {language}."
+msgstr "De pagina \"{title}\" is vertaald naar het {language}."
+
+#: bluebottle/pages/admin.py:387
+#, python-brace-format
+msgid "Error translating page: {error}"
+msgstr "Fout bij het vertalen van pagina: {error}"
 
 #: bluebottle/pages/models.py:28
 msgid "Link title"
@@ -8953,7 +8985,7 @@ msgstr "Paginatype"
 msgid "Platform page"
 msgstr "Platformpagina"
 
-#: bluebottle/pages/templates/admin/pages/page/change_form.html:7
+#: bluebottle/pages/templates/admin/pages/page/change_form.html:12
 msgid "Export page"
 msgstr "Exporteer pagina"
 
@@ -8994,6 +9026,28 @@ msgstr[1] "\n"
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:19
 msgid "No pages were imported or updated."
 msgstr "Geen pagina's geïmporteerd of bijgewerkt."
+
+#: bluebottle/pages/templates/admin/pages/page/translate.html:15
+msgid "Select the target language to translate this page. All blocks will be copied and text fields will be translated using DeepL."
+msgstr "Selecteer de doeltaal om deze pagina te vertalen. Alle blokken worden gekopieerd en tekstvelden worden vertaald met DeepL."
+
+#: bluebottle/pages/templates/admin/pages/page/translate.html:16
+msgid "Source page:"
+msgstr "Bronpagina:"
+
+#: bluebottle/pages/templates/admin/pages/page/translate_error_message.html:3
+#, python-format
+msgid "\n"
+"A page with slug \"%(slug)s\" already exists for language %(language)s.\n"
+msgstr "\n"
+"Er bestaat al een pagina met slug \"%(slug)s\" voor de taal %(language)s.\n"
+
+#: bluebottle/pages/templates/admin/pages/page/translate_success_message.html:3
+#, python-format
+msgid "\n"
+"Page \"%(title)s\" has been translated to %(language)s.\n"
+msgstr "\n"
+"De pagina \"%(title)s\" is vertaald naar het %(language)s.\n"
 
 #: bluebottle/redirects/models.py:8
 msgid "redirect from"

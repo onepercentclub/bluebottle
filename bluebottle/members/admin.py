@@ -157,8 +157,8 @@ class MemberPlatformSettingsAdmin(
             _('Login'),
             {
                 'fields': (
-                    'closed',
                     'background',
+                    'closed',
                     'login_methods',
                     'confirm_signup',
                     'account_creation_rules',

@@ -1,6 +1,7 @@
 import io
 import qrcode
 from PIL import Image, UnidentifiedImageError
+from bluebottle.scim.models import SCIMPlatformSettings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 from django.core.validators import validate_email
@@ -282,6 +283,7 @@ class ParticipantCreateMixin:
     def perform_create(self, serializer):
         email = serializer.validated_data.pop('email', None)
         send_messages = serializer.validated_data.pop('send_messages', True)
+
         if email:
             user = Member.objects.filter(email__iexact=email).first()
             if not user:
@@ -290,7 +292,12 @@ class ParticipantCreateMixin:
                 except Exception:
                     raise ValidationError(_('Not a valid email address'), code="invalid")
                 member_settings = MemberPlatformSettings.load()
-                if member_settings.closed or member_settings.confirm_signup:
+                scim_settings = SCIMPlatformSettings.objects.get()
+
+                if (
+                    (member_settings.closed or member_settings.confirm_signup) and
+                    not scim_settings.enabled
+                ):
                     try:
                         user = Member.create_by_email(email.strip())
                     except Exception:

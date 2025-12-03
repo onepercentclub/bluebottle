@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-12-03 09:39+0100\n"
-"PO-Revision-Date: 2025-12-03 08:43\n"
+"PO-Revision-Date: 2025-12-03 08:49\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -7685,7 +7685,7 @@ msgstr "Функцията за часовете на въздействие щ�
 
 #: bluebottle/members/admin.py:151
 msgid "If you allow people to request access, use the fields below to explain how they can do this."
-msgstr ""
+msgstr "Ако позволите на хората да поискат достъп, използвайте полетата по-долу, за да обясните как могат да го направят."
 
 #: bluebottle/members/admin.py:157
 msgid "Login"
@@ -7729,11 +7729,11 @@ msgstr "Задължителни полета"
 
 #: bluebottle/members/admin.py:311
 msgid "Access link"
-msgstr ""
+msgstr "Линк за достъп"
 
 #: bluebottle/members/admin.py:345
 msgid "Access code has been renewed successfully."
-msgstr ""
+msgstr "Кодът за достъп беше успешно обновен."
 
 #: bluebottle/members/admin.py:599
 msgid "Permissions"
@@ -7897,35 +7897,35 @@ msgstr "При извършване на вноска"
 
 #: bluebottle/members/models.py:62
 msgid "Anyone can create an account"
-msgstr ""
+msgstr "Всеки може да създаде акаунт"
 
 #: bluebottle/members/models.py:63
 msgid "Only people with a whitelisted email domain can create an account"
-msgstr ""
+msgstr "Само хора с имейл домейн в бял списък могат да създадат акаунт"
 
 #: bluebottle/members/models.py:66
 msgid "People with a whitelisted domain can create an account; all others can request access"
-msgstr ""
+msgstr "Хората с домейн в бял списък могат да създадат акаунт; всички останали могат да поискат достъп"
 
 #: bluebottle/members/models.py:71
 msgid "People request access by entering their email address"
-msgstr ""
+msgstr "Хората искат достъп, като въвеждат своя имейл адрес"
 
 #: bluebottle/members/models.py:72
 msgid "People request access by following your instructions"
-msgstr ""
+msgstr "Хората искат достъп, следвайки вашите инструкции"
 
 #: bluebottle/members/models.py:76
 msgid "Platform access"
-msgstr ""
+msgstr "Достъп до платформата"
 
 #: bluebottle/members/models.py:77
 msgid "Require log in before accessing the platform"
-msgstr ""
+msgstr "Изисква логване преди достъп до платформата"
 
 #: bluebottle/members/models.py:78
 msgid "Only logged-in users can view the platform."
-msgstr ""
+msgstr "Само потребители, влезли в системата, могат да видят платформата."
 
 #: bluebottle/members/models.py:81
 msgid "create initiatives"
@@ -7969,27 +7969,27 @@ msgstr "методи за влизане"
 
 #: bluebottle/members/models.py:117
 msgid "People can use any selected method to sign up or log in. For social log in options, see the ‘Social log in’ tab."
-msgstr ""
+msgstr "Хората могат да използват всякакъв избран метод, за да се регистрират или влязат. За опции за социално логване вижте раздела „Социално логване“."
 
 #: bluebottle/members/models.py:125
 msgid "verify email on sign up"
-msgstr ""
+msgstr "позволи проверка на имейл при регистрация"
 
 #: bluebottle/members/models.py:127
 msgid "Require users to verify their email on sign-up"
-msgstr ""
+msgstr "Изисква потребителите да проверят своя имейл при регистрация"
 
 #: bluebottle/members/models.py:128 bluebottle/members/models.py:133
 msgid "This rule only applies to email + password sign-ups."
-msgstr ""
+msgstr "Това правило важи само за регистрации с имейл + парола."
 
 #: bluebottle/members/models.py:132
 msgid "account creation rules"
-msgstr ""
+msgstr "правила за създаване на акаунт"
 
 #: bluebottle/members/models.py:140
 msgid "Whitelisted email domains"
-msgstr ""
+msgstr "Имейл домейни в бял списък"
 
 #: bluebottle/members/models.py:146
 msgid "session only"
@@ -8001,35 +8001,35 @@ msgstr "Ограничете сесията на потребителя до с�
 
 #: bluebottle/members/models.py:152
 msgid "request access method"
-msgstr ""
+msgstr "метод за искане на достъп"
 
 #: bluebottle/members/models.py:153
 msgid "This rule only applies when requesting access is allowed."
-msgstr ""
+msgstr "Това правило важи само когато е разрешено искането за достъп."
 
 #: bluebottle/members/models.py:160
 msgid "request access instructions"
-msgstr ""
+msgstr "инструкции за искане на достъп"
 
 #: bluebottle/members/models.py:161
 msgid "Explain how people can request access to the platform."
-msgstr ""
+msgstr "Обяснете как хората могат да поискат достъп до платформата."
 
 #: bluebottle/members/models.py:169
 msgid "Request access mail to address"
-msgstr ""
+msgstr "Имейл за искане на достъп на адрес"
 
 #: bluebottle/members/models.py:170
 msgid "Enter the email address where people should send their access request."
-msgstr ""
+msgstr "Въведете имейл адреса, на който хората трябва да изпращат искането си за достъп."
 
 #: bluebottle/members/models.py:176
 msgid "Request access code"
-msgstr ""
+msgstr "Код за искане на достъп"
 
 #: bluebottle/members/models.py:177
 msgid "With this code people can sign-up without a white-listed email address."
-msgstr ""
+msgstr "С този код хората могат да се регистрират без имейл адрес в бял списък."
 
 #: bluebottle/members/models.py:184
 msgid "required questions location"
@@ -8065,11 +8065,11 @@ msgstr "Добавянето на скрипта GTM на платформата
 
 #: bluebottle/members/models.py:216
 msgid "Sign up image"
-msgstr ""
+msgstr "Снимка за регистрация"
 
 #: bluebottle/members/models.py:217
 msgid "This image will be displayed on the sign up and log in pages."
-msgstr ""
+msgstr "Тази снимка ще се показва на страниците за регистрация и влизане."
 
 #: bluebottle/members/models.py:228
 msgid "translate user content"
@@ -8182,7 +8182,7 @@ msgstr "Прието"
 
 #: bluebottle/members/models.py:364
 msgid "Was approved by platform manager."
-msgstr ""
+msgstr "Беше одобрено от платформен мениджър."
 
 #: bluebottle/members/models.py:367
 msgid "Matching"
@@ -8255,15 +8255,15 @@ msgstr "Трябва да се включи \"{username_field}\" и \"парол
 
 #: bluebottle/members/serializers.py:524
 msgid "The access link you supplied is invalid. Please contact us to request a new access link."
-msgstr ""
+msgstr "Линкът за достъп, който предоставихте, е невалиден. Моля, свържете се с нас, за да поискате нов линк за достъп."
 
 #: bluebottle/members/serializers.py:530
 msgid "This email is not whitelisted, please contact us to request access."
-msgstr ""
+msgstr "Този имейл не е в бял списък, моля, свържете се с нас, за да поискате достъп."
 
 #: bluebottle/members/serializers.py:535
 msgid "Only emails for specified domains are allowed. Please use your work e-mail address."
-msgstr ""
+msgstr "Позволяват се само имейли за определени домейни. Моля, използвайте служебния си имейл адрес."
 
 #: bluebottle/members/serializers.py:592
 msgid "A user with this email address already exists"
@@ -8303,31 +8303,31 @@ msgstr "Изпратете имейл за нулиране на паролат�
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:11
 msgid "Copy"
-msgstr ""
+msgstr "Копирай"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:16
 msgid "Are you sure you want to generate a new access code? The old code will no longer work."
-msgstr ""
+msgstr "Сигурни ли сте, че искате да генерирате нов код за достъп? Старият код вече няма да работи."
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:17
 msgid "Re-new link"
-msgstr ""
+msgstr "Обнови линк"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:26
 msgid "Copied!"
-msgstr ""
+msgstr "Копирано!"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:36
 msgid "Failed to copy to clipboard"
-msgstr ""
+msgstr "Неуспешно копиране в клипборда"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:41
 msgid "Share this link with people who are allowed to get access."
-msgstr ""
+msgstr "Споделете този линк с хора, на които е позволено да получат достъп."
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:47
 msgid "Generate link"
-msgstr ""
+msgstr "Генерирай линк"
 
 #: bluebottle/members/templates/admin/members/resend_welcome_mail.html:9
 msgid "Resend welcome mail to"

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-12-03 09:39+0100\n"
-"PO-Revision-Date: 2025-12-03 08:44\n"
+"PO-Revision-Date: 2025-12-03 08:49\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -7679,7 +7679,7 @@ msgstr "A hatásidők funkció megmutatja, mennyi órát ösztönöznek a felhas
 
 #: bluebottle/members/admin.py:151
 msgid "If you allow people to request access, use the fields below to explain how they can do this."
-msgstr ""
+msgstr "Ha engedélyezed, hogy az emberek hozzáférést kérjenek, használd az alábbi mezőket, hogy elmagyarázd, hogyan tehetik ezt meg."
 
 #: bluebottle/members/admin.py:157
 msgid "Login"
@@ -7723,11 +7723,11 @@ msgstr "Kötelező mezők"
 
 #: bluebottle/members/admin.py:311
 msgid "Access link"
-msgstr ""
+msgstr "Hozzáférési link"
 
 #: bluebottle/members/admin.py:345
 msgid "Access code has been renewed successfully."
-msgstr ""
+msgstr "A hozzáférési kódot sikeresen megújították."
 
 #: bluebottle/members/admin.py:599
 msgid "Permissions"
@@ -7891,35 +7891,35 @@ msgstr "Hozzájáruláskor"
 
 #: bluebottle/members/models.py:62
 msgid "Anyone can create an account"
-msgstr ""
+msgstr "Bárki létrehozhat egy fiókot"
 
 #: bluebottle/members/models.py:63
 msgid "Only people with a whitelisted email domain can create an account"
-msgstr ""
+msgstr "Csak azok a személyek hozhatnak létre fiókot, akiknek a levelezési tartománya fehérlistás"
 
 #: bluebottle/members/models.py:66
 msgid "People with a whitelisted domain can create an account; all others can request access"
-msgstr ""
+msgstr "A fehérlistás domainnel rendelkező emberek létrehozhatnak egy fiókot; a többiek hozzáférést kérhetnek"
 
 #: bluebottle/members/models.py:71
 msgid "People request access by entering their email address"
-msgstr ""
+msgstr "Az emberek az email címük megadásával kérhetnek hozzáférést"
 
 #: bluebottle/members/models.py:72
 msgid "People request access by following your instructions"
-msgstr ""
+msgstr "Az emberek követhetik az utasításaidat, hogy hozzáférést kérjenek"
 
 #: bluebottle/members/models.py:76
 msgid "Platform access"
-msgstr ""
+msgstr "Platformhozzáférés"
 
 #: bluebottle/members/models.py:77
 msgid "Require log in before accessing the platform"
-msgstr ""
+msgstr "Bejelentkezés szükséges a platform hozzáféréséhez"
 
 #: bluebottle/members/models.py:78
 msgid "Only logged-in users can view the platform."
-msgstr ""
+msgstr "Csak a bejelentkezett felhasználók láthatják a platformot."
 
 #: bluebottle/members/models.py:81
 msgid "create initiatives"
@@ -7963,27 +7963,27 @@ msgstr "bejelentkezési módok"
 
 #: bluebottle/members/models.py:117
 msgid "People can use any selected method to sign up or log in. For social log in options, see the ‘Social log in’ tab."
-msgstr ""
+msgstr "Az emberek bármelyik kiválasztott módszert használhatják a regisztráláshoz vagy bejelentkezéshez. A közösségi bejelentkezési lehetőségekért lásd a „Közösségi bejelentkezés” fület."
 
 #: bluebottle/members/models.py:125
 msgid "verify email on sign up"
-msgstr ""
+msgstr "az email cím megerősítése a regisztrációkor"
 
 #: bluebottle/members/models.py:127
 msgid "Require users to verify their email on sign-up"
-msgstr ""
+msgstr "Kötelező a felhasználók e-mail címének megerősítése a regisztráció során"
 
 #: bluebottle/members/models.py:128 bluebottle/members/models.py:133
 msgid "This rule only applies to email + password sign-ups."
-msgstr ""
+msgstr "Ez a szabály csak az email + jelszó regisztrációkra vonatkozik."
 
 #: bluebottle/members/models.py:132
 msgid "account creation rules"
-msgstr ""
+msgstr "fiók létrehozási szabályok"
 
 #: bluebottle/members/models.py:140
 msgid "Whitelisted email domains"
-msgstr ""
+msgstr "Fehérlistás email tartományok"
 
 #: bluebottle/members/models.py:146
 msgid "session only"
@@ -7995,35 +7995,35 @@ msgstr "Korreláld a felhasználói munkamenetet a böngésző munkamenetéhez"
 
 #: bluebottle/members/models.py:152
 msgid "request access method"
-msgstr ""
+msgstr "hozzáféréskérelem mód"
 
 #: bluebottle/members/models.py:153
 msgid "This rule only applies when requesting access is allowed."
-msgstr ""
+msgstr "Ez a szabály csak akkor alkalmazható, ha a hozzáféréskérés engedélyezett."
 
 #: bluebottle/members/models.py:160
 msgid "request access instructions"
-msgstr ""
+msgstr "hozzáféréskérelem utasítások"
 
 #: bluebottle/members/models.py:161
 msgid "Explain how people can request access to the platform."
-msgstr ""
+msgstr "Magyarázd el, hogyan kérhetnek hozzáférést az emberek a platformhoz."
 
 #: bluebottle/members/models.py:169
 msgid "Request access mail to address"
-msgstr ""
+msgstr "Hozzáférést kérő levél cím"
 
 #: bluebottle/members/models.py:170
 msgid "Enter the email address where people should send their access request."
-msgstr ""
+msgstr "Add meg azt az email címet, ahová az emberek küldjék a hozzáférési kérelmüket."
 
 #: bluebottle/members/models.py:176
 msgid "Request access code"
-msgstr ""
+msgstr "Hozzáférési kód megkérése"
 
 #: bluebottle/members/models.py:177
 msgid "With this code people can sign-up without a white-listed email address."
-msgstr ""
+msgstr "Ezzel a kóddal az emberek regisztrálhatnak fehérlistás email cím nélkül."
 
 #: bluebottle/members/models.py:184
 msgid "required questions location"
@@ -8059,11 +8059,11 @@ msgstr "A GTM script hozzáadása a platformhoz lehetővé teszi a harmadik fél
 
 #: bluebottle/members/models.py:216
 msgid "Sign up image"
-msgstr ""
+msgstr "Regisztrációs kép"
 
 #: bluebottle/members/models.py:217
 msgid "This image will be displayed on the sign up and log in pages."
-msgstr ""
+msgstr "Ez a kép megjelenik a regisztrációs és bejelentkezési oldalakon."
 
 #: bluebottle/members/models.py:228
 msgid "translate user content"
@@ -8176,7 +8176,7 @@ msgstr "Elfogadva"
 
 #: bluebottle/members/models.py:364
 msgid "Was approved by platform manager."
-msgstr ""
+msgstr "A platform menedzsere hagyta jóvá."
 
 #: bluebottle/members/models.py:367
 msgid "Matching"
@@ -8249,15 +8249,15 @@ msgstr "Kötelező megadni a \"{username_field}\" és a \"jelszó\" mezőket."
 
 #: bluebottle/members/serializers.py:524
 msgid "The access link you supplied is invalid. Please contact us to request a new access link."
-msgstr ""
+msgstr "A megadott hozzáférési link érvénytelen. Kérlek, vedd fel velünk a kapcsolatot, hogy új hozzáférési linket kérj."
 
 #: bluebottle/members/serializers.py:530
 msgid "This email is not whitelisted, please contact us to request access."
-msgstr ""
+msgstr "Ez az email cím nem fehérlistás, kérlek, vedd fel velünk a kapcsolatot, hogy hozzáférést kérj."
 
 #: bluebottle/members/serializers.py:535
 msgid "Only emails for specified domains are allowed. Please use your work e-mail address."
-msgstr ""
+msgstr "Csak a megadott doménekhez tartozó email címek engedélyezettek. Kérlek, használd a munkával kapcsolatos email címedet."
 
 #: bluebottle/members/serializers.py:592
 msgid "A user with this email address already exists"
@@ -8297,31 +8297,31 @@ msgstr "Állítson be jelszót"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:11
 msgid "Copy"
-msgstr ""
+msgstr "Másolás"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:16
 msgid "Are you sure you want to generate a new access code? The old code will no longer work."
-msgstr ""
+msgstr "Biztos vagy benne, hogy új hozzáférési kódot akarsz generálni? A régi kód már nem lesz érvényes."
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:17
 msgid "Re-new link"
-msgstr ""
+msgstr "Link megújítása"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:26
 msgid "Copied!"
-msgstr ""
+msgstr "Másolva!"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:36
 msgid "Failed to copy to clipboard"
-msgstr ""
+msgstr "A vágólapra másolás sikertelen"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:41
 msgid "Share this link with people who are allowed to get access."
-msgstr ""
+msgstr "Oszd meg ezt a linket azokkal, akiknek megengedett a hozzáférés."
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:47
 msgid "Generate link"
-msgstr ""
+msgstr "Link generálása"
 
 #: bluebottle/members/templates/admin/members/resend_welcome_mail.html:9
 msgid "Resend welcome mail to"

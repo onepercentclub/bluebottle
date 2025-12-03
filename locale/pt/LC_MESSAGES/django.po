@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-12-03 09:39+0100\n"
-"PO-Revision-Date: 2025-12-03 08:44\n"
+"PO-Revision-Date: 2025-12-03 08:49\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt_PT\n"
@@ -7687,7 +7687,7 @@ msgstr "A funcionalidade de horas de impacto mostrará a quantidade de horas que
 
 #: bluebottle/members/admin.py:151
 msgid "If you allow people to request access, use the fields below to explain how they can do this."
-msgstr ""
+msgstr "Se você permitir que as pessoas solicitem acesso, use os campos abaixo para explicar como podem fazer isso."
 
 #: bluebottle/members/admin.py:157
 msgid "Login"
@@ -7731,11 +7731,11 @@ msgstr "Campos de preenchimento obrigatório"
 
 #: bluebottle/members/admin.py:311
 msgid "Access link"
-msgstr ""
+msgstr "Link de acesso"
 
 #: bluebottle/members/admin.py:345
 msgid "Access code has been renewed successfully."
-msgstr ""
+msgstr "O código de acesso foi renovado com sucesso."
 
 #: bluebottle/members/admin.py:599
 msgid "Permissions"
@@ -7899,35 +7899,35 @@ msgstr "Ao fazer uma contribuição"
 
 #: bluebottle/members/models.py:62
 msgid "Anyone can create an account"
-msgstr ""
+msgstr "Qualquer pessoa pode criar uma conta"
 
 #: bluebottle/members/models.py:63
 msgid "Only people with a whitelisted email domain can create an account"
-msgstr ""
+msgstr "Apenas pessoas com um domínio de email autorizado podem criar uma conta"
 
 #: bluebottle/members/models.py:66
 msgid "People with a whitelisted domain can create an account; all others can request access"
-msgstr ""
+msgstr "Pessoas com um domínio autorizado podem criar uma conta; todas as outras podem solicitar acesso"
 
 #: bluebottle/members/models.py:71
 msgid "People request access by entering their email address"
-msgstr ""
+msgstr "As pessoas solicitam acesso digitando seu endereço de email"
 
 #: bluebottle/members/models.py:72
 msgid "People request access by following your instructions"
-msgstr ""
+msgstr "As pessoas solicitam acesso seguindo suas instruções"
 
 #: bluebottle/members/models.py:76
 msgid "Platform access"
-msgstr ""
+msgstr "Acesso à plataforma"
 
 #: bluebottle/members/models.py:77
 msgid "Require log in before accessing the platform"
-msgstr ""
+msgstr "Exigir login antes de acessar a plataforma"
 
 #: bluebottle/members/models.py:78
 msgid "Only logged-in users can view the platform."
-msgstr ""
+msgstr "Apenas usuários logados podem visualizar a plataforma."
 
 #: bluebottle/members/models.py:81
 msgid "create initiatives"
@@ -7971,27 +7971,27 @@ msgstr "métodos de login"
 
 #: bluebottle/members/models.py:117
 msgid "People can use any selected method to sign up or log in. For social log in options, see the ‘Social log in’ tab."
-msgstr ""
+msgstr "As pessoas podem usar qualquer método selecionado para se inscrever ou fazer login. Para opções de login social, veja a guia ‘Login social’."
 
 #: bluebottle/members/models.py:125
 msgid "verify email on sign up"
-msgstr ""
+msgstr "verificar email ao se inscrever"
 
 #: bluebottle/members/models.py:127
 msgid "Require users to verify their email on sign-up"
-msgstr ""
+msgstr "Exigir que os usuários verifiquem seu email ao se inscrever"
 
 #: bluebottle/members/models.py:128 bluebottle/members/models.py:133
 msgid "This rule only applies to email + password sign-ups."
-msgstr ""
+msgstr "Essa regra se aplica apenas a inscrições por email + senha."
 
 #: bluebottle/members/models.py:132
 msgid "account creation rules"
-msgstr ""
+msgstr "regras de criação de conta"
 
 #: bluebottle/members/models.py:140
 msgid "Whitelisted email domains"
-msgstr ""
+msgstr "Domínios de email autorizados"
 
 #: bluebottle/members/models.py:146
 msgid "session only"
@@ -8003,35 +8003,35 @@ msgstr "Limitar sessão de usuário ao navegador"
 
 #: bluebottle/members/models.py:152
 msgid "request access method"
-msgstr ""
+msgstr "método de solicitação de acesso"
 
 #: bluebottle/members/models.py:153
 msgid "This rule only applies when requesting access is allowed."
-msgstr ""
+msgstr "Essa regra se aplica apenas quando a solicitação de acesso é permitida."
 
 #: bluebottle/members/models.py:160
 msgid "request access instructions"
-msgstr ""
+msgstr "instruções de solicitação de acesso"
 
 #: bluebottle/members/models.py:161
 msgid "Explain how people can request access to the platform."
-msgstr ""
+msgstr "Explique como as pessoas podem solicitar acesso à plataforma."
 
 #: bluebottle/members/models.py:169
 msgid "Request access mail to address"
-msgstr ""
+msgstr "Email para solicitar acesso"
 
 #: bluebottle/members/models.py:170
 msgid "Enter the email address where people should send their access request."
-msgstr ""
+msgstr "Digite o endereço de email onde as pessoas devem enviar suas solicitações de acesso."
 
 #: bluebottle/members/models.py:176
 msgid "Request access code"
-msgstr ""
+msgstr "Código de solicitação de acesso"
 
 #: bluebottle/members/models.py:177
 msgid "With this code people can sign-up without a white-listed email address."
-msgstr ""
+msgstr "Com este código, as pessoas podem se inscrever sem um endereço de email autorizado."
 
 #: bluebottle/members/models.py:184
 msgid "required questions location"
@@ -8067,11 +8067,11 @@ msgstr "Adicionar o script GTM à sua plataforma permite que você gerencie e fa
 
 #: bluebottle/members/models.py:216
 msgid "Sign up image"
-msgstr ""
+msgstr "Imagem de inscrição"
 
 #: bluebottle/members/models.py:217
 msgid "This image will be displayed on the sign up and log in pages."
-msgstr ""
+msgstr "Esta imagem será exibida nas páginas de inscrição e login."
 
 #: bluebottle/members/models.py:228
 msgid "translate user content"
@@ -8184,7 +8184,7 @@ msgstr "Aceitou"
 
 #: bluebottle/members/models.py:364
 msgid "Was approved by platform manager."
-msgstr ""
+msgstr "Foi aprovado pelo gerente da plataforma."
 
 #: bluebottle/members/models.py:367
 msgid "Matching"
@@ -8257,15 +8257,15 @@ msgstr "Deve incluir \"{username_field}\" e \"senha\"."
 
 #: bluebottle/members/serializers.py:524
 msgid "The access link you supplied is invalid. Please contact us to request a new access link."
-msgstr ""
+msgstr "O link de acesso que você forneceu é inválido. Por favor, entre em contato conosco para solicitar um novo link de acesso."
 
 #: bluebottle/members/serializers.py:530
 msgid "This email is not whitelisted, please contact us to request access."
-msgstr ""
+msgstr "Este email não está na lista autorizada, por favor, entre em contato conosco para solicitar acesso."
 
 #: bluebottle/members/serializers.py:535
 msgid "Only emails for specified domains are allowed. Please use your work e-mail address."
-msgstr ""
+msgstr "Apenas emails de domínios especificados são permitidos. Por favor, use seu endereço de email de trabalho."
 
 #: bluebottle/members/serializers.py:592
 msgid "A user with this email address already exists"
@@ -8305,31 +8305,31 @@ msgstr "Enviar email de redefinição de senha para"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:11
 msgid "Copy"
-msgstr ""
+msgstr "Copiar"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:16
 msgid "Are you sure you want to generate a new access code? The old code will no longer work."
-msgstr ""
+msgstr "Você tem certeza de que deseja gerar um novo código de acesso? O código antigo não funcionará mais."
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:17
 msgid "Re-new link"
-msgstr ""
+msgstr "Renovar link"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:26
 msgid "Copied!"
-msgstr ""
+msgstr "Copiado!"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:36
 msgid "Failed to copy to clipboard"
-msgstr ""
+msgstr "Falha ao copiar para a área de transferência"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:41
 msgid "Share this link with people who are allowed to get access."
-msgstr ""
+msgstr "Compartilhe este link com pessoas que têm permissão para obter acesso."
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:47
 msgid "Generate link"
-msgstr ""
+msgstr "Gerar link"
 
 #: bluebottle/members/templates/admin/members/resend_welcome_mail.html:9
 msgid "Resend welcome mail to"

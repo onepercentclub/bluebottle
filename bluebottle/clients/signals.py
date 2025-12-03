@@ -5,7 +5,6 @@ from django_elasticsearch_dsl.registries import registry
 from celery import shared_task
 
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.clients.models import Client
 
 from django_elasticsearch_dsl.signals import RealTimeSignalProcessor
 

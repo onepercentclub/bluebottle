@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-27 11:02+0100\n"
-"PO-Revision-Date: 2025-11-27 10:03\n"
+"POT-Creation-Date: 2025-12-03 09:39+0100\n"
+"PO-Revision-Date: 2025-12-03 08:49\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -163,7 +163,7 @@ msgid "Segments"
 msgstr "Segmente"
 
 #: bluebottle/activities/admin.py:785 bluebottle/cms/models.py:337
-#: bluebottle/settings/admin_dashboard.py:218
+#: bluebottle/settings/admin_dashboard.py:219
 #: bluebottle/statistics/models.py:45
 msgid "Statistics"
 msgstr "Statistiken"
@@ -607,13 +607,13 @@ msgstr "Anzahl gelöschter erfolgreicher Mitwirkender"
 #: bluebottle/activities/models.py:108 bluebottle/cms/models.py:49
 #: bluebottle/cms/models.py:125 bluebottle/cms/models.py:142
 #: bluebottle/funding/models.py:349 bluebottle/news/models.py:22
-#: bluebottle/pages/models.py:231 bluebottle/slides/models.py:46
-#: bluebottle/statistics/models.py:235
+#: bluebottle/pages/models.py:232 bluebottle/pages/models.py:324
+#: bluebottle/slides/models.py:46 bluebottle/statistics/models.py:235
 msgid "Title"
 msgstr "Titel"
 
 #: bluebottle/activities/models.py:109 bluebottle/cms/models.py:50
-#: bluebottle/news/models.py:23 bluebottle/pages/models.py:232
+#: bluebottle/news/models.py:23 bluebottle/pages/models.py:233
 #: bluebottle/slides/models.py:27
 msgid "Slug"
 msgstr "Slug"
@@ -908,7 +908,7 @@ msgstr "Absenden"
 
 #: bluebottle/activities/states.py:194 bluebottle/funding/states.py:167
 #: bluebottle/funding/states.py:604 bluebottle/funding/states.py:684
-#: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:203
+#: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:217
 #: bluebottle/grant_management/states.py:109
 #: bluebottle/grant_management/states.py:285
 #: bluebottle/grant_management/states.py:365
@@ -1117,7 +1117,7 @@ msgstr "Der Beitrag ist fehlgeschlagen."
 #: bluebottle/activities/states.py:404 bluebottle/activities/states.py:436
 #: bluebottle/funding/states.py:415 bluebottle/funding/states.py:508
 #: bluebottle/funding/states.py:589 bluebottle/funding/states.py:660
-#: bluebottle/funding_stripe/states.py:193
+#: bluebottle/funding_stripe/states.py:207
 #: bluebottle/grant_management/states.py:189
 #: bluebottle/grant_management/states.py:270
 #: bluebottle/grant_management/states.py:341
@@ -2528,7 +2528,7 @@ msgid "categories"
 msgstr "kategorie"
 
 #: bluebottle/categories/models.py:87 bluebottle/funding/models.py:427
-#: bluebottle/initiatives/models.py:39 bluebottle/pages/models.py:57
+#: bluebottle/initiatives/models.py:39 bluebottle/pages/models.py:58
 #: bluebottle/time_based/models.py:299
 msgid "title"
 msgstr "titel"
@@ -2610,7 +2610,7 @@ msgstr "Styling"
 #: bluebottle/cms/content_plugins.py:125 bluebottle/cms/content_plugins.py:132
 #: bluebottle/cms/content_plugins.py:139 bluebottle/cms/content_plugins.py:146
 #: bluebottle/cms/content_plugins.py:153 bluebottle/cms/content_plugins.py:159
-#: bluebottle/settings/admin_dashboard.py:213
+#: bluebottle/settings/admin_dashboard.py:214
 msgid "Homepage"
 msgstr "Homepage"
 
@@ -2787,8 +2787,8 @@ msgstr "Verwenden Sie dies für 'manuell' Eingabe oder die Überschreibung des b
 #: bluebottle/cms/models.py:205 bluebottle/cms/models.py:228
 #: bluebottle/cms/models.py:500 bluebottle/cms/models.py:581
 #: bluebottle/cms/models.py:619 bluebottle/cms/models.py:840
-#: bluebottle/cms/models.py:900 bluebottle/pages/models.py:108
-#: bluebottle/pages/models.py:166 bluebottle/pages/models.py:199
+#: bluebottle/cms/models.py:900 bluebottle/pages/models.py:109
+#: bluebottle/pages/models.py:167 bluebottle/pages/models.py:200
 msgid "Image"
 msgstr "Bild"
 
@@ -3060,13 +3060,13 @@ msgstr "Einfacher Text"
 msgid "Video URL"
 msgstr "Video-URL"
 
-#: bluebottle/cms/models.py:870 bluebottle/pages/models.py:119
-#: bluebottle/pages/models.py:209
+#: bluebottle/cms/models.py:870 bluebottle/pages/models.py:120
+#: bluebottle/pages/models.py:210
 msgid "Left"
 msgstr "Links"
 
-#: bluebottle/cms/models.py:871 bluebottle/pages/models.py:120
-#: bluebottle/pages/models.py:210
+#: bluebottle/cms/models.py:871 bluebottle/pages/models.py:121
+#: bluebottle/pages/models.py:211
 msgid "Right"
 msgstr "Rechts"
 
@@ -3074,7 +3074,7 @@ msgstr "Rechts"
 msgid "1:2 (Text twice as wide)"
 msgstr "1:2 (Text doppelt so breit)"
 
-#: bluebottle/cms/models.py:876 bluebottle/pages/models.py:125
+#: bluebottle/cms/models.py:876 bluebottle/pages/models.py:126
 msgid "1:1 (Equal width)"
 msgstr "1:1 (Qualbreite)"
 
@@ -3082,11 +3082,11 @@ msgstr "1:1 (Qualbreite)"
 msgid "2:1 (Media twice as wide)"
 msgstr "2:1 (Medien doppelt so breit)"
 
-#: bluebottle/cms/models.py:880 bluebottle/pages/models.py:129
+#: bluebottle/cms/models.py:880 bluebottle/pages/models.py:130
 msgid "Picture placement"
 msgstr "Bildplatzierung"
 
-#: bluebottle/cms/models.py:881 bluebottle/pages/models.py:130
+#: bluebottle/cms/models.py:881 bluebottle/pages/models.py:131
 msgid "Picture / Text ratio"
 msgstr "Bild- / Textverhältnis"
 
@@ -3897,7 +3897,7 @@ msgid "Grant applications"
 msgstr "Zuschussanträge"
 
 #: bluebottle/funding/admin.py:648 bluebottle/funding/filters.py:11
-#: bluebottle/pages/admin.py:179 bluebottle/time_based/admin.py:242
+#: bluebottle/pages/admin.py:213 bluebottle/time_based/admin.py:242
 #: bluebottle/time_based/admin.py:331 bluebottle/time_based/admin.py:374
 #: bluebottle/time_based/admin.py:484 bluebottle/time_based/admin.py:542
 #: bluebottle/time_based/admin.py:919 bluebottle/time_based/admin.py:1132
@@ -4321,95 +4321,95 @@ msgstr "überprüft"
 msgid "Public payout account"
 msgstr "Öffentliches Auszahlungskonto"
 
-#: bluebottle/funding/models.py:718
+#: bluebottle/funding/models.py:723
 msgid "IP address"
 msgstr "IP-Adresse"
 
-#: bluebottle/funding/models.py:725
+#: bluebottle/funding/models.py:730
 msgid "Plain KYC account"
 msgstr "Einfacher KYC-Account"
 
-#: bluebottle/funding/models.py:726
+#: bluebottle/funding/models.py:731
 msgid "Plain KYC accounts"
 msgstr "Einfache KYC-Konten"
 
-#: bluebottle/funding/models.py:806
+#: bluebottle/funding/models.py:811
 msgid "Individual person"
 msgstr "Individuelle Person"
 
-#: bluebottle/funding/models.py:810
+#: bluebottle/funding/models.py:815
 msgid "Non-profit organization"
 msgstr "Non-Profit-Organisation"
 
-#: bluebottle/funding/models.py:815
+#: bluebottle/funding/models.py:820
 msgid "Commercial company"
 msgstr "Handelsunternehmen"
 
-#: bluebottle/funding/models.py:822
+#: bluebottle/funding/models.py:827
 msgid "Hide names from all donations"
 msgstr "Namen aus allen Spenden ausblenden"
 
-#: bluebottle/funding/models.py:825
+#: bluebottle/funding/models.py:830
 msgid "Allow guests to donate rewards"
 msgstr "Erlaube Gästen Belohnungen zu spenden"
 
-#: bluebottle/funding/models.py:829
+#: bluebottle/funding/models.py:834
 msgid "Crowdfunding for verified organisations"
 msgstr "Crowdfunding für verifizierte Organisationen"
 
-#: bluebottle/funding/models.py:832
+#: bluebottle/funding/models.py:837
 msgid "When enabled, campaign initiators must select from a list of organisations with a public payout account that will receive the raised money, rather than providing the bank account details themselves."
 msgstr "Wenn aktiviert, müssen Kampagneninitiatoren aus einer Liste von Organisationen mit einem öffentlichen Auszahlungskonto wählen, das das aufgelaufene Geld erhalten wird statt die Kontodaten selbst anzugeben."
 
-#: bluebottle/funding/models.py:839
+#: bluebottle/funding/models.py:844
 msgid "Do IBAN bank account number vs. name checks"
 msgstr "Überprüfen Sie die IBAN-Kontonummer mit dem Namen"
 
-#: bluebottle/funding/models.py:842
+#: bluebottle/funding/models.py:847
 msgid "In the KYC flow do a check to see if bank account number and name match. This will be done by the Surepay API, and only Dutch IBANs are supported. "
 msgstr "Im KYC-Prozess wird überprüft, ob Kontonummer und Name übereinstimmen. Dies erfolgt über die Surepay-API, und nur niederländische IBANs werden unterstützt."
 
-#: bluebottle/funding/models.py:848
+#: bluebottle/funding/models.py:853
 msgid "Name to use for match funding"
 msgstr "Name für die Finanzierung des Matches"
 
-#: bluebottle/funding/models.py:852
+#: bluebottle/funding/models.py:857
 msgid "Change this if you want to use something else then the platform name for matching amounts."
 msgstr "Ändern Sie diese Option, wenn Sie etwas anderes verwenden wollen, dann den Plattformnamen für passende Beträge."
 
-#: bluebottle/funding/models.py:856
+#: bluebottle/funding/models.py:861
 msgid "verification types"
 msgstr "Verifizierungstypen"
 
-#: bluebottle/funding/models.py:871 bluebottle/funding/models.py:872
+#: bluebottle/funding/models.py:876 bluebottle/funding/models.py:877
 msgid "funding settings"
 msgstr "finanzierungs-Einstellungen"
 
-#: bluebottle/funding/models.py:878
+#: bluebottle/funding/models.py:883
 msgid "Match"
 msgstr "Spiel"
 
-#: bluebottle/funding/models.py:879
+#: bluebottle/funding/models.py:884
 msgid "Mistype"
 msgstr "Tippfehler"
 
-#: bluebottle/funding/models.py:880
+#: bluebottle/funding/models.py:885
 msgid "Close match"
 msgstr "Nahezu passend"
 
-#: bluebottle/funding/models.py:881
+#: bluebottle/funding/models.py:886
 msgid "No match"
 msgstr "Kein Treffer"
 
-#: bluebottle/funding/models.py:892
+#: bluebottle/funding/models.py:897
 msgid "Hashed IBAN to check against"
 msgstr "Gehashte IBAN zur Überprüfung"
 
-#: bluebottle/funding/models.py:895
+#: bluebottle/funding/models.py:900
 msgid "Result of the IBAN check"
 msgstr "Ergebnis der IBAN-Prüfung"
 
-#: bluebottle/funding/models.py:903
+#: bluebottle/funding/models.py:908
 msgid "Name of the account holder"
 msgstr "Name des Kontoinhabers"
 
@@ -4804,7 +4804,7 @@ msgstr "Bankkonto muss noch überprüft werden"
 msgid "Bank account is rejected"
 msgstr "Bankkonto wurde abgelehnt"
 
-#: bluebottle/funding/states.py:590 bluebottle/funding_stripe/states.py:194
+#: bluebottle/funding/states.py:590 bluebottle/funding_stripe/states.py:208
 #: bluebottle/grant_management/states.py:271
 msgid "Bank account details are entered."
 msgstr "Kontodaten werden eingegeben."
@@ -4813,20 +4813,20 @@ msgstr "Kontodaten werden eingegeben."
 msgid "Bank account is missing details"
 msgstr "Bankkonto fehlt Details"
 
-#: bluebottle/funding/states.py:605 bluebottle/funding_stripe/states.py:204
+#: bluebottle/funding/states.py:605 bluebottle/funding_stripe/states.py:218
 #: bluebottle/grant_management/states.py:286
 msgid "Reject bank account"
 msgstr "Bankkonto ablehnen"
 
 #: bluebottle/funding/states.py:612 bluebottle/funding/states.py:675
 #: bluebottle/funding/states.py:710 bluebottle/funding_stripe/states.py:178
-#: bluebottle/funding_stripe/states.py:215
+#: bluebottle/funding_stripe/states.py:229
 #: bluebottle/grant_management/states.py:293
 #: bluebottle/grant_management/states.py:356
 msgid "Verify"
 msgstr "Überprüfen"
 
-#: bluebottle/funding/states.py:613 bluebottle/funding_stripe/states.py:216
+#: bluebottle/funding/states.py:613 bluebottle/funding_stripe/states.py:230
 #: bluebottle/grant_management/states.py:294
 msgid "Verify that the bank account is complete."
 msgstr "Überprüfen Sie, ob das Bankkonto abgeschlossen ist."
@@ -4873,11 +4873,13 @@ msgstr "Überprüfen Sie das Auszahlungskonto."
 msgid "Reject the payout account."
 msgstr "Das Auszahlungskonto ablehnen."
 
-#: bluebottle/funding/states.py:692 bluebottle/grant_management/states.py:373
+#: bluebottle/funding/states.py:692 bluebottle/funding_stripe/states.py:191
+#: bluebottle/grant_management/states.py:373
 msgid "Set incomplete"
 msgstr "Setze unvollständig"
 
-#: bluebottle/funding/states.py:694 bluebottle/grant_management/states.py:375
+#: bluebottle/funding/states.py:694 bluebottle/funding_stripe/states.py:193
+#: bluebottle/grant_management/states.py:375
 msgid "Mark the payout account as incomplete. The initiator will have to add more information."
 msgstr "Markieren Sie das Auszahlungskonto als unvollständig. Der Initiator muss weitere Informationen hinzufügen."
 
@@ -5921,23 +5923,23 @@ msgstr "Verifizierungstyp"
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Nicht anwendbar - Gelder für ein gemeinnütziges Projekt auf %(platform)s, einer GoodUp-Plattform, sammeln."
 
-#: bluebottle/funding_stripe/models.py:632
+#: bluebottle/funding_stripe/models.py:634
 msgid "stripe payout account"
 msgstr "Streifen Auszahlungskonto"
 
-#: bluebottle/funding_stripe/models.py:633
+#: bluebottle/funding_stripe/models.py:635
 msgid "stripe payout accounts"
 msgstr "Streifen Auszahlungskonten"
 
-#: bluebottle/funding_stripe/models.py:644
+#: bluebottle/funding_stripe/models.py:646
 msgid "Starts with 'ba_...'"
 msgstr "Beginnt mit 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:692
+#: bluebottle/funding_stripe/models.py:694
 msgid "Bank account"
 msgstr "Bankkonto"
 
-#: bluebottle/funding_stripe/models.py:693
+#: bluebottle/funding_stripe/models.py:695
 msgid "Bank accounts"
 msgstr "Bankkonten"
 
@@ -7014,7 +7016,7 @@ msgstr "Büros"
 msgid "Options"
 msgstr "Optionen"
 
-#: bluebottle/initiatives/admin.py:329
+#: bluebottle/initiatives/admin.py:329 bluebottle/pages/models.py:300
 msgid "Terms of service"
 msgstr "Nutzungsbedingungen"
 
@@ -7377,7 +7379,7 @@ msgstr "Name ist erforderlich"
 msgid "Email is required"
 msgstr "E-Mail ist erforderlich"
 
-#: bluebottle/initiatives/states.py:19 bluebottle/pages/models.py:229
+#: bluebottle/initiatives/states.py:19 bluebottle/pages/models.py:230
 #: bluebottle/slides/models.py:25 bluebottle/utils/models.py:197
 msgid "Draft"
 msgstr "Entwurf"
@@ -7684,7 +7686,7 @@ msgstr "Die Aufprallzeit zeigt die Anzahl der Stunden, die Nutzer dazu ermutigt 
 
 #: bluebottle/members/admin.py:151
 msgid "If you allow people to request access, use the fields below to explain how they can do this."
-msgstr "Wenn du es Menschen erlaubst, Zugang zu beantragen, verwende die untenstehenden Felder, um zu erklären, wie sie dies tun können."
+msgstr "Wenn Sie es Personen erlauben, den Zugriff zu beantragen, verwenden Sie die folgenden Felder, um zu erklären, wie sie dies tun können."
 
 #: bluebottle/members/admin.py:157
 msgid "Login"
@@ -7728,11 +7730,11 @@ msgstr "Pflichtfelder"
 
 #: bluebottle/members/admin.py:311
 msgid "Access link"
-msgstr "Zugangslink"
+msgstr "Zugriff-Link"
 
 #: bluebottle/members/admin.py:345
 msgid "Access code has been renewed successfully."
-msgstr "Der Zugangscode wurde erfolgreich erneuert."
+msgstr "Der Zugriffscode wurde erfolgreich erneuert."
 
 #: bluebottle/members/admin.py:599
 msgid "Permissions"
@@ -7904,15 +7906,15 @@ msgstr "Nur Personen mit einer auf der Whitelist stehenden E-Mail-Domain können
 
 #: bluebottle/members/models.py:66
 msgid "People with a whitelisted domain can create an account; all others can request access"
-msgstr "Personen mit einer Whitelist-Domain können ein Konto erstellen; alle anderen können Zugang anfordern"
+msgstr "Personen mit einer auf der Whitelist stehenden Domain können ein Konto erstellen; alle anderen können Zugriff beantragen"
 
 #: bluebottle/members/models.py:71
 msgid "People request access by entering their email address"
-msgstr "Personen fordern Zugang an, indem sie ihre E-Mail-Adresse eingeben"
+msgstr "Personen beantragen Zugang, indem sie ihre E-Mail-Adresse eingeben"
 
 #: bluebottle/members/models.py:72
 msgid "People request access by following your instructions"
-msgstr "Personen fordern Zugang an, indem sie deinen Anweisungen folgen"
+msgstr "Personen beantragen Zugang, indem sie Ihren Anweisungen folgen"
 
 #: bluebottle/members/models.py:76
 msgid "Platform access"
@@ -7920,11 +7922,11 @@ msgstr "Plattformzugang"
 
 #: bluebottle/members/models.py:77
 msgid "Require log in before accessing the platform"
-msgstr "Anmeldung erforderlich, bevor auf die Plattform zugegriffen werden kann"
+msgstr "Anmeldung vor dem Zugriff auf die Plattform erforderlich"
 
 #: bluebottle/members/models.py:78
 msgid "Only logged-in users can view the platform."
-msgstr "Nur angemeldete Benutzer können die Plattform anzeigen."
+msgstr "Nur eingeloggte Benutzer können die Plattform anzeigen."
 
 #: bluebottle/members/models.py:81
 msgid "create initiatives"
@@ -7968,7 +7970,7 @@ msgstr "Anmeldemethoden"
 
 #: bluebottle/members/models.py:117
 msgid "People can use any selected method to sign up or log in. For social log in options, see the ‘Social log in’ tab."
-msgstr "Menschen können jede ausgewählte Methode verwenden, um sich anzumelden oder einzuloggen. Weitere soziale Anmeldemöglichkeiten findest du im Tab ‚Soziale Anmeldung‘."
+msgstr "Personen können jede ausgewählte Methode verwenden, um sich anzumelden oder einzuloggen. Für soziale Anmeldemöglichkeiten siehe den Tab 'Soziale Anmeldung'."
 
 #: bluebottle/members/models.py:125
 msgid "verify email on sign up"
@@ -7984,11 +7986,11 @@ msgstr "Diese Regel gilt nur für Anmeldungen mit E-Mail + Passwort."
 
 #: bluebottle/members/models.py:132
 msgid "account creation rules"
-msgstr "Regeln zur Kontoerstellung"
+msgstr "Regeln für die Kontoerstellung"
 
 #: bluebottle/members/models.py:140
 msgid "Whitelisted email domains"
-msgstr "Whitelist-E-Mail-Domains"
+msgstr "Auf der Whitelist stehende E-Mail-Domains"
 
 #: bluebottle/members/models.py:146
 msgid "session only"
@@ -8000,35 +8002,35 @@ msgstr "Benutzersitzung auf Browsersitzung beschränken"
 
 #: bluebottle/members/models.py:152
 msgid "request access method"
-msgstr "Methode zur Anforderung von Zugang"
+msgstr "Zugriffsantrag-Methode"
 
 #: bluebottle/members/models.py:153
 msgid "This rule only applies when requesting access is allowed."
-msgstr "Diese Regel gilt nur, wenn das Anfordern von Zugang erlaubt ist."
+msgstr "Diese Regel gilt nur, wenn das Beantragen von Zugriff erlaubt ist."
 
 #: bluebottle/members/models.py:160
 msgid "request access instructions"
-msgstr "Anweisungen zur Anforderung von Zugang"
+msgstr "Anweisungen zur Beantragung des Zugriffs"
 
 #: bluebottle/members/models.py:161
 msgid "Explain how people can request access to the platform."
-msgstr "Erkläre, wie Personen Zugang zur Plattform anfordern können."
+msgstr "Erklären Sie, wie Personen Zugang zur Plattform beantragen können."
 
 #: bluebottle/members/models.py:169
 msgid "Request access mail to address"
-msgstr "Zugangsanfrage per E-Mail an die Adresse"
+msgstr "Zugriffsantrag senden an"
 
 #: bluebottle/members/models.py:170
 msgid "Enter the email address where people should send their access request."
-msgstr "Gib die E-Mail-Adresse an, an die Menschen ihre Zugangsanforderung senden sollen."
+msgstr "Geben Sie die E-Mail-Adresse ein, an die Personen ihren Zugriffsantrag senden sollen."
 
 #: bluebottle/members/models.py:176
 msgid "Request access code"
-msgstr "Zugangscode anfordern"
+msgstr "Zugriffsantragscode"
 
 #: bluebottle/members/models.py:177
 msgid "With this code people can sign-up without a white-listed email address."
-msgstr "Mit diesem Code können Personen sich ohne eine auf die Whitelist gesetzte E-Mail-Adresse anmelden."
+msgstr "Mit diesem Code können sich Personen ohne eine auf der Whitelist stehende E-Mail-Adresse anmelden."
 
 #: bluebottle/members/models.py:184
 msgid "required questions location"
@@ -8064,11 +8066,11 @@ msgstr "Das Hinzufügen des GTM-Skripts zu Ihrer Plattform ermöglicht Ihnen die
 
 #: bluebottle/members/models.py:216
 msgid "Sign up image"
-msgstr "Anmeldebild"
+msgstr "Anmeldebilder"
 
 #: bluebottle/members/models.py:217
 msgid "This image will be displayed on the sign up and log in pages."
-msgstr "Dieses Bild wird auf den Anmelde- und Einloggeseiten angezeigt."
+msgstr "Dieses Bild wird auf den Anmelde- und Einlogseiten angezeigt."
 
 #: bluebottle/members/models.py:228
 msgid "translate user content"
@@ -8254,15 +8256,15 @@ msgstr "Muss \"{username_field}\" und \"Passwort\" enthalten."
 
 #: bluebottle/members/serializers.py:524
 msgid "The access link you supplied is invalid. Please contact us to request a new access link."
-msgstr "Der von dir bereitgestellte Zugangslink ist ungültig. Bitte kontaktiere uns, um einen neuen Zugangslink zu beantragen."
+msgstr "Der von Ihnen bereitgestellte Zugriff-Link ist ungültig. Bitte kontaktieren Sie uns, um einen neuen Zugriff-Link zu beantragen."
 
 #: bluebottle/members/serializers.py:530
 msgid "This email is not whitelisted, please contact us to request access."
-msgstr "Diese E-Mail ist nicht auf der Whitelist, bitte kontaktiere uns, um Zugang zu beantragen."
+msgstr "Diese E-Mail ist nicht auf der Whitelist, bitte kontaktieren Sie uns, um Zugang zu beantragen."
 
 #: bluebottle/members/serializers.py:535
 msgid "Only emails for specified domains are allowed. Please use your work e-mail address."
-msgstr "Nur E-Mails für angegebene Domains sind erlaubt. Bitte benutze deine Arbeits-E-Mail-Adresse."
+msgstr "Nur E-Mails von bestimmten Domains sind erlaubt. Bitte verwenden Sie Ihre Arbeits-E-Mail-Adresse."
 
 #: bluebottle/members/serializers.py:592
 msgid "A user with this email address already exists"
@@ -8306,7 +8308,7 @@ msgstr "Kopieren"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:16
 msgid "Are you sure you want to generate a new access code? The old code will no longer work."
-msgstr "Bist du sicher, dass du einen neuen Zugangscode generieren möchtest? Der alte Code funktioniert nicht mehr."
+msgstr "Sind Sie sicher, dass Sie einen neuen Zugriffscode generieren möchten? Der alte Code wird nicht mehr funktionieren."
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:17
 msgid "Re-new link"
@@ -8322,7 +8324,7 @@ msgstr "Kopieren in die Zwischenablage fehlgeschlagen"
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:41
 msgid "Share this link with people who are allowed to get access."
-msgstr "Teile diesen Link mit Personen, die Zugang erhalten dürfen."
+msgstr "Teilen Sie diesen Link mit Personen, die Zugang erhalten dürfen."
 
 #: bluebottle/members/templates/admin/members/request_access_code_display.html:47
 msgid "Generate link"
@@ -8345,7 +8347,7 @@ msgid "This will have the following effects:"
 msgstr "Dies wird folgende Auswirkungen haben:"
 
 #: bluebottle/members/templates/admin/members/set_retention_confirmation.html:33
-#: bluebottle/settings/admin_dashboard.py:248
+#: bluebottle/settings/admin_dashboard.py:249
 msgid "Reporting"
 msgstr "Meldung"
 
@@ -8456,32 +8458,32 @@ msgctxt "email"
 msgid "Create your password"
 msgstr "Erstelle dein Passwort"
 
-#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:27
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:31
 msgid "JSON file"
 msgstr "JSON-Datei"
 
-#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:27
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:31
 msgid "Select a JSON file exported from another platform"
 msgstr "Wähle eine JSON-Datei, die von einer anderen Plattform exportiert wurde"
 
-#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:52
+#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:60
 #: bluebottle/slides/admin.py:39
 msgid "Publication settings"
 msgstr "Veröffentlichungseinstellungen"
 
-#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:64
+#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:72
 msgid "Online"
 msgstr "Online"
 
-#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:65
+#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:73
 msgid "Offline"
 msgstr "Offline"
 
-#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:67
+#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:75
 msgid "Is this item currently visible online or not."
 msgstr "Ist dieses Element derzeit online sichtbar oder nicht."
 
-#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:191
+#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:225
 #: bluebottle/slides/admin.py:111
 msgid "Mark selected entries as published"
 msgstr "Ausgewählte Einträge als veröffentlicht markieren"
@@ -8494,7 +8496,7 @@ msgstr "Es wurden keine Nachrichtenartikel ausgewählt."
 msgid "Export selected news items"
 msgstr "Ausgewählte Nachrichtenartikel exportieren"
 
-#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:264
+#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:298
 msgid "Invalid JSON file. Please check the file format."
 msgstr "Ungültige JSON-Datei. Bitte überprüfe das Dateiformat."
 
@@ -8517,7 +8519,7 @@ msgstr "Hauptbild"
 msgid "Shows at the top of your post."
 msgstr "Zeigt oben an deinem Beitrag."
 
-#: bluebottle/news/models.py:38 bluebottle/pages/models.py:246
+#: bluebottle/news/models.py:38 bluebottle/pages/models.py:247
 #: bluebottle/slides/models.py:39 bluebottle/statistics/models.py:252
 msgid "language"
 msgstr "sprache"
@@ -8854,103 +8856,123 @@ msgstr "Webseite"
 msgid "Phone Number"
 msgstr "Telefonnummer"
 
-#: bluebottle/pages/admin.py:200
+#: bluebottle/pages/admin.py:171
+msgid "You are trying to create a platform page. Please do so at <a href=\"{}\">Platform pages</a>."
+msgstr "Sie versuchen, eine Plattformseite zu erstellen. Bitte tun Sie dies unter <a href=\"{}\">Plattformseiten</a>."
+
+#: bluebottle/pages/admin.py:234
 msgid "No pages were selected."
 msgstr "Es wurden keine Seiten ausgewählt."
 
-#: bluebottle/pages/admin.py:212
+#: bluebottle/pages/admin.py:246
 msgid "Export selected pages"
 msgstr "Ausgewählte Seiten exportieren"
 
-#: bluebottle/pages/admin.py:266
+#: bluebottle/pages/admin.py:300
 #, python-brace-format
 msgid "Error importing pages: {0}"
 msgstr "Fehler beim Importieren von Seiten: {0}"
 
-#: bluebottle/pages/admin.py:277
+#: bluebottle/pages/admin.py:311
 #: bluebottle/pages/templates/admin/pages/page/change_list.html:8
 #: bluebottle/pages/templates/admin/pages/page/import.html:9
 msgid "Import pages"
 msgstr "Seiten importieren"
 
-#: bluebottle/pages/models.py:27
+#: bluebottle/pages/models.py:28
 msgid "Link title"
 msgstr "Link-Titel"
 
-#: bluebottle/pages/models.py:29 bluebottle/pages/models.py:51
-#: bluebottle/pages/models.py:52
+#: bluebottle/pages/models.py:30 bluebottle/pages/models.py:52
+#: bluebottle/pages/models.py:53
 msgid "Document"
 msgstr "Dokument"
 
-#: bluebottle/pages/models.py:56
+#: bluebottle/pages/models.py:57
 msgid "link"
 msgstr "link"
 
-#: bluebottle/pages/models.py:63
+#: bluebottle/pages/models.py:64
 msgid "Call to action"
 msgstr "Aktion aufrufen"
 
-#: bluebottle/pages/models.py:64
+#: bluebottle/pages/models.py:65
 msgid "Call to actions"
 msgstr "Aufruf an Aktionen"
 
-#: bluebottle/pages/models.py:71
+#: bluebottle/pages/models.py:72
 msgid "text left"
 msgstr "Text übrig"
 
-#: bluebottle/pages/models.py:73
+#: bluebottle/pages/models.py:74
 msgid "text right"
 msgstr "text rechts"
 
-#: bluebottle/pages/models.py:79 bluebottle/pages/models.py:80
+#: bluebottle/pages/models.py:80 bluebottle/pages/models.py:81
 msgid "Text in columns"
 msgstr "Text in Spalten"
 
-#: bluebottle/pages/models.py:105 bluebottle/pages/models.py:163
-#: bluebottle/pages/models.py:197
+#: bluebottle/pages/models.py:106 bluebottle/pages/models.py:164
+#: bluebottle/pages/models.py:198
 msgid "text"
 msgstr "text"
 
-#: bluebottle/pages/models.py:124
+#: bluebottle/pages/models.py:125
 msgid "2:1 (Text twice as wide)"
 msgstr "2:1 (Text doppelt so breit)"
 
-#: bluebottle/pages/models.py:126
+#: bluebottle/pages/models.py:127
 msgid "1:2 (Image twice as wide)"
 msgstr "1:2 (Bild doppelt so breit)"
 
-#: bluebottle/pages/models.py:142 bluebottle/pages/models.py:143
+#: bluebottle/pages/models.py:143 bluebottle/pages/models.py:144
 msgid "Text + Image"
 msgstr "Text + Bild"
 
-#: bluebottle/pages/models.py:179 bluebottle/pages/models.py:180
+#: bluebottle/pages/models.py:180 bluebottle/pages/models.py:181
 msgid "Text + Round Image"
 msgstr "Text + runden Bild"
 
-#: bluebottle/pages/models.py:213
+#: bluebottle/pages/models.py:214
 msgid "Image placement"
 msgstr "Bildplatzierung"
 
-#: bluebottle/pages/models.py:218 bluebottle/pages/models.py:219
+#: bluebottle/pages/models.py:219 bluebottle/pages/models.py:220
 msgid "Text + Scaled Image"
 msgstr "Text + skaliertes Bild"
 
-#: bluebottle/pages/models.py:228 bluebottle/slides/models.py:24
+#: bluebottle/pages/models.py:229 bluebottle/slides/models.py:24
 #: bluebottle/utils/models.py:196
 msgid "Published"
 msgstr "Veröffentlicht"
 
-#: bluebottle/pages/models.py:234
+#: bluebottle/pages/models.py:235
 msgid "Page without sub-navigation"
 msgstr "Seite ohne Unternavigation"
 
-#: bluebottle/pages/models.py:236
+#: bluebottle/pages/models.py:237
 msgid "Show this page in full width and hide the sub-navigation"
 msgstr "Diese Seite in voller Breite anzeigen und die Unternavigation ausblenden"
 
-#: bluebottle/pages/models.py:241
+#: bluebottle/pages/models.py:242
 msgid "Show the title of this page in the header"
 msgstr "Den Titel dieser Seite in der Kopfzeile anzeigen"
+
+#: bluebottle/pages/models.py:299
+msgid "Start an initiative"
+msgstr "Starten Sie eine Initiative"
+
+#: bluebottle/pages/models.py:301
+msgid "Privacy policy"
+msgstr "Datenschutzerklärung"
+
+#: bluebottle/pages/models.py:331
+msgid "Page type"
+msgstr "Seitentyp"
+
+#: bluebottle/pages/models.py:349
+msgid "Platform page"
+msgstr "Plattformseite"
 
 #: bluebottle/pages/templates/admin/pages/page/change_form.html:7
 msgid "Export page"
@@ -9236,27 +9258,27 @@ msgstr "Fördermanagement"
 msgid "All segment types"
 msgstr "Alle Segmenttypen"
 
-#: bluebottle/settings/admin_dashboard.py:208
+#: bluebottle/settings/admin_dashboard.py:209
 msgid "News"
 msgstr "Nachrichten"
 
-#: bluebottle/settings/admin_dashboard.py:224
+#: bluebottle/settings/admin_dashboard.py:225
 msgid "Result page"
 msgstr "Ergebnisseite"
 
-#: bluebottle/settings/admin_dashboard.py:229
+#: bluebottle/settings/admin_dashboard.py:230
 msgid "Header & footer"
 msgstr "Kopf- & Fußzeile"
 
-#: bluebottle/settings/admin_dashboard.py:234
+#: bluebottle/settings/admin_dashboard.py:235
 msgid "Email templates"
 msgstr "E-Mail-Vorlagen"
 
-#: bluebottle/settings/admin_dashboard.py:254 bluebottle/utils/models.py:185
+#: bluebottle/settings/admin_dashboard.py:255 bluebottle/utils/models.py:185
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: bluebottle/settings/admin_dashboard.py:290
+#: bluebottle/settings/admin_dashboard.py:291
 msgid "Manage Reporting"
 msgstr "Berichte verwalten"
 
@@ -9354,7 +9376,7 @@ msgstr "Ungarisch"
 
 #: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:432
 msgid "Bulgarian"
-msgstr ""
+msgstr "Bulgarisch"
 
 #: bluebottle/slides/admin.py:34
 msgid "Contents"

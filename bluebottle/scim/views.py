@@ -75,6 +75,14 @@ class SCIMViewMixin(object):
     parser_classes = (SCIMParser, parsers.JSONParser,)
     filter_backends = (SCIMFilter, )
 
+    def initial(self, request, *args, **kwargs):
+        settings = SCIMPlatformSettings.load()
+
+        if not settings.enabled:
+            raise exceptions.PermissionDenied(detail="Scim is not enabled")
+
+        return super().initial(request, *args, **kwargs)
+
     def handle_exception(self, exc):
         if isinstance(exc, Http404):
             status_code = 404

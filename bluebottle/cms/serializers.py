@@ -685,7 +685,7 @@ class PlatformPageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
     def get_blocks(self, obj):
-        return obj.body.contentitems.all()
+        return obj.body.contentitems.all().translated()
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page

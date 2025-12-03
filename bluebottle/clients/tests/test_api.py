@@ -317,7 +317,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             'login_methods': ['password'],
             'session_only': False,
             'consent_link': 'example.com',
-            'email_domain': None,
+            'email_domains': [],
             'confirm_signup': False
         }
 

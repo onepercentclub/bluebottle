@@ -7,6 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('analytics', '0015_alter_analyticsplatformsettings_options_and_more'),
+        ('cms', '0106_auto_20251022_1118'),
     ]
 
     operations = [

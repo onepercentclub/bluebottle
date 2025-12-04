@@ -528,7 +528,7 @@ div.inline.radiolist {
     display: flex;
 }
 
-/* Radio button styling */ /* Radio button styling */
+/* Radio button styling */
 input[type="radio"] {
     appearance: none;
     -webkit-appearance: none;

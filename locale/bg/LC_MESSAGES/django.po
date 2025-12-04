@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-03 09:39+0100\n"
-"PO-Revision-Date: 2025-12-03 08:49\n"
+"POT-Creation-Date: 2025-12-04 08:29+0100\n"
+"PO-Revision-Date: 2025-12-04 07:36\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -157,7 +157,7 @@ msgid "Office"
 msgstr "Офис"
 
 #: bluebottle/activities/admin.py:761 bluebottle/funding/admin.py:233
-#: bluebottle/grant_management/admin.py:540 bluebottle/members/admin.py:642
+#: bluebottle/grant_management/admin.py:540 bluebottle/members/admin.py:646
 #: bluebottle/settings/admin_dashboard.py:174
 msgid "Segments"
 msgstr "Сегменти"
@@ -673,7 +673,7 @@ msgstr "Описание на стъпката при пренасочване"
 msgid "A description to explain what the next step is"
 msgstr "Описание, за да обясните каква е следващата стъпка"
 
-#: bluebottle/activities/models.py:172 bluebottle/members/models.py:418
+#: bluebottle/activities/models.py:172 bluebottle/members/models.py:424
 msgid "Segment"
 msgstr "Сегмент"
 
@@ -1051,7 +1051,7 @@ msgstr "Активността ще бъде анулирана, защото н
 
 #: bluebottle/activities/states.py:359
 #: bluebottle/bluebottle_dashboard/templates/admin/submit_line.html:7
-#: bluebottle/initiatives/states.py:195 bluebottle/members/models.py:321
+#: bluebottle/initiatives/states.py:195 bluebottle/members/models.py:327
 msgid "Delete"
 msgstr "Изтрий"
 
@@ -1852,8 +1852,8 @@ msgstr "Училище"
 msgid "Club / association"
 msgstr "Клуб / асоциация"
 
-#: bluebottle/bb_accounts/models.py:113 bluebottle/members/admin.py:405
-#: bluebottle/members/models.py:246
+#: bluebottle/bb_accounts/models.py:113 bluebottle/members/admin.py:406
+#: bluebottle/members/models.py:252
 msgid "email address"
 msgstr "имейл адрес"
 
@@ -2182,7 +2182,7 @@ msgstr "Потребители"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
 #: bluebottle/initiatives/admin.py:370 bluebottle/initiatives/models.py:175
-#: bluebottle/members/admin.py:218 bluebottle/members/admin.py:819
+#: bluebottle/members/admin.py:219 bluebottle/members/admin.py:823
 msgid "Initiatives"
 msgstr "Инициативи"
 
@@ -2260,7 +2260,7 @@ msgid "Merge"
 msgstr "Обединяване"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:7
-#: bluebottle/members/admin.py:610
+#: bluebottle/members/admin.py:611
 msgid "Search"
 msgstr "Търсене"
 
@@ -2451,7 +2451,7 @@ msgid "If your primary method is not available, we are able to send backup token
 msgstr "Ако основният ви метод не е наличен, можем да изпратим резервни токени на телефонните номера, изброени по-долу."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:21
-#: bluebottle/members/admin.py:372 bluebottle/notifications/admin.py:81
+#: bluebottle/members/admin.py:373 bluebottle/notifications/admin.py:81
 msgid "Are you sure?"
 msgstr "Сигурни ли сте?"
 
@@ -2649,7 +2649,7 @@ msgstr "Трябва ли разрешението да е налично или
 msgid "Site links"
 msgstr "Връзки на сайта"
 
-#: bluebottle/cms/models.py:116 bluebottle/members/admin.py:567
+#: bluebottle/cms/models.py:116 bluebottle/members/admin.py:568
 msgid "Main"
 msgstr "Главен"
 
@@ -2808,7 +2808,7 @@ msgstr "Роля"
 msgid "Email"
 msgstr "Имейл"
 
-#: bluebottle/cms/models.py:225 bluebottle/members/models.py:279
+#: bluebottle/cms/models.py:225 bluebottle/members/models.py:285
 msgid "Phone number"
 msgstr "Телефонен номер"
 
@@ -3229,7 +3229,7 @@ msgid "\n"
 msgstr "\n"
 "Събиране на {type}"
 
-#: bluebottle/collect/models.py:168 bluebottle/members/admin.py:914
+#: bluebottle/collect/models.py:168 bluebottle/members/admin.py:918
 msgid "Collect contributor"
 msgstr "Приносител на събиране"
 
@@ -3881,8 +3881,8 @@ msgid "Basic"
 msgstr "Основен"
 
 #: bluebottle/funding/admin.py:602 bluebottle/funding/admin.py:621
-#: bluebottle/members/admin.py:817 bluebottle/members/admin.py:845
-#: bluebottle/members/admin.py:887 bluebottle/members/admin.py:902
+#: bluebottle/members/admin.py:821 bluebottle/members/admin.py:849
+#: bluebottle/members/admin.py:891 bluebottle/members/admin.py:906
 msgid "None"
 msgstr "Няма"
 
@@ -3891,7 +3891,7 @@ msgid "Funding activities"
 msgstr "Активности по финансиране"
 
 #: bluebottle/funding/admin.py:623 bluebottle/grant_management/models.py:418
-#: bluebottle/members/admin.py:904
+#: bluebottle/members/admin.py:908
 msgid "Grant applications"
 msgstr "Заявления за грантове"
 
@@ -6190,7 +6190,7 @@ msgid "Province"
 msgstr "Провинция"
 
 #: bluebottle/geo/models.py:217 bluebottle/geo/models.py:262
-#: bluebottle/members/models.py:274
+#: bluebottle/members/models.py:280
 msgid "Address"
 msgstr "Адрес"
 
@@ -7220,7 +7220,7 @@ msgstr "Планирана дейност"
 msgid "Periodic Activity"
 msgstr "Периодична дейност"
 
-#: bluebottle/initiatives/models.py:320 bluebottle/members/admin.py:875
+#: bluebottle/initiatives/models.py:320 bluebottle/members/admin.py:879
 #: bluebottle/time_based/models.py:886
 msgid "Past date activity"
 msgstr "Дейност с минала дата"
@@ -7425,7 +7425,7 @@ msgstr "Отменено"
 msgid "The initiative is not executed. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
 msgstr "Инициативата не е изпълнена. Инициативата няма да се показва на страницата за търсене, но ще се отчита. Инициативата не може да бъде редактирана от инициатора."
 
-#: bluebottle/initiatives/states.py:54 bluebottle/members/admin.py:490
+#: bluebottle/initiatives/states.py:54 bluebottle/members/admin.py:491
 msgid "Deleted"
 msgstr "Изтрито"
 
@@ -7667,7 +7667,7 @@ msgstr "Потребител с този имейл вече съществув�
 msgid "Email address"
 msgstr "Имейл адрес"
 
-#: bluebottle/members/admin.py:103 bluebottle/members/admin.py:406
+#: bluebottle/members/admin.py:103 bluebottle/members/admin.py:407
 msgid "A valid, unique email address."
 msgstr "Валиден, уникален имейл адрес."
 
@@ -7691,142 +7691,142 @@ msgstr "Ако позволите на хората да поискат дост
 msgid "Login"
 msgstr "Вход"
 
-#: bluebottle/members/admin.py:174 bluebottle/members/admin.py:587
+#: bluebottle/members/admin.py:175 bluebottle/members/admin.py:588
 msgid "Profile"
 msgstr "Профил"
 
-#: bluebottle/members/admin.py:183
+#: bluebottle/members/admin.py:184
 msgid "Translations"
 msgstr "Преводи"
 
-#: bluebottle/members/admin.py:191
+#: bluebottle/members/admin.py:192
 msgid "Privacy"
 msgstr "Поверителност"
 
-#: bluebottle/members/admin.py:203 bluebottle/members/models.py:84
+#: bluebottle/members/admin.py:204 bluebottle/members/models.py:84
 msgid "Impact hours"
 msgstr "Часове на въздействие"
 
-#: bluebottle/members/admin.py:226
+#: bluebottle/members/admin.py:227
 msgid "User data"
 msgstr "Данни на потребителя"
 
-#: bluebottle/members/admin.py:228
+#: bluebottle/members/admin.py:229
 msgid "User data can be anonymised and/or deleted after a set number of months from the time it was created to comply with company policies and local laws. User data includes names, contributions and wall posts. Please contact the support team at GoodUp for more information."
 msgstr "Данните на потребителя могат да бъдат анонимизирани и/или изтрити след зададен брой месеци от момента на създаването им, за да се спазят политиките на компанията и местните закони. Данните на потребителя включват имена, вноски и публикации на стената. Моля, свържете се с екипа за поддръжка на GoodUp за повече информация."
 
-#: bluebottle/members/admin.py:265
+#: bluebottle/members/admin.py:266
 msgid "Members are required to fill out the fields listed below after log in or when contributing to an activity."
 msgstr "Членовете трябва да попълнят полетата, изброени по-долу, след вход или при внасяне на активно участие."
 
-#: bluebottle/members/admin.py:268
+#: bluebottle/members/admin.py:269
 msgid "Members are required to fill out the fields listed below when contributing to an activity."
 msgstr "Членовете трябва да попълнят полетата, изброени по-долу, когато участват в дейност."
 
-#: bluebottle/members/admin.py:272
+#: bluebottle/members/admin.py:273
 msgid "Required fields"
 msgstr "Задължителни полета"
 
-#: bluebottle/members/admin.py:311
+#: bluebottle/members/admin.py:312
 msgid "Access link"
 msgstr "Линк за достъп"
 
-#: bluebottle/members/admin.py:345
+#: bluebottle/members/admin.py:346
 msgid "Access code has been renewed successfully."
 msgstr "Кодът за достъп беше успешно обновен."
 
-#: bluebottle/members/admin.py:599
+#: bluebottle/members/admin.py:600
 msgid "Permissions"
 msgstr "Разрешения"
 
-#: bluebottle/members/admin.py:603
+#: bluebottle/members/admin.py:604
 msgid "Engagement"
 msgstr "Обвързване"
 
-#: bluebottle/members/admin.py:724
+#: bluebottle/members/admin.py:728
 #, python-brace-format
 msgid "Only data from the last {months} months is shown."
 msgstr "Показват се само данни от последните {months} месеца."
 
-#: bluebottle/members/admin.py:730
+#: bluebottle/members/admin.py:734
 msgid "Hours spent this year"
 msgstr "Часове прекарани тази година"
 
-#: bluebottle/members/admin.py:735
+#: bluebottle/members/admin.py:739
 msgid "Hours planned this year"
 msgstr "Часове планирани тази година"
 
-#: bluebottle/members/admin.py:739
+#: bluebottle/members/admin.py:743
 msgid "Show all contributions"
 msgstr "Покажи всички вноски"
 
-#: bluebottle/members/admin.py:741
+#: bluebottle/members/admin.py:745
 msgid "All contributions"
 msgstr "Всички вноски"
 
-#: bluebottle/members/admin.py:850 bluebottle/time_based/models.py:253
+#: bluebottle/members/admin.py:854 bluebottle/time_based/models.py:253
 msgid "Activity on a date"
 msgstr "Дейност на дата"
 
-#: bluebottle/members/admin.py:855 bluebottle/time_based/models.py:784
+#: bluebottle/members/admin.py:859 bluebottle/time_based/models.py:784
 msgid "Recurring activity"
 msgstr "Периодична дейност"
 
-#: bluebottle/members/admin.py:860 bluebottle/time_based/models.py:637
+#: bluebottle/members/admin.py:864 bluebottle/time_based/models.py:637
 msgid "Flexible activity"
 msgstr "Гъвкава дейност"
 
-#: bluebottle/members/admin.py:865 bluebottle/time_based/models.py:733
+#: bluebottle/members/admin.py:869 bluebottle/time_based/models.py:733
 msgid "Schedule activity"
 msgstr "Планирайте дейност"
 
-#: bluebottle/members/admin.py:870
+#: bluebottle/members/admin.py:874
 msgid "Team schedule activity"
 msgstr "Планиране на дейност на екип"
 
-#: bluebottle/members/admin.py:889
+#: bluebottle/members/admin.py:893
 msgid "Funding donations"
 msgstr "Вноски от финансиране"
 
-#: bluebottle/members/admin.py:909
+#: bluebottle/members/admin.py:913
 msgid "Deed participation"
 msgstr "Участие в дело"
 
-#: bluebottle/members/admin.py:921
+#: bluebottle/members/admin.py:925
 msgid "Following"
 msgstr "Следене"
 
-#: bluebottle/members/admin.py:929
+#: bluebottle/members/admin.py:933
 msgid "Send reset password mail"
 msgstr "Изпратете имейл за нулиране на паролата"
 
-#: bluebottle/members/admin.py:936
+#: bluebottle/members/admin.py:940
 msgid "Resend welcome email"
 msgstr "Изпратете отново имейла за приветствие"
 
-#: bluebottle/members/admin.py:947
+#: bluebottle/members/admin.py:951
 msgid "accounts"
 msgstr "акаунти"
 
-#: bluebottle/members/admin.py:950
+#: bluebottle/members/admin.py:954
 msgid "KYC accounts"
 msgstr "KYC акаунти"
 
-#: bluebottle/members/admin.py:1005
+#: bluebottle/members/admin.py:1009
 #, python-brace-format
 msgid "User {name} will receive an email to reset password."
 msgstr "Потребителят {name} ще получи имейл за нулиране на паролата."
 
-#: bluebottle/members/admin.py:1020
+#: bluebottle/members/admin.py:1024
 #, python-brace-format
 msgid "User {name} will receive an welcome email."
 msgstr "Потребителят {name} ще получи имейл за приветствие."
 
-#: bluebottle/members/admin.py:1041
+#: bluebottle/members/admin.py:1045
 msgid "Login as user"
 msgstr "Вход като потребител"
 
-#: bluebottle/members/admin.py:1044 bluebottle/members/forms.py:6
+#: bluebottle/members/admin.py:1048 bluebottle/members/forms.py:6
 #: bluebottle/members/templates/admin/members/login_as.html:9
 msgid "Login as"
 msgstr "Вход като"
@@ -8000,243 +8000,259 @@ msgid "Limit user session to browser session"
 msgstr "Ограничете сесията на потребителя до сесия на браузъра"
 
 #: bluebottle/members/models.py:152
+msgid "Explicit terms"
+msgstr "Ясни условия"
+
+#: bluebottle/members/models.py:154
+msgid "Users have to explicitly accept terms when logging in"
+msgstr "Потребителите трябва изрично да приемат условията при влизане"
+
+#: bluebottle/members/models.py:158
 msgid "request access method"
 msgstr "метод за искане на достъп"
 
-#: bluebottle/members/models.py:153
+#: bluebottle/members/models.py:159
 msgid "This rule only applies when requesting access is allowed."
 msgstr "Това правило важи само когато е разрешено искането за достъп."
 
-#: bluebottle/members/models.py:160
+#: bluebottle/members/models.py:166
 msgid "request access instructions"
 msgstr "инструкции за искане на достъп"
 
-#: bluebottle/members/models.py:161
+#: bluebottle/members/models.py:167
 msgid "Explain how people can request access to the platform."
 msgstr "Обяснете как хората могат да поискат достъп до платформата."
 
-#: bluebottle/members/models.py:169
+#: bluebottle/members/models.py:175
 msgid "Request access mail to address"
 msgstr "Имейл за искане на достъп на адрес"
 
-#: bluebottle/members/models.py:170
+#: bluebottle/members/models.py:176
 msgid "Enter the email address where people should send their access request."
 msgstr "Въведете имейл адреса, на който хората трябва да изпращат искането си за достъп."
 
-#: bluebottle/members/models.py:176
+#: bluebottle/members/models.py:182
 msgid "Request access code"
 msgstr "Код за искане на достъп"
 
-#: bluebottle/members/models.py:177
+#: bluebottle/members/models.py:183
 msgid "With this code people can sign-up without a white-listed email address."
 msgstr "С този код хората могат да се регистрират без имейл адрес в бял списък."
 
-#: bluebottle/members/models.py:184
+#: bluebottle/members/models.py:190
 msgid "required questions location"
 msgstr "необходими въпроси местоположение"
 
-#: bluebottle/members/models.py:189
+#: bluebottle/members/models.py:195
 msgid "When should the user be asked to complete their required profile fields?"
 msgstr "Кога потребителят ще бъде помолен да попълни необходимите профилни полета?"
 
-#: bluebottle/members/models.py:194
+#: bluebottle/members/models.py:200
 msgid "consent link"
 msgstr "връзка за съгласие"
 
-#: bluebottle/members/models.py:196
+#: bluebottle/members/models.py:202
 msgid "Link more information about the platforms cookie policy"
 msgstr "Свържете повече информация за политика за бисквитки на платформата"
 
-#: bluebottle/members/models.py:201
+#: bluebottle/members/models.py:207
 msgid "disable cookie consent"
 msgstr "деактивиране на съгласието за бисквитки"
 
-#: bluebottle/members/models.py:204
+#: bluebottle/members/models.py:210
 msgid "Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)"
 msgstr "Обработвайте съгласието за бисквитки извънредно (напр. Cookiebot) - (Изисква се, когато е добавен GTM.)"
 
-#: bluebottle/members/models.py:209
+#: bluebottle/members/models.py:215
 msgid "gtm code"
 msgstr "код за gtm"
 
-#: bluebottle/members/models.py:210
+#: bluebottle/members/models.py:216
 msgid "Adding the GTM script to your platform allows you to manage and deploy third-party tools."
 msgstr "Добавянето на скрипта GTM на платформата ви позволява да управлявате и внедрявате инструменти на трети страни."
 
-#: bluebottle/members/models.py:216
+#: bluebottle/members/models.py:222
 msgid "Sign up image"
 msgstr "Снимка за регистрация"
 
-#: bluebottle/members/models.py:217
+#: bluebottle/members/models.py:223
 msgid "This image will be displayed on the sign up and log in pages."
 msgstr "Тази снимка ще се показва на страниците за регистрация и влизане."
 
-#: bluebottle/members/models.py:228
+#: bluebottle/members/models.py:234
 msgid "translate user content"
 msgstr "превеждайте съдържанието на потребителя"
 
-#: bluebottle/members/models.py:229
+#: bluebottle/members/models.py:235
 msgid "Give users the option to translate user generated content."
 msgstr "Дайте на потребителите опция да преведат генерираното от потребителя съдържание."
 
-#: bluebottle/members/models.py:234
+#: bluebottle/members/models.py:240
 msgid "enable gender"
 msgstr "включване на пол"
 
-#: bluebottle/members/models.py:236
+#: bluebottle/members/models.py:242
 msgid "Show gender question in profile form"
 msgstr "Показвайте въпроса за пола във формуляра на профила"
 
-#: bluebottle/members/models.py:240
+#: bluebottle/members/models.py:246
 msgid "enable birthday"
 msgstr "включване на рождената дата"
 
-#: bluebottle/members/models.py:242
+#: bluebottle/members/models.py:248
 msgid "Show birthdate question in profile form"
 msgstr "Показвайте въпроса за рождената дата във формуляра на профила"
 
-#: bluebottle/members/models.py:248
+#: bluebottle/members/models.py:254
 msgid "Show address question in profile form"
 msgstr "Показвайте въпроса за адреса във формуляра на профила"
 
-#: bluebottle/members/models.py:252
+#: bluebottle/members/models.py:258
 msgid "create segments"
 msgstr "създаване на сегменти"
 
-#: bluebottle/members/models.py:255
+#: bluebottle/members/models.py:261
 msgid "Create new segments when a user logs in. Leave unchecked if only priorly specified ones should be used."
 msgstr "Създаване на нови сегменти, когато потребителят влезе. Оставете отметката, ако само предварително зададените трябва да се използват."
 
-#: bluebottle/members/models.py:260
+#: bluebottle/members/models.py:266
 msgid "create locations"
 msgstr "създаване на местоположения"
 
-#: bluebottle/members/models.py:263
+#: bluebottle/members/models.py:269
 msgid "Create new office locations when a user logs in. Leave unchecked if only priorly specified ones should be used."
 msgstr "Създаване на нови офис локации, когато потребителят влезе. Оставете отметката, ако само предварително зададените трябва да се използват."
 
-#: bluebottle/members/models.py:269
+#: bluebottle/members/models.py:275
 msgid "Office location"
 msgstr "Локация на офиса"
 
-#: bluebottle/members/models.py:271
+#: bluebottle/members/models.py:277
 msgid "Require members to enter their office location."
 msgstr "Изисквайте от членовете да попълнят локацията на офиса си."
 
-#: bluebottle/members/models.py:276
+#: bluebottle/members/models.py:282
 msgid "Require members to enter their address."
 msgstr "Изисквайте от членовете да попълнят адреса си."
 
-#: bluebottle/members/models.py:281
+#: bluebottle/members/models.py:287
 msgid "Require members to enter their phone number."
 msgstr "Изисквайте от членовете да попълнят телефонния си номер."
 
-#: bluebottle/members/models.py:284
+#: bluebottle/members/models.py:290
 msgid "Birthdate"
 msgstr "Рожденна дата"
 
-#: bluebottle/members/models.py:286
+#: bluebottle/members/models.py:292
 msgid "Require members to enter their date of birth."
 msgstr "Изисквайте от членовете да попълнят датата си на раждане."
 
-#: bluebottle/members/models.py:290
+#: bluebottle/members/models.py:296
 msgid "Verify SSO data office location"
 msgstr "Потвърдете местоположението на офиса за SSO данни"
 
-#: bluebottle/members/models.py:292
+#: bluebottle/members/models.py:298
 msgid "Require members to verify their office location once if it is filled via SSO."
 msgstr "Изисква се членовете да потвърдят местоположението на офиса си веднъж, ако е попълнено чрез SSO."
 
-#: bluebottle/members/models.py:296
+#: bluebottle/members/models.py:302
 msgid "Display member names"
 msgstr "Покажете имената на членовете"
 
-#: bluebottle/members/models.py:301
+#: bluebottle/members/models.py:307
 msgid "How names of members will be displayed for visitors and other members.If first name is selected, then the names of initiators and activity manager will remain displayed in full and Activity managers and initiators will see the full names of their participants. And staff members will see all names in full."
 msgstr "Как имената на членовете ще бъдат показани пред посетителите и другите членове. Ако е избрано само име, имената на инициаторите и мениджъра на активността ще останат показани в пълен вид и мениджърите на активността и инициаторите ще виждат пълните имена на участниците си. А служителите ще виждат всичките имена в пълен вид."
 
-#: bluebottle/members/models.py:309
+#: bluebottle/members/models.py:315
 msgid "Anonymise"
 msgstr "Анонимизиране"
 
-#: bluebottle/members/models.py:314
+#: bluebottle/members/models.py:320
 msgid "Set the number of months after which user data will be anonymised. Leave the field empty or with ‘0’ if you do not wish to anonymise user data."
 msgstr "Настройте броя месеци, след които данните на потребителите ще бъдат анонимизирани. Оставете полето празно или с „0“, ако не желаете да анонимизирате данните на потребителите."
 
-#: bluebottle/members/models.py:326
+#: bluebottle/members/models.py:332
 msgid "Set the number of months after which user data will be deleted. Leave the field empty or with ‘0’ if you do not wish to delete user data."
 msgstr "Настройте броя месеци, след които данните на потребителите ще бъдат изтрити. Оставете полето празно или с „0“, ако не желаете да изтривате данните на потребителите."
 
-#: bluebottle/members/models.py:354 bluebottle/members/models.py:355
+#: bluebottle/members/models.py:360 bluebottle/members/models.py:361
 msgid "member platform settings"
 msgstr "настройки на платформата на члена"
 
-#: bluebottle/members/models.py:360
+#: bluebottle/members/models.py:366
 msgid "Was verified for voting by recaptcha."
 msgstr "Беше потвърдено за гласуване от reCAPTCHA."
 
-#: bluebottle/members/models.py:362
+#: bluebottle/members/models.py:368
 #: bluebottle/time_based/states/registrations.py:18
 msgid "Accepted"
 msgstr "Прието"
 
-#: bluebottle/members/models.py:364
+#: bluebottle/members/models.py:370
 msgid "Was approved by platform manager."
 msgstr "Беше одобрено от платформен мениджър."
 
-#: bluebottle/members/models.py:367
+#: bluebottle/members/models.py:373
 msgid "Matching"
 msgstr "Съответствие"
 
-#: bluebottle/members/models.py:369
+#: bluebottle/members/models.py:375
 msgid "Monthly overview of activities that match this person's profile"
 msgstr "Месечен преглед на активностите, които отговарят на профила на този човек"
 
-#: bluebottle/members/models.py:372
+#: bluebottle/members/models.py:378
 msgid "Receive reminder emails"
 msgstr "Получаване на имейли с напомняния"
 
-#: bluebottle/members/models.py:374
+#: bluebottle/members/models.py:380
 msgid "User receives emails reminding them about their do good hours"
 msgstr "Потребителят получава имейли, напомнящи му за неговите часове на добри дела"
 
-#: bluebottle/members/models.py:377 bluebottle/token_auth/tests/models.py:12
+#: bluebottle/members/models.py:383 bluebottle/token_auth/tests/models.py:12
 msgid "remote_id"
 msgstr "remote_id"
 
-#: bluebottle/members/models.py:381
+#: bluebottle/members/models.py:387
 msgid "Last Logout"
 msgstr "Последно излизане"
 
-#: bluebottle/members/models.py:384
+#: bluebottle/members/models.py:390
 msgid "external SCIM id"
 msgstr "външен SCIM id"
 
-#: bluebottle/members/models.py:394
+#: bluebottle/members/models.py:400
 msgid "Office groups managed"
 msgstr "Управлявани офис групи"
 
-#: bluebottle/members/models.py:396
+#: bluebottle/members/models.py:402
 msgid "Select one or more groups to filter on. The user will only see data related to those selected groups. Leave empty to show all data."
 msgstr "Изберете една или повече групи за филтриране. Потребителят ще вижда само данни, свързани с тези избрани групи. Оставете празно, за да покажете всички данни."
 
-#: bluebottle/members/models.py:404
+#: bluebottle/members/models.py:410
 msgid "Segments managed"
 msgstr "Управлявани сегменти"
 
-#: bluebottle/members/models.py:406
+#: bluebottle/members/models.py:412
 msgid "Select one or more segments to filter on. The user will only get updates for activities with the selected segments."
 msgstr "Изберете един или повече сегмента за филтриране. Потребителят ще получава актуализации само за активности с избраните сегменти."
 
-#: bluebottle/members/models.py:413
+#: bluebottle/members/models.py:419
 msgid "When the user updated their matching preferences."
 msgstr "Когато потребителят е актуализирал предпочитанията си за съответствие."
 
-#: bluebottle/members/models.py:561
+#: bluebottle/members/models.py:433
+msgid "Terms accepted"
+msgstr "Условията са приети"
+
+#: bluebottle/members/models.py:435
+msgid "User has explicitly accepted the terms"
+msgstr "Потребителят изрично е приел условията"
+
+#: bluebottle/members/models.py:573
 msgid "User activity"
 msgstr "Дейност на потребителя"
 
-#: bluebottle/members/models.py:562
+#: bluebottle/members/models.py:574
 msgid "User activities"
 msgstr "Дейности на потребителя"
 
@@ -8289,11 +8305,11 @@ msgstr "Несъответствие в потвърждението на име
 msgid "Signup requires a confirmation token"
 msgstr "Регистрацията изисква токен за потвърждение"
 
-#: bluebottle/members/serializers.py:824
+#: bluebottle/members/serializers.py:825
 msgid "Password does not match"
 msgstr "Паролата не съвпада"
 
-#: bluebottle/members/serializers.py:887
+#: bluebottle/members/serializers.py:888
 msgid "The two password fields didn't match."
 msgstr "Двете полета за парола не съвпадат."
 

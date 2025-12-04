@@ -585,11 +585,10 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         BlueBottleUserFactory.create(
             first_name='Bob',
             email='bob@bob.bg',
-            primary_language='bg'
+            primary_language='dk'
         )
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.bg'])
-        # NL translations not set so we should receive default translation
         self.assertEqual(welcome_email.subject, 'Welcome to Test!')
 
     def test_create_user_language_not_set(self):

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import logging
 from builtins import object
 
@@ -145,7 +146,10 @@ class GrantPayment(TriggerMixin, models.Model):
         if not session.payment_intent:
             return None
 
-        intent = stripe.PaymentIntent.retrieve(session.payment_intent)
+        intent = stripe.PaymentIntent.retrieve(
+            session.payment_intent,
+            expand=['latest_charge']
+        )
         if not self.intent_id:
             self.intent_id = intent.id
             self.save()
@@ -155,7 +159,7 @@ class GrantPayment(TriggerMixin, models.Model):
             return None
 
         if intent.status == "succeeded":
-            charge_id = intent.charges.data[0].id if intent.charges.data else None
+            charge_id = intent.latest_charge.id if intent.latest_charge else None
             if not charge_id:
                 return None
 
@@ -171,8 +175,12 @@ class GrantPayment(TriggerMixin, models.Model):
                 if balance_transaction.available_on <= now:
                     # Funds are actually available for payout
                     self.states.succeed(save=True)
-                else:
+                elif self.status != 'pending':
+                    date = datetime.datetime.fromtimestamp(
+                        balance_transaction.available_on
+                    ).strftime('%Y-%m-%d %H:%M:%S')
                     self.states.wait(save=True)
+                    raise Exception(f"Will become available on {date}")
 
         return None
 

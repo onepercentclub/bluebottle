@@ -214,7 +214,6 @@ class UpdateDetailView(APITestCase):
         self.assertRelationship('activity')
 
     def test_get_other_user(self):
-
         self.perform_get(user=BlueBottleUserFactory.create())
         self.assertStatus(status.HTTP_200_OK)
 

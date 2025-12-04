@@ -1,5 +1,4 @@
 import functools
-
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
 
@@ -23,6 +22,8 @@ from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
+from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
+from parler.admin import TranslatableAdmin
 from rest_framework.authtoken.models import Token
 
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -44,6 +45,7 @@ from bluebottle.members.forms import (
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.notifications.models import Message
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
+from bluebottle.segments.filters import MemberSegmentAdminMixin
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.time_based.models import (
     DateParticipant,
@@ -52,6 +54,7 @@ from bluebottle.time_based.models import (
     ScheduleParticipant,
     TeamScheduleParticipant, RegisteredDateParticipant,
 )
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import (
     BasePlatformSettingsAdmin,
     admin_info_box,
@@ -59,7 +62,7 @@ from bluebottle.utils.admin import (
 )
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-from .models import Member, UserSegment
+from .models import Member, SocialLoginSettings, UserSegment
 from ..grant_management.models import GrantApplication
 from ..offices.admin import RegionManagerAdminMixin
 from ..offices.models import OfficeSubRegion
@@ -120,7 +123,16 @@ class MemberCreationForm(MemberForm):
         return user
 
 
-class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
+class SocialLoginSettingsInline(admin.TabularInline):
+    extra = 1
+    model = SocialLoginSettings
+
+
+class MemberPlatformSettingsAdmin(
+    TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin,
+    NonSortableParentAdmin, DynamicArrayMixin
+):
+    inlines = [SocialLoginSettingsInline]
 
     def reminder_info(self, obj):
         return admin_info_box(
@@ -135,23 +147,46 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
               'users are encouraged to spend making an impact each year.')
         )
 
+    def request_access_info(self, obj):
+        return admin_info_box(
+            _(
+                'If you allow people to request access, use the fields below to explain how they can do this.'
+            )
+        )
     fieldsets = (
         (
             _('Login'),
             {
                 'fields': (
-                    'closed', 'confirm_signup', 'login_methods', 'email_domain',
+                    'translatable_info',
+                    'closed',
                     'background',
+                    'login_methods',
+                    'confirm_signup',
+                    'explicit_terms',
+                    'account_creation_rules',
+                    'email_domains',
+                    'request_access_info',
+                    'request_access_instructions',
+                    'request_access_email',
+                    'request_access_code_display'
                 )
             }
         ),
-
         (
             _('Profile'),
             {
                 'fields': (
                     'enable_gender', 'enable_birthdate',
                     'enable_address', 'create_segments'
+                )
+            }
+        ),
+        (
+            _('Translations'),
+            {
+                'fields': (
+                    'translate_user_content',
                 )
             }
         ),
@@ -205,8 +240,13 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         )
     )
 
+    radio_fields = {
+        'account_creation_rules': admin.HORIZONTAL,
+        'request_access_method': admin.HORIZONTAL,
+    }
+
     def get_fieldsets(self, request, obj=None):
-        fieldsets = self.fieldsets
+        fieldsets = super().get_fieldsets(request, obj)
         required_fields = [
             'require_birthdate',
             'require_address',
@@ -242,10 +282,13 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
         return fieldsets
 
-    readonly_fields = ('segment_types', 'reminder_info', 'impact_hours_info')
+    readonly_fields = (
+        'segment_types', 'reminder_info', 'impact_hours_info', 'request_access_info',
+        'request_access_code', 'request_access_code_display',
+    )
 
     def get_readonly_fields(self, request, obj=None):
-        read_only_fields = super(MemberPlatformSettingsAdmin, self).get_readonly_fields(request, obj)
+        read_only_fields = super().get_readonly_fields(request, obj)
         if not request.user.is_superuser:
             read_only_fields += ('retention_anonymize', 'retention_delete')
 
@@ -254,6 +297,22 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
         return read_only_fields
 
+    def request_access_code_display(self, obj):
+        template = loader.get_template('admin/members/request_access_code_display.html')
+        renew_url = reverse('admin:members_memberplatformsettings_renew_code')
+
+        context = {
+            'code': obj.request_access_code if obj else None,
+            'renew_url': renew_url,
+        }
+
+        if obj and obj.request_access_code:
+            context['signup_url'] = tenant_url(f'/auth/signup-with-code?code={obj.request_access_code}')
+
+        return template.render(context)
+
+    request_access_code_display.short_description = _('Access link')
+
     def segment_types(self, obj):
         template = loader.get_template('segments/admin/required_segment_types.html')
         context = {
@@ -261,6 +320,33 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             'link': reverse('admin:segments_segmenttype_changelist')
         }
         return template.render(context)
+
+    def get_urls(self):
+        urls = super(MemberPlatformSettingsAdmin, self).get_urls()
+
+        extra_urls = [
+            re_path(
+                r'^renew-access-code/$',
+                self.admin_site.admin_view(self.renew_access_code),
+                name='members_memberplatformsettings_renew_code'
+            ),
+        ]
+        return extra_urls + urls
+
+    def renew_access_code(self, request):
+        import secrets
+        import string
+
+        obj = MemberPlatformSettings.load()
+
+        alphabet = string.ascii_letters + string.digits
+        new_code = ''.join(secrets.choice(alphabet) for _ in range(12))
+
+        obj.request_access_code = new_code
+        obj.save()
+
+        self.message_user(request, _('Access code has been renewed successfully.'))
+        return HttpResponseRedirect(reverse('admin:members_memberplatformsettings_change', args=(obj.id,)))
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         """
@@ -280,9 +366,9 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
             data = request.POST
             if (
-                    data['retention_anonymize'] and str(obj.retention_anonymize) != data['retention_anonymize']
+                data['retention_anonymize'] and str(obj.retention_anonymize) != data['retention_anonymize']
             ) or (
-                    data['retention_delete'] and str(obj.retention_delete) != data['retention_delete']
+                data['retention_delete'] and str(obj.retention_delete) != data['retention_delete']
             ):
                 context = dict(
                     obj=obj,
@@ -426,6 +512,13 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
         return functools.partial(Form, current_user=request.user)
 
+    def get_list_filter(self, request):
+        filters = super().get_list_filter(request)
+        settings = MemberPlatformSettings.load()
+        if settings.account_creation_rules == 'whitelist_and_request':
+            filters += ('accepted',)
+        return filters
+
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "segment_manager":
             kwargs["queryset"] = Segment.objects.filter(
@@ -448,6 +541,9 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
     def get_permission_fields(self, request, obj=None):
         fields = self.permission_fields.copy()
+        settings = MemberPlatformSettings.load()
+        if settings.account_creation_rules == 'whitelist_and_request':
+            fields.insert(2, 'accepted')
         if OfficeSubRegion.objects.count():
             fields.insert(4, 'subregion_manager')
         if Segment.objects.count():
@@ -458,7 +554,8 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         if not obj:
             fieldsets = (
                 (
-                    None, {
+                    None,
+                    {
                         'classes': ('wide',),
                         'fields': [
                             'first_name', 'last_name', 'email', 'is_active',
@@ -535,6 +632,9 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             if member_settings.enable_birthdate:
                 fieldsets[0][1]['fields'].append('birthdate')
 
+            if member_settings.explicit_terms:
+                fieldsets[2][1]['fields'].append('terms_accepted')
+
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')
 
@@ -545,7 +645,8 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
             if SegmentType.objects.count():
                 extra = (
-                    _('Segments'), {
+                    _('Segments'),
+                    {
                         'fields': [
                             segment_type.field_name
                             for segment_type in SegmentType.objects.all()

@@ -17,7 +17,7 @@ from polymorphic.managers import PolymorphicManager
 from polymorphic.models import PolymorphicModel
 from polymorphic.query import PolymorphicQuerySet
 
-from bluebottle.files.fields import ImageField, DocumentField
+from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
@@ -624,7 +624,7 @@ class FileUploadQuestion(ActivityQuestion, TranslatableModel):
 
 
 class FileUploadAnswer(ActivityAnswer):
-    file = DocumentField(on_delete=models.CASCADE)
+    file = PrivateDocumentField(on_delete=models.CASCADE)
 
     class JSONAPIMeta:
         resource_name = 'file-upload-answers'

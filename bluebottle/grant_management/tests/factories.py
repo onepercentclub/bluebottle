@@ -55,7 +55,7 @@ class GrantPayoutFactory(factory.DjangoModelFactory):
         model = GrantPayout
 
     activity = factory.SubFactory(GrantApplicationFactory)
-    provider = factory.SubFactory(GrantProviderFactory)
+    provider = 'stripe'
     currency = 'EUR'
     status = 'approved'
 

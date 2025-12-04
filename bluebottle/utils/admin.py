@@ -15,14 +15,13 @@ from django.http import HttpResponse
 from django.template import loader
 from django.utils.encoding import smart_str
 from djmoney.money import Money
-from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
 from bluebottle.activities.models import Contributor
 from bluebottle.clients import properties
 from bluebottle.members.models import Member
 from bluebottle.utils.exchange_rates import convert
-from .models import Language, TranslationPlatformSettings
+from .models import Language
 from ..segments.models import SegmentType
 
 
@@ -179,13 +178,7 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
     )
 
 
-@admin.register(TranslationPlatformSettings)
-class TranslationPlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
-    pass
-
-
 class TranslatableAdminOrderingMixin(object):
-
     translatable_ordering = 'translations__name'
 
     def get_queryset(self, request):
@@ -201,9 +194,10 @@ class TranslatableAdminOrderingMixin(object):
         ).order_by(self.translatable_ordering)
 
 
-def admin_info_box(text):
+def admin_info_box(text, class_name=None):
     template = loader.get_template('admin/info_box.html')
     context = {
         'text': text,
+        'class_name': class_name,
     }
     return template.render(context)

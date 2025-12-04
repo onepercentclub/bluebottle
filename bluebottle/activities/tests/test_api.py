@@ -32,13 +32,13 @@ from bluebottle.offices.tests.factories import OfficeSubRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.geo import (
     CountryFactory,
     GeolocationFactory,
     LocationFactory,
     PlaceFactory,
 )
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -586,7 +586,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
             DeadlineActivityFactory(status='open', deadline=today + timedelta(days=8)),
             CollectActivityFactory(status='open', end=today + timedelta(days=9)),
-
 
             DeadlineActivityFactory(
                 status='open', start=now() - timedelta(days=1), deadline=None

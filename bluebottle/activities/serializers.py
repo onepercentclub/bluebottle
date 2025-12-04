@@ -24,6 +24,7 @@ from bluebottle.activities.models import (
     FileUploadQuestion, SegmentQuestion, TextQuestion, ConfirmationAnswer,
     ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion
 )
+from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.collect.serializers import (
     CollectActivityListSerializer,
     CollectActivitySerializer,
@@ -37,8 +38,9 @@ from bluebottle.deeds.serializers import (
     DeedSerializer
 )
 from bluebottle.files.models import RelatedImage
-from bluebottle.files.serializers import IMAGE_SIZES, ImageField, ImageSerializer, DocumentSerializer
-from bluebottle.fsm.serializers import CurrentStatusField, TransitionSerializer
+from bluebottle.files.serializers import IMAGE_SIZES, ImageField, ImageSerializer, PrivateDocumentSerializer
+from bluebottle.fsm.serializers import CurrentStatusField
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import Donor
 from bluebottle.funding.serializers import (
     DonorListSerializer,
@@ -47,11 +49,11 @@ from bluebottle.funding.serializers import (
     FundingSerializer,
     TinyFundingSerializer,
 )
+from bluebottle.geo.serializers import PointSerializer
 from bluebottle.grant_management.serializers import (
     GrantSerializer,
     GrantApplicationSerializer
 )
-from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.models import (
     DateParticipant,
     PeriodicParticipant,
@@ -78,7 +80,6 @@ from bluebottle.time_based.serializers import (
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
-
 
 ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity"])
 
@@ -259,9 +260,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             try:
                 start, end = (
                     dateutil.parser.parse(date).astimezone(tz)
-                    for date in self.context["request"]
-                    .GET.get("filter[date]")
-                    .split(",")
+                    for date in self.context["request"].GET.get("filter[date]").split(",")
                 )
             except (ValueError, AttributeError):
                 start = None
@@ -569,7 +568,10 @@ class ActivityPreviewSerializer(ModelSerializer):
             "capacity",
             "contributor_count",
         )
-        meta_fields = ("current_status", "created")
+        meta_fields = (
+            "current_status",
+            "created",
+        )
 
     class JSONAPIMeta:
         resource_name = "activities/preview"
@@ -889,7 +891,7 @@ class TextQuestionSerializer(BaseQuestionSerializer):
 class ConfirmationQuestionSerializer(BaseQuestionSerializer):
     class Meta(BaseQuestionSerializer.Meta):
         model = ConfirmationQuestion
-        fields = BaseQuestionSerializer.Meta.fields + ('text', )
+        fields = BaseQuestionSerializer.Meta.fields + ('text',)
 
     class JSONAPIMeta(BaseQuestionSerializer.JSONAPIMeta):
         resource_name = 'confirmation-questions'
@@ -898,7 +900,7 @@ class ConfirmationQuestionSerializer(BaseQuestionSerializer):
 class SegmentQuestionSerializer(BaseQuestionSerializer):
     class Meta(BaseQuestionSerializer.Meta):
         model = SegmentQuestion
-        fields = BaseQuestionSerializer.Meta.fields + ('segment_type', )
+        fields = BaseQuestionSerializer.Meta.fields + ('segment_type',)
 
     class JSONAPIMeta(BaseQuestionSerializer.JSONAPIMeta):
         resource_name = 'segment-questions'
@@ -957,7 +959,7 @@ class BaseAnswerSerializer(ModelSerializer):
 class TextAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = TextAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('answer', )
+        fields = BaseAnswerSerializer.Meta.fields + ('answer',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'text-answers'
@@ -966,7 +968,7 @@ class TextAnswerSerializer(BaseAnswerSerializer):
 class ConfirmationAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = ConfirmationAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('confirmed', )
+        fields = BaseAnswerSerializer.Meta.fields + ('confirmed',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'confirmation-answers'
@@ -975,7 +977,7 @@ class ConfirmationAnswerSerializer(BaseAnswerSerializer):
 class SegmentAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = SegmentAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('segment', )
+        fields = BaseAnswerSerializer.Meta.fields + ('segment',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'segment-answers'
@@ -988,15 +990,30 @@ class SegmentAnswerSerializer(BaseAnswerSerializer):
     }
 
 
-class FileUploadAnswerDocumentSerializer(DocumentSerializer):
+class FileUploadAnswerDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'file-upload-answer-document'
     relationship = 'fileuploadanswer_set'
+
+    def get_link(self, obj):
+        answer = obj.fileuploadanswer_set.first()
+
+        if answer:
+            activity = answer.activity
+            question = answer.question
+
+            if (
+                question.visibility == 'all' or
+                ActivityOwnerPermission().has_object_action_permission(
+                    'POST', self.context['request'].user, activity
+                )
+            ):
+                return super().get_link(obj)
 
 
 class FileUploadAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = FileUploadAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('file', )
+        fields = BaseAnswerSerializer.Meta.fields + ('file',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'file-upload-answers'

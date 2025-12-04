@@ -1,5 +1,5 @@
-import munch
 import mock
+import munch
 import stripe
 from django.test.utils import override_settings
 
@@ -36,6 +36,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 "country": self.check.country,
                 "charges_enabled": True,
                 "payouts_enabled": True,
+                "business_type": "individual",
                 "individual": munch.munchify(
                     {
                         "first_name": "Jhon",
@@ -87,7 +88,7 @@ class ConnectAccountTestCase(BluebottleTestCase):
 
     def test_account(self):
         with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
+            'stripe.Account.retrieve', return_value=self.connect_account
         ) as retrieve:
             self.assertTrue(isinstance(self.check.account, stripe.Account))
             self.assertEqual(self.check.account.id, self.connect_account.id)
@@ -120,7 +121,7 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         })
 
         with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
+            'stripe.Account.retrieve', return_value=self.connect_account
         ):
             self.check = StripePayoutAccount(
                 owner=BlueBottleUserFactory.create(), country=country, account_id=account_id
@@ -152,10 +153,10 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
 
     def test_retrieve(self):
         with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
+            'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                    'stripe.ListObject.retrieve', return_value=self.connect_external_account
+                'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
                 self.assertEqual(
                     self.external_account.account.id,
@@ -175,10 +176,10 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         self.connect_account.external_accounts = list_object
 
         with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
+            'stripe.Account.retrieve', return_value=self.connect_account
         ):
             with mock.patch(
-                    'stripe.ListObject.retrieve', return_value=self.connect_external_account
+                'stripe.ListObject.retrieve', return_value=self.connect_external_account
             ) as retrieve_external_account:
                 self.assertEqual(
                     self.external_account.account.id,

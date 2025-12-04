@@ -3,7 +3,6 @@ from urllib.parse import unquote
 
 from django import forms
 from django.contrib import admin, messages
-
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
@@ -86,6 +85,7 @@ from bluebottle.time_based.models import (
     TeamScheduleParticipant,
     TimeContribution,
 )
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
 from bluebottle.utils.utils import get_current_host
@@ -1186,7 +1186,7 @@ class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
     list_display = ['name', 'question', 'visibility', 'activity_types']
 
 
-class ActivityQuestionChildAdmin(TranslatableAdmin, PolymorphicChildModelAdmin):
+class ActivityQuestionChildAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, PolymorphicChildModelAdmin):
     base_model = ActivityQuestion
     fields = ['name', 'question', 'help_text', 'required', 'visibility', 'activity_types']
     list_fields = ['question', 'help_text']

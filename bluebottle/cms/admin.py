@@ -164,7 +164,8 @@ class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
             _('Contact'),
             {
                 'fields': (
-                    'share_activities', 'organization', 'contact_email', 'contact_phone', 'start_page'
+                    'translatable_info', 'share_activities', 'organization',
+                    'contact_email', 'contact_phone', 'start_page'
                 )
             }
         ),

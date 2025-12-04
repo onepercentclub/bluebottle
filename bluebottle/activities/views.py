@@ -529,7 +529,7 @@ class ActivityAnswerDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
 
 class FileUploadAnswerDocumentView(PrivateFileView):
     max_age = 15 * 60  # 15 minutes
-    relation = 'document'
+    relation = 'file'
     field = 'file'
     queryset = FileUploadAnswer.objects
     serializer_class = FileUploadAnswerDocumentSerializer

@@ -510,7 +510,7 @@ class PayoutStateMachine(ModelStateMachine):
     )
 
     approve = Transition(
-        [new, approved],
+        [new],
         approved,
         name=_('Approve'),
         description=_(
@@ -687,7 +687,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     set_incomplete = Transition(
-        [pending, verified],
+        [pending, verified, new],
         incomplete,
         name=_('Set incomplete'),
         description=_(

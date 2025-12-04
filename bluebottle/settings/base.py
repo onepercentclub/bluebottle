@@ -9,7 +9,6 @@ BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
 PROJECT_ROOT = BASE_DIR
 
-
 DEBUG = True
 COMPRESS_ENABLED = False
 COMPRESS_TEMPLATES = False
@@ -190,7 +189,6 @@ REST_FRAMEWORK = {
 if not DEBUG:
     REST_FRAMEWORK['DEFAULT_METADATA_CLASS'] = None
 
-
 JWT_AUTH = {
     'JWT_LEEWAY': 0,
     'JWT_VERIFY': True,
@@ -212,9 +210,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
                           '/media', '/downloads', '/login-with',
                           '/surveys', '/token', '/jet', '/.well-known')
 
-SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
-
 
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
@@ -229,7 +225,7 @@ PASSWORD_HASHERS = (
 AUTHENTICATION_BACKENDS = (
     'axes.backends.AxesBackend',
     'bluebottle.social.backends.NoStateFacebookOAuth2',
-    'social.backends.facebook.FacebookAppOAuth2',
+    'bluebottle.social.backends.NoStateGoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
     'bluebottle.utils.backends.AnonymousAuthenticationBackend'
 )
@@ -249,23 +245,21 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
     'bluebottle.auth.utils.user_from_request',
-    'social.pipeline.social_auth.social_details',
-    'social.pipeline.social_auth.social_uid',
-    'social.pipeline.social_auth.auth_allowed',
-    'social.pipeline.social_auth.social_user',
-    'bluebottle.auth.utils.fallback_email',
-    'social.pipeline.user.get_username',
-    'social.pipeline.social_auth.associate_by_email',
-    'social.pipeline.user.create_user',
-    'social.pipeline.social_auth.associate_user',
-    'bluebottle.auth.utils.refresh',
-    'social.pipeline.social_auth.load_extra_data',
-    'social.pipeline.user.user_details',
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'social_core.pipeline.social_auth.associate_by_email',
+    'social_core.pipeline.user.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
     'bluebottle.auth.utils.set_language',
-    'bluebottle.auth.utils.save_profile_picture',
-    'bluebottle.auth.utils.get_extra_facebook_data',
+    'bluebottle.auth.utils.set_last_login',
 )
 
 AFOM_ENABLED = False
@@ -405,6 +399,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
     'bluebottle.scim',
     'bluebottle.updates',
+    'bluebottle.translations',
 
     # Custom dashboard
     # 'fluent_dashboard',
@@ -448,7 +443,6 @@ TENANT_APPS = (
     'bluebottle.webfinger',
 )
 
-
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 CSRF_USE_SESSIONS = True
@@ -465,7 +459,6 @@ THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
 THUMBNAIL_PRESERVE_FORMAT = True
 THUMBNAIL_ENGINE = 'bluebottle.files.engines.Engine'
-
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
@@ -631,7 +624,6 @@ SEND_MAIL = False
 
 DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
-
 # Sometimes images crash projects
 # Error: Exception Value: image file is truncated (26 bytes not processed)
 # This fixes it
@@ -652,7 +644,6 @@ PRIVATE_FILE_ALLOWED_MIME_TYPES = (
     'application/pdf', 'application/vnd.oasis.opendocument.text',
     'text/rtf'
 )
-
 
 TOKEN_AUTH_SETTINGS = 'bluebottle.clients.properties'
 
@@ -784,7 +775,6 @@ AXES_FAILURE_LIMIT = 10
 AXES_COOLOFF_TIME = datetime.timedelta(minutes=10)
 AXES_CLIENT_IP_CALLABLE = "bluebottle.utils.utils.get_client_ip"
 
-
 AXES_USERNAME_FORM_FIELD = 'email'
 
 USE_X_FORWARDED_HOST = True
@@ -811,7 +801,7 @@ TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 30
 TWO_FACTOR_REMEMBER_COOKIE_SECURE = False if DEBUG else True
 TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY = True
 
-LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale/'), )
+LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale/'),)
 
 IBAN_CHECK_API = {
     "token_url": "https://auth-mtls-sandbox.abnamro.com/as/token.oauth2",
@@ -821,3 +811,6 @@ IBAN_CHECK_API = {
     "private_key": "path-to-private-key",
     "public_cert": "path-to-public-cert",
 }
+
+DEEPL_API_KEY = "deepl-key"
+DEEPL_API_URL = "deepl-url"

@@ -118,6 +118,12 @@ class MatchingActivitiesNotification(TransitionMessage):
 
 
 class BaseDoGoodHoursReminderNotification(TransitionMessage):
+    """
+    Base class for all notifications do-good hours reminders.
+    """
+
+    class Meta:
+        abstract = True
 
     @property
     def action_link(self):
@@ -178,20 +184,32 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
 
 
 class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
+    """
+    Send a reminder in Q1 to platform user to spend their do-good hours.
+    """
     subject = pgettext('email', "It’s a new year, let's make some impact!")
     template = 'messages/matching/reminder-q1'
 
 
 class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
+    """
+    Send a reminder in Q2 to platform user to spend their do-good hours.
+    """
     subject = pgettext('email', "Haven’t joined an activity yet? Let’s get started!")
     template = 'messages/matching/reminder-q2'
 
 
 class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
+    """
+    Send a reminder in Q3 to platform user to spend their do-good hours.
+    """
     subject = pgettext('email', "Half way through the year and still plenty of activities to join")
     template = 'messages/matching/reminder-q3'
 
 
 class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
+    """
+    Send a reminder in Q4 to platform user to spend their do-good hours.
+    """
     subject = pgettext('email', "Make use of your {do_good_hours} hours of impact!")
     template = 'messages/matching/reminder-q4'

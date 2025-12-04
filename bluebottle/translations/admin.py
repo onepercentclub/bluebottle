@@ -47,7 +47,7 @@ class TranslatableLabelAdminMixin:
         return admin_info_box(
             _(
                 'Every change will apply to all languages. '
-                'Except for the fields that can be translated, which are marked "Translatable"'
+                'Except for the fields that can be translated, which are marked with 🌐'
             ),
             'translatable-info',
         )

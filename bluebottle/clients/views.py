@@ -32,7 +32,7 @@ class SettingsView(views.APIView):
         languages = obj['languages']
 
         is_jwt_authenticated = (
-            request.user.is_authenticated 
+            request.user.is_authenticated
             and request.META.get('HTTP_AUTHORIZATION', '').startswith('JWT ')
         )
 

@@ -30,7 +30,13 @@ class SettingsView(views.APIView):
         member_settings = obj['platform']['members']
         content_settings = obj['platform']['content']
         languages = obj['languages']
-        if member_settings['closed'] and not request.user.is_authenticated:
+
+        is_jwt_authenticated = (
+            request.user.is_authenticated
+            and request.META.get('HTTP_AUTHORIZATION', '').startswith('JWT ')
+        )
+
+        if member_settings['closed'] and not is_jwt_authenticated:
             obj = {
                 'tenant': connection.tenant.client_name,
                 'languages': languages,

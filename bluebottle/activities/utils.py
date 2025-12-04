@@ -25,7 +25,7 @@ from bluebottle.activities.models import (
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.files.serializers import DocumentSerializer
+from bluebottle.files.serializers import PrivateDocumentSerializer
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
@@ -168,7 +168,7 @@ class SegmentAnswerSerializer(BaseAnswerSerializer):
     }
 
 
-class FileUploadAnswerDocumentSerializer(DocumentSerializer):
+class FileUploadAnswerDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'file-upload-answer-document'
     relationship = 'fileuploadanswer_set'
 

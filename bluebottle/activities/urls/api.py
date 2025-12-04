@@ -93,7 +93,7 @@ urlpatterns = [
     ),
 
     re_path(
-        r'^/answers/(?P<pk>\d+)/document/(?P<type>.+)/$',
+        r'^/answers/(?P<pk>\d+)/document/$',
         FileUploadAnswerDocumentView.as_view(),
         name='file-upload-answer-document'
     ),

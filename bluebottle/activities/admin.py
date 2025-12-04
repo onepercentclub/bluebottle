@@ -1,5 +1,5 @@
 import re
-from bluebottle.segments.filters import ActivitySegmentAdminMixin
+
 from django import forms
 from django.contrib import admin, messages
 from django.db import connection
@@ -60,6 +60,7 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -75,6 +76,7 @@ from bluebottle.time_based.models import (
     TeamScheduleParticipant,
     TimeContribution,
 )
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
@@ -1079,7 +1081,7 @@ class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
     list_display = ['name', 'question', 'visibility', 'activity_types']
 
 
-class ActivityQuestionChildAdmin(TranslatableAdmin, PolymorphicChildModelAdmin):
+class ActivityQuestionChildAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, PolymorphicChildModelAdmin):
     base_model = ActivityQuestion
     fields = ['name', 'question', 'help_text', 'required', 'visibility', 'activity_types']
     list_fields = ['question', 'help_text']

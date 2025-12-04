@@ -528,7 +528,6 @@ div.inline.radiolist {
     display: flex;
 }
 
-
 /* Radio button styling */
 input[type="radio"] {
     appearance: none;
@@ -572,6 +571,7 @@ input[type="radio"]:focus {
 }
 
 /* Radio button labels */
+
 .radiolist label,
 ul.radiolist label {
     display: inline-flex;

@@ -162,6 +162,7 @@ class MemberPlatformSettingsAdmin(
                     'background',
                     'login_methods',
                     'confirm_signup',
+                    'explicit_terms',
                     'account_creation_rules',
                     'email_domains',
                     'request_access_info',
@@ -629,6 +630,9 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                 fieldsets[0][1]['fields'].append('gender')
             if member_settings.enable_birthdate:
                 fieldsets[0][1]['fields'].append('birthdate')
+
+            if member_settings.explicit_terms:
+                fieldsets[2][1]['fields'].append('terms_accepted')
 
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')

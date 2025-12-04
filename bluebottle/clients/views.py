@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from rest_framework import views, response
 from django.db import connection
 from django.views.generic import TemplateView
-
+from rest_framework import views, response
 
 from bluebottle.clients.utils import get_public_properties
 from bluebottle.members.models import MemberPlatformSettings
@@ -42,7 +41,7 @@ class SettingsView(views.APIView):
                         'background': member_settings['background'],
                         'login_methods': member_settings['login_methods'],
                         'session_only': member_settings['session_only'],
-                        'email_domain': member_settings['email_domain'],
+                        'email_domains': member_settings['email_domains'],
                         'confirm_signup': member_settings['confirm_signup'],
                         'consent_link': member_settings['consent_link'],
                     }

@@ -529,15 +529,18 @@ div.inline.radiolist {
 }
 
 
-#content .parler-language-tabs span.current {
-    color: #237c36
-}
-
-label.translatable-field:before {
-    content: '🌐';
-    display: inline-block;
-    float: right;
-    margin-top: 6px;
-    margin-left: 6px;
+/* Radio button styling */
+input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #281E50;
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    background-color: #fff;
     vertical-align: middle;
 }

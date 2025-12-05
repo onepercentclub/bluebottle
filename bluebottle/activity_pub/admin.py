@@ -36,7 +36,6 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.members.models import Member
-from bluebottle.utils.admin import admin_info_box
 from bluebottle.webfinger.client import client
 
 
@@ -257,7 +256,6 @@ class FollowingAddForm(forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-
     def clean(self):
         super().clean()
         if 'platform_url' in self.cleaned_data:
@@ -276,7 +274,7 @@ class FollowingAddForm(forms.ModelForm):
 class FollowingAdmin(FollowAdmin):
     list_display = ("object", "accepted")
     raw_id_fields = ('default_owner',)
-    
+
     readonly_fields = ('object', 'accepted')
 
     def accepted(self, obj):
@@ -349,7 +347,10 @@ class FollowingAdmin(FollowAdmin):
                     follow_obj.save()
                 self.message_user(
                     request,
-                    f"Follow request sent to {platform_url}. Your platforms will be connected when the request is accepted.",
+                    _(
+                        "Follow request sent to {platform_url}. "
+                        "Your platforms will be connected when the request is accepted."
+                    ) % platform_url,
                     level="success"
                 )
                 # Store the created object for response_add
@@ -357,17 +358,16 @@ class FollowingAdmin(FollowAdmin):
             except requests.exceptions.HTTPError:
                 self.message_user(
                     request,
-                    (
-
+                    _(
                         "Could not determine platform information needed for subscribing. "
                         "Are you sure the url is correct?"
                     ),
                     level="error"
                 )
-            except Exception as e:
+            except Exception as error:
                 self.message_user(
                     request,
-                    f"Error creating Follow relationship: {str(e)}",
+                    _("Error creating Follow relationship: {error}") % error,
                     level="error"
                 )
         else:

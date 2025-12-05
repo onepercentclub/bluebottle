@@ -1,9 +1,8 @@
 import functools
+from builtins import object
+
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
-
-from bluebottle.segments.filters import MemberSegmentAdminMixin
-from builtins import object
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin, UserAdmin

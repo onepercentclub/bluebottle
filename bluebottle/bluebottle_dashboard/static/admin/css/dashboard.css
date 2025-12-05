@@ -614,3 +614,17 @@ input[type=email],
 .vTextField {
     width: 400px
 }
+
+
+#content .parler-language-tabs span.current {
+    color: #237c36
+}
+
+label.translatable-field:before {
+    content: '🌐';
+    display: inline-block;
+    float: right;
+    margin-top: 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+}

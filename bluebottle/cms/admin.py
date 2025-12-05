@@ -19,6 +19,7 @@ from bluebottle.cms.models import (
     Greeting
 )
 from bluebottle.statistics.statistics import Statistics
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
@@ -155,7 +156,7 @@ class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmi
 
 
 @admin.register(SitePlatformSettings)
-class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
+class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
 
     fieldsets = (
         (

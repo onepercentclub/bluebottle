@@ -616,10 +616,6 @@ input[type=email],
 }
 
 
-#content .parler-language-tabs span.current {
-    color: #237c36
-}
-
 label.translatable-field:before {
     content: '🌐';
     display: inline-block;

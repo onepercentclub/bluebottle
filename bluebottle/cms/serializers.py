@@ -15,7 +15,6 @@ from rest_framework_json_api.serializers import ModelSerializer, PolymorphicMode
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField
 )
-from bluebottle.clients import properties
 from bluebottle.cms.models import (
     HomePage, QuotesContent, Quote, PeopleContent, Person,
     ProjectsMapContent, CategoriesContent, StepsContent,
@@ -32,6 +31,7 @@ from bluebottle.pages.models import (
 )
 from bluebottle.slides.models import Slide
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, RichTextField, SafeField
+from bluebottle.utils.models import get_default_language
 
 
 class QuoteSerializer(ModelSerializer):
@@ -630,7 +630,8 @@ class BaseCMSSerializer(ModelSerializer):
         blocks = obj.content.contentitems.all().translated()
         if blocks.exists():
             return blocks
-        return obj.content.contentitems.all().translated(language_code=properties.LANGUAGE_CODE)
+        default_language = get_default_language()
+        return obj.content.contentitems.all().translated(default_language)
 
     class Meta(object):
         fields = ('id', 'blocks')
@@ -689,7 +690,12 @@ class PlatformPageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
     def get_blocks(self, obj):
-        return obj.body.contentitems.all().translated()
+        blocks = obj.body.contentitems.all().translated()
+        if blocks.exists():
+            return blocks
+
+        default_language = get_default_language()
+        return obj.body.contentitems.all().translated(default_language)
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page

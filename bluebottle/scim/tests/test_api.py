@@ -21,16 +21,20 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 
 class SCIMEndpointTestCaseMixin(object):
     def setUp(self):
+        (settings, _created) = SCIMPlatformSettings.objects.get_or_create(enabled=True)
+
         self.token = 'Bearer {}'.format(
-            SCIMPlatformSettings.objects.get().bearer_token
+            settings.bearer_token
         )
         super(SCIMEndpointTestCaseMixin, self).setUp()
 
 
 class AuthenticatedSCIMEndpointTestCaseMixin(object):
     def setUp(self):
+        (settings, _created) = SCIMPlatformSettings.objects.get_or_create(enabled=True)
+
         self.token = 'Bearer {}'.format(
-            SCIMPlatformSettings.objects.get().bearer_token
+            settings.bearer_token
         )
         super(AuthenticatedSCIMEndpointTestCaseMixin, self).setUp()
 
@@ -75,6 +79,24 @@ class AuthenticatedSCIMEndpointTestCaseMixin(object):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.status_code, 401)
         self.assertEqual(data['status'], 401)
+        self.assertTrue('details' in data)
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
+
+    def test_disabled(self):
+        settings = SCIMPlatformSettings.load()
+        settings.enabled = False
+        settings.save()
+
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(
+            self.url,
+            token="JWT {0}".format(user.get_jwt_token())
+        )
+        data = response.data
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(data['status'], 403)
         self.assertTrue('details' in data)
         self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 

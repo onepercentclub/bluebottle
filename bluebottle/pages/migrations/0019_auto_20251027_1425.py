@@ -90,7 +90,7 @@ def migrate_start_page(apps, schema_editor):
                     new_item = item.copy_to_placeholder(dst_ph)
                     new_item.language_code = lang_code
                     new_item.save()
-        
+
 
 
 class Migration(migrations.Migration):

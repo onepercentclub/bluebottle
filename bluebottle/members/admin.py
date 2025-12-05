@@ -53,6 +53,7 @@ from bluebottle.time_based.models import (
     ScheduleParticipant,
     TeamScheduleParticipant, RegisteredDateParticipant,
 )
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import (
     BasePlatformSettingsAdmin,
     admin_info_box,
@@ -127,8 +128,8 @@ class SocialLoginSettingsInline(admin.TabularInline):
 
 
 class MemberPlatformSettingsAdmin(
-    TranslatableAdmin, BasePlatformSettingsAdmin, NonSortableParentAdmin,
-    DynamicArrayMixin
+    TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin,
+    NonSortableParentAdmin, DynamicArrayMixin
 ):
     inlines = [SocialLoginSettingsInline]
 
@@ -151,16 +152,17 @@ class MemberPlatformSettingsAdmin(
                 'If you allow people to request access, use the fields below to explain how they can do this.'
             )
         )
-
     fieldsets = (
         (
             _('Login'),
             {
                 'fields': (
                     'background',
+                    'translatable_info',
                     'closed',
                     'login_methods',
                     'confirm_signup',
+                    'explicit_terms',
                     'account_creation_rules',
                     'email_domains',
                     'request_access_info',
@@ -243,7 +245,7 @@ class MemberPlatformSettingsAdmin(
     }
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = self.fieldsets
+        fieldsets = super().get_fieldsets(request, obj)
         required_fields = [
             'require_birthdate',
             'require_address',
@@ -285,7 +287,7 @@ class MemberPlatformSettingsAdmin(
     )
 
     def get_readonly_fields(self, request, obj=None):
-        read_only_fields = super(MemberPlatformSettingsAdmin, self).get_readonly_fields(request, obj)
+        read_only_fields = super().get_readonly_fields(request, obj)
         if not request.user.is_superuser:
             read_only_fields += ('retention_anonymize', 'retention_delete')
 
@@ -628,6 +630,9 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                 fieldsets[0][1]['fields'].append('gender')
             if member_settings.enable_birthdate:
                 fieldsets[0][1]['fields'].append('birthdate')
+
+            if member_settings.explicit_terms:
+                fieldsets[2][1]['fields'].append('terms_accepted')
 
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')

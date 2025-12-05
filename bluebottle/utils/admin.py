@@ -194,9 +194,10 @@ class TranslatableAdminOrderingMixin(object):
         ).order_by(self.translatable_ordering)
 
 
-def admin_info_box(text):
+def admin_info_box(text, class_name=None):
     template = loader.get_template('admin/info_box.html')
     context = {
         'text': text,
+        'class_name': class_name,
     }
     return template.render(context)

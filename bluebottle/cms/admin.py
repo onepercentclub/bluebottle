@@ -163,7 +163,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
             _('Contact'),
             {
                 'fields': (
-                    'translatable_info', 'contact_email', 'contact_phone', 'start_page'
+                    'contact_email', 'contact_phone'
                 )
             }
         ),
@@ -179,7 +179,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
             _('Metadata'),
             {
                 'fields': (
-                    'metadata_title', 'metadata_description', 'metadata_keywords'
+                    'translatable_info', 'metadata_title', 'metadata_description', 'metadata_keywords'
                 )
             }
         ),

@@ -524,6 +524,10 @@ div.inline.radiolist {
     display: block;
 }
 
+.flex-row {
+    display: flex;
+}
+
 /* Radio button styling */
 input[type="radio"] {
     appearance: none;
@@ -567,6 +571,7 @@ input[type="radio"]:focus {
 }
 
 /* Radio button labels */
+
 .radiolist label,
 ul.radiolist label {
     display: inline-flex;
@@ -608,4 +613,14 @@ form .aligned p.help {
 input[type=email],
 .vTextField {
     width: 400px
+}
+
+
+label.translatable-field:before {
+    content: '🌐';
+    display: inline-block;
+    float: right;
+    margin-top: 6px;
+    margin-left: 6px;
+    vertical-align: middle;
 }

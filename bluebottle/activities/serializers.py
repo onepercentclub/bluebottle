@@ -24,6 +24,7 @@ from bluebottle.activities.models import (
     FileUploadQuestion, SegmentQuestion, TextQuestion, ConfirmationAnswer,
     ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion
 )
+from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.collect.serializers import (
     CollectActivityListSerializer,
     CollectActivitySerializer,
@@ -37,7 +38,7 @@ from bluebottle.deeds.serializers import (
     DeedSerializer
 )
 from bluebottle.files.models import RelatedImage
-from bluebottle.files.serializers import IMAGE_SIZES, ImageField, ImageSerializer, DocumentSerializer
+from bluebottle.files.serializers import IMAGE_SIZES, ImageField, ImageSerializer, PrivateDocumentSerializer
 from bluebottle.fsm.serializers import CurrentStatusField
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import Donor
@@ -989,9 +990,24 @@ class SegmentAnswerSerializer(BaseAnswerSerializer):
     }
 
 
-class FileUploadAnswerDocumentSerializer(DocumentSerializer):
+class FileUploadAnswerDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'file-upload-answer-document'
     relationship = 'fileuploadanswer_set'
+
+    def get_link(self, obj):
+        answer = obj.fileuploadanswer_set.first()
+
+        if answer:
+            activity = answer.activity
+            question = answer.question
+
+            if (
+                question.visibility == 'all' or
+                ActivityOwnerPermission().has_object_action_permission(
+                    'POST', self.context['request'].user, activity
+                )
+            ):
+                return super().get_link(obj)
 
 
 class FileUploadAnswerSerializer(BaseAnswerSerializer):

@@ -22,13 +22,41 @@ from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 from parler.admin import TranslatableAdmin
 
+from bluebottle.utils.models import Language
 from .models import Page, PageTypeChoices
 from .models import PlatformPage
+from .utils import create_translated_page
 from .utils import export_page_to_dict, import_pages_from_data
+from ..bluebottle_dashboard.decorators import admin_form
 
 
 class PageImportForm(Form):
     json_file = forms.FileField(label=_('JSON file'), help_text=_('Select a JSON file exported from another platform'))
+
+
+class PageTranslateForm(Form):
+    target_language = forms.ChoiceField(
+        label=_('Target Language'),
+        help_text=_('Select the language to translate this page to')
+    )
+    title = _('Translate page')
+
+    def __init__(self, *args, **kwargs):
+        obj = kwargs.pop('obj', None)
+        current_language = kwargs.pop('current_language', None)
+        # If obj is provided, use its language
+        if obj and hasattr(obj, 'language'):
+            current_language = obj.language
+        super().__init__(*args, **kwargs)
+
+        # Get all available languages except the current one
+        languages = Language.objects.all().order_by('language_name')
+        choices = []
+        for lang in languages:
+            if lang.full_code != current_language:
+                choices.append((lang.full_code, lang.language_name))
+
+        self.fields['target_language'].choices = choices
 
 
 @admin.register(Page)
@@ -103,6 +131,13 @@ class PageAdmin(PlaceholderFieldAdmin):
                 ),
                 name="{0}_{1}_import".format(*info)
             ),
+            re_path(
+                r'^(?P<pk>\d+)/translate/$',
+                self.admin_site.admin_view(
+                    self.translate_page
+                ),
+                name="{0}_{1}_translate".format(*info)
+            ),
         ]
 
         return urlpatterns + base_urls
@@ -157,8 +192,14 @@ class PageAdmin(PlaceholderFieldAdmin):
         })
         if change and obj and request.user.is_superuser:
             context.update({
-                'export_url': reverse('admin:{0}_{1}_export'.format(*info),
-                                      kwargs={'pk': obj.pk}),
+                'export_url': reverse(
+                    'admin:{0}_{1}_export'.format(*info),
+                    kwargs={'pk': obj.pk}
+                ),
+                'translate_url': reverse(
+                    'admin:{0}_{1}_translate'.format(*info),
+                    kwargs={'pk': obj.pk}
+                ),
             })
         return super(PageAdmin, self).render_change_form(request, context, add,
                                                          change, form_url, obj)
@@ -254,10 +295,8 @@ class PageAdmin(PlaceholderFieldAdmin):
                 "Page object with primary key '%s' does not exist." % pk
             )
 
-        # Export page data using utility function (request is used for absolute image URLs)
         export_data = [export_page_to_dict(page)]
 
-        # Create JSON response
         response = HttpResponse(
             json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
             content_type='application/json'
@@ -311,6 +350,43 @@ class PageAdmin(PlaceholderFieldAdmin):
             'title': _('Import pages'),
         }
         return render(request, 'admin/pages/page/import.html', context)
+
+    @admin_form(
+        PageTranslateForm,
+        Page,
+        'admin/pages/page/translate.html'
+    )
+    def translate_page(self, request, page, form):
+        """Translate a page to another language."""
+        target_language = form.cleaned_data['target_language']
+
+        if Page.objects.filter(slug=page.slug, language=target_language).exists():
+            messages.error(
+                request,
+                _('A page with slug "{slug}" already exists for language {language}.').format(
+                    slug=page.slug,
+                    language=target_language
+                )
+            )
+            return redirect('admin:pages_page_change', page.pk)
+
+        try:
+            new_page = create_translated_page(page, target_language, request.user)
+
+            messages.success(
+                request,
+                _('Page "{title}" has been translated to {language}.').format(
+                    title=new_page.title,
+                    language=target_language
+                )
+            )
+            return redirect('admin:pages_page_change', new_page.pk)
+        except Exception as e:
+            messages.error(
+                request,
+                _('Error translating page: {error}').format(error=str(e))
+            )
+            return redirect('admin:pages_page_change', page.pk)
 
     def changelist_view(self, request, extra_context=None):
         """Override to add import URL to context."""

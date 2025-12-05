@@ -31,6 +31,7 @@ from bluebottle.pages.models import (
 )
 from bluebottle.slides.models import Slide
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, RichTextField, SafeField
+from bluebottle.utils.models import get_default_language
 
 
 class QuoteSerializer(ModelSerializer):
@@ -626,7 +627,11 @@ class BaseCMSSerializer(ModelSerializer):
     content_attribute = 'content'
 
     def get_blocks(self, obj):
-        return obj.content.contentitems.all().translated()
+        blocks = obj.content.contentitems.all().translated()
+        if blocks.exists():
+            return blocks
+        default_language = get_default_language()
+        return obj.content.contentitems.all().translated(default_language)
 
     class Meta(object):
         fields = ('id', 'blocks')
@@ -685,7 +690,12 @@ class PlatformPageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
     def get_blocks(self, obj):
-        return obj.body.contentitems.all().translated()
+        blocks = obj.body.contentitems.all().translated()
+        if blocks.exists():
+            return blocks
+
+        default_language = get_default_language()
+        return obj.body.contentitems.all().translated(default_language)
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page

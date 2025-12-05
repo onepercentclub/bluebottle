@@ -39,7 +39,11 @@ class TeamTriggers(TriggerManager):
     def should_auto_accept(effect):
         """ Check if the team should be auto accepted """
         user = effect.options.get('user')
-        is_admin = user and effect.instance.user != user and (user.is_staff or user.is_superuser)
+        is_admin = (
+            user and
+            (not hasattr(effect.instance, 'user') or effect.instance.user != user) and
+            (user.is_staff or user.is_superuser)
+        )
         return (
             not effect.instance.activity.review or is_admin
         )

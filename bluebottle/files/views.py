@@ -186,6 +186,12 @@ class ImageList(FileList):
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
 
 
+class FileDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsOwner,)
+    queryset = Document.objects.all()
+    serializer_class = FileSerializer
+
+
 class ImageDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (IsOwner,)
     queryset = Image.objects.all()

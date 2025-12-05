@@ -21,6 +21,7 @@ from bluebottle.cms.models import (
 )
 from bluebottle.members.models import Member
 from bluebottle.statistics.statistics import Statistics
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
@@ -163,39 +164,39 @@ class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             (
-                _('General'),
+                _('Contact'),
                 {
-                    'fields': [
-                        'contact_email', 'contact_phone', 'start_page', 'terminated'
-                    ]
+                    'fields': (
+                        'contact_email', 'contact_phone', 'terminated'
+                    )
                 }
             ),
             (
                 _('Powered by'),
                 {
-                    'fields': [
+                    'fields': (
                         'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo', 'footer_banner'
-                    ]
+                    )
                 }
             ),
             (
                 _('Metadata'),
                 {
-                    'fields': [
-                        'metadata_title', 'metadata_description', 'metadata_keywords'
-                    ]
+                    'fields': (
+                        'translatable_info', 'metadata_title', 'metadata_description', 'metadata_keywords'
+                    )
                 }
             ),
             (
                 _('Styling'),
                 {
-                    'fields': [
+                    'fields': (
                         'logo', 'favicon',
                         'action_color', 'action_text_color', 'alternative_link_color',
                         'description_color', 'description_text_color',
                         'footer_color', 'footer_text_color',
                         'title_font', 'body_font'
-                    ]
+                    )
                 }
             ),
         )

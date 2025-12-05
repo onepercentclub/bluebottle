@@ -346,6 +346,14 @@ class GrantPayout(TriggerMixin, models.Model):
             return Money(self.grants.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
         return self.grants.aggregate(total=Sum('amount'))['total']
 
+    @property
+    def grant(self):
+        return self.grants.first()
+
+    def get_admin_url(self):
+        from django.urls import reverse
+        return get_current_host() + reverse('admin:grant_management_grantpayout_change', args=[self.pk])
+
     class Meta(object):
         verbose_name = _('Grant payout')
         verbose_name_plural = _('Grant payouts')

@@ -19,6 +19,7 @@ from bluebottle.cms.models import (
     Greeting
 )
 from bluebottle.statistics.statistics import Statistics
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
@@ -155,7 +156,7 @@ class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmi
 
 
 @admin.register(SitePlatformSettings)
-class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
+class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
 
     readonly_fields = ['organization']
 
@@ -164,8 +165,8 @@ class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
             _('Contact'),
             {
                 'fields': (
-                    'translatable_info', 'share_activities', 'organization',
-                    'contact_email', 'contact_phone', 'start_page'
+                    'share_activities', 'organization',
+                    'contact_email', 'contact_phone'
                 )
             }
         ),
@@ -181,7 +182,7 @@ class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
             _('Metadata'),
             {
                 'fields': (
-                    'metadata_title', 'metadata_description', 'metadata_keywords'
+                    'translatable_info', 'metadata_title', 'metadata_description', 'metadata_keywords'
                 )
             }
         ),

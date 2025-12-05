@@ -241,7 +241,7 @@ class FollowingAddForm(forms.ModelForm):
 
     class Meta:
         model = Following
-        fields = '__all__'
+        fields = ['platform_url', 'default_owner']
         widgets = {
             'default_owner': admin.widgets.ForeignKeyRawIdWidget(
                 Following._meta.get_field('default_owner').remote_field,
@@ -257,7 +257,7 @@ class FollowingAddForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     def clean(self):
-        super().clean()
+        result = super().clean()
         if 'platform_url' in self.cleaned_data:
             try:
                 client.get(self.cleaned_data['platform_url'])
@@ -286,7 +286,7 @@ class FollowingAdmin(FollowAdmin):
     accepted.short_description = _("Accepted")
 
     def get_readonly_fields(self, request, obj=None):
-        readonly = ['object', 'accepted']
+        readonly = ['object', 'accepted', 'iri', 'actor']
         return readonly
 
     def get_fieldsets(self, request, obj=None):
@@ -335,6 +335,7 @@ class FollowingAdmin(FollowAdmin):
     def save_model(self, request, obj, form, change):
         """Handle saving of new Following objects using adapter.follow()"""
         if not change and isinstance(form, FollowingAddForm):
+
             # This is a new object using our custom add form
             platform_url = form.cleaned_data['platform_url']
             default_owner = form.cleaned_data.get('default_owner')
@@ -345,14 +346,30 @@ class FollowingAdmin(FollowAdmin):
                 if default_owner:
                     follow_obj.default_owner = default_owner
                     follow_obj.save()
-                self.message_user(
-                    request,
-                    _(
-                        "Follow request sent to {platform_url}. "
-                        "Your platforms will be connected when the request is accepted."
-                    ) % platform_url,
-                    level="success"
-                )
+                # Publish the Follow activity to the remote inbox
+                try:
+                    adapter.publish(follow_obj)
+                    self.message_user(
+                        request,
+                        _(
+                            "Follow request sent to %s. "
+                            "Your platforms will be connected when the request is accepted."
+                        ) % platform_url,
+                        level="success"
+                    )
+                except Exception as publish_error:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Failed to publish Follow {follow_obj.pk}: {str(publish_error)}", exc_info=True)
+                    
+                    self.message_user(
+                        request,
+                        _(
+                            "Follow relationship created but publishing failed: %s. "
+                            "The follow request may not have been sent to the remote platform."
+                        ) % str(publish_error),
+                        level="warning"
+                    )
                 # Store the created object for response_add
                 self._created_follow_obj = follow_obj
             except requests.exceptions.HTTPError:
@@ -367,7 +384,7 @@ class FollowingAdmin(FollowAdmin):
             except Exception as error:
                 self.message_user(
                     request,
-                    _("Error creating Follow relationship: {error}") % error,
+                    _("Error creating Follow relationship: %s") % str(error),
                     level="error"
                 )
         else:

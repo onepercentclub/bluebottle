@@ -1,4 +1,5 @@
 import datetime
+import logging
 from io import BytesIO
 
 import pytz
@@ -9,6 +10,8 @@ from django.db import connection, models
 from django.urls import reverse
 from rest_framework import serializers, exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
+
+logger = logging.getLogger(__name__)
 
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField
@@ -58,12 +61,24 @@ class ImageSerializer(FederatedObjectSerializer):
 
 class ImageField(serializers.Field):
     def to_internal_value(self, data):
-        image = ActivityPubImage.objects.from_iri(data)
+        if not data:
+            return None
+        
+        try:
+            image = ActivityPubImage.objects.from_iri(data)
+            image_url = image.url
 
-        response = requests.get(image.url, timeout=30)
-        response.raise_for_status()
+            response = requests.get(image_url, timeout=30)
+            response.raise_for_status()
 
-        return File(BytesIO(response.content), name=image.name)
+            return File(BytesIO(response.content), name=image.name)
+        except requests.exceptions.HTTPError as e:
+            # If image is not found (404), log and return None since logo is an optional field
+            if e.response.status_code == 404:
+                logger.warning(f"Image not found (404) for IRI {data}, skipping logo field")
+                return None
+            # Re-raise other HTTP errors
+            raise
 
 
 class DateField(serializers.Field):

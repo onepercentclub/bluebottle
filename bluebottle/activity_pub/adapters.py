@@ -1,26 +1,21 @@
-
-from celery import shared_task
-import requests
+import logging
 from io import BytesIO
 
-from requests_http_signature import HTTPSignatureAuth, algorithms
+import requests
+from celery import shared_task
 from django.db import connection
-
-from bluebottle.activity_pub.parsers import JSONLDParser
-from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Follow, Activity, Publish
-from bluebottle.activity_pub.utils import get_platform_actor, is_local
-from bluebottle.activity_pub.authentication import key_resolver
-
-from bluebottle.clients.utils import LocalTenant
-from bluebottle.webfinger.client import client
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from requests_http_signature import HTTPSignatureAuth, algorithms
 
-import logging
-
+from bluebottle.activity_pub.authentication import key_resolver
+from bluebottle.activity_pub.models import Follow, Activity, Publish
 from bluebottle.activity_pub.models import Organization
+from bluebottle.activity_pub.parsers import JSONLDParser
+from bluebottle.activity_pub.renderers import JSONLDRenderer
+from bluebottle.activity_pub.utils import get_platform_actor, is_local
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.webfinger.client import client
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +55,8 @@ class JSONLDAdapter():
         return self.do_request("get", url, auth=auth)
 
     def post(self, url, data, auth):
-        return self.do_request('post', url, data=self.renderer.render(data), auth=auth)
+        rendered_data = self.renderer.render(data)
+        return self.do_request('post', url, data=rendered_data, auth=auth)
 
     def fetch(self, url):
         auth = self.get_auth(get_platform_actor())
@@ -87,11 +83,9 @@ class JSONLDAdapter():
             try:
                 data = ActivitySerializer().to_representation(activity)
                 auth = self.get_auth(activity.actor)
-
                 self.post(inbox.iri, data=data, auth=auth)
             except Exception as e:
-                logger.error(e)
-                print(e)
+                logger.error(f"Error in publish_to_inbox: {type(e).__name__}: {str(e)}", exc_info=True)
                 raise
 
     def publish(self, activity):
@@ -99,6 +93,10 @@ class JSONLDAdapter():
             raise TypeError('Only local activities can be published')
 
         for actor in activity.audience:
+            if actor.inbox is None:
+                logger.warning(f"Actor {actor} has no inbox, skipping publish")
+                continue
+
             if not actor.inbox.is_local:
                 self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
 
@@ -125,7 +123,7 @@ def publish_activity(sender, instance, **kwargs):
         if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
             adapter.publish(instance)
     except Exception as e:
-        logger.error(f"Failed to publish activity: {str(e)}")
+        logger.error(f"Failed to publish activity: {str(e)}", exc_info=True)
 
 
 @receiver([post_save])

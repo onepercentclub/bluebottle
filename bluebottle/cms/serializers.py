@@ -15,6 +15,7 @@ from rest_framework_json_api.serializers import ModelSerializer, PolymorphicMode
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField
 )
+from bluebottle.clients import properties
 from bluebottle.cms.models import (
     HomePage, QuotesContent, Quote, PeopleContent, Person,
     ProjectsMapContent, CategoriesContent, StepsContent,
@@ -626,7 +627,10 @@ class BaseCMSSerializer(ModelSerializer):
     content_attribute = 'content'
 
     def get_blocks(self, obj):
-        return obj.content.contentitems.all().translated()
+        blocks = obj.content.contentitems.all().translated()
+        if blocks.exists():
+            return blocks
+        return obj.content.contentitems.all().translated(language_code=properties.LANGUAGE_CODE)
 
     class Meta(object):
         fields = ('id', 'blocks')

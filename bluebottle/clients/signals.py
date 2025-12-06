@@ -1,12 +1,11 @@
-from django.db import connection
-from django.core.exceptions import ObjectDoesNotExist
-
-from django_elasticsearch_dsl.registries import registry
 from celery import shared_task
+from django.apps import apps
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import connection
+from django_elasticsearch_dsl.registries import registry
+from django_elasticsearch_dsl.signals import RealTimeSignalProcessor
 
 from bluebottle.clients.utils import LocalTenant
-
-from django_elasticsearch_dsl.signals import RealTimeSignalProcessor
 
 
 class TenantCelerySignalProcessor(RealTimeSignalProcessor):
@@ -59,17 +58,30 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         Given an individual model instance, create a task to delete the object from index.
         """
         if sender in self.models:
+            # Pass model info instead of instance to avoid pickling issues
+            model_info = {
+                'app_label': sender._meta.app_label,
+                'model_name': sender._meta.model_name,
+                'pk': instance.pk
+            }
             self.registry_delete_task.apply_async(
-                args=[instance, connection.tenant], countdown=2
+                args=[model_info, connection.tenant], countdown=2
             )
 
     @shared_task()
-    def registry_delete_task(instance, tenant):
+    def registry_delete_task(model_info, tenant):
         """
         Delete instance in index as a celery task
         """
         with LocalTenant(tenant):
-            registry.delete(instance)
+            # Fetch the instance fresh from the database to avoid pickling issues
+            model = apps.get_model(model_info['app_label'], model_info['model_name'])
+            try:
+                instance = model.objects.get(pk=model_info['pk'])
+                registry.delete(instance)
+            except model.DoesNotExist:
+                # Instance was already deleted, nothing to do
+                pass
 
     @shared_task()
     def registry_delete_related_task(doc_instance, related, tenant):
@@ -86,24 +98,45 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         Given an individual model instance, update the object in the index.
         Update the related objects either.
         """
+        model_info = {
+            'app_label': sender._meta.app_label,
+            'model_name': sender._meta.model_name,
+            'pk': instance.pk
+        }
+        tenant = connection.tenant
+
         if sender in self.models:
             self.registry_update_task.apply_async(
-                args=[instance, connection.tenant], countdown=2
+                args=[model_info, tenant], countdown=2
             )
 
         if sender in self.related_models:
             self.registry_update_related_task.apply_async(
-                args=[instance, connection.tenant], countdown=2
+                args=[model_info, tenant], countdown=2
             )
 
     @shared_task()
-    def registry_update_task(instance, tenant):
+    def registry_update_task(model_info, tenant):
         """Handle the update on the registry as a Celery task."""
         with LocalTenant(tenant):
-            registry.update(instance)
+            # Fetch the instance fresh from the database to avoid pickling issues
+            model = apps.get_model(model_info['app_label'], model_info['model_name'])
+            try:
+                instance = model.objects.get(pk=model_info['pk'])
+                registry.update(instance)
+            except model.DoesNotExist:
+                # Instance was deleted between signal and task execution
+                pass
 
     @shared_task()
-    def registry_update_related_task(instance, tenant):
+    def registry_update_related_task(model_info, tenant):
         """Handle the related update on the registry as a Celery task."""
         with LocalTenant(tenant):
-            registry.update_related(instance)
+            # Fetch the instance fresh from the database to avoid pickling issues
+            model = apps.get_model(model_info['app_label'], model_info['model_name'])
+            try:
+                instance = model.objects.get(pk=model_info['pk'])
+                registry.update_related(instance)
+            except model.DoesNotExist:
+                # Instance was deleted between signal and task execution
+                pass

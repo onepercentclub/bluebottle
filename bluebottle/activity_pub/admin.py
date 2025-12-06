@@ -257,7 +257,7 @@ class FollowingAddForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     def clean(self):
-        result = super().clean()
+        super().clean()
         if 'platform_url' in self.cleaned_data:
             try:
                 client.get(self.cleaned_data['platform_url'])
@@ -361,7 +361,6 @@ class FollowingAdmin(FollowAdmin):
                     import logging
                     logger = logging.getLogger(__name__)
                     logger.error(f"Failed to publish Follow {follow_obj.pk}: {str(publish_error)}", exc_info=True)
-                    
                     self.message_user(
                         request,
                         _(

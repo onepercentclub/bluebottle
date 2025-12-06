@@ -63,7 +63,6 @@ class ImageField(serializers.Field):
     def to_internal_value(self, data):
         if not data:
             return None
-        
         try:
             image = ActivityPubImage.objects.from_iri(data)
             image_url = image.url

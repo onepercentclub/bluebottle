@@ -58,30 +58,17 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         Given an individual model instance, create a task to delete the object from index.
         """
         if sender in self.models:
-            # Pass model info instead of instance to avoid pickling issues
-            model_info = {
-                'app_label': sender._meta.app_label,
-                'model_name': sender._meta.model_name,
-                'pk': instance.pk
-            }
             self.registry_delete_task.apply_async(
-                args=[model_info, connection.tenant], countdown=2
+                args=[instance, connection.tenant], countdown=2
             )
 
     @shared_task()
-    def registry_delete_task(model_info, tenant):
+    def registry_delete_task(instance, tenant):
         """
         Delete instance in index as a celery task
         """
         with LocalTenant(tenant):
-            # Fetch the instance fresh from the database to avoid pickling issues
-            model = apps.get_model(model_info['app_label'], model_info['model_name'])
-            try:
-                instance = model.objects.get(pk=model_info['pk'])
-                registry.delete(instance)
-            except model.DoesNotExist:
-                # Instance was already deleted, nothing to do
-                pass
+            registry.delete(instance)
 
     @shared_task()
     def registry_delete_related_task(doc_instance, related, tenant):

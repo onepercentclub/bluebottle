@@ -366,10 +366,10 @@ class DateSlotDetailAPITestCase(APITestCase):
 
         self.perform_get(user=self.model.owner)
 
+        url = reverse('slot-participant-export', args=(self.model.pk,))
+
         self.assertTrue(
-            self.response.json()['data']['attributes']['participants-export-url']['url'].startswith(
-                reverse('slot-participant-export', args=(self.model.pk,))
-            ),
+            url in self.response.json()['data']['attributes']['participants-export-url']['url']
         )
 
         export_response = self.client.get(

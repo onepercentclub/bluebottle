@@ -535,7 +535,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         'can_pledge',
         'can_do_bank_transfer',
         'verified',
-        'kyc'
+        'kyc',
     ]
 
     def get_permission_fields(self, request, obj=None):

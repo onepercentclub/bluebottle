@@ -1,12 +1,10 @@
 import re
-from urllib.parse import unquote
 
 from django import forms
 from django.contrib import admin, messages
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
@@ -49,11 +47,11 @@ from bluebottle.activities.models import (
 )
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.activity_pub.admin import adapter
-from bluebottle.activity_pub.models import Publish
+from bluebottle.activity_pub.models import Actor, Publish, Follow as ActivityPubFollow
 from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
-from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.bluebottle_dashboard.decorators import admin_form, confirmation_form
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -380,6 +378,34 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
                 if self.instance.pk:
                     self.initial[segment_type.field_name] = self.instance.segments.filter(
                         segment_type=segment_type).all()
+
+
+class SharePublishForm(forms.Form):
+    title = _('Share activity')
+    recipients = forms.ModelMultipleChoiceField(
+        label=_('Partners'),
+        required=False,
+        queryset=Actor.objects.none(),
+        help_text=_('Partners that will receive this publish.'),
+    )
+
+    def __init__(self, *args, obj=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        accepted_follow_ids = ActivityPubFollow.objects.filter(
+            object=get_platform_actor(),
+            accept__isnull=False,
+        ).values_list('actor_id', flat=True)
+
+        self.fields['recipients'].queryset = Actor.objects.filter(pk__in=accepted_follow_ids)
+
+        publish = None
+        if obj and getattr(obj, 'event', None):
+            publish = obj.event.publish_set.first()
+
+        if publish:
+            self.initial['recipients'] = publish.recipients.all()
+        else:
+            self.initial['recipients'] = self.fields['recipients'].queryset
 
 
 class TeamInline(admin.TabularInline):
@@ -779,23 +805,26 @@ class ActivityChildAdmin(
 
     share_activity_link.short_description = _('Share activity')
 
-    def share_activity(self, request, pk):
+    @admin_form(SharePublishForm, Activity, 'admin/activities/share_publish.html')
+    def share_activity(self, request, activity, form):
         if not request.user.has_perm("activity.add_activity"):
             raise PermissionDenied
 
-        activity = get_object_or_404(Activity, pk=unquote(pk))
-        try:
-            publish = activity.event.publish_set.get()
+        publish = None
+        if getattr(activity, 'event', None):
+            publish = activity.event.publish_set.first()
 
-            adapter.publish(publish)
-        except ObjectDoesNotExist:
+        if not publish:
             federated_serializer = FederatedActivitySerializer(activity)
 
             serializer = EventSerializer(data=federated_serializer.data)
             serializer.is_valid(raise_exception=True)
             event = serializer.save(activity=activity)
 
-            Publish.objects.create(actor=get_platform_actor(), object=event)
+            publish = Publish.objects.create(actor=get_platform_actor(), object=event)
+
+        publish.recipients.set(form.cleaned_data.get('recipients') or [])
+        adapter.publish(publish)
 
         self.message_user(
             request,

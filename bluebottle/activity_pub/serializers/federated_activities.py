@@ -79,6 +79,11 @@ class ImageField(serializers.Field):
             # Re-raise other HTTP errors
             raise
 
+    def to_representation(self, value):
+        if not value:
+            return None
+        return value
+
 
 class DateField(serializers.Field):
     def to_internal_value(self, data):

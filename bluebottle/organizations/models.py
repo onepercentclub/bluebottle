@@ -1,11 +1,12 @@
 from __future__ import absolute_import
-from builtins import str
+
 from builtins import object
+from builtins import str
+
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
-
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
@@ -59,6 +60,14 @@ class Organization(ValidatedModelMixin, models.Model):
             return f'{self.name} (verified)'
         else:
             return self.name
+
+    @property
+    def activity_pub_url(self):
+        from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
+        try:
+            return self.activity_pub_organization.iri
+        except ActivityPubOrganization.DoesNotExist:
+            return None
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)

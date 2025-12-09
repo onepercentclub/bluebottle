@@ -849,6 +849,15 @@ class FundingPlatformSettings(BasePlatformSettings):
         )
     )
 
+    allow_exceed_target = models.BooleanField(
+        _('Allow campaigns to exceed donation target'),
+        default=True,
+        help_text=_(
+            'When disabled, campaigns will be set to succeeded when 100% of the target is reached '
+            'and donations exceeding the target will be prevented.'
+        )
+    )
+
     matching_name = models.CharField(
         _('Name to use for match funding'),
         max_length=60,

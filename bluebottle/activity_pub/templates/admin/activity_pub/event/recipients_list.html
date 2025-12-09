@@ -20,9 +20,9 @@
                 <td>{{ row.actor }}</td>
                 <td>
                     {% if row.adopted %}
-                        <img src="/static/assets/admin/img/icon-no.svg" alt="False">
-                    {% else %}
                         <img src="/static/assets/admin/img/icon-yes.svg" alt="True">
+                    {% else %}
+                        <img src="/static/assets/admin/img/icon-no.svg" alt="False">
                     {% endif %}
                 </td>
             </tr>
@@ -41,7 +41,7 @@
     </b>
     <br/>
     {% if recipients %}
-        {% trans "You already shared this with all teh connected partners." %}
+        {% trans "You already shared this with all the connected partners." %}
     {% else %}
         {% trans "No partners to share to. Please connect with other platforms first." %}
     {% endif %}

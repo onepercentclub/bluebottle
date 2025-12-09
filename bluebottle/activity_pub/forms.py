@@ -8,9 +8,10 @@ from bluebottle.activity_pub.utils import get_platform_actor
 
 class SharePublishForm(forms.Form):
     title = _('Share activity')
-    old_recipients_display = forms.CharField(
+    old_recipients = forms.ModelMultipleChoiceField(
         label=_('Already shared with'),
         required=False,
+        queryset=Actor.objects.none(),
         widget=forms.Textarea(attrs={'readonly': True, 'rows': 3}),
         help_text=_('These partners are already recipients and cannot be changed here.'),
     )
@@ -33,10 +34,7 @@ class SharePublishForm(forms.Form):
         except ObjectDoesNotExist:
             pass
 
-        # Show existing recipients in a read-only field
-        self.fields['old_recipients_display'].initial = "\n".join(
-            str(recipient) for recipient in old_recipients
-        ) or _('None')
+        self.fields['old_recipients'].initial = old_recipients
 
         accepted_follow_ids = Follow.objects.exclude(
             actor__id__in=old_recipient_ids

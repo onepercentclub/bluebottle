@@ -19,19 +19,13 @@
         {% csrf_token %}
         <fieldset class="module aligned">
             <div class="form-row">
+                <label>
+                    {% trans "Already shared this activity with these partners" %}:
+                </label>
                 <div>
-                    <label for="{{ form.old_recipients_display.id_for_label }}">{{ form.old_recipients_display.label }}:</label>
-                    {{ form.old_recipients_display }}
-                    {% if form.old_recipients_display.help_text %}
-                        <p class="help">{{ form.old_recipients_display.help_text }}</p>
-                    {% endif %}
-                    {% if form.old_recipients_display.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.old_recipients_display.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                    {% for recipient in form.old_recipients.initial %}
+                        <b>{{ recipient }}</b><br/>
+                    {% endfor %}
                 </div>
             </div>
             <div class="form-row">
@@ -58,4 +52,3 @@
         </div>
     </form>
 {% endblock %}
-

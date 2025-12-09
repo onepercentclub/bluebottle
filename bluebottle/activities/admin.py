@@ -2,7 +2,7 @@ import re
 
 from django import forms
 from django.contrib import admin, messages
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
@@ -765,18 +765,21 @@ class ActivityChildAdmin(
 
     def activity_pub(self, obj):
 
-        event = obj.event
         recipients = []
-        if event:
-            publishes = event.publish_set.all().prefetch_related("recipients")
-            for publish in publishes:
-                for actor in publish.recipients.all():
-                    recipients.append(
-                        {
-                            "actor": actor,
-                            "adopted": event.announce_set.filter(actor=actor).exists(),
-                        }
-                    )
+        try:
+            event = obj.event
+            if event:
+                publishes = event.publish_set.all().prefetch_related("recipients")
+                for publish in publishes:
+                    for actor in publish.recipients.all():
+                        recipients.append(
+                            {
+                                "actor": actor,
+                                "adopted": event.announce_set.filter(actor=actor).exists(),
+                            }
+                        )
+        except ObjectDoesNotExist:
+            pass
 
         share_link = None
         partners = ActivityPubFollow.objects.filter(
@@ -805,7 +808,13 @@ class ActivityChildAdmin(
         if getattr(activity, 'event', None):
             publish = activity.event.publish_set.first()
 
-        if not publish:
+        if publish:
+            new_recipients = form.cleaned_data.get('recipients') or []
+            for recipient in new_recipients:
+                publish.recipients.add(recipient)
+            publish.save()
+            adapter.publish_new(publish, new_recipients)
+        else:
             federated_serializer = FederatedActivitySerializer(activity)
 
             serializer = EventSerializer(data=federated_serializer.data)
@@ -814,9 +823,8 @@ class ActivityChildAdmin(
 
             publish = Publish.objects.create(actor=get_platform_actor(), object=event)
 
-        for recipient in form.cleaned_data.get('recipients') or []:
-            publish.recipients.add(recipient)
-        adapter.publish(publish)
+            publish.recipients.set(form.cleaned_data.get('recipients') or [])
+            adapter.publish(publish)
 
         self.message_user(
             request,
@@ -848,14 +856,9 @@ class ActivityChildAdmin(
         ]
         site_settings = SitePlatformSettings.load()
         if site_settings.share_activities and request.user.has_perm("activity_pub.add_event"):
-            if obj and obj.origin:
-                fieldsets.append(
-                    (_("Source activity"), {"fields": self.get_activity_pub_fields(request, obj)})
-                )
-            elif site_settings.is_publishing_activities:
-                fieldsets.append(
-                    (_("Connect"), {"fields": self.get_activity_pub_fields(request, obj)})
-                )
+            fieldsets.append(
+                (_("GoodUp Connect"), {"fields": self.get_activity_pub_fields(request, obj)})
+            )
 
         if self.get_registration_fields(request, obj):
             fieldsets.append(

@@ -1,5 +1,6 @@
 {% load i18n %}
 <div class="inline-group">
+    {% if recipients %}
     <table class="tabular">
         <thead>
         <tr>
@@ -29,8 +30,14 @@
         {% endfor %}
         </tbody>
     </table>
+    {% else %}
+
+        {% trans "Click the button bellow to share this to your connected partners." %} <br/>
+        {% trans "In the next step you can select to which partners you want to share." %}
+    {% endif %}
 </div>
 <br/><br/>
+
 {% if share_link %}
     <a href="{{ share_link }}" class="button">
         {% trans "Share to partners" %}

@@ -74,6 +74,14 @@ class JSONLDAdapter():
 
         return Follow.objects.create(object=actor)
 
+    def publish_new(self, activity, recipients):
+        for actor in recipients:
+            inbox = getattr(actor, "inbox", None)
+            if inbox is None or inbox.is_local:
+                logger.warning(f"Actor {actor} has no inbox, skipping publish")
+                continue
+            publish_to_inbox.delay(activity, inbox, connection.tenant)
+
     def publish(self, activity):
         if not activity.is_local:
             raise TypeError('Only local activities can be published')

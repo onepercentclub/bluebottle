@@ -18,16 +18,18 @@
     <form method="post">
         {% csrf_token %}
         <fieldset class="module aligned">
-            <div class="form-row">
-                <label>
-                    {% trans "Already shared this activity with these partners" %}:
-                </label>
-                <div>
-                    {% for recipient in form.old_recipients.initial %}
-                        <b>{{ recipient }}</b><br/>
-                    {% endfor %}
+            {% if form.old_recipients.initial %}
+                <div class="form-row">
+                    <label>
+                        {% trans "Already shared this activity with these partners" %}:
+                    </label>
+                    <div>
+                        {% for recipient in form.old_recipients.initial %}
+                            <b>{{ recipient }}</b><br/>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
+            {% endif %}
             <div class="form-row">
                 <div>
                     <label for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}:</label>

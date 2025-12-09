@@ -49,7 +49,7 @@ from bluebottle.activities.models import (
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.activity_pub.admin import adapter
 from bluebottle.activity_pub.forms import SharePublishForm
-from bluebottle.activity_pub.models import Publish, Follow as ActivityPubFollow
+from bluebottle.activity_pub.models import Publish, Follow as ActivityPubFollow, Recipient
 from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -769,9 +769,10 @@ class ActivityChildAdmin(
         try:
             event = obj.event
             if event:
-                publishes = event.publish_set.all().prefetch_related("recipients")
+                publishes = event.publish_set.all().prefetch_related("recipients__actor")
                 for publish in publishes:
-                    for actor in publish.recipients.all():
+                    for recipient in publish.recipients.all():
+                        actor = recipient.actor
                         recipients.append(
                             {
                                 "actor": actor,
@@ -810,10 +811,9 @@ class ActivityChildAdmin(
 
         if publish:
             new_recipients = form.cleaned_data.get('recipients') or []
-            for recipient in new_recipients:
-                publish.recipients.add(recipient)
-            publish.save()
-            adapter.publish_new(publish, new_recipients)
+            for actor in new_recipients:
+                Recipient.objects.create(actor=actor, activity=publish)
+            adapter.publish(publish)
         else:
             federated_serializer = FederatedActivitySerializer(activity)
 

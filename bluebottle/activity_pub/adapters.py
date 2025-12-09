@@ -74,36 +74,19 @@ class JSONLDAdapter():
 
         return Follow.objects.create(object=actor)
 
-    def publish_new(self, activity, recipients):
-        for actor in recipients:
-            inbox = getattr(actor, "inbox", None)
-            if inbox is None or inbox.is_local:
-                logger.warning(f"Actor {actor} has no inbox, skipping publish")
-                continue
-            publish_to_inbox.delay(activity, inbox, connection.tenant)
-
     def publish(self, activity):
         if not activity.is_local:
             raise TypeError('Only local activities can be published')
 
-        inboxes = []
-        if hasattr(activity, 'recipients') and activity.recipients.exists():
-            for actor in activity.recipients.all():
-                inbox = getattr(actor, "inbox", None)
-                if inbox is None or inbox.is_local:
-                    logger.warning(f"Actor {actor} has no inbox, skipping publish")
-                    continue
-                inboxes.append(inbox)
-        else:
-            for item in activity.audience:
-                inbox = getattr(item, "inbox", None) or item
-                if inbox is None or inbox.is_local:
-                    logger.warning("Inbox is None, skipping publish")
-                    continue
-                inboxes.append(inbox)
-
-        for inbox in inboxes:
-            publish_to_inbox.delay(activity, inbox, connection.tenant)
+        for recipient in activity.recipients.all():
+            if recipient.send:
+                pass
+            actor = recipient.actor
+            inbox = getattr(actor, "inbox", None)
+            if inbox is None or inbox.is_local:
+                logger.warning(f"Actor {actor} has no inbox, skipping publish")
+                continue
+            publish_to_recipient.delay(activity, recipient, connection.tenant)
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -123,17 +106,29 @@ adapter = JSONLDAdapter()
 
 
 @shared_task(
-    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5}
+    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
+    name="bluebottle.activity_pub.adapters.publish_to_recipient"
 )
-def publish_to_inbox(activity, inbox, tenant):
+def publish_to_recipient(activity, recipient, tenant):
     from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
+
     with LocalTenant(tenant, clear_tenant=True):
+        actor = recipient.actor
+        inbox = getattr(actor, "inbox", None)
+        if recipient.send:
+            pass
+        actor = recipient.actor
+        if inbox is None or inbox.is_local:
+            logger.warning(f"Actor {actor} has no inbox, skipping publish")
+            pass
         try:
             data = ActivitySerializer().to_representation(activity)
             auth = adapter.get_auth(activity.actor)
             adapter.post(inbox.iri, data=data, auth=auth)
+            recipient.send = True
+            recipient.save()
         except Exception as e:
-            logger.error(f"Error in publish_to_inbox: {type(e).__name__}: {str(e)}", exc_info=True)
+            logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
             raise
 
 

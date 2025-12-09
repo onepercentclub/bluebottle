@@ -28,10 +28,12 @@ class SharePublishForm(forms.Form):
         old_recipient_ids = []
         old_recipients = []
         try:
-            publish = obj.event.publish_set.all().prefetch_related("recipients").first()
-            old_recipients = publish.recipients.all()
-            old_recipient_ids = old_recipients.values_list('id', flat=True)
-        except ObjectDoesNotExist:
+            publish = obj.event.publish_set.first()
+            if publish:
+                # Recipients are Recipient objects, extract the actors
+                old_recipients = [r.actor for r in publish.recipients.all()]
+                old_recipient_ids = [r.actor.id for r in publish.recipients.all()]
+        except (ObjectDoesNotExist, AttributeError):
             pass
 
         self.fields['old_recipients'].initial = old_recipients

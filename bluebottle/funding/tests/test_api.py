@@ -977,6 +977,33 @@ class DonationTestCase(BluebottleTestCase):
             "Amount cannot exceed 1000.00 EUR"
         )
 
+    def test_donate_over_funded(self):
+        self.funding.target = Money(5, 'EUR')
+        self.funding.save()
+
+        FundingPlatformSettings.objects.update_or_create(
+            allow_exceed_target=False
+        )
+
+        response = self.client.post(
+            self.create_url, data=json.dumps(self.data), user=self.user
+        )
+        self.data['data']['attributes']['amount']['value'] = 10
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_donate_over_funded_allowed(self):
+        self.funding.target = Money(5, 'EUR')
+        self.funding.save()
+        FundingPlatformSettings.objects.update_or_create(
+            allow_exceed_target=True
+        )
+
+        response = self.client.post(
+            self.create_url, data=json.dumps(self.data), user=self.user
+        )
+        self.data['data']['attributes']['amount']['value'] = 10
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_donate(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

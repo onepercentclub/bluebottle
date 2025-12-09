@@ -597,16 +597,33 @@ class EventAdminMixin:
 
     inlines = []
 
+
+class EventAdminMixin:
+    list_display = (
+        "name",
+        "source",
+        "adopted",
+    )
+    readonly_fields = (
+        "name",
+        "display_description",
+        "display_image",
+        "source",
+    )
+    fields = readonly_fields
+    list_filter = [AdoptedFilter, SourceFilter]
+
+    def adopted(self, obj):
+        return obj.adopted
+
+    adopted.boolean = True
+    adopted.short_description = _("Adopted")
+
+    inlines = []
+
     def source(self, obj):
         return obj.source
     source.short_description = _("Partner")
-
-    def get_inline_instances(self, request, obj=None):
-        inlines = super().get_inline_instances(request, obj)
-        if obj and obj.is_local:
-            inlines.append(AnnouncementInline(self.model, self.admin_site))
-
-        return inlines
 
     def display_description(self, obj):
         return format_html(

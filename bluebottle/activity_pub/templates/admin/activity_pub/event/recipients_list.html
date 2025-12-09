@@ -1,0 +1,48 @@
+{% load i18n %}
+<div class="inline-group">
+    <table class="tabular">
+        <thead>
+        <tr>
+            <th class="column-actor">
+                {% trans "Connected platform" %}
+
+            </th>
+
+            <th class="column-adopted">
+                {% trans "Adopted" %}
+            </th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {% for row in recipients %}
+            <tr class="form-row has_original">
+                <td>{{ row.actor }}</td>
+                <td>
+                    {% if row.adopted %}
+                        <img src="/static/assets/admin/img/icon-no.svg" alt="False">
+                    {% else %}
+                        <img src="/static/assets/admin/img/icon-yes.svg" alt="True">
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<br/><br/>
+{% if share_link %}
+    <a href="{{ share_link }}" class="button">
+        {% trans "Share to partners" %}
+    </a>
+{% else %}
+    <b>
+        {% trans "No partners to share to" %}
+    </b>
+    <br/>
+    {% if recipients %}
+        {% trans "You already shared this with all teh connected partners." %}
+    {% else %}
+        {% trans "No partners to share to. Please connect with other platforms first." %}
+    {% endif %}
+{% endif %}

@@ -427,6 +427,11 @@ class Accept(Activity):
 
 class Publish(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+    recipients = models.ManyToManyField(
+        'activity_pub.Actor',
+        related_name='received_publications',
+        blank=True
+    )
 
     @property
     def audience(self):

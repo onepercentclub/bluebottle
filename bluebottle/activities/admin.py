@@ -6,6 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
 from django.utils.html import format_html
@@ -47,7 +48,8 @@ from bluebottle.activities.models import (
 )
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.activity_pub.admin import adapter
-from bluebottle.activity_pub.models import Actor, Publish, Follow as ActivityPubFollow
+from bluebottle.activity_pub.forms import SharePublishForm
+from bluebottle.activity_pub.models import Publish, Follow as ActivityPubFollow
 from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -379,35 +381,6 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
                     self.initial[segment_type.field_name] = self.instance.segments.filter(
                         segment_type=segment_type).all()
 
-
-class SharePublishForm(forms.Form):
-    title = _('Share activity')
-    recipients = forms.ModelMultipleChoiceField(
-        label=_('Partners'),
-        required=False,
-        queryset=Actor.objects.none(),
-        help_text=_('Partners that will receive this publish.'),
-    )
-
-    def __init__(self, *args, obj=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        accepted_follow_ids = ActivityPubFollow.objects.filter(
-            object=get_platform_actor(),
-            accept__isnull=False,
-        ).values_list('actor_id', flat=True)
-
-        self.fields['recipients'].queryset = Actor.objects.filter(pk__in=accepted_follow_ids)
-
-        publish = None
-        if obj and getattr(obj, 'event', None):
-            publish = obj.event.publish_set.first()
-
-        if publish:
-            self.initial['recipients'] = publish.recipients.all()
-        else:
-            self.initial['recipients'] = self.fields['recipients'].queryset
-
-
 class TeamInline(admin.TabularInline):
     model = Team
     raw_id_fields = ('owner',)
@@ -666,7 +639,7 @@ class ActivityChildAdmin(
         'review_status',
         'send_impact_reminder_message_link',
         'origin',
-        'share_activity_link',
+        'activity_pub',
         'event',
         'host_organization'
     ]
@@ -698,8 +671,7 @@ class ActivityChildAdmin(
     )
 
     activity_pub_fields = (
-        'share_activity_link',
-        'event',
+        'activity_pub',
     )
 
     registration_fields = None
@@ -791,19 +763,38 @@ class ActivityChildAdmin(
         if obj.event:
             return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
 
-    def share_activity_link(self, obj):
-        if obj and obj.id:
-            url = reverse('admin:{}_{}_share_activity'.format(
+    def activity_pub(self, obj):
+
+        event = obj.event
+        recipients = []
+        if event:
+            publishes = event.publish_set.all().prefetch_related("recipients")
+            for publish in publishes:
+                for actor in publish.recipients.all():
+                    recipients.append(
+                        {
+                            "actor": actor,
+                            "adopted": event.announce_set.filter(actor=actor).exists(),
+                        }
+                    )
+
+        share_link = None
+        partners = ActivityPubFollow.objects.filter(
+            object=get_platform_actor(),
+            accept__isnull=False,
+        )
+        if partners.count() > len(recipients):
+            share_link = reverse('admin:{}_{}_share_activity'.format(
                 obj._meta.app_label,
                 obj._meta.model_name
             ), args=(obj.id,))
-            return format_html(
-                '<a href="{}">{}</a>',
-                url,
-                _('Share activity')
-            )
 
-    share_activity_link.short_description = _('Share activity')
+        return render_to_string(
+            "admin/activity_pub/event/recipients_list.html",
+            {"recipients": recipients, "share_link": share_link},
+        )
+
+    activity_pub.short_description = _('Share activity')
 
     @admin_form(SharePublishForm, Activity, 'admin/activities/share_publish.html')
     def share_activity(self, request, activity, form):
@@ -823,7 +814,8 @@ class ActivityChildAdmin(
 
             publish = Publish.objects.create(actor=get_platform_actor(), object=event)
 
-        publish.recipients.set(form.cleaned_data.get('recipients') or [])
+        for recipient in form.cleaned_data.get('recipients') or []:
+            publish.recipients.add(recipient)
         adapter.publish(publish)
 
         self.message_user(
@@ -844,8 +836,7 @@ class ActivityChildAdmin(
                 )
             else:
                 return (
-                    'share_activity_link',
-                    'event',
+                    'activity_pub',
                 )
         return []
 

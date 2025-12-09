@@ -1867,6 +1867,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
                 "matching_name": "Dagobert Duck",
                 "public_accounts": False,
                 "stripe_publishable_key": "test-pub-key",
+                "allow_exceed_target": True,
             },
         )
 

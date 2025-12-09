@@ -828,6 +828,7 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
             'matching_name',
             'business_types',
             'enable_iban_check',
+            'allow_exceed_target',
         )
 
 

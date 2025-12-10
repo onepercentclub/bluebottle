@@ -5,8 +5,8 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
-from django.contrib.gis.geos import Point
 from django.contrib.auth.models import Permission
+from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -1071,10 +1071,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound([])
 
     def test_filter_reviewing_with_permission(self):
-        subregion = OfficeSubRegionFactory.create()
         submitted = DeadlineActivityFactory.create(
             status='submitted',
-            office_location=LocationFactory.create(subregion=subregion)
         )
         other = DeadlineActivityFactory.create(status='open')
 
@@ -1083,7 +1081,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         if perm:
             reviewer.user_permissions.add(perm)
 
-        self.search({'reviewing': '1'}, user=reviewer)
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([submitted], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(submitted.pk), ids)
+        self.assertNotIn(str(other.pk), ids)
+
+    def test_filter_reviewing_with_superuser(self):
+        submitted = DeadlineActivityFactory.create(
+            status='submitted',
+        )
+        other = DeadlineActivityFactory.create(status='open')
+        admin = BlueBottleUserFactory.create(is_superuser=True)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=admin)
 
         self.assertFound([submitted], count=1)
         ids = [a['id'] for a in self.data['data']]
@@ -1103,8 +1115,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         reviewer = BlueBottleUserFactory.create()
         reviewer.subregion_manager.add(managed_subregion)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
 
-        self.search({'reviewing': '1'}, user=reviewer)
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
 
         self.assertFound([in_region], count=1)
         ids = [a['id'] for a in self.data['data']]
@@ -1115,6 +1130,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
         managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
 
+        no_segment = DeadlineActivityFactory.create(status='submitted')
+
         in_segment = DeadlineActivityFactory.create(status='submitted')
         in_segment.segments.add(managed_segment)
 
@@ -1123,12 +1140,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         reviewer = BlueBottleUserFactory.create()
         reviewer.segment_manager.add(managed_segment)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
 
-        self.search({'reviewing': '1'}, user=reviewer)
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
 
         self.assertFound([in_segment], count=1)
         ids = [a['id'] for a in self.data['data']]
         self.assertIn(str(in_segment.pk), ids)
+        self.assertNotIn(str(no_segment.pk), ids)
         self.assertNotIn(str(out_segment.pk), ids)
 
     def test_filter_online(self):

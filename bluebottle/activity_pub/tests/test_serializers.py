@@ -1,21 +1,18 @@
-import mock
-
 from io import BytesIO
 
+import mock
+from django.test import RequestFactory
 from requests import Response
 
-from django.test import RequestFactory
-
-from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
-
-from bluebottle.time_based.tests.factories import DateActivityFactory
-from bluebottle.activity_pub.serializers.json_ld import DoGoodEventSerializer
 from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
+from bluebottle.activity_pub.serializers.json_ld import DoGoodEventSerializer
 from bluebottle.activity_pub.tests.factories import (
     DoGoodEventFactory
 )
+from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
 class DoGoodEventSerializer(BluebottleTestCase):
@@ -26,7 +23,7 @@ class DoGoodEventSerializer(BluebottleTestCase):
 
     def setUp(self):
         self.settings = SitePlatformSettings.objects.create(
-            share_activities=True
+            share_activities=['supplier', 'consumer']
         )
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
             self.mock_image_response = Response()

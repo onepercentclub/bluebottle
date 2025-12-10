@@ -100,7 +100,7 @@ class ActivityPubTestCase:
         site_settings = SitePlatformSettings.load()
         with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
             site_settings.favicon = File(BytesIO(image.read()), name='favion.png')
-            site_settings.share_activities = True
+            site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
         self.country = CountryFactory.create()
@@ -114,7 +114,7 @@ class ActivityPubTestCase:
             site_settings = SitePlatformSettings.load()
             with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
                 site_settings.favicon = File(BytesIO(image.read()), name='favion.png')
-            site_settings.share_activities = True
+            site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
         self.client = ActivityPubClient()
@@ -134,7 +134,7 @@ class ActivityPubTestCase:
 
     def test_platform_organization(self):
         site_settings = SitePlatformSettings.load()
-        self.assertTrue(site_settings.share_activities)
+        self.assertEqual(site_settings.share_activities, ['supplier', 'consumer'])
         self.assertTrue(bool(site_settings.organization))
         self.assertTrue(bool(site_settings.organization.activity_pub_organization))
 

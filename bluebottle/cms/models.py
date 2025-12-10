@@ -697,7 +697,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
 
     @property
     def is_sharing_activities(self):
-        return len(self.share_activities)
+        return not self.is_publishing_activities and not self.is_receiving_activities
 
     @property
     def is_publishing_activities(self):

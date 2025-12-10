@@ -246,6 +246,28 @@ class ManagingFacet(Facet):
             return Term(manager=user.id)
 
 
+class ReviewingFacet(Facet):
+    agg_type = "terms"
+
+    def get_aggregation(self):
+        return A("filter", filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return A("filter", filter=MatchNone())
+
+    def add_filter(self, filter_values):
+        if filter_values == ["1"]:
+            user = get_current_user()
+
+            if not user.is_authenticated:
+                return MatchNone()
+        
+            if user.has_perm('activities.api_review_activity'):
+                return MatchAll()
+
+            return MatchNone()
+
+
 class StatusFacet(Facet):
     agg_type = "terms"
 
@@ -258,6 +280,10 @@ class StatusFacet(Facet):
     def add_filter(self, filter_values):
         if filter_values == ["draft"]:
             return Terms(status=["draft", "needs_work", "submitted"])
+        if filter_values == ["submitted"]:
+            return Terms(status=["submitted"])
+        if filter_values == ["needs_work"]:
+            return Terms(status=["needs_work"])
         if filter_values == ["open"]:
             return Terms(status=["open", "running", "full", "on_hold", "granted"])
         if filter_values == ["succeeded"]:
@@ -357,6 +383,7 @@ class ActivitySearch(Search):
     possible_facets = {
         "status": StatusFacet(),
         "managing": ManagingFacet(),
+        "reviewing": ReviewingFacet(),
         "category": ModelFacet("categories", Category, "title"),
         "skill": ModelFacet("expertise", Skill),
         "country": ModelFacet("country", Country),

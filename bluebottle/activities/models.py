@@ -1,5 +1,6 @@
 import uuid
 from builtins import object, str
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import SET_NULL
@@ -248,6 +249,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         permissions = (
             ("api_read_activity", "Can view activity through the API"),
             ("api_read_own_activity", "Can view own activity through the API"),
+            ("api_review_activity", "Can review activities through the API"),
         )
 
     def __str__(self):

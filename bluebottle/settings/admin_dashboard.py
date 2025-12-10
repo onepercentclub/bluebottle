@@ -165,7 +165,7 @@ JET_SIDE_MENU_ITEMS = [
         "label": _("GoodUp Connect"),
         "app_label": "activity_pub",
         "permissions": ["activity_pub.change_event"],
-        "enabled": "cms.SitePlatformSettings.share_activities",
+        "enabled": "cms.SitePlatformSettings.is_sharing_activities",
         "items": [
             {
                 "name": "activity_pub.publishedactivity",
@@ -174,6 +174,14 @@ JET_SIDE_MENU_ITEMS = [
                 "url": "/en/admin/activity_pub/publishedactivity/",
                 "label": _("Published activities"),
             },
+            {
+                "name": "activity_pub.follower",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
+                "url": "/en/admin/activity_pub/follower/",
+                "label": _("Followers"),
+            },
+
             {
                 "name": "activity_pub.receivedactivity",
                 "permissions": ["activity_pub.change_event"],
@@ -184,14 +192,9 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "name": "activity_pub.following",
                 "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
                 "url": "/en/admin/activity_pub/following/",
                 "label": _("Connections"),
-            },
-            {
-                "name": "activity_pub.follower",
-                "permissions": ["activity_pub.change_event"],
-                "url": "/en/admin/activity_pub/follower/",
-                "label": _("Followers"),
             },
         ],
     },

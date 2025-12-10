@@ -100,7 +100,7 @@ class RecipientInline(admin.TabularInline):
             _('Republish')
         )
     republish_button.short_description = _("Actions")
-    
+
 
 class ActivityPubModelChildAdmin(PolymorphicChildModelAdmin):
     base_model = ActivityPubModel
@@ -653,30 +653,6 @@ class PlaceInline(admin.StackedInline):
         'latitude',
         'longitude'
     )
-
-
-class EventAdminMixin:
-    list_display = (
-        "name",
-        "source",
-        "adopted",
-    )
-    readonly_fields = (
-        "name",
-        "display_description",
-        "display_image",
-        "source",
-    )
-    fields = readonly_fields
-    list_filter = [AdoptedFilter, SourceFilter]
-
-    def adopted(self, obj):
-        return obj.adopted
-
-    adopted.boolean = True
-    adopted.short_description = _("Adopted")
-
-    inlines = []
 
 
 class EventAdminMixin:

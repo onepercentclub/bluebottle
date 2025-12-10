@@ -197,7 +197,6 @@ class ActivityPubTestCase:
 
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()
-
             self.assertTrue(event.name, self.model.title)
 
     def test_publish_no_accept(self):

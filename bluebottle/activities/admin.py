@@ -379,6 +379,7 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
                     self.initial[segment_type.field_name] = self.instance.segments.filter(
                         segment_type=segment_type).all()
 
+
 class TeamInline(admin.TabularInline):
     model = Team
     raw_id_fields = ('owner',)

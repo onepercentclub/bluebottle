@@ -37,6 +37,7 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.members.models import Member
+from bluebottle.utils.admin import admin_info_box
 from bluebottle.webfinger.client import client
 
 
@@ -800,7 +801,14 @@ class ReceivedActivityAdmin(EventPolymorphicAdmin):
 class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
     change_form_template = 'admin/activity_pub/event/change_form.html'
     base_model = Event
+    fields = ('adopt_info',) + EventAdminMixin.fields
 
+    readonly_fields = ('adopt_info',) + EventAdminMixin.readonly_fields
+
+    def adopt_info(self, obj):
+        return admin_info_box(
+            _('You can make changes to this activity after you adopt it '
+              'which will create a draft version of this activity.'))
 
 @admin.register(GoodDeed)
 class GoodDeedAdmin(EventChildAdmin):

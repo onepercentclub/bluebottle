@@ -816,7 +816,8 @@ class ActivityChildAdmin(
         else:
             event = adapter.create_event(activity)
             publish = event.publish_set.first()
-            publish.recipients.set(form.cleaned_data.get('recipients') or [])
+            for actor in form.cleaned_data.get('recipients'):
+                Recipient.objects.create(actor=actor, activity=publish)
             adapter.publish(publish)
 
         self.message_user(

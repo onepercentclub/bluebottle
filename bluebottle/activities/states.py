@@ -144,6 +144,33 @@ class ActivityStateMachine(ModelStateMachine):
         """user is a staff member"""
         return user.is_staff or user.is_superuser
 
+    def can_approve(self, user):
+        """user has approve permission"""
+        if not user.is_authenticated:
+            return False
+
+        if user.has_perm('activities.api_review_activity'):
+            allow = True
+            if user.subregion_manager.exists() and self.instance.office_location_id:
+                activity_subregion = getattr(self.instance.office_location, "subregion", None)
+                if (
+                    activity_subregion
+                    and not user.subregion_manager.filter(id=activity_subregion.id).exists()
+                ):
+                    return False
+
+            if user.segment_manager.exists():
+                activity_segments = getattr(self.instance, "segments", None)
+                if (
+                    activity_segments
+                    and not activity_segments.filter(id__in=user.segment_manager.values_list("id", flat=True)).exists()
+                ):
+                    return False
+
+            return True
+
+        return user.is_staff or user.is_superuser
+
     def is_owner(self, user):
         """user is the owner"""
         return (
@@ -199,7 +226,7 @@ class ActivityStateMachine(ModelStateMachine):
             "be available in the back office and appear in your reporting."
         ),
         automatic=False,
-        permission=is_staff,
+        permission=can_approve,
     )
 
     publish = Transition(
@@ -251,7 +278,7 @@ class ActivityStateMachine(ModelStateMachine):
         open,
         name=_("Approve"),
         automatic=False,
-        permission=is_staff,
+        permission=can_approve,
         description=_(
             "The activity will be published and visible in the frontend for people to contribute to,"
         ),
@@ -269,7 +296,7 @@ class ActivityStateMachine(ModelStateMachine):
         ),
         conditions=[],
         automatic=False,
-        permission=is_staff,
+        permission=can_approve,
     )
 
     cancel = Transition(

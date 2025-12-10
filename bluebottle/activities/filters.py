@@ -263,6 +263,33 @@ class ReviewingFacet(Facet):
                 return MatchNone()
         
             if user.has_perm('activities.api_review_activity'):
+
+                should_filters = []
+
+                subregions = getattr(user, "subregion_manager", None)
+                if subregions:
+                    subregion_ids = list(subregions.values_list("id", flat=True))
+                    if subregion_ids:
+                        should_filters.append(
+                            Nested(
+                                path="office_subregion",
+                                query=Terms(**{"office_subregion__id": subregion_ids})
+                            )
+                        )
+
+                segment_manager = getattr(user, "segment_manager", None)
+                if segment_manager and segment_manager.exists():
+                    segment_ids = list(segment_manager.values_list("id", flat=True))
+                    if segment_ids:
+                        should_filters.append(
+                            Nested(
+                                path="segments",
+                                query=Terms(**{"segments__id": segment_ids})
+                            )
+                        )
+                print(should_filters)
+                if should_filters:
+                    return Bool(should=should_filters, minimum_should_match=1)
                 return MatchAll()
 
             return MatchNone()

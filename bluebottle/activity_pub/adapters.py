@@ -9,7 +9,7 @@ from django.dispatch import receiver
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import Follow, Activity, Publish
+from bluebottle.activity_pub.models import Follow, Activity, Publish, Recipient, Event
 from bluebottle.activity_pub.models import Organization
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
@@ -71,12 +71,15 @@ class JSONLDAdapter():
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         actor = serializer.save()
-
         return Follow.objects.create(object=actor)
 
     def publish(self, activity):
         if not activity.is_local:
             raise TypeError('Only local activities can be published')
+
+        # Ensure the activity is saved so recipient relations can be accessed
+        if not activity.pk:
+            activity.save()
 
         for recipient in activity.recipients.all():
             if recipient.send:
@@ -100,6 +103,23 @@ class JSONLDAdapter():
         organization = Publish.objects.filter(object=event).first().actor.organization
 
         return serializer.save(owner=follow.default_owner, host_organization=organization)
+
+    def create_event(self, activity):
+        from bluebottle.activities.models import Activity as BluebottleActivity
+        from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+        if not isinstance(activity, BluebottleActivity):
+            raise TypeError('Activity must be a BluebottleActivity')
+        try:
+            event = activity.event
+        except Event.DoesNotExist:
+            federated_serializer = FederatedActivitySerializer(activity)
+            serializer = EventSerializer(data=federated_serializer.data)
+            serializer.is_valid(raise_exception=True)
+            event = serializer.save(activity=activity)
+        if not event.publish_set.exists():
+            Publish.objects.create(actor=get_platform_actor(), object=event)
+        return event
 
 
 adapter = JSONLDAdapter()
@@ -135,7 +155,20 @@ def publish_to_recipient(activity, recipient, tenant):
 @receiver([post_save])
 def publish_activity(sender, instance, **kwargs):
     try:
-        if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
+        if (
+            isinstance(instance, Activity)
+            and not isinstance(instance, Publish)
+            and kwargs['created']
+            and instance.is_local
+        ):
+            print(instance)
+            print(instance.default_recipients)
+            for recipient in instance.default_recipients:
+                recipient = Recipient.objects.get_or_create(
+                    actor=recipient,
+                    activity=instance,
+                )
+                print(recipient)
             adapter.publish(instance)
     except Exception as e:
         logger.error(f"Failed to publish activity: {str(e)}", exc_info=True)

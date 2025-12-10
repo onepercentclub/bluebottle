@@ -1,34 +1,32 @@
-from requests import Request, Response
-import mock
-from urllib.parse import urlparse
-from io import BytesIO
 from datetime import datetime, timedelta
+from io import BytesIO
+from urllib.parse import urlparse
 
+import mock
 from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
 from django.utils.timezone import get_current_timezone
+from requests import Request, Response
 
-from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Announce, Follow, Accept, Event
 from bluebottle.activity_pub.adapters import adapter
-
-from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.clients.utils import LocalTenant
+from bluebottle.activity_pub.effects import get_platform_actor
+from bluebottle.activity_pub.models import Announce, Follow, Accept, Event, Recipient
 from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.deeds.tests.factories import DeedFactory
-from bluebottle.geo.models import Geolocation
-
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
+from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
-from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
 
 
 class ActivityPubClient(TestClient):
@@ -173,6 +171,7 @@ class ActivityPubTestCase:
             image=ImageFactory.create(),
             **kwargs
         )
+        adapter.create_event(self.model)
 
     def submit(self):
         self.model.states.submit()
@@ -180,12 +179,13 @@ class ActivityPubTestCase:
 
     def test_publish(self):
         self.test_accept()
-
         self.create()
+        publish = self.model.event.publish_set.first()
+        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             self.event = Event.objects.get()
-
             self.assertEqual(self.event.name, self.model.title)
 
     def test_publish_to_closed_platform(self):
@@ -237,6 +237,8 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.image.origin, self.event.image)
 
                     self.approve(self.adopted)
+                    announce = Announce.objects.get()
+                    self.assertTrue(announce)
 
         announce = Announce.objects.get()
         self.assertTrue(announce)

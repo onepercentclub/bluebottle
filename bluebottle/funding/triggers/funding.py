@@ -4,6 +4,7 @@ from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
 from bluebottle.activities.triggers import ContributorTriggers
+from bluebottle.activity_pub.effects import AnnounceAdoptionEffect
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -39,8 +40,6 @@ from bluebottle.funding.states import (
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
-
-from bluebottle.activity_pub.effects import PublishEffect, AnnounceAdoptionEffect
 
 
 def should_finish(effect):
@@ -125,7 +124,6 @@ class FundingTriggers(ActivityTriggers):
                     conditions=[should_finish]
                 ),
                 NotificationEffect(FundingApprovedMessage),
-                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),

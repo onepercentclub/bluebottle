@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, models
+from django.db import models, connection
 from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
@@ -368,20 +368,9 @@ class Activity(ActivityPubModel):
 
     def save(self, *args, **kwargs):
         from bluebottle.activity_pub.utils import get_platform_actor
-
         if not getattr(self, 'actor_id', None):
             self.actor = get_platform_actor()
-
-        is_new = self._state.adding
-        super().save(*args, **kwargs)
-
-        if is_new:
-            for recipient in self.default_recipients:
-                Recipient.objects.get_or_create(
-                    actor=recipient,
-                    activity=self,
-                )
-        return self
+        return super().save(*args, **kwargs)
 
 
 class Recipient(models.Model):
@@ -456,6 +445,8 @@ class Announce(Activity):
 
     @property
     def default_recipients(self):
-        for publish in self.object.publish_set.all():
-            for follow in publish.actor.follow_set.all():
-                yield follow.object.inbox
+        publish = self.object.publish_set.first()
+        return [publish.actor]
+
+
+from .tasks import *  # noqa

@@ -14,7 +14,7 @@ from bluebottle.activities.messages.reviewer import (
 )
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
-from bluebottle.activity_pub.effects import PublishEffect, AnnounceAdoptionEffect
+from bluebottle.activity_pub.effects import AnnounceAdoptionEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
 from bluebottle.notifications.effects import NotificationEffect
@@ -26,7 +26,6 @@ from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffe
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
-
 from bluebottle.time_based.messages.activity_manager import (
     PastActivityRegisteredNotification,
     PastActivityApprovedNotification,
@@ -363,7 +362,6 @@ class DateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegistrationActivityStateMachine.approve,
             effects=[
-                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),
@@ -371,7 +369,6 @@ class DateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             DateStateMachine.publish,
             effects=[
-                PublishEffect,
                 AnnounceAdoptionEffect,
                 RelatedTransitionEffect(
                     'organizer',
@@ -522,14 +519,12 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
         TransitionTrigger(
             RegistrationActivityStateMachine.approve,
             effects=[
-                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),
         TransitionTrigger(
             RegistrationActivityStateMachine.publish,
             effects=[
-                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),

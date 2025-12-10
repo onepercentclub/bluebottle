@@ -405,7 +405,7 @@ class Follow(Activity):
         return [self.object]
 
     @property
-    def shared_count(self):
+    def shared_activities(self):
         if self.is_local:
             return Event.objects.filter(
                 publish__actor=self.object,
@@ -417,7 +417,7 @@ class Follow(Activity):
         ).count()
 
     @property
-    def adopted_count(self):
+    def adopted_activities(self):
         return Announce.objects.filter(actor=self.actor).count()
 
 

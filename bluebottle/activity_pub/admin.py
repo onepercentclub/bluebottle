@@ -355,10 +355,10 @@ class FollowingAddForm(forms.ModelForm):
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
     model = Following
-    list_display = ("object", "accepted", "shared_count", "adopted_count")
+    list_display = ("object", "shared_activities", "adopted_activities", "accepted")
     raw_id_fields = ('default_owner',)
 
-    readonly_fields = ('object', 'accepted', "shared_count", "adopted_count")
+    readonly_fields = ('object', 'accepted', "shared_activities", "adopted_activities")
 
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
@@ -484,9 +484,9 @@ class FollowingAdmin(FollowAdmin):
 
 @admin.register(Follower)
 class FollowerAdmin(FollowAdmin):
-    list_display = ("platform", "shared_count", "adopted_count", "accepted")
+    list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
     actions = ['accept_follow_requests']
-    readonly_fields = ('platform', 'accepted', "shared_count", "adopted_count")
+    readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities")
     fields = readonly_fields
 
     def platform(self, obj):

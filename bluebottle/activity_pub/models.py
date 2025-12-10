@@ -404,6 +404,22 @@ class Follow(Activity):
     def default_recipients(self):
         return [self.object]
 
+    @property
+    def shared_count(self):
+        if self.is_local:
+            return Event.objects.filter(
+                publish__actor=self.object,
+            ).count()
+        return Recipient.objects.filter(
+            actor=self.actor,
+            activity__publish__isnull=False,
+            send=True
+        ).count()
+
+    @property
+    def adopted_count(self):
+        return Announce.objects.filter(actor=self.actor).count()
+
 
 class Follower(Follow):
     class Meta:

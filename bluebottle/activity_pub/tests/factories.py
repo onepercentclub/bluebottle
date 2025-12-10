@@ -37,7 +37,7 @@ class OrganizationFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'ActivityPub Organization {0}'.format(n))
     summary = factory.Faker('text', max_nb_chars=200)
     content = factory.Faker('text', max_nb_chars=500)
-    image = factory.Faker('image_url')
+    image = factory.SubFactory('bluebottle.activity_pub.tests.factories.ImageFactory')
     preferred_username = factory.Sequence(lambda n: 'activitypub_org_{0}'.format(n))
 
     inbox = factory.SubFactory(InboxFactory)
@@ -88,7 +88,7 @@ class EventFactory(factory.DjangoModelFactory):
 
     name = factory.Faker('sentence', nb_words=4)
     description = factory.Faker('text', max_nb_chars=500)
-    image = factory.Faker('image_url')
+    image = factory.SubFactory('bluebottle.activity_pub.tests.factories.ImageFactory')
     start = factory.LazyFunction(lambda: timezone.now() + timedelta(days=7))
     end = factory.LazyFunction(lambda: timezone.now() + timedelta(days=8))
     organizer = factory.SubFactory(OrganizationFactory)

@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, models
+from django.db import models, connection
 from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
@@ -364,13 +364,24 @@ class DoGoodEvent(Event):
 class Activity(ActivityPubModel):
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
 
+    default_recipients = []
+
     def save(self, *args, **kwargs):
         from bluebottle.activity_pub.utils import get_platform_actor
-
-        if not hasattr(self, 'actor'):
+        if not getattr(self, 'actor_id', None):
             self.actor = get_platform_actor()
+        return super().save(*args, **kwargs)
 
-        super().save(*args, **kwargs)
+
+class Recipient(models.Model):
+    activity = models.ForeignKey('activity_pub.Activity', on_delete=models.CASCADE, related_name='recipients')
+    actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
+    send = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = _("Recipient")
+        verbose_name_plural = _("Recipients")
+        unique_together = ('activity', 'actor')
 
 
 class Follow(Activity):
@@ -390,7 +401,7 @@ class Follow(Activity):
     )
 
     @property
-    def audience(self):
+    def default_recipients(self):
         return [self.object]
 
 
@@ -421,25 +432,21 @@ class Accept(Activity):
     object = models.ForeignKey('activity_pub.Follow', on_delete=models.CASCADE)
 
     @property
-    def audience(self):
+    def default_recipients(self):
         return [self.object.actor]
 
 
 class Publish(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
-    @property
-    def audience(self):
-        # All followers of the actor
-        for follow in self.actor.follow_set.filter(accept__isnull=False):
-            yield follow.actor.inbox
-
 
 class Announce(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
     @property
-    def audience(self):
-        for publish in self.object.publish_set.all():
-            for follow in publish.actor.follow_set.all():
-                yield follow.object.inbox
+    def default_recipients(self):
+        publish = self.object.publish_set.first()
+        return [publish.actor]
+
+
+from .tasks import *  # noqa

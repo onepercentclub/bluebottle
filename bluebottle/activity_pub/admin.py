@@ -31,7 +31,8 @@ from bluebottle.activity_pub.models import (
     Announce,
     Organization,
     Following,
-    Follower, GoodDeed, CrowdFunding, DoGoodEvent, SubEvent, PublishedActivity, ReceivedActivity,
+    Follower, GoodDeed, CrowdFunding, DoGoodEvent,
+    Recipient, SubEvent, PublishedActivity, ReceivedActivity, Accept,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -66,6 +67,39 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
 
     list_display = ("id", "type", "iri")
     readonly_fields = ('iri', 'actor', 'pub_url')
+
+
+class RecipientInline(admin.TabularInline):
+    model = Recipient
+    verbose_name = _("Recipient")
+    verbose_name_plural = _("Recipients")
+    readonly_fields = ('actor', 'send', 'republish_button')
+    fields = ('actor', 'send', 'republish_button')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def republish_button(self, obj):
+        if obj.send:
+            return "-"
+        if not obj.id:
+            return "-"
+        url = reverse(
+            'admin:activity_pub_activity_republish_recipient',
+            args=[obj.activity_id, obj.id]
+        )
+        return format_html(
+            '<a class="button" href="{}">{}</a>',
+            url,
+            _('Republish')
+        )
+    republish_button.short_description = _("Actions")
 
 
 class ActivityPubModelChildAdmin(PolymorphicChildModelAdmin):
@@ -150,6 +184,47 @@ class OrganizationAdmin(ActivityPubModelChildAdmin):
 @admin.register(Activity)
 class ActivityAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
+    inlines = [RecipientInline]
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/recipient/<path:recipient_id>/republish/",
+                self.admin_site.admin_view(self.republish_recipient),
+                name="activity_pub_activity_republish_recipient",
+            ),
+        ]
+        return custom_urls + urls
+
+    def republish_recipient(self, request, object_id, recipient_id):
+        from django.db import connection
+        from bluebottle.activity_pub.adapters import publish_to_recipient
+        from bluebottle.activity_pub.models import Recipient
+
+        activity = get_object_or_404(Activity, pk=unquote(object_id))
+        recipient = get_object_or_404(Recipient, pk=unquote(recipient_id), activity=activity)
+
+        if not request.user.has_perm("activity_pub.change_activity"):
+            raise PermissionDenied
+
+        try:
+            publish_to_recipient.delay(activity, recipient, connection.tenant)
+            self.message_user(
+                request,
+                _('Republish task queued for recipient {actor}.').format(actor=recipient.actor),
+                level="success",
+            )
+        except Exception as e:
+            self.message_user(
+                request,
+                _('Error queuing republish: {error}').format(error=str(e)),
+                level="error",
+            )
+
+        return HttpResponseRedirect(
+            reverse("admin:activity_pub_activity_change", args=[activity.pk])
+        )
 
 
 @admin.register(Actor)
@@ -158,7 +233,7 @@ class ActorAdmin(ActivityPubModelChildAdmin):
 
 
 @admin.register(Follow)
-class FollowAdmin(ActivityPubModelChildAdmin):
+class FollowAdmin(ActivityAdmin):
     list_display = ('actor', "object")
     readonly_fields = ("actor", "object", "iri", "pub_url")
 
@@ -174,8 +249,14 @@ class PublishAdmin(ActivityPubModelChildAdmin):
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')
 
 
+@admin.register(Accept)
+class AcceptAdmin(ActivityAdmin):
+    list_display = ("id", "actor", "object")
+    readonly_fields = ('iri', 'actor', 'object', 'pub_url')
+
+
 @admin.register(Announce)
-class AnnounceAdmin(ActivityPubModelChildAdmin):
+class AnnounceAdmin(ActivityAdmin):
     list_display = ("id", "actor", "object")
 
 
@@ -600,13 +681,6 @@ class EventAdminMixin:
     def source(self, obj):
         return obj.source
     source.short_description = _("Partner")
-
-    def get_inline_instances(self, request, obj=None):
-        inlines = super().get_inline_instances(request, obj)
-        if obj and obj.is_local:
-            inlines.append(AnnouncementInline(self.model, self.admin_site))
-
-        return inlines
 
     def display_description(self, obj):
         return format_html(

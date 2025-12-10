@@ -624,3 +624,8 @@ label.translatable-field:before {
     margin-left: 6px;
     vertical-align: middle;
 }
+
+
+.field-activity_pub label {
+    display: none;
+}

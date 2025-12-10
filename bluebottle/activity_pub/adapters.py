@@ -161,14 +161,11 @@ def publish_activity(sender, instance, **kwargs):
             and kwargs['created']
             and instance.is_local
         ):
-            print(instance)
-            print(instance.default_recipients)
             for recipient in instance.default_recipients:
-                recipient = Recipient.objects.get_or_create(
+                Recipient.objects.get_or_create(
                     actor=recipient,
                     activity=instance,
                 )
-                print(recipient)
             adapter.publish(instance)
     except Exception as e:
         logger.error(f"Failed to publish activity: {str(e)}", exc_info=True)

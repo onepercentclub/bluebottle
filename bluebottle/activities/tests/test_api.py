@@ -6,6 +6,7 @@ from datetime import timedelta
 
 import dateutil
 from django.contrib.gis.geos import Point
+from django.contrib.auth.models import Permission
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -1068,6 +1069,67 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             {'teams': ('With your team', 0)}
         )
         self.assertFound([])
+
+    def test_filter_reviewing_with_permission(self):
+        subregion = OfficeSubRegionFactory.create()
+        submitted = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=subregion)
+        )
+        other = DeadlineActivityFactory.create(status='open')
+
+        reviewer = BlueBottleUserFactory.create()
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1'}, user=reviewer)
+
+        self.assertFound([submitted], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(submitted.pk), ids)
+        self.assertNotIn(str(other.pk), ids)
+
+    def test_filter_reviewing_subregion_manager(self):
+        managed_subregion = OfficeSubRegionFactory.create()
+        in_region = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=managed_subregion)
+        )
+        out_region = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create()
+        )
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.subregion_manager.add(managed_subregion)
+
+        self.search({'reviewing': '1'}, user=reviewer)
+
+        self.assertFound([in_region], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(in_region.pk), ids)
+        self.assertNotIn(str(out_region.pk), ids)
+
+    def test_filter_reviewing_segment_manager(self):
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
+
+        in_segment = DeadlineActivityFactory.create(status='submitted')
+        in_segment.segments.add(managed_segment)
+
+        out_segment = DeadlineActivityFactory.create(status='submitted')
+        out_segment.segments.add(other_segment)
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.segment_manager.add(managed_segment)
+
+        self.search({'reviewing': '1'}, user=reviewer)
+
+        self.assertFound([in_segment], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(in_segment.pk), ids)
+        self.assertNotIn(str(out_segment.pk), ids)
 
     def test_filter_online(self):
         matching = DeadlineActivityFactory.create_batch(2, status="open", is_online=True)

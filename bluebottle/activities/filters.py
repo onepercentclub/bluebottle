@@ -261,7 +261,7 @@ class ReviewingFacet(Facet):
 
             if not user.is_authenticated:
                 return MatchNone()
-        
+
             if user.has_perm('activities.api_review_activity'):
 
                 should_filters = []
@@ -287,7 +287,6 @@ class ReviewingFacet(Facet):
                                 query=Terms(**{"segments__id": segment_ids})
                             )
                         )
-                print(should_filters)
                 if should_filters:
                     return Bool(should=should_filters, minimum_should_match=1)
                 return MatchAll()

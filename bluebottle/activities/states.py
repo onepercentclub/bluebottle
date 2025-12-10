@@ -150,7 +150,6 @@ class ActivityStateMachine(ModelStateMachine):
             return False
 
         if user.has_perm('activities.api_review_activity'):
-            allow = True
             if user.subregion_manager.exists() and self.instance.office_location_id:
                 activity_subregion = getattr(self.instance.office_location, "subregion", None)
                 if (

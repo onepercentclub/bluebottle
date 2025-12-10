@@ -25,7 +25,7 @@ from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.time_based.models import Skill
-from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
+from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField, UserPermissionField
 
 BB_USER_MODEL = get_user_model()
 
@@ -253,12 +253,14 @@ class UserPermissionsSerializer(serializers.Serializer):
     project_list = PermissionField('initiative-list')
     project_manage_list = PermissionField('initiative-list')
     homepage = PermissionField('home-detail')
+    review_activities = UserPermissionField('activities.api_review_activity')
 
     class Meta(object):
         fields = [
             'project_list',
             'project_manage_list',
-            'homepage'
+            'homepage',
+            'review_activities'
         ]
 
 

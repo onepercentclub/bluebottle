@@ -182,7 +182,6 @@ class ActivityPubTestCase:
         self.create()
         publish = self.model.event.publish_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
-        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             self.event = Event.objects.get()
@@ -197,7 +196,6 @@ class ActivityPubTestCase:
 
         publish = self.model.event.publish_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
-        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()

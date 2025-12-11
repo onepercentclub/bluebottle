@@ -21,7 +21,6 @@ from bluebottle.cms.models import (
 )
 from bluebottle.members.models import Member
 from bluebottle.statistics.statistics import Statistics
-from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 

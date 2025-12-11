@@ -146,26 +146,12 @@ class ActivityStateMachine(ModelStateMachine):
 
     def can_approve(self, user):
         """user has approve permission"""
+        from bluebottle.activities.permissions import user_can_review_activity
+
         if not user.is_authenticated:
             return False
 
-        if user.has_perm('activities.api_review_activity'):
-            if user.subregion_manager.exists() and self.instance.office_location_id:
-                activity_subregion = getattr(self.instance.office_location, "subregion", None)
-                if (
-                    activity_subregion
-                    and not user.subregion_manager.filter(id=activity_subregion.id).exists()
-                ):
-                    return False
-
-            if user.segment_manager.exists():
-                activity_segments = getattr(self.instance, "segments", None)
-                if (
-                    activity_segments
-                    and not activity_segments.filter(id__in=user.segment_manager.values_list("id", flat=True)).exists()
-                ):
-                    return False
-
+        if user_can_review_activity(user, self.instance):
             return True
 
         return user.is_staff or user.is_superuser

@@ -157,9 +157,9 @@ class MemberPlatformSettingsAdmin(
             _('Login'),
             {
                 'fields': (
+                    'background',
                     'translatable_info',
                     'closed',
-                    'background',
                     'login_methods',
                     'confirm_signup',
                     'explicit_terms',

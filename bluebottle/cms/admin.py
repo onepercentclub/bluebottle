@@ -21,6 +21,7 @@ from bluebottle.cms.models import (
 )
 from bluebottle.members.models import Member
 from bluebottle.statistics.statistics import Statistics
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
@@ -157,7 +158,7 @@ class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmi
 
 
 @admin.register(SitePlatformSettings)
-class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
+class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
     readonly_fields = ['terminated_info']
 
     def get_fieldsets(self, request, obj=None):
@@ -201,7 +202,7 @@ class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
         )
 
         if obj.terminated:
-            fieldsets[0][1]['fields'].append('terminated_info')
+            fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info', )
 
         return fieldsets
 

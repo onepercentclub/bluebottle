@@ -10,16 +10,16 @@ def add_permission_to_groups(apps, schema_editor):
     Activity = apps.get_model('activities', 'Activity')
 
     ct = ContentType.objects.get_for_model(Activity)
-    perm = Permission.objects.filter(codename='api_review_activity', content_type=ct).first()
-    if not perm:
-        print("Permission not found")
-        return
+    perm, _ = Permission.objects.get_or_create(
+        codename='api_review_activity',
+        content_type=ct,
+        defaults={'name': 'Can review activities'}
+    )
 
     for name in ["Staff", "Region manager"]:
         group = Group.objects.filter(name=name).first()
         if group:
             group.permissions.add(perm)
-            print("Permission added to group '%s'" % name)
 
 
 class Migration(migrations.Migration):

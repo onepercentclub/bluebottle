@@ -9,8 +9,11 @@
         <p>
             {% blocktrans context 'email' %}Hi {{ recipient_name }},{% endblocktrans %}
         </p>
-        {% block message %}
-        {% endblock message %}
+        {% if custom_message %}
+            <p>{{ custom_message|linebreaks }}</p>
+        {% else %}
+            {% block message %}{% endblock %}
+        {% endif %}
         {% if body_html and insert_method == 'append' %}
             <p>
             {{ body_html }}

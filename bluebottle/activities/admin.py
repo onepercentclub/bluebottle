@@ -805,7 +805,7 @@ class ActivityChildAdmin(
             raise PermissionDenied
 
         publish = None
-        if  hasattr(activity, 'event'):
+        if hasattr(activity, 'event'):
             adapter.create_event(activity)
 
         publish = activity.event.publish_set.first()

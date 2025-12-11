@@ -9,7 +9,7 @@ from django.dispatch import receiver
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import Follow, Activity, Publish, Recipient, Event
+from bluebottle.activity_pub.models import Follow, Publish, Recipient, Event
 from bluebottle.activity_pub.models import Organization
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
@@ -104,7 +104,6 @@ class JSONLDAdapter():
             except Exception as e:
                 logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
                 raise
-
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer

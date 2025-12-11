@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activity_pub.models import Publish, Announce
+from bluebottle.activity_pub.models import Announce
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
 

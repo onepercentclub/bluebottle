@@ -736,10 +736,29 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         )
     )
 
-    footer_banner = models.ImageField(
-        _('Footer banner'),
-        help_text=_('Banner shown just above the footer'),
+    footer_banner_full = models.ImageField(
+        _('Footer banner full'),
+        help_text=_('Full-width banner shown just above the footer'),
         null=True, blank=True, upload_to='site_content/',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
+    footer_banner_color = ColorField(
+        _('Footer banner colour'),
+        null=True,
+        blank=True,
+        help_text=_('Background colour for the footer banner'),
+    )
+    footer_banner_logo = models.ImageField(
+        _('Footer banner logo'),
+        help_text=_('Logo shown centered on the footer banner colour'),
+        null=True,
+        blank=True,
+        upload_to='site_content/',
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,

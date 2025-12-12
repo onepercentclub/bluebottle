@@ -1,4 +1,5 @@
 from future import standard_library
+
 standard_library.install_aliases()
 
 from builtins import str
@@ -62,9 +63,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.user_with_partner_organization.save()
 
         self.current_user_api_url = reverse('user-current')
-        self.profile_url = reverse('member-profile-detail', args=(self.user_1.pk, ))
+        self.profile_url = reverse('member-profile-detail', args=(self.user_1.pk,))
         self.profile_url_with_partner_organization = reverse(
-            'member-profile-detail', args=(self.user_with_partner_organization.pk, )
+            'member-profile-detail', args=(self.user_with_partner_organization.pk,)
         )
         self.user_create_api_url = reverse('member-signup')
         self.user_password_reset_api_url = reverse('password-reset')
@@ -656,7 +657,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
     def test_password_reset_validation(self):
         client = JSONAPITestClient()
-        token = default_token_generator.make_token(self.user_1)       # Setup: create a user.
+        token = default_token_generator.make_token(self.user_1)  # Setup: create a user.
         uidb36 = int_to_base36(self.user_1.pk)
         reset_confirm_url = reverse('password-reset-confirm')
 
@@ -842,7 +843,7 @@ class LoginJsonApiTestCase(BluebottleTestCase):
         expected = {
             'errors': [{
                 'code': 'invalid',
-                'detail': 'Unable to log in with provided credentials.',
+                'detail': 'We are unable to log you in with the provided email address and password combination.',
                 'source': {
                     'pointer': '/data'
                 },

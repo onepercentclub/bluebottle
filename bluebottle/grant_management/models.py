@@ -643,7 +643,10 @@ class GrantDonor(Contributor):
         return f'{self.activity.title} - {self.amount}'
 
 
-class GrantDeposit(TriggerMixin, models.Model):
+class GrantTransaction(models.Model):
+    class Meta:
+        abstract = True
+
     status = models.CharField(max_length=40)
     amount = MoneyField()
 
@@ -662,6 +665,14 @@ class GrantDeposit(TriggerMixin, models.Model):
             raise ValidationError({'amount': _('Currency should match fund currency')})
 
         super().clean()
+
+
+class GrantDeposit(TriggerMixin, GrantTransaction):
+    pass
+
+
+class GrantWithdrawal(TriggerMixin, GrantTransaction):
+    pass
 
 
 from .periodic_tasks import *  # noqa

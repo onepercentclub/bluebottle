@@ -17,7 +17,7 @@ from polymorphic.managers import PolymorphicManager
 from polymorphic.models import PolymorphicModel
 from polymorphic.query import PolymorphicQuerySet
 
-from bluebottle.files.fields import ImageField, DocumentField
+from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
@@ -229,14 +229,15 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         for field in super().required:
             yield field
 
-        for question in self.questions.filter(required=True):
-            try:
-                answer = self.answers.get(question=question)
-                if not answer.is_valid:
-                    yield f'answers.{question.id}'
+        if self.pk:
+            for question in self.questions.filter(required=True):
+                try:
+                    answer = self.answers.get(question=question)
+                    if not answer.is_valid:
+                        yield f'answers.{question.id}'
 
-            except ActivityAnswer.DoesNotExist:
-                yield f'answers.{question.id}'
+                except ActivityAnswer.DoesNotExist:
+                    yield f'answers.{question.id}'
 
     @property
     def questions(self):
@@ -597,7 +598,7 @@ class FileUploadQuestion(ActivityQuestion, TranslatableModel):
 
 
 class FileUploadAnswer(ActivityAnswer):
-    file = DocumentField(on_delete=models.CASCADE)
+    file = PrivateDocumentField(on_delete=models.CASCADE)
 
     class JSONAPIMeta:
         resource_name = 'file-upload-answers'

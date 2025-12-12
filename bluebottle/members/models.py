@@ -8,15 +8,18 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import validate_email
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, CharField
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import Place
+from bluebottle.utils.fields import CheckboxField
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..offices.models import OfficeSubRegion
@@ -38,11 +41,15 @@ class SocialLoginSettings(models.Model):
     secret = models.CharField(_('Secret'))
     client_id = models.CharField(_('Client id'))
 
+    class Meta(object):
+        verbose_name_plural = _('Social login settings')
+        verbose_name = _('Social login settings')
 
-class MemberPlatformSettings(BasePlatformSettings):
+
+class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     LOGIN_METHODS = (
-        ('password', _('Email/password combination')),
         ('SSO', _('Company SSO')),
+        ('password', _('Email + password')),
     )
 
     DISPLAY_MEMBER_OPTIONS = (
@@ -55,8 +62,24 @@ class MemberPlatformSettings(BasePlatformSettings):
         ('contribution', _('When making a contribution')),
     )
 
-    closed = models.BooleanField(
-        _('closed'), default=False, help_text=_('Require login before accessing the platform')
+    ACCOUNT_CREATION_RULES = (
+        ('anyone', _('Anyone can create an account')),
+        ('whitelist', _('Only people with a whitelisted domain can create an account')),
+        (
+            'whitelist_and_request',
+            _('People with a whitelisted domain can create an account; all others can request access')
+        ),
+    )
+
+    REQUEST_ACCESS_METHODS = (
+        ('email', _('People request access by entering their email address')),
+        ('instructions', _('People request access by following your instructions')),
+    )
+
+    closed = CheckboxField(
+        _('Platform access'), default=False,
+        inline_label=_('Require log in before accessing the platform'),
+        help_text=_('Only logged-in users can view the platform.')
     )
     create_initiatives = models.BooleanField(
         _('create initiatives'), default=True, help_text=_('Members can create initiatives')
@@ -92,20 +115,79 @@ class MemberPlatformSettings(BasePlatformSettings):
         default=False,
     )
 
-    login_methods = MultiSelectField(_('login methods'), max_length=100, choices=LOGIN_METHODS, default=['password'])
-    confirm_signup = models.BooleanField(
-        _('confirm signup'), default=False, help_text=_('Require verifying the user\'s email before signup')
+    login_methods = MultiSelectField(
+        _('login methods'),
+        help_text=_(
+            'People can use any selected method to sign up or log in. '
+            'For social log in options, see the ‘Social log in’ tab.'
+        ),
+        max_length=100,
+        choices=LOGIN_METHODS,
+        default=['password']
     )
-    email_domain = models.CharField(
-        _('email domains'),
+    confirm_signup = CheckboxField(
+        _('verify email on sign up'),
+        default=False,
+        inline_label=_('Require users to verify their email on sign-up'),
+        help_text=_('This rule only applies to the email + password method.'),
+    )
+
+    account_creation_rules = CharField(
+        _('account creation rules'),
+        help_text=_('This rule only applies to the email + password method.'),
+        choices=ACCOUNT_CREATION_RULES,
+        default='anyone',
+    )
+
+    email_domains = ArrayField(
+        models.CharField(),
+        verbose_name=_('Whitelisted email domains'),
         blank=True, null=True,
-        help_text=_('Domain that all email should belong to'),
-        max_length=256
+        default=list,
     )
+
     session_only = models.BooleanField(
         _('session only'),
         default=False,
         help_text=_('Limit user session to browser session')
+    )
+
+    explicit_terms = models.BooleanField(
+        _('Explicit terms'),
+        default=False,
+        help_text=_('Users have to explicitly accept terms when logging in')
+    )
+
+    request_access_method = models.CharField(
+        _('request access method'),
+        help_text=_('This rule only applies when requesting access is allowed.'),
+        choices=REQUEST_ACCESS_METHODS,
+        default='email',
+    )
+
+    translations = TranslatedFields(
+        request_access_instructions=models.CharField(
+            _('request access instructions'),
+            help_text=_('Explain how people can request access to the platform.'),
+            max_length=2000,
+            null=True,
+            blank=True
+        ),
+    )
+
+    request_access_email = models.EmailField(
+        _('Request access mail to address'),
+        help_text=_('Enter the email address where people should send their access request.'),
+        null=True,
+        blank=True
+    )
+
+    request_access_code = models.CharField(
+        _('Request access code'),
+        help_text=_('With this code people can sign-up without a white-listed email address.'),
+        max_length=255,
+        null=True,
+        blank=True
     )
 
     required_questions_location = models.CharField(
@@ -141,7 +223,8 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
 
     background = models.ImageField(
-        _('background'),
+        _('Sign up image'),
+        help_text=_('This image will be displayed on the sign up and log in pages.'),
         null=True, blank=True, upload_to='site_content/',
         validators=[
             FileMimetypeValidator(
@@ -285,6 +368,11 @@ class MemberPlatformSettings(BasePlatformSettings):
 @python_2_unicode_compatible
 class Member(BlueBottleBaseUser):
     verified = models.BooleanField(default=False, blank=True, help_text=_('Was verified for voting by recaptcha.'))
+    accepted = models.BooleanField(
+        _('Accepted'),
+        default=True,
+        help_text=_('Was approved by platform manager.')
+    )
     subscribed = models.BooleanField(
         _('Matching'),
         default=False,
@@ -344,6 +432,12 @@ class Member(BlueBottleBaseUser):
     )
 
     avatar = ImageField(blank=True, null=True)
+
+    terms_accepted = models.BooleanField(
+        _('Terms accepted'),
+        default=False,
+        help_text=_('User has explicitly accepted the terms')
+    )
 
     @classmethod
     def create_by_email(cls, email, **kwargs):

@@ -810,6 +810,7 @@ class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
             _('You can make changes to this activity after you adopt it '
               'which will create a draft version of this activity.'))
 
+
 @admin.register(GoodDeed)
 class GoodDeedAdmin(EventChildAdmin):
     base_model = Event

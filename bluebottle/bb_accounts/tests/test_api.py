@@ -843,7 +843,7 @@ class LoginJsonApiTestCase(BluebottleTestCase):
         expected = {
             'errors': [{
                 'code': 'invalid',
-                'detail': 'Unable to log in with provided credentials.',
+                'detail': 'We are unable to log you in with the provided email address and password combination.',
                 'source': {
                     'pointer': '/data'
                 },

@@ -26,6 +26,7 @@ from bluebottle.geo.models import Location
 from bluebottle.grant_management.models import (
     GrantApplication,
     GrantDeposit,
+    GrantWithdrawal,
     GrantDonor,
     GrantFund,
     GrantPayment,
@@ -135,6 +136,22 @@ class GrantDepositInline(StateMachineAdminMixin, admin.StackedInline):
         return formset
 
 
+class GrantWithdrawalInline(StateMachineAdminMixin, admin.StackedInline):
+    model = GrantWithdrawal
+    readonly_fields = ["created", "state_name"]
+    fields = ['amount', 'reference', ] + readonly_fields
+    extra = 0
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj and obj.currency:
+            formset.form.base_fields["amount"].initial = (None, obj.currency)
+        return formset
+
+
 class GrantFundForm(forms.ModelForm):
     class Meta:
         model = GrantFund
@@ -151,7 +168,7 @@ class GrantFundForm(forms.ModelForm):
 
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
-    inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline]
+    inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline, GrantWithdrawalInline]
     model = GrantFund
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']

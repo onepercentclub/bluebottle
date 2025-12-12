@@ -1170,6 +1170,10 @@ class DateRegistration(Registration):
     def participants(self):
         return self.dateparticipant_set.all()
 
+    @property
+    def unreviewed_participants(self):
+        return self.participants.exclude(status='withdrawn')
+
     class Meta:
         verbose_name = _("Candidate for date activities")
         verbose_name_plural = _("Candidates for date activities")

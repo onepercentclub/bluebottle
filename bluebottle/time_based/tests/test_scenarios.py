@@ -149,6 +149,24 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_participant_status(self, slot, self.supporter, status='accepted')
         assert_registration_status(self, self.activity, self.supporter, status='accepted')
 
+    def test_user_withdraws_from_activity_reapply_different_slot(self):
+        slot = self.activity.slots.first()
+        api_user_joins_slot(self, slot, self.supporter)
+
+        assert_participant_status(self, slot, self.supporter, status='accepted')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+        api_participant_transition(self, slot, self.supporter, transition='withdraw')
+        assert_participant_status(self, slot, self.supporter, status='withdrawn')
+        assert_registration_status(self, self.activity, self.supporter, status='withdrawn')
+
+        slot2 = self.activity.slots.exclude(pk=slot.pk).first()
+        api_user_joins_slot(self, slot2, self.supporter)
+
+        assert_participant_status(self, slot2, self.supporter, status='accepted')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+
+        assert_participant_status(self, slot, self.supporter, status='withdrawn')
+
     def test_user_withdraws_from_review_activity(self):
         slot = self.activity.slots.first()
 

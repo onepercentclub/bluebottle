@@ -13,6 +13,7 @@ from bluebottle.grant_management.forms import GrantApplicationApproveForm, Grant
 from bluebottle.grant_management.models import (
     GrantApplication,
     GrantDeposit,
+    GrantWithdrawal,
     GrantDonor,
     GrantPayment,
     GrantPayout,
@@ -377,8 +378,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
 
-@register(GrantDeposit)
-class GrantDepositStateMachine(ModelStateMachine):
+class GrantTransactionStateMachine(ModelStateMachine):
     pending = State(
         _('pending'),
         'pending',
@@ -416,6 +416,16 @@ class GrantDepositStateMachine(ModelStateMachine):
         description=_("Cancel the deposit"),
         name=_("cancel"),
     )
+
+
+@register(GrantDeposit)
+class GrantDepositStateMachine(GrantTransactionStateMachine):
+    pass
+
+
+@register(GrantWithdrawal)
+class GrantWithdrawalStateMachine(GrantTransactionStateMachine):
+    pass
 
 
 @register(LedgerItem)

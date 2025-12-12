@@ -4,7 +4,8 @@ from bluebottle.activities.messages.activity_manager import TermsOfServiceNotifi
 from bluebottle.grant_management.messages.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationRejectedMessage, GrantApplicationSubmittedMessage, GrantApplicationCancelledMessage
 from bluebottle.grant_management.messages.grant_provider import GrantPaymentRequestMessage
-from bluebottle.grant_management.messages.reviewer import GrantApplicationSubmittedReviewerMessage
+from bluebottle.grant_management.messages.reviewer import GrantApplicationSubmittedReviewerMessage, \
+    PayoutReadyForApprovalMessage
 from bluebottle.grant_management.tests.factories import GrantApplicationFactory, GrantPaymentFactory, \
     GrantPayoutFactory, GrantDonorFactory, GrantProviderFactory, GrantFundFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -131,3 +132,46 @@ class GrantPaymentNotificationTestCase(NotificationTestCase):
         self.assertSubject('A grant payment request is ready on Test')
         self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('Pay now')
+
+
+class GrantPayoutNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+        finance_manager = BlueBottleUserFactory.create()
+        provider = GrantProviderFactory.create(
+            name="Test Provider",
+            owner=finance_manager
+        )
+        fund = GrantFundFactory.create(
+            name="Test Fund",
+            grant_provider=provider
+        )
+
+        self.grant_application = GrantApplicationFactory.create(
+            title="Save the whales!",
+            status='granted'
+        )
+        self.obj = GrantPayoutFactory.create(
+            activity=self.grant_application,
+            status='new',
+        )
+        GrantDonorFactory.create(
+            payout=self.obj,
+            activity=self.grant_application,
+            fund=fund,
+            amount=Money(5000, 'EUR')
+        )
+
+    def test_payout_ready_for_approval_notification(self):
+        self.message_class = PayoutReadyForApprovalMessage
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('You have grant payout to approve on Test')
+        self.assertBodyContains('Save the whales!')
+        self.assertBodyContains('Test Fund')
+        self.assertActionLink(self.obj.get_admin_url())
+        self.assertActionTitle('Complete payout')

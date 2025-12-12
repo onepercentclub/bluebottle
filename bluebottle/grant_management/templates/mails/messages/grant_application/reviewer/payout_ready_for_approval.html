@@ -1,0 +1,21 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+            The grant application "{{ title }}" is ready to be paid out.<br>
+            Please take a moment to review this application and decide if it's right for your platform.<br>
+            <br>
+            {{ initiator_name }} will be waiting for the payout, so please respond promptly.<br>
+        {% endblocktrans %}
+    </p>
+    <div style="background:#D9D9D9; padding: 24px 12px; margin-top: 24px">
+        <p>
+            <b>{{ title }}</b>
+        </p>
+        {% trans "Grant fund" %}: {{ grant_fund }} <br/>
+        {% trans "Grant requester" %}: {{ requester }} <br/>
+        {% trans "Granted amount" %}: {{ amount }} <br/>
+    </div>
+{% endblock %}

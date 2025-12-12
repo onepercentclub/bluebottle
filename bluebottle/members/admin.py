@@ -242,6 +242,7 @@ class MemberPlatformSettingsAdmin(
     radio_fields = {
         'account_creation_rules': admin.HORIZONTAL,
         'request_access_method': admin.HORIZONTAL,
+        'display_member_names': admin.HORIZONTAL,
     }
 
     def get_fieldsets(self, request, obj=None):

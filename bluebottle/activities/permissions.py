@@ -8,6 +8,7 @@ from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermis
 class ActivityOwnerPermission(ResourceOwnerPermission):
     def has_object_action_permission(self, action, user, obj):
         is_owner = user in obj.owners
+        can_approve = user_can_review_activity(user, obj)
 
         if action == 'POST':
             if is_owner:
@@ -18,7 +19,7 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
             elif not obj.id:
                 return True
         else:
-            return is_owner
+            return is_owner or can_approve
 
 
 class RelatedActivityOwnerPermission(ResourceOwnerPermission):
@@ -41,9 +42,11 @@ class ActivityTypePermission(ResourcePermission):
 
 class ActivityStatusPermission(ResourcePermission):
     def has_object_action_permission(self, action, user, obj):
+        can_review = user_can_review_activity(user, obj)
         if (
             action in ('PATCH', 'PUT') and
-            obj.status in ('rejected', 'deleted', 'submitted')
+            obj.status in ('rejected', 'deleted', 'submitted') and
+            not can_review
         ):
             return False
         else:
@@ -146,3 +149,37 @@ class CanExportTeamParticipantsPermission(IsOwner):
 
     def has_action_permission(self, action, user, model_cls):
         return True
+
+
+def user_can_review_activity(user, activity):
+    if not user.has_perm('activities.api_review_activity'):
+        return False
+
+    has_subregions = user.subregion_manager.exists()
+    has_segments = user.segment_manager.exists()
+
+    if not has_subregions and not has_segments:
+        return True
+
+    if has_subregions:
+        office_location = getattr(activity, "office_location", None)
+        activity_subregion = getattr(office_location, "subregion", None) if office_location else None
+
+        if not activity_subregion:
+            return False
+
+        if user.subregion_manager.filter(id=activity_subregion.id).exists():
+            return True
+
+    if has_segments:
+        activity_segments = getattr(activity, "segments", None)
+
+        if not activity_segments:
+            return False
+
+        if activity_segments.filter(
+            id__in=user.segment_manager.values_list("id", flat=True)
+        ).exists():
+            return True
+
+    return False

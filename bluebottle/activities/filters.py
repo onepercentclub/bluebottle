@@ -246,6 +246,54 @@ class ManagingFacet(Facet):
             return Term(manager=user.id)
 
 
+class ReviewingFacet(Facet):
+    agg_type = "terms"
+
+    def get_aggregation(self):
+        return A("filter", filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return A("filter", filter=MatchNone())
+
+    def add_filter(self, filter_values):
+        if filter_values == ["1"]:
+            user = get_current_user()
+
+            if not user.is_authenticated:
+                return MatchNone()
+
+            if user.has_perm('activities.api_review_activity'):
+
+                should_filters = []
+
+                subregions = getattr(user, "subregion_manager", None)
+                if subregions:
+                    subregion_ids = list(subregions.values_list("id", flat=True))
+                    if subregion_ids:
+                        should_filters.append(
+                            Nested(
+                                path="office_subregion",
+                                query=Terms(**{"office_subregion__id": subregion_ids})
+                            )
+                        )
+
+                segment_manager = getattr(user, "segment_manager", None)
+                if segment_manager and segment_manager.exists():
+                    segment_ids = list(segment_manager.values_list("id", flat=True))
+                    if segment_ids:
+                        should_filters.append(
+                            Nested(
+                                path="segments",
+                                query=Terms(**{"segments__id": segment_ids})
+                            )
+                        )
+                if should_filters:
+                    return Bool(should=should_filters, minimum_should_match=1)
+                return MatchAll()
+
+            return MatchNone()
+
+
 class StatusFacet(Facet):
     agg_type = "terms"
 
@@ -258,6 +306,10 @@ class StatusFacet(Facet):
     def add_filter(self, filter_values):
         if filter_values == ["draft"]:
             return Terms(status=["draft", "needs_work", "submitted"])
+        if filter_values == ["submitted"]:
+            return Terms(status=["submitted"])
+        if filter_values == ["needs_work"]:
+            return Terms(status=["needs_work"])
         if filter_values == ["open"]:
             return Terms(status=["open", "running", "full", "on_hold", "granted"])
         if filter_values == ["succeeded"]:
@@ -357,6 +409,7 @@ class ActivitySearch(Search):
     possible_facets = {
         "status": StatusFacet(),
         "managing": ManagingFacet(),
+        "reviewing": ReviewingFacet(),
         "category": ModelFacet("categories", Category, "title"),
         "skill": ModelFacet("expertise", Skill),
         "country": ModelFacet("country", Country),

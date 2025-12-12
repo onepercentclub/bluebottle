@@ -1,15 +1,12 @@
 import icalendar
-
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc
 from django.utils.translation import gettext_lazy as _
-
 from rest_framework.exceptions import ValidationError
 
-from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.activities.models import Activity
-
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.views import PrivateFileView
 
 
@@ -33,9 +30,16 @@ class AnonymizeMembersMixin:
         context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
 
         if self.request.user and self.request.user.is_authenticated and (
-                self.request.user in self.owners or
-                self.request.user.is_staff or
-                self.request.user.is_superuser
+            self.request.user.is_staff or
+            self.request.user.is_superuser
+        ):
+            context['display_member_names'] = 'full_name'
+
+        if (
+            self.request.user
+            and self.request.user.is_authenticated
+            and self.request.user in self.owners
+            and context['display_member_names'] == 'first_name'
         ):
             context['display_member_names'] = 'full_name'
 

@@ -16,7 +16,8 @@ from bluebottle.grant_management.messages.activity_manager import GrantApplicati
     GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage, GrantApplicationCancelledMessage, \
     GrantApplicationSubmittedMessage
 from bluebottle.grant_management.messages.grant_provider import GrantPaymentRequestMessage
-from bluebottle.grant_management.messages.reviewer import GrantApplicationSubmittedReviewerMessage
+from bluebottle.grant_management.messages.reviewer import GrantApplicationSubmittedReviewerMessage, \
+    PayoutReadyForApprovalMessage
 from bluebottle.grant_management.models import (
     GrantDeposit, GrantWithdrawal,
     GrantDonor, GrantApplication,
@@ -194,6 +195,12 @@ class GrantApplicationTriggers(ActivityTriggers):
 @register(GrantPayout)
 class GrantPayoutTriggers(TriggerManager):
     triggers = [
+        TransitionTrigger(
+            GrantPayoutStateMachine.initiate,
+            effects=[
+                NotificationEffect(PayoutReadyForApprovalMessage)
+            ]
+        ),
         TransitionTrigger(
             GrantPayoutStateMachine.approve,
             effects=[

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-12 10:59+0100\n"
-"PO-Revision-Date: 2025-12-12 10:11\n"
+"POT-Creation-Date: 2025-12-12 14:14+0100\n"
+"PO-Revision-Date: 2025-12-12 13:21\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt_PT\n"
@@ -495,25 +495,25 @@ msgstr "Encontrar atividades"
 #, python-brace-format
 msgctxt "email"
 msgid "{first_name}, a new year, a new chance to make impact"
-msgstr ""
+msgstr "{first_name}, um novo ano, uma nova chance de fazer impacto"
 
 #: bluebottle/activities/messages/matching.py:204
 #, python-brace-format
 msgctxt "email"
 msgid "{first_name}, your impact starts here"
-msgstr ""
+msgstr "{first_name}, seu impacto começa aqui"
 
 #: bluebottle/activities/messages/matching.py:212
 #, python-brace-format
 msgctxt "email"
 msgid "{first_name}, there's still time to make your mark this year"
-msgstr ""
+msgstr "{first_name}, ainda há tempo para marcar sua presença este ano"
 
 #: bluebottle/activities/messages/matching.py:220
 #, python-brace-format
 msgctxt "email"
 msgid "{first_name}, use your {do_good_hours} hours to make a difference!"
-msgstr ""
+msgstr "{first_name}, use suas {do_good_hours} horas para fazer a diferença!"
 
 #: bluebottle/activities/messages/participant.py:10
 #, python-brace-format
@@ -554,13 +554,13 @@ msgctxt "email"
 msgid "View this activity"
 msgstr "Visualizar esta atividade"
 
-#: bluebottle/activities/messages/reviewer.py:45
+#: bluebottle/activities/messages/reviewer.py:49
 #, python-brace-format
 msgctxt "email"
 msgid "A new activity is ready to be reviewed on {site_name}"
 msgstr "Uma nova atividade está pronta para ser revisada em {site_name}"
 
-#: bluebottle/activities/messages/reviewer.py:51
+#: bluebottle/activities/messages/reviewer.py:55
 #, python-brace-format
 msgctxt "email"
 msgid "A new activity has been published on {site_name}"
@@ -624,7 +624,7 @@ msgstr "Permalink"
 #: bluebottle/activities/models.py:110 bluebottle/cms/models.py:51
 #: bluebottle/funding/models.py:350
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
-#: bluebottle/grant_management/models.py:460
+#: bluebottle/grant_management/models.py:468
 msgid "Description"
 msgstr "Descrição"
 
@@ -1544,28 +1544,36 @@ msgctxt "email"
 msgid "\n"
 "    Ready to make an impact from day one? On %(site_name)s you’ll find many activities waiting for you.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Pronto para causar um impacto desde o primeiro dia? No %(site_name)s você encontrará muitas atividades esperando por você.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q1.html:11
 msgctxt "email"
 msgid "\n"
 "    Take a look and you might discover your next passion project!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Dê uma olhada e você pode descobrir seu próximo projeto de paixão!\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q1.html:21
 msgctxt "email"
 msgid "\n"
 "    Even a small step can lead to big impact. Let’s make it happen!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Mesmo um pequeno passo pode levar a um grande impacto. Vamos fazer acontecer!\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q2.html:6
 msgctxt "email"
 msgid "\n"
 "    We know that getting started can sometimes be the hardest part. That’s why we’ve made it simple to find activities that match your interests and time.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Sabemos que começar pode ser a parte mais difícil. É por isso que tornamos simples encontrar atividades que correspondam aos seus interesses e tempo.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q2.html:11
 #, python-format
@@ -1573,56 +1581,72 @@ msgctxt "email"
 msgid "\n"
 "    Ready to explore %(site_name)s? Just click below to find activities that fit your schedule.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Pronto para explorar %(site_name)s? Basta clicar abaixo para encontrar atividades que se encaixam na sua agenda.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q2.html:20
 msgctxt "email"
 msgid "\n"
 "    Remember, even small actions can lead to big impact. We’re here to support you every step of the way.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Lembre-se, mesmo pequenas ações podem levar a grandes impactos. Estamos aqui para apoiá-lo em cada passo do caminho.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q3.html:6
 msgctxt "email"
 msgid "\n"
 "    We’re halfway through the year and there’s still lots of opportunity to make impact. Whether you’ve got a few minutes or a few hours, your efforts can make a real difference.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Estamos na metade do ano e ainda há muitas oportunidades para causar impacto. Se você tem alguns minutos ou algumas horas, seus esforços podem fazer uma real diferença.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q3.html:11
 msgctxt "email"
 msgid "\n"
 "    Take a moment to explore the activities waiting for you.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Reserve um momento para explorar as atividades que estão esperando por você.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q3.html:21
 msgctxt "email"
 msgid "\n"
 "    Every action counts. Let's see what we can accomplish together in the coming months.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Toda ação conta. Vamos ver o que podemos realizar juntos nos próximos meses.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q4.html:6
 msgctxt "email"
 msgid "\n"
 "    As we approach the final months of the year, there’s still time to make impact. Many causes would benefit from your time and skills.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    À medida que nos aproximamos dos últimos meses do ano, ainda há tempo para causar impacto. Muitas causas se beneficiariam do seu tempo e habilidades.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q4.html:11
 msgctxt "email"
 msgid "\n"
 "    Ready to end the year on a high note?\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Pronto para encerrar o ano em grande estilo?\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q4.html:21
 msgctxt "email"
 msgid "\n"
 "    Your involvement matters. Let's work together to close out the year with meaningful impact.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    Sua participação é importante. Vamos trabalhar juntos para terminar o ano com um impacto significativo.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/participant/inactive_participant_added.html:6
 #, python-format
@@ -3942,7 +3966,7 @@ msgstr "Nenhuma"
 msgid "Funding activities"
 msgstr "Atividades de financiamento"
 
-#: bluebottle/funding/admin.py:623 bluebottle/grant_management/models.py:418
+#: bluebottle/funding/admin.py:623 bluebottle/grant_management/models.py:426
 #: bluebottle/members/admin.py:909
 msgid "Grant applications"
 msgstr "Aplicações para subsídios"
@@ -4268,7 +4292,7 @@ msgstr "Se você inserir uma duração, deixe o campo de prazo vazio para que el
 
 #: bluebottle/funding/models.py:169 bluebottle/funding/models.py:479
 #: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:296
-#: bluebottle/grant_management/models.py:369
+#: bluebottle/grant_management/models.py:377
 msgid "started"
 msgstr "iniciado"
 
@@ -4344,7 +4368,7 @@ msgstr "Pagamento de financiamento"
 msgid "Funding payouts"
 msgstr "Pagamentos de financiamento"
 
-#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:354
+#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:362
 msgid "Payout"
 msgstr "Pagamento"
 
@@ -5281,7 +5305,6 @@ msgid "Go to campaign"
 msgstr "Ir para a campanha"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/grant_application_approved.html:5
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/application_approved.html:5
 #, python-format
 msgctxt "email"
 msgid "\n"
@@ -5366,7 +5389,6 @@ msgstr "\n"
 "        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_rejected.html:22
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_rejected.html:23
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_rejected.html:22
 msgctxt "email"
 msgid "Check your details"
@@ -5414,7 +5436,6 @@ msgstr "\n"
 "    "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:14
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:17
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:20
 msgctxt "email"
 msgid "Provide additional details"
@@ -5532,133 +5553,6 @@ msgstr "\n"
 "Por favor, reserve um momento para revisar esta campanha e decidir se é adequada para a sua plataforma.<br>\n"
 "<br>\n"
 "%(initiator_name)s estará aguardando sua revisão, então por favor responda prontamente.<br>\n"
-
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/application_cancelled.html:6
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_cancelled.html:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"            Unfortunately your grant application “%(title)s” has been cancelled.\n"
-"            <br><br>\n"
-"            If you have any questions, you can contact the platform manager by replying to this email.\n"
-"        "
-msgstr "\n"
-"            Infelizmente, sua solicitação de subsídio “%(title)s” foi cancelada.\n"
-"            <br><br>\n"
-"            Se você tiver alguma dúvida, pode entrar em contato com o gerente da plataforma respondendo a este e-mail.\n"
-"        "
-
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/application_needs_work.html:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Your grant application \"%(title)s\" has been reviewed and needs work. The platform manager\n"
-"will be in contact to help you make some changes to your application.\n"
-msgstr "\n"
-"Sua solicitação de subsídio \"%(title)s\" foi analisada e precisa de ajustes. O gestor da plataforma\n"
-"entrará em contato para ajudá-lo a fazer algumas alterações em sua solicitação.\n"
-
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/application_rejected.html:6
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_rejected.html:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"            Unfortunately your grant application \"%(title)s\" has been rejected.\n"
-"            <br />\n"
-"            If you have any questions, you can contact the platform manager at %(contact_email)s.\n"
-"        "
-msgstr "\n"
-"Sua solicitação de subsídio \"%(title)s\" foi rejeitada.\n"
-"            <br />\n"
-"            Se você tiver alguma dúvida, pode entrar em contato com o gerente da plataforma em %(contact_email)s.\n"
-"        "
-
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/application_submitted.html:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"Your grant application \"%(title)s\" has been submitted on %(site_name)s.<br>\n"
-"<br>\n"
-"<b>What’s next?</b>\n"
-"<ul>\n"
-"    <li>\n"
-"        The platform manager will review your application.\n"
-"    </li>\n"
-"    <li>\n"
-"        Once approved, you’ll need to enter your bank details and verify your identity and/or that of the organisation to receive the grant.  \n"
-"    </li>\n"
-"</ul>\n"
-"You will not be able to edit the application when it is in review.\n"
-msgstr "\n"
-"Sua solicitação de subsídio \"%(title)s\" foi enviada em %(site_name)s.<br>\n"
-"<br>\n"
-"<b>Qual é o próximo passo?</b>\n"
-"<ul>\n"
-"    <li>\n"
-"        O gestor da plataforma irá revisar sua solicitação.\n"
-"    </li>\n"
-"    <li>\n"
-"        Uma vez aprovada, você precisará inserir seus dados bancários e verificar sua identidade e/ou a da organização para receber o subsídio.\n"
-"    </li>\n"
-"</ul>\n"
-"Você não poderá editar a solicitação enquanto estiver em revisão.\n"
-
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"            You are working on a grant application on %(site_name)s.\n"
-"            <br/><br/>\n"
-"            Earlier, you submitted information to verify your identity. In some cases, we need extra information from you.\n"
-"            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
-"        "
-msgstr "\n"
-"            Você está trabalhando em uma solicitação de subsídio no %(site_name)s.\n"
-"            <br/><br/>\n"
-"            Anteriormente, você enviou informações para verificar sua identidade. Em alguns casos, precisamos de informações extras de você.\n"
-"            Por favor, forneça isso o mais rápido possível para evitar problemas com sua campanha ou para resolvê-los rapidamente.\n"
-"        "
-
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_rejected.html:6
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_rejected.html:6
-#, python-format
-msgctxt "email"
-msgid "\n"
-"            You are working on a grant application on %(site_name)s.\n"
-"            <br/>\n"
-"            <br/>\n"
-"            Earlier, you submitted information to verify your identity, but unfortunately, this was not successful.\n"
-"            This could be due to various reasons. Please check the link below to make sure your details are correct.\n"
-"            If you still have problems, contact the platform manager at %(contact_email)s.\n"
-"            <br/>\n"
-"            <br/>\n"
-"            Please do this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
-"        "
-msgstr "\n"
-"            Você está trabalhando em uma solicitação de subsídio no %(site_name)s.\n"
-"            <br/>\n"
-"            <br/>\n"
-"            Anteriormente, você enviou informações para verificar sua identidade, mas infelizmente, isso não foi bem-sucedido.\n"
-"            Isso pode ser devido a vários motivos. Verifique o link abaixo para garantir que seus dados estejam corretos.\n"
-"            Se você ainda tiver problemas, entre em contato com o gerente da plataforma pelo e-mail %(contact_email)s.\n"
-"            <br/>\n"
-"            <br/>\n"
-"            Faça isso o mais rápido possível para evitar problemas com sua campanha ou para resolvê-los rapidamente.\n"
-"        "
-
-#: bluebottle/funding/templates/mails/messages/grant_application/reviewer/application_submitted.html:5
-#, python-format
-msgctxt "email"
-msgid "\n"
-"A grant application titled \"%(title)s\" has been submitted by %(initiator_name)s.<br>\n"
-"Take your time to review and assess this activity.<br>\n"
-"<br>\n"
-"%(initiator_name)s will be waiting for your review, so please respond promptly.<br>\n"
-msgstr "\n"
-"Uma solicitação de subsídio intitulada \"%(title)s\" foi feita por %(initiator_name)s.<br>\n"
-"Tire o seu tempo para revisar e avaliar esta atividade.<br>\n"
-"<br>\n"
-"%(initiator_name)s estará aguardando sua revisão, portanto, responda rapidamente.<br>\n"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:25
 msgid "Reward:"
@@ -6260,8 +6154,8 @@ msgstr "Insira 3 letras maiúsculas."
 
 #: bluebottle/grant_management/admin.py:99
 #: bluebottle/grant_management/models.py:279
-#: bluebottle/grant_management/models.py:380
-#: bluebottle/grant_management/models.py:417
+#: bluebottle/grant_management/models.py:388
+#: bluebottle/grant_management/models.py:425
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:15
 msgid "Grant application"
 msgstr "Solicitação de subsídio"
@@ -6383,14 +6277,14 @@ msgid "Enter the grant amount"
 msgstr "Insira o valor do subsídio"
 
 #: bluebottle/grant_management/forms.py:39
-#: bluebottle/grant_management/models.py:569
-#: bluebottle/grant_management/models.py:616
-#: bluebottle/grant_management/models.py:657
+#: bluebottle/grant_management/models.py:577
+#: bluebottle/grant_management/models.py:624
+#: bluebottle/grant_management/models.py:665
 msgid "Currency should match fund currency"
 msgstr "A moeda deve corresponder à moeda do fundo"
 
 #: bluebottle/grant_management/forms.py:42
-#: bluebottle/grant_management/models.py:619
+#: bluebottle/grant_management/models.py:627
 msgid "Insufficient funds"
 msgstr "Fundos insuficientes"
 
@@ -6464,6 +6358,17 @@ msgctxt "email"
 msgid "A new grant application is ready to be reviewed on {site_name}"
 msgstr "Uma nova solicitação de subsídio está pronta para revisão em {site_name}"
 
+#: bluebottle/grant_management/messages/reviewer.py:22
+#, python-brace-format
+msgctxt "email"
+msgid "You have grant payout to approve on {site_name}"
+msgstr "Você tem um pagamento de subsídio para aprovar em {site_name}"
+
+#: bluebottle/grant_management/messages/reviewer.py:26
+msgctxt "email"
+msgid "Complete payout"
+msgstr "Concluir pagamento"
+
 #: bluebottle/grant_management/models.py:38
 msgid "Every week"
 msgstr "Toda semana"
@@ -6500,60 +6405,61 @@ msgstr "Pagamento de subsídio"
 msgid "Grant payments"
 msgstr "Pagamentos de subsídio"
 
-#: bluebottle/grant_management/models.py:350
+#: bluebottle/grant_management/models.py:358
 msgid "Grant payout"
 msgstr "Pagamento de subsídio"
 
-#: bluebottle/grant_management/models.py:351
+#: bluebottle/grant_management/models.py:359
 msgid "Grant payouts"
 msgstr "Pagamentos de subsídio"
 
-#: bluebottle/grant_management/models.py:447
+#: bluebottle/grant_management/models.py:455
 msgid "Debit"
 msgstr "Débito"
 
-#: bluebottle/grant_management/models.py:451
+#: bluebottle/grant_management/models.py:459
 msgid "credit"
 msgstr "crédito"
 
-#: bluebottle/grant_management/models.py:476
+#: bluebottle/grant_management/models.py:484
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:23
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:17
 msgid "Grant fund"
 msgstr "Fundo de subsídio"
 
-#: bluebottle/grant_management/models.py:477
+#: bluebottle/grant_management/models.py:485
 msgid "Grant funds"
 msgstr "Fundos de subsídio"
 
-#: bluebottle/grant_management/models.py:508
+#: bluebottle/grant_management/models.py:516
 msgid "Total paid out"
 msgstr "Total pago"
 
-#: bluebottle/grant_management/models.py:514
+#: bluebottle/grant_management/models.py:522
 msgid "Paid out applications"
 msgstr "Solicitações pagas"
 
-#: bluebottle/grant_management/models.py:519
+#: bluebottle/grant_management/models.py:527
 msgid "Total budget"
 msgstr "Orçamento total"
 
-#: bluebottle/grant_management/models.py:525
+#: bluebottle/grant_management/models.py:533
 msgid "Pending payments"
 msgstr "Pagamentos pendentes"
 
-#: bluebottle/grant_management/models.py:533
+#: bluebottle/grant_management/models.py:541
 msgid "Pending applications"
 msgstr "Solicitações pendentes"
 
-#: bluebottle/grant_management/models.py:540
+#: bluebottle/grant_management/models.py:548
 msgid "Available budget"
 msgstr "Orçamento disponível"
 
-#: bluebottle/grant_management/models.py:597
+#: bluebottle/grant_management/models.py:605
 msgid "Grant"
 msgstr "Subsídio"
 
-#: bluebottle/grant_management/models.py:598
+#: bluebottle/grant_management/models.py:606
 msgid "Grants"
 msgstr "Subsídios"
 
@@ -6782,6 +6688,20 @@ msgstr "\n"
 "</ul>\n"
 "<br>\n"
 
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_cancelled.html:6
+#, python-format
+msgctxt "email"
+msgid "\n"
+"            Unfortunately your grant application “%(title)s” has been cancelled.\n"
+"            <br><br>\n"
+"            If you have any questions, you can contact the platform manager by replying to this email.\n"
+"        "
+msgstr "\n"
+"            Infelizmente, sua solicitação de subsídio “%(title)s” foi cancelada.\n"
+"            <br><br>\n"
+"            Se você tiver alguma dúvida, pode entrar em contato com o gerente da plataforma respondendo a este e-mail.\n"
+"        "
+
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_needs_work.html:5
 #, python-format
 msgctxt "email"
@@ -6791,6 +6711,20 @@ msgid "\n"
 msgstr "\n"
 "Sua solicitação de subsídio \"%(title)s\" foi revisada e precisa de ajustes. O gerente da plataforma\n"
 "entrará em contato para ajudá-lo a fazer algumas alterações na sua campanha.\n"
+
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_rejected.html:6
+#, python-format
+msgctxt "email"
+msgid "\n"
+"            Unfortunately your grant application \"%(title)s\" has been rejected.\n"
+"            <br />\n"
+"            If you have any questions, you can contact the platform manager at %(contact_email)s.\n"
+"        "
+msgstr "\n"
+"Sua solicitação de subsídio \"%(title)s\" foi rejeitada.\n"
+"            <br />\n"
+"            Se você tiver alguma dúvida, pode entrar em contato com o gerente da plataforma em %(contact_email)s.\n"
+"        "
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_submitted.html:5
 #, python-format
@@ -6844,6 +6778,32 @@ msgstr "\n"
 "            Forneça isso o mais rápido possível para evitar problemas com sua solicitação de subsídio ou para resolvê-los rapidamente.\n"
 "        "
 
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_rejected.html:6
+#, python-format
+msgctxt "email"
+msgid "\n"
+"            You are working on a grant application on %(site_name)s.\n"
+"            <br/>\n"
+"            <br/>\n"
+"            Earlier, you submitted information to verify your identity, but unfortunately, this was not successful.\n"
+"            This could be due to various reasons. Please check the link below to make sure your details are correct.\n"
+"            If you still have problems, contact the platform manager at %(contact_email)s.\n"
+"            <br/>\n"
+"            <br/>\n"
+"            Please do this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
+"        "
+msgstr "\n"
+"            Você está trabalhando em uma solicitação de subsídio no %(site_name)s.\n"
+"            <br/>\n"
+"            <br/>\n"
+"            Anteriormente, você enviou informações para verificar sua identidade, mas infelizmente, isso não foi bem-sucedido.\n"
+"            Isso pode ser devido a vários motivos. Verifique o link abaixo para garantir que seus dados estejam corretos.\n"
+"            Se você ainda tiver problemas, entre em contato com o gerente da plataforma pelo e-mail %(contact_email)s.\n"
+"            <br/>\n"
+"            <br/>\n"
+"            Faça isso o mais rápido possível para evitar problemas com sua campanha ou para resolvê-los rapidamente.\n"
+"        "
+
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_verified.html:6
 #, python-format
 msgctxt "email"
@@ -6883,6 +6843,30 @@ msgstr "\n"
 "Reserve um momento para revisar esta solicitação e decidir se é adequada para sua plataforma.<br>\n"
 "<br>\n"
 "%(initiator_name)s estará aguardando sua revisão, portanto, por favor, responda rapidamente.<br>\n"
+
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:6
+#, python-format
+msgctxt "email"
+msgid "\n"
+"            The grant application \"%(title)s\" is ready to be paid out.<br>\n"
+"            Please take a moment to review this application and decide if it's right for your platform.<br>\n"
+"            <br>\n"
+"            %(initiator_name)s will be waiting for the payout, so please respond promptly.<br>\n"
+"        "
+msgstr "\n"
+"            O pedido de subsídio \"%(title)s\" está pronto para ser pago.<br>\n"
+"            Por favor, reserve um momento para revisar este pedido e decidir se é adequado para sua plataforma.<br>\n"
+"            <br>\n"
+"            %(initiator_name)s estará aguardando o pagamento, por isso, responda rapidamente.<br>\n"
+"        "
+
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:18
+msgid "Grant requester"
+msgstr "Solicitante do subsídio"
+
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:19
+msgid "Granted amount"
+msgstr "Valor concedido"
 
 #: bluebottle/impact/admin.py:20
 msgid "Unit"
@@ -7930,7 +7914,7 @@ msgstr "ID do cliente"
 
 #: bluebottle/members/models.py:45 bluebottle/members/models.py:46
 msgid "Social login settings"
-msgstr ""
+msgstr "Configurações de login social"
 
 #: bluebottle/members/models.py:51
 msgid "Company SSO"
@@ -7938,7 +7922,7 @@ msgstr "SSO da empresa"
 
 #: bluebottle/members/models.py:52
 msgid "Email + password"
-msgstr ""
+msgstr "Email + senha"
 
 #: bluebottle/members/models.py:56
 msgid "Full name"
@@ -7958,7 +7942,7 @@ msgstr "Qualquer pessoa pode criar uma conta"
 
 #: bluebottle/members/models.py:67
 msgid "Only people with a whitelisted domain can create an account"
-msgstr ""
+msgstr "Apenas pessoas com um domínio autorizado podem criar uma conta"
 
 #: bluebottle/members/models.py:70
 msgid "People with a whitelisted domain can create an account; all others can request access"
@@ -8038,7 +8022,7 @@ msgstr "Exigir que os usuários verifiquem seu email ao se inscrever"
 
 #: bluebottle/members/models.py:132 bluebottle/members/models.py:137
 msgid "This rule only applies to the email + password method."
-msgstr ""
+msgstr "Esta regra se aplica apenas ao método de email + senha."
 
 #: bluebottle/members/models.py:136
 msgid "account creation rules"
@@ -8319,7 +8303,7 @@ msgstr "Conta de usuário desabilitada."
 
 #: bluebottle/members/serializers.py:66
 msgid "We are unable to log you in with the provided email address and password combination."
-msgstr ""
+msgstr "Não conseguimos fazer login com a combinação de endereço de email e senha fornecida."
 
 #: bluebottle/members/serializers.py:70
 #, python-brace-format
@@ -8478,37 +8462,41 @@ msgstr "\n"
 msgid "Yes, I'm sure"
 msgstr "Sim, tenho certeza"
 
-#: bluebottle/members/templates/mails/messages/account_activation.html:9
+#: bluebottle/members/templates/mails/messages/account_activation.html:10
+#: bluebottle/members/templates/mails/messages/sign_up_token.html:6
 #, python-format
-msgid "\n"
-"<h1>Welcome %(first_name)s</h1>\n"
-"<p class=\"lead\">You’re now officially part of the %(site_name)s community. Connect, share and work with others on initiatives that you care about.</p>\n"
-msgstr "\n"
-"<h1>Bem-vindo %(first_name)s</h1>\n"
-"<p class=\"lead\">Você agora faz parte oficial da comunidade %(site_name)s. Conecte, compartilhe e trabalhe com outras pessoas em iniciativas que você se importa.</p>\n"
+msgctxt "email"
+msgid "Hi %(first_name)s,"
+msgstr "Oi %(first_name)s,"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:13
+#, python-format
+msgid "\n"
+"<p >You’re now officially part of the %(site_name)s community. Connect, share and work with others on initiatives that you care about.</p>\n"
+msgstr "\n"
+"<p>Você agora faz parte oficial da comunidade %(site_name)s. Conecte, compartilhe e trabalhe com outros em iniciativas que você se importa.</p>\n"
+
+#: bluebottle/members/templates/mails/messages/account_activation.html:16
 #, python-format
 msgid "\n"
 "<p>If you have any questions please don’t hesitate to contact %(contact_email)s</p>\n"
 msgstr "\n"
 "<p>Se você tiver alguma dúvida, por favor, não hesite em contactar %(contact_email)s</p>\n"
 
-#: bluebottle/members/templates/mails/messages/account_activation.html:24
+#: bluebottle/members/templates/mails/messages/account_activation.html:27
 msgctxt "email"
 msgid "Set password"
 msgstr "Definir senha"
 
-#: bluebottle/members/templates/mails/messages/account_activation.html:28
+#: bluebottle/members/templates/mails/messages/account_activation.html:31
 msgctxt "email"
 msgid "Take me there"
 msgstr "Me leve lá"
 
-#: bluebottle/members/templates/mails/messages/sign_up_token.html:5
+#: bluebottle/members/templates/mails/messages/sign_up_token.html:9
 #, python-format
 msgid "\n"
-"<h1>Hi </h1>\n"
-"<p class=\"lead\">Welcome to the %(site_name)s community.<p> \n"
+"<p>Welcome to the %(site_name)s community.<p>\n"
 "<p>\n"
 "    Click the link below to create a password and activate your account.\n"
 "</p>\n"
@@ -8516,16 +8504,15 @@ msgid "\n"
 "    The link will expire in 24 hours.\n"
 "</p>\n"
 msgstr "\n"
-"<h1>Olá </h1>\n"
-"<p class=\"lead\">Bem-vindo à comunidade %(site_name)s.<p> \n"
+"<p>Bem-vindo à comunidade %(site_name)s.<p>\n"
 "<p>\n"
-"    Clique no link abaixo para criar uma senha e ativar a sua conta.\n"
+"    Clique no link abaixo para criar uma senha e ativar sua conta.\n"
 "</p>\n"
 "<p>\n"
 "    O link irá expirar em 24 horas.\n"
 "</p>\n"
 
-#: bluebottle/members/templates/mails/messages/sign_up_token.html:19
+#: bluebottle/members/templates/mails/messages/sign_up_token.html:22
 msgctxt "email"
 msgid "Create your password"
 msgstr "Crie a sua senha"
@@ -8736,7 +8723,7 @@ msgstr "para {}"
 msgid "Raise error"
 msgstr "Erro ao levantar"
 
-#: bluebottle/notifications/management/commands/preview_all_messages.py:727
+#: bluebottle/notifications/management/commands/preview_all_messages.py:784
 msgid "test"
 msgstr "test"
 
@@ -8930,18 +8917,18 @@ msgstr "Número de telefone"
 
 #: bluebottle/pages/admin.py:39
 msgid "Target Language"
-msgstr ""
+msgstr "Idioma de destino"
 
 #: bluebottle/pages/admin.py:40
 msgid "Select the language to translate this page to"
-msgstr ""
+msgstr "Selecione o idioma para traduzir esta página"
 
 #: bluebottle/pages/admin.py:42
 #: bluebottle/pages/templates/admin/pages/page/change_form.html:7
 #: bluebottle/pages/templates/admin/pages/page/translate.html:10
 #: bluebottle/pages/templates/admin/pages/page/translate.html:40
 msgid "Translate page"
-msgstr ""
+msgstr "Traduzir página"
 
 #: bluebottle/pages/admin.py:212
 msgid "You are trying to create a platform page. Please do so at <a href=\"{}\">Platform pages</a>."
@@ -8969,17 +8956,17 @@ msgstr "Importar páginas"
 #: bluebottle/pages/admin.py:366
 #, python-brace-format
 msgid "A page with slug \"{slug}\" already exists for language {language}."
-msgstr ""
+msgstr "Já existe uma página com slug \"{slug}\" para o idioma {language}."
 
 #: bluebottle/pages/admin.py:378
 #, python-brace-format
 msgid "Page \"{title}\" has been translated to {language}."
-msgstr ""
+msgstr "A página \"{title}\" foi traduzida para {language}."
 
 #: bluebottle/pages/admin.py:387
 #, python-brace-format
 msgid "Error translating page: {error}"
-msgstr ""
+msgstr "Erro ao traduzir a página: {error}"
 
 #: bluebottle/pages/models.py:28
 msgid "Link title"
@@ -9120,23 +9107,25 @@ msgstr "Nenhuma página foi importada ou atualizada."
 
 #: bluebottle/pages/templates/admin/pages/page/translate.html:15
 msgid "Select the target language to translate this page. All blocks will be copied and text fields will be translated using DeepL."
-msgstr ""
+msgstr "Selecione o idioma de destino para traduzir esta página. Todos os blocos serão copiados e os campos de texto serão traduzidos usando o DeepL."
 
 #: bluebottle/pages/templates/admin/pages/page/translate.html:16
 msgid "Source page:"
-msgstr ""
+msgstr "Página de origem:"
 
 #: bluebottle/pages/templates/admin/pages/page/translate_error_message.html:3
 #, python-format
 msgid "\n"
 "A page with slug \"%(slug)s\" already exists for language %(language)s.\n"
-msgstr ""
+msgstr "\n"
+"Já existe uma página com slug \"%(slug)s\" para o idioma %(language)s.\n"
 
 #: bluebottle/pages/templates/admin/pages/page/translate_success_message.html:3
 #, python-format
 msgid "\n"
 "Page \"%(title)s\" has been translated to %(language)s.\n"
-msgstr ""
+msgstr "\n"
+"A página \"%(title)s\" foi traduzida para %(language)s.\n"
 
 #: bluebottle/redirects/models.py:8
 msgid "redirect from"
@@ -9404,7 +9393,8 @@ msgstr "Confirgurações"
 msgid "Manage Reporting"
 msgstr "Gerenciar relatórios"
 
-#: bluebottle/settings/testing.py:425 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:425
+#: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9417,27 +9407,29 @@ msgstr "Gerenciar relatórios"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/impact-booster/settings.py:28
+#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
-#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
-#: tenants/maximising-potential/settings.py:27
-#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
-#: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
-#: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
+#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
+#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
+#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/nlcares/settings.py:27 tenants/nlmtd/settings.py:30
+#: tenants/nn/settings.py:27 tenants/nola-connects/settings.py:26
+#: tenants/nordea/settings.py:27 tenants/partos/settings.py:26
 #: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
+#: tenants/rhi-magnesita/settings.py:25
+#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
 #: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Português-Brasil"
 
-#: bluebottle/settings/testing.py:426 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
-#: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
+#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:426
+#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
+#: tenants/almelo/settings.py:25 tenants/apg/settings.py:26
+#: tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
 #: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
@@ -9447,12 +9439,14 @@ msgstr "Português-Brasil"
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
-#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
-#: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
+#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
+#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/nlcares/settings.py:26 tenants/nlmtd/settings.py:29
+#: tenants/nn/settings.py:26 tenants/ouderenfonds/settings.py:26
 #: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
 #: tenants/purpose-in-action/settings.py:26
+#: tenants/rabobank-cooperatief/settings.py:25
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -9467,28 +9461,31 @@ msgstr "Português-Brasil"
 msgid "Dutch"
 msgstr "Neerlandês"
 
-#: bluebottle/settings/testing.py:427 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
+#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:427
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Francês"
 
-#: bluebottle/settings/testing.py:428
+#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:428
+#: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Espanhol"
 
-#: bluebottle/settings/testing.py:429
+#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:429
+#: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Alemão"
 
-#: bluebottle/settings/testing.py:430
+#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:430
 msgid "Portuguese"
 msgstr "Português"
 
-#: bluebottle/settings/testing.py:431
+#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:431
+#: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Húngaro"
 
-#: bluebottle/settings/testing.py:432
+#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:432
 msgid "Bulgarian"
 msgstr "Búlgaro"
 
@@ -13318,7 +13315,7 @@ msgstr "Deve ter pelo menos um intervalo de tempo."
 
 #: bluebottle/translations/admin.py:49
 msgid "Every change will apply to all languages. Except for the fields that can be translated, which are marked with 🌐"
-msgstr ""
+msgstr "Toda mudança se aplicará a todos os idiomas. Exceto pelos campos que podem ser traduzidos, que estão marcados com 🌐"
 
 #: bluebottle/updates/dashboard.py:13
 msgid "Recent wall updates"
@@ -13606,4 +13603,8 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Segundo"
 msgstr[1] "segundos"
+
+#: tenants/goodup-nl/settings.py:27
+msgid "Nederlands"
+msgstr "Holandês"
 

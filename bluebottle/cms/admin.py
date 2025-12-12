@@ -159,52 +159,58 @@ class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmi
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
-    readonly_fields = ['terminated_info']
+    readonly_fields = ['terminated_info', 'organization']
 
-    readonly_fields = ['organization']
-
-    fieldsets = (
-        (
-            _('Contact'),
-            {
-                'fields': (
-                    'share_activities', 'organization',
-                    'contact_email', 'contact_phone', 'terminated'
-                )
-            }
-        ),
-        (
-            _('Powered by'),
-            {
-                'fields': (
-                    'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo', 'footer_banner'
-                )
-            }
-        ),
-        (
-            _('Metadata'),
-            {
-                'fields': (
-                    'translatable_info', 'metadata_title', 'metadata_description', 'metadata_keywords'
-                )
-            }
-        ),
-        (
-            _('Styling'),
-            {
-                'fields': (
-                    'logo', 'favicon',
-                    'action_color', 'action_text_color', 'alternative_link_color',
-                    'description_color', 'description_text_color',
-                    'footer_color', 'footer_text_color',
-                    'title_font', 'body_font'
-                )
-            }
-        ),
-    )
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (
+                _('Contact'),
+                {
+                    'fields': (
+                        'contact_email', 'contact_phone', 'terminated'
+                    )
+                }
+            ),
+            (
+                _('Powered by'),
+                {
+                    'fields': (
+                        'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo', 'footer_banner'
+                    )
+                }
+            ),
+            (
+                _('Metadata'),
+                {
+                    'fields': (
+                        'translatable_info', 'metadata_title', 'metadata_description', 'metadata_keywords'
+                    )
+                }
+            ),
+            (
+                _('Styling'),
+                {
+                    'fields': (
+                        'logo', 'favicon',
+                        'action_color', 'action_text_color', 'alternative_link_color',
+                        'description_color', 'description_text_color',
+                        'footer_color', 'footer_text_color',
+                        'title_font', 'body_font'
+                    )
+                }
+            ),
+            (
+                _('GoodUp Connect'),
+                {
+                    'fields': (
+                        'share_activities', 'organization',
+                    )
+                }
+            ),
+        )
 
         if obj.terminated:
-            fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info', )
+            fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info',)
 
         return fieldsets
 

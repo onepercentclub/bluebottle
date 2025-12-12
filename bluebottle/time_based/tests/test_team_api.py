@@ -17,6 +17,7 @@ class TeamDetailAPIViewTestCase(APITestCase):
     model = Team
 
     def setUp(self):
+        super().setUp()
         self.captain = BlueBottleUserFactory.create()
         self.manager = BlueBottleUserFactory.create()
         self.user = BlueBottleUserFactory.create()

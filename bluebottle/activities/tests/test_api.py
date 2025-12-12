@@ -1781,6 +1781,7 @@ class ActivityLocationAPITestCase(APITestCase):
     model = Activity
 
     def setUp(self):
+        super().setUp()
         self.user = BlueBottleUserFactory.create(
             location=LocationFactory.create(subregion=OfficeSubRegionFactory.create())
         )

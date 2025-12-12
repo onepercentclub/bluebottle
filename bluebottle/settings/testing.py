@@ -431,3 +431,5 @@ LANGUAGES = (
     ('hu', gettext_noop('Hungarian')),
     ('bg', gettext_noop('Bulgarian')),
 )
+
+TESTING = True

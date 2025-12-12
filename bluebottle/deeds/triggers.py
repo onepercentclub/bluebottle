@@ -10,11 +10,12 @@ from bluebottle.activities.messages.participant import (
     ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import (
-    OrganizerStateMachine, EffortContributionStateMachine
+    OrganizerStateMachine, EffortContributionStateMachine, ActivityStateMachine
 )
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
+from bluebottle.activity_pub.effects import AnnounceAdoptionEffect
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
@@ -157,6 +158,13 @@ class DeedTriggers(ActivityTriggers):
             ]
         ),
         TransitionTrigger(
+            ActivityStateMachine.approve,
+            effects=[
+                AnnounceAdoptionEffect
+            ]
+        ),
+
+        TransitionTrigger(
             DeedStateMachine.publish,
             effects=[
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
@@ -167,6 +175,7 @@ class DeedTriggers(ActivityTriggers):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
+                AnnounceAdoptionEffect
             ]
         ),
 

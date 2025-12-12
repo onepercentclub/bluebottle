@@ -1003,6 +1003,7 @@ class TimeBasedParticipantTransitionListAPITestCase:
 
 class TimeBasedActivityAPIExportTestCase:
     def setUp(self):
+        super().setUp()
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()

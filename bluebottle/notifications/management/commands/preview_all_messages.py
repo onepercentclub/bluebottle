@@ -492,7 +492,6 @@ class MockGrantPayment:
         self.payouts = Payout.objects.none()
         self.total = Money(1700, 'EUR')
 
-
     def get_admin_url(self):
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
 

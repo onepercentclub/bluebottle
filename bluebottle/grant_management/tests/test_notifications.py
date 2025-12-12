@@ -150,7 +150,7 @@ class GrantPayoutNotificationTestCase(NotificationTestCase):
             name="Test Fund",
             grant_provider=provider
         )
-        
+
         self.grant_application = GrantApplicationFactory.create(
             title="Save the whales!",
             status='granted'

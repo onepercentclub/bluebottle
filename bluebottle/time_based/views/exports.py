@@ -1,4 +1,5 @@
 import re
+
 from django.utils.timezone import now
 
 from bluebottle.segments.models import SegmentType

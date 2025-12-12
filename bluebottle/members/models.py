@@ -50,7 +50,8 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
 
     DISPLAY_MEMBER_OPTIONS = (
         ('full_name', _('Full name')),
-        ('first_name', _('First name')),
+        ('first_name', _('First name (members)')),
+        ('first_name_strict', _('First name (also activity managers)')),
     )
 
     REQUIRED_QUESTIONS_OPTIONS = (
@@ -301,7 +302,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     display_member_names = models.CharField(
         _('Display member names'),
         choices=DISPLAY_MEMBER_OPTIONS,
-        max_length=12,
+        max_length=50,
         default='full_name',
         help_text=_(
             'How names of members will be displayed for visitors and other members.'

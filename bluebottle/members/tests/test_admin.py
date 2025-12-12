@@ -150,7 +150,10 @@ class MemberAdminTest(BluebottleAdminTestCase):
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
         self.assertTrue(
-            'Welcome {}'.format(user.first_name) in welcome_email.body
+            'Hi {}'.format(user.first_name) in welcome_email.body
+        )
+        self.assertTrue(
+            "You’re now officially part of the Test" in welcome_email.body
         )
 
     def test_resend_welcome_anonymous(self):

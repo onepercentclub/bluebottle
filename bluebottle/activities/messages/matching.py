@@ -144,6 +144,12 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         context['opt_out_link'] = tenant_url('/member/profile')
         return context
 
+    def get_generic_context(self):
+        context = super().get_generic_context()
+        context['first_name'] = 'Test'
+
+        return context
+
     @property
     def generic_subject(self):
         from bluebottle.members.models import MemberPlatformSettings

@@ -171,11 +171,11 @@ class ActivityPubTestCase:
             image=ImageFactory.create(),
             **kwargs
         )
-        adapter.create_event(self.model)
 
     def submit(self):
         self.model.states.submit()
         self.model.states.approve(save=True)
+        adapter.create_event(self.model)
 
     def test_publish(self):
         self.test_accept()
@@ -194,6 +194,10 @@ class ActivityPubTestCase:
 
         self.test_accept()
         self.create()
+
+        publish = self.model.event.publish_set.first()
+        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-12 14:14+0100\n"
+"POT-Creation-Date: 2025-12-12 16:10+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1762,19 +1762,19 @@ msgid ""
 "promptly.<br>\n"
 msgstr ""
 
-#: bluebottle/activities/utils.py:516 bluebottle/activities/utils.py:517
+#: bluebottle/activities/utils.py:517 bluebottle/activities/utils.py:518
 msgid "Description is required"
 msgstr ""
 
-#: bluebottle/activities/views.py:291 bluebottle/activities/views.py:297
+#: bluebottle/activities/views.py:293 bluebottle/activities/views.py:304
 msgid "Not a valid email address"
 msgstr ""
 
-#: bluebottle/activities/views.py:299
+#: bluebottle/activities/views.py:306
 msgid "User with email address not found"
 msgstr ""
 
-#: bluebottle/activities/views.py:317
+#: bluebottle/activities/views.py:324
 msgid "Already participating"
 msgstr ""
 
@@ -9358,10 +9358,14 @@ msgid "Reset token?!"
 msgstr ""
 
 #: bluebottle/scim/models.py:12
+msgid "Enable SCIM"
+msgstr ""
+
+#: bluebottle/scim/models.py:13
 msgid "Bearer Token"
 msgstr ""
 
-#: bluebottle/scim/models.py:28 bluebottle/scim/models.py:29
+#: bluebottle/scim/models.py:29 bluebottle/scim/models.py:30
 msgid "scim platform settings"
 msgstr ""
 

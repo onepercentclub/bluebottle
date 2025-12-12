@@ -38,6 +38,7 @@ class SettingsView(views.APIView):
 
         if member_settings['closed'] and not is_jwt_authenticated:
             obj = {
+                'siteName': obj['siteName'],
                 'tenant': connection.tenant.client_name,
                 'languages': languages,
                 'platform': {

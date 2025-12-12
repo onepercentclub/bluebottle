@@ -69,12 +69,6 @@ class AnalyticsPlatformSettings(BasePlatformSettings):
         _("Plausibe embed link"), null=True, blank=True, max_length=256
     )
 
-    terminated = models.BooleanField(
-        _("Terminated"),
-        default=False,
-        help_text=_('Is the platform terminated?')
-    )
-
     class Meta(object):
         verbose_name_plural = _('reporting settings')
         verbose_name = _('reporting settings')

@@ -7,6 +7,7 @@ from django.forms import Textarea
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from nested_inline.admin import NestedStackedInline
@@ -18,6 +19,7 @@ from bluebottle.cms.models import (
     Stat, Quote, Person, Step, Logo, ResultPage, HomePage, ContentLink,
     Greeting
 )
+from bluebottle.members.models import Member
 from bluebottle.statistics.statistics import Statistics
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
@@ -157,6 +159,7 @@ class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmi
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
+    readonly_fields = ['terminated_info']
 
     readonly_fields = ['organization']
 
@@ -166,7 +169,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
             {
                 'fields': (
                     'share_activities', 'organization',
-                    'contact_email', 'contact_phone'
+                    'contact_email', 'contact_phone', 'terminated'
                 )
             }
         ),
@@ -199,3 +202,17 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
             }
         ),
     )
+
+        if obj.terminated:
+            fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info', )
+
+        return fieldsets
+
+    def terminated_info(self, obj):
+        active_members = Member.objects.filter(is_active=True)
+        return mark_safe(
+            f"<div class='info_field'>"
+            f"    The platform is terminated. No emails will be sent to users. "
+            f"    There are {active_members.count()} active members."
+            f"</div>"
+        )

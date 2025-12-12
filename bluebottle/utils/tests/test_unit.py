@@ -19,6 +19,7 @@ from django.utils.encoding import force_bytes
 from moneyed import Money
 from parler import appsettings
 
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import Member
@@ -197,6 +198,21 @@ class SendMailTestCase(BluebottleTestCase):
             logger.error.call_args[0][0],
             'Exception while rendering email template: None.html, in None'
         )
+
+    @mock.patch('bluebottle.utils.email_backend.logger')
+    @mock.patch('bluebottle.utils.email_backend.create_message')
+    def test_terminated(self, create_message, logger):
+        settings = SitePlatformSettings.load()
+        settings.terminated = True
+        settings.save()
+
+        send_mail(to=self.user, template_name='utils/test')
+        self.assertTrue(logger.error.called)
+        self.assertEqual(
+            logger.error.call_args[0][0],
+            'Trying to send email on terminated platform: testuser@example.com'
+        )
+        self.assertFalse(create_message.called)
 
     @mock.patch('bluebottle.common.tasks._send_celery_mail')
     @override_settings(LANGUAGE_CODE='nl',

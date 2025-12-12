@@ -35,6 +35,21 @@ class GenerateDepositLedgerItem(Effect):
         self.instance.save()
 
 
+class GenerateWithdrawalLedgerItem(Effect):
+    def post_save(self):
+        ledger_item = LedgerItem(
+            fund=self.instance.fund,
+            amount=self.instance.amount,
+            object=self.instance,
+            type=LedgerItemChoices.credit
+        )
+        ledger_item.states.initiate()
+        ledger_item.states.finalise(save=True)
+
+        self.instance.ledger_item = ledger_item
+        self.instance.save()
+
+
 class UpdateLedgerItemEffect(Effect):
     title = _("Update ledger item")
     template = "admin/update_ledger_item.html"

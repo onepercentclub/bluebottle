@@ -86,7 +86,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         ('initiatives__theme', admin.RelatedOnlyFieldListFilter),
         ('initiatives__location', admin.RelatedOnlyFieldListFilter),
     )
-    fields = ('name', 'website', 'description', 'verified', 'logo')
+    fields = ('name', 'website', 'description', 'verified', 'logo', )
     search_fields = ('name',)
     export_fields = [
         ('name', 'name'),

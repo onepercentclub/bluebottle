@@ -323,7 +323,7 @@ class FollowingAddForm(forms.ModelForm):
 
     class Meta:
         model = Following
-        fields = ['platform_url', 'default_owner']
+        fields = ['platform_url', ]
         widgets = {
             'default_owner': admin.widgets.ForeignKeyRawIdWidget(
                 Following._meta.get_field('default_owner').remote_field,
@@ -376,14 +376,14 @@ class FollowingAdmin(FollowAdmin):
             # When adding a new Following
             return (
                 (None, {
-                    'fields': ('platform_url', 'default_owner')
+                    'fields': ('platform_url', )
                 }),
             )
         else:
             # When viewing/editing an existing Following
             return (
                 (None, {
-                    'fields': ('object', 'accepted', 'default_owner')
+                    'fields': ('object', 'accepted', )
                 }),
             )
 

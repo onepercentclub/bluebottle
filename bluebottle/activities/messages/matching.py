@@ -144,6 +144,12 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         context['opt_out_link'] = tenant_url('/member/profile')
         return context
 
+    def get_generic_context(self):
+        context = super().get_generic_context()
+        context['first_name'] = 'Test'
+
+        return context
+
     @property
     def generic_subject(self):
         from bluebottle.members.models import MemberPlatformSettings
@@ -187,7 +193,7 @@ class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
     """
     Send a reminder in Q1 to platform user to spend their do-good hours.
     """
-    subject = pgettext('email', "It’s a new year, let's make some impact!")
+    subject = pgettext('email', "{first_name}, a new year, a new chance to make impact")
     template = 'messages/matching/reminder-q1'
 
 
@@ -195,7 +201,7 @@ class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
     """
     Send a reminder in Q2 to platform user to spend their do-good hours.
     """
-    subject = pgettext('email', "Haven’t joined an activity yet? Let’s get started!")
+    subject = pgettext('email', "{first_name}, your impact starts here")
     template = 'messages/matching/reminder-q2'
 
 
@@ -203,7 +209,7 @@ class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
     """
     Send a reminder in Q3 to platform user to spend their do-good hours.
     """
-    subject = pgettext('email', "Half way through the year and still plenty of activities to join")
+    subject = pgettext('email', "{first_name}, there's still time to make your mark this year")
     template = 'messages/matching/reminder-q3'
 
 
@@ -211,5 +217,5 @@ class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
     """
     Send a reminder in Q4 to platform user to spend their do-good hours.
     """
-    subject = pgettext('email', "Make use of your {do_good_hours} hours of impact!")
+    subject = pgettext('email', "{first_name}, use your {do_good_hours} hours to make a difference!")
     template = 'messages/matching/reminder-q4'

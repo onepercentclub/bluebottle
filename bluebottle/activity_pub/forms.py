@@ -20,6 +20,7 @@ class SharePublishForm(forms.Form):
         required=False,
         queryset=Actor.objects.none(),
         help_text=_('Partners that will receive this activity.'),
+        widget=forms.CheckboxSelectMultiple(),
     )
 
     def __init__(self, *args, obj=None, **kwargs):

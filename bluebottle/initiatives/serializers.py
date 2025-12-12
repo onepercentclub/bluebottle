@@ -109,12 +109,13 @@ class MemberSerializer(ModelSerializer):
         representation = super().to_representation(instance)
 
         if (
-            self.context.get('display_member_names') == 'first_name' and
+            self.context.get('display_member_names') in ['first_name', 'first_name_strict'] and
             instance not in self.context.get('owners', []) and
             not user.is_staff and
             not user.is_superuser
         ):
             representation['last_name'] = None
+            representation['initials'] = representation['first_name'][0]
             representation['full_name'] = representation['first_name']
 
         return representation

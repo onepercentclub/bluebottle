@@ -9,6 +9,7 @@ from bluebottle.scim.utils import SCIMPath
 
 
 class SCIMPlatformSettings(BasePlatformSettings):
+    enabled = models.BooleanField(_('Enable SCIM'), default=False)
     bearer_token = models.CharField(_('Bearer Token'), max_length=32)
 
     @property

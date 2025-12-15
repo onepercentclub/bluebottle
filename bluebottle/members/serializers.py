@@ -62,7 +62,9 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
                     'user': user
                 }
             else:
-                msg = _('Unable to log in with provided credentials.')
+                msg = _(
+                    'We are unable to log you in with the provided email address and password combination.'
+                )
                 raise serializers.ValidationError(msg)
         else:
             msg = _('Must include "{username_field}" and "password".')

@@ -346,6 +346,14 @@ class GrantPayout(TriggerMixin, models.Model):
             return Money(self.grants.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
         return self.grants.aggregate(total=Sum('amount'))['total']
 
+    @property
+    def grant(self):
+        return self.grants.first()
+
+    def get_admin_url(self):
+        from django.urls import reverse
+        return get_current_host() + reverse('admin:grant_management_grantpayout_change', args=[self.pk])
+
     class Meta(object):
         verbose_name = _('Grant payout')
         verbose_name_plural = _('Grant payouts')
@@ -635,7 +643,10 @@ class GrantDonor(Contributor):
         return f'{self.activity.title} - {self.amount}'
 
 
-class GrantDeposit(TriggerMixin, models.Model):
+class GrantTransaction(models.Model):
+    class Meta:
+        abstract = True
+
     status = models.CharField(max_length=40)
     amount = MoneyField()
 
@@ -654,6 +665,14 @@ class GrantDeposit(TriggerMixin, models.Model):
             raise ValidationError({'amount': _('Currency should match fund currency')})
 
         super().clean()
+
+
+class GrantDeposit(TriggerMixin, GrantTransaction):
+    pass
+
+
+class GrantWithdrawal(TriggerMixin, GrantTransaction):
+    pass
 
 
 from .periodic_tasks import *  # noqa

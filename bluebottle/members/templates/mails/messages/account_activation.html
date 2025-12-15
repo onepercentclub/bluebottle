@@ -6,9 +6,12 @@
 {% if body_html %}
     {{ body_html }}
 {% else %}
+<p>
+    {% blocktrans context 'email' %}Hi {{ first_name }},{% endblocktrans %}
+</p>
+
 {% blocktrans %}
-<h1>Welcome {{ first_name }}</h1>
-<p class="lead">You’re now officially part of the {{ site_name }} community. Connect, share and work with others on initiatives that you care about.</p>
+<p >You’re now officially part of the {{ site_name }} community. Connect, share and work with others on initiatives that you care about.</p>
 {% endblocktrans %}
 {% blocktrans %}
 <p>If you have any questions please don’t hesitate to contact {{ contact_email }}</p>

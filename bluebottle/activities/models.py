@@ -230,14 +230,15 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         for field in super().required:
             yield field
 
-        for question in self.questions.filter(required=True):
-            try:
-                answer = self.answers.get(question=question)
-                if not answer.is_valid:
-                    yield f'answers.{question.id}'
+        if self.pk:
+            for question in self.questions.filter(required=True):
+                try:
+                    answer = self.answers.get(question=question)
+                    if not answer.is_valid:
+                        yield f'answers.{question.id}'
 
-            except ActivityAnswer.DoesNotExist:
-                yield f'answers.{question.id}'
+                except ActivityAnswer.DoesNotExist:
+                    yield f'answers.{question.id}'
 
     @property
     def questions(self):

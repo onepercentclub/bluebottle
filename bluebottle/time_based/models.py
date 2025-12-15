@@ -1172,7 +1172,9 @@ class DateRegistration(Registration):
 
     @property
     def unreviewed_participants(self):
-        return self.participants.exclude(status='withdrawn')
+        if self.id:
+            return self.participants.exclude(status='withdrawn')
+        return Registration.objects.none()
 
     class Meta:
         verbose_name = _("Candidate for date activities")

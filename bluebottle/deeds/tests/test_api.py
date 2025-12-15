@@ -3,6 +3,7 @@ import json
 from datetime import timedelta, date
 from unittest import mock
 
+from bluebottle.scim.models import SCIMPlatformSettings
 from django.core import mail
 from django.urls import reverse
 from openpyxl import load_workbook
@@ -811,11 +812,58 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertIncluded('user')
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_create_by_email_user(self):
+    def test_create_by_email_new_user(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+
         data = self.data
-        data['data']['attributes'] = {'email': self.user.email}
-        self.perform_create(user=self.user, data=data)
-        self.assertStatus(status.HTTP_403_FORBIDDEN)
+        data['data']['attributes'] = {
+            'email': 'new@example.com',
+            'send_messages': False
+        }
+        self.perform_create(user=staff, data=data)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_by_email_new_user_closed(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        MemberPlatformSettings.objects.update_or_create(closed=True)
+
+        data = self.data
+        data['data']['attributes'] = {
+            'email': 'new@example.com',
+            'send_messages': False
+        }
+        self.perform_create(user=staff, data=data)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_by_email_new_user_closed_scim_enabled(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        MemberPlatformSettings.objects.update_or_create(closed=True)
+        SCIMPlatformSettings.objects.update_or_create(enabled=True)
+
+        data = self.data
+        data['data']['attributes'] = {
+            'email': 'new@example.com',
+            'send_messages': False
+        }
+        self.perform_create(user=staff, data=data)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_by_email_new_user_confirm_signup(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+
+        MemberPlatformSettings.objects.update_or_create(closed=True)
+
+        data = self.data
+        data['data']['attributes'] = {
+            'email': 'new@example.com',
+            'send_messages': False
+        }
+        self.perform_create(user=staff, data=data)
+
+        self.assertStatus(status.HTTP_201_CREATED)
 
 
 class DeedParticipantTransitionListViewAPITestCase(APITestCase):

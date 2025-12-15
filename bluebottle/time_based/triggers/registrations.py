@@ -123,7 +123,7 @@ class RegistrationTriggers(TriggerManager):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    'participants',
+                    'unreviewed_participants',
                     RegistrationParticipantStateMachine.accept,
                 ),
                 FollowActivityEffect,

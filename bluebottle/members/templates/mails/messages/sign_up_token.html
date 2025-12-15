@@ -2,9 +2,12 @@
 {% load i18n %}
 
 {% block content %}
+<p>
+    {% blocktrans context 'email' %}Hi {{ first_name }},{% endblocktrans %}
+</p>
+
 {% blocktrans with context='email' %}
-<h1>Hi </h1>
-<p class="lead">Welcome to the {{ site_name }} community.<p> 
+<p>Welcome to the {{ site_name }} community.<p>
 <p>
     Click the link below to create a password and activate your account.
 </p>

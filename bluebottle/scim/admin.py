@@ -17,7 +17,7 @@ class SCIMSegmentSettingInline(admin.TabularInline):
 
 @admin.register(SCIMPlatformSettings)
 class SCIMPlatformSettingsAdmin(BasePlatformSettingsAdmin):
-    readonly_fields = ('enabled', 'bearer_token', )
+    readonly_fields = ('bearer_token', )
     inlines = [SCIMSegmentSettingInline]
 
     def get_urls(self):

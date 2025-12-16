@@ -778,8 +778,15 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
 @admin.register(PublishedActivity)
 class PublishedActivityAdmin(EventPolymorphicAdmin):
     model = PublishedActivity
-    list_display = ("name_link", "type")
+    list_display = ("name_link", "type", "shared", "adopted")
     list_display_links = ("name_link",)
+
+    def shared(self, obj):
+        publish = Publish.objects.filter(object=obj).first()
+        return publish.recipients.filter(send=True).count()
+
+    def adopted(self, obj):
+        return Announce.objects.filter(object=obj).count()
 
     def get_queryset(self, request):
         return Event.objects.filter(iri__isnull=True)

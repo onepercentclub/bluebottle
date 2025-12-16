@@ -2,7 +2,23 @@
 {% load i18n %}
 
 {% block message %}
+    <p>
     {% blocktrans context 'email' %}
-        The first step is always the hardest, that's why we have made it as easy as possible to find an activity and make an impact!
+    We know that getting started can sometimes be the hardest part. That’s why we’ve made it simple to find activities that match your interests and time.
     {% endblocktrans %}
+    </p>
+    <p>
+    {% blocktrans context 'email' %}
+    Ready to explore {{ site_name }}? Just click below to find activities that fit your schedule.
+    {% endblocktrans %}
+    </p>
+{% endblock %}
+
+{% block end_message %}
+    {{block.super}}
+    <p>
+    {% blocktrans context 'email' %}
+    Remember, even small actions can lead to big impact. We’re here to support you every step of the way.
+    {% endblocktrans %}
+    </p>
 {% endblock %}

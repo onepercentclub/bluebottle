@@ -19,10 +19,7 @@ class SegmentStateMachineModelFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
-                try:
-                    field_name = field.safe_translation_getter('name', default=field.old_name or field.slug)
-                except (ValueError, AttributeError):
-                    field_name = getattr(field, 'old_name', None) or field.slug
+                field_name = field.safe_translation_getter('name', field.slug)
                 attrs[field.field_name] = forms.CharField(
                     required=False,
                     label=field_name
@@ -35,10 +32,7 @@ class SegmentAdminFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
-                try:
-                    field_name = field.safe_translation_getter('name', default=field.old_name or field.slug)
-                except (ValueError, AttributeError):
-                    field_name = getattr(field, 'old_name', None) or field.slug
+                field_name = field.safe_translation_getter('name', field.slug)
                 attrs[field.field_name] = forms.CharField(
                     required=False,
                     label=field_name

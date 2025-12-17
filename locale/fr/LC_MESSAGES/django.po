@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-17 13:55+0100\n"
-"PO-Revision-Date: 2025-12-17 12:59\n"
+"POT-Creation-Date: 2025-12-17 15:50+0100\n"
+"PO-Revision-Date: 2025-12-17 14:52\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -4445,55 +4445,54 @@ msgid "In the KYC flow do a check to see if bank account number and name match. 
 msgstr "Dans le flux KYC, vérifiez si le numéro de compte bancaire et le nom correspondent. Ceci sera fait par l'API Surepay, et seuls les IBAN néerlandais sont pris en charge. "
 
 #: bluebottle/funding/models.py:853
-msgid "Allow campaigns to exceed donation target"
-msgstr "Autoriser les campagnes à dépasser l'objectif de dons"
+msgid "Cap donations: "
+msgstr ""
 
 #: bluebottle/funding/models.py:856
-#, python-format
-msgid "When disabled, campaigns will be set to succeeded when 100% of the target is reached and donations exceeding the target will be prevented."
-msgstr "Lorsque désactivé, les campagnes seront considérées comme réussies lorsque 100 % de l'objectif est atteint et les dons dépassant l'objectif seront interdits."
+msgid "Stop accepting donations as soon as the target is reached."
+msgstr ""
 
-#: bluebottle/funding/models.py:862
+#: bluebottle/funding/models.py:861
 msgid "Name to use for match funding"
 msgstr "Nom à utiliser pour le financement de match"
 
-#: bluebottle/funding/models.py:866
+#: bluebottle/funding/models.py:865
 msgid "Change this if you want to use something else then the platform name for matching amounts."
 msgstr "Changez ceci si vous voulez utiliser quelque chose d'autre alors le nom de la plate-forme pour les montants correspondants."
 
-#: bluebottle/funding/models.py:870
+#: bluebottle/funding/models.py:869
 msgid "verification types"
 msgstr "types de vérification"
 
-#: bluebottle/funding/models.py:885 bluebottle/funding/models.py:886
+#: bluebottle/funding/models.py:884 bluebottle/funding/models.py:885
 msgid "funding settings"
 msgstr "paramètres de financement"
 
-#: bluebottle/funding/models.py:892
+#: bluebottle/funding/models.py:891
 msgid "Match"
 msgstr "Correspondance"
 
-#: bluebottle/funding/models.py:893
+#: bluebottle/funding/models.py:892
 msgid "Mistype"
 msgstr "Erreur de frappe"
 
-#: bluebottle/funding/models.py:894
+#: bluebottle/funding/models.py:893
 msgid "Close match"
 msgstr "Proche correspondance"
 
-#: bluebottle/funding/models.py:895
+#: bluebottle/funding/models.py:894
 msgid "No match"
 msgstr "Aucune correspondance"
 
-#: bluebottle/funding/models.py:906
+#: bluebottle/funding/models.py:905
 msgid "Hashed IBAN to check against"
 msgstr "IBAN haché à vérifier"
 
-#: bluebottle/funding/models.py:909
+#: bluebottle/funding/models.py:908
 msgid "Result of the IBAN check"
 msgstr "Résultat de la vérification de l'IBAN"
 
-#: bluebottle/funding/models.py:917
+#: bluebottle/funding/models.py:916
 msgid "Name of the account holder"
 msgstr "Nom du titulaire du compte"
 

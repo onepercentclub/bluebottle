@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-17 13:55+0100\n"
+"POT-Creation-Date: 2025-12-17 15:50+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4594,59 +4594,56 @@ msgid ""
 msgstr ""
 
 #: bluebottle/funding/models.py:853
-msgid "Allow campaigns to exceed donation target"
+msgid "Cap donations: "
 msgstr ""
 
 #: bluebottle/funding/models.py:856
-#, python-format
-msgid ""
-"When disabled, campaigns will be set to succeeded when 100% of the target is "
-"reached and donations exceeding the target will be prevented."
+msgid "Stop accepting donations as soon as the target is reached."
 msgstr ""
 
-#: bluebottle/funding/models.py:862
+#: bluebottle/funding/models.py:861
 msgid "Name to use for match funding"
 msgstr ""
 
-#: bluebottle/funding/models.py:866
+#: bluebottle/funding/models.py:865
 msgid ""
 "Change this if you want to use something else then the platform name for "
 "matching amounts."
 msgstr ""
 
-#: bluebottle/funding/models.py:870
+#: bluebottle/funding/models.py:869
 msgid "verification types"
 msgstr ""
 
-#: bluebottle/funding/models.py:885 bluebottle/funding/models.py:886
+#: bluebottle/funding/models.py:884 bluebottle/funding/models.py:885
 msgid "funding settings"
 msgstr ""
 
-#: bluebottle/funding/models.py:892
+#: bluebottle/funding/models.py:891
 msgid "Match"
 msgstr ""
 
-#: bluebottle/funding/models.py:893
+#: bluebottle/funding/models.py:892
 msgid "Mistype"
 msgstr ""
 
-#: bluebottle/funding/models.py:894
+#: bluebottle/funding/models.py:893
 msgid "Close match"
 msgstr ""
 
-#: bluebottle/funding/models.py:895
+#: bluebottle/funding/models.py:894
 msgid "No match"
 msgstr ""
 
-#: bluebottle/funding/models.py:906
+#: bluebottle/funding/models.py:905
 msgid "Hashed IBAN to check against"
 msgstr ""
 
-#: bluebottle/funding/models.py:909
+#: bluebottle/funding/models.py:908
 msgid "Result of the IBAN check"
 msgstr ""
 
-#: bluebottle/funding/models.py:917
+#: bluebottle/funding/models.py:916
 msgid "Name of the account holder"
 msgstr ""
 

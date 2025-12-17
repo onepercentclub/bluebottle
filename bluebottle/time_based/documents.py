@@ -15,6 +15,7 @@ from bluebottle.time_based.models import (
     RegisteredDateActivity,
     RegisteredDateParticipant
 )
+from bluebottle.utils.documents import TextField
 
 SCORE_MAP = {
     'open': 1,
@@ -44,7 +45,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
     slots = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'status': fields.KeywordField(),
-        'title': fields.TextField(),
+        'title': TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
         'locality': fields.KeywordField(attr='location.locality'),

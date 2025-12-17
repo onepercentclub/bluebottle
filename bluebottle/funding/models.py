@@ -850,7 +850,7 @@ class FundingPlatformSettings(BasePlatformSettings):
     )
 
     allow_exceed_target = models.BooleanField(
-        _('Allow campaigns to exceed donation target'),
+        _('Cap donations: '),
         default=True,
         help_text=_(
             'Stop accepting donations as soon as the target is reached.'

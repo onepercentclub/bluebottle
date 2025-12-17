@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='fundingplatformsettings',
             name='allow_exceed_target',
-            field=models.BooleanField(default=True, help_text='When disabled, campaigns will be set to succeeded when 100% of the target is reached and donations exceeding the target will be prevented.', verbose_name='Allow campaigns to exceed donation target'),
+            field=models.BooleanField(default=True, help_text=' Stop accepting donations as soon as the target is reached.'),
         ),
     ]

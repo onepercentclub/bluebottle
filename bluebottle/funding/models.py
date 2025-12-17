@@ -853,8 +853,7 @@ class FundingPlatformSettings(BasePlatformSettings):
         _('Allow campaigns to exceed donation target'),
         default=True,
         help_text=_(
-            'When disabled, campaigns will be set to succeeded when 100% of the target is reached '
-            'and donations exceeding the target will be prevented.'
+            'Stop accepting donations as soon as the target is reached.'
         )
     )
 

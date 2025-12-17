@@ -110,7 +110,9 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             row = labels if labels else field_names
             if queryset.model is Member or issubclass(queryset.model, Contributor):
                 for segment_type in SegmentType.objects.all():
-                    labels.append(segment_type.name)
+                    # Get translated name for segment type
+                    segment_type_name = segment_type.safe_translation_getter('name', segment_type.slug)
+                    labels.append(segment_type_name)
             writer.writerow([escape_csv_formulas(item) for item in row])
 
         if queryset.model is Member:
@@ -124,14 +126,22 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             # Write extra field data
             if queryset.model is Member:
                 for segment_type in SegmentType.objects.all():
-                    segments = " | ".join(obj.segments.filter(
-                        segment_type=segment_type).values_list('name', flat=True))
+                    # Get translated names for segments
+                    segment_list = []
+                    for segment in obj.segments.filter(segment_type=segment_type):
+                        segment_name = segment.safe_translation_getter('name', segment.slug)
+                        segment_list.append(segment_name)
+                    segments = " | ".join(segment_list)
                     row.append(segments)
             if issubclass(queryset.model, Contributor):
                 for segment_type in SegmentType.objects.all():
                     if obj.user:
-                        segments = " | ".join(obj.user.segments.filter(
-                            segment_type=segment_type).values_list('name', flat=True))
+                        # Get translated names for segments
+                        segment_list = []
+                        for segment in obj.user.segments.filter(segment_type=segment_type):
+                            segment_name = segment.safe_translation_getter('name', segment.slug)
+                            segment_list.append(segment_name)
+                        segments = " | ".join(segment_list)
                     else:
                         segments = ''
                     row.append(segments)

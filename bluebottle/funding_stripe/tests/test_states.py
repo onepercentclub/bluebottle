@@ -261,7 +261,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
             enable_payments=False
         )
 
-        self.assertEqual(self.account.status, "disabled")
+        self.assertEqual(self.account.status, "incomplete")
         self.assertEqual(
             mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )

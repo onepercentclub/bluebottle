@@ -215,6 +215,15 @@ class StripePayoutAccountTriggers(TriggerManager):
                     LivePublicPayoutAccountMarkedIncomplete,
                     conditions=[has_live_campaign, is_public],
                 ),
+                TransitionEffect(
+                    StripePayoutAccountStateMachine.disable,
+                    conditions=[payments_are_disabled, has_funding_campaign],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            StripePayoutAccountStateMachine.disable,
+            effects=[
                 PutActivitiesOnHoldEffect
             ],
         ),

@@ -614,7 +614,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         }
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "incomplete")
+        self.assertEqual(self.payout_account.status, "disabled")
         self.assertEqual(self.funding.status, "on_hold")
 
         self.connect_account.charges_enabled = True

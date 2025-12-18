@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-17 15:50+0100\n"
-"PO-Revision-Date: 2025-12-17 14:52\n"
+"POT-Creation-Date: 2025-12-18 13:27+0100\n"
+"PO-Revision-Date: 2025-12-18 12:39\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -4444,12 +4444,12 @@ msgid "In the KYC flow do a check to see if bank account number and name match. 
 msgstr "Im KYC-Prozess wird überprüft, ob Kontonummer und Name übereinstimmen. Dies erfolgt über die Surepay-API, und nur niederländische IBANs werden unterstützt. "
 
 #: bluebottle/funding/models.py:853
-msgid "Cap donations: "
-msgstr ""
+msgid "Cap donations"
+msgstr "Spenden begrenzen"
 
 #: bluebottle/funding/models.py:856
 msgid "Stop accepting donations as soon as the target is reached."
-msgstr ""
+msgstr "Stoppen Sie die Annahme von Spenden, sobald das Ziel erreicht ist."
 
 #: bluebottle/funding/models.py:861
 msgid "Name to use for match funding"
@@ -4500,49 +4500,49 @@ msgstr "Name des Kontoinhabers"
 msgid "Campaign deadline has passed."
 msgstr "Die Kampagnenfrist ist abgelaufen."
 
-#: bluebottle/funding/serializers.py:83
+#: bluebottle/funding/serializers.py:84
 msgid "Currency does not match any of the activities currencies"
 msgstr "Währung stimmt nicht mit einer der Aktivitäten Währungen überein"
 
-#: bluebottle/funding/serializers.py:221 bluebottle/funding/validators.py:48
+#: bluebottle/funding/serializers.py:222 bluebottle/funding/validators.py:48
 msgid "The deadline should not be more then 60 days in the future"
 msgstr "Die Frist sollte in Zukunft nicht mehr als 60 Tage betragen"
 
-#: bluebottle/funding/serializers.py:384
+#: bluebottle/funding/serializers.py:385
 msgid "Target cannot be changed after the funding has been published."
 msgstr "Das Ziel kann nach der Veröffentlichung der Finanzierung nicht mehr geändert werden."
 
-#: bluebottle/funding/serializers.py:388
+#: bluebottle/funding/serializers.py:389
 msgid "Deadline cannot be changed after the funding has been published."
 msgstr "Die Frist kann nach der Veröffentlichung der Finanzierung nicht mehr geändert werden."
 
-#: bluebottle/funding/serializers.py:457 bluebottle/funding/serializers.py:625
+#: bluebottle/funding/serializers.py:458 bluebottle/funding/serializers.py:626
 msgid "Pledge"
 msgstr "Versprechen"
 
-#: bluebottle/funding/serializers.py:493
+#: bluebottle/funding/serializers.py:494
 msgid "The selected reward is not related to this activity"
 msgstr "Die ausgewählte Belohnung ist nicht mit dieser Aktivität verbunden"
 
-#: bluebottle/funding/serializers.py:509
+#: bluebottle/funding/serializers.py:510
 msgid "The amount must be higher or equal to the amount of the reward."
 msgstr "Der Betrag muss höher oder gleich der Höhe der Belohnung sein."
 
-#: bluebottle/funding/serializers.py:518
+#: bluebottle/funding/serializers.py:519
 msgid "User can only be set, not changed."
 msgstr "Benutzer kann nur gesetzt und nicht geändert werden."
 
-#: bluebottle/funding/serializers.py:669
+#: bluebottle/funding/serializers.py:670
 #, python-brace-format
 msgid "Amount must be at least {amount} {currency}"
 msgstr "Betrag muss mindestens {amount} {currency} sein"
 
-#: bluebottle/funding/serializers.py:686
+#: bluebottle/funding/serializers.py:687
 #, python-brace-format
 msgid "Amount cannot exceed {amount} {currency}"
 msgstr "Betrag darf {amount} {currency} nicht überschreiten"
 
-#: bluebottle/funding/serializers.py:713
+#: bluebottle/funding/serializers.py:714
 msgid "Donations cannot exceed the target amount"
 msgstr "Spenden dürfen den Zielbetrag nicht überschreiten"
 

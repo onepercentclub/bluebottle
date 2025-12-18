@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-17 15:50+0100\n"
-"PO-Revision-Date: 2025-12-17 14:52\n"
+"POT-Creation-Date: 2025-12-18 13:27+0100\n"
+"PO-Revision-Date: 2025-12-18 12:39\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -4441,12 +4441,12 @@ msgid "In the KYC flow do a check to see if bank account number and name match. 
 msgstr "A KYC folyamat során ellenőrizni kell, hogy a banki számlaszám és a név egyezik-e. Ezt a Surepay API végzi, és csak holland IBAN-ok támogatottak. "
 
 #: bluebottle/funding/models.py:853
-msgid "Cap donations: "
-msgstr ""
+msgid "Cap donations"
+msgstr "Adományok korlátozása"
 
 #: bluebottle/funding/models.py:856
 msgid "Stop accepting donations as soon as the target is reached."
-msgstr ""
+msgstr "Állítsuk le az adományok fogadását, amint elérjük a célt."
 
 #: bluebottle/funding/models.py:861
 msgid "Name to use for match funding"
@@ -4497,51 +4497,51 @@ msgstr "A számlatulajdonos neve"
 msgid "Campaign deadline has passed."
 msgstr "A kampány határideje lejárt."
 
-#: bluebottle/funding/serializers.py:83
+#: bluebottle/funding/serializers.py:84
 msgid "Currency does not match any of the activities currencies"
 msgstr "A valuta nem egyezik a tevékenységek valutáival"
 
-#: bluebottle/funding/serializers.py:221 bluebottle/funding/validators.py:48
+#: bluebottle/funding/serializers.py:222 bluebottle/funding/validators.py:48
 msgid "The deadline should not be more then 60 days in the future"
 msgstr "A határidőnek nem szabad több mint 60 napra a jövőben lennie"
 
-#: bluebottle/funding/serializers.py:384
+#: bluebottle/funding/serializers.py:385
 msgid "Target cannot be changed after the funding has been published."
 msgstr "A cél nem módosítható, miután a finanszírozást közzétették."
 
-#: bluebottle/funding/serializers.py:388
+#: bluebottle/funding/serializers.py:389
 msgid "Deadline cannot be changed after the funding has been published."
 msgstr "A határidő nem módosítható, miután a finanszírozást közzétették."
 
-#: bluebottle/funding/serializers.py:457 bluebottle/funding/serializers.py:625
+#: bluebottle/funding/serializers.py:458 bluebottle/funding/serializers.py:626
 msgid "Pledge"
 msgstr "Ígéret"
 
-#: bluebottle/funding/serializers.py:493
+#: bluebottle/funding/serializers.py:494
 msgid "The selected reward is not related to this activity"
 msgstr "A kiválasztott jutalom nem kapcsolódik ehhez a tevékenységhez"
 
-#: bluebottle/funding/serializers.py:509
+#: bluebottle/funding/serializers.py:510
 msgid "The amount must be higher or equal to the amount of the reward."
 msgstr "Az összegnek magasabbnak vagy egyenlőnek kell lennie a jutalom összegével."
 
-#: bluebottle/funding/serializers.py:518
+#: bluebottle/funding/serializers.py:519
 msgid "User can only be set, not changed."
 msgstr "A felhasználót csak meg lehet határozni, nem megváltoztatni."
 
-#: bluebottle/funding/serializers.py:669
+#: bluebottle/funding/serializers.py:670
 #, python-brace-format
 msgid "Amount must be at least {amount} {currency}"
 msgstr "Az összegnek legalább {amount} {currency} kell lennie"
 
-#: bluebottle/funding/serializers.py:686
+#: bluebottle/funding/serializers.py:687
 #, python-brace-format
 msgid "Amount cannot exceed {amount} {currency}"
 msgstr "Az összeg nem haladhatja meg a {amount} {currency}"
 
-#: bluebottle/funding/serializers.py:713
+#: bluebottle/funding/serializers.py:714
 msgid "Donations cannot exceed the target amount"
-msgstr "A támogatások nem haladhatják meg a célt"
+msgstr "Az adományok nem haladhatják meg a célösszeget"
 
 #: bluebottle/funding/states.py:14
 msgid "partially funded"

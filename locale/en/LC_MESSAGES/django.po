@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-17 15:50+0100\n"
+"POT-Creation-Date: 2025-12-18 13:27+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4594,7 +4594,7 @@ msgid ""
 msgstr ""
 
 #: bluebottle/funding/models.py:853
-msgid "Cap donations: "
+msgid "Cap donations"
 msgstr ""
 
 #: bluebottle/funding/models.py:856
@@ -4652,49 +4652,49 @@ msgstr ""
 msgid "Campaign deadline has passed."
 msgstr ""
 
-#: bluebottle/funding/serializers.py:83
+#: bluebottle/funding/serializers.py:84
 msgid "Currency does not match any of the activities currencies"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:221 bluebottle/funding/validators.py:48
+#: bluebottle/funding/serializers.py:222 bluebottle/funding/validators.py:48
 msgid "The deadline should not be more then 60 days in the future"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:384
+#: bluebottle/funding/serializers.py:385
 msgid "Target cannot be changed after the funding has been published."
 msgstr ""
 
-#: bluebottle/funding/serializers.py:388
+#: bluebottle/funding/serializers.py:389
 msgid "Deadline cannot be changed after the funding has been published."
 msgstr ""
 
-#: bluebottle/funding/serializers.py:457 bluebottle/funding/serializers.py:625
+#: bluebottle/funding/serializers.py:458 bluebottle/funding/serializers.py:626
 msgid "Pledge"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:493
+#: bluebottle/funding/serializers.py:494
 msgid "The selected reward is not related to this activity"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:509
+#: bluebottle/funding/serializers.py:510
 msgid "The amount must be higher or equal to the amount of the reward."
 msgstr ""
 
-#: bluebottle/funding/serializers.py:518
+#: bluebottle/funding/serializers.py:519
 msgid "User can only be set, not changed."
 msgstr ""
 
-#: bluebottle/funding/serializers.py:669
+#: bluebottle/funding/serializers.py:670
 #, python-brace-format
 msgid "Amount must be at least {amount} {currency}"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:686
+#: bluebottle/funding/serializers.py:687
 #, python-brace-format
 msgid "Amount cannot exceed {amount} {currency}"
 msgstr ""
 
-#: bluebottle/funding/serializers.py:713
+#: bluebottle/funding/serializers.py:714
 msgid "Donations cannot exceed the target amount"
 msgstr ""
 

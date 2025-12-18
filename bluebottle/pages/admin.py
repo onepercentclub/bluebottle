@@ -401,7 +401,7 @@ class PageAdmin(PlaceholderFieldAdmin):
 class PlatformPageAdmin(TranslatableAdmin, PlaceholderFieldAdmin, NonSortableParentAdmin):
     model = Page
     readonly_fields = ('slug',)
-    list_display = ('title',)
+    list_display = ('title', 'slug')
     fields = ['slug', 'title', 'body']
 
     empty_value_display = '-empty-'

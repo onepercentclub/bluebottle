@@ -982,7 +982,7 @@ class DonationTestCase(BluebottleTestCase):
         self.funding.save()
 
         FundingPlatformSettings.objects.update_or_create(
-            allow_exceed_target=False
+            fixed_target=True
         )
 
         response = self.client.post(
@@ -995,7 +995,7 @@ class DonationTestCase(BluebottleTestCase):
         self.funding.target = Money(5, 'EUR')
         self.funding.save()
         FundingPlatformSettings.objects.update_or_create(
-            allow_exceed_target=True
+            fixed_target=False
         )
 
         response = self.client.post(
@@ -1894,7 +1894,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
                 "matching_name": "Dagobert Duck",
                 "public_accounts": False,
                 "stripe_publishable_key": "test-pub-key",
-                "allow_exceed_target": True,
+                "fixed_target": False,
             },
         )
 

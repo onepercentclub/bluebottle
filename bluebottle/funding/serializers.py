@@ -1,5 +1,6 @@
 from builtins import object
 from datetime import datetime, timedelta
+
 from dateutil.parser import parse
 from django.db import connection
 from django.utils.timezone import get_current_timezone, make_aware, now
@@ -28,7 +29,6 @@ from bluebottle.activities.utils import (
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import PrivateDocumentField, PrivateDocumentSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
-from bluebottle.utils.exchange_rates import convert
 from bluebottle.funding.models import (
     BankAccount,
     BudgetLine,
@@ -72,6 +72,7 @@ from bluebottle.funding_vitepay.serializers import (
 from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import Member
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
 from bluebottle.utils.serializers import MoneySerializer, ResourcePermissionField
 
@@ -698,7 +699,7 @@ class TargetReachedValidator:
     def __call__(self, value, serializer):
         settings = FundingPlatformSettings.load()
 
-        if not settings.allow_exceed_target:
+        if settings.fixed_target:
             try:
                 activity = Funding.objects.get(
                     pk=serializer.parent.initial_data['activity']['id']
@@ -878,7 +879,7 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
             'matching_name',
             'business_types',
             'enable_iban_check',
-            'allow_exceed_target',
+            'fixed_target',
         )
 
 

@@ -809,9 +809,16 @@ class ReceivedActivityAdmin(EventPolymorphicAdmin):
 class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
     change_form_template = 'admin/activity_pub/event/change_form.html'
     base_model = Event
-    fields = ('adopt_info',) + EventAdminMixin.fields
+    fields = EventAdminMixin.fields
 
     readonly_fields = ('adopt_info',) + EventAdminMixin.readonly_fields
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and obj.is_local:
+            fields = fields[1:]
+
+        return fields
 
     def adopt_info(self, obj):
         return admin_info_box(

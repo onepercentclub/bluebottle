@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-18 09:57+0100\n"
-"PO-Revision-Date: 2025-12-18 08:59\n"
+"POT-Creation-Date: 2025-12-18 10:34+0100\n"
+"PO-Revision-Date: 2025-12-18 09:35\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -7532,6 +7532,14 @@ msgstr ""
 
 #: bluebottle/initiatives/states.py:230
 msgid "The initiative will be archived."
+msgstr ""
+
+#: bluebottle/initiatives/states.py:239
+msgid "Unarchive"
+msgstr ""
+
+#: bluebottle/initiatives/states.py:240
+msgid "The initiative will be approved again."
 msgstr ""
 
 #: bluebottle/initiatives/templates/dashboard/recent_initiatives.html:14

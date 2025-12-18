@@ -240,5 +240,5 @@ class ReviewStateMachine(ModelStateMachine):
         description=_("The initiative will be approved again."),
         conditions=[is_complete, is_valid],
         automatic=False,
-        permission=[is_staff],
+        permission=is_staff,
     )

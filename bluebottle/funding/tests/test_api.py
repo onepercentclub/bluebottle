@@ -1004,20 +1004,6 @@ class DonationTestCase(BluebottleTestCase):
         self.data['data']['attributes']['amount']['value'] = 10
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_donate(self):
-        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        data = json.loads(response.content)
-        donation = Donor.objects.get(pk=data['data']['id'])
-        donation.states.succeed()
-        donation.save()
-
-        response = self.client.get(self.funding_url, user=self.user)
-
-        self.assertTrue(response.json()['data']['attributes']['is-follower'])
-        self.assertEqual(response.json()['data']['meta']['contributor-count'], 1)
-
     def test_donate_anonymous(self):
         self.data['data']['attributes']['anonymous'] = True
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)

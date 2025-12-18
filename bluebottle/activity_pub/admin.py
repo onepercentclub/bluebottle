@@ -1,4 +1,5 @@
 import requests
+from bluebottle.cms.models import SitePlatformSettings
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
@@ -360,6 +361,14 @@ class FollowingAdmin(FollowAdmin):
 
     readonly_fields = ('object', 'accepted', "shared_activities", "adopted_activities")
 
+    def shared_activities(self, obj):
+        return obj.shared_activities
+    shared_activities.short_description = _("Shared activities")
+
+    def adopted_activities(self, obj):
+        return obj.adopted_activities
+    adopted_activities.short_description = _("Adopted activities")
+
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
         from bluebottle.activity_pub.models import Accept
@@ -488,6 +497,25 @@ class FollowerAdmin(FollowAdmin):
     actions = ['accept_follow_requests']
     readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities")
     fields = readonly_fields
+
+    def shared_activities(self, obj):
+        return format_html(
+            u"<a href='{}?sharing=shared&follower={}'>{}</a>",
+            reverse('admin:activities_activity_changelist'),
+            obj.actor.pk,
+            obj.shared_activities
+        )
+    shared_activities.short_description = _("Shared activities")
+
+    def adopted_activities(self, obj):
+        return format_html(
+            u"<a href='{}?sharing=adopted&follower={}'>{}</a>",
+            reverse('admin:activities_activity_changelist'),
+            obj.actor.pk,
+            obj.adopted_activities
+        )
+        return obj.adopted_activities
+    adopted_activities.short_description = _("Adopted activities")
 
     def platform(self, obj):
         return obj.actor
@@ -898,3 +926,84 @@ class DoGoodEventAdmin(EventChildAdmin):
         'registration_deadline',
     )
     fields = readonly_fields
+
+
+class ActivityPubFilter(admin.SimpleListFilter):
+    title = _('Sharing')
+    parameter_name = 'sharing'
+
+    def lookups(self, request, model_admin):
+        settings = SitePlatformSettings.load()
+        lookups = []
+
+        if settings.is_publishing_activities:
+            lookups = lookups + [
+                ('shared', _('Shared to other plaforms')),
+                ('adopted', _('Adopted on other plaforms')),
+            ]
+
+        if settings.is_receiving_activities:
+            lookups = lookups + [
+                ('copied', _('Copied from another plaform')),
+            ]
+
+        return lookups
+
+    def queryset(self, request, queryset):
+        value = self.value()
+
+        if value == 'shared':
+            queryset = queryset.filter(
+                event__publish__isnull=False,
+                event__iri__isnull=True
+            )
+
+        if value == 'adopted':
+            queryset = queryset.filter(
+                event__publish__isnull=False,
+                event__iri__isnull=True,
+                event__announce__isnull=False
+            )
+
+        if value == 'copied':
+            queryset = queryset.filter(
+                origin__isnull=False,
+            )
+
+        return queryset
+
+
+class ActivityPubFollowingFilter(admin.SimpleListFilter):
+    title = _('Platform')
+    parameter_name = 'following'
+
+    def lookups(self, request, model_admin):
+        return [
+            (follow.object.pk, follow.object.name) for follow in Follow.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            queryset = queryset.filter(
+                origin__publish__actor_id=self.value()
+            )
+
+        return queryset
+
+
+class ActivityPubFollowerFilter(admin.SimpleListFilter):
+    title = _('Platform')
+    parameter_name = 'follower'
+
+    def lookups(self, request, model_admin):
+        return [
+            (follow.actor.pk, follow.actor.name) for follow in Follow.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            queryset = queryset.filter(
+                event__publish__recipients__actor_id=self.value()
+            )
+
+        return queryset

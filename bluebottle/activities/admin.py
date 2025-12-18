@@ -47,7 +47,9 @@ from bluebottle.activities.models import (
     ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
-from bluebottle.activity_pub.admin import adapter
+from bluebottle.activity_pub.admin import (
+    ActivityPubFilter, ActivityPubFollowingFilter, ActivityPubFollowerFilter, adapter
+)
 from bluebottle.activity_pub.forms import SharePublishForm
 from bluebottle.activity_pub.models import Follow as ActivityPubFollow, Recipient
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -1019,7 +1021,9 @@ class ActivityAdmin(
         RegisteredDateActivity
     )
     readonly_fields = ['link', 'review_status', 'activity_pub_url']
-    list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
+    list_filter = [
+        PolymorphicChildModelFilter, StateMachineFilter, 'highlight',
+    ]
 
     def lookup_allowed(self, key, value):
         if key in [
@@ -1033,6 +1037,8 @@ class ActivityAdmin(
 
     def get_list_filter(self, request):
         settings = InitiativePlatformSettings.objects.get()
+        site_settings = SitePlatformSettings.objects.get()
+
         filters = list(self.list_filter)
         from bluebottle.geo.models import Location
         if Location.objects.count():
@@ -1045,6 +1051,15 @@ class ActivityAdmin(
 
         if settings.team_activities:
             filters = filters + ['team_activity']
+
+        if site_settings.share_activities:
+            filters = filters + [ActivityPubFilter]
+            if 'sharing' in request.GET:
+                if request.GET['sharing'] in ('shared', 'adopted'):
+                    filters = filters + [ActivityPubFollowerFilter]
+                else:
+                    filters = filters + [ActivityPubFollowingFilter]
+
         return filters
 
     list_display = ['__str__', 'created', 'type', 'state_name',

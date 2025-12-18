@@ -232,3 +232,13 @@ class ReviewStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_staff,
     )
+
+    unarchive = Transition(
+        [archived],
+        approved,
+        name=_("Unarchive"),
+        description=_("The initiative will be approved again."),
+        conditions=[is_complete, is_valid],
+        automatic=False,
+        permission=[is_staff],
+    )

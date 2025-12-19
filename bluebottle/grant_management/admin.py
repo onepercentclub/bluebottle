@@ -1,8 +1,8 @@
 from __future__ import division
 
 import logging
-from django import forms
 
+from django import forms
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.template import loader
@@ -26,6 +26,7 @@ from bluebottle.geo.models import Location
 from bluebottle.grant_management.models import (
     GrantApplication,
     GrantDeposit,
+    GrantWithdrawal,
     GrantDonor,
     GrantFund,
     GrantPayment,
@@ -135,6 +136,22 @@ class GrantDepositInline(StateMachineAdminMixin, admin.StackedInline):
         return formset
 
 
+class GrantWithdrawalInline(StateMachineAdminMixin, admin.StackedInline):
+    model = GrantWithdrawal
+    readonly_fields = ["created", "state_name"]
+    fields = ['amount', 'reference', ] + readonly_fields
+    extra = 0
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj and obj.currency:
+            formset.form.base_fields["amount"].initial = (None, obj.currency)
+        return formset
+
+
 class GrantFundForm(forms.ModelForm):
     class Meta:
         model = GrantFund
@@ -151,7 +168,7 @@ class GrantFundForm(forms.ModelForm):
 
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
-    inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline]
+    inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline, GrantWithdrawalInline]
     model = GrantFund
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
@@ -232,6 +249,7 @@ class GrantPayoutAdmin(StateMachineAdmin):
             })
         except StripeError as e:
             return "Error retrieving details: {}".format(e)
+
     bank_details.short_description = _('Bank details')
 
     def account_details(self, obj):
@@ -249,6 +267,7 @@ class GrantPayoutAdmin(StateMachineAdmin):
             )
             return template.render({'info': business})
         return _("Bank account details not available")
+
     account_details.short_description = _('KYC details')
 
     def get_fieldsets(self, request, obj=None):
@@ -288,7 +307,6 @@ class GrantPayoutAdmin(StateMachineAdmin):
 
 
 class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
-
     model = GrantPayout
     readonly_fields = [
         "payout_link",
@@ -396,6 +414,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
         "grant_provider",
         "state_name",
         "checkout_id",
+        "intent_id",
         "get_payment_link",
     ]
     fields = readonly_fields
@@ -410,7 +429,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
                 )
             title = _("Pay now")
             return format_html(
-                f'<a class="button default" href="{obj.checkout_link }" target="_blank">{title}</a>'
+                f'<a class="button default" href="{obj.checkout_link}" target="_blank">{title}</a>'
             )
         return "-"
 
@@ -460,6 +479,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
             payment.check_status()
             self.message_user(request, _("Successfully checked payment status"))
         except Exception as e:
+            logger.error(e)
             self.message_user(request, str(e), level=messages.ERROR)
 
         return HttpResponseRedirect(

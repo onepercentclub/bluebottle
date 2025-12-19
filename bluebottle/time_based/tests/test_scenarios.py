@@ -3,13 +3,13 @@ from datetime import date, timedelta
 from django.core import mail
 from django.utils.timezone import now
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.tests.steps import api_initiative_transition
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import (
     BluebottleTestCase,
     JSONAPITestClient,
-    BluebottleAdminTestCase,
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -28,7 +28,7 @@ from bluebottle.time_based.tests.steps import (
 )
 
 
-class DateActivityScenarioTestCase(BluebottleAdminTestCase):
+class DateActivityScenarioTestCase(BluebottleTestCase):
 
     def setUp(self):
         super().setUp()
@@ -36,6 +36,9 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
         self.supporter = BlueBottleUserFactory.create()
         self.initiative = InitiativeFactory.create(owner=self.owner, status='draft')
         self.client = JSONAPITestClient()
+        settings = InitiativePlatformSettings.load()
+        settings.activity_types = ['dateactivity']
+        settings.save()
 
     def test_create_with_multiple_slots(self):
         activity_data = {
@@ -141,10 +144,31 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         api_user_joins_slot(self, slot, self.supporter)
 
         assert_participant_status(self, slot, self.supporter, status='accepted')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
         api_participant_transition(self, slot, self.supporter, transition='withdraw')
         assert_participant_status(self, slot, self.supporter, status='withdrawn')
+        assert_registration_status(self, self.activity, self.supporter, status='withdrawn')
         api_participant_transition(self, slot, self.supporter, transition='reapply')
         assert_participant_status(self, slot, self.supporter, status='accepted')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+
+    def test_user_withdraws_from_activity_reapply_different_slot(self):
+        slot = self.activity.slots.first()
+        api_user_joins_slot(self, slot, self.supporter)
+
+        assert_participant_status(self, slot, self.supporter, status='accepted')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+        api_participant_transition(self, slot, self.supporter, transition='withdraw')
+        assert_participant_status(self, slot, self.supporter, status='withdrawn')
+        assert_registration_status(self, self.activity, self.supporter, status='withdrawn')
+
+        slot2 = self.activity.slots.exclude(pk=slot.pk).first()
+        api_user_joins_slot(self, slot2, self.supporter)
+
+        assert_participant_status(self, slot2, self.supporter, status='accepted')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+
+        assert_participant_status(self, slot, self.supporter, status='withdrawn')
 
     def test_user_withdraws_from_review_activity(self):
         slot = self.activity.slots.first()

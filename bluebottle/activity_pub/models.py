@@ -1,8 +1,10 @@
+from urllib.parse import urlparse
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, models
-from django.urls import reverse
+from django.db import models, connection
+from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
@@ -12,12 +14,25 @@ from bluebottle.organizations.models import Organization as BluebottleOrganizati
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
 
 
+class ActivityPubManager(PolymorphicManager):
+    def from_iri(self, iri):
+        from bluebottle.activity_pub.utils import is_local
+
+        if is_local(iri):
+            resolved = resolve(urlparse(iri).path)
+            return self.get(pk=resolved.kwargs['pk'])
+        else:
+            return self.get(iri=iri)
+
+
 class ActivityPubModel(PolymorphicModel):
     def __init__(self, *args, **kwargs):
         ContentType.objects.clear_cache()
         super().__init__(*args, **kwargs)
 
     iri = models.URLField(null=True, unique=True)
+
+    objects = ActivityPubManager()
 
     @property
     def is_local(self):
@@ -57,7 +72,7 @@ class Actor(ActivityPubModel):
         return self.preferred_username
 
 
-class PersonManager(PolymorphicManager):
+class PersonManager(ActivityPubManager):
     def from_model(self, model):
         if not isinstance(model, Member):
             raise TypeError("Model should be a member instance")
@@ -90,7 +105,7 @@ class Person(Actor):
         return self.name
 
 
-class OrganizationManager(PolymorphicManager):
+class OrganizationManager(ActivityPubManager):
 
     def from_model(self, model):
         if not isinstance(model, BluebottleOrganization):
@@ -103,7 +118,7 @@ class OrganizationManager(PolymorphicManager):
             outbox = Outbox.objects.create()
 
             public_key = PublicKey.objects.create()
-            logo = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
+            logo_url = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
 
             return Organization.objects.create(
                 inbox=inbox,
@@ -111,17 +126,27 @@ class OrganizationManager(PolymorphicManager):
                 outbox=outbox,
                 public_key=public_key,
                 name=model.name,
-                image=logo,
+                logo=Image.objects.create(
+                    url=logo_url,
+                    name=model.logo.name
+                ) if logo_url else None,
                 summary=model.description,
                 preferred_username=model.slug
             )
+
+
+class Image(ActivityPubModel):
+    name = models.CharField(max_length=1000, null=True)
+    url = models.URLField(null=True)
 
 
 class Organization(Actor):
     name = models.CharField(max_length=300)
     summary = models.TextField(null=True, blank=True)
     content = models.TextField(null=True, blank=True)
-    image = models.URLField(null=True, blank=True)
+
+    image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
+    logo = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
 
     organization = models.OneToOneField(
         BluebottleOrganization,
@@ -133,8 +158,8 @@ class Organization(Actor):
     objects = OrganizationManager()
 
     class Meta:
-        verbose_name = _("Platform")
-        verbose_name_plural = _("Platforms")
+        verbose_name = _("partner")
+        verbose_name_plural = _("partners")
 
     def __str__(self):
         return self.name
@@ -197,13 +222,8 @@ class Place(ActivityPubModel):
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
 
 
-class Image(ActivityPubModel):
-    name = models.CharField(max_length=1000, null=True)
-    url = models.URLField(null=True)
-
-
 class Event(ActivityPubModel):
-    name = models.CharField()
+    name = models.CharField(verbose_name=_('Activity title'))
     summary = models.TextField()
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
     activity = models.OneToOneField(
@@ -374,19 +394,30 @@ class DoGoodEvent(Event):
 class Activity(ActivityPubModel):
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
 
+    default_recipients = []
+
     def save(self, *args, **kwargs):
         from bluebottle.activity_pub.utils import get_platform_actor
-
-        if not hasattr(self, 'actor'):
+        if not getattr(self, 'actor_id', None):
             self.actor = get_platform_actor()
+        return super().save(*args, **kwargs)
 
-        super().save(*args, **kwargs)
+
+class Recipient(models.Model):
+    activity = models.ForeignKey('activity_pub.Activity', on_delete=models.CASCADE, related_name='recipients')
+    actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
+    send = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = _("Recipient")
+        verbose_name_plural = _("Recipients")
+        unique_together = ('activity', 'actor')
 
 
 class Follow(Activity):
     object = models.ForeignKey(
         'activity_pub.Actor',
-        verbose_name=_("Platform"),
+        verbose_name=_("Partner"),
         on_delete=models.CASCADE
     )
 
@@ -395,6 +426,7 @@ class Follow(Activity):
         null=True,
         blank=True,
         verbose_name=_("Default activity owner"),
+        help_text=_("This person will be the activity manager of the activities that are adopted."),
         on_delete=models.SET_NULL,
     )
 
@@ -406,15 +438,31 @@ class Follow(Activity):
     )
 
     @property
-    def audience(self):
+    def default_recipients(self):
         return [self.object]
+
+    @property
+    def shared_activities(self):
+        if self.is_local:
+            return Event.objects.filter(
+                publish__actor=self.object,
+            ).count()
+        return Recipient.objects.filter(
+            actor=self.actor,
+            activity__publish__isnull=False,
+            send=True
+        ).count()
+
+    @property
+    def adopted_activities(self):
+        return Announce.objects.filter(actor=self.actor).count()
 
 
 class Follower(Follow):
     class Meta:
         proxy = True
-        verbose_name = _('Follower')
-        verbose_name_plural = _('Followers')
+        verbose_name = _('Partner')
+        verbose_name_plural = _('Partners')
 
     def __str__(self):
         return str(self.actor)
@@ -423,8 +471,8 @@ class Follower(Follow):
 class Following(Follow):
     class Meta:
         proxy = True
-        verbose_name = _('Following')
-        verbose_name_plural = _('Following')
+        verbose_name = _('connection')
+        verbose_name_plural = _('connections')
 
     def __str__(self):
         try:
@@ -437,25 +485,21 @@ class Accept(Activity):
     object = models.ForeignKey('activity_pub.Follow', on_delete=models.CASCADE)
 
     @property
-    def audience(self):
+    def default_recipients(self):
         return [self.object.actor]
 
 
 class Publish(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
-    @property
-    def audience(self):
-        # All followers of the actor
-        for follow in self.actor.follow_set.filter(accept__isnull=False):
-            yield follow.actor.inbox
-
 
 class Announce(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
     @property
-    def audience(self):
-        for publish in self.object.publish_set.all():
-            for follow in publish.actor.follow_set.all():
-                yield follow.object.inbox
+    def default_recipients(self):
+        publish = self.object.publish_set.first()
+        return [publish.actor]
+
+
+from .tasks import *  # noqa

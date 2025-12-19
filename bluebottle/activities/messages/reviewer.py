@@ -16,6 +16,10 @@ class ReviewerActivityNotification(TransitionMessage):
 
     action_title = pgettext("email", "View this activity")
 
+    @property
+    def activity(self):
+        return self.obj
+
     def get_recipients(self):
         """reviewers for this activity"""
         from bluebottle.members.models import Member
@@ -24,17 +28,20 @@ class ReviewerActivityNotification(TransitionMessage):
             Q(is_staff=True) | Q(is_superuser=True)
         ).filter(submitted_initiative_notifications=True)
 
-        if self.obj.office_location and self.obj.office_location.subregion:
+        if self.activity.office_location and self.activity.office_location.subregion:
             recipients = recipients.filter(
-                Q(subregion_manager=self.obj.office_location.subregion)
+                Q(subregion_manager=self.activity.office_location.subregion)
                 | Q(subregion_manager__isnull=True)
             )
-        if self.obj.segments.exists():
+        if self.activity.segments.exists():
             recipients = recipients.filter(
-                Q(segment_manager__in=self.obj.segments.all())
+                Q(segment_manager__in=self.activity.segments.all())
                 | Q(segment_manager__isnull=True)
             )
         return list(recipients)
+
+    class Meta:
+        abstract = True
 
 
 class ActivitySubmittedReviewerNotification(ReviewerActivityNotification):

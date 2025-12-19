@@ -51,43 +51,6 @@ JET_SIDE_MENU_ITEMS = [
         ],
     },
     {
-        "label": _("Activity Pub"),
-        "app_label": "activity_pub",
-        "permissions": ["activity_pub.change_event"],
-        "items": [
-            {
-                "name": "activity_pub.publishedactivity",
-                "permissions": ["activity_pub.change_event"],
-                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
-                "url": "/en/admin/activity_pub/publishedactivity/",
-                "label": _("Published activities"),
-            },
-            {
-                "name": "activity_pub.receivedactivity",
-                "permissions": ["activity_pub.change_event"],
-                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
-                "url": "/en/admin/activity_pub/receivedactivity/",
-                "label": _("Received activities"),
-            },
-            {
-                "name": "activity_pub.following",
-                "permissions": ["activity_pub.change_event"],
-                "url": "/en/admin/activity_pub/following/",
-                "label": _("Followed platforms"),
-            },
-            {
-                "name": "activity_pub.follower",
-                "permissions": ["activity_pub.change_event"],
-                "url": "/en/admin/activity_pub/follower/",
-                "label": _("Followers"),
-            },
-            {
-                "name": "activity_pub.activitypubmodel",
-                "permissions": ["cms.change_site_platform_settings"],
-            },
-        ],
-    },
-    {
         "label": _("Time Based"),
         "app_label": "time_based",
         "permissions": ["activities.change_activity"],
@@ -199,6 +162,43 @@ JET_SIDE_MENU_ITEMS = [
         ],
     },
     {
+        "label": _("GoodUp Connect"),
+        "app_label": "activity_pub",
+        "permissions": ["activity_pub.change_event"],
+        "enabled": "cms.SitePlatformSettings.is_sharing_activities",
+        "items": [
+            {
+                "name": "activity_pub.publishedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
+                "url": "/admin/activity_pub/publishedactivity/",
+                "label": _("Published activities"),
+            },
+            {
+                "name": "activity_pub.publishedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
+                "url": "/admin/activity_pub/follower/",
+                "label": _("Followers"),
+            },
+
+            {
+                "name": "activity_pub.receivedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
+                "url": "/admin/activity_pub/receivedactivity/",
+                "label": _("Received activities"),
+            },
+            {
+                "name": "activity_pub.receivedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
+                "url": "/admin/activity_pub/following/",
+                "label": _("Connections"),
+            },
+        ],
+    },
+    {
         "label": _("Users"),
         "app_label": "members",
         "permissions": ["members.change_member"],
@@ -239,6 +239,7 @@ JET_SIDE_MENU_ITEMS = [
         "label": _("Content"),
         "permissions": ["pages.change_page"],
         "items": [
+            {"name": "pages.platformpage", "permissions": ["pages.change_platformpage"]},
             {"name": "pages.page", "permissions": ["pages.change_page"]},
             {
                 "name": "news.newsitem",
@@ -326,10 +327,6 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "label": _("Manage Reporting"),
                 "name": "looker.lookerembed",
-            },
-            {
-                "name": "utils.translationplatformsettings",
-                "permissions": ["utils.change_translationplatformsettings"],
             },
             {
                 "name": "scim.scimplatformsettings",

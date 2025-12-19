@@ -1,29 +1,23 @@
-
-from celery import shared_task
-import requests
+import logging
 from io import BytesIO
 
-from django.forms import model_to_dict
-from requests_http_signature import HTTPSignatureAuth, algorithms
+import requests
+from celery import shared_task
 from django.db import connection
-
-from bluebottle.activity_links.models import LinkedDeed
-from bluebottle.activity_links.serializers import LinkedActivitySerializer, LinkedDeedSerializer
-from bluebottle.activity_pub.parsers import JSONLDParser
-from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Follow, Activity, Publish, Event
-from bluebottle.activity_pub.utils import get_platform_actor, is_local
-from bluebottle.activity_pub.authentication import key_resolver
-
-from bluebottle.clients.utils import LocalTenant
-from bluebottle.webfinger.client import client
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from requests_http_signature import HTTPSignatureAuth, algorithms
 
-import logging
-
+from bluebottle.activity_links.serializers import LinkedDeedSerializer
+from bluebottle.activity_pub.authentication import key_resolver
+from bluebottle.activity_pub.models import Follow, Activity, Publish, Event
 from bluebottle.activity_pub.models import Organization
+from bluebottle.activity_pub.models import Recipient
+from bluebottle.activity_pub.parsers import JSONLDParser
+from bluebottle.activity_pub.renderers import JSONLDRenderer
+from bluebottle.activity_pub.utils import get_platform_actor, is_local
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.webfinger.client import client
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +57,8 @@ class JSONLDAdapter():
         return self.do_request("get", url, auth=auth)
 
     def post(self, url, data, auth):
-        return self.do_request('post', url, data=self.renderer.render(data), auth=auth)
+        rendered_data = self.renderer.render(data)
+        return self.do_request('post', url, data=rendered_data, auth=auth)
 
     def fetch(self, url):
         auth = self.get_auth(get_platform_actor())
@@ -74,34 +69,29 @@ class JSONLDAdapter():
 
         discovered_url = client.get(url)
         data = self.fetch(discovered_url)
+
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         actor = serializer.save()
         return Follow.objects.create(object=actor)
 
-    @shared_task(
-        autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5}
-    )
-    def publish_to_inbox(self, activity, inbox, tenant):
-        from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
-        with LocalTenant(tenant, clear_tenant=True):
-            try:
-                data = ActivitySerializer().to_representation(activity)
-                auth = self.get_auth(activity.actor)
-
-                self.post(inbox.iri, data=data, auth=auth)
-            except Exception as e:
-                logger.error(e)
-                print(e)
-                raise
-
     def publish(self, activity):
         if not activity.is_local:
             raise TypeError('Only local activities can be published')
 
-        for actor in activity.audience:
-            if not actor.inbox.is_local:
-                self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
+        # Ensure the activity is saved so recipient relations can be accessed
+        if not activity.pk:
+            activity.save()
+
+        for recipient in activity.recipients.all():
+            if recipient.send:
+                pass
+            actor = recipient.actor
+            inbox = getattr(actor, "inbox", None)
+            if inbox is None or inbox.is_local:
+                logger.warning(f"Actor {actor} has no inbox, skipping publish")
+                continue
+            publish_to_recipient.delay(activity, recipient, connection.tenant)
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -116,8 +106,24 @@ class JSONLDAdapter():
 
         return serializer.save(owner=follow.default_owner, host_organization=organization)
 
+    def create_event(self, activity):
+        from bluebottle.activities.models import Activity as BluebottleActivity
+        from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+        if not isinstance(activity, BluebottleActivity):
+            raise TypeError('Activity must be a BluebottleActivity')
+        try:
+            event = activity.event
+        except Event.DoesNotExist:
+            federated_serializer = FederatedActivitySerializer(activity)
+            serializer = EventSerializer(data=federated_serializer.data)
+            serializer.is_valid(raise_exception=True)
+            event = serializer.save(activity=activity)
+        if not event.publish_set.exists():
+            Publish.objects.create(actor=get_platform_actor(), object=event)
+        return event
+
     def link(self, event, request=None):
-        from bluebottle.activity_links.serializers import LinkedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 
         data = EventSerializer(instance=event).data
@@ -133,13 +139,50 @@ class JSONLDAdapter():
 adapter = JSONLDAdapter()
 
 
+@shared_task(
+    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
+    name="bluebottle.activity_pub.adapters.publish_to_recipient"
+)
+def publish_to_recipient(activity, recipient, tenant):
+    from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
+
+    with LocalTenant(tenant, clear_tenant=True):
+        actor = recipient.actor
+        inbox = getattr(actor, "inbox", None)
+        if recipient.send:
+            pass
+        actor = recipient.actor
+        if inbox is None or inbox.is_local:
+            logger.warning(f"Actor {actor} has no inbox, skipping publish")
+            pass
+        try:
+            data = ActivitySerializer().to_representation(activity)
+            auth = adapter.get_auth(activity.actor)
+            adapter.post(inbox.iri, data=data, auth=auth)
+            recipient.send = True
+            recipient.save()
+        except Exception as e:
+            logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
+            raise
+
+
 @receiver([post_save])
 def publish_activity(sender, instance, **kwargs):
     try:
-        if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
+        if (
+            isinstance(instance, Activity)
+            and not isinstance(instance, Publish)
+            and kwargs['created']
+            and instance.is_local
+        ):
+            for recipient in instance.default_recipients:
+                Recipient.objects.get_or_create(
+                    actor=recipient,
+                    activity=instance,
+                )
             adapter.publish(instance)
     except Exception as e:
-        logger.error(f"Failed to publish activity: {str(e)}")
+        logger.error(f"Failed to publish activity: {str(e)}", exc_info=True)
 
 
 @receiver(post_save, sender=Event)
@@ -162,8 +205,15 @@ def auto_adopt_event(sender, instance, created, **kwargs):
 def create_organization(sender, instance, **kwargs):
     try:
         if isinstance(instance, Organization) and kwargs['created'] and not instance.organization_id:
-            from bluebottle.activity_pub.serializers.federated_activities import OrganizationSerializer
-            serializer = OrganizationSerializer(data=model_to_dict(instance))
+            from bluebottle.activity_pub.serializers.federated_activities import (
+                OrganizationSerializer as FederatedOrganizationSerializer
+            )
+
+            from bluebottle.activity_pub.serializers.json_ld import (
+                OrganizationSerializer
+            )
+            data = OrganizationSerializer(instance=instance).data
+            serializer = FederatedOrganizationSerializer(data=data)
             serializer.is_valid(raise_exception=True)
             organization = serializer.save()
             instance.organization = organization

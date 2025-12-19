@@ -1,7 +1,7 @@
+from datetime import timedelta
 from unittest import mock
 
 import stripe
-from datetime import timedelta
 from django.utils.timezone import now
 from djmoney.money import Money
 
@@ -78,6 +78,45 @@ class PlainFundingTriggerTests(BluebottleTestCase):
         self.funding.save()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+
+    def test_trigger_target_reached(self):
+        FundingPlatformSettings.objects.update_or_create(fixed_target=True)
+        self.funding.states.approve(save=True)
+        self.funding.target = Money(500, 'EUR')
+        self.funding.save()
+
+        donation = DonorFactory.create(activity=self.funding, amount=Money(400, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+
+        donation = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+
+    def test_trigger_overfunding(self):
+        self.funding.states.approve(save=True)
+        self.funding.target = Money(500, 'EUR')
+        self.funding.save()
+
+        donation = DonorFactory.create(activity=self.funding, amount=Money(400, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+
+        donation = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+
+        donation = DonorFactory.create(activity=self.funding, amount=Money(400, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
 
 
 class DonorTriggerTests(BluebottleTestCase):

@@ -8,6 +8,7 @@ from bluebottle.activities.messages.activity_manager import (
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.files.tests.factories import ImageFactory
+from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationPayoutAccountMarkedIncomplete,
     GrantApplicationPayoutAccountVerified,
@@ -37,13 +38,14 @@ from bluebottle.funding.messages.funding.activity_manager import (
 from bluebottle.grant_management.tests.factories import (
     GrantApplicationFactory,
     GrantDepositFactory,
+    GrantWithdrawalFactory,
     GrantFundFactory,
     GrantDonorFactory,
     GrantPaymentFactory, GrantProviderFactory, GrantPayoutFactory
 )
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
-    ExternalAccountFactory
+    ExternalAccountFactory, StripePaymentProviderFactory
 )
 
 from bluebottle.funding.messages.funding.platform_manager import LivePayoutAccountMarkedIncomplete
@@ -76,6 +78,8 @@ class GrantApplicationTriggersTestCase(TriggerTestCase):
             is_staff=True,
             submitted_initiative_notifications=True
         )
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
 
         image = ImageFactory()
 
@@ -175,6 +179,36 @@ class GrantDepositTriggerTestCase(TriggerTestCase):
         self.assertEqual(self.model.status, 'final')
         self.assertEqual(self.model.ledger_item.status, 'final')
         self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
+
+    def test_cancel(self):
+        self.model.states.cancel(save=True)
+
+        self.model.ledger_item.refresh_from_db()
+
+        self.assertEqual(self.model.status, 'cancelled')
+        self.assertEqual(self.model.ledger_item.status, 'removed')
+        self.assertEqual(self.fund.balance, Money(0, 'EUR'))
+        self.assertEqual(self.fund.total_pending, Money(0, 'EUR'))
+
+
+class GrantWithdrawalTriggerTestCase(TriggerTestCase):
+    factory = GrantWithdrawalFactory
+
+    def setUp(self):
+        self.fund = GrantFundFactory.create()
+        self.defaults = {
+            'fund': self.fund,
+            'amount': Money(1000, 'EUR')
+        }
+        self.create()
+
+    def test_initial(self):
+        self.model.ledger_item.refresh_from_db()
+
+        self.assertEqual(self.model.status, 'final')
+        self.assertEqual(self.model.ledger_item.status, 'final')
+
+        self.assertEqual(self.fund.balance, Money(-1000, 'EUR'))
 
     def test_cancel(self):
         self.model.states.cancel(save=True)

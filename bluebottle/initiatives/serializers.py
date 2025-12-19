@@ -1,5 +1,6 @@
 import hashlib
 from builtins import object
+
 from django.db.models import Q
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
@@ -20,7 +21,7 @@ from bluebottle.categories.models import Category
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import (
-    AvailableTransitionsField, TransitionSerializer, CurrentStatusField
+    AvailableTransitionsField, CurrentStatusField, TransitionSerializer
 )
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding_stripe.models import StripePayoutAccount
@@ -47,7 +48,6 @@ from bluebottle.utils.utils import get_current_language
 
 
 class ThemeSerializer(ModelSerializer):
-
     class Meta(object):
         model = Theme
         fields = ('id', 'slug', 'name', 'description')
@@ -127,7 +127,7 @@ class ProfileLinkField(HyperlinkedRelatedField):
         super().__init__(*args, source='*', read_only=True, **kwargs)
 
     def get_url(self, rel, link_view_name, self_kwargs, request):
-        return reverse(self.related_link_view_name, args=(self_kwargs['pk'], ))
+        return reverse(self.related_link_view_name, args=(self_kwargs['pk'],))
 
 
 class CurrentMemberSerializer(MemberSerializer):
@@ -163,8 +163,10 @@ class CurrentMemberSerializer(MemberSerializer):
             "can_pledge",
             "can_do_bank_transfer",
             "payout_account",
+            "primary_language",
+            "translate_user_content"
         )
-        meta_fields = ('permissions', )
+        meta_fields = ('permissions',)
 
     class JSONAPIMeta:
         resource_name = 'members'
@@ -237,7 +239,7 @@ class InitiativePreviewSerializer(ModelSerializer):
     def get_image(self, obj):
         if obj.image:
             hash = hashlib.md5(obj.image.file.encode('utf-8')).hexdigest()
-            url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+            url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'],))
 
             return f'{url}?_={hash}'
 
@@ -467,7 +469,7 @@ class RelatedInitiativeImageSerializer(ModelSerializer):
 
     class Meta(object):
         model = RelatedImage
-        fields = ('image', 'resource', )
+        fields = ('image', 'resource',)
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -491,7 +493,7 @@ class OrganizationSubmitSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Organization
-        fields = ('name', )
+        fields = ('name',)
 
 
 class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
@@ -506,7 +508,7 @@ class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = OrganizationContact
-        fields = ('name', 'email', 'phone', )
+        fields = ('name', 'email', 'phone',)
 
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
@@ -522,14 +524,12 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
 
 class ActivitySearchFilterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ActivitySearchFilter
         fields = ['type', 'name', 'highlight', 'placeholder']
 
 
 class InitiativeSearchFilterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = InitiativeSearchFilter
         fields = ['type', 'name', 'highlight', 'placeholder']

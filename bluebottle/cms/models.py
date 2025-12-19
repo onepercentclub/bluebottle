@@ -6,13 +6,13 @@ from django.core.exceptions import ValidationError
 from django.db import models, connection
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.extensions import PluginImageField
 from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
+from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
-
-from django_quill.fields import QuillField
 
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
@@ -681,28 +681,36 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         if ext not in valid_extensions:
             raise ValidationError(u'File not supported!')
 
-    share_activities = models.BooleanField(
-        _('Share activities'),
-        help_text=_('Share activities with/from other platforms.'),
-        default=False
+    SHARE_ACTIVITIES_CHOICES = (
+        ('supplier', _('Supplier')),
+        ('consumer', _('Consumer')),
+    )
+
+    share_activities = MultiSelectField(
+        _('Enable GoodUp Connect'),
+        choices=SHARE_ACTIVITIES_CHOICES,
+        help_text=_('Allow sharing and/or receiving activities with other connected partners.'),
+        default=[],
+        max_length=100,
+        blank=True
     )
 
     @property
+    def is_sharing_activities(self):
+        return self.is_publishing_activities or self.is_receiving_activities
+
+    @property
     def is_publishing_activities(self):
-        from bluebottle.activity_pub.models import Accept
-        from bluebottle.activity_pub.utils import get_platform_actor
-        actor = get_platform_actor()
-        return self.share_activities and Accept.objects.filter(object__object=actor).exists()
+        return 'supplier' in (self.share_activities or [])
 
     @property
     def is_receiving_activities(self):
-        from bluebottle.activity_pub.models import Accept
-        from bluebottle.activity_pub.utils import get_platform_actor
-        actor = get_platform_actor()
-        return self.share_activities and Accept.objects.filter(object__actor=actor).exists()
+        return 'consumer' in (self.share_activities or [])
 
     organization = models.ForeignKey(
-        'organizations.Organization', null=True, blank=True, on_delete=models.SET_NULL,
+        'organizations.Organization',
+        verbose_name=_('GoodUp Connect name'),
+        null=True, blank=True, on_delete=models.SET_NULL,
         help_text=_('The organization this platform belongs to.')
     )
 
@@ -724,6 +732,12 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         help_text=_(
             'If the action colour is quite light, you can set this colour to use for text links'
         )
+    )
+
+    terminated = models.BooleanField(
+        _("Terminated"),
+        default=False,
+        help_text=_('Is the platform terminated?')
     )
 
     @property

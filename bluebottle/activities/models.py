@@ -17,7 +17,7 @@ from polymorphic.managers import PolymorphicManager
 from polymorphic.models import PolymorphicModel
 from polymorphic.query import PolymorphicQuerySet
 
-from bluebottle.files.fields import ImageField, DocumentField
+from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
@@ -256,14 +256,15 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         for field in super().required:
             yield field
 
-        for question in self.questions.filter(required=True):
-            try:
-                answer = self.answers.get(question=question)
-                if not answer.is_valid:
-                    yield f'answers.{question.id}'
+        if self.pk:
+            for question in self.questions.filter(required=True):
+                try:
+                    answer = self.answers.get(question=question)
+                    if not answer.is_valid:
+                        yield f'answers.{question.id}'
 
-            except ActivityAnswer.DoesNotExist:
-                yield f'answers.{question.id}'
+                except ActivityAnswer.DoesNotExist:
+                    yield f'answers.{question.id}'
 
     @property
     def questions(self):
@@ -501,6 +502,16 @@ class TranslatedPolymorphicManager(PolymorphicManager, TranslatableManager):
 class ActivityQuestion(PolymorphicModel, TranslatableModel):
     objects = TranslatablePolymorphicManager()
 
+    VISIBILITY_CHOICES = (
+        ('all', _("Everyone")),
+        ('managers', _("Managers")),
+    )
+
+    class VisibilityChoices(DjangoChoices):
+
+        all = ChoiceItem('all', label=_("Everyone"))
+        managers = ChoiceItem('managers', label=_("Managers"))
+
     translations = TranslatedFields(
         name=models.CharField(
             _('Label'),
@@ -520,6 +531,12 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
     )
 
     required = models.BooleanField(default=True)
+    visibility = models.CharField(
+        _('Who can see the answers?'),
+        max_length=255,
+        choices=VisibilityChoices.choices,
+        default=VisibilityChoices.all
+    )
 
     def __str__(self):
         return self.question
@@ -608,7 +625,7 @@ class FileUploadQuestion(ActivityQuestion, TranslatableModel):
 
 
 class FileUploadAnswer(ActivityAnswer):
-    file = DocumentField(on_delete=models.CASCADE)
+    file = PrivateDocumentField(on_delete=models.CASCADE)
 
     class JSONAPIMeta:
         resource_name = 'file-upload-answers'

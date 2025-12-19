@@ -1,147 +1,130 @@
-from django.urls import reverse
+from io import BytesIO
 
-from rest_framework import exceptions
+import mock
+from django.test import RequestFactory
+from requests import Response
 
+from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
+from bluebottle.activity_pub.serializers.json_ld import DoGoodEventSerializer
+from bluebottle.activity_pub.tests.factories import (
+    DoGoodEventFactory
+)
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-
-from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
-from bluebottle.activity_pub.tests.factories import BluebottleOrganizationFactory, FollowFactory, OrganizationFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
-class PolymorphicSerializerTestCase(BluebottleTestCase):
-    serializer_class = ActivitySerializer
+class DoGoodEventSerializer(BluebottleTestCase):
+    activity_pub_serializer = DoGoodEventSerializer
+    federated_serializer = FederatedDateActivitySerializer
+    factory = DateActivityFactory
+    activity_pub_factory = DoGoodEventFactory
 
     def setUp(self):
         self.settings = SitePlatformSettings.objects.create(
-            organization=BluebottleOrganizationFactory.create()
+            share_activities=['supplier', 'consumer']
+        )
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
+            self.mock_image_response = Response()
+            self.mock_image_response.raw = BytesIO(image_file.read())
+            self.mock_image_response.status_code = 200
+
+    @property
+    def context(self):
+        request = RequestFactory().get('/')
+        request.user = BlueBottleUserFactory.create()
+
+        return {'request': request}
+
+    def test_to_json_ld(self):
+        model = self.factory.create()
+        federated_serializer = self.federated_serializer(
+            instance=model,
+            context=self.context
         )
 
-        self.follow = FollowFactory.create()
-
-    def test_to_representation(self):
-        data = self.serializer_class().to_representation(
-            self.follow
+        activity_pub_serializer = self.activity_pub_serializer(
+            data=federated_serializer.data,
+            context=self.context
         )
 
-        self.assertEqual(
-            data,
-            {
-                'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
-                'type': 'Follow',
-                'actor': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
-                'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
-            }
+        self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
+
+        do_good_event = activity_pub_serializer.save()
+
+        self.assertEqual(do_good_event.name, model.title)
+        self.assertEqual(do_good_event.summary, model.description.html)
+        self.assertEqual(do_good_event.sub_event.count(), model.slots.count())
+
+    def test_to_json_ld_already_exists(self):
+        model = self.factory.create()
+        federated_serializer = self.federated_serializer(
+            instance=model,
+            context=self.context
         )
 
-    def test_to_representation_no_matching_serializer(self):
-        with self.assertRaises(TypeError):
-            self.serializer_class().to_representation(
-                self.follow.object
-            )
-
-    def test_to_internal_value(self):
-        data = {
-            'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
-            'type': 'Follow',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
-        }
-        internal_value = self.serializer_class().to_internal_value(data)
-
-        self.assertEqual(internal_value['id'], str(self.follow.pub_url))
-        self.assertEqual(internal_value['object']['id'], self.follow.object.pub_url)
-        self.assertEqual(internal_value['actor']['id'], self.follow.actor.pub_url)
-
-    def test_to_internal_value_no_matching_serializer(self):
-        data = {
-            'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
-            'type': 'Organization',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
-        }
-
-        with self.assertRaises(exceptions.ValidationError):
-            self.serializer_class().to_internal_value(data)
-
-    def test_to_internal_value_invalid(self):
-        data = {
-            'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
-            'type': 'Follow',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
-        }
-        with self.assertRaises(exceptions.ValidationError):
-            self.serializer_class().to_internal_value(data)
-
-    def test_create(self):
-        actor = OrganizationFactory.create()
-        object = OrganizationFactory()
-
-        serializer = self.serializer_class(data={
-            'type': 'Follow',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(object.pk, ))}'
-        })
-        self.assertTrue(serializer.is_valid())
-
-        instance = serializer.save()
-
-        self.assertEqual(instance.object, object)
-        self.assertEqual(instance.actor, actor)
-
-        self.assertTrue(instance.pk)
-
-    def test_create_no_matching_serializer(self):
-        actor = OrganizationFactory.create()
-        object = OrganizationFactory()
-
-        serializer = self.serializer_class(data={
-            'type': 'Organization',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(object.pk, ))}'
-        })
-
-        with self.assertRaises(exceptions.ValidationError):
-            serializer.is_valid()
-
-    def test_create_invalid(self):
-        actor = OrganizationFactory.create()
-
-        serializer = self.serializer_class(data={
-            'type': 'Follow',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
-        })
-
-        self.assertFalse(serializer.is_valid())
-
-    def test_update(self):
-        actor = OrganizationFactory.create()
-
-        serializer = self.serializer_class(
-            instance=self.follow,
-            data={
-                'type': 'Follow',
-                'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
-                'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}',
-            }
+        activity_pub_serializer = self.activity_pub_serializer(
+            data=federated_serializer.data,
+            context=self.context
         )
-        self.assertTrue(serializer.is_valid())
 
-        serializer.save()
+        self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
 
-        self.follow.refresh_from_db()
-        self.assertEqual(self.follow.actor, actor)
+        do_good_event = activity_pub_serializer.save()
 
-    def test_update_wrong_instance(self):
-        actor = OrganizationFactory.create()
+        self.activity_pub_serializer(instance=do_good_event, data=federated_serializer.data, context=self.context)
+        self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
+        do_good_event = activity_pub_serializer.save()
 
-        serializer = self.serializer_class(
-            instance=self.follow.actor,
-            data={
-                'type': 'Follow',
-                'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
-                'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}',
-            }
+        self.assertEqual(do_good_event.name, model.title)
+        self.assertEqual(do_good_event.summary, model.description.html)
+        self.assertEqual(do_good_event.sub_event.count(), model.slots.count())
+
+    def test_to_federated_activity(self):
+        activity_pub_model = self.activity_pub_factory.create(iri='http://example.com')
+
+        federated_serializer = self.activity_pub_serializer(
+            instance=activity_pub_model, context=self.context
         )
-        with self.assertRaises(TypeError):
-            serializer.is_valid()
+        serializer = self.federated_serializer(
+            data=federated_serializer.data, context=self.context
+        )
+
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+        with mock.patch('requests.get', return_value=self.mock_image_response):
+            activity = serializer.save()
+
+        self.assertEqual(activity.title, activity_pub_model.name)
+        self.assertEqual(activity.description.html, activity_pub_model.summary)
+        self.assertEqual(activity.slots.count(), activity_pub_model.sub_event.count())
+
+    def test_to_federated_activity_already_exists(self):
+        activity_pub_model = self.activity_pub_factory.create(iri='http://example.com')
+
+        federated_serializer = self.activity_pub_serializer(
+            instance=activity_pub_model, context=self.context
+        )
+
+        serializer = self.federated_serializer(
+            data=federated_serializer.data, context=self.context
+        )
+
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+        with mock.patch('requests.get', return_value=self.mock_image_response):
+            activity = serializer.save()
+
+        serializer = self.federated_serializer(
+            instance=activity, data=federated_serializer.data, context=self.context
+        )
+
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+        with mock.patch('requests.get', return_value=self.mock_image_response):
+            activity = serializer.save()
+
+        self.assertEqual(activity.title, activity_pub_model.name)
+        self.assertEqual(activity.description.html, activity_pub_model.summary)
+        self.assertEqual(activity.slots.count(), activity_pub_model.sub_event.count())

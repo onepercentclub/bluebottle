@@ -180,6 +180,20 @@ class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
         automatic=True,
     )
 
+    set_incomplete = Transition(
+        [
+            PayoutAccountStateMachine.pending,
+            PayoutAccountStateMachine.verified,
+            PayoutAccountStateMachine.new,
+            disabled
+        ],
+        PayoutAccountStateMachine.incomplete,
+        name=_('Set incomplete'),
+        description=_(
+            "Mark the payout account as incomplete. The initiator will have to add more information."),
+        automatic=False
+    )
+
 
 @register(ExternalAccount)
 class StripeBankAccountStateMachine(BankAccountStateMachine):

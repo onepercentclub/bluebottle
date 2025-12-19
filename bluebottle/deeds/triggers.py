@@ -15,6 +15,7 @@ from bluebottle.activities.states import (
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
+from bluebottle.activity_pub.effects import AnnounceAdoptionEffect
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
@@ -40,7 +41,6 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )
 from bluebottle.time_based.triggers.triggers import is_not_owner, is_not_user, is_user
-from bluebottle.activity_pub.effects import PublishEffect, AnnounceAdoptionEffect
 
 
 def is_started(effect):
@@ -160,7 +160,6 @@ class DeedTriggers(ActivityTriggers):
         TransitionTrigger(
             ActivityStateMachine.approve,
             effects=[
-                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),
@@ -176,7 +175,6 @@ class DeedTriggers(ActivityTriggers):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
-                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),

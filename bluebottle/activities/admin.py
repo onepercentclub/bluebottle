@@ -1,14 +1,12 @@
 import re
-from urllib.parse import unquote
 
 from django import forms
 from django.contrib import admin, messages
-
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.template import loader
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
 from django.utils.html import format_html
@@ -50,11 +48,11 @@ from bluebottle.activities.models import (
 )
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.activity_pub.admin import adapter
-from bluebottle.activity_pub.models import Publish
-from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
-from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+from bluebottle.activity_pub.forms import SharePublishForm
+from bluebottle.activity_pub.models import Follow as ActivityPubFollow, Recipient
 from bluebottle.activity_pub.utils import get_platform_actor
-from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.bluebottle_dashboard.decorators import admin_form, confirmation_form
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.models import Follow
@@ -85,6 +83,7 @@ from bluebottle.time_based.models import (
     TeamScheduleParticipant,
     TimeContribution,
 )
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
 from bluebottle.utils.utils import get_current_host
@@ -639,7 +638,7 @@ class ActivityChildAdmin(
         'review_status',
         'send_impact_reminder_message_link',
         'origin',
-        'share_activity_link',
+        'activity_pub',
         'event',
         'host_organization'
     ]
@@ -671,10 +670,7 @@ class ActivityChildAdmin(
     )
 
     activity_pub_fields = (
-        'share_activity_link',
-        'origin',
-        'event',
-        'host_organization',
+        'activity_pub',
     )
 
     registration_fields = None
@@ -766,37 +762,63 @@ class ActivityChildAdmin(
         if obj.event:
             return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
 
-    def share_activity_link(self, obj):
-        if obj and obj.id:
-            url = reverse('admin:{}_{}_share_activity'.format(
+    def activity_pub(self, obj):
+
+        recipients = []
+        try:
+            event = obj.event
+            if event:
+                publishes = event.publish_set.all().prefetch_related("recipients__actor")
+                for publish in publishes:
+                    for recipient in publish.recipients.all():
+                        actor = recipient.actor
+                        recipients.append(
+                            {
+                                "actor": actor,
+                                "adopted": event.announce_set.filter(actor=actor).exists(),
+                            }
+                        )
+        except ObjectDoesNotExist:
+            pass
+
+        share_link = None
+        partners = ActivityPubFollow.objects.filter(
+            object=get_platform_actor(),
+            accept__isnull=False,
+        )
+        if partners.count() > len(recipients):
+            share_link = reverse('admin:{}_{}_share_activity'.format(
                 obj._meta.app_label,
                 obj._meta.model_name
             ), args=(obj.id,))
-            return format_html(
-                '<a href="{}">{}</a>',
-                url,
-                _('Share activity')
-            )
 
-    share_activity_link.short_description = _('Share activity')
+        return render_to_string(
+            "admin/activity_pub/event/recipients_list.html",
+            {"recipients": recipients, "share_link": share_link},
+        )
 
-    def share_activity(self, request, pk):
+    activity_pub.short_description = _('Share activity')
+
+    @admin_form(SharePublishForm, Activity, 'admin/activities/share_publish.html')
+    def share_activity(self, request, activity, form):
         if not request.user.has_perm("activity.add_activity"):
             raise PermissionDenied
 
-        activity = get_object_or_404(Activity, pk=unquote(pk))
-        try:
-            publish = activity.event.publish_set.get()
+        publish = None
+        if getattr(activity, 'event', None):
+            publish = activity.event.publish_set.first()
 
+        if publish:
+            new_recipients = form.cleaned_data.get('recipients') or []
+            for actor in new_recipients:
+                Recipient.objects.create(actor=actor, activity=publish)
             adapter.publish(publish)
-        except ObjectDoesNotExist:
-            federated_serializer = FederatedActivitySerializer(activity)
-
-            serializer = EventSerializer(data=federated_serializer.data)
-            serializer.is_valid(raise_exception=True)
-            event = serializer.save(activity=activity)
-
-            Publish.objects.create(actor=get_platform_actor(), object=event)
+        else:
+            event = adapter.create_event(activity)
+            publish = event.publish_set.first()
+            for actor in form.cleaned_data.get('recipients'):
+                Recipient.objects.create(actor=actor, activity=publish)
+            adapter.publish(publish)
 
         self.message_user(
             request,
@@ -808,15 +830,29 @@ class ActivityChildAdmin(
         )
 
     def get_activity_pub_fields(self, request, obj=None):
-        return self.activity_pub_fields
+        if obj:
+            if obj.origin:
+                return (
+                    'origin',
+                    'host_organization',
+                )
+            else:
+                return (
+                    'activity_pub',
+                )
+        return []
 
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
-            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
         ]
+        site_settings = SitePlatformSettings.load()
+        if site_settings.share_activities and request.user.has_perm("activity_pub.add_event"):
+            fieldsets.append(
+                (_("GoodUp Connect"), {"fields": self.get_activity_pub_fields(request, obj)})
+            )
 
         if self.get_registration_fields(request, obj):
             fieldsets.append(
@@ -1164,12 +1200,12 @@ class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
         SegmentQuestion,
         FileUploadQuestion
     )
-    list_display = ['name', 'question', 'activity_types']
+    list_display = ['name', 'question', 'visibility', 'activity_types']
 
 
-class ActivityQuestionChildAdmin(TranslatableAdmin, PolymorphicChildModelAdmin):
+class ActivityQuestionChildAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, PolymorphicChildModelAdmin):
     base_model = ActivityQuestion
-    fields = ['name', 'question', 'help_text', 'required', 'activity_types']
+    fields = ['name', 'question', 'help_text', 'required', 'visibility', 'activity_types']
     list_fields = ['question', 'help_text']
 
 

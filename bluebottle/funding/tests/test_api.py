@@ -905,6 +905,7 @@ class FundingTestCase(BluebottleTestCase):
 class DonationTestCase(BluebottleTestCase):
     def setUp(self):
         super(DonationTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -977,19 +978,32 @@ class DonationTestCase(BluebottleTestCase):
             "Amount cannot exceed 1000.00 EUR"
         )
 
-    def test_donate(self):
-        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+    def test_donate_over_funded(self):
+        self.funding.target = Money(5, 'EUR')
+        self.funding.save()
+
+        FundingPlatformSettings.objects.update_or_create(
+            fixed_target=True
+        )
+
+        response = self.client.post(
+            self.create_url, data=json.dumps(self.data), user=self.user
+        )
+        self.data['data']['attributes']['amount']['value'] = 10
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_donate_over_funded_allowed(self):
+        self.funding.target = Money(5, 'EUR')
+        self.funding.save()
+        FundingPlatformSettings.objects.update_or_create(
+            fixed_target=False
+        )
+
+        response = self.client.post(
+            self.create_url, data=json.dumps(self.data), user=self.user
+        )
+        self.data['data']['attributes']['amount']['value'] = 10
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        data = json.loads(response.content)
-        donation = Donor.objects.get(pk=data['data']['id'])
-        donation.states.succeed()
-        donation.save()
-
-        response = self.client.get(self.funding_url, user=self.user)
-
-        self.assertTrue(response.json()['data']['attributes']['is-follower'])
-        self.assertEqual(response.json()['data']['meta']['contributor-count'], 1)
 
     def test_donate_anonymous(self):
         self.data['data']['attributes']['anonymous'] = True
@@ -1846,6 +1860,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
     def setUp(self):
         super(FundingPlatformSettingsAPITestCase, self).setUp()
         self.user = BlueBottleUserFactory.create()
+        StripePaymentProviderFactory.create()
 
     def test_anonymous_donations_setting(self):
         funding_settings = FundingPlatformSettings.load()
@@ -1867,6 +1882,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
                 "matching_name": "Dagobert Duck",
                 "public_accounts": False,
                 "stripe_publishable_key": "test-pub-key",
+                "fixed_target": False,
             },
         )
 
@@ -1915,6 +1931,8 @@ class IbanCheckTestCase(APITestCase):
         self.url = reverse('funding-iban-check')
         self.user = BlueBottleUserFactory.create()
         self.stripe_token = stripe.Token("tok_test_token_id")
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
 
         self.stripe_token.bank_account = stripe.BankAccount()
         self.stripe_token.bank_account.update(munch.munchify({

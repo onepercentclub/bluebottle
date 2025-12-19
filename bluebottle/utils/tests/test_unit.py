@@ -19,6 +19,7 @@ from django.utils.encoding import force_bytes
 from moneyed import Money
 from parler import appsettings
 
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import Member
@@ -198,6 +199,21 @@ class SendMailTestCase(BluebottleTestCase):
             'Exception while rendering email template: None.html, in None'
         )
 
+    @mock.patch('bluebottle.utils.email_backend.logger')
+    @mock.patch('bluebottle.utils.email_backend.create_message')
+    def test_terminated(self, create_message, logger):
+        settings = SitePlatformSettings.load()
+        settings.terminated = True
+        settings.save()
+
+        send_mail(to=self.user, template_name='utils/test')
+        self.assertTrue(logger.error.called)
+        self.assertEqual(
+            logger.error.call_args[0][0],
+            'Trying to send email on terminated platform: testuser@example.com'
+        )
+        self.assertFalse(create_message.called)
+
     @mock.patch('bluebottle.common.tasks._send_celery_mail')
     @override_settings(LANGUAGE_CODE='nl',
                        CELERY_MAIL=True)
@@ -246,7 +262,8 @@ ZWwmp8Nkdeirc0wsQ41fR+SNVfw7mlzzvN5ucxNEkWcCGCngccwnHZ+iEbkCQQC8
 3QjW7VSsDTjh9IlNfiMEoVCe/NcA+efXNvUzhF0vf+w52p0NuEQeoHlyTkze23fU
 ShoJXy+7HBXhw27EqkAhAkEAvizvS5bTzkAi7T94zWYoS0rbO/pSqzcGcNGjyisM
 pk501YSTBeanQ7Y9PL17TLQjXquz0u5oqhGlRujFnt9HwA==
------END RSA PRIVATE KEY----"""
+-----END RSA PRIVATE KEY-----
+"""
 
 DKIM_PUBLIC_KEY = b"""MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcw49R0Dy
 5F8mkP31iCQdgHl9TzZV8n9puQf4pYl0GnHcnj+josc9s1PRMI9rxvYFdM7Vxpw9w2ryxe
@@ -254,7 +271,8 @@ jzWuxXPMNhn5m9Z1XNVRaxTIVEsQAYemMFMBGVnyfELBS9QR+ewNCy7E8maIFW3CLpeMtB
 nGIqOjhR2zLfswkVaXQ+89QIDAQAB"""
 
 
-class Testtenantawaremailserver(BluebottleTestCase):
+class TestTenantAwareMailserver(BluebottleTestCase):
+
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
         EMAIL_HOST='somehost',
@@ -262,21 +280,25 @@ class Testtenantawaremailserver(BluebottleTestCase):
     @mock.patch("smtplib.SMTP")
     def test_settings_config(self, smtp):
         """ Test simple / traditional case where config comes from settings """
-        be = TenantAwareBackend()
-        msg = EmailMultiAlternatives(subject="test", body="test",
-                                     to=["test@example.com"])
+        with mock.patch("bluebottle.utils.email_backend.properties",
+                        new=mock.Mock([])) as properties:
+            # Mock properties without DKIM settings to test non-DKIM case
+            properties.MAIL_CONFIG = None
+            be = TenantAwareBackend()
+            msg = EmailMultiAlternatives(subject="test", body="test",
+                                         to=["test@example.com"])
 
-        # open the connection explicitly so we can get the
-        # connection reference. It will be cleared once closed
-        # in send_messages
-        be.open()
-        connection = be.connection
+            # open the connection explicitly so we can get the
+            # connection reference. It will be cleared once closed
+            # in send_messages
+            be.open()
+            connection = be.connection
 
-        be.send_messages([msg])
+            be.send_messages([msg])
 
-        self.assertTrue(smtp.called)
-        self.assertEqual(smtp.call_args[0], ('somehost', 1337))
-        self.assertTrue(connection.sendmail.called)
+            self.assertTrue(smtp.called)
+            self.assertEqual(smtp.call_args[0], ('somehost', 1337))
+            self.assertTrue(connection.sendmail.called)
 
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',

@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, StackedInline, widgets
@@ -21,7 +23,6 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 from pytz import timezone
-from urllib.parse import urlencode
 
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
@@ -70,6 +71,7 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import (
     TranslatableAdminOrderingMixin,
     admin_info_box,
@@ -143,7 +145,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'image',
         'video_url',
         'organization',
-        'theme',
         'categories',
     )
 
@@ -1839,7 +1840,7 @@ class PeriodicRegistrationAdmin(RegistrationChildAdmin):
 
 
 @admin.register(Skill)
-class SkillAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
+class SkillAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = ('name', 'member_link')
     readonly_fields = ('member_link',)
     fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')

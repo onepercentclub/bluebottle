@@ -1,6 +1,7 @@
 from builtins import object
 from itertools import groupby
 
+from bluebottle.scim.models import SCIMPlatformSettings
 from django.conf import settings
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
@@ -25,7 +26,7 @@ from bluebottle.activities.models import (
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.files.serializers import DocumentSerializer
+from bluebottle.files.serializers import PrivateDocumentSerializer
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
@@ -37,6 +38,7 @@ from bluebottle.time_based.models import (
     TimeContribution, DeadlineActivity, DeadlineParticipant,
     DateActivitySlot, DateParticipant, RegisteredDateParticipant, RegisteredDateActivity
 )
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -136,7 +138,7 @@ class BaseAnswerSerializer(ModelSerializer):
 class TextAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = TextAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('answer', )
+        fields = BaseAnswerSerializer.Meta.fields + ('answer',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'text-answers'
@@ -145,7 +147,7 @@ class TextAnswerSerializer(BaseAnswerSerializer):
 class ConfirmationAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = ConfirmationAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('confirmed', )
+        fields = BaseAnswerSerializer.Meta.fields + ('confirmed',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'confirmation-answers'
@@ -154,7 +156,7 @@ class ConfirmationAnswerSerializer(BaseAnswerSerializer):
 class SegmentAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = SegmentAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('segment', )
+        fields = BaseAnswerSerializer.Meta.fields + ('segment',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'segment-answers'
@@ -167,7 +169,7 @@ class SegmentAnswerSerializer(BaseAnswerSerializer):
     }
 
 
-class FileUploadAnswerDocumentSerializer(DocumentSerializer):
+class FileUploadAnswerDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'file-upload-answer-document'
     relationship = 'fileuploadanswer_set'
 
@@ -175,7 +177,7 @@ class FileUploadAnswerDocumentSerializer(DocumentSerializer):
 class FileUploadAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = FileUploadAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('file', )
+        fields = BaseAnswerSerializer.Meta.fields + ('file',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'file-upload-answers'
@@ -253,6 +255,22 @@ class BaseActivitySerializer(ModelSerializer):
         queryset=ActivityAnswer.objects.all(),
         many=True
     )
+
+    translations = TranslationsSerializer(fields=['description'])
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        user = self.context["request"].user
+
+        if not (
+            user in instance.owners
+            or user.is_staff
+            or user.is_superuser
+        ):
+            visible_answers = instance.answers.filter(question__visibility="all")
+            field = self.fields["answers"]
+            data["answers"] = field.to_representation(list(visible_answers))
+        return data
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -357,12 +375,13 @@ class BaseActivitySerializer(ModelSerializer):
             'host_organization',
             'theme',
             'answers',
-            'tos_accepted'
+            'tos_accepted',
         )
 
         meta_fields = (
             'permissions',
             'transitions',
+            'translations',
             'created',
             'updated',
             'errors',
@@ -372,7 +391,7 @@ class BaseActivitySerializer(ModelSerializer):
             'contributor_count',
             'team_count',
             'current_status',
-            'admin_url'
+            'admin_url',
         )
 
     class JSONAPIMeta(object):
@@ -666,8 +685,9 @@ def get_stats_for_activities(activities):
 
     contributor_count += anonymous_donations
 
-    contributor_count += Activity.objects.filter(id__in=ids).\
-        aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
+    contributor_count += Activity.objects.filter(
+        id__in=ids
+    ).aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
 
     types = CollectType.objects.all()
     collect = (
@@ -770,16 +790,18 @@ def bulk_add_participants(activity, emails, send_messages):
     if isinstance(activity, RegisteredDateActivity):
         Participant = RegisteredDateParticipant
 
+    settings = MemberPlatformSettings.objects.get()
+    scim_settings = SCIMPlatformSettings.objects.get()
+
     if not Participant:
         raise AttributeError(f'Could not find participant type for {activity}')
     new = False
     for email in emails:
         try:
             user = Member.objects.filter(email__iexact=email.strip()).first()
-            settings = MemberPlatformSettings.objects.get()
             if not user:
                 new = True
-                if settings.closed:
+                if settings.closed and not scim_settings.enabled:
                     email = email.strip()
                     try:
                         user = Member.create_by_email(email)

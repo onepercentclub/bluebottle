@@ -1,8 +1,10 @@
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.grant_management.models import GrantApplication, GrantPayout
-from bluebottle.grant_management.models import LedgerItem, LedgerItemChoices
+from bluebottle.grant_management.models import (
+    GrantApplication, GrantPayout, GrantDonor,
+    LedgerItem, LedgerItemChoices
+)
 
 
 class DisburseFundsEffect(Effect):
@@ -33,9 +35,25 @@ class GenerateDepositLedgerItem(Effect):
         self.instance.save()
 
 
+class GenerateWithdrawalLedgerItem(Effect):
+    def post_save(self):
+        ledger_item = LedgerItem(
+            fund=self.instance.fund,
+            amount=self.instance.amount,
+            object=self.instance,
+            type=LedgerItemChoices.credit
+        )
+        ledger_item.states.initiate()
+        ledger_item.states.finalise(save=True)
+
+        self.instance.ledger_item = ledger_item
+        self.instance.save()
+
+
 class UpdateLedgerItemEffect(Effect):
     title = _("Update ledger item")
     template = "admin/update_ledger_item.html"
+    display = False
 
     def post_save(self, **kwargs):
         ledger_item = self.instance.ledger_items.last()
@@ -75,7 +93,8 @@ class CreatePayoutEffect(Effect):
     def is_valid(self):
         return (
             self.instance.bank_account and
-            self.instance.bank_account.connect_account.status == 'verified'
+            self.instance.bank_account.connect_account.status == 'verified' and
+            GrantDonor.objects.filter(activity=self.instance, payout__isnull=True).count() > 0
         )
 
     def __str__(self):

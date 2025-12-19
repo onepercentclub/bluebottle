@@ -32,3 +32,14 @@
         {% endif %}
     {% endif %}
 {% endblock %}
+
+{% block field_sets %}
+    {{ block.super }}
+    {% if not is_accepted %}
+        <fieldset class="module aligned module_0 initialized">
+            <div class="description">
+                {%  trans "Once accepted, you can choose which activities to share with this partner."  %}
+            </div>
+        </fieldset>
+    {% endif %}
+{%  endblock %}

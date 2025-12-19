@@ -99,5 +99,8 @@ class FollowTestCase(BluebottleTestCase):
     def test_actor(self):
         self.assertEqual(self.model.actor.organization, self.settings.organization)
 
-    def test_audience(self):
-        self.assertEqual(self.model.audience, [self.model.object])
+    def test_recipients(self):
+        self.assertEqual(
+            [recipient.actor for recipient in self.model.recipients.all()],
+            [self.model.object]
+        )

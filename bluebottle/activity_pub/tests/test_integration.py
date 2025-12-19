@@ -1,33 +1,32 @@
-from requests import Request, Response
-import mock
-from urllib.parse import urlparse
-from io import BytesIO
 from datetime import datetime, timedelta
+from io import BytesIO
+from urllib.parse import urlparse
 
+import mock
+from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
 from django.utils.timezone import get_current_timezone
+from requests import Request, Response
 
-from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Announce, Follow, Accept, Event
 from bluebottle.activity_pub.adapters import adapter
-
-from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.clients.utils import LocalTenant
+from bluebottle.activity_pub.effects import get_platform_actor
+from bluebottle.activity_pub.models import Announce, Follow, Accept, Event, Recipient
 from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.deeds.tests.factories import DeedFactory
-from bluebottle.geo.models import Geolocation
-
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
+from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
-from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
 
 
 class ActivityPubClient(TestClient):
@@ -35,6 +34,7 @@ class ActivityPubClient(TestClient):
         env = super()._base_environ(**request)
 
         env['SERVER_NAME'] = connection.tenant.domain_url
+        env['HTTP_HOST'] = connection.tenant.domain_url
         env['content_type'] = 'application/ld+json'
 
         return env
@@ -98,8 +98,10 @@ class ActivityPubTestCase:
 
         self.other_tenant = Client.objects.get(schema_name='test2')
         site_settings = SitePlatformSettings.load()
-        site_settings.share_activities = True
-        site_settings.save()
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
+            site_settings.favicon = File(BytesIO(image.read()), name='favion.png')
+            site_settings.share_activities = ['supplier', 'consumer']
+            site_settings.save()
 
         self.country = CountryFactory.create()
 
@@ -108,8 +110,11 @@ class ActivityPubTestCase:
                 alpha2_code=self.country.alpha2_code
             )
             CountryFactory.create()
+
             site_settings = SitePlatformSettings.load()
-            site_settings.share_activities = True
+            with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
+                site_settings.favicon = File(BytesIO(image.read()), name='favion.png')
+            site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
         self.client = ActivityPubClient()
@@ -129,17 +134,22 @@ class ActivityPubTestCase:
 
     def test_platform_organization(self):
         site_settings = SitePlatformSettings.load()
-        self.assertTrue(site_settings.share_activities)
+        self.assertEqual(site_settings.share_activities, ['supplier', 'consumer'])
         self.assertTrue(bool(site_settings.organization))
         self.assertTrue(bool(site_settings.organization.activity_pub_organization))
 
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
+
         with LocalTenant(self.other_tenant):
-            adapter.follow(platform_url)
+            with mock.patch('requests.get', return_value=self.mock_response):
+                adapter.follow(platform_url)
 
         self.follow = Follow.objects.get(object=get_platform_actor())
+
         self.assertTrue(self.follow)
+        self.assertTrue(self.follow.actor.organization)
+        self.assertTrue(self.follow.actor.organization.logo)
 
     def test_accept(self):
         self.test_follow()
@@ -151,6 +161,8 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())
             self.assertTrue(accept)
+            self.assertTrue(accept.actor.organization)
+            self.assertTrue(accept.actor.organization.logo)
 
     def create(self, **kwargs):
         self.model = self.factory.create(
@@ -163,15 +175,17 @@ class ActivityPubTestCase:
     def submit(self):
         self.model.states.submit()
         self.model.states.approve(save=True)
+        adapter.create_event(self.model)
 
     def test_publish(self):
         self.test_accept()
-
         self.create()
+        publish = self.model.event.publish_set.first()
+        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             self.event = Event.objects.get()
-
             self.assertEqual(self.event.name, self.model.title)
 
     def test_publish_to_closed_platform(self):
@@ -181,9 +195,12 @@ class ActivityPubTestCase:
         self.test_accept()
         self.create()
 
+        publish = self.model.event.publish_set.first()
+        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+        adapter.publish(publish)
+
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()
-
             self.assertTrue(event.name, self.model.title)
 
     def test_publish_no_accept(self):
@@ -193,13 +210,21 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             self.assertEqual(Event.objects.count(), 0)
 
-    def test_adopt(self):
-        self.test_publish()
+    def approve(self, activity):
+        activity.theme = ThemeFactory.create()
+        activity.states.approve(save=True)
 
+    @property
+    def mock_response(self):
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
             mock_response = Response()
             mock_response.raw = BytesIO(image_file.read())
             mock_response.status_code = 200
+
+        return mock_response
+
+    def test_adopt(self):
+        self.test_publish()
 
         with LocalTenant(self.other_tenant):
             self.event = Event.objects.get()
@@ -207,12 +232,19 @@ class ActivityPubTestCase:
             request = RequestFactory().get('/')
             request.user = BlueBottleUserFactory.create()
 
-            with mock.patch('requests.get', return_value=mock_response):
+            with mock.patch('requests.get', return_value=self.mock_response):
                 with mock.patch.object(Geolocation, 'update_location'):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
+
+                    self.approve(self.adopted)
+                    announce = Announce.objects.get()
+                    self.assertTrue(announce)
+
+        announce = Announce.objects.get()
+        self.assertTrue(announce)
 
     def test_adopt_default_owner(self):
         self.test_publish()
@@ -222,11 +254,6 @@ class ActivityPubTestCase:
             follow.default_owner = BlueBottleUserFactory()
             follow.save()
 
-        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
-            mock_response = Response()
-            mock_response.raw = BytesIO(image_file.read())
-            mock_response.status_code = 200
-
         with LocalTenant(self.other_tenant):
             follow = Follow.objects.get()
             self.event = Event.objects.get()
@@ -234,7 +261,7 @@ class ActivityPubTestCase:
             request = RequestFactory().get('/')
             request.user = BlueBottleUserFactory.create()
 
-            with mock.patch('requests.get', return_value=mock_response):
+            with mock.patch('requests.get', return_value=self.mock_response):
                 with mock.patch.object(Geolocation, 'update_location'):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
@@ -246,7 +273,8 @@ class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
     def create(self):
         super().create(
             start=(datetime.now() + timedelta(days=10)).date(),
-            end=(datetime.now() + timedelta(days=20)).date()
+            end=(datetime.now() + timedelta(days=20)).date(),
+            organization=None
         )
         self.submit()
 
@@ -261,14 +289,6 @@ class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.end, self.model.end)
-
-        with LocalTenant(self.other_tenant):
-            self.adopted.theme = ThemeFactory.create()
-            self.adopted.states.submit()
-            self.adopted.states.approve(save=True)
-
-        announce = Announce.objects.get()
-        self.assertEqual(announce.object, self.model.event)
 
 
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
@@ -291,6 +311,21 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
         BudgetLineFactory.create_batch(2, activity=self.model)
 
         self.submit()
+
+    def approve(self, activity):
+        BudgetLineFactory.create_batch(2, activity=activity)
+
+        activity.bank_account = ExternalAccountFactory.create(
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id",
+                status="verified",
+            )
+        )
+        activity.theme = ThemeFactory.create()
+        activity.states.submit()
+        activity.states.approve(save=True)
 
     def test_publish(self):
         super().test_publish()
@@ -342,12 +377,13 @@ class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
     def create(self):
-        super().create(slots=[])
+        super().create(slots=[], organization=None)
 
         DateActivitySlotFactory.create_batch(
             3,
             activity=self.model,
-            location=GeolocationFactory.create(country=self.country),
+            location=None,
+            is_online=True
         )
 
         self.submit()

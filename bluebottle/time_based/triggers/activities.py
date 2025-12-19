@@ -1,4 +1,5 @@
 from datetime import date
+
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.activity_manager import (
@@ -13,7 +14,7 @@ from bluebottle.activities.messages.reviewer import (
 )
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
-from bluebottle.activity_pub.effects import PublishEffect, AnnounceAdoptionEffect
+from bluebottle.activity_pub.effects import AnnounceAdoptionEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
 from bluebottle.notifications.effects import NotificationEffect
@@ -42,7 +43,8 @@ from bluebottle.time_based.states import (
     ParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
-    RegisteredDateActivityStateMachine, RegisteredDateParticipantStateMachine
+    RegisteredDateActivityStateMachine, RegisteredDateParticipantStateMachine, SlotStateMachine,
+    DateActivitySlotStateMachine
 )
 from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
@@ -270,6 +272,14 @@ class TimeBasedTriggers(ActivityTriggers):
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
             ]
         ),
+        TransitionTrigger(
+            TimeBasedStateMachine.auto_cancel,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                RelatedTransitionEffect('slots', SlotStateMachine.auto_cancel),
+                RelatedTransitionEffect('slots', DateActivitySlotStateMachine.auto_cancel),
+            ]
+        ),
 
         TransitionTrigger(
             TimeBasedStateMachine.restore,
@@ -352,7 +362,6 @@ class DateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegistrationActivityStateMachine.approve,
             effects=[
-                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),
@@ -360,7 +369,6 @@ class DateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             DateStateMachine.publish,
             effects=[
-                PublishEffect,
                 AnnounceAdoptionEffect,
                 RelatedTransitionEffect(
                     'organizer',
@@ -511,14 +519,12 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
         TransitionTrigger(
             RegistrationActivityStateMachine.approve,
             effects=[
-                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),
         TransitionTrigger(
             RegistrationActivityStateMachine.publish,
             effects=[
-                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),

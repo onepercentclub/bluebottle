@@ -1,5 +1,6 @@
 from builtins import object
 from datetime import datetime, timedelta
+
 from dateutil.parser import parse
 from django.db import connection
 from django.utils.timezone import get_current_timezone, make_aware, now
@@ -71,6 +72,7 @@ from bluebottle.funding_vitepay.serializers import (
 from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import Member
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
 from bluebottle.utils.serializers import MoneySerializer, ResourcePermissionField
 
@@ -630,49 +632,103 @@ class DonorSerializer(BaseContributorSerializer):
 
     def get_fields(self):
         """
-        If the donor is anonymous, we do not return the user.
+        If the donor is anonymous, we do not return the user, except when
+        the request is performed by the user.
         """
         fields = super(DonorSerializer, self).get_fields()
         funding_settings = FundingPlatformSettings.load()
-        if isinstance(self.instance, Donor) and (
-            self.instance.anonymous or
-            funding_settings.anonymous_donations
+        if (
+            isinstance(self.instance, Donor) and
+            self.instance.user and
+            self.instance.user != self.context['request'].user and (
+                self.instance.anonymous or
+                funding_settings.anonymous_donations
+            )
         ):
             del fields['user']
         return fields
 
 
-class DonorCreateSerializer(DonorSerializer):
-    amount = MoneySerializer()
-
-    class Meta(DonorSerializer.Meta):
-        model = Donor
-        fields = DonorSerializer.Meta.fields + ('client_secret',)
-
-    def validate_amount(self, value):
+class AmountValidator:
+    def currency_settings(self, currency):
         provider = StripePaymentProvider.objects.first()
-        currency_code = str(value.currency)
-        currency_settings = provider.get_currency_settings(currency_code)
+        currency_code = str(currency)
+        return provider.get_currency_settings(currency_code)
 
+
+class MinAmountValidator(AmountValidator):
+    """
+    Validates that the donation is higher then the min amount
+    """
+    def __call__(self, value):
+        currency_settings = self.currency_settings(value.currency)
         if currency_settings:
             min_amount = currency_settings.min_amount
-            max_amount = currency_settings.max_amount
 
             if min_amount and value.amount < min_amount:
                 raise serializers.ValidationError(
                     _("Amount must be at least {amount} {currency}").format(
-                        amount=min_amount, currency=currency_code
+                        amount=min_amount, currency=value.currency
                     )
                 )
+
+
+class MaxAmountValidator(AmountValidator):
+    """
+    Validates that the donation is lower then the max amount
+    """
+    def __call__(self, value):
+        currency_settings = self.currency_settings(value.currency)
+        if currency_settings:
+            max_amount = currency_settings.max_amount
 
             if max_amount and value.amount > max_amount:
                 raise serializers.ValidationError(
                     _("Amount cannot exceed {amount} {currency}").format(
-                        amount=max_amount, currency=currency_code
+                        amount=max_amount, currency=value.currency
                     )
                 )
 
-        return value
+
+class TargetReachedValidator:
+    """
+    Validates that the donation does not overfund the activity if that is not allowed
+    """
+    requires_context = True
+
+    def __call__(self, value, serializer):
+        settings = FundingPlatformSettings.load()
+
+        if settings.fixed_target:
+            try:
+                activity = Funding.objects.get(
+                    pk=serializer.parent.initial_data['activity']['id']
+                )
+                amount_needed = activity.target - activity.amount_raised
+
+                if amount_needed.currency != value.currency:
+                    value = convert(value, amount_needed.currency)
+
+                if value.amount > amount_needed.amount:
+                    raise serializers.ValidationError(
+                        _("Donations cannot exceed the target amount")
+                    )
+            except (Funding.DoesNotExist, KeyError):
+                pass
+
+
+class DonorCreateSerializer(DonorSerializer):
+    amount = MoneySerializer(
+        validators=[
+            MinAmountValidator(),
+            MaxAmountValidator(),
+            TargetReachedValidator()
+        ]
+    )
+
+    class Meta(DonorSerializer.Meta):
+        model = Donor
+        fields = DonorSerializer.Meta.fields + ('client_secret',)
 
 
 class KycDocumentSerializer(PrivateDocumentSerializer):
@@ -823,6 +879,7 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
             'matching_name',
             'business_types',
             'enable_iban_check',
+            'fixed_target',
         )
 
 

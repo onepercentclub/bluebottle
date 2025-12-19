@@ -19,9 +19,8 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 
 @python_2_unicode_compatible
 class NewsItem(PublishableModel):
-
     title = models.CharField(_("Title"), max_length=200)
-    slug = models.SlugField(_("Slug"))
+    slug = models.SlugField(_("Slug"), max_length=200)
 
     # Contents
     main_image = ImageField(
@@ -54,6 +53,9 @@ class NewsItem(PublishableModel):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return f'/{self.language}/news/{self.slug}'
 
     def get_meta_description(self, **kwargs):
         request = kwargs.get('request')

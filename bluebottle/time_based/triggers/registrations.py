@@ -123,7 +123,7 @@ class RegistrationTriggers(TriggerManager):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    'participants',
+                    'unreviewed_participants',
                     RegistrationParticipantStateMachine.accept,
                 ),
                 FollowActivityEffect,
@@ -148,6 +148,15 @@ class RegistrationTriggers(TriggerManager):
             ]
         ),
         TransitionTrigger(
+            RegistrationStateMachine.restore,
+            effects=[
+                TransitionEffect(
+                    RegistrationStateMachine.accept,
+                    conditions=[no_review_needed]
+                ),
+            ]
+        ),
+        TransitionTrigger(
             RegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
@@ -167,8 +176,7 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 UnFollowActivityEffect,
             ]
-        )
-
+        ),
     ]
 
 
@@ -331,6 +339,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     conditions=[activity_no_spots_left],
                 ),
                 AdjustInitialPeriodicParticipantEffect,
+                RelatedTransitionEffect(
+                    "participants",
+                    PeriodicParticipantStateMachine.accept,
+                ),
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),

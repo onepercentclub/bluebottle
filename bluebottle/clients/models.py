@@ -2,7 +2,6 @@ from urllib.parse import urljoin
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
 from future.utils import python_2_unicode_compatible
 from tenant_schemas.models import TenantMixin
 from django.conf import settings

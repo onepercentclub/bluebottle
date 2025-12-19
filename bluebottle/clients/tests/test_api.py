@@ -15,10 +15,10 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, APITestCase
 
 
-class ClientSettingsTestCase(BluebottleTestCase):
+class ClientSettingsTestCase(APITestCase):
 
     def setUp(self):
         super(ClientSettingsTestCase, self).setUp()
@@ -317,7 +317,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             'login_methods': ['password'],
             'session_only': False,
             'consent_link': 'example.com',
-            'email_domain': None,
+            'email_domains': [],
             'confirm_signup': False
         }
 

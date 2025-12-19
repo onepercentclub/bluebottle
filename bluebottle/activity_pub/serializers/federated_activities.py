@@ -1,4 +1,5 @@
 import datetime
+import logging
 from io import BytesIO
 
 import pytz
@@ -10,10 +11,12 @@ from django.urls import reverse
 from rest_framework import serializers, exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
+logger = logging.getLogger(__name__)
+
+from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
+from bluebottle.activity_pub.serializers.fields import FederatedIdField
+
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices
-from bluebottle.activity_pub.serializers.base import (
-    FederatedObjectSerializer
-)
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
@@ -25,22 +28,10 @@ from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import Money
 
 
-class IdField(serializers.CharField):
-    def __init__(self, url_name):
-        self.url_name = url_name
-        super().__init__(source='*')
-
-    def to_representation(self, value):
-        return value.activity_pub_url
-
-    def to_internal_value(self, value):
-        return {'id': value}
-
-
 class ImageSerializer(FederatedObjectSerializer):
-    id = IdField('json-ld:image')
+    id = FederatedIdField('json-ld:image')
     url = serializers.SerializerMethodField()
-    name = serializers.CharField()
+    name = serializers.CharField(allow_null=True, allow_blank=True, required=False)
 
     def get_url(self, instance):
         return connection.tenant.build_absolute_url(
@@ -50,8 +41,10 @@ class ImageSerializer(FederatedObjectSerializer):
     def create(self, validated_data):
         if not validated_data:
             return None
+
         validated_data['owner'] = self.context['request'].user
-        image = ActivityPubImage.objects.get(iri=validated_data['id'])
+        image = ActivityPubImage.objects.from_iri(validated_data['id'])
+
         response = requests.get(image.url, timeout=30)
         response.raise_for_status()
 
@@ -64,6 +57,32 @@ class ImageSerializer(FederatedObjectSerializer):
         fields = FederatedObjectSerializer.Meta.fields + (
             'url', 'name'
         )
+
+
+class ImageField(serializers.Field):
+    def to_internal_value(self, data):
+        if not data:
+            return None
+        try:
+            image = ActivityPubImage.objects.from_iri(data)
+            image_url = image.url
+
+            response = requests.get(image_url, timeout=30)
+            response.raise_for_status()
+
+            return File(BytesIO(response.content), name=image.name)
+        except requests.exceptions.HTTPError as e:
+            # If image is not found (404), log and return None since logo is an optional field
+            if e.response.status_code == 404:
+                logger.warning(f"Image not found (404) for IRI {data}, skipping logo field")
+                return None
+            # Re-raise other HTTP errors
+            raise
+
+    def to_representation(self, value):
+        if not value:
+            return None
+        return value
 
 
 class DateField(serializers.Field):
@@ -96,7 +115,7 @@ class CountryField(serializers.CharField):
 
 
 class AddressSerializer(FederatedObjectSerializer):
-    id = IdField('json-ld:address')
+    id = FederatedIdField('json-ld:address')
 
     street_address = serializers.CharField(source='street', required=False, allow_null=True)
     postal_code = serializers.CharField(required=False, allow_null=True)
@@ -120,7 +139,8 @@ class AddressSerializer(FederatedObjectSerializer):
         return result
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(FederatedObjectSerializer):
+    id = FederatedIdField('json-ld:organization')
     name = serializers.CharField(allow_null=True)
     summary = serializers.CharField(
         source='description',
@@ -128,14 +148,15 @@ class OrganizationSerializer(serializers.ModelSerializer):
         allow_null=True,
         required=False
     )
+    logo = ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Organization
-        fields = ('name', 'summary')
+        fields = ('id', 'name', 'summary', 'logo')
 
 
 class LocationSerializer(FederatedObjectSerializer):
-    id = IdField('json-ld:place')
+    id = FederatedIdField('json-ld:place')
     latitude = serializers.FloatField(source='position.x', allow_null=True)
     longitude = serializers.FloatField(source='position.y', allow_null=True)
     name = serializers.CharField(source='formatted_address', allow_null=True)
@@ -182,18 +203,15 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
             'name', 'summary', 'image', 'organization', 'activity_link'
         )
 
-    def create(self, validated_data):
-        organization_data = validated_data.pop('organization', None)
-        if organization_data:
-            organization_serializer = OrganizationSerializer(data=organization_data)
-            organization_serializer.is_valid(raise_exception=True)
-            validated_data['organization'] = organization_serializer.save()
+    def save(self, *args, **kwargs):
+        if not kwargs.get('owner'):
+            kwargs['owner'] = self.context['request'].user
 
-        return super().create(validated_data)
+        return super().save(**kwargs)
 
 
 class FederatedDeedSerializer(BaseFederatedActivitySerializer):
-    id = IdField('json-ld:good-deed')
+    id = FederatedIdField('json-ld:good-deed')
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='end', allow_null=True)
 
@@ -205,7 +223,7 @@ class FederatedDeedSerializer(BaseFederatedActivitySerializer):
 
 
 class FederatedFundingSerializer(BaseFederatedActivitySerializer):
-    id = IdField('json-ld:crowd-funding')
+    id = FederatedIdField('json-ld:crowd-funding')
 
     location = LocationSerializer(source='impact_location', allow_null=True, required=False)
 
@@ -246,6 +264,9 @@ class EventAttendanceModeField(serializers.Field):
 class JoinModeField(serializers.Field):
     def __init__(self, *args, **kwargs):
         kwargs['source'] = 'review'
+        kwargs['required'] = False
+        kwargs['allow_null'] = True
+
         super().__init__(*args, **kwargs)
 
     def to_representation(self, value):
@@ -256,12 +277,12 @@ class JoinModeField(serializers.Field):
     def to_internal_value(self, value):
         if value == JoinModeChoices.review:
             return True
-        elif value == JoinModeChoices.open:
+        else:
             return False
 
 
 class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
-    id = IdField('json-ld:crowd-funding')
+    id = FederatedIdField('json-ld:crowd-funding')
 
     location = LocationSerializer(allow_null=True, required=False)
 
@@ -282,7 +303,7 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
 
 
 class SlotsSerializer(FederatedObjectSerializer):
-    id = IdField('json-ld:sub-event')
+    id = FederatedIdField('json-ld:sub-event')
 
     name = serializers.CharField(source='title', required=False, allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
@@ -308,7 +329,7 @@ class SlotsSerializer(FederatedObjectSerializer):
 
 
 class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
-    id = IdField('json-ld:do-good-event')
+    id = FederatedIdField('json-ld:do-good-event')
 
     sub_event = SlotsSerializer(many=True, source='slots')
     join_mode = JoinModeField()
@@ -329,6 +350,18 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
             slot['activity'] = result
 
         validated_data[field.source] = field.create(slots)
+
+        return result
+
+    def update(self, instance, validated_data):
+        slots = validated_data.pop('slots', [])
+        result = super().update(instance, validated_data)
+
+        field = self.fields['sub_event']
+        for slot in slots:
+            slot['activity'] = result
+
+        validated_data[field.source] = field.update(instance.slots.all(), slots)
 
         return result
 

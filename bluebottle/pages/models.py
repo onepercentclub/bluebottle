@@ -17,6 +17,7 @@ from fluent_contents.models.managers import ContentItemManager
 from fluent_contents.rendering import render_placeholder
 from fluent_contents.utils.filters import apply_filters
 from future.utils import python_2_unicode_compatible
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.models import PublishableModel, get_language_choices
 from bluebottle.utils.serializers import MLStripper
@@ -24,7 +25,6 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 
 
 class DocumentItem(ContentItem):
-
     text = models.CharField(_('Link title'), max_length=100)
     document = models.FileField(
         _("Document"),
@@ -54,7 +54,6 @@ class DocumentItem(ContentItem):
 
 
 class ActionItem(ContentItem):
-
     link = models.CharField(_('link'), max_length=200)
     title = models.CharField(_('title'), max_length=100)
 
@@ -287,10 +286,64 @@ class Page(PublishableModel):
         return self.title
 
     def get_absolute_url(self):
-        return f'/pages/{self.slug}'
+        return f'/{self.language}/pages/{self.slug}'
 
     def get_meta_description(self, **kwargs):
         request = kwargs.get('request')
         s = MLStripper()
         s.feed(mark_safe(render_placeholder(request, self.body).html))
         return truncatechars(s.get_data(), 200)
+
+
+class PageTypeChoices(DjangoChoices):
+    start = ChoiceItem('start', label=_("Start an initiative"))
+    terms = ChoiceItem('terms', label=_("Terms of service"))
+    privacy = ChoiceItem('privacy', label=_("Privacy policy"))
+
+
+class PlatformPage(TranslatableModel):
+    body = PlaceholderField(
+        'blog_contents',
+        plugins=[
+            'TextPlugin',
+            'ColumnsPlugin',
+            'ActionPlugin',
+            'ImageTextPlugin',
+            'ImageTextRoundPlugin',
+            'ScaledImageTextPlugin',
+            'OEmbedPlugin',
+            'RawHtmlPlugin',
+            'PicturePlugin',
+            'DocumentPlugin',
+            'PeopleBlockPlugin',
+            'ImagePlainTextBlockPlugin',
+        ]
+    )
+
+    translations = TranslatedFields(
+        title=models.CharField(_('Title'), max_length=200, null=True, blank=True),
+    )
+
+    full_page = True
+    show_title = True
+
+    slug = models.CharField(
+        _('Page type'),
+        choices=PageTypeChoices.choices,
+        default=PageTypeChoices.start,
+        unique=True,
+    )
+
+    class Meta:
+        permissions = (
+            ('api_read_platformpage', 'Can view platform pages through the API'),
+            ('api_add_platformpage', 'Can add platform pages through the API'),
+            ('api_change_platformpage', 'Can change platform pages through the API'),
+            ('api_delete_platformpage', 'Can delete platform pages through the API'),
+        )
+
+    def get_absolute_url(self):
+        return f'/platform/{self.slug}'
+
+    def __str__(self):
+        return str(PageTypeChoices.get_choice(self.slug).label if self.slug else _('Platform page'))

@@ -1,13 +1,13 @@
 import munch
+import stripe
 from django.core import mail
 from djmoney.money import Money
 from mock import patch
-import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
-from bluebottle.funding_stripe.models import StripePayoutAccount
+from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
-    StripePaymentFactory, ExternalAccountFactory
+    StripePaymentFactory, ExternalAccountFactory, StripePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -131,6 +131,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
             {
                 "country": "NL",
                 "charges_enabled": True,
+                "business_type": "individual",
                 "individual": munch.munchify(
                     {
                         "email": "jhon@example.com",
@@ -205,7 +206,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         self.account.update(self.stripe_account)
 
     def test_initial(self):
-        self.assertEqual(self.account.status, 'new')
+        self.assertEqual(self.account.status, 'incomplete')
 
     def test_pending(self):
         self.simulate_webhook([])
@@ -226,7 +227,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
     def test_verify(self):
         self.simulate_webhook([], verification_status="verified")
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, "Your identity has been verified")
+        self.assertEqual(mail.outbox[0].subject, "Your identity has been verified on Test")
 
     def test_needs_verification_pending(self):
         self.test_needs_verification()
@@ -235,7 +236,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         self.simulate_webhook([], verification_status="verified")
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified')
+        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified on Test')
 
     def test_reject(self):
         self.test_verify()
@@ -270,6 +271,8 @@ class StripeBankAccountStateMachineTests(BluebottleTestCase):
 
     def setUp(self):
         account_id = 'some-connect-id'
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
         self.user = BlueBottleUserFactory.create()
         self.account = StripePayoutAccount(
             owner=self.user,

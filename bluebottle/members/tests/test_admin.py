@@ -96,7 +96,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'is_superuser': False,
             'csrfmiddlewaretoken': csrf
         }
-        response = self.client.post(self.add_member_url, data)
+        response = self.client.post(self.add_member_url, data, format='multipart')
         self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
@@ -118,7 +118,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
-        response = self.client.post(reset_url, {'confirm': True})
+        response = self.client.post(reset_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
@@ -128,7 +128,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         user = BlueBottleUserFactory.create()
         self.client.logout()
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
-        response = self.client.post(reset_url, {'confirm': True})
+        response = self.client.post(reset_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 403)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -145,12 +145,15 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
-        response = self.client.post(welcome_email_url, {'confirm': True})
+        response = self.client.post(welcome_email_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
         self.assertTrue(
-            'Welcome {}'.format(user.first_name) in welcome_email.body
+            'Hi {}'.format(user.first_name) in welcome_email.body
+        )
+        self.assertTrue(
+            "You’re now officially part of the Test" in welcome_email.body
         )
 
     def test_resend_welcome_anonymous(self):
@@ -158,7 +161,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.client.logout()
 
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
-        response = self.client.post(welcome_email_url, {'confirm': True})
+        response = self.client.post(welcome_email_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 403)
 
 
@@ -585,11 +588,10 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         BlueBottleUserFactory.create(
             first_name='Bob',
             email='bob@bob.bg',
-            primary_language='bg'
+            primary_language='dk'
         )
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.bg'])
-        # NL translations not set so we should receive default translation
         self.assertEqual(welcome_email.subject, 'Welcome to Test!')
 
     def test_create_user_language_not_set(self):

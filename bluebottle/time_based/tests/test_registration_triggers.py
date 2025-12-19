@@ -164,6 +164,7 @@ class DateRegistrationTriggerTestCase(
             activity=self.activity,
             as_user=self.user,
         )
+        self.contribution = self.participant.contributions.first()
 
     def test_initial(self):
         self.create()
@@ -195,6 +196,7 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.slot, "finished")
         self.assertStatus(self.registration, "accepted")
         self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.contribution, "succeeded")
 
     def test_initial_review_past(self):
         super().test_initial_review()
@@ -204,6 +206,7 @@ class DateRegistrationTriggerTestCase(
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertStatus(self.registration, "new")
         self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.contribution, "succeeded")
 
     def test_accept_past(self):
         super().test_accept()
@@ -211,12 +214,42 @@ class DateRegistrationTriggerTestCase(
         self.slot.save()
         self.assertStatus(self.registration, "accepted")
         self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.contribution, "succeeded")
+
+    def test_withdraw(self):
+        super().test_accept()
+        self.registration.states.withdraw(save=True)
+        self.assertStatus(self.registration, "withdrawn")
+        self.assertStatus(self.participant, "withdrawn")
+        self.assertStatus(self.contribution, "failed")
+
+    def test_withdraw_after_past(self):
+        super().test_accept()
+        self.slot.start = now() - timedelta(days=3)
+        self.slot.save()
+        self.assertStatus(self.participant, "succeeded")
+        self.registration.states.withdraw(save=True)
+        self.assertStatus(self.registration, "withdrawn")
+        self.assertStatus(self.participant, "withdrawn")
+        self.assertStatus(self.contribution, "failed")
+
+    def test_withdraw_past(self):
+        super().test_accept()
+        self.registration.states.withdraw(save=True)
+        self.assertStatus(self.registration, "withdrawn")
+        self.assertStatus(self.participant, "withdrawn")
+        self.slot.start = now() - timedelta(days=3)
+        self.slot.save()
+        self.assertStatus(self.registration, "withdrawn")
+        self.assertStatus(self.participant, "withdrawn")
+        self.assertStatus(self.contribution, "failed")
 
     def test_reject(self):
         super().test_reject()
         self.assertStatus(self.registration, "rejected")
         self.assertStatus(self.participant, "rejected")
         self.assertStatus(self.participant.contributions.first(), "failed")
+        self.assertStatus(self.contribution, "failed")
 
     def test_reject_after_succeed(self):
         super().test_accept()
@@ -225,7 +258,7 @@ class DateRegistrationTriggerTestCase(
         self.registration.states.reject(save=True)
         self.assertStatus(self.registration, "rejected")
         self.assertStatus(self.participant, "rejected")
-        self.assertStatus(self.participant.contributions.first(), "failed")
+        self.assertStatus(self.contribution, "failed")
 
     def test_fill(self):
         self.slot.capacity = 1
@@ -238,8 +271,6 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.registration, "accepted")
         self.assertStatus(self.participant, "accepted")
         self.assertStatus(self.slot, "full")
-
-        print([m.subject for m in mail.outbox])
 
     def test_fill_accept(self):
         super().test_initial_review()

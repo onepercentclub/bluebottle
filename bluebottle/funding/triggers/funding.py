@@ -32,8 +32,7 @@ from bluebottle.funding.messages.funding.contributor import (
 )
 from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import (
-    Funding, Donor, Payment, MoneyContribution,
-)
+    Funding, Donor, Payment, MoneyContribution, FundingPlatformSettings, )
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
     DonationStateMachine,
@@ -93,6 +92,19 @@ def should_review(effect):
     if effect.instance.initiative is None:
         return review
     return effect.instance.initiative.status != 'approved'
+
+
+def fixed_target(effect):
+    platform_settings = FundingPlatformSettings.load()
+    return platform_settings.fixed_target
+
+
+def campaign_target_reached(effect):
+    """ the campaign target amount has been reached (100% or more)"""
+    activity = effect.instance.activity
+    if not activity.target:
+        return False
+    return activity.amount_raised >= activity.target
 
 
 @register(Funding)
@@ -261,17 +273,30 @@ class FundingTriggers(ActivityTriggers):
                     conditions=[should_finish, target_reached]
                 ),
                 TransitionEffect(
+                    FundingStateMachine.succeed,
+                    conditions=[fixed_target, target_reached]
+                ),
+                TransitionEffect(
                     FundingStateMachine.partial,
                     conditions=[should_finish, target_not_reached]
+                ),
+            ]
+        ),
+        ModelChangedTrigger(
+            'amount_donated',
+            effects=[
+                TransitionEffect(
+                    FundingStateMachine.succeed,
+                    conditions=[fixed_target, target_reached]
                 ),
             ]
         )
     ]
 
 
-def is_successful(instance):
+def is_successful(effect):
     """donation is successful"""
-    return instance.instance.status == ContributorStateMachine.succeeded
+    return effect.instance.status == ContributorStateMachine.succeeded
 
 
 @register(Donor)

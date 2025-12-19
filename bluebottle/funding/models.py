@@ -2,8 +2,9 @@
 import logging
 import random
 import string
-from babel.numbers import get_currency_name
 from builtins import object, range
+
+from babel.numbers import get_currency_name
 from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models import SET_NULL, Count
@@ -11,13 +12,12 @@ from django.db.models.aggregates import Sum
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
+from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 from moneyed import Money
+from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
-
-from multiselectfield import MultiSelectField
-from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution, Contributor
 from bluebottle.clients import properties
@@ -846,6 +846,14 @@ class FundingPlatformSettings(BasePlatformSettings):
         help_text=_(
             'In the KYC flow do a check to see if bank account number and name match. '
             'This will be done by the Surepay API, and only Dutch IBANs are supported. '
+        )
+    )
+
+    fixed_target = models.BooleanField(
+        _('Cap donations'),
+        default=False,
+        help_text=_(
+            'Stop accepting donations as soon as the target is reached.'
         )
     )
 

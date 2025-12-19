@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-16 10:52+0100\n"
-"PO-Revision-Date: 2025-12-16 09:55\n"
+"POT-Creation-Date: 2025-12-18 13:27+0100\n"
+"PO-Revision-Date: 2025-12-18 12:39\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -4445,46 +4445,54 @@ msgid "In the KYC flow do a check to see if bank account number and name match. 
 msgstr "Dans le flux KYC, vérifiez si le numéro de compte bancaire et le nom correspondent. Ceci sera fait par l'API Surepay, et seuls les IBAN néerlandais sont pris en charge. "
 
 #: bluebottle/funding/models.py:853
+msgid "Cap donations"
+msgstr "Cap des donations"
+
+#: bluebottle/funding/models.py:856
+msgid "Stop accepting donations as soon as the target is reached."
+msgstr "Arrêtez d'accepter des donations dès que l'objectif est atteint."
+
+#: bluebottle/funding/models.py:861
 msgid "Name to use for match funding"
 msgstr "Nom à utiliser pour le financement de match"
 
-#: bluebottle/funding/models.py:857
+#: bluebottle/funding/models.py:865
 msgid "Change this if you want to use something else then the platform name for matching amounts."
 msgstr "Changez ceci si vous voulez utiliser quelque chose d'autre alors le nom de la plate-forme pour les montants correspondants."
 
-#: bluebottle/funding/models.py:861
+#: bluebottle/funding/models.py:869
 msgid "verification types"
 msgstr "types de vérification"
 
-#: bluebottle/funding/models.py:876 bluebottle/funding/models.py:877
+#: bluebottle/funding/models.py:884 bluebottle/funding/models.py:885
 msgid "funding settings"
 msgstr "paramètres de financement"
 
-#: bluebottle/funding/models.py:883
+#: bluebottle/funding/models.py:891
 msgid "Match"
 msgstr "Correspondance"
 
-#: bluebottle/funding/models.py:884
+#: bluebottle/funding/models.py:892
 msgid "Mistype"
 msgstr "Erreur de frappe"
 
-#: bluebottle/funding/models.py:885
+#: bluebottle/funding/models.py:893
 msgid "Close match"
 msgstr "Proche correspondance"
 
-#: bluebottle/funding/models.py:886
+#: bluebottle/funding/models.py:894
 msgid "No match"
 msgstr "Aucune correspondance"
 
-#: bluebottle/funding/models.py:897
+#: bluebottle/funding/models.py:905
 msgid "Hashed IBAN to check against"
 msgstr "IBAN haché à vérifier"
 
-#: bluebottle/funding/models.py:900
+#: bluebottle/funding/models.py:908
 msgid "Result of the IBAN check"
 msgstr "Résultat de la vérification de l'IBAN"
 
-#: bluebottle/funding/models.py:908
+#: bluebottle/funding/models.py:916
 msgid "Name of the account holder"
 msgstr "Nom du titulaire du compte"
 
@@ -4493,47 +4501,51 @@ msgstr "Nom du titulaire du compte"
 msgid "Campaign deadline has passed."
 msgstr "La date limite de la campagne est dépassée."
 
-#: bluebottle/funding/serializers.py:82
+#: bluebottle/funding/serializers.py:84
 msgid "Currency does not match any of the activities currencies"
 msgstr "La devise ne correspond à aucune des devises des activités"
 
-#: bluebottle/funding/serializers.py:220 bluebottle/funding/validators.py:48
+#: bluebottle/funding/serializers.py:222 bluebottle/funding/validators.py:48
 msgid "The deadline should not be more then 60 days in the future"
 msgstr "La date limite ne devrait pas être supérieure à 60 jours dans le futur"
 
-#: bluebottle/funding/serializers.py:383
+#: bluebottle/funding/serializers.py:385
 msgid "Target cannot be changed after the funding has been published."
 msgstr "Le montant cible ne peut pas être changé après la publication du financement."
 
-#: bluebottle/funding/serializers.py:387
+#: bluebottle/funding/serializers.py:389
 msgid "Deadline cannot be changed after the funding has been published."
 msgstr "La date limite ne peut pas être changée après la publication du financement."
 
-#: bluebottle/funding/serializers.py:456 bluebottle/funding/serializers.py:624
+#: bluebottle/funding/serializers.py:458 bluebottle/funding/serializers.py:626
 msgid "Pledge"
 msgstr "Engagement"
 
-#: bluebottle/funding/serializers.py:492
+#: bluebottle/funding/serializers.py:494
 msgid "The selected reward is not related to this activity"
 msgstr "La récompense sélectionnée n'est pas liée à cette activité"
 
-#: bluebottle/funding/serializers.py:508
+#: bluebottle/funding/serializers.py:510
 msgid "The amount must be higher or equal to the amount of the reward."
 msgstr "Le montant doit être supérieur ou égal au montant de la récompense."
 
-#: bluebottle/funding/serializers.py:517
+#: bluebottle/funding/serializers.py:519
 msgid "User can only be set, not changed."
 msgstr "L'utilisateur ne peut être défini, pas modifié."
 
-#: bluebottle/funding/serializers.py:668
+#: bluebottle/funding/serializers.py:670
 #, python-brace-format
 msgid "Amount must be at least {amount} {currency}"
 msgstr "Le montant doit être d'au moins {amount} {currency}"
 
-#: bluebottle/funding/serializers.py:675
+#: bluebottle/funding/serializers.py:687
 #, python-brace-format
 msgid "Amount cannot exceed {amount} {currency}"
 msgstr "Le montant ne doit pas dépasser {amount} {currency}"
+
+#: bluebottle/funding/serializers.py:714
+msgid "Donations cannot exceed the target amount"
+msgstr "Les donations ne peuvent pas dépasser le montant cible"
 
 #: bluebottle/funding/states.py:14
 msgid "partially funded"
@@ -9418,10 +9430,10 @@ msgstr "Gérer les rapports"
 #: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
 #: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
 #: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
-#: tenants/nlcares/settings.py:27 tenants/nlmtd/settings.py:30
-#: tenants/nn/settings.py:27 tenants/nola-connects/settings.py:26
-#: tenants/nordea/settings.py:27 tenants/partos/settings.py:26
-#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
+#: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
+#: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
+#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
+#: tenants/purpose-in-action/settings.py:27
 #: tenants/rhi-magnesita/settings.py:25
 #: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
@@ -9432,8 +9444,8 @@ msgstr "Anglais"
 
 #: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:426
 #: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/almelo/settings.py:25 tenants/apg/settings.py:26
-#: tenants/athlon/settings.py:26
+#: tenants/aed-actie/settings.py:26 tenants/almelo/settings.py:25
+#: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
 #: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
@@ -9446,10 +9458,9 @@ msgstr "Anglais"
 #: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
 #: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
 #: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
-#: tenants/nlcares/settings.py:26 tenants/nlmtd/settings.py:29
-#: tenants/nn/settings.py:26 tenants/ouderenfonds/settings.py:26
-#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
-#: tenants/purpose-in-action/settings.py:26
+#: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
+#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
+#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-cooperatief/settings.py:25
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25

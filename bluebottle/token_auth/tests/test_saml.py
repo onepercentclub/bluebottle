@@ -8,6 +8,7 @@ from future import standard_library
 from mock import patch, MagicMock
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
+from bluebottle.clients import properties
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -16,8 +17,7 @@ from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.models import SAMLLog
 from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS, TOKEN_AUTH_SETTINGS
-
-from bluebottle.clients import properties
+from bluebottle.utils import translation
 
 standard_library.install_aliases()
 
@@ -779,26 +779,27 @@ class TestSAMLTokenAuthentication(TestCase):
             }
         )
 
+        language = properties.LANGUAGE_CODE
         with self.settings(TOKEN_AUTH=settings):
+            with translation.override(language):
+                request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+                auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
-            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
-
-            result = auth_backend.parse_user({
-                'team': ['Marketing'],
-                'team_name': ['Online Marketing'],
-                'mail': ['test@example.com'],
-                'nameId': ['1234325']
-            })
-            self.assertEqual(
-                result['remote_id'], '1234325'
-            )
-            self.assertEqual(
-                result['email'], 'test@example.com'
-            )
-            self.assertEqual(
-                result['segment.team'], ['Marketing', 'Online Marketing']
-            )
+                result = auth_backend.parse_user({
+                    'team': ['Marketing'],
+                    'team_name': ['Online Marketing'],
+                    'mail': ['test@example.com'],
+                    'nameId': ['1234325']
+                })
+                self.assertEqual(
+                    result['remote_id'], '1234325'
+                )
+                self.assertEqual(
+                    result['email'], 'test@example.com'
+                )
+                self.assertEqual(
+                    result['segment.team'], ['Marketing', 'Online Marketing']
+                )
 
     def test_parse_segments(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)
@@ -821,6 +822,8 @@ class TestSAMLTokenAuthentication(TestCase):
             name='Sales'
         )
 
+        language = properties.LANGUAGE_CODE
+
         with self.settings(TOKEN_AUTH=settings):
             user = BlueBottleUserFactory.create()
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
@@ -830,21 +833,21 @@ class TestSAMLTokenAuthentication(TestCase):
                 'segment.segment': ['Online Marketing', 'Marketing']
             })
             self.assertEqual(
-                list(user.segments.values_list('name', flat=True)),
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
                 ['Marketing']
             )
             auth_backend.set_segments(user, {
                 'segment.segment': ['Sales', 'Marketing']
             })
             self.assertEqual(
-                list(user.segments.values_list('name', flat=True)),
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
                 ['Marketing', 'Sales']
             )
             auth_backend.set_segments(user, {
                 'segment.segment': ['markeTING']
             })
             self.assertEqual(
-                list(user.segments.values_list('name', flat=True)),
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
                 ['Marketing']
             )
 

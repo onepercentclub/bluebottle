@@ -8,7 +8,6 @@ from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
-from bluebottle import activity_pub
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
@@ -229,7 +228,7 @@ class Event(ActivityPubModel):
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
     )
-    activity_link = models.URLField(null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
 
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL

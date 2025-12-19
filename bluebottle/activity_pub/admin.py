@@ -118,18 +118,6 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
     pass
 
 
-class FollowForm(forms.ModelForm):
-    url = forms.URLField(
-        label=_("Partner URL"),
-        help_text=_("This is the website address of the partner you want to follow."),
-        max_length=400
-    )
-
-    class Meta:
-        model = Follow
-        fields = ["iri", ]
-
-
 @admin.register(Person)
 class PersonAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
@@ -200,7 +188,7 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
 
     def republish_recipient(self, request, object_id, recipient_id):
         from django.db import connection
-        from bluebottle.activity_pub.adapters import publish_to_recipient
+        from bluebottle.activity_pub.tasks import publish_to_recipient
         from bluebottle.activity_pub.models import Recipient
 
         activity = get_object_or_404(Activity, pk=unquote(object_id))
@@ -312,7 +300,7 @@ class SourceFilter(admin.SimpleListFilter):
 class FollowingAddForm(forms.ModelForm):
     platform_url = forms.URLField(
         label=_("Partner URL"),
-        help_text=_("This is the website address of the partner you want to follow."),
+        help_text=_("Thi is the website address of the partner you want to follow."),
     )
     default_owner = forms.ModelChoiceField(
         Member.objects.all(),
@@ -377,7 +365,7 @@ class FollowingAdmin(FollowAdmin):
             # When adding a new Following
             return (
                 (None, {
-                    'fields': ('platform_url', )
+                    'fields': ('platform_url', 'adoption_mode')
                 }),
             )
         else:
@@ -669,6 +657,8 @@ class EventAdminMixin:
         "display_image",
         "source",
         "activity",
+        "url",
+        "iri"
     )
     fields = readonly_fields
     list_filter = [AdoptedFilter, SourceFilter]

@@ -2,7 +2,6 @@ import logging
 from io import BytesIO
 
 import requests
-from celery import shared_task
 from django.db import connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -16,7 +15,6 @@ from bluebottle.activity_pub.models import Recipient
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
-from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
 
 logger = logging.getLogger(__name__)
@@ -83,6 +81,8 @@ class JSONLDAdapter():
         if not activity.pk:
             activity.save()
 
+        from .tasks import publish_to_recipient
+
         for recipient in activity.recipients.all():
             if recipient.send:
                 pass
@@ -116,6 +116,7 @@ class JSONLDAdapter():
             event = activity.event
         except Event.DoesNotExist:
             federated_serializer = FederatedActivitySerializer(activity)
+            print(federated_serializer.data)
             serializer = EventSerializer(data=federated_serializer.data)
             serializer.is_valid(raise_exception=True)
             event = serializer.save(activity=activity)
@@ -128,42 +129,20 @@ class JSONLDAdapter():
 
         data = EventSerializer(instance=event).data
         serializer = LinkedDeedSerializer(data=data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-
-        follow = Follow.objects.get(object=event.source)
+        obj = serializer.is_valid(raise_exception=True)
         organization = Publish.objects.filter(object=event).first().actor.organization
 
-        return serializer.save(host_organization=organization, status='open')
+        import ipdb;
+        ipdb.set_trace()
+
+        return serializer.save(
+            host_organization=organization,
+            status='open',
+            event=event
+        )
 
 
 adapter = JSONLDAdapter()
-
-
-@shared_task(
-    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
-    name="bluebottle.activity_pub.adapters.publish_to_recipient"
-)
-def publish_to_recipient(activity, recipient, tenant):
-    from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
-
-    with LocalTenant(tenant, clear_tenant=True):
-        actor = recipient.actor
-        inbox = getattr(actor, "inbox", None)
-        if recipient.send:
-            pass
-        actor = recipient.actor
-        if inbox is None or inbox.is_local:
-            logger.warning(f"Actor {actor} has no inbox, skipping publish")
-            pass
-        try:
-            data = ActivitySerializer().to_representation(activity)
-            auth = adapter.get_auth(activity.actor)
-            adapter.post(inbox.iri, data=data, auth=auth)
-            recipient.send = True
-            recipient.save()
-        except Exception as e:
-            logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
-            raise
 
 
 @receiver([post_save])

@@ -5,10 +5,10 @@ from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Donor
-from bluebottle.segments.models import Segment
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.documents import deduplicate, get_translated_list
 from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.segments.models import Segment
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.utils.search import Search
 
@@ -147,6 +147,15 @@ class ActivityDocument(Document):
             'city': fields.TextField(),
             'country': fields.TextField(attr='country.name'),
             'country_code': fields.TextField(attr='country.alpha2_code'),
+        }
+    )
+
+    host_organization = fields.NestedField(
+        attr='host_organization',
+        properties={
+            'id': fields.LongField(),
+            'name': fields.TextField(),
+            'logo': fields.TextField(),
         }
     )
 

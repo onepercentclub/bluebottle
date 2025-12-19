@@ -85,7 +85,6 @@ class TeamTriggerTestCase(BluebottleTestCase):
         mail.outbox = []
         self.team.states.remove(save=True)
         self.assertEqual(self.team.status, "removed")
-        print([m.subject for m in mail.outbox])
         self.assertEqual(
             len(mail.outbox),
             2

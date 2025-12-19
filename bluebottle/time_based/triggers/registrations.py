@@ -339,6 +339,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     conditions=[activity_no_spots_left],
                 ),
                 AdjustInitialPeriodicParticipantEffect,
+                RelatedTransitionEffect(
+                    "participants",
+                    PeriodicParticipantStateMachine.accept,
+                ),
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),

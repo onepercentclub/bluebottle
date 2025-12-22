@@ -112,7 +112,7 @@ class MoneyField(DjangoMoneyField):
                  currency_choices=None,
                  **kwargs):
         default_currency = 'EUR'
-        currency_choices = [('EUR', 'Euro')]
+        currency_choices = self.get_currency_choices()
         super(MoneyField, self).__init__(
             verbose_name=verbose_name, name=name,
             max_digits=max_digits, decimal_places=decimal_places, default=default,
@@ -142,6 +142,8 @@ class MoneyField(DjangoMoneyField):
     def formfield(self, **kwargs):
         # Use the new reusable form field
         defaults = {"form_class": MoneyFormField}
+        defaults["currency_choices"] = self.get_currency_choices()
+        defaults["default_currency"] = self.get_default_currency()
         defaults.update(kwargs)
         return super(MoneyField, self).formfield(**defaults)
 

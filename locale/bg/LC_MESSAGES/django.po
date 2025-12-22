@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-19 09:33+0100\n"
-"PO-Revision-Date: 2025-12-19 08:35\n"
+"POT-Creation-Date: 2025-12-22 15:10+0100\n"
+"PO-Revision-Date: 2025-12-22 14:12\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -4442,12 +4442,12 @@ msgid "In the KYC flow do a check to see if bank account number and name match. 
 msgstr "В процеса на KYC направете проверка дали IBAN номерът на банковата сметка и името съвпадат. Това ще бъде направено от API на Surepay и само холандските IBAN са поддържани. "
 
 #: bluebottle/funding/models.py:853
-msgid "Cap donations"
-msgstr "Покриване на дарения"
+msgid "Limit donations"
+msgstr ""
 
 #: bluebottle/funding/models.py:856
-msgid "Stop accepting donations as soon as the target is reached."
-msgstr "Спирайте да приемате дарения, веднага щом целта бъде достигната."
+msgid "Automatically stop accepting donations once the target is reached."
+msgstr ""
 
 #: bluebottle/funding/models.py:861
 msgid "Name to use for match funding"

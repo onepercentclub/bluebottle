@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-19 09:33+0100\n"
+"POT-Creation-Date: 2025-12-22 15:10+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4594,11 +4594,11 @@ msgid ""
 msgstr ""
 
 #: bluebottle/funding/models.py:853
-msgid "Cap donations"
+msgid "Limit donations"
 msgstr ""
 
 #: bluebottle/funding/models.py:856
-msgid "Stop accepting donations as soon as the target is reached."
+msgid "Automatically stop accepting donations once the target is reached."
 msgstr ""
 
 #: bluebottle/funding/models.py:861

@@ -638,7 +638,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')
 
-            if obj and (obj.is_staff or obj.is_superuser):
+            if obj:
                 fieldsets[1][1]['fields'].append('submitted_initiative_notifications')
 
             fieldsets[1][1]['fields'].append('subscribed')

@@ -79,7 +79,7 @@ class PaymentProvider(PolymorphicModel):
     def get_currency_choices(cls):
         currencies = []
         if isinstance(connection.tenant, FakeTenant):
-            currencies = [('EUR', 'Euro'), ('USD', 'US Dollar')]
+            currencies = [('EUR', 'Euro')]
         else:
             for provider in cls.objects.all():
                 for cur in provider.paymentcurrency_set.all():

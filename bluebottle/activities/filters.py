@@ -264,7 +264,7 @@ class ReviewingFacet(Facet):
 
             if user.has_perm('activities.api_review_activity'):
 
-                should_filters = []
+                should_filters = [~Term(activity_type='grantapplication')]
 
                 subregions = getattr(user, "subregion_manager", None)
                 if subregions:
@@ -287,9 +287,7 @@ class ReviewingFacet(Facet):
                                 query=Terms(**{"segments__id": segment_ids})
                             )
                         )
-                if should_filters:
-                    return Bool(should=should_filters, minimum_should_match=1)
-                return MatchAll()
+                return Bool(should=should_filters, minimum_should_match=1)
 
             return MatchNone()
 

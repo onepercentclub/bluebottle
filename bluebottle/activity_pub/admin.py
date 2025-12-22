@@ -435,8 +435,8 @@ class FollowingAdmin(FollowAdmin):
                     self.message_user(
                         request,
                         _(
-                            "Follow request sent to %s. "
-                            "Your platforms will be connected when the request is accepted."
+                            "Connection request sent to %s. "
+                            "You will be able to receive activities when the request is accepted."
                         ) % platform_url,
                         level="success"
                     )

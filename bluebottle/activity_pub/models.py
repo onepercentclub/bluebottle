@@ -47,6 +47,10 @@ class ActivityPubModel(PolymorphicModel):
                 reverse(f'json-ld:{model_name}', args=(str(self.pk),))
             )
 
+    class Meta:
+        verbose_name = _("GoodUp Connect object")
+        verbose_name_plural = _("GoodUp Connect objects")
+
 
 class Actor(ActivityPubModel):
     inbox = models.ForeignKey('activity_pub.Inbox', on_delete=models.SET_NULL, null=True, blank=True)
@@ -271,8 +275,8 @@ class PublishedActivity(Event):
 
     class Meta:
         proxy = True
-        verbose_name = _("Published activity")
-        verbose_name_plural = _("Publihed activities")
+        verbose_name = _("Shared activity")
+        verbose_name_plural = _("Shated activities")
 
 
 class ReceivedActivity(Event):
@@ -420,22 +424,26 @@ class Follow(Activity):
     def adopted_activities(self):
         return Announce.objects.filter(actor=self.actor).count()
 
+    def __str__(self):
+        return str(self.actor)
+
+    class Meta:
+        verbose_name = _('Connection')
+        verbose_name_plural = _('Connections')
+
 
 class Follower(Follow):
     class Meta:
         proxy = True
-        verbose_name = _('Partner')
-        verbose_name_plural = _('Partners')
-
-    def __str__(self):
-        return str(self.actor)
+        verbose_name = _('Consumer')
+        verbose_name_plural = _('Consumers')
 
 
 class Following(Follow):
     class Meta:
         proxy = True
-        verbose_name = _('connection')
-        verbose_name_plural = _('connections')
+        verbose_name = _('Supplier')
+        verbose_name_plural = _('Suppliers')
 
     def __str__(self):
         try:

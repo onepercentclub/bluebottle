@@ -129,11 +129,8 @@ class JSONLDAdapter():
 
         data = EventSerializer(instance=event).data
         serializer = LinkedDeedSerializer(data=data, context={'request': request})
-        obj = serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True)
         organization = Publish.objects.filter(object=event).first().actor.organization
-
-        import ipdb;
-        ipdb.set_trace()
 
         return serializer.save(
             host_organization=organization,

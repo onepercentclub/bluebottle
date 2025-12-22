@@ -1,6 +1,6 @@
+from celery import shared_task
 from django.db import connection
 from rest_framework import generics, status, response
-from celery import shared_task
 
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (

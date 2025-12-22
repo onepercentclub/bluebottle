@@ -6,7 +6,7 @@ from django_quill.fields import QuillField
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.organizations.models import Organization
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, ImageField
 
 
 class LinkedActivity(PolymorphicModel):
@@ -14,6 +14,7 @@ class LinkedActivity(PolymorphicModel):
     link = models.URLField()
     status = models.CharField(max_length=40)
     description = QuillField(_("Description"), blank=True)
+    image = ImageField(blank=True, null=True)
     event = models.ForeignKey(
         'activity_pub.Event',
         related_name='linked_activities',

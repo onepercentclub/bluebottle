@@ -231,13 +231,11 @@ class DoGoodEventSerializer(BaseEventSerializer):
     def create(self, validated_data):
         sub_events = validated_data.pop('sub_event', [])
         result = super().create(validated_data)
-
         field = self.fields['sub_event']
         field.initial_data = sub_events
 
         field.is_valid(raise_exception=True)
         field.save(parent=result)
-
         return result
 
     def update(self, instance, validated_data):

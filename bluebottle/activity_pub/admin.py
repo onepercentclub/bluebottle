@@ -434,8 +434,8 @@ class FollowingAdmin(FollowAdmin):
                     self.message_user(
                         request,
                         _(
-                            "Follow request sent to %s. "
-                            "Your platforms will be connected when the request is accepted."
+                            "Connection request sent to %s. "
+                            "You will be able to receive activities when the request is accepted."
                         ) % platform_url,
                         level="success"
                     )
@@ -803,6 +803,9 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name if obj.get_real_instance_class() else '-'
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
     list_display = ("name", "type", "source", "adopted")
 

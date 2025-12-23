@@ -1,6 +1,20 @@
 from django.db import connection
 
-from django_elasticsearch_dsl import Index
+from django_elasticsearch_dsl import Index, fields
+from elasticsearch_dsl import analyzer
+
+default_analyzer = analyzer(
+    'standard',
+    tokenizer="standard",
+    filter=["lowercase", "asciifolding"],
+)
+
+
+class TextField(fields.TextField):
+    def __init__(self, *args, **kwargs):
+        kwargs['analyzer'] = default_analyzer
+
+        super().__init__(*args, **kwargs)
 
 
 class MultiTenantIndex(Index):

@@ -181,10 +181,18 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
             'tenant_name': connection.tenant.name
         })
 
+    site_platform_settings = SitePlatformSettings.load()
+    mail_platform_settings = MailPlatformSettings.load()
     kwargs.update({
-        'settings': MailPlatformSettings.load(),
-        'content': SitePlatformSettings.load(),
+        'settings': mail_platform_settings,
+        'content': site_platform_settings,
     })
+
+    if site_platform_settings.terminated:
+        logger.error(
+            f"Trying to send email on terminated platform: {to.email}"
+        )
+        return
 
     try:
         msg = create_message(

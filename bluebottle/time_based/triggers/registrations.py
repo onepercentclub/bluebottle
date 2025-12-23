@@ -123,7 +123,7 @@ class RegistrationTriggers(TriggerManager):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    'participants',
+                    'unreviewed_participants',
                     RegistrationParticipantStateMachine.accept,
                 ),
                 FollowActivityEffect,
@@ -339,6 +339,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     conditions=[activity_no_spots_left],
                 ),
                 AdjustInitialPeriodicParticipantEffect,
+                RelatedTransitionEffect(
+                    "participants",
+                    PeriodicParticipantStateMachine.accept,
+                ),
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),

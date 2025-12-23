@@ -61,14 +61,6 @@ class Organization(ValidatedModelMixin, models.Model):
         else:
             return self.name
 
-    @property
-    def activity_pub_url(self):
-        from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
-        try:
-            return self.activity_pub_organization.iri
-        except ActivityPubOrganization.DoesNotExist:
-            return None
-
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
 

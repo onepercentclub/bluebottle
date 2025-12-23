@@ -41,11 +41,15 @@ class SocialLoginSettings(models.Model):
     secret = models.CharField(_('Secret'))
     client_id = models.CharField(_('Client id'))
 
+    class Meta(object):
+        verbose_name_plural = _('Social login settings')
+        verbose_name = _('Social login settings')
+
 
 class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     LOGIN_METHODS = (
-        ('password', _('Email/password combination')),
         ('SSO', _('Company SSO')),
+        ('password', _('Email + password')),
     )
 
     DISPLAY_MEMBER_OPTIONS = (
@@ -60,7 +64,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
 
     ACCOUNT_CREATION_RULES = (
         ('anyone', _('Anyone can create an account')),
-        ('whitelist', _('Only people with a whitelisted email domain can create an account')),
+        ('whitelist', _('Only people with a whitelisted domain can create an account')),
         (
             'whitelist_and_request',
             _('People with a whitelisted domain can create an account; all others can request access')
@@ -125,12 +129,12 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         _('verify email on sign up'),
         default=False,
         inline_label=_('Require users to verify their email on sign-up'),
-        help_text=_('This rule only applies to email + password sign-ups.'),
+        help_text=_('This rule only applies to the email + password method.'),
     )
 
     account_creation_rules = CharField(
         _('account creation rules'),
-        help_text=_('This rule only applies to email + password sign-ups.'),
+        help_text=_('This rule only applies to the email + password method.'),
         choices=ACCOUNT_CREATION_RULES,
         default='anyone',
     )

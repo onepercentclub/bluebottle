@@ -1,6 +1,7 @@
 from builtins import object
 from itertools import groupby
 
+from bluebottle.scim.models import SCIMPlatformSettings
 from django.conf import settings
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
@@ -789,16 +790,18 @@ def bulk_add_participants(activity, emails, send_messages):
     if isinstance(activity, RegisteredDateActivity):
         Participant = RegisteredDateParticipant
 
+    settings = MemberPlatformSettings.objects.get()
+    scim_settings = SCIMPlatformSettings.objects.get()
+
     if not Participant:
         raise AttributeError(f'Could not find participant type for {activity}')
     new = False
     for email in emails:
         try:
             user = Member.objects.filter(email__iexact=email.strip()).first()
-            settings = MemberPlatformSettings.objects.get()
             if not user:
                 new = True
-                if settings.closed:
+                if settings.closed and not scim_settings.enabled:
                     email = email.strip()
                     try:
                         user = Member.create_by_email(email)

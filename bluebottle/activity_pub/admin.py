@@ -321,7 +321,7 @@ class FollowingAddForm(forms.ModelForm):
 
     class Meta:
         model = Following
-        fields = ['platform_url', 'default_owner']
+        fields = ['platform_url', ]
         widgets = {
             'default_owner': admin.widgets.ForeignKeyRawIdWidget(
                 Following._meta.get_field('default_owner').remote_field,
@@ -352,10 +352,11 @@ class FollowingAddForm(forms.ModelForm):
 
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
-    list_display = ("object", "accepted")
+    model = Following
+    list_display = ("object", "shared_activities", "adopted_activities", "accepted")
     raw_id_fields = ('default_owner',)
 
-    readonly_fields = ('object', 'accepted')
+    readonly_fields = ('object', 'accepted', "shared_activities", "adopted_activities")
 
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
@@ -374,14 +375,14 @@ class FollowingAdmin(FollowAdmin):
             # When adding a new Following
             return (
                 (None, {
-                    'fields': ('platform_url', 'default_owner')
+                    'fields': ('platform_url', )
                 }),
             )
         else:
             # When viewing/editing an existing Following
             return (
                 (None, {
-                    'fields': ('object', 'accepted', 'default_owner')
+                    'fields': ('object', 'accepted', )
                 }),
             )
 
@@ -465,9 +466,9 @@ class FollowingAdmin(FollowAdmin):
 
 @admin.register(Follower)
 class FollowerAdmin(FollowAdmin):
-    list_display = ("platform", "accepted")
+    list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
     actions = ['accept_follow_requests']
-    readonly_fields = ('platform', 'accepted')
+    readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities")
     fields = readonly_fields
 
     def platform(self, obj):
@@ -742,6 +743,9 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name if obj.get_real_instance_class() else '-'
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
     list_display = ("name", "type", "source", "adopted")
 
     def name_link(self, obj):
@@ -759,8 +763,15 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
 @admin.register(PublishedActivity)
 class PublishedActivityAdmin(EventPolymorphicAdmin):
     model = PublishedActivity
-    list_display = ("name_link", "type")
+    list_display = ("name_link", "type", "shared", "adopted")
     list_display_links = ("name_link",)
+
+    def shared(self, obj):
+        publish = Publish.objects.filter(object=obj).first()
+        return publish.recipients.filter(send=True).count()
+
+    def adopted(self, obj):
+        return Announce.objects.filter(object=obj).count()
 
     def get_queryset(self, request):
         return Event.objects.filter(iri__isnull=True)
@@ -783,9 +794,16 @@ class ReceivedActivityAdmin(EventPolymorphicAdmin):
 class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
     change_form_template = 'admin/activity_pub/event/change_form.html'
     base_model = Event
-    fields = ('adopt_info',) + EventAdminMixin.fields
+    fields = EventAdminMixin.fields
 
     readonly_fields = ('adopt_info',) + EventAdminMixin.readonly_fields
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and obj.is_local:
+            fields = fields[1:]
+
+        return fields
 
     def adopt_info(self, obj):
         return admin_info_box(

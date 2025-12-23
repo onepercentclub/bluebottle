@@ -217,7 +217,7 @@ class StripePayoutAccountTriggers(TriggerManager):
                 ),
                 TransitionEffect(
                     StripePayoutAccountStateMachine.disable,
-                    conditions=[payments_are_disabled],
+                    conditions=[payments_are_disabled, has_funding_campaign],
                 ),
             ],
         ),

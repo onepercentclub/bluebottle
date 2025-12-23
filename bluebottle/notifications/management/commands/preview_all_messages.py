@@ -58,6 +58,7 @@ MESSAGE_MODULES = {
 
     'grant_management.activity_manager': 'bluebottle.grant_management.messages.activity_manager',
     'grant_management.grant_provider': 'bluebottle.grant_management.messages.grant_provider',
+    'grant_management.reviewer': 'bluebottle.grant_management.messages.reviewer',
 
     'initiatives.initiator': 'bluebottle.initiatives.messages.initiator',
     'initiatives.reviewer': 'bluebottle.initiatives.messages.reviewer',
@@ -408,6 +409,26 @@ class MockPayoutAccount:
         self.pk = 111
         self.funding = MockFunding(language)
 
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+
+class MockGrantPayout:
+    """Mock GrantPayout object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+        self.activity = MockGrantApplication(language)
+        self.amount = Money(3500, 'EUR')
+        self.grant = MockGrantDonor(language)
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/admin/grant_management/grantpayout/{self.id}/change"
+
 
 class MockGrantApplication:
     """Mock Grant Application object"""
@@ -423,6 +444,37 @@ class MockGrantApplication:
         self.total = Money(1700, 'EUR')
         self.organization = None
         self.payouts = Payout.objects.none()
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+
+class MockGrantFund:
+    """Mock GrantFund object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+        self.name = "GoodUp Big Fund"
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+
+class MockGrantDonor:
+    """Mock GrantDonor object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+        self.activity = MockGrantApplication(language)
+        self.fund = MockGrantFund(language)
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
@@ -508,7 +560,9 @@ MOCK_OBJECT_MAP = {
     'Update': MockUpdate,
     'Activity': MockActivity,
     'Member': MockMember,
-    'Registration': MockRegistration
+    'Registration': MockRegistration,
+    'GrantPayout': MockGrantPayout,
+
 }
 
 
@@ -553,6 +607,9 @@ def get_mock_object_for_message(message_class, language='en'):
 
         if 'GrantPayment' in class_name:
             return MockGrantPayment(language)
+
+        if 'PayoutReady' in class_name:
+            return MockGrantPayout(language)
 
         if 'grant_management' in module_name:
             if 'PayoutAccount' in class_name:

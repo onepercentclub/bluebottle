@@ -842,7 +842,13 @@ class ActivityChildAdmin(
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
         ]
         site_settings = SitePlatformSettings.load()
-        if site_settings.share_activities and request.user.has_perm("activity_pub.add_event"):
+        if (
+            site_settings.share_activities and
+            request.user.has_perm("activity_pub.add_event") and (
+                site_settings.is_publishing_activities or
+                (obj and obj.origin)
+            )
+        ):
             fieldsets.append(
                 (_("GoodUp Connect"), {"fields": self.get_activity_pub_fields(request, obj)})
             )

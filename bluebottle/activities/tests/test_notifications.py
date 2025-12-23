@@ -213,8 +213,11 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ1Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("It’s a new year, let's make some impact!")
-        self.assertBodyContains('Can you spend 8 hours making an impact this year?')
+        self.assertSubject("Test, a new year, a new chance to make impact")
+        self.assertBodyContains(
+            "Ready to make an impact from day one? On Test "
+            "you’ll find many activities waiting for you."
+        )
         self.assertActionTitle('Find activities')
         self.assertActionLink('http://test.localhost:8000/initiatives/activities/list')
         self.assertBodyContains('http://test.localhost:8000/member/profile')
@@ -223,17 +226,23 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ2Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Haven’t joined an activity yet? Let’s get started!")
-        self.assertBodyContains('The first step is always the hardest')
+        self.assertSubject("Test, your impact starts here")
+        self.assertBodyContains(
+            "We know that getting started can sometimes be the hardest part. "
+            "That’s why we’ve made it simple to find activities that match your "
+            "interests and time."
+        )
         self.assertActionTitle('Find activities')
 
     def test_reminder_q3(self):
         self.message_class = DoGoodHoursReminderQ3Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Half way through the year and still plenty of activities to join")
+        self.assertSubject("Test, there's still time to make your mark this year")
         self.assertBodyContains(
-            'There’s still so much time to reach the target of 8 hours making an impact this year.'
+            "We’re halfway through the year and there’s still lots of opportunity to "
+            "make impact. Whether you’ve got a few minutes or a few hours, your efforts "
+            "can make a real difference."
         )
         self.assertActionTitle('Find activities')
 
@@ -241,9 +250,9 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ4Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Make use of your 8 hours of impact!")
+        self.assertSubject("Test, use your 8 hours to make a difference!")
         self.assertBodyContains(
-            'Get involved with some good causes before the year ends, '
-            'there are plenty of activities that need your help!'
+            'As we approach the final months of the year, there’s '
+            'still time to make impact. Many causes would benefit from your time and skills.'
         )
         self.assertActionTitle('Find activities')

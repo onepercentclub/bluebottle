@@ -476,7 +476,7 @@ class FollowerAdmin(FollowAdmin):
     list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
     actions = ['accept_follow_requests']
     readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities")
-    fields = readonly_fields + ('publish_mode',)
+    fields = readonly_fields
 
     def platform(self, obj):
         return obj.actor
@@ -497,6 +497,12 @@ class FollowerAdmin(FollowAdmin):
 
     accepted.boolean = True
     accepted.short_description = _("Accepted")
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and self.accepted(obj):
+            fields += ('publish_mode',)
+        return fields
 
     def get_urls(self):
         urls = super().get_urls()

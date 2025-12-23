@@ -2,12 +2,12 @@
 {% load i18n admin_urls %}
 
 {% block submit_buttons_bottom %}
-    {{ block.super }}
     {% if original %}
         {% if is_accepted %}
             <div class="submit-row">
-                <p style="color: green; font-weight: bold;">✓ {% trans "This follow request has already been accepted" %}</p>
+                <p style="color: green; font-weight: bold;">✓ {% trans "This follow request has been accepted" %}</p>
             </div>
+            {{ block.super }}
         {% else %}
             <div class="submit-row">
                 <a href="{{ accept_url }}">

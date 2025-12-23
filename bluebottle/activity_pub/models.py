@@ -351,6 +351,17 @@ class AdoptionTypeChoices(DjangoChoices):
     )
 
 
+class PublishModeChoices(DjangoChoices):
+    manual = ChoiceItem(
+        'manual',
+        _('Activities will be shared manually.')
+    )
+    automatic = ChoiceItem(
+        'automatic',
+        _('Activities are automatically shared once they go live.')
+    )
+
+
 class SubEvent(ActivityPubModel):
     name = models.CharField(null=True)
     start_time = models.DateTimeField(null=True)
@@ -447,6 +458,13 @@ class Follow(Activity):
         default=AdoptionTypeChoices.template,
         verbose_name=_("Adoption type"),
         help_text=_("Select how a received activity should be adopted."),
+    )
+
+    publish_mode = models.CharField(
+        choices=PublishModeChoices.choices,
+        default=PublishModeChoices.manual,
+        verbose_name=_("Publish mode"),
+        help_text=_("Select how you want to share activities."),
     )
 
     @property

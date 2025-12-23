@@ -16,6 +16,7 @@ from polymorphic.admin import (
 )
 
 from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm
 from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
@@ -36,6 +37,7 @@ from bluebottle.activity_pub.models import (
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.bluebottle_dashboard.decorators import admin_form
 from bluebottle.members.models import Member
 from bluebottle.utils.admin import admin_info_box
 from bluebottle.webfinger.client import client
@@ -474,7 +476,7 @@ class FollowerAdmin(FollowAdmin):
     list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
     actions = ['accept_follow_requests']
     readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities")
-    fields = readonly_fields
+    fields = readonly_fields + ('publish_mode',)
 
     def platform(self, obj):
         return obj.actor
@@ -500,18 +502,18 @@ class FollowerAdmin(FollowAdmin):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "<path:object_id>/accept/",
+                "<path:pk>/accept/",
                 self.admin_site.admin_view(self.accept_follow_request),
                 name="activity_pub_follower_accept",
             ),
         ]
         return custom_urls + urls
 
-    def accept_follow_request(self, request, object_id):
-        """Accept a single follow request"""
-        from bluebottle.activity_pub.models import Accept, Follow
+    @admin_form(AcceptFollowPublishModeForm, Follow, 'admin/activity_pub/follow/accept_publish_mode.html')
+    def accept_follow_request(self, request, follow, form):
+        """Accept a single follow request allowing publish_mode selection"""
+        from bluebottle.activity_pub.models import Accept
 
-        follow = get_object_or_404(Follow, pk=unquote(object_id))
         platform_actor = get_platform_actor()
 
         if not platform_actor:
@@ -519,6 +521,12 @@ class FollowerAdmin(FollowAdmin):
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_follower_change", args=[follow.pk])
             )
+
+        # Persist chosen publish mode before accepting
+        publish_mode = form.cleaned_data.get('publish_mode')
+        if publish_mode and follow.publish_mode != publish_mode:
+            follow.publish_mode = publish_mode
+            follow.save(update_fields=['publish_mode'])
 
         # Check if already accepted
         if Accept.objects.filter(object=follow).exists():

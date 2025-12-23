@@ -1,9 +1,5 @@
-from bluebottle.activity_pub.serializers.base import (
-    ActivityPubSerializer, PolymorphicActivityPubSerializer
-)
 from rest_framework import serializers
 
-from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
 from bluebottle.activity_pub.models import (
     Accept,
     Announce,
@@ -26,6 +22,10 @@ from bluebottle.activity_pub.models import (
     DoGoodEvent,
     SubEvent,
 )
+from bluebottle.activity_pub.serializers.base import (
+    ActivityPubSerializer, PolymorphicActivityPubSerializer
+)
+from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
 
 
 class InboxSerializer(ActivityPubSerializer):
@@ -142,11 +142,11 @@ class BaseEventSerializer(ActivityPubSerializer):
     summary = serializers.CharField()
     image = ImageSerializer(include=True, allow_null=True, required=False)
     organization = OrganizationSerializer(include=True, allow_null=True, required=False)
-    activity_link = serializers.URLField(required=False, allow_null=True, allow_blank=True)
+    url = serializers.URLField()
 
     class Meta(ActivityPubSerializer.Meta):
         fields = ActivityPubSerializer.Meta.fields + (
-            'name', 'summary', 'image', 'organization', 'activity_link',
+            'name', 'summary', 'image', 'organization', 'url',
         )
 
 
@@ -159,7 +159,7 @@ class GoodDeedSerializer(BaseEventSerializer):
 
     class Meta(BaseEventSerializer.Meta):
         model = GoodDeed
-        fields = BaseEventSerializer.Meta.fields + ('start_time', 'end_time', )
+        fields = BaseEventSerializer.Meta.fields + ('start_time', 'end_time')
 
 
 class CrowdFundingSerializer(BaseEventSerializer):
@@ -232,13 +232,11 @@ class DoGoodEventSerializer(BaseEventSerializer):
     def create(self, validated_data):
         sub_events = validated_data.pop('sub_event', [])
         result = super().create(validated_data)
-
         field = self.fields['sub_event']
         field.initial_data = sub_events
 
         field.is_valid(raise_exception=True)
         field.save(parent=result)
-
         return result
 
     def update(self, instance, validated_data):

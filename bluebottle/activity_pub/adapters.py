@@ -2,10 +2,12 @@ import logging
 from io import BytesIO
 
 import requests
-from celery import shared_task
 from django.db import connection
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+
+from celery import shared_task
+
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
@@ -15,6 +17,7 @@ from bluebottle.activity_pub.models import Recipient
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
+
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
 

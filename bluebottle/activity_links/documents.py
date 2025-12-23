@@ -43,6 +43,9 @@ class LinkedDeedDocument(ActivityDocument):
             'description': 'Open',
         }
 
+    def prepare_link(self, instance):
+        return instance.link
+
     def prepare_is_online(self, instance):
         return True
 
@@ -92,7 +95,13 @@ class LinkedDeedDocument(ActivityDocument):
         return []
 
     def prepare_image(self, instance):
-        return []
+        if instance.image:
+            return {
+                'id': instance.pk,
+                'file': instance.image.file.name,
+                'type': 'activity'
+            }
+        return {}
 
     def prepare_owner(self, instance):
         return []

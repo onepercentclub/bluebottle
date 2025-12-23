@@ -232,7 +232,7 @@ class Event(ActivityPubModel):
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
     )
-    activity_link = models.URLField(null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
 
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL
@@ -330,22 +330,39 @@ class JoinModeChoices(DjangoChoices):
 
 
 class AdoptionModeChoices(DjangoChoices):
-    nothing = ChoiceItem(
-        'NothingAdoptionMode',
-        _('Leave new activities. Adoption is managed manually.')
+    manual = ChoiceItem(
+        'manual',
+        _('Received activities are adopted manually.')
+    )
+    automatic = ChoiceItem(
+        'automatic',
+        _('Received activities are always automatically adopted and published.')
+    )
+
+
+class AdoptionTypeChoices(DjangoChoices):
+    template = ChoiceItem(
+        'template',
+        _('Use received activities as template to create your own activities.')
     )
     link = ChoiceItem(
-        'LinkAdoptionMode',
-        _('Create a link to new activities.')
+        'link',
+        _('Show adopted activities as links to the partner platform.')
+    )
+    hosted = ChoiceItem(
+        'hosted',
+        _('Activities are managed by the partner platform, sign ups are synced.')
+    )
 
+
+class PublishModeChoices(DjangoChoices):
+    manual = ChoiceItem(
+        'manual',
+        _('Activities will be shared manually.')
     )
-    publish = ChoiceItem(
-        'PublishAdoptionMode',
-        _('Publish the new activities.')
-    )
-    copy = ChoiceItem(
-        'CopyAdoptionMode',
-        _('Create a local copy for new activities.')
+    automatic = ChoiceItem(
+        'automatic',
+        _('Activities are automatically shared once they go live.')
     )
 
 
@@ -445,9 +462,23 @@ class Follow(Activity):
 
     adoption_mode = models.CharField(
         choices=AdoptionModeChoices.choices,
-        default=AdoptionModeChoices.nothing,
+        default=AdoptionModeChoices.manual,
         verbose_name=_("Adoption mode"),
         help_text=_("Select what should happen when a new activity has been received."),
+    )
+
+    adoption_type = models.CharField(
+        choices=AdoptionTypeChoices.choices,
+        default=AdoptionTypeChoices.template,
+        verbose_name=_("Adoption type"),
+        help_text=_("Select how a received activity should be adopted."),
+    )
+
+    publish_mode = models.CharField(
+        choices=PublishModeChoices.choices,
+        default=PublishModeChoices.manual,
+        verbose_name=_("Publish mode"),
+        help_text=_("Select how you want to share activities."),
     )
 
     @property

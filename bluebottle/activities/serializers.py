@@ -184,6 +184,9 @@ class ActivityPreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
     initiative = serializers.CharField(source="initiative.title", required=False)
+    host_name = serializers.CharField(source="host_organization.name", required=False)
+    host_logo = serializers.SerializerMethodField()
+
     owner = serializers.SerializerMethodField()
 
     image = serializers.SerializerMethodField()
@@ -217,6 +220,11 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_type = serializers.SerializerMethodField()
     collect_target = serializers.SerializerMethodField()
     realized = serializers.SerializerMethodField()
+
+    def get_host_logo(self, obj):
+        if obj.host_organization and obj.host_organization.logo:
+            return obj.host_organization.logo
+        return None
 
     def get_activity(self, obj):
         return {"id": obj.meta["id"], "type": obj.resource_name}
@@ -548,6 +556,9 @@ class ActivityPreviewSerializer(ModelSerializer):
             "expertise",
             "initiative",
             "image",
+            "link",
+            "host_name",
+            "host_logo",
             "matching_properties",
             "amount_raised",
             "realized",

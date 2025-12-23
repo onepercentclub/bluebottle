@@ -232,7 +232,11 @@ class ActivityPreviewSerializer(ModelSerializer):
                 pass
 
         if model:
-            state = getattr(model._state_machines["states"], obj.current_status.value)
+            try:
+                state = getattr(model._state_machines["states"], obj.current_status.value)
+            except AttributeError:
+                # FIXME
+                return obj.current_status
         else:
             state = obj.current_status
 
@@ -522,7 +526,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.status != "open"
 
     def get_owner(self, obj):
-        return obj.owner.full_name
+        return obj.owner.full_name if obj.owner else None
 
     def get_contributor_count(self, obj):
         return obj.contributor_count

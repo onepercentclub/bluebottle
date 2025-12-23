@@ -191,9 +191,17 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     summary = RichTextField(source='description')
     image = ImageSerializer(required=False, allow_null=True)
     organization = OrganizationSerializer(required=False, allow_null=True)
+    activity_link = serializers.SerializerMethodField(required=False, allow_null=True)
 
-    class Meta(FederatedObjectSerializer.Meta):
-        fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image', 'organization')
+    def get_activity_link(self, obj):
+        return connection.tenant.build_absolute_url(
+            obj.get_absolute_url()
+        )
+
+    class Meta:
+        fields = FederatedObjectSerializer.Meta.fields + (
+            'name', 'summary', 'image', 'organization', 'activity_link'
+        )
 
     def save(self, *args, **kwargs):
         if not kwargs.get('owner'):
@@ -366,7 +374,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         FederatedDeedSerializer,
         FederatedDateActivitySerializer,
         FederatedFundingSerializer
-    ]
+                                                                                                                                                                                                                                                                                                                        ]
 
     model_type_mapping = {
         Deed: 'GoodDeed',

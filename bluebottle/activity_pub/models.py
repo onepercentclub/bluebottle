@@ -8,6 +8,7 @@ from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
+from bluebottle import activity_pub
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
@@ -232,6 +233,7 @@ class Event(ActivityPubModel):
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
     )
+    activity_link = models.URLField(null=True, blank=True)
 
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL
@@ -250,6 +252,14 @@ class Event(ActivityPubModel):
     @property
     def adopted(self):
         return self.adopted_activity is not None
+
+    @property
+    def linked_activity(self):
+        return self.linked_activities.first()
+
+    @property
+    def linked(self):
+        return self.linked_activity is not None
 
     def __str__(self):
         return self.name
@@ -318,6 +328,26 @@ class EventAttendanceModeChoices(DjangoChoices):
 class JoinModeChoices(DjangoChoices):
     open = ChoiceItem('OpenJoinMode')
     review = ChoiceItem('ReviewJoinMode')
+
+
+class AdoptionModeChoices(DjangoChoices):
+    nothing = ChoiceItem(
+        'NothingAdoptionMode',
+        _('Leave new activities. Adoption is managed manually.')
+    )
+    link = ChoiceItem(
+        'LinkAdoptionMode',
+        _('Create a link to new activities.')
+
+    )
+    publish = ChoiceItem(
+        'PublishAdoptionMode',
+        _('Publish the new activities.')
+    )
+    copy = ChoiceItem(
+        'CopyAdoptionMode',
+        _('Create a local copy for new activities.')
+    )
 
 
 class SubEvent(ActivityPubModel):
@@ -402,6 +432,13 @@ class Follow(Activity):
         verbose_name=_("Default activity owner"),
         help_text=_("This person will be the activity manager of the activities that are adopted."),
         on_delete=models.SET_NULL,
+    )
+
+    adoption_mode = models.CharField(
+        choices=AdoptionModeChoices.choices,
+        default=AdoptionModeChoices.nothing,
+        verbose_name=_("Adoption mode"),
+        help_text=_("Select what should happen when a new activity has been received."),
     )
 
     @property

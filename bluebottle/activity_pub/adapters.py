@@ -8,9 +8,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
+from bluebottle.activity_links.serializers import LinkedDeedSerializer
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import Follow, Activity, Publish, Recipient, Event
+from bluebottle.activity_pub.models import Follow, Activity, Publish, Event
 from bluebottle.activity_pub.models import Organization
+from bluebottle.activity_pub.models import Recipient
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
@@ -121,6 +123,18 @@ class JSONLDAdapter():
             Publish.objects.create(actor=get_platform_actor(), object=event)
         return event
 
+    def link(self, event, request=None):
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+
+        data = EventSerializer(instance=event).data
+        serializer = LinkedDeedSerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        follow = Follow.objects.get(object=event.source)
+        organization = Publish.objects.filter(object=event).first().actor.organization
+
+        return serializer.save(host_organization=organization, status='open')
+
 
 adapter = JSONLDAdapter()
 
@@ -169,6 +183,22 @@ def publish_activity(sender, instance, **kwargs):
             adapter.publish(instance)
     except Exception as e:
         logger.error(f"Failed to publish activity: {str(e)}", exc_info=True)
+
+
+@receiver(post_save, sender=Event)
+def auto_adopt_event(sender, instance, created, **kwargs):
+    try:
+        if not instance.is_local and not instance.linked_activity:
+            source = instance.source
+            if source:
+                try:
+                    follow = Follow.objects.get(object=source)
+                    if follow.adoption_mode == 'LinkAdoptionMode':
+                        adapter.link(instance, follow)
+                except Follow.DoesNotExist:
+                    logger.debug(f"No follow found for source: {source}")
+    except Exception as e:
+        logger.error(f"Failed to auto-adopt event: {str(e)}")
 
 
 @receiver([post_save])

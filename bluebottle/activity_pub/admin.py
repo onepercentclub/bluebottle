@@ -323,7 +323,7 @@ class FollowingAddForm(forms.ModelForm):
 
     class Meta:
         model = Following
-        fields = ['platform_url', ]
+        fields = ['default_owner', 'adoption_mode', 'platform_url']
         widgets = {
             'default_owner': admin.widgets.ForeignKeyRawIdWidget(
                 Following._meta.get_field('default_owner').remote_field,
@@ -389,8 +389,7 @@ class FollowingAdmin(FollowAdmin):
             )
 
     def get_fields(self, request, obj=None):
-        # This will be overridden by get_fieldsets
-        fields = ['default_owner']
+        fields = ['default_owner', 'adoption_mode']
         if not obj:
             fields = ['connect_info', 'platform_url'] + fields
         else:
@@ -662,12 +661,14 @@ class EventAdminMixin:
         "name",
         "source",
         "adopted",
+        "linked"
     )
     readonly_fields = (
         "name",
         "display_description",
         "display_image",
         "source",
+        "activity",
     )
     fields = readonly_fields
     list_filter = [AdoptedFilter, SourceFilter]
@@ -677,6 +678,12 @@ class EventAdminMixin:
 
     adopted.boolean = True
     adopted.short_description = _("Adopted")
+
+    def linked(self, obj):
+        return obj.linked
+
+    linked.boolean = True
+    linked.short_description = _("Linked")
 
     inlines = []
 
@@ -706,14 +713,16 @@ class EventAdminMixin:
                 self.admin_site.admin_view(self.adopt_event),
                 name="activity_pub_event_adopt",
             ),
+            path(
+                "<path:object_id>/link/",
+                self.admin_site.admin_view(self.link_event),
+                name="activity_pub_event_link",
+            ),
         ]
         return custom_urls + urls
 
     def adopt_event(self, request, object_id):
-        """
-        Create a Deed from the Event information
-        """
-        if not request.user.has_perm("deeds.add_deed"):
+        if not request.user.has_perm("deeds.add_activity"):
             raise PermissionDenied
 
         event = get_object_or_404(Event, pk=unquote(object_id))
@@ -742,6 +751,40 @@ class EventAdminMixin:
 
         except Exception as e:
             self.message_user(request, f"Error creating activity: {str(e)}", level="error")
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+    def link_event(self, request, object_id):
+        if not request.user.has_perm("deeds.add_activity"):
+            raise PermissionDenied
+
+        event = get_object_or_404(Event, pk=unquote(object_id))
+
+        if event.linked_activity:
+            self.message_user(
+                request,
+                "This activity has already been linked.",
+                level="warning",
+            )
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+        try:
+            activity = adapter.link(event, request)
+
+            self.message_user(
+                request,
+                f'Successfully created Activity "{activity.title}" from Event.',
+                level="success",
+            )
+            return HttpResponseRedirect(
+                reverse("admin:activities_activity_change", args=[activity.pk])
+            )
+
+        except Exception as e:
+            self.message_user(request, f"Error creating linked activity: {str(e)}", level="error")
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])
             )
@@ -798,7 +841,7 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
 @admin.register(ReceivedActivity)
 class ReceivedActivityAdmin(EventPolymorphicAdmin):
     model = ReceivedActivity
-    list_display = ("name_link", "type", "source", "adopted")
+    list_display = ("name_link", "type", "source", "adopted", "linked")
     list_display_links = ("name_link",)
 
     def source(self, obj):

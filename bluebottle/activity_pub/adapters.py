@@ -116,7 +116,6 @@ class JSONLDAdapter():
             event = activity.event
         except Event.DoesNotExist:
             federated_serializer = FederatedActivitySerializer(activity)
-            print(federated_serializer.data)
             serializer = EventSerializer(data=federated_serializer.data)
             serializer.is_valid(raise_exception=True)
             event = serializer.save(activity=activity)

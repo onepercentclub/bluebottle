@@ -804,21 +804,13 @@ class ActivityChildAdmin(
         if not request.user.has_perm("activity.add_activity"):
             raise PermissionDenied
 
-        publish = None
-        if getattr(activity, 'event', None):
-            publish = activity.event.publish_set.first()
+        if not hasattr(activity, 'event'):
+            adapter.create_event(activity)
 
-        if publish:
-            new_recipients = form.cleaned_data.get('recipients') or []
-            for actor in new_recipients:
-                Recipient.objects.create(actor=actor, activity=publish)
-            adapter.publish(publish)
-        else:
-            event = adapter.create_event(activity)
-            publish = event.publish_set.first()
-            for actor in form.cleaned_data.get('recipients'):
-                Recipient.objects.create(actor=actor, activity=publish)
-            adapter.publish(publish)
+        publish = activity.event.publish_set.first()
+        new_recipients = form.cleaned_data.get('recipients') or []
+        for actor in new_recipients:
+            Recipient.objects.create(actor=actor, activity=publish)
 
         self.message_user(
             request,
@@ -849,7 +841,13 @@ class ActivityChildAdmin(
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
         ]
         site_settings = SitePlatformSettings.load()
-        if site_settings.share_activities and request.user.has_perm("activity_pub.add_event"):
+        if (
+            site_settings.share_activities and
+            request.user.has_perm("activity_pub.add_event") and (
+                site_settings.is_publishing_activities or
+                (obj and obj.origin)
+            )
+        ):
             fieldsets.append(
                 (_("GoodUp Connect"), {"fields": self.get_activity_pub_fields(request, obj)})
             )

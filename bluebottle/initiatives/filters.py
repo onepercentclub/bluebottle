@@ -50,6 +50,8 @@ class StatusFacet(Facet):
             return Terms(status=['approved'])
         if filter_values == ['failed']:
             return Terms(status=['rejected', 'deleted', 'cancelled'])
+        if filter_values == ['archived']:
+            return Terms(status=['archived'])
         return MatchNone()
 
 

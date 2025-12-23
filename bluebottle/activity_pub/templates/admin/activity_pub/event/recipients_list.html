@@ -5,7 +5,7 @@
         <thead>
         <tr>
             <th class="column-actor">
-                {% trans "Connected platform" %}
+                {% trans "Shared to" %}
 
             </th>
 
@@ -31,9 +31,10 @@
         </tbody>
     </table>
     {% else %}
-
-        {% trans "Click the button bellow to share this to your connected partners." %} <br/>
-        {% trans "In the next step you can select to which partners you want to share." %}
+        {% if share_link %}
+            {% trans "Click the button bellow to share this to your connected partners." %} <br/>
+            {% trans "In the next step you can select to which partners you want to share." %}
+        {% endif %}
     {% endif %}
 </div>
 <br/><br/>
@@ -44,12 +45,12 @@
     </a>
 {% else %}
     <b>
-        {% trans "No partners to share to" %}
+        {% trans "No connected consumers" %}
     </b>
     <br/>
     {% if recipients %}
         {% trans "You already shared this with all the connected partners." %}
     {% else %}
-        {% trans "No partners to share to. Please connect with other platforms first." %}
+        {% trans "Partners need to connect to your platform to receive activities" %}
     {% endif %}
 {% endif %}

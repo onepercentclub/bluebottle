@@ -217,7 +217,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     def activity_pub_url(self):
         from bluebottle.activity_pub.models import Event
         try:
-            return self.event.iri
+            return self.event.iri or self.event.pub_url
         except Event.DoesNotExist:
             return None
 

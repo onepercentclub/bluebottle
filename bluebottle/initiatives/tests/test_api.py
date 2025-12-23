@@ -885,6 +885,18 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({'search': text})
         self.assertFound(matching)
 
+    def test_search_diacritics(self):
+        text = 'lorem ipsum'
+        matching = [
+            InitiativeFactory.create(title='LÔrem Ïpsum dolor sit amet', status='approved'),
+            InitiativeFactory.create(title='Other title', pitch="Lorem ipsum", status='approved')
+        ]
+        InitiativeFactory.create(title='consectetur adipiscing elit', status='approved')
+        InitiativeFactory.create(title='Nam eu turpis erat', status='approved')
+
+        self.search({'search': text})
+        self.assertFound(matching)
+
     def test_sort_created(self):
         matching = InitiativeFactory.create_batch(3, status='approved')
 

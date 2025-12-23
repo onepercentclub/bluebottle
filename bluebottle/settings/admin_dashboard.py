@@ -172,14 +172,14 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["activity_pub.change_event"],
                 "enabled": "cms.SitePlatformSettings.is_publishing_activities",
                 "url": "/en/admin/activity_pub/publishedactivity/",
-                "label": _("Published activities"),
+                "label": _("Shared activities"),
             },
             {
                 "name": "activity_pub.publishedactivity",
                 "permissions": ["activity_pub.change_event"],
                 "enabled": "cms.SitePlatformSettings.is_publishing_activities",
                 "url": "/en/admin/activity_pub/follower/",
-                "label": _("Followers"),
+                "label": _("Connected consumers"),
             },
 
             {
@@ -194,7 +194,7 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["activity_pub.change_event"],
                 "enabled": "cms.SitePlatformSettings.is_receiving_activities",
                 "url": "/en/admin/activity_pub/following/",
-                "label": _("Connections"),
+                "label": _("Connected suppliers"),
             },
         ],
     },

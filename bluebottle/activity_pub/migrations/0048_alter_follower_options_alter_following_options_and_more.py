@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('activity_pub', '0047_merge_20251219_1056'),
+        ('activity_pub', '0047_merge_20251223_1051'),
     ]
 
     operations = [
@@ -54,5 +54,17 @@ class Migration(migrations.Migration):
             model_name='recipient',
             name='actor',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='activities', to='activity_pub.actor'),
+        ),
+        migrations.CreateModel(
+            name='Update',
+            fields=[
+                ('activity_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='activity_pub.activity')),
+                ('object', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='activity_pub.event')),
+            ],
+            options={
+                'abstract': False,
+                'base_manager_name': 'objects',
+            },
+            bases=('activity_pub.activity',),
         ),
     ]

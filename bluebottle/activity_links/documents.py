@@ -43,13 +43,6 @@ class LinkedDeedDocument(ActivityDocument):
             'description': 'Open',
         }
 
-    def prepare_current_status(self, instance):
-        return {
-            'value': 'open',
-            'name': 'Open',
-            'description': 'Open',
-        }
-
     def prepare_link(self, instance):
         return instance.link
 

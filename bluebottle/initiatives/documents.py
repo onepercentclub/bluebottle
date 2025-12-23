@@ -12,7 +12,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     DateActivity,
 )
-from bluebottle.utils.documents import MultiTenantIndex
+from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.utils.models import Language
 
 SCORE_MAP = {
@@ -57,11 +57,11 @@ def get_translated_list(obj, field='name'):
 @initiative.document
 class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
-    title = fields.TextField(fielddata=True)
+    title = TextField(fielddata=True)
     slug = fields.KeywordField()
-    story = fields.TextField(attr='story.html')
+    story = TextField(attr='story.html')
 
-    pitch = fields.TextField()
+    pitch = TextField()
     status = fields.KeywordField()
     created = fields.DateField()
 
@@ -126,17 +126,17 @@ class InitiativeDocument(Document):
     succeeded_activities_count = fields.IntegerField()
 
     place = fields.NestedField(properties={
-        'province': fields.TextField(),
-        'locality': fields.TextField(),
-        'street': fields.TextField(),
-        'postal_code': fields.TextField(),
+        'province': TextField(),
+        'locality': TextField(),
+        'street': TextField(),
+        'postal_code': TextField(),
     })
 
     location = fields.NestedField(
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
-            'city': fields.TextField(),
+            'city': TextField(),
         }
     )
 

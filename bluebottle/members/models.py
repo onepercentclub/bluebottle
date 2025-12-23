@@ -557,11 +557,6 @@ class Member(BlueBottleBaseUser):
     def hours_planned(self):
         return self.get_hours('new')
 
-    def save(self, *args, **kwargs):
-        if not (self.is_staff or self.is_superuser) and self.submitted_initiative_notifications:
-            self.submitted_initiative_notifications = False
-        super(Member, self).save(*args, **kwargs)
-
 
 class UserSegment(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)

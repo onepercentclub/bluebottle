@@ -172,7 +172,7 @@ class TransitionMessage(object):
         return context
 
     def get_action_link(self, recipient):
-        return self.action_link
+        return getattr(self, "action_link", None)
 
     def __init__(self, obj, **options):
         self.obj = obj

@@ -536,7 +536,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         'can_pledge',
         'can_do_bank_transfer',
         'verified',
-        'kyc'
+        'kyc',
     ]
 
     def get_permission_fields(self, request, obj=None):
@@ -594,6 +594,8 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                                 'avatar',
                                 'about_me',
                                 'campaign_notifications',
+                                'subscribed',
+                                'submitted_initiative_notifications',
                             ]
 
                     }
@@ -637,11 +639,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')
-
-            if obj:
-                fieldsets[1][1]['fields'].append('submitted_initiative_notifications')
-
-            fieldsets[1][1]['fields'].append('subscribed')
 
             if SegmentType.objects.count():
                 extra = (

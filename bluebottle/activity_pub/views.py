@@ -137,7 +137,7 @@ class PublishView(ActivityPubView):
 
 
 class UpdateView(ActivityPubView):
-    serializer_class = PublishSerializer
+    serializer_class = UpdateSerializer
     queryset = Update.objects.all()
 
 

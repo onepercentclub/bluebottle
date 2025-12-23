@@ -8,7 +8,6 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
-from bluebottle.activity_links.serializers import LinkedDeedSerializer
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import Follow, Publish, Event, Update
 from bluebottle.activity_pub.models import Organization
@@ -156,15 +155,15 @@ def publish_recipient(instance, created, **kwargs):
 
 
 @receiver(pre_save, sender=Update)
-def update_event(sender, instance, created, **kwargs):
+def update_event(sender, instance, **kwargs):
     from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 
-    if not instance.is_local and created:
+    if not instance.is_local and not instance.pk:
         serializer = EventSerializer(
             instance=instance.object, data=adapter.fetch(instance.object.iri)
         )
         serializer.is_valid(raise_exception=True)
-        event = serializer.save()
+        serializer.save()
 
 
 @receiver([post_save])

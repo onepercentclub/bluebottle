@@ -133,8 +133,6 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         return self.Meta.model.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        id = validated_data.pop('id', None)
-
         for name, field in self.fields.items():
             if isinstance(
                 field,

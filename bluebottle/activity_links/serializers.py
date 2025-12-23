@@ -62,9 +62,9 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         return self.model_type_mapping[model]
 
     model_serializer_mapping = {
-        LinkedDeed: 'LinkedDeedSerializer',
-        LinkedDateActivity: 'LinkedDateActivitySerializer',
-        LinkedDeadlineActivity: 'LinkedDeadlineActivitySerializer',
+        LinkedDeed: LinkedDeedSerializer,
+        LinkedDateActivity: LinkedDateActivitySerializer,
+        LinkedDeadlineActivity: LinkedDeadlineActivitySerializer,
     }
 
     class Meta:

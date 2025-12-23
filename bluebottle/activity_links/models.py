@@ -33,7 +33,6 @@ class LinkedActivityManager(PolymorphicManager):
         )
 
 
-
 class LinkedActivity(PolymorphicModel):
     title = models.CharField(max_length=255)
     link = models.URLField()
@@ -111,3 +110,6 @@ def es_upsert_linked_deed(sender, instance, **kwargs):
 def es_delete_linked_deed(sender, instance, **kwargs):
     from bluebottle.activity_links.documents import LinkedDeedDocument
     LinkedDeedDocument().delete(instance, refresh="wait_for")
+
+
+from bluebottle.activity_links.signals import *  # noqa

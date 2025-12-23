@@ -804,8 +804,7 @@ class ActivityChildAdmin(
         if not request.user.has_perm("activity.add_activity"):
             raise PermissionDenied
 
-        publish = None
-        if hasattr(activity, 'event'):
+        if not hasattr(activity, 'event'):
             adapter.create_event(activity)
 
         publish = activity.event.publish_set.first()

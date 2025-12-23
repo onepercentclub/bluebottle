@@ -188,6 +188,61 @@ class ActivityPubTestCase:
             self.event = Event.objects.get()
             self.assertEqual(self.event.name, self.model.title)
 
+    def test_automatic_publish_on_approve(self):
+        self.test_accept()
+
+        self.follow.publish_mode = 'automatic'
+        self.follow.save(update_fields=['publish_mode'])
+
+        with LocalTenant(self.other_tenant):
+            Event.objects.all().delete()
+
+        activity = DeedFactory.create(status='submitted')
+        activity.states.approve(save=True)
+
+        publish = activity.event.publish_set.first()
+        self.assertIsNotNone(publish)
+        self.assertTrue(
+            Recipient.objects.filter(activity=publish, actor=self.follow.actor).exists()
+        )
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+            self.assertEqual(event.name, activity.title)
+
+    def test_manual_follow_not_auto_published(self):
+        self.test_accept()
+
+        with LocalTenant(self.other_tenant):
+            Event.objects.all().delete()
+
+        activity = DeedFactory.create(status='submitted')
+        activity.states.approve(save=True)
+
+        event = getattr(activity, 'event', None)
+        self.assertIsNone(event)
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(Event.objects.count(), 0)
+
+    def test_manual_publish_after_approve(self):
+        self.test_accept()
+
+        with LocalTenant(self.other_tenant):
+            Event.objects.all().delete()
+
+        activity = DeedFactory.create(status='submitted')
+        activity.states.approve(save=True)
+
+        adapter.create_event(activity)
+        publish = activity.event.publish_set.first()
+        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+        adapter.publish(publish)
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+            self.assertEqual(event.name, activity.title)
+
     def test_publish_to_closed_platform(self):
         with LocalTenant(self.other_tenant):
             MemberPlatformSettings.objects.create(closed=True)

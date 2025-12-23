@@ -191,16 +191,16 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     summary = RichTextField(source='description')
     image = ImageSerializer(required=False, allow_null=True)
     organization = OrganizationSerializer(required=False, allow_null=True)
-    activity_link = serializers.SerializerMethodField(required=False, allow_null=True)
+    url = serializers.SerializerMethodField()
 
-    def get_activity_link(self, obj):
+    def get_url(self, obj):
         return connection.tenant.build_absolute_url(
             obj.get_absolute_url()
         )
 
     class Meta:
         fields = FederatedObjectSerializer.Meta.fields + (
-            'name', 'summary', 'image', 'organization', 'activity_link'
+            'name', 'summary', 'image', 'organization', 'url'
         )
 
     def save(self, *args, **kwargs):

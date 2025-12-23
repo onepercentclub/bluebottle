@@ -2,6 +2,7 @@
 {% load i18n admin_urls %}
 
 {% block submit_buttons_bottom %}
+    {{ block.super }}
     {% if original %}
         {% if is_accepted %}
             <div class="submit-row">
@@ -20,9 +21,7 @@
 {% block submit_buttons_top %}
     {% if original %}
         {% if is_accepted %}
-            <div class="submit-row">
-                <p style="color: green; font-weight: bold;">✓ {% trans "This follow request has already been accepted" %}</p>
-            </div>
+            {{ block.super }}
         {% else %}
             <div class="submit-row">
                 <a href="{{ accept_url }}">
@@ -32,14 +31,3 @@
         {% endif %}
     {% endif %}
 {% endblock %}
-
-{% block field_sets %}
-    {{ block.super }}
-    {% if not is_accepted %}
-        <fieldset class="module aligned module_0 initialized">
-            <div class="description">
-                {%  trans "Once accepted, you can choose which activities to share with this partner."  %}
-            </div>
-        </fieldset>
-    {% endif %}
-{%  endblock %}

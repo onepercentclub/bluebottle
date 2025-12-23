@@ -9,10 +9,11 @@ from bluebottle.utils.fields import RichTextField
 class BaseLinkedActivitySerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
+    url = serializers.URLField(source='link')
 
     class Meta:
         model = LinkedActivity
-        fields = ('name', 'summary')
+        fields = ('name', 'summary', 'url')
 
 
 class LinkedDeedSerializer(BaseLinkedActivitySerializer):

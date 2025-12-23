@@ -1,5 +1,6 @@
 import uuid
 from builtins import object, str
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import SET_NULL
@@ -202,6 +203,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         default=False,
         help_text=_("Has the user accepted the terms of service for this activity?")
     )
+
+    @property
+    def link(self):
+        return None
 
     @property
     def event(self):

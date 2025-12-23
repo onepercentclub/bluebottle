@@ -1,5 +1,5 @@
 from django.utils.timezone import now
-from django_elasticsearch_dsl import Document, fields
+from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
@@ -42,6 +42,16 @@ class LinkedDeedDocument(ActivityDocument):
             'name': 'Open',
             'description': 'Open',
         }
+
+    def prepare_current_status(self, instance):
+        return {
+            'value': 'open',
+            'name': 'Open',
+            'description': 'Open',
+        }
+
+    def prepare_link(self, instance):
+        return instance.link
 
     def prepare_is_online(self, instance):
         return True
@@ -92,7 +102,13 @@ class LinkedDeedDocument(ActivityDocument):
         return []
 
     def prepare_image(self, instance):
-        return []
+        if instance.image:
+            return {
+                'id': instance.pk,
+                'file': instance.image.file.name,
+                'type': 'activity'
+            }
+        return {}
 
     def prepare_owner(self, instance):
         return []

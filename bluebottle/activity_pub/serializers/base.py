@@ -1,14 +1,13 @@
 from urllib.parse import urlparse
 
 from django.urls import resolve
-
 from rest_framework import serializers, exceptions
 
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, ActivityPubIdField, TypeField
 from bluebottle.activity_pub.utils import is_local
-from bluebottle.activity_pub.adapters import adapter
 
 
 class ActivityPubListSerializer(serializers.ListSerializer):

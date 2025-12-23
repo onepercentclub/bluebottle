@@ -11,6 +11,7 @@ from django.contrib.admin.options import get_content_type_for_model
 from django.core.cache import cache
 from django.db import connection
 from django.template import loader
+from django.utils import translation as django_translation
 from django.utils.html import format_html
 from django.utils.timezone import now
 from future.utils import python_2_unicode_compatible
@@ -19,7 +20,6 @@ from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language, to_text, get_tenant_name
-from django.utils import translation as django_translation
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,10 @@ class TransitionMessage(object):
     @property
     def task_id(self):
         return f'{self.__class__.__name__}-{self.obj.id}'
+
+    @property
+    def action_link(self):
+        return ''
 
     def get_generic_context(self):
         language = get_current_language()
@@ -150,7 +154,7 @@ class TransitionMessage(object):
             "contact_email": properties.CONTACT_EMAIL,
             "recipient_name": recipient.first_name,
             "first_name": recipient.first_name,
-            "action_link": getattr(self, "action_link", None),
+            "action_link": self.get_action_link(recipient),
             "action_title": getattr(self, "action_title", None),
             "utm_campaign": self.__class__.__name__,
         }
@@ -166,6 +170,9 @@ class TransitionMessage(object):
         if self.get_event_data(recipient):
             context['attachments'] = self.get_calendar_attachments(recipient)
         return context
+
+    def get_action_link(self, recipient):
+        return self.action_link
 
     def __init__(self, obj, **options):
         self.obj = obj

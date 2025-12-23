@@ -144,9 +144,8 @@ class PersonAdmin(ActivityPubModelChildAdmin):
                     if url:
                         try:
                             target_actor = adapter.sync(url, serializer=OrganizationSerializer)
-                            follow = Follow.objects.create(actor=actor, object=target_actor)
+                            Follow.objects.create(actor=actor, object=target_actor)
                             try:
-                                adapter.publish(follow)
                                 self.message_user(
                                     request,
                                     f"Successfully created and published Follow relationship to {url}",
@@ -200,7 +199,6 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
 
     def republish_recipient(self, request, object_id, recipient_id):
         from django.db import connection
-        from bluebottle.activity_pub.adapters import publish_to_recipient
         from bluebottle.activity_pub.models import Recipient
 
         activity = get_object_or_404(Activity, pk=unquote(object_id))
@@ -210,7 +208,7 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
             raise PermissionDenied
 
         try:
-            publish_to_recipient.delay(activity, recipient, connection.tenant)
+            adapter.publish.delay(adapter, recipient, connection.tenant)
             self.message_user(
                 request,
                 _('Republish task queued for recipient {actor}.').format(actor=recipient.actor),
@@ -430,30 +428,14 @@ class FollowingAdmin(FollowAdmin):
                     follow_obj.default_owner = default_owner
                     follow_obj.save()
                 # Publish the Follow activity to the remote inbox
-                try:
-                    adapter.publish(follow_obj)
-                    self.message_user(
-                        request,
-                        _(
-                            "Connection request sent to %s. "
-                            "You will be able to receive activities when the request is accepted."
-                        ) % platform_url,
-                        level="success"
-                    )
-                except Exception as publish_error:
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.error(f"Failed to publish Follow {follow_obj.pk}: {str(publish_error)}", exc_info=True)
-                    self.message_user(
-                        request,
-                        _(
-                            "Follow relationship created but publishing failed: %s. "
-                            "The follow request may not have been sent to the remote platform."
-                        ) % str(publish_error),
-                        level="warning"
-                    )
-                # Store the created object for response_add
-                self._created_follow_obj = follow_obj
+                self.message_user(
+                    request,
+                    _(
+                        "Follow request sent to %s. "
+                        "Your platforms will be connected when the request is accepted."
+                    ) % platform_url,
+                    level="success"
+                )
             except requests.exceptions.HTTPError:
                 self.message_user(
                     request,

@@ -16,6 +16,7 @@ from bluebottle.activity_pub.models import (
     Person,
     PublicKey,
     Publish,
+    Update,
     Organization,
     Actor,
     Activity,
@@ -297,6 +298,15 @@ class PublishSerializer(BaseActivitySerializer):
         model = Publish
 
 
+class UpdateSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:update')
+    type = TypeField('Update')
+    object = EventSerializer()
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Update
+
+
 class AnnounceSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:announce')
     type = TypeField('Announce')
@@ -308,7 +318,8 @@ class AnnounceSerializer(BaseActivitySerializer):
 
 class ActivitySerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        FollowSerializer, AcceptSerializer, PublishSerializer, AnnounceSerializer
+        FollowSerializer, AcceptSerializer, PublishSerializer,
+        AnnounceSerializer, UpdateSerializer
     ]
 
     class Meta:

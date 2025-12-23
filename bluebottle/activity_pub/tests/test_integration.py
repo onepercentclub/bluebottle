@@ -3,6 +3,7 @@ from io import BytesIO
 from urllib.parse import urlparse
 
 import mock
+from bluebottle.activity_links.models import LinkedActivity
 from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
@@ -12,7 +13,7 @@ from requests import Request, Response
 
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Announce, Follow, Accept, Event, Recipient
+from bluebottle.activity_pub.models import AdoptionModeChoices, Announce, Follow, Accept, Event, Recipient
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
@@ -267,6 +268,32 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
 
+class LinkTestCase(ActivityPubTestCase):
+    def test_follow(self):
+        super().test_follow()
+        with LocalTenant(self.other_tenant):
+            follow = Follow.objects.get()
+            follow.adoption_mode = AdoptionModeChoices.link
+            follow.save()
+
+    def test_link(self):
+        self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.title, self.model.title)
+
+    def test_update(self):
+        title = 'Some new title'
+        self.test_link()
+        self.model.title = title
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.title, title)
+
+
 class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DeedFactory
 
@@ -289,6 +316,18 @@ class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.end, self.model.end)
+
+
+class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
+    factory = DeedFactory
+
+    def create(self):
+        super().create(
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date(),
+            organization=None
+        )
+        self.submit()
 
 
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):

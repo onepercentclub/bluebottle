@@ -2,6 +2,7 @@ import logging
 from io import BytesIO
 
 import requests
+from bluebottle.activity_links.models import LinkedActivity
 from celery import shared_task
 from django.db import connection
 from django.db.models.signals import post_save
@@ -10,7 +11,7 @@ from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_links.serializers import LinkedDeedSerializer
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import Follow, Activity, Publish, Event
+from bluebottle.activity_pub.models import Follow, Activity, Publish, Event, Update
 from bluebottle.activity_pub.models import Organization
 from bluebottle.activity_pub.models import Recipient
 from bluebottle.activity_pub.parsers import JSONLDParser
@@ -110,30 +111,39 @@ class JSONLDAdapter():
         from bluebottle.activities.models import Activity as BluebottleActivity
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+
         if not isinstance(activity, BluebottleActivity):
             raise TypeError('Activity must be a BluebottleActivity')
+
         try:
-            event = activity.event
+            instance = activity.event
         except Event.DoesNotExist:
-            federated_serializer = FederatedActivitySerializer(activity)
-            serializer = EventSerializer(data=federated_serializer.data)
-            serializer.is_valid(raise_exception=True)
-            event = serializer.save(activity=activity)
+            instance = None
+
+        federated_serializer = FederatedActivitySerializer(activity)
+
+        serializer = EventSerializer(
+            data=federated_serializer.data, instance=instance
+        )
+        serializer.is_valid(raise_exception=True)
+        event = serializer.save(activity=activity)
+
         if not event.publish_set.exists():
             Publish.objects.create(actor=get_platform_actor(), object=event)
         return event
 
-    def link(self, event, request=None):
+    def link(self, event, instance=None, request=None):
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 
         data = EventSerializer(instance=event).data
-        serializer = LinkedDeedSerializer(data=data, context={'request': request})
+        serializer = LinkedDeedSerializer(data=data, context={'request': request}, instance=instance)
         serializer.is_valid(raise_exception=True)
 
-        follow = Follow.objects.get(object=event.source)
         organization = Publish.objects.filter(object=event).first().actor.organization
 
-        return serializer.save(host_organization=organization, status='open')
+        return serializer.save(
+            event=event, host_organization=organization, status='open'
+        )
 
 
 adapter = JSONLDAdapter()
@@ -162,6 +172,7 @@ def publish_to_recipient(activity, recipient, tenant):
             recipient.send = True
             recipient.save()
         except Exception as e:
+            print(e)
             logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
             raise
 
@@ -185,21 +196,43 @@ def publish_activity(sender, instance, **kwargs):
         logger.error(f"Failed to publish activity: {str(e)}", exc_info=True)
 
 
-@receiver(post_save, sender=Event)
+@receiver(post_save, sender=Publish)
 def auto_adopt_event(sender, instance, created, **kwargs):
     try:
-        if not instance.is_local and not instance.linked_activity:
-            source = instance.source
-            if source:
-                try:
-                    follow = Follow.objects.get(object=source)
-                    if follow.adoption_mode == 'LinkAdoptionMode':
-                        adapter.link(instance, follow)
-                except Follow.DoesNotExist:
-                    logger.debug(f"No follow found for source: {source}")
+        if not instance.is_local and created:
+            try:
+                follow = Follow.objects.get(object=instance.actor)
+
+                if follow.adoption_mode == 'LinkAdoptionMode':
+                    adapter.link(instance.object)
+            except Follow.DoesNotExist:
+                logger.debug(f"No follow found for actor: {instance.actor}")
     except Exception as e:
         logger.error(f"Failed to auto-adopt event: {str(e)}")
 
+
+@receiver(post_save, sender=Update)
+def update_event(sender, instance, created, **kwargs):
+    from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+    try:
+        if not instance.is_local and created:
+            try:
+                follow = Follow.objects.get(object=instance.actor)
+
+                if follow.adoption_mode == 'LinkAdoptionMode':
+                    serializer = EventSerializer(
+                        instance=instance.object, data=adapter.fetch(instance.object.iri)
+                    )
+                    serializer.is_valid(raise_exception=True)
+                    event = serializer.save()
+
+                    link = LinkedActivity.objects.get(event=event)
+
+                    adapter.link(event, instance=link)
+            except Follow.DoesNotExist:
+                logger.debug(f"No follow found for actor: {instance.actor}")
+    except Exception as e:
+        logger.error(f"Failed to auto-adopt event: {str(e)}")
 
 @receiver([post_save])
 def create_organization(sender, instance, **kwargs):

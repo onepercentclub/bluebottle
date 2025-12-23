@@ -135,26 +135,18 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
     def update(self, instance, validated_data):
         id = validated_data.pop('id', None)
 
-        if (
-            is_local(id) and
-            self.context['request'].auth and
-            is_local(self.context['request'].auth.iri)
-        ):
+        for name, field in self.fields.items():
+            if isinstance(
+                field,
+                (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
+            ):
+                if validated_data.get(name, None):
+                    field.initial_data = validated_data[name]
+                    field.is_valid()
+                    validated_data[field.source] = field.save()
 
-            for name, field in self.fields.items():
-                if isinstance(
-                    field,
-                    (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
-                ):
-                    if validated_data.get(name, None):
-                        field.initial_data = validated_data[name]
-                        field.is_valid()
-                        validated_data[field.source] = field.save()
-
-            validated_data.pop('type', None)
-            return super().update(instance, validated_data)
-        else:
-            return instance
+        validated_data.pop('type', None)
+        return super().update(instance, validated_data)
 
     def get_value(self, data):
         result = super().get_value(data)

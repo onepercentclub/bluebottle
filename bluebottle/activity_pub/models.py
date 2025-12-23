@@ -493,6 +493,16 @@ class Publish(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
 
+class Update(Activity):
+    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+    @property
+    def default_recipients(self):
+        for publish in self.object.publish_set.all():
+            for recipient in publish.recipients.all():
+                yield recipient.actor
+
+
 class Announce(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 

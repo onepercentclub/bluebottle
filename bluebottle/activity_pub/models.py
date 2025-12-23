@@ -404,7 +404,17 @@ class Activity(ActivityPubModel):
         from bluebottle.activity_pub.utils import get_platform_actor
         if not getattr(self, 'actor_id', None):
             self.actor = get_platform_actor()
-        return super().save(*args, **kwargs)
+
+        created = not self.pk
+
+        super().save(*args, **kwargs)
+
+        if created:
+            for recipient in self.default_recipients:
+                Recipient.objects.create(
+                    actor=recipient,
+                    activity=self
+                )
 
 
 class Recipient(models.Model):

@@ -3,10 +3,35 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
-from polymorphic.models import PolymorphicModel
+from polymorphic.models import PolymorphicModel, PolymorphicManager
 
 from bluebottle.organizations.models import Organization
+from bluebottle.activity_pub.models import Publish
 from bluebottle.utils.fields import MoneyField
+
+
+class LinkedActivityManager(PolymorphicManager):
+    def sync(self, event):
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+        from bluebottle.activity_links.serializers import LinkedActivitySerializer
+
+        try:
+            instance = self.get(event=event)
+        except LinkedActivity.DoesNotExist:
+            instance = None
+
+        data = EventSerializer(instance=event).data
+        serializer = LinkedActivitySerializer(
+            data=data, instance=instance
+        )
+        serializer.is_valid(raise_exception=True)
+
+        organization = Publish.objects.filter(object=event).first().actor.organization
+
+        return serializer.save(
+            event=event, host_organization=organization, status='open'
+        )
+
 
 
 class LinkedActivity(PolymorphicModel):
@@ -26,6 +51,8 @@ class LinkedActivity(PolymorphicModel):
         null=True,
         on_delete=models.SET_NULL,
     )
+
+    objects = LinkedActivityManager()
 
     def __str__(self):
         return self.title

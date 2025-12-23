@@ -326,22 +326,28 @@ class JoinModeChoices(DjangoChoices):
 
 
 class AdoptionModeChoices(DjangoChoices):
-    nothing = ChoiceItem(
-        'NothingAdoptionMode',
-        _('Leave new activities. Adoption is managed manually.')
+    manual = ChoiceItem(
+        'manual',
+        _('Received activities are adopted manually.')
+    )
+    automatic = ChoiceItem(
+        'automatic',
+        _('Received activities are always automatically adopted and published.')
+    )
+
+
+class AdoptionTypeChoices(DjangoChoices):
+    template = ChoiceItem(
+        'template',
+        _('Use received activities as template to create your own activities.')
     )
     link = ChoiceItem(
-        'LinkAdoptionMode',
-        _('Create a link to new activities.')
-
+        'link',
+        _('Show adopted activities as links to the partner platform.')
     )
-    publish = ChoiceItem(
-        'PublishAdoptionMode',
-        _('Publish the new activities.')
-    )
-    copy = ChoiceItem(
-        'CopyAdoptionMode',
-        _('Create a local copy for new activities.')
+    hosted = ChoiceItem(
+        'hosted',
+        _('Activities are managed by the partner platform, sign ups are synced.')
     )
 
 
@@ -431,9 +437,16 @@ class Follow(Activity):
 
     adoption_mode = models.CharField(
         choices=AdoptionModeChoices.choices,
-        default=AdoptionModeChoices.nothing,
+        default=AdoptionModeChoices.manual,
         verbose_name=_("Adoption mode"),
         help_text=_("Select what should happen when a new activity has been received."),
+    )
+
+    adoption_type = models.CharField(
+        choices=AdoptionTypeChoices.choices,
+        default=AdoptionTypeChoices.template,
+        verbose_name=_("Adoption type"),
+        help_text=_("Select how a received activity should be adopted."),
     )
 
     @property

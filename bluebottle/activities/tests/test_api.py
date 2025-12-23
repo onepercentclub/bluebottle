@@ -23,6 +23,7 @@ from bluebottle.collect.tests.factories import (
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
+from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.initiatives.models import (
     ActivitySearchFilter,
     InitiativePlatformSettings,
@@ -1151,6 +1152,80 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertIn(str(in_segment.pk), ids)
         self.assertNotIn(str(no_segment.pk), ids)
         self.assertNotIn(str(out_segment.pk), ids)
+
+    def test_filter_reviewing_subregion_matches_segment_not(self):
+        """Test that when subregion matches but segment doesn't, no results are returned"""
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
+        managed_subregion = OfficeSubRegionFactory.create()
+
+        # Activity in managed subregion but with non-managed segment
+        activity = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=managed_subregion)
+        )
+        activity.segments.add(other_segment)
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.subregion_manager.add(managed_subregion)
+        reviewer.segment_manager.add(managed_segment)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        # Should return no results because segment doesn't match
+        self.assertFound([], count=0)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertNotIn(str(activity.pk), ids)
+
+    def test_filter_reviewing_segment_matches_subregion_not(self):
+        """Test that when segment matches but subregion doesn't, no results are returned"""
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
+        managed_subregion = OfficeSubRegionFactory.create()
+        other_subregion = OfficeSubRegionFactory.create()
+
+        # Activity with managed segment but in non-managed subregion
+        activity = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=other_subregion)
+        )
+        activity.segments.add(managed_segment)
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.subregion_manager.add(managed_subregion)
+        reviewer.segment_manager.add(managed_segment)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        # Should return no results because subregion doesn't match
+        self.assertFound([], count=0)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertNotIn(str(activity.pk), ids)
+
+    def test_filter_reviewing_excludes_grant_application(self):
+        """Test that grant applications are excluded from reviewing filter"""
+        # Create a regular activity and a grant application, both submitted
+        regular_activity = DeadlineActivityFactory.create(status='submitted')
+        grant_application = GrantApplicationFactory.create(status='submitted')
+
+        reviewer = BlueBottleUserFactory.create()
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        # Should only return the regular activity, not the grant application
+        self.assertFound([regular_activity], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(regular_activity.pk), ids)
+        self.assertNotIn(str(grant_application.pk), ids)
 
     def test_filter_online(self):
         matching = DeadlineActivityFactory.create_batch(2, status="open", is_online=True)

@@ -264,30 +264,30 @@ class ReviewingFacet(Facet):
 
             if user.has_perm('activities.api_review_activity'):
 
-                should_filters = [~Term(activity_type='grantapplication')]
+                must_filters = [~Term(activity_type='grantapplication')]
 
                 subregions = getattr(user, "subregion_manager", None)
                 if subregions:
                     subregion_ids = list(subregions.values_list("id", flat=True))
                     if subregion_ids:
-                        should_filters.append(
+                        must_filters.append(
                             Nested(
                                 path="office_subregion",
                                 query=Terms(**{"office_subregion__id": subregion_ids})
                             )
                         )
 
-                segment_manager = getattr(user, "segment_manager", None)
-                if segment_manager and segment_manager.exists():
-                    segment_ids = list(segment_manager.values_list("id", flat=True))
+                segments = getattr(user, "segment_manager", None)
+                if segments and segments.exists():
+                    segment_ids = list(segments.values_list("id", flat=True))
                     if segment_ids:
-                        should_filters.append(
+                        must_filters.append(
                             Nested(
                                 path="segments",
                                 query=Terms(**{"segments__id": segment_ids})
                             )
                         )
-                return Bool(should=should_filters, minimum_should_match=1)
+                return Bool(must=must_filters)
 
             return MatchNone()
 

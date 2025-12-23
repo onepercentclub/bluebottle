@@ -13,6 +13,7 @@ from requests import Request, Response
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import Announce, Follow, Accept, Event, Recipient
+from bluebottle.activity_pub.tests.factories import OrganizationFactory
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
@@ -187,6 +188,27 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             self.event = Event.objects.get()
             self.assertEqual(self.event.name, self.model.title)
+
+    def test_automatic_publish_on_approve(self):
+        """Approve a deed triggers automatic publish to followers with publish_mode=automatic."""
+        platform_actor = get_platform_actor()
+        follower = Follow.objects.create(
+            object=platform_actor,
+            actor=OrganizationFactory(),
+            publish_mode='automatic',
+        )
+        Accept.objects.create(actor=platform_actor, object=follower)
+
+        with mock.patch('bluebottle.activity_pub.adapters.adapter.publish') as publish_mock:
+            activity = DeedFactory.create(status='submitted')
+            activity.states.approve(save=True)
+
+            publish = activity.event.publish_set.first()
+            self.assertIsNotNone(publish)
+            self.assertTrue(
+                Recipient.objects.filter(activity=publish, actor=follower.actor).exists()
+            )
+            publish_mock.assert_called_once_with(publish)
 
     def test_publish_to_closed_platform(self):
         with LocalTenant(self.other_tenant):

@@ -199,7 +199,8 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
             raise PermissionDenied
 
         try:
-            adapter.publish.delay(adapter, recipient, connection.tenant)
+            from bluebottle.activity_pub.adapters import publish_to_recipient
+            publish_to_recipient.delay(recipient, connection.tenant)
             self.message_user(
                 request,
                 _('Republish task queued for recipient {actor}.').format(actor=recipient.actor),

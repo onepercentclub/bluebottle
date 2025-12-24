@@ -15,6 +15,7 @@ from bluebottle.activity_pub.models import Organization
 from bluebottle.activity_pub.models import Recipient
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
+from bluebottle.activity_pub.tasks import update_linked_activity
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
@@ -174,13 +175,14 @@ def publish_recipient(instance, created, **kwargs):
 @receiver(pre_save, sender=Update)
 def update_event(sender, instance, **kwargs):
     from bluebottle.activity_pub.serializers.json_ld import EventSerializer
-
     if not instance.is_local and not instance.pk:
         serializer = EventSerializer(
             instance=instance.object, data=adapter.fetch(instance.object.iri)
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        event = serializer.save()
+        if event.linked_activity:
+            update_linked_activity.delay(event.pk, connection.tenant)
 
 
 @receiver([post_save])

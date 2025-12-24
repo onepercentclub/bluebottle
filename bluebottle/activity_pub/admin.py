@@ -778,7 +778,7 @@ class EventAdminMixin:
                 level="success",
             )
             return HttpResponseRedirect(
-                reverse("admin:activities_activity_change", args=[activity.pk])
+                reverse("activity_links_linkedactivity_change", args=[activity.pk])
             )
 
         except Exception as e:

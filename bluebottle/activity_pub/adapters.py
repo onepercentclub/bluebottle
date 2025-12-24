@@ -8,7 +8,7 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
-from bluebottle.activity_links.serializers import LinkedDeedSerializer
+from bluebottle.activity_links.serializers import LinkedActivitySerializer
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import Follow, Publish, Event, Update
 from bluebottle.activity_pub.models import Organization
@@ -94,7 +94,7 @@ class JSONLDAdapter():
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 
         data = EventSerializer(instance=event).data
-        serializer = LinkedDeedSerializer(data=data, context={'request': request})
+        serializer = LinkedActivitySerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         organization = Publish.objects.filter(object=event).first().actor.organization
 

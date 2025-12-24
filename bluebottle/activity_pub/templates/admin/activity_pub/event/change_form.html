@@ -15,6 +15,11 @@
                 {% else %}
                     {% if adoption_mode == 'automatic' %}
                         {% trans "Activities are adopted automatically for this connection" %}
+                        <br/>
+                        Here's a link if it didn't work:
+                        <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
+                            {% trans 'Adopt activity' %}
+                        </a>
                     {% else %}
                         <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
                             <input type="button" value="{% trans 'Adopt activity' %}" class="default" name="_adopt">

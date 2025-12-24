@@ -59,6 +59,11 @@ class Actor(ActivityPubModel):
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
+    def follow(self):
+        follow = Follow.objects.filter(object=self).first()
+        return follow
+
+    @property
     def webfinger_uri(self):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
@@ -502,7 +507,7 @@ class Follow(Activity):
         return Announce.objects.filter(actor=self.actor).count()
 
     def __str__(self):
-        return str(self.actor)
+        return str(self.object)
 
     class Meta:
         verbose_name = _('Connection')

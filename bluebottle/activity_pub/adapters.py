@@ -2,14 +2,13 @@ import logging
 from io import BytesIO
 
 import requests
+from celery import shared_task
 from django.db import connection
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-
-from celery import shared_task
-
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
+from bluebottle.activity_links.serializers import LinkedDeedSerializer
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import Follow, Publish, Event, Update
 from bluebottle.activity_pub.models import Organization
@@ -17,7 +16,6 @@ from bluebottle.activity_pub.models import Recipient
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
-
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
 
@@ -90,6 +88,20 @@ class JSONLDAdapter():
         organization = Publish.objects.filter(object=event).first().actor.organization
 
         return serializer.save(owner=follow.default_owner, host_organization=organization)
+
+    def link(self, event, request=None):
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+
+        data = EventSerializer(instance=event).data
+        serializer = LinkedDeedSerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        organization = Publish.objects.filter(object=event).first().actor.organization
+
+        return serializer.save(
+            host_organization=organization,
+            status='open',
+            event=event
+        )
 
     def create_event(self, activity):
         from bluebottle.activities.models import Activity as BluebottleActivity

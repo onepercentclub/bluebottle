@@ -1,11 +1,10 @@
 import requests
 from django import forms
-
-from django.db import connection
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import connection
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
@@ -367,14 +366,14 @@ class FollowingAdmin(FollowAdmin):
             # When adding a new Following
             return (
                 (None, {
-                    'fields': ('platform_url', 'adoption_mode', 'adoption_type', 'default_owner',),
+                    'fields': ('platform_url', 'adoption_mode', 'adoption_type', 'default_owner'),
                 }),
             )
         else:
             # When viewing/editing an existing Following
             return (
                 (None, {
-                    'fields': ('object', 'accepted', )
+                    'fields': ('object', 'accepted', 'adoption_mode', 'adoption_type', 'default_owner')
                 }),
             )
 
@@ -678,6 +677,17 @@ class EventAdminMixin:
     def source(self, obj):
         return obj.source
     source.short_description = _("Partner")
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        event = get_object_or_404(Event, pk=unquote(object_id))
+        extra_context = extra_context or {}
+        source = event.source
+        follow = event.source.follow if event.source else None
+        extra_context["source"] = source
+        extra_context["follow"] = follow
+        extra_context["adoption_mode"] = follow.adoption_mode if follow else None
+        extra_context["adoption_type"] = follow.adoption_type if follow else None
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def display_description(self, obj):
         return format_html(

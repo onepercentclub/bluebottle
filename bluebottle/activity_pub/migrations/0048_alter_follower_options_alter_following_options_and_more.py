@@ -25,11 +25,6 @@ class Migration(migrations.Migration):
             name='organization',
             options={'verbose_name': 'partner', 'verbose_name_plural': 'partners'},
         ),
-        migrations.RenameField(
-            model_name='event',
-            old_name='activity_link',
-            new_name='url',
-        ),
         migrations.AlterField(
             model_name='event',
             name='name',

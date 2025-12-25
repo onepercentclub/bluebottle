@@ -58,8 +58,7 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
 
         form = page.forms['segment_form']
         form['email_domains'] = 'test.com'
-        page = form.submit()
-
+        form.submit()
         segment.refresh_from_db()
         self.assertEqual(segment.email_domains, ['test.com'])
 
@@ -78,9 +77,9 @@ class TestSegmentTypeAdmin(BluebottleAdminTestCase):
 
     def test_required_segment_types_no_segments(self):
         member_settings_url = reverse('admin:members_memberplatformsettings_change')
+        print(member_settings_url)
         page = self.app.get(member_settings_url)
         self.assertFalse('Mark segment types as required' in page.text)
-
         SegmentTypeFactory.create(name='Department')
         SegmentTypeFactory.create(name='Hobbies')
         page = self.app.get(member_settings_url)

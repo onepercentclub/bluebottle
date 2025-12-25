@@ -1,12 +1,12 @@
-from django.db.utils import ProgrammingError
-
 from builtins import object, str
 
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
+from django.db.utils import ProgrammingError
 from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils.functional import lazy
@@ -30,7 +30,6 @@ from bluebottle.utils.models import (
     ValidatedModelMixin,
 )
 from bluebottle.utils.utils import get_current_host, get_current_language
-from django.core.exceptions import ValidationError
 
 
 @python_2_unicode_compatible
@@ -302,7 +301,11 @@ def get_search_filters(filters):
     try:
         if connection.tenant.schema_name != "public":
             for segment in SegmentType.objects.all():
-                filters = filters + ((f"segment.{segment.slug}", segment.name),)
+                try:
+                    segment_name = segment.safe_translation_getter('name', segment.slug)
+                except (ValueError, AttributeError):
+                    segment_name = segment.slug
+                filters = filters + ((f"segment.{segment.slug}", segment_name),)
         return filters
     except ProgrammingError:
         return []

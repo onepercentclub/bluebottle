@@ -311,8 +311,10 @@ class GoodDeed(Event):
 
 
 class CrowdFunding(Event):
-    target = models.DecimalField(decimal_places=2, max_digits=10)
-    target_currency = models.CharField(max_length=3)
+    target = models.DecimalField(decimal_places=2, max_digits=10, default=0)
+    target_currency = models.CharField(max_length=3, default='EUR')
+    donated = models.DecimalField(decimal_places=2, max_digits=10, default=0)
+    donated_currency = models.CharField(max_length=3, default='EUR')
 
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)

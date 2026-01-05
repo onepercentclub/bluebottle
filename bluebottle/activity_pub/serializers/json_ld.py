@@ -175,7 +175,12 @@ class CrowdFundingSerializer(BaseEventSerializer):
 
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
-        fields = BaseEventSerializer.Meta.fields + ('end_time', 'target', 'target_currency', 'location')
+        fields = BaseEventSerializer.Meta.fields + (
+            'end_time',
+            'target', 'target_currency',
+            'donated', 'donated_currency',
+            'location'
+        )
 
 
 class SubEventSerializer(ActivityPubSerializer):

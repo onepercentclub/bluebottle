@@ -887,7 +887,8 @@ class CrowdFundingAdmin(EventChildAdmin):
     model = GoodDeed
     readonly_fields = EventChildAdmin.readonly_fields + (
         'end_time',
-        'target'
+        'target',
+        'donated'
     )
     fields = readonly_fields
 

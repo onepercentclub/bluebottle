@@ -3,17 +3,15 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
-from bluebottle.activity_links.models import LinkedDeed
+from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity
 
 
-@registry.register_document
-@activity.doc_type
-class LinkedDeedDocument(ActivityDocument):
+class LinkedActivityDocument(ActivityDocument):
 
     link = fields.KeywordField()
 
     def get_queryset(self):
-        return LinkedDeed.objects.all()
+        return self.django.model._default_manager.all()
 
     def prepare_kind(self, instance):
         return "linked_activity"
@@ -23,25 +21,6 @@ class LinkedDeedDocument(ActivityDocument):
 
     def get_id(self, instance):
         return f"linked_{instance.pk}"
-
-    def prepare_slug(self, instance):
-        return f'linked-deed-{instance.id}'
-
-    def prepare_type(self, instance):
-        return 'deed'
-
-    def prepare_resource_name(self, instance):
-        return 'activities/deeds'
-
-    def prepare_activity_type(self, instance):
-        return 'deed'
-
-    def prepare_current_status(self, instance):
-        return {
-            'value': 'open',
-            'name': 'Open',
-            'description': 'Open',
-        }
 
     def prepare_current_status(self, instance):
         return {
@@ -153,5 +132,68 @@ class LinkedDeedDocument(ActivityDocument):
         return now()
 
     class Django:
+        model = LinkedActivity
+        related_models = ()
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedDeedDocument(LinkedActivityDocument):
+    class Django:
         model = LinkedDeed
-        related_models = ()  # No related models for LinkedDeed
+        related_models = ()
+
+    def prepare_slug(self, instance):
+        return f'linked-deed-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'deed'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/deeds'
+
+    def prepare_activity_type(self, instance):
+        return 'deed'
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedFundingDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedFunding
+        related_models = ()
+
+    target = fields.NestedField(properties={
+        'currency': fields.KeywordField(),
+        'amount': fields.FloatField(),
+    })
+    amount_raised = fields.NestedField(properties={
+        'currency': fields.KeywordField(),
+        'amount': fields.FloatField(),
+    })
+
+    def prepare_slug(self, instance):
+        return f'linked-funding-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'funding'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/fundings'
+
+    def prepare_activity_type(self, instance):
+        return 'funding'
+
+    def prepare_amount(self, amount):
+        if amount:
+            return {'amount': amount.amount, 'currency': str(amount.currency)}
+
+    def prepare_target(self, instance):
+        if not hasattr(instance, 'target'):
+            return None
+        return self.prepare_amount(instance.target)
+
+    def prepare_amount_raised(self, instance):
+        if not hasattr(instance, 'donated'):
+            return None
+        return self.prepare_amount(instance.donated)

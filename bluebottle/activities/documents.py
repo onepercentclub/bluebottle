@@ -9,8 +9,8 @@ from bluebottle.funding.models import Donor
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.documents import deduplicate, get_translated_list
 from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.segments.models import Segment
-from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.utils.search import Search
 
 
@@ -29,9 +29,9 @@ activity.settings(
 
 class ActivityDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
-    title = fields.TextField(fielddata=True)
+    title = TextField(fielddata=True)
     slug = fields.KeywordField()
-    description = fields.TextField(attr='description.html')
+    description = TextField(attr='description.html')
     highlight = fields.BooleanField()
     is_upcoming = fields.BooleanField()
     status = fields.KeywordField()
@@ -80,14 +80,14 @@ class ActivityDocument(Document):
 
     owner = fields.NestedField(properties={
         'id': fields.KeywordField(),
-        'full_name': fields.TextField()
+        'full_name': TextField()
     })
 
     initiative = fields.NestedField(properties={
         'id': fields.KeywordField(),
-        'title': fields.TextField(),
-        'pitch': fields.TextField(),
-        'story': fields.TextField(attr='story.html'),
+        'title': TextField(),
+        'pitch': TextField(),
+        'story': TextField(attr='story.html'),
         'owner': fields.KeywordField(attr='owner.id'),
         'activity_managers': fields.NestedField(
             properties={
@@ -148,10 +148,10 @@ class ActivityDocument(Document):
         attr='location',
         properties={
             'id': fields.LongField(),
-            'name': fields.TextField(),
-            'city': fields.TextField(),
-            'country': fields.TextField(attr='country.name'),
-            'country_code': fields.TextField(attr='country.alpha2_code'),
+            'name': TextField(),
+            'city': TextField(),
+            'country': TextField(attr='country.name'),
+            'country_code': TextField(attr='country.alpha2_code'),
         }
     )
 
@@ -191,7 +191,7 @@ class ActivityDocument(Document):
     office_restriction = fields.NestedField(
         attr='office_restriction',
         properties={
-            'restriction': fields.TextField(),
+            'restriction': TextField(),
             'office': fields.LongField(),
             'office_subregion': fields.LongField(),
             'office_region': fields.LongField(),

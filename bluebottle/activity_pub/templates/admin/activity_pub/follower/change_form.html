@@ -2,16 +2,16 @@
 {% load i18n admin_urls %}
 
 {% block submit_buttons_bottom %}
-    {{ block.super }}
     {% if original %}
         {% if is_accepted %}
             <div class="submit-row">
-                <p style="color: green; font-weight: bold;">✓ {% trans "This follow request has already been accepted" %}</p>
+                <p style="color: green; font-weight: bold;">✓ {% trans "This connection has already been accepted" %}</p>
             </div>
+            {{ block.super }}
         {% else %}
             <div class="submit-row">
                 <a href="{{ accept_url }}">
-                    <input type="button" value="{% trans 'Accept Follow Request' %}" class="default" name="_accept">
+                    <input type="button" value="{% trans 'Accept connection' %}" class="default" name="_accept">
                 </a>
             </div>
         {% endif %}
@@ -21,11 +21,13 @@
 {% block submit_buttons_top %}
     {% if original %}
         {% if is_accepted %}
-            {{ block.super }}
+            <div class="submit-row">
+                <p style="color: green; font-weight: bold;">✓ {% trans "This connection has already been accepted" %}</p>
+            </div>
         {% else %}
             <div class="submit-row">
                 <a href="{{ accept_url }}">
-                    <input type="button" value="{% trans 'Accept Follow Request' %}" class="default" name="_accept">
+                    <input type="button" value="{% trans 'Accept connection' %}" class="default" name="_accept">
                 </a>
             </div>
         {% endif %}

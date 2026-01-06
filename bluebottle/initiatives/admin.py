@@ -106,6 +106,24 @@ class ActivityManagersInline(admin.TabularInline):
     exclude = ("member",)
 
 
+class ArchivedFilter(admin.SimpleListFilter):
+    title = _('Hide archived activities')
+    parameter_name = 'archived'
+
+    def lookups(self, request, model_admin):
+        return [
+            (True, 'Show archived activities'),
+        ]
+
+    def queryset(self, request, queryset):
+        if not self.value():
+            return queryset.exclude(
+                status='archived'
+            )
+        else:
+            return queryset
+
+
 @admin.register(Initiative)
 class InitiativeAdmin(
     PolymorphicInlineSupportMixin,
@@ -130,6 +148,7 @@ class InitiativeAdmin(
     list_display = ["__str__", "created", "owner", "state_name"]
 
     list_filter = [
+        ArchivedFilter,
         InitiativeReviewerFilter,
         ("categories", SortedRelatedFieldListFilter),
         ("theme", SortedRelatedFieldListFilter),
@@ -168,7 +187,13 @@ class InitiativeAdmin(
         ("reviewer__email", "Reviewer email"),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [export_as_csv_action(fields=export_to_csv_fields), 'archive']
+
+    def archive(self, request, queryset):
+        for initiative in queryset:
+            initiative.states.archive(save=True)
+
+    archive.short_description = _("Archive selected initiatives")
 
     def get_fieldsets(self, request, obj=None):
         detail_fields = [

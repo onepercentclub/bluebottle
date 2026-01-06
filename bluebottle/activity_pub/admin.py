@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import connection
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
@@ -134,9 +135,8 @@ class PersonAdmin(ActivityPubModelChildAdmin):
                     if url:
                         try:
                             target_actor = adapter.sync(url, serializer=OrganizationSerializer)
-                            follow = Follow.objects.create(actor=actor, object=target_actor)
+                            Follow.objects.create(actor=actor, object=target_actor)
                             try:
-                                adapter.publish(follow)
                                 self.message_user(
                                     request,
                                     f"Successfully created and published Follow relationship to {url}",
@@ -189,8 +189,6 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
         return custom_urls + urls
 
     def republish_recipient(self, request, object_id, recipient_id):
-        from django.db import connection
-        from bluebottle.activity_pub.tasks import publish_to_recipient
         from bluebottle.activity_pub.models import Recipient
 
         activity = get_object_or_404(Activity, pk=unquote(object_id))
@@ -200,7 +198,8 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
             raise PermissionDenied
 
         try:
-            publish_to_recipient.delay(activity, recipient, connection.tenant)
+            from bluebottle.activity_pub.adapters import publish_to_recipient
+            publish_to_recipient.delay(recipient, connection.tenant)
             self.message_user(
                 request,
                 _('Republish task queued for recipient {actor}.').format(actor=recipient.actor),
@@ -367,14 +366,14 @@ class FollowingAdmin(FollowAdmin):
             # When adding a new Following
             return (
                 (None, {
-                    'fields': ('platform_url', 'adoption_mode', 'adoption_type', 'default_owner',),
+                    'fields': ('platform_url', 'adoption_mode', 'adoption_type', 'default_owner'),
                 }),
             )
         else:
             # When viewing/editing an existing Following
             return (
                 (None, {
-                    'fields': ('object', 'accepted', )
+                    'fields': ('object', 'accepted', 'adoption_mode', 'adoption_type', 'default_owner')
                 }),
             )
 
@@ -419,30 +418,14 @@ class FollowingAdmin(FollowAdmin):
                     follow_obj.default_owner = default_owner
                     follow_obj.save()
                 # Publish the Follow activity to the remote inbox
-                try:
-                    adapter.publish(follow_obj)
-                    self.message_user(
-                        request,
-                        _(
-                            "Follow request sent to %s. "
-                            "Your platforms will be connected when the request is accepted."
-                        ) % platform_url,
-                        level="success"
-                    )
-                except Exception as publish_error:
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.error(f"Failed to publish Follow {follow_obj.pk}: {str(publish_error)}", exc_info=True)
-                    self.message_user(
-                        request,
-                        _(
-                            "Follow relationship created but publishing failed: %s. "
-                            "The follow request may not have been sent to the remote platform."
-                        ) % str(publish_error),
-                        level="warning"
-                    )
-                # Store the created object for response_add
-                self._created_follow_obj = follow_obj
+                self.message_user(
+                    request,
+                    _(
+                        "Follow request sent to %s. "
+                        "Your platforms will be connected when the request is accepted."
+                    ) % platform_url,
+                    level="success"
+                )
             except requests.exceptions.HTTPError:
                 self.message_user(
                     request,
@@ -476,7 +459,7 @@ class FollowerAdmin(FollowAdmin):
     list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
     actions = ['accept_follow_requests']
     readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities")
-    fields = readonly_fields + ('publish_mode',)
+    fields = readonly_fields
 
     def platform(self, obj):
         return obj.actor
@@ -497,6 +480,12 @@ class FollowerAdmin(FollowAdmin):
 
     accepted.boolean = True
     accepted.short_description = _("Accepted")
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and self.accepted(obj):
+            fields += ('publish_mode',)
+        return fields
 
     def get_urls(self):
         urls = super().get_urls()
@@ -689,6 +678,17 @@ class EventAdminMixin:
         return obj.source
     source.short_description = _("Partner")
 
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        event = get_object_or_404(Event, pk=unquote(object_id))
+        extra_context = extra_context or {}
+        source = event.source
+        follow = event.source.follow if event.source else None
+        extra_context["source"] = source
+        extra_context["follow"] = follow
+        extra_context["adoption_mode"] = follow.adoption_mode if follow else None
+        extra_context["adoption_type"] = follow.adoption_type if follow else None
+        return super().change_view(request, object_id, form_url, extra_context)
+
     def display_description(self, obj):
         return format_html(
             '<div style="display: table-cell; border-left:1px solid #aaa; padding: 0 12px">' + obj.summary + "</div>"
@@ -778,7 +778,7 @@ class EventAdminMixin:
                 level="success",
             )
             return HttpResponseRedirect(
-                reverse("admin:activities_activity_change", args=[activity.pk])
+                reverse("activity_links_linkedactivity_change", args=[activity.pk])
             )
 
         except Exception as e:
@@ -801,6 +801,9 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name if obj.get_real_instance_class() else '-'
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
     list_display = ("name", "type", "source", "adopted")
 
@@ -884,7 +887,8 @@ class CrowdFundingAdmin(EventChildAdmin):
     model = GoodDeed
     readonly_fields = EventChildAdmin.readonly_fields + (
         'end_time',
-        'target'
+        'target',
+        'donated'
     )
     fields = readonly_fields
 

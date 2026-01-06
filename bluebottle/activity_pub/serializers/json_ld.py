@@ -12,6 +12,7 @@ from bluebottle.activity_pub.models import (
     Person,
     PublicKey,
     Publish,
+    Update,
     Organization,
     Actor,
     Activity,
@@ -169,12 +170,19 @@ class CrowdFundingSerializer(BaseEventSerializer):
 
     target = serializers.DecimalField(decimal_places=2, max_digits=10)
     target_currency = serializers.CharField()
+    donated = serializers.DecimalField(decimal_places=2, max_digits=10)
+    donated_currency = serializers.CharField()
 
     location = PlaceSerializer(allow_null=True, include=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
-        fields = BaseEventSerializer.Meta.fields + ('end_time', 'target', 'target_currency', 'location')
+        fields = BaseEventSerializer.Meta.fields + (
+            'end_time',
+            'target', 'target_currency',
+            'donated', 'donated_currency',
+            'location'
+        )
 
 
 class SubEventSerializer(ActivityPubSerializer):
@@ -295,6 +303,15 @@ class PublishSerializer(BaseActivitySerializer):
         model = Publish
 
 
+class UpdateSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:update')
+    type = TypeField('Update')
+    object = EventSerializer()
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Update
+
+
 class AnnounceSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:announce')
     type = TypeField('Announce')
@@ -306,7 +323,8 @@ class AnnounceSerializer(BaseActivitySerializer):
 
 class ActivitySerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        FollowSerializer, AcceptSerializer, PublishSerializer, AnnounceSerializer
+        FollowSerializer, AcceptSerializer, PublishSerializer,
+        AnnounceSerializer, UpdateSerializer
     ]
 
     class Meta:

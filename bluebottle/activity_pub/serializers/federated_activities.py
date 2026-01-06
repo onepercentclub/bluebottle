@@ -191,16 +191,16 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     summary = RichTextField(source='description')
     image = ImageSerializer(required=False, allow_null=True)
     organization = OrganizationSerializer(required=False, allow_null=True)
-    activity_link = serializers.SerializerMethodField(required=False, allow_null=True)
+    url = serializers.SerializerMethodField()
 
-    def get_activity_link(self, obj):
+    def get_url(self, obj):
         return connection.tenant.build_absolute_url(
             obj.get_absolute_url()
         )
 
     class Meta:
         fields = FederatedObjectSerializer.Meta.fields + (
-            'name', 'summary', 'image', 'organization', 'activity_link'
+            'name', 'summary', 'image', 'organization', 'url'
         )
 
     def save(self, *args, **kwargs):
@@ -230,11 +230,15 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     end_time = serializers.DateTimeField(source='deadline')
     target = serializers.DecimalField(source='target.amount', decimal_places=2, max_digits=10)
     target_currency = serializers.CharField(source='target.currency')
+    donated = serializers.DecimalField(source='amount_donated.amount', decimal_places=2, max_digits=10)
+    donated_currency = serializers.CharField(source='amount_donated.currency')
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Funding
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'location', 'end_time', 'target', 'target_currency'
+            'location', 'end_time',
+            'target', 'target_currency',
+            'donated', 'donated_currency'
         )
 
     def create(self, validated_data):
@@ -374,7 +378,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         FederatedDeedSerializer,
         FederatedDateActivitySerializer,
         FederatedFundingSerializer
-                                                                                                                                                                                                                                                                                                                        ]
+    ]
 
     model_type_mapping = {
         Deed: 'GoodDeed',

@@ -7,39 +7,27 @@
         &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
         &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
         &rsaquo; <a href="{% url opts|admin_urlname:'change' obj.pk %}">{{ obj }}</a>
-        &rsaquo; {% trans 'Share activity' %}
+        &rsaquo; {% trans 'Accept follow request' %}
     </div>
 {% endblock %}
 
 {% block content %}
-    <p>{% trans "Select which partners should receive this activity." %}</p>
-    <p><strong>{% trans 'Activity:' %}</strong> {{ obj }}</p>
+    <p>{% trans 'Select how activities from this partner should be shared before accepting the follow request.' %}</p>
+    <p><strong>{% trans 'Partner:' %}</strong> {{ obj.actor }}</p>
 
     <form method="post">
         {% csrf_token %}
         <fieldset class="module aligned">
-            {% if form.old_recipients.initial %}
-                <div class="form-row">
-                    <label>
-                        {% trans "Already shared with" %}:
-                    </label>
-                    <div>
-                        {% for recipient in form.old_recipients.initial %}
-                            <b>{{ recipient }}</b><br/>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endif %}
             <div class="form-row">
                 <div>
-                    <label for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}:</label>
-                    {{ form.recipients }}
-                    {% if form.recipients.help_text %}
-                        <p class="help">{{ form.recipients.help_text }}</p>
+                    <label for="{{ form.publish_mode.id_for_label }}">{{ form.publish_mode.label }}:</label>
+                    {{ form.publish_mode }}
+                    {% if form.publish_mode.help_text %}
+                        <p class="help">{{ form.publish_mode.help_text }}</p>
                     {% endif %}
-                    {% if form.recipients.errors %}
+                    {% if form.publish_mode.errors %}
                         <ul class="errorlist">
-                            {% for error in form.recipients.errors %}
+                            {% for error in form.publish_mode.errors %}
                                 <li>{{ error }}</li>
                             {% endfor %}
                         </ul>
@@ -49,8 +37,9 @@
         </fieldset>
 
         <div class="submit-row flex-row">
-            <input type="submit" name="confirm" value="{% trans 'Confirm' %}" class="default"/>
+            <input type="submit" name="confirm" value="{% trans 'Accept follow request' %}" class="default"/>
             <a href="{% url opts|admin_urlname:'change' obj.pk %}" class="button">{% trans 'Cancel' %}</a>
         </div>
     </form>
 {% endblock %}
+

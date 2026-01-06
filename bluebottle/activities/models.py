@@ -1,5 +1,6 @@
 import uuid
 from builtins import object, str
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import SET_NULL
@@ -204,6 +205,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     @property
+    def link(self):
+        return None
+
+    @property
     def event(self):
         from bluebottle.activity_pub.models import Event
         return Event.objects.get(object=self)
@@ -212,7 +217,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     def activity_pub_url(self):
         from bluebottle.activity_pub.models import Event
         try:
-            return self.event.iri
+            return self.event.iri or self.event.pub_url
         except Event.DoesNotExist:
             return None
 

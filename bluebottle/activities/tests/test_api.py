@@ -480,6 +480,48 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 6)
 
+    def test_search_diacritics(self):
+        text = 'cônsectetur adïpiscing elit,'
+        title = DeadlineActivityFactory.create(
+            status="open", title=f'title with {text}',
+        )
+        description = DeadlineActivityFactory.create(
+            status="open", description=json.dumps({'html': f'description with {text}', 'delta': ''}),
+        )
+
+        initiative_title = DeadlineActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
+        )
+        initiative_story = DeadlineActivityFactory.create(
+            status="open",
+            initiative=InitiativeFactory.create(
+                story=json.dumps({'html': f'story with {text}', 'delta': ''})
+            ),
+        )
+
+        initiative_pitch = DeadlineActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
+        )
+
+        slot_title = DateActivityFactory.create(status="open")
+        DateActivitySlotFactory.create(activity=slot_title, title=f'slot title with {text}')
+
+        response = self.client.get(
+            f'{self.url}?filter[search]=consectetur adipiscing elit,',
+        )
+
+        data = json.loads(response.content)
+        ids = [int(activity['id']) for activity in data['data']]
+
+        self.assertTrue(title.pk in ids)
+        self.assertTrue(description.pk in ids)
+        self.assertTrue(initiative_title.pk in ids)
+        self.assertTrue(initiative_pitch.pk in ids)
+        self.assertTrue(initiative_story.pk in ids)
+        self.assertTrue(slot_title.pk in ids)
+
+        self.assertEqual(data['meta']['pagination']['count'], 6)
+
     def test_search_prefix(self):
         text = 'consectetur adipiscing elit,'
         title = DeadlineActivityFactory.create(

@@ -3,5 +3,12 @@
 
 <p>
 {% blocktrans %}
-    This activity will be published to platforms that subscribed to your updates.
+    This activity will be automatically be published to these platforms:
 {% endblocktrans %}
+
+<ul>
+    {% for follower in effects.0.followers %}
+        <li>{{ follower.actor.name }}</li>
+    {% endfor %}
+</ul>
+<br/>

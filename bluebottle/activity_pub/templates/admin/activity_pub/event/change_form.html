@@ -2,51 +2,52 @@
 {% load i18n admin_urls %}
 
 
-{% block object-tools %}
-    <div style="padding-bottom: 20px; text-align: right">
-    {% if original and not original.is_local %}
-        {% if original.adopted_activity %}
-            <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
-                <input type="button" value="View adopted activity" class="default" name="_adopt">
-            </a>
-        {% else %}
-            <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
-                <input type="button" value="Adopt activity" class="default" name="_adopt">
-            </a>
-        {% endif %}
-    {% endif %}
-    </div>
-{% endblock %}
-
 {% block submit_buttons_bottom %}
-    
+
     {% if original and not original.is_local %}
-        {% if original.adopted_activity %}
-            <div class="submit-row">
-                <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
-                    <input type="button" value="View adopted activity" class="default" name="_adopt">
-                </a>
-            </div>
-        {% else %}
-            <div class="submit-row">
-                <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
-                    <input type="button" value="Adopt activity" class="default" name="_adopt">
-                </a>
-            </div>
-        {% endif %}
-        {% if original.linked_activity %}
-            <div class="submit-row">
-                <a href="{% url 'admin:activity_links_linkeddeed_change' original.linked_activity.pk %}">
-                    <input type="button" value="View linked activity" class="default" name="_adopt">
-                </a>
-            </div>
-        {% else %}
-            <div class="submit-row">
-                <a href="{% url 'admin:activity_pub_event_link' original.pk %}">
-                    <input type="button" value="Link activity" class="default" name="_adopt">
-                </a>
-            </div>
-        {% endif %}
+        <div class="submit-row">
+            {% if adoption_type == 'template' %}
+                {% if original.adopted_activity %}
+                    <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
+                        <input type="button" value="{% trans 'View adopted activity' %}" class="default"
+                               name="_adopt">
+                    </a>
+                {% else %}
+                    {% if adoption_mode == 'automatic' %}
+                        {% trans "Activities are adopted automatically for this connection" %}
+                        <br/>
+                        Here's a link if it didn't work:
+                        <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
+                            {% trans 'Adopt activity' %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
+                            <input type="button" value="{% trans 'Adopt activity' %}" class="default" name="_adopt">
+                        </a>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+            {% if adoption_type == 'link' %}
+                {% if original.linked_activity %}
+                    <a href="{% url 'admin:activity_links_linkedactivity_change' original.linked_activity.pk %}">
+                        <input type="button" value="{% trans 'View linked activity' %}" class="default"
+                               name="_adopt">
+                    </a>
+                {% else %}
+                    {% if adoption_mode == 'automatic' %}
+                        {% trans "Activities are adopted automatically for this connection" %}
+                        <br/>
+                        Here's a link if it didn't work:
+                        <a href="{% url 'admin:activity_pub_event_link' original.pk %}">
+                            {% trans 'Link activity' %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'admin:activity_pub_event_link' original.pk %}">
+                            <input type="button" value="{% trans 'Link activity' %}" class="default" name="_adopt">
+                        </a>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </div>
     {% endif %}
 {% endblock %}
-

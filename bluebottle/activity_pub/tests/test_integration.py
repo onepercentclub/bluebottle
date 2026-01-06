@@ -8,11 +8,16 @@ from django.db import connection
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
 from django.utils.timezone import get_current_timezone
+from djmoney.money import Money
 from requests import Request, Response
 
+from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Announce, Follow, Accept, Event, Recipient
+from bluebottle.activity_pub.models import (
+    AdoptionModeChoices, AdoptionTypeChoices, Announce, Follow, Accept, Event,
+    Recipient
+)
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
@@ -182,11 +187,64 @@ class ActivityPubTestCase:
         self.create()
         publish = self.model.event.publish_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
-        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             self.event = Event.objects.get()
             self.assertEqual(self.event.name, self.model.title)
+
+    def test_automatic_publish_on_approve(self):
+        self.test_accept()
+
+        self.follow.publish_mode = 'automatic'
+        self.follow.save(update_fields=['publish_mode'])
+
+        with LocalTenant(self.other_tenant):
+            Event.objects.all().delete()
+
+        activity = DeedFactory.create(status='submitted')
+        activity.states.approve(save=True)
+
+        publish = activity.event.publish_set.first()
+        self.assertIsNotNone(publish)
+        self.assertTrue(
+            Recipient.objects.filter(activity=publish, actor=self.follow.actor).exists()
+        )
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+            self.assertEqual(event.name, activity.title)
+
+    def test_manual_follow_not_auto_published(self):
+        self.test_accept()
+
+        with LocalTenant(self.other_tenant):
+            Event.objects.all().delete()
+
+        activity = DeedFactory.create(status='submitted')
+        activity.states.approve(save=True)
+
+        event = getattr(activity, 'event', None)
+        self.assertIsNone(event)
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(Event.objects.count(), 0)
+
+    def test_manual_publish_after_approve(self):
+        self.test_accept()
+
+        with LocalTenant(self.other_tenant):
+            Event.objects.all().delete()
+
+        activity = DeedFactory.create(status='submitted')
+        activity.states.approve(save=True)
+
+        adapter.create_event(activity)
+        publish = activity.event.publish_set.first()
+        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+            self.assertEqual(event.name, activity.title)
 
     def test_publish_to_closed_platform(self):
         with LocalTenant(self.other_tenant):
@@ -197,7 +255,6 @@ class ActivityPubTestCase:
 
         publish = self.model.event.publish_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
-        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()
@@ -267,6 +324,33 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
 
+class LinkTestCase(ActivityPubTestCase):
+    def test_follow(self):
+        super().test_follow()
+        with LocalTenant(self.other_tenant):
+            follow = Follow.objects.get()
+            follow.adoption_mode = AdoptionModeChoices.automatic
+            follow.adoption_type = AdoptionTypeChoices.link
+            follow.save()
+
+    def test_link(self):
+        self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.title, self.model.title)
+
+    def test_update(self):
+        title = 'Some new title'
+        self.test_link()
+        self.model.title = title
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.title, title)
+
+
 class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DeedFactory
 
@@ -289,6 +373,49 @@ class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.end, self.model.end)
+
+
+class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
+    factory = DeedFactory
+
+    def create(self):
+        super().create(
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date(),
+            organization=None
+        )
+        self.submit()
+
+
+class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
+    factory = FundingFactory
+
+    def create(self):
+        super().create(
+            impact_location=GeolocationFactory.create(country=self.country),
+            deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
+            bank_account=ExternalAccountFactory.create(
+                account_id="some-external-account-id",
+                status="verified",
+                connect_account=StripePayoutAccountFactory.create(
+                    account_id="test-account-id",
+                    status="verified",
+                ),
+            )
+        )
+
+        BudgetLineFactory.create_batch(2, activity=self.model)
+        self.submit()
+
+    def test_update_donated_amount(self):
+        self.test_link()
+
+        self.model.amount_donated = Money(12, 'EUR')
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.donated, Money(12, 'EUR'))
 
 
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):

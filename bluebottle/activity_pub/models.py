@@ -59,6 +59,11 @@ class Actor(ActivityPubModel):
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
+    def follow(self):
+        follow = Follow.objects.filter(object=self).first()
+        return follow
+
+    @property
     def webfinger_uri(self):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
@@ -232,6 +237,7 @@ class Event(ActivityPubModel):
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
     )
+    url = models.URLField(null=True, blank=True)
 
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL
@@ -250,6 +256,14 @@ class Event(ActivityPubModel):
     @property
     def adopted(self):
         return self.adopted_activity is not None
+
+    @property
+    def linked_activity(self):
+        return self.linked_activities.first()
+
+    @property
+    def linked(self):
+        return self.linked_activity is not None
 
     def __str__(self):
         return self.name
@@ -297,8 +311,10 @@ class GoodDeed(Event):
 
 
 class CrowdFunding(Event):
-    target = models.DecimalField(decimal_places=2, max_digits=10)
-    target_currency = models.CharField(max_length=3)
+    target = models.DecimalField(decimal_places=2, max_digits=10, default=0)
+    target_currency = models.CharField(max_length=3, default='EUR')
+    donated = models.DecimalField(decimal_places=2, max_digits=10, default=0)
+    donated_currency = models.CharField(max_length=3, default='EUR')
 
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
@@ -318,6 +334,43 @@ class EventAttendanceModeChoices(DjangoChoices):
 class JoinModeChoices(DjangoChoices):
     open = ChoiceItem('OpenJoinMode')
     review = ChoiceItem('ReviewJoinMode')
+
+
+class AdoptionModeChoices(DjangoChoices):
+    manual = ChoiceItem(
+        'manual',
+        _('Received activities are adopted manually.')
+    )
+    automatic = ChoiceItem(
+        'automatic',
+        _('Received activities are always automatically adopted and published.')
+    )
+
+
+class AdoptionTypeChoices(DjangoChoices):
+    template = ChoiceItem(
+        'template',
+        _('Use received activities as template to create your own activities.')
+    )
+    link = ChoiceItem(
+        'link',
+        _('Show adopted activities as links to the partner platform.')
+    )
+    hosted = ChoiceItem(
+        'hosted',
+        _('Activities are managed by the partner platform, sign ups are synced.')
+    )
+
+
+class PublishModeChoices(DjangoChoices):
+    manual = ChoiceItem(
+        'manual',
+        _('Activities will be shared manually.')
+    )
+    automatic = ChoiceItem(
+        'automatic',
+        _('Activities are automatically shared once they go live.')
+    )
 
 
 class SubEvent(ActivityPubModel):
@@ -374,7 +427,17 @@ class Activity(ActivityPubModel):
         from bluebottle.activity_pub.utils import get_platform_actor
         if not getattr(self, 'actor_id', None):
             self.actor = get_platform_actor()
-        return super().save(*args, **kwargs)
+
+        created = not self.pk
+
+        super().save(*args, **kwargs)
+
+        if created:
+            for recipient in self.default_recipients:
+                Recipient.objects.create(
+                    actor=recipient,
+                    activity=self
+                )
 
 
 class Recipient(models.Model):
@@ -404,6 +467,27 @@ class Follow(Activity):
         on_delete=models.SET_NULL,
     )
 
+    adoption_mode = models.CharField(
+        choices=AdoptionModeChoices.choices,
+        default=AdoptionModeChoices.manual,
+        verbose_name=_("Adoption mode"),
+        help_text=_("Select what should happen when a new activity has been received."),
+    )
+
+    adoption_type = models.CharField(
+        choices=AdoptionTypeChoices.choices,
+        default=AdoptionTypeChoices.template,
+        verbose_name=_("Adoption type"),
+        help_text=_("Select how a received activity should be adopted."),
+    )
+
+    publish_mode = models.CharField(
+        choices=PublishModeChoices.choices,
+        default=PublishModeChoices.manual,
+        verbose_name=_("Publish mode"),
+        help_text=_("Select how you want to share activities."),
+    )
+
     @property
     def default_recipients(self):
         return [self.object]
@@ -425,7 +509,7 @@ class Follow(Activity):
         return Announce.objects.filter(actor=self.actor).count()
 
     def __str__(self):
-        return str(self.actor)
+        return str(self.object)
 
     class Meta:
         verbose_name = _('Connection')
@@ -462,6 +546,16 @@ class Accept(Activity):
 
 class Publish(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+
+class Update(Activity):
+    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+    @property
+    def default_recipients(self):
+        for publish in self.object.publish_set.all():
+            for recipient in publish.recipients.all():
+                yield recipient.actor
 
 
 class Announce(Activity):

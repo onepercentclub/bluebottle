@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import connection
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
@@ -16,6 +17,7 @@ from polymorphic.admin import (
 )
 
 from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm
 from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
@@ -36,6 +38,7 @@ from bluebottle.activity_pub.models import (
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.bluebottle_dashboard.decorators import admin_form
 from bluebottle.members.models import Member
 from bluebottle.utils.admin import admin_info_box
 from bluebottle.webfinger.client import client
@@ -118,18 +121,6 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
     pass
 
 
-class FollowForm(forms.ModelForm):
-    url = forms.URLField(
-        label=_("Partner URL"),
-        help_text=_("This is the website address of the partner you want to follow."),
-        max_length=400
-    )
-
-    class Meta:
-        model = Follow
-        fields = ["iri", ]
-
-
 @admin.register(Person)
 class PersonAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
@@ -144,9 +135,8 @@ class PersonAdmin(ActivityPubModelChildAdmin):
                     if url:
                         try:
                             target_actor = adapter.sync(url, serializer=OrganizationSerializer)
-                            follow = Follow.objects.create(actor=actor, object=target_actor)
+                            Follow.objects.create(actor=actor, object=target_actor)
                             try:
-                                adapter.publish(follow)
                                 self.message_user(
                                     request,
                                     f"Successfully created and published Follow relationship to {url}",
@@ -199,8 +189,6 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
         return custom_urls + urls
 
     def republish_recipient(self, request, object_id, recipient_id):
-        from django.db import connection
-        from bluebottle.activity_pub.adapters import publish_to_recipient
         from bluebottle.activity_pub.models import Recipient
 
         activity = get_object_or_404(Activity, pk=unquote(object_id))
@@ -210,7 +198,8 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
             raise PermissionDenied
 
         try:
-            publish_to_recipient.delay(activity, recipient, connection.tenant)
+            from bluebottle.activity_pub.adapters import publish_to_recipient
+            publish_to_recipient.delay(recipient, connection.tenant)
             self.message_user(
                 request,
                 _('Republish task queued for recipient {actor}.').format(actor=recipient.actor),
@@ -312,7 +301,7 @@ class SourceFilter(admin.SimpleListFilter):
 class FollowingAddForm(forms.ModelForm):
     platform_url = forms.URLField(
         label=_("Partner URL"),
-        help_text=_("This is the website address of the partner you want to follow."),
+        help_text=_("Thi is the website address of the partner you want to follow."),
     )
     default_owner = forms.ModelChoiceField(
         Member.objects.all(),
@@ -323,7 +312,7 @@ class FollowingAddForm(forms.ModelForm):
 
     class Meta:
         model = Following
-        fields = ['platform_url', ]
+        fields = ['default_owner', 'adoption_mode', 'adoption_type', 'platform_url']
         widgets = {
             'default_owner': admin.widgets.ForeignKeyRawIdWidget(
                 Following._meta.get_field('default_owner').remote_field,
@@ -377,20 +366,19 @@ class FollowingAdmin(FollowAdmin):
             # When adding a new Following
             return (
                 (None, {
-                    'fields': ('platform_url', )
+                    'fields': ('platform_url', 'adoption_mode', 'adoption_type', 'default_owner'),
                 }),
             )
         else:
             # When viewing/editing an existing Following
             return (
                 (None, {
-                    'fields': ('object', 'accepted', )
+                    'fields': ('object', 'accepted', 'adoption_mode', 'adoption_type', 'default_owner')
                 }),
             )
 
     def get_fields(self, request, obj=None):
-        # This will be overridden by get_fieldsets
-        fields = ['default_owner']
+        fields = ['default_owner', 'adoption_mode']
         if not obj:
             fields = ['connect_info', 'platform_url'] + fields
         else:
@@ -430,30 +418,14 @@ class FollowingAdmin(FollowAdmin):
                     follow_obj.default_owner = default_owner
                     follow_obj.save()
                 # Publish the Follow activity to the remote inbox
-                try:
-                    adapter.publish(follow_obj)
-                    self.message_user(
-                        request,
-                        _(
-                            "Connection request sent to %s. "
-                            "You will be able to receive activities when the request is accepted."
-                        ) % platform_url,
-                        level="success"
-                    )
-                except Exception as publish_error:
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.error(f"Failed to publish Follow {follow_obj.pk}: {str(publish_error)}", exc_info=True)
-                    self.message_user(
-                        request,
-                        _(
-                            "Follow relationship created but publishing failed: %s. "
-                            "The follow request may not have been sent to the remote platform."
-                        ) % str(publish_error),
-                        level="warning"
-                    )
-                # Store the created object for response_add
-                self._created_follow_obj = follow_obj
+                self.message_user(
+                    request,
+                    _(
+                        "Follow request sent to %s. "
+                        "Your platforms will be connected when the request is accepted."
+                    ) % platform_url,
+                    level="success"
+                )
             except requests.exceptions.HTTPError:
                 self.message_user(
                     request,
@@ -509,22 +481,28 @@ class FollowerAdmin(FollowAdmin):
     accepted.boolean = True
     accepted.short_description = _("Accepted")
 
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and self.accepted(obj):
+            fields += ('publish_mode',)
+        return fields
+
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "<path:object_id>/accept/",
+                "<path:pk>/accept/",
                 self.admin_site.admin_view(self.accept_follow_request),
                 name="activity_pub_follower_accept",
             ),
         ]
         return custom_urls + urls
 
-    def accept_follow_request(self, request, object_id):
-        """Accept a single follow request"""
-        from bluebottle.activity_pub.models import Accept, Follow
+    @admin_form(AcceptFollowPublishModeForm, Follow, 'admin/activity_pub/follow/accept_publish_mode.html')
+    def accept_follow_request(self, request, follow, form):
+        """Accept a single follow request allowing publish_mode selection"""
+        from bluebottle.activity_pub.models import Accept
 
-        follow = get_object_or_404(Follow, pk=unquote(object_id))
         platform_actor = get_platform_actor()
 
         if not platform_actor:
@@ -532,6 +510,12 @@ class FollowerAdmin(FollowAdmin):
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_follower_change", args=[follow.pk])
             )
+
+        # Persist chosen publish mode before accepting
+        publish_mode = form.cleaned_data.get('publish_mode')
+        if publish_mode and follow.publish_mode != publish_mode:
+            follow.publish_mode = publish_mode
+            follow.save(update_fields=['publish_mode'])
 
         # Check if already accepted
         if Accept.objects.filter(object=follow).exists():
@@ -662,12 +646,16 @@ class EventAdminMixin:
         "name",
         "source",
         "adopted",
+        "linked"
     )
     readonly_fields = (
         "name",
         "display_description",
         "display_image",
         "source",
+        "activity",
+        "url",
+        "iri"
     )
     fields = readonly_fields
     list_filter = [AdoptedFilter, SourceFilter]
@@ -678,11 +666,28 @@ class EventAdminMixin:
     adopted.boolean = True
     adopted.short_description = _("Adopted")
 
+    def linked(self, obj):
+        return obj.linked
+
+    linked.boolean = True
+    linked.short_description = _("Linked")
+
     inlines = []
 
     def source(self, obj):
         return obj.source
     source.short_description = _("Partner")
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        event = get_object_or_404(Event, pk=unquote(object_id))
+        extra_context = extra_context or {}
+        source = event.source
+        follow = event.source.follow if event.source else None
+        extra_context["source"] = source
+        extra_context["follow"] = follow
+        extra_context["adoption_mode"] = follow.adoption_mode if follow else None
+        extra_context["adoption_type"] = follow.adoption_type if follow else None
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def display_description(self, obj):
         return format_html(
@@ -706,14 +711,16 @@ class EventAdminMixin:
                 self.admin_site.admin_view(self.adopt_event),
                 name="activity_pub_event_adopt",
             ),
+            path(
+                "<path:object_id>/link/",
+                self.admin_site.admin_view(self.link_event),
+                name="activity_pub_event_link",
+            ),
         ]
         return custom_urls + urls
 
     def adopt_event(self, request, object_id):
-        """
-        Create a Deed from the Event information
-        """
-        if not request.user.has_perm("deeds.add_deed"):
+        if not request.user.has_perm("deeds.add_activity"):
             raise PermissionDenied
 
         event = get_object_or_404(Event, pk=unquote(object_id))
@@ -742,6 +749,40 @@ class EventAdminMixin:
 
         except Exception as e:
             self.message_user(request, f"Error creating activity: {str(e)}", level="error")
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+    def link_event(self, request, object_id):
+        if not request.user.has_perm("deeds.add_activity"):
+            raise PermissionDenied
+
+        event = get_object_or_404(Event, pk=unquote(object_id))
+
+        if event.linked_activity:
+            self.message_user(
+                request,
+                "This activity has already been linked.",
+                level="warning",
+            )
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+        try:
+            activity = adapter.link(event, request)
+
+            self.message_user(
+                request,
+                f'Successfully created Activity "{activity.title}" from Event.',
+                level="success",
+            )
+            return HttpResponseRedirect(
+                reverse("activity_links_linkedactivity_change", args=[activity.pk])
+            )
+
+        except Exception as e:
+            self.message_user(request, f"Error creating linked activity: {str(e)}", level="error")
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])
             )
@@ -798,7 +839,7 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
 @admin.register(ReceivedActivity)
 class ReceivedActivityAdmin(EventPolymorphicAdmin):
     model = ReceivedActivity
-    list_display = ("name_link", "type", "source", "adopted")
+    list_display = ("name_link", "type", "source", "adopted", "linked")
     list_display_links = ("name_link",)
 
     def source(self, obj):
@@ -846,7 +887,8 @@ class CrowdFundingAdmin(EventChildAdmin):
     model = GoodDeed
     readonly_fields = EventChildAdmin.readonly_fields + (
         'end_time',
-        'target'
+        'target',
+        'donated'
     )
     fields = readonly_fields
 

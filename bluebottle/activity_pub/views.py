@@ -1,11 +1,11 @@
+from celery import shared_task
 from django.db import connection
 from rest_framework import generics, status, response
-from celery import shared_task
 
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Announce, Organization,
-    GoodDeed, Image, CrowdFunding, Place, Address, DoGoodEvent, SubEvent
+    GoodDeed, Image, CrowdFunding, Place, Address, DoGoodEvent, SubEvent, Update
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import InboxPermission, ActivityPubPermission
@@ -15,7 +15,7 @@ from bluebottle.activity_pub.serializers.json_ld import (
     AcceptSerializer, ActivitySerializer, PublishSerializer, AnnounceSerializer,
     OrganizationSerializer, GoodDeedSerializer, ImageSerializer,
     CrowdFundingSerializer, PlaceSerializer, AddressSerializer,
-    DoGoodEventSerializer, SubEventSerializer
+    DoGoodEventSerializer, SubEventSerializer, UpdateSerializer
 )
 from bluebottle.clients.utils import LocalTenant
 
@@ -134,6 +134,11 @@ class AcceptView(ActivityPubView):
 class PublishView(ActivityPubView):
     serializer_class = PublishSerializer
     queryset = Publish.objects.all()
+
+
+class UpdateView(ActivityPubView):
+    serializer_class = UpdateSerializer
+    queryset = Update.objects.all()
 
 
 class AnnounceView(ActivityPubView):

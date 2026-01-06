@@ -159,7 +159,7 @@ class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmi
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
-    readonly_fields = ['terminated_info']
+    readonly_fields = ['terminated_info', 'organization']
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -199,10 +199,18 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
                     )
                 }
             ),
+            (
+                _('GoodUp Connect'),
+                {
+                    'fields': (
+                        'share_activities', 'organization',
+                    )
+                }
+            ),
         )
 
         if obj.terminated:
-            fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info', )
+            fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info',)
 
         return fieldsets
 

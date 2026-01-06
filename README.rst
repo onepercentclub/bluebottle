@@ -185,4 +185,3 @@ To pull messages simply do
     $ crowdin pull
 
 And commit the changes after that command
-

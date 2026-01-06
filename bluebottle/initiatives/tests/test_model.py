@@ -35,7 +35,7 @@ class InitiativeTestCase(TestCase):
 
     def test_absolute_url(self):
         initiative = InitiativeFactory(activity_managers=[])
-        expected = 'http://testserver/en/initiatives/details/{}/{}'.format(initiative.id, initiative.slug)
+        expected = 'http://test.localhost/en/initiatives/details/{}/{}'.format(initiative.id, initiative.slug)
         self.assertEqual(initiative.get_absolute_url(), expected)
 
     def test_member_organization(self):

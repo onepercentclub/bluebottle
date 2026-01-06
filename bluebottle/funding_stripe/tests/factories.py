@@ -67,6 +67,8 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
         stripe = get_stripe()
         account_id = 'acct_1234567890'
         account = stripe.Account(

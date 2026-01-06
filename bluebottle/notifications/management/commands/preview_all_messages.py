@@ -436,7 +436,7 @@ class MockGrantPayout:
         self.amount = Money(3500, 'EUR')
         self.total_amount = Money(3500, 'EUR')
         self.grant = MockGrantDonor(language)
-        # Create a mock queryset-like object for grants
+        self.fund = MockGrantFund(language)
         self._grants_list = [self.grant]
 
     @property
@@ -528,9 +528,7 @@ class MockGrantPayment:
     def __init__(self, language='en'):
         self.id = 111
         self.pk = 111
-        # Create a mock payout for testing
         self._payout = MockGrantPayout(language)
-        # Make payouts.all() work
         class MockPayoutsQuerySet:
             def __init__(self, payout):
                 self._payout = payout
@@ -542,7 +540,7 @@ class MockGrantPayment:
         self.grant_provider = MockGrantProvider(language)
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
 
 
 class MockDonation:

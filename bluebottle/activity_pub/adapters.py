@@ -94,15 +94,24 @@ class JSONLDAdapter():
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 
         data = EventSerializer(instance=event).data
-        serializer = LinkedActivitySerializer(data=data, context={'request': request})
+        linked_activity = event.linked_activity
+        serializer = LinkedActivitySerializer(
+            data=data,
+            instance=linked_activity,
+            context={'request': request}
+        )
         serializer.is_valid(raise_exception=True)
         organization = Publish.objects.filter(object=event).first().actor.organization
 
-        return serializer.save(
-            host_organization=organization,
-            status='open',
-            event=event
-        )
+        save_kwargs = {
+            'host_organization': organization,
+            'event': event
+        }
+
+        if not linked_activity:
+            save_kwargs['status'] = 'open'
+
+        return serializer.save(**save_kwargs)
 
     def create_event(self, activity):
         from bluebottle.activities.models import Activity as BluebottleActivity
@@ -177,7 +186,8 @@ def update_event(sender, instance, **kwargs):
     from bluebottle.activity_pub.serializers.json_ld import EventSerializer
     if not instance.is_local and not instance.pk:
         serializer = EventSerializer(
-            instance=instance.object, data=adapter.fetch(instance.object.iri)
+            instance=instance.object,
+            data=adapter.fetch(instance.object.iri)
         )
         serializer.is_valid(raise_exception=True)
         event = serializer.save()

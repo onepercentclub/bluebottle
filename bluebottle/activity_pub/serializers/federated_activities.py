@@ -236,7 +236,8 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Funding
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'location', 'end_time', 'target', 'target_currency',
+            'location', 'end_time',
+            'target', 'target_currency',
             'donated', 'donated_currency'
         )
 

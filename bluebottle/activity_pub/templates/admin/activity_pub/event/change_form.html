@@ -29,7 +29,7 @@
             {% endif %}
             {% if adoption_type == 'link' %}
                 {% if original.linked_activity %}
-                    <a href="{% url 'admin:activity_links_linkeddeed_change' original.linked_activity.pk %}">
+                    <a href="{% url 'admin:activity_links_linkedactivity_change' original.linked_activity.pk %}">
                         <input type="button" value="{% trans 'View linked activity' %}" class="default"
                                name="_adopt">
                     </a>

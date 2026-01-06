@@ -170,6 +170,8 @@ class CrowdFundingSerializer(BaseEventSerializer):
 
     target = serializers.DecimalField(decimal_places=2, max_digits=10)
     target_currency = serializers.CharField()
+    donated = serializers.DecimalField(decimal_places=2, max_digits=10)
+    donated_currency = serializers.CharField()
 
     location = PlaceSerializer(allow_null=True, include=True, required=False)
 

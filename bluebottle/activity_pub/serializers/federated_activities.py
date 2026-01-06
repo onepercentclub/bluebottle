@@ -8,6 +8,7 @@ from django.contrib.gis.geos import Point
 from django.core.files import File
 from django.db import connection, models
 from django.urls import reverse
+from djmoney.money import Money
 from rest_framework import serializers, exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
@@ -25,7 +26,6 @@ from bluebottle.geo.models import Country, Geolocation
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity
 from bluebottle.utils.fields import RichTextField
-from bluebottle.utils.serializers import Money
 
 
 class ImageSerializer(FederatedObjectSerializer):
@@ -233,6 +233,7 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     donated = serializers.DecimalField(source='amount_donated.amount', decimal_places=2, max_digits=10)
     donated_currency = serializers.CharField(source='amount_donated.currency')
 
+
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Funding
         fields = BaseFederatedActivitySerializer.Meta.fields + (
@@ -243,8 +244,14 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
 
     def create(self, validated_data):
         if validated_data.get('target'):
-            validated_data['target'] = Money(**validated_data['target'])
-
+            validated_data['target'] = Money(
+                **validated_data['target']
+            )
+        if validated_data.get('amount_donated'):
+            validated_data['amount_donated'] = Money(
+                **validated_data['amount_donated']
+            )
+        print('validated_data', validated_data)
         return super().create(validated_data)
 
 

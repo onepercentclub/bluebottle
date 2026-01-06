@@ -180,7 +180,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         fields = super().get_registration_fields(request, obj)
         settings = InitiativePlatformSettings.load()
         if settings.hour_registration == 'per_activity':
-            fields = ('hour_registration_data',) + fields
+            fields = ['hour_registration_data'] + list(fields)
         return fields
 
     def registration_link(self, obj):

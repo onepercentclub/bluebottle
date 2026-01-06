@@ -536,7 +536,7 @@ class MockGrantPayment:
             def all(self):
                 return [self._payout]
         self.payouts = MockPayoutsQuerySet(self._payout)
-        self.total = Money(1700, 'EUR')
+        self.total = Money(3500, 'EUR')
         self.grant_provider = MockGrantProvider(language)
 
     def get_admin_url(self):

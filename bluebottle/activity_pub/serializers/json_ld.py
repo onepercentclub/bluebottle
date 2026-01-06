@@ -170,12 +170,19 @@ class CrowdFundingSerializer(BaseEventSerializer):
 
     target = serializers.DecimalField(decimal_places=2, max_digits=10)
     target_currency = serializers.CharField()
+    donated = serializers.DecimalField(decimal_places=2, max_digits=10)
+    donated_currency = serializers.CharField()
 
     location = PlaceSerializer(allow_null=True, include=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
-        fields = BaseEventSerializer.Meta.fields + ('end_time', 'target', 'target_currency', 'location')
+        fields = BaseEventSerializer.Meta.fields + (
+            'end_time',
+            'target', 'target_currency',
+            'donated', 'donated_currency',
+            'location'
+        )
 
 
 class SubEventSerializer(ActivityPubSerializer):

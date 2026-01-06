@@ -17,10 +17,10 @@ from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine,
     EffortContributionStateMachine, ContributorStateMachine
 )
-from bluebottle.activity_pub.effects import AnnounceAdoptionEffect, PublishEffect
+from bluebottle.activity_pub.effects import AnnounceAdoptionEffect, PublishEffect, UpdateEventEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
-    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
+    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register, ModelChangedTrigger
 )
 from bluebottle.funding.models import Funding
 from bluebottle.impact.effects import UpdateImpactGoalEffect
@@ -240,6 +240,12 @@ class ActivityTriggers(TriggerManager):
                 )
             ]
         ),
+        ModelChangedTrigger(
+            ['title', 'description', 'status'],
+            effects=[
+                UpdateEventEffect,
+            ]
+        )
     ]
 
 

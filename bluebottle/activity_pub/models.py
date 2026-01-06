@@ -59,6 +59,11 @@ class Actor(ActivityPubModel):
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
+    def follow(self):
+        follow = Follow.objects.filter(object=self).first()
+        return follow
+
+    @property
     def webfinger_uri(self):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
@@ -306,8 +311,10 @@ class GoodDeed(Event):
 
 
 class CrowdFunding(Event):
-    target = models.DecimalField(decimal_places=2, max_digits=10)
-    target_currency = models.CharField(max_length=3)
+    target = models.DecimalField(decimal_places=2, max_digits=10, default=0)
+    target_currency = models.CharField(max_length=3, default='EUR')
+    donated = models.DecimalField(decimal_places=2, max_digits=10, default=0)
+    donated_currency = models.CharField(max_length=3, default='EUR')
 
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
@@ -502,7 +509,7 @@ class Follow(Activity):
         return Announce.objects.filter(actor=self.actor).count()
 
     def __str__(self):
-        return str(self.actor)
+        return str(self.object)
 
     class Meta:
         verbose_name = _('Connection')

@@ -3,10 +3,10 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
+from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
 from bluebottle.organizations.models import Organization
-from bluebottle.activity_pub.models import Publish
 from bluebottle.utils.fields import MoneyField, ImageField
 
 
@@ -76,7 +76,8 @@ class LinkedDeed(LinkedActivity):
 
 class LinkedFunding(LinkedActivity):
     target = MoneyField()
-    donated = MoneyField()
+    donated = MoneyField(default=Money('0.00', 'EUR'))
+    amount = MoneyField(default=Money('0.00', 'EUR'))
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
 

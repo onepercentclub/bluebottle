@@ -230,11 +230,15 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     end_time = serializers.DateTimeField(source='deadline')
     target = serializers.DecimalField(source='target.amount', decimal_places=2, max_digits=10)
     target_currency = serializers.CharField(source='target.currency')
+    donated = serializers.DecimalField(source='amount_donated.amount', decimal_places=2, max_digits=10)
+    donated_currency = serializers.CharField(source='amount_donated.currency')
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Funding
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'location', 'end_time', 'target', 'target_currency'
+            'location', 'end_time',
+            'target', 'target_currency',
+            'donated', 'donated_currency'
         )
 
     def create(self, validated_data):

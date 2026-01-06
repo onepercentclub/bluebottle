@@ -1,11 +1,10 @@
-import inflection
 from urllib.parse import urlparse
 
+import inflection
+
 from bluebottle.activity_pub.models import Organization as Organization
-
-from bluebottle.cms.models import SitePlatformSettings
-
 from bluebottle.clients import properties
+from bluebottle.cms.models import SitePlatformSettings
 
 
 def transform(data, func, *args, **kwargs):

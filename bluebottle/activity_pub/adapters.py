@@ -6,6 +6,7 @@ from celery import shared_task
 from django.db import connection
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django_tools.middlewares.ThreadLocal import get_current_user
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_links.serializers import LinkedActivitySerializer
@@ -76,7 +77,6 @@ class JSONLDAdapter():
         actor = serializer.save()
         return Follow.objects.create(object=actor)
 
-
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
@@ -87,8 +87,8 @@ class JSONLDAdapter():
 
         follow = Follow.objects.get(object=event.source)
         organization = Publish.objects.filter(object=event).first().actor.organization
-
-        return serializer.save(owner=follow.default_owner, host_organization=organization)
+        owner = follow.default_owner or get_current_user()
+        return serializer.save(owner=owner, host_organization=organization)
 
     def link(self, event, request=None):
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer

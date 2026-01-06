@@ -3,14 +3,15 @@ from io import BytesIO
 from urllib.parse import urlparse
 
 import mock
-from bluebottle.activity_links.models import LinkedActivity
 from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
 from django.utils.timezone import get_current_timezone
+from djmoney.money import Money
 from requests import Request, Response
 
+from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
@@ -384,6 +385,37 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             organization=None
         )
         self.submit()
+
+
+class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
+    factory = FundingFactory
+
+    def create(self):
+        super().create(
+            impact_location=GeolocationFactory.create(country=self.country),
+            deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
+            bank_account=ExternalAccountFactory.create(
+                account_id="some-external-account-id",
+                status="verified",
+                connect_account=StripePayoutAccountFactory.create(
+                    account_id="test-account-id",
+                    status="verified",
+                ),
+            )
+        )
+
+        BudgetLineFactory.create_batch(2, activity=self.model)
+        self.submit()
+
+    def test_update_donated_amount(self):
+        self.test_link()
+
+        self.model.amount_donated = Money(12, 'EUR')
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.donated, Money(12, 'EUR'))
 
 
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):

@@ -155,6 +155,12 @@ class LinkedDeedDocument(LinkedActivityDocument):
     def prepare_activity_type(self, instance):
         return 'deed'
 
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.end]
+
 
 @registry.register_document
 @activity.doc_type

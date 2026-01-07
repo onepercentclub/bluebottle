@@ -56,8 +56,14 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
 
 
 class LinkedDeedSerializer(BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeed
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time'
+        )
 
 
 class LinkedDateActivitySerializer(BaseLinkedActivitySerializer):

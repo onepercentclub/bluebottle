@@ -199,7 +199,8 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
 
         try:
             from bluebottle.activity_pub.adapters import publish_to_recipient
-            publish_to_recipient.delay(recipient, connection.tenant)
+            tenant = connection.tenant
+            publish_to_recipient.delay(recipient, tenant)
             self.message_user(
                 request,
                 _('Republish task queued for recipient {actor}.').format(actor=recipient.actor),
@@ -226,6 +227,7 @@ class ActorAdmin(ActivityPubModelChildAdmin):
 class FollowAdmin(ActivityAdmin):
     list_display = ('actor', "object")
     readonly_fields = ("actor", "object", "iri", "pub_url")
+    inlines = [RecipientInline]
 
 
 @admin.register(PublicKey)
@@ -237,17 +239,20 @@ class PublicKeyAdmin(ActivityPubModelChildAdmin):
 class PublishAdmin(ActivityPubModelChildAdmin):
     list_display = ("id", "actor", "object")
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')
+    inlines = [RecipientInline]
 
 
 @admin.register(Accept)
 class AcceptAdmin(ActivityAdmin):
     list_display = ("id", "actor", "object")
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')
+    inlines = [RecipientInline]
 
 
 @admin.register(Announce)
 class AnnounceAdmin(ActivityAdmin):
     list_display = ("id", "actor", "object")
+    inlines = [RecipientInline]
 
 
 class AnnouncementInline(admin.StackedInline):

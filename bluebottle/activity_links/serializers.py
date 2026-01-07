@@ -33,9 +33,18 @@ class LinkedDeadlineActivitySerializer(BaseLinkedActivitySerializer):
 
 
 class LinkedFundingSerializer(BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+
+    class Meta:
+        model = LinkedFunding
+
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedFunding
-        fields = BaseLinkedActivitySerializer.Meta.fields + ('target', 'donated')
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'target', 'donated',
+            'start_time', 'end_time'
+        )
 
 
 class LinkedActivitySerializer(PolymorphicSerializer):

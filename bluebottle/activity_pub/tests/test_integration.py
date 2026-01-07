@@ -407,6 +407,9 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
         BudgetLineFactory.create_batch(2, activity=self.model)
         self.submit()
 
+    def test_adopt(self):
+        pass
+
     def test_update_donated_amount(self):
         self.test_link()
 
@@ -416,6 +419,14 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.donated, Money(12, 'EUR'))
+
+    def test_deadline_maps_to_end(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            from bluebottle.activity_links.models import LinkedFunding
+            link = LinkedFunding.objects.get()
+            self.assertEqual(link.end, self.model.deadline)
 
 
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):

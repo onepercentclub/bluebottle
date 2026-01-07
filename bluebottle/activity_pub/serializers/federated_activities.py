@@ -251,7 +251,6 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
             validated_data['amount_donated'] = Money(
                 **validated_data['amount_donated']
             )
-        print('validated_data', validated_data)
         return super().create(validated_data)
 
 

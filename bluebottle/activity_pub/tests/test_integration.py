@@ -428,6 +428,15 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
             link = LinkedFunding.objects.get()
             self.assertEqual(link.end, self.model.deadline)
 
+    def test_image_maps_to_linked_funding_image(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            from bluebottle.activity_links.models import LinkedFunding
+            link = LinkedFunding.objects.get()
+            self.assertIsNotNone(self.model.image, "Original Funding should have an image")
+            self.assertIsNotNone(link.image, "LinkedFunding should have an image mapped from Funding")
+
 
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = FundingFactory

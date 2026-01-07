@@ -1,3 +1,7 @@
+from io import BytesIO
+
+import requests
+from django.core.files import File
 from django.db import models
 from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
@@ -7,14 +11,48 @@ from bluebottle.activity_links.models import LinkedActivity, LinkedDeed, LinkedD
 from bluebottle.utils.fields import RichTextField
 
 
+class LinkedActivityImageField(serializers.Field):
+    """Custom field to handle image conversion from JSON-LD format to File object"""
+
+    def to_internal_value(self, data):
+        if not data:
+            return None
+
+        if isinstance(data, dict):
+            image_url = data.get('url') or data.get('id')
+            image_name = data.get('name', 'image')
+        else:
+            image_url = data
+            image_name = 'image'
+
+        if not image_url:
+            return None
+
+        try:
+            response = requests.get(image_url, timeout=30)
+            response.raise_for_status()
+            return File(BytesIO(response.content), name=image_name)
+        except requests.exceptions.RequestException as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Could not fetch image from {image_url}: {e}")
+            return None
+
+    def to_representation(self, value):
+        if not value:
+            return None
+        return value
+
+
 class BaseLinkedActivitySerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
     url = serializers.URLField(source='link')
+    image = LinkedActivityImageField(required=False, allow_null=True)
 
     class Meta:
         model = LinkedActivity
-        fields = ('name', 'summary', 'url')
+        fields = ('name', 'summary', 'url', 'image')
 
 
 class LinkedDeedSerializer(BaseLinkedActivitySerializer):
@@ -35,9 +73,6 @@ class LinkedDeadlineActivitySerializer(BaseLinkedActivitySerializer):
 class LinkedFundingSerializer(BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
-
-    class Meta:
-        model = LinkedFunding
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedFunding

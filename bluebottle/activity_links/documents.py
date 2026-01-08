@@ -7,6 +7,9 @@ from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedAc
 
 
 class LinkedActivityDocument(ActivityDocument):
+    class Django:
+        related_models = []
+        model = LinkedActivity
 
     link = fields.KeywordField()
 
@@ -131,10 +134,6 @@ class LinkedActivityDocument(ActivityDocument):
     def prepare_created(self, instance):
         return now()
 
-    class Django:
-        model = LinkedActivity
-        related_models = ()
-
 
 @registry.register_document
 @activity.doc_type
@@ -150,6 +149,7 @@ class LinkedDeedDocument(LinkedActivityDocument):
         return 'deed'
 
     def prepare_resource_name(self, instance):
+        __import__('ipdb').set_trace()
         return 'activities/deeds'
 
     def prepare_activity_type(self, instance):

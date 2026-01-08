@@ -1,7 +1,9 @@
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.models import Publish, Announce, Recipient, Follow, Update
+from bluebottle.activity_pub.models import (
+    Publish, Announce, Recipient, Follow, Update, Cancel, Delete, Finish
+)
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
 
@@ -76,3 +78,45 @@ class UpdateEventEffect(Effect):
 
     def __str__(self):
         return str(_('Notify subscribers of the changes'))
+
+
+class CancelEffect(Effect):
+    def post_save(self, **kwargs):
+        Cancel.objects.create(
+            object=self.instance.event
+        )
+
+    @property
+    def is_valid(self):
+        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+
+    def __str__(self):
+        return str(_('Notify subscribers of the cancelation'))
+
+
+class FinishEffect(Effect):
+    def post_save(self, **kwargs):
+        Finish.objects.create(
+            object=self.instance.event
+        )
+
+    @property
+    def is_valid(self):
+        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+
+    def __str__(self):
+        return str(_('Notify subscribers of the end'))
+
+
+class DeletedEffect(Effect):
+    def post_save(self, **kwargs):
+        Delete.objects.create(
+            object=self.instance.event
+        )
+
+    @property
+    def is_valid(self):
+        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+
+    def __str__(self):
+        return str(_('Notify subscribers of the deletion'))

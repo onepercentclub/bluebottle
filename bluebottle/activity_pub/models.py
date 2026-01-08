@@ -17,11 +17,12 @@ class ActivityPubManager(PolymorphicManager):
     def from_iri(self, iri):
         from bluebottle.activity_pub.utils import is_local
 
-        if is_local(iri):
-            resolved = resolve(urlparse(iri).path)
-            return self.get(pk=resolved.kwargs['pk'])
-        else:
-            return self.get(iri=iri)
+        if iri:
+            if is_local(iri):
+                resolved = resolve(urlparse(iri).path)
+                return self.filter(pk=resolved.kwargs['pk']).first()
+            else:
+                return self.filter(iri=iri).first()
 
 
 class ActivityPubModel(PolymorphicModel):
@@ -567,4 +568,26 @@ class Announce(Activity):
         return [publish.actor]
 
 
-from .tasks import *  # noqa
+class Transition(Activity):
+    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+    @property
+    def default_recipients(self):
+        for publish in self.object.publish_set.all():
+            for recipient in publish.recipients.all():
+                yield recipient.actor
+
+    class Meta:
+        abstract = True
+
+
+class Delete(Transition):
+    pass
+
+
+class Cancel(Transition):
+    pass
+
+
+class Finish(Transition):
+    pass

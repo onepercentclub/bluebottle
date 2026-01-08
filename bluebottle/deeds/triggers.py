@@ -15,7 +15,9 @@ from bluebottle.activities.states import (
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
-from bluebottle.activity_pub.effects import AnnounceAdoptionEffect, UpdateEventEffect
+from bluebottle.activity_pub.effects import (
+    AnnounceAdoptionEffect, CancelEffect, UpdateEventEffect, FinishEffect
+)
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
@@ -204,6 +206,7 @@ class DeedTriggers(ActivityTriggers):
                 ),
                 NotificationEffect(ActivitySucceededNotification),
                 SetEndDateEffect,
+                FinishEffect
             ]
         ),
 
@@ -212,6 +215,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityExpiredNotification),
+                CancelEffect
             ]
         ),
 
@@ -220,6 +224,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityRejectedNotification),
+                CancelEffect
             ]
         ),
 
@@ -228,7 +233,8 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
-            ]
+                CancelEffect
+            ],
         ),
 
         TransitionTrigger(

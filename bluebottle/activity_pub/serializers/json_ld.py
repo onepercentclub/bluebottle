@@ -13,6 +13,9 @@ from bluebottle.activity_pub.models import (
     PublicKey,
     Publish,
     Update,
+    Delete,
+    Cancel,
+    Finish,
     Organization,
     Actor,
     Activity,
@@ -26,6 +29,7 @@ from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, PolymorphicActivityPubSerializer
 )
 from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
+from bluebottle.activity_pub.adapters import adapter
 
 
 class InboxSerializer(ActivityPubSerializer):
@@ -311,6 +315,37 @@ class UpdateSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Update
 
+    def save(self, *args, **kwargs):
+        self.validated_data['object'] = adapter.fetch(self.validated_data['object']['id'])
+        return super().save(*args, **kwargs)
+
+
+class DeleteSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:delete')
+    type = TypeField('Delete')
+    object = EventSerializer()
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Delete
+
+
+class CancelSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:cancel')
+    type = TypeField('Cancel')
+    object = EventSerializer()
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Cancel
+
+
+class FinishSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:finish')
+    type = TypeField('Finish')
+    object = EventSerializer()
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Finish
+
 
 class AnnounceSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:announce')
@@ -324,7 +359,8 @@ class AnnounceSerializer(BaseActivitySerializer):
 class ActivitySerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
         FollowSerializer, AcceptSerializer, PublishSerializer,
-        AnnounceSerializer, UpdateSerializer
+        AnnounceSerializer, UpdateSerializer, CancelSerializer,
+        DeleteSerializer, FinishSerializer
     ]
 
     class Meta:

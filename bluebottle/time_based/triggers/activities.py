@@ -14,7 +14,9 @@ from bluebottle.activities.messages.reviewer import (
 )
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
-from bluebottle.activity_pub.effects import AnnounceAdoptionEffect, PublishEffect
+from bluebottle.activity_pub.effects import (
+    AnnounceAdoptionEffect, PublishEffect, CancelEffect, FinishEffect
+)
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
 from bluebottle.notifications.effects import NotificationEffect
@@ -254,6 +256,7 @@ class TimeBasedTriggers(ActivityTriggers):
             effects=[
                 NotificationEffect(ActivitySucceededNotification),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
+                FinishEffect
             ]
         ),
 
@@ -270,6 +273,7 @@ class TimeBasedTriggers(ActivityTriggers):
                 NotificationEffect(ActivityCancelledNotification),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                CancelEffect
             ]
         ),
         TransitionTrigger(
@@ -278,6 +282,7 @@ class TimeBasedTriggers(ActivityTriggers):
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 RelatedTransitionEffect('slots', SlotStateMachine.auto_cancel),
                 RelatedTransitionEffect('slots', DateActivitySlotStateMachine.auto_cancel),
+                CancelEffect
             ]
         ),
 
@@ -293,6 +298,7 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.expire,
             effects=[
                 NotificationEffect(ActivityExpiredNotification),
+                CancelEffect
             ]
         ),
         ModelChangedTrigger(
@@ -327,6 +333,7 @@ class DateActivityTriggers(TimeBasedTriggers):
                 ),
 
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
+                CancelEffect
             ],
         ),
 

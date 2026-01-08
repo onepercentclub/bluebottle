@@ -103,8 +103,7 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
         self.assertEqual(activity.description.html, activity_pub_model.summary)
         self.assertEqual(activity.slots.count(), activity_pub_model.sub_event.count())
 
-    def \
-        test_to_federated_activity_already_exists(self):
+    def test_to_federated_activity_already_exists(self):
         activity_pub_model = self.activity_pub_factory.create(iri='http://example.com')
 
         federated_serializer = self.activity_pub_serializer(

@@ -9,7 +9,7 @@ from django.core.files import File
 from django.db import connection, models
 from django.urls import reverse
 from djmoney.money import Money
-from rest_framework import serializers, exceptions
+from rest_framework import exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,8 @@ from bluebottle.geo.models import Country, Geolocation
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity
 from bluebottle.utils.fields import RichTextField
+
+from rest_framework import serializers
 
 
 class ImageSerializer(FederatedObjectSerializer):
@@ -331,14 +333,13 @@ class SlotsSerializer(FederatedObjectSerializer):
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivitySlot
-
         fields = FederatedObjectSerializer.Meta.fields + (
             'name', 'location', 'start_time', 'end_time',
             'event_attendance_mode', 'duration',
         )
 
 
-class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
+class FederatedDateActivitySerializer(FederatedObjectSerializer):
     id = FederatedIdField('json-ld:do-good-event')
 
     sub_event = SlotsSerializer(many=True, source='slots')

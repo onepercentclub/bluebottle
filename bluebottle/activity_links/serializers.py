@@ -8,7 +8,8 @@ from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_links.models import LinkedActivity, LinkedDeed, LinkedDateActivity, LinkedDeadlineActivity, \
-    LinkedFunding
+    LinkedFunding, LinkedDateSlot
+from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer, PointSerializer, CountrySerializer
 from bluebottle.utils.fields import RichTextField
@@ -110,15 +111,7 @@ class LinkedLocationSerializer(GeolocationSerializer):
         fields = GeolocationSerializer.Meta.fields + ('address', 'name', 'longitude', 'latitude')
 
 
-class BaseLinkedActivitySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='title')
-    summary = RichTextField(source='description')
-    url = serializers.URLField(source='link')
-    image = LinkedActivityImageField(required=False, allow_null=True)
-
-    class Meta:
-        model = LinkedActivity
-        fields = ('name', 'summary', 'url', 'image')
+class LinkedLocationMixin(object):
 
     def update(self, instance, validated_data):
         location_data = validated_data.pop('location', serializers.empty)
@@ -157,6 +150,17 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
         return instance
 
 
+class BaseLinkedActivitySerializer(FederatedObjectSerializer):
+    name = serializers.CharField(source='title')
+    summary = RichTextField(source='description')
+    url = serializers.URLField(source='link')
+    image = LinkedActivityImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = LinkedActivity
+        fields = ('name', 'summary', 'url', 'image')
+
+
 class LinkedDeedSerializer(BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
@@ -168,17 +172,29 @@ class LinkedDeedSerializer(BaseLinkedActivitySerializer):
         )
 
 
+class LinkedSlotSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+    fields = BaseLinkedActivitySerializer.Meta.fields + (
+        'start_time', 'end_time'
+    )
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedDateSlot
+
+
 class LinkedDateActivitySerializer(BaseLinkedActivitySerializer):
+    sub_event = LinkedSlotSerializer(source='slots', many=True)
+
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDateActivity
+        fields = BaseLinkedActivitySerializer.Meta.fields + ('sub_event',)
 
 
-class LinkedDeadlineActivitySerializer(BaseLinkedActivitySerializer):
+class LinkedDeadlineActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeadlineActivity
 
 
-class LinkedFundingSerializer(BaseLinkedActivitySerializer):
+class LinkedFundingSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
     location = LinkedLocationSerializer(required=False, allow_null=True)

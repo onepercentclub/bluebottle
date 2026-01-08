@@ -129,6 +129,10 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
                     validated_data[field.source] = field.save()
 
         validated_data.pop('type', None)
+        if validated_data.get('iri', None):
+            instance = self.Meta.model.objects.filter(iri=validated_data['iri']).first()
+            if instance:
+                return self.update(instance, validated_data)
         return self.Meta.model.objects.create(**validated_data)
 
     def update(self, instance, validated_data):

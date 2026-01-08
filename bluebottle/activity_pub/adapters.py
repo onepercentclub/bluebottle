@@ -9,7 +9,6 @@ from django.dispatch import receiver
 from django_tools.middlewares.ThreadLocal import get_current_user
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
-from bluebottle.activity_links.serializers import LinkedActivitySerializer
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import Follow, Publish, Event, Update
 from bluebottle.activity_pub.models import Organization
@@ -93,6 +92,7 @@ class JSONLDAdapter():
 
     def link(self, event, request=None):
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+        from bluebottle.activity_links.serializers import LinkedActivitySerializer
 
         data = EventSerializer(instance=event).data
         linked_activity = event.linked_activity

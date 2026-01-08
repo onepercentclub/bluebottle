@@ -262,7 +262,9 @@ class DoGoodEventSerializer(BaseEventSerializer):
 
 class EventSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        GoodDeedSerializer, CrowdFundingSerializer, DoGoodEventSerializer
+        GoodDeedSerializer,
+        CrowdFundingSerializer,
+        DoGoodEventSerializer
     ]
 
     class Meta:

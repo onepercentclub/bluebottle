@@ -11,7 +11,7 @@ class LinkedDeedAdmin(admin.ModelAdmin):
 
 @admin.register(LinkedFunding)
 class LinkedFundingAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization']
+    raw_id_fields = ['event', 'host_organization', 'location']
 
 
 @admin.register(LinkedDateActivity)

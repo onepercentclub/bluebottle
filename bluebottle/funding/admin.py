@@ -184,7 +184,15 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
 
-    detail_fields = ("title", "description", "image", "video_url", "theme", 'categories')
+    detail_fields = (
+        "title",
+        "description",
+        "image",
+        "video_url",
+        "theme",
+        "impact_location",
+        "categories"
+    )
 
     status_fields = (
         "initiative",
@@ -203,7 +211,6 @@ class FundingAdmin(ActivityChildAdmin):
         'duration',
         'deadline',
         'target',
-        'impact_location',
         'amount_matching',
         'amount_donated',
         'amount_raised',

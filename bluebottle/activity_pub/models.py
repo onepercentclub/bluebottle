@@ -229,6 +229,9 @@ class Place(ActivityPubModel):
 
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
 
+    def __str__(self):
+        return self.name or self.id
+
 
 class Event(ActivityPubModel):
     name = models.CharField(verbose_name=_('Activity title'))

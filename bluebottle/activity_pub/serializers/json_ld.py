@@ -167,6 +167,7 @@ class CrowdFundingSerializer(BaseEventSerializer):
     type = TypeField('CrowdFunding')
 
     end_time = serializers.DateTimeField(required=False, allow_null=True)
+    start_time = serializers.DateTimeField(required=False, allow_null=True)
 
     target = serializers.DecimalField(decimal_places=2, max_digits=10)
     target_currency = serializers.CharField()
@@ -178,7 +179,7 @@ class CrowdFundingSerializer(BaseEventSerializer):
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
         fields = BaseEventSerializer.Meta.fields + (
-            'end_time',
+            'end_time', 'start_time',
             'target', 'target_currency',
             'donated', 'donated_currency',
             'location'

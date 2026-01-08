@@ -77,9 +77,9 @@ class LinkedDeed(LinkedActivity):
 class LinkedFunding(LinkedActivity):
     target = MoneyField()
     donated = MoneyField(default=Money('0.00', 'EUR'))
-    amount = MoneyField(default=Money('0.00', 'EUR'))
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
 
 
 class LinkedDeadlineActivity(LinkedActivity):

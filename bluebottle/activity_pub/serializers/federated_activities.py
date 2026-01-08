@@ -117,7 +117,7 @@ class CountryField(serializers.CharField):
 class AddressSerializer(FederatedObjectSerializer):
     id = FederatedIdField('json-ld:address')
 
-    street_address = serializers.CharField(source='street', required=False, allow_null=True)
+    street_address = serializers.CharField(source='street   ', required=False, allow_null=True)
     postal_code = serializers.CharField(required=False, allow_null=True)
 
     address_locality = serializers.CharField(source='locality', required=False, allow_null=True)
@@ -251,7 +251,6 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
             validated_data['amount_donated'] = Money(
                 **validated_data['amount_donated']
             )
-        print('validated_data', validated_data)
         return super().create(validated_data)
 
 

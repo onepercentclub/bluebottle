@@ -11,7 +11,7 @@ from django.utils.timezone import get_current_timezone
 from djmoney.money import Money
 from requests import Request, Response
 
-from bluebottle.activity_links.models import LinkedActivity
+from bluebottle.activity_links.models import LinkedActivity, LinkedFunding
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
@@ -424,7 +424,6 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
         self.test_link()
 
         with LocalTenant(self.other_tenant):
-            from bluebottle.activity_links.models import LinkedFunding
             link = LinkedFunding.objects.get()
             self.assertEqual(link.end, self.model.deadline)
 
@@ -432,10 +431,19 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
         self.test_link()
 
         with LocalTenant(self.other_tenant):
-            from bluebottle.activity_links.models import LinkedFunding
             link = LinkedFunding.objects.get()
             self.assertIsNotNone(self.model.image, "Original Funding should have an image")
             self.assertIsNotNone(link.image, "LinkedFunding should have an image mapped from Funding")
+
+    def test_impact_location_maps_to_linked_funding_location(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedFunding.objects.get()
+            self.assertIsNotNone(self.model.impact_location)
+            self.assertIsNotNone(link.location)
+            self.assertEqual(link.location.locality, self.model.impact_location.locality)
+            self.assertEqual(link.location.country, self.model.impact_location.country)
 
 
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):

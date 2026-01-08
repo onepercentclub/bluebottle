@@ -893,7 +893,8 @@ class CrowdFundingAdmin(EventChildAdmin):
     readonly_fields = EventChildAdmin.readonly_fields + (
         'end_time',
         'target',
-        'donated'
+        'donated',
+        'location'
     )
     fields = readonly_fields
 

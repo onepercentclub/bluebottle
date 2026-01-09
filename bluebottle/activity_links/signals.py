@@ -45,8 +45,7 @@ def cancel(sender, instance, created, **kwargs):
     try:
         if not instance.is_local and created:
             link = LinkedActivity.objects.filter(event=instance.object).get()
-            link.status = 'cancelled'
-            link.save()
+            link.states.cancel(save=True)
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")
 
@@ -66,7 +65,6 @@ def finish(sender, instance, created, **kwargs):
     try:
         if not instance.is_local and created:
             link = LinkedActivity.objects.filter(event=instance.object).get()
-            link.status = 'finished'
-            link.save()
+            link.states.succeed(save=True)
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")

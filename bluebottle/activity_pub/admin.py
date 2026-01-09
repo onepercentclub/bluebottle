@@ -788,8 +788,6 @@ class EventAdminMixin:
 
         except Exception as e:
             self.message_user(request, f"Error creating linked activity: {str(e)}", level="error")
-            import ipdb;
-            ipdb.set_trace()
 
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])

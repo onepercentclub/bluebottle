@@ -117,6 +117,9 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         iri = validated_data.pop('id', None)
         if iri and not is_local(iri):
             validated_data['iri'] = iri
+            instance = self.Meta.model.objects.filter(iri=iri).first()
+            if instance:
+                return self.update(instance, validated_data)
 
         for name, field in self.fields.items():
             if (
@@ -129,10 +132,6 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
                     validated_data[field.source] = field.save()
 
         validated_data.pop('type', None)
-        if validated_data.get('iri', None):
-            instance = self.Meta.model.objects.filter(iri=validated_data['iri']).first()
-            if instance:
-                return self.update(instance, validated_data)
         return self.Meta.model.objects.create(**validated_data)
 
     def update(self, instance, validated_data):

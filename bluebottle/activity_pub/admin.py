@@ -788,6 +788,7 @@ class EventAdminMixin:
 
         except Exception as e:
             self.message_user(request, f"Error creating linked activity: {str(e)}", level="error")
+
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])
             )
@@ -800,7 +801,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
         GoodDeed,
         CrowdFunding,
         DoGoodEvent,
-
+        SubEvent
     )
     list_filter = [AdoptedFilter, SourceFilter, PolymorphicChildModelFilter]
 
@@ -948,4 +949,12 @@ class DoGoodEventAdmin(EventChildAdmin):
         'end_time',
         'registration_deadline',
     )
+    fields = readonly_fields
+
+
+@admin.register(SubEvent)
+class SubEventAdmin(EventChildAdmin):
+    base_model = Event
+    model = SubEvent
+    readonly_fields = ('start_time', 'end_time')
     fields = readonly_fields

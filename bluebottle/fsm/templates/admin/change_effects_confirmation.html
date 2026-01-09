@@ -38,26 +38,20 @@ delete-selected-confirmation{% endblock %}
     </p>
     {% endif %}
     {% for field in form %}
-        <fieldset class="module aligned">
-            <div class="form-row{% if field.errors %} errors{% endif %}">
-                <div {% if field.is_checkbox %} class="checkbox-row" {% endif %}>
-                    {% if field.name == 'send_messages' %}
-                        {% include "admin/send_mail_check_box.html" %}
-                    {% else %}
-                        {{ field.errors }}
-                        {{ field.label_tag }}
-                        {% if field.is_readonly %}
-                            <p>{{ field.contents|linebreaksbr }}</p>
-                        {% else %}
-                            {{ field }}
-                        {% endif %}
-                        {% if field.help_text %}
-                            <p class="help">{{ field.help_text|safe }}</p>
-                        {% endif %}
-                    {% endif %}
-                </div>
-            </div>
-        </fieldset>
+        {% if field.name == 'send_messages' %}
+            {% include "admin/send_mail_check_box.html" %}
+        {% else %}
+            {{ field.errors }}
+            {{ field.label_tag }}
+            {% if field.is_readonly %}
+                <p>{{ field.contents|linebreaksbr }}</p>
+            {% else %}
+                {{ field }}
+            {% endif %}
+            {% if field.help_text %}
+                <p class="help">{{ field.help_text|safe }}</p>
+            {% endif %}
+        {% endif %}
     {% empty %}
         {% if has_notifications %}
             <fieldset class="module aligned">
@@ -68,13 +62,13 @@ delete-selected-confirmation{% endblock %}
     {% endfor %}
 
 
+    {% if effects|length %}
     <p>
         {% blocktrans %}Here is what will happen when you confirm this action:{% endblocktrans %}
     </p>
     <fieldset class="module">
 
         <i>{{ action. }}</i>
-        {% if effects|length %}
         <ul></ul>
         <ul>
             {% for effect in effects %}
@@ -83,8 +77,9 @@ delete-selected-confirmation{% endblock %}
             </li>
             {% endfor %}
         </ul>
-        {% endif %}
     </fieldset>
+
+    {% endif %}
 
     <div>
 

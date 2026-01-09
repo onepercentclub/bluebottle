@@ -284,8 +284,8 @@ class Event(ActivityPubModel):
             )
 
     class Meta:
-        verbose_name = _("Shared activity")
-        verbose_name_plural = _("Shared activities")
+        verbose_name = _("Shared/Received activity")
+        verbose_name_plural = _("Shared/Received activities")
 
 
 class PublishedActivity(Event):
@@ -293,7 +293,7 @@ class PublishedActivity(Event):
     class Meta:
         proxy = True
         verbose_name = _("Shared activity")
-        verbose_name_plural = _("Shated activities")
+        verbose_name_plural = _("Shared activities")
 
 
 class ReceivedActivity(Event):

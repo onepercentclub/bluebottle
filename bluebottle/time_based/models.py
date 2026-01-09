@@ -444,7 +444,7 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
         return {
             'uid': f"{connection.tenant.client_name}-{self.id}",
             'summary': title,
-            'description': self.activity.description,
+            'description': self.activity.description.html,
             'organizer': self.organizer.email,
             'url': self.activity.get_absolute_url(),
             'location': location,

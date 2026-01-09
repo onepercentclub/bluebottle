@@ -260,7 +260,6 @@ class ActivityPreviewSerializer(ModelSerializer):
             slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[0].start
-
         elif obj.start and len(obj.start) == 1:
             return obj.start[0]
 
@@ -399,7 +398,8 @@ class ActivityPreviewSerializer(ModelSerializer):
                 "initiative_office",
                 "impact_location",
             ]
-            location = sorted(obj.location, key=lambda loc: order.index(loc.type))[0]
+
+            location = sorted(obj.location, key=lambda loc: order.index(getattr(loc, 'type', 'location')))[0]
 
         if location:
             if location.locality:

@@ -82,15 +82,11 @@ class MoneyFormField(DjangoMoneyFormField):
     def __init__(self, **kwargs):
         # Get currency choices and default currency from PaymentProvider
         from bluebottle.funding.models import PaymentProvider
-
+        kwargs.pop('currency_choices', None)
+        kwargs.pop('default_currency', None)
         default_currency = PaymentProvider.get_default_currency()
         currency_choices = PaymentProvider.get_currency_choices()
-
-        # Set up the field with dynamic currency choices
-        kwargs.setdefault("default_currency", default_currency)
-        kwargs.setdefault("currency_choices", currency_choices)
-
-        super().__init__(**kwargs)
+        super().__init__(currency_choices=currency_choices, default_currency=default_currency, **kwargs)
 
     def get_default_currency(self):
         """Get the default currency from PaymentProvider."""
@@ -112,7 +108,7 @@ class MoneyField(DjangoMoneyField):
                  currency_choices=None,
                  **kwargs):
         default_currency = 'EUR'
-        currency_choices = [('EUR', 'Euro')]
+        currency_choices = self.get_currency_choices()
         super(MoneyField, self).__init__(
             verbose_name=verbose_name, name=name,
             max_digits=max_digits, decimal_places=decimal_places, default=default,
@@ -142,6 +138,8 @@ class MoneyField(DjangoMoneyField):
     def formfield(self, **kwargs):
         # Use the new reusable form field
         defaults = {"form_class": MoneyFormField}
+        defaults["currency_choices"] = self.get_currency_choices()
+        defaults["default_currency"] = self.get_default_currency()
         defaults.update(kwargs)
         return super(MoneyField, self).formfield(**defaults)
 
@@ -190,12 +188,10 @@ class CurrencyField(models.CharField):
 
     def get_default_currency(self):
         from bluebottle.funding.models import PaymentProvider
-
         return PaymentProvider.get_default_currency()
 
     def get_currency_choices(self):
         from bluebottle.funding.models import PaymentProvider
-
         return PaymentProvider.get_currency_choices()
 
     def deconstruct(self):

@@ -364,7 +364,7 @@ class LinkTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
-            self.assertEqual(link.status, 'finished')
+            self.assertEqual(link.status, 'succeeded')
 
     def test_delete(self):
         self.test_link()

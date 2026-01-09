@@ -5,6 +5,7 @@ from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
 from bluebottle.activity_pub.models import Publish
+from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import MoneyField, ImageField
 
@@ -32,7 +33,7 @@ class LinkedActivityManager(PolymorphicManager):
         )
 
 
-class LinkedActivity(PolymorphicModel):
+class LinkedActivity(TriggerMixin, PolymorphicModel):
     title = models.CharField(max_length=255)
     link = models.URLField()
     status = models.CharField(max_length=40)
@@ -99,8 +100,6 @@ class LinkedDateSlot(models.Model):
     )
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
-
-
 
 
 from bluebottle.activity_links.signals import *  # noqa

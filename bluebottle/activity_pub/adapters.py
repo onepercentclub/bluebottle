@@ -81,7 +81,7 @@ class JSONLDAdapter():
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 
-        data = EventSerializer(instance=event).data
+        data = EventSerializer(instance=event, full=True).data
         serializer = FederatedActivitySerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 

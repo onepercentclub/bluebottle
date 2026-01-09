@@ -291,18 +291,15 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
             for slot in instance.slots.all()
             if slot.location
         ]
-        print('LOCATIONS', locations)
         return locations
 
     def prepare_country(self, instance):
         countries = []
         for slot in instance.slots.all():
             countries += get_translated_list(slot.location.country)
-        print("COUNTRIES", countries)
         return countries
 
     def prepare_start(self, instance):
-        print("START", [slot.start for slot in instance.slots.all()])
         return [slot.start for slot in instance.slots.all()]
 
     def prepare_end(self, instance):

@@ -3,8 +3,9 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
-from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity
+from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity
 from bluebottle.initiatives.documents import get_translated_list
+from bluebottle.utils.documents import TextField
 
 
 class LinkedActivityDocument(ActivityDocument):
@@ -37,7 +38,7 @@ class LinkedActivityDocument(ActivityDocument):
         return True
 
     def prepare_is_upcoming(self, instance):
-        return instance.status in ['open', 'running', 'full']
+        return instance.slots.filter(start__gte=now()).exists()
 
     def prepare_highlight(self, instance):
         return False
@@ -234,3 +235,115 @@ class LinkedFundingDocument(LinkedActivityDocument):
                 'type': 'location'
             })
         return locations
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedDateActivityDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedDateActivity
+        related_models = ()
+
+    slots = fields.NestedField(properties={
+        'id': fields.KeywordField(),
+        'status': fields.KeywordField(),
+        'title': TextField(),
+        'start': fields.DateField(),
+        'end': fields.DateField(),
+        'locality': fields.KeywordField(attr='location.locality'),
+        'formatted_address': fields.KeywordField(attr='location.formatted_address'),
+        'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
+        'country': fields.KeywordField(attr='location.country.name'),
+        'is_online': fields.BooleanField(),
+    })
+
+    def prepare_is_online(self, instance):
+        return False
+
+    def prepare_slots(self, instance):
+        return [
+            {
+                'id': slot.id,
+                'status': slot.status,
+                'title': '',
+                'start': slot.start,
+                'end': slot.end,
+                'locality': slot.location.locality,
+                'formatted_address': slot.location.formatted_address,
+                'country_code': slot.location.country.alpha2_code,
+                'country': slot.location.country.name,
+                'is_online': False,
+            }
+            for slot in instance.slots.all()
+        ]
+
+    def prepare_location(self, instance):
+        locations = []
+        locations += [
+            {
+                'name': slot.location.formatted_address,
+                'locality': slot.location.locality,
+                'country_code': slot.location.country.alpha2_code,
+                'country': slot.location.country.name,
+                'type': 'location'
+
+            }
+            for slot in instance.slots.all()
+            if slot.location
+        ]
+        print('LOCATIONS', locations)
+        return locations
+
+    def prepare_country(self, instance):
+        countries = []
+        for slot in instance.slots.all():
+            countries += get_translated_list(slot.location.country)
+        print("COUNTRIES", countries)
+        return countries
+
+    def prepare_start(self, instance):
+        print("START", [slot.start for slot in instance.slots.all()])
+        return [slot.start for slot in instance.slots.all()]
+
+    def prepare_end(self, instance):
+        return [slot.end for slot in instance.slots.all()]
+
+    def prepare_dates(self, instance):
+        return [
+            {
+                'start': slot.start,
+                'end': slot.end,
+            }
+            for slot in instance.slots.all()
+            if slot.start and slot.end
+        ]
+
+    def prepare_duration(self, instance):
+        return [
+            {'gte': slot.start, 'lte': slot.end}
+            for slot in instance.slots.all()
+            if slot.start and slot.duration
+        ]
+
+    def prepare_contribution_duration(self, instance):
+        return [
+            {
+                'period': 'slot',
+                'start': slot.start,
+                'value': slot.duration.seconds / (60 * 60) + slot.duration.days * 24
+            }
+            for slot in instance.slots.all()
+            if slot.start and slot.duration
+        ]
+
+    def prepare_slug(self, instance):
+        return f'linked-date-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'date'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/time-based/dates'
+
+    def prepare_activity_type(self, instance):
+        return 'date'

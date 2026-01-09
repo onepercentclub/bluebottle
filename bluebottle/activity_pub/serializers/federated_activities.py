@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField
 
-from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices
+from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
+    SubEvent
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
@@ -331,6 +332,28 @@ class SlotsSerializer(FederatedObjectSerializer):
 
         super().__init__(*args, **kwargs)
 
+    def create(self, validated_data):
+
+        iri = validated_data.get('id')
+        if iri:
+            try:
+                sub_event = SubEvent.objects.get(iri=iri)
+                activity = validated_data.get('activity')
+                if activity:
+                    existing_slot = DateActivitySlot.objects.filter(origin=sub_event, activity=activity).first()
+                    if existing_slot:
+                        for key, value in validated_data.items():
+                            if key not in ('id', 'origin'):
+                                setattr(existing_slot, key, value)
+                        existing_slot.save()
+                        return existing_slot
+                validated_data.pop('id', None)
+                validated_data['origin'] = sub_event
+            except SubEvent.DoesNotExist:
+                pass
+
+        return super().create(validated_data)
+
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivitySlot
         fields = FederatedObjectSerializer.Meta.fields + (
@@ -339,7 +362,7 @@ class SlotsSerializer(FederatedObjectSerializer):
         )
 
 
-class FederatedDateActivitySerializer(FederatedObjectSerializer):
+class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:do-good-event')
 
     sub_event = SlotsSerializer(many=True, source='slots')

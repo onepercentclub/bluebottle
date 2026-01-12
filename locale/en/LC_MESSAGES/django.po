@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-12 13:03+0100\n"
+"POT-Creation-Date: 2026-01-12 13:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -7483,7 +7483,8 @@ msgid "Allow admins to add (sub)regions to their work location."
 msgstr ""
 
 #: bluebottle/initiatives/models.py:409
-msgid "Allow activity managers to specify office restrictions on activities."
+msgid ""
+"Allow activity managers to specify work location restrictions on activities."
 msgstr ""
 
 #: bluebottle/initiatives/models.py:413
@@ -8382,12 +8383,12 @@ msgstr ""
 
 #: bluebottle/members/models.py:273
 msgid ""
-"Create new office locations when a user logs in. Leave unchecked if only "
+"Create new work locations when a user logs in. Leave unchecked if only "
 "priorly specified ones should be used."
 msgstr ""
 
 #: bluebottle/members/models.py:281
-msgid "Require members to enter their office work location."
+msgid "Require members to enter their work location."
 msgstr ""
 
 #: bluebottle/members/models.py:286
@@ -9747,8 +9748,8 @@ msgstr ""
 
 #: bluebottle/slides/models.py:34
 msgid ""
-"Select office groups to make the slide only visible to visitors from those "
-"regions or leave empty to make the slide visible for everyone."
+"Select work location groups to make the slide only visible to visitors from "
+"those regions or leave empty to make the slide visible for everyone."
 msgstr ""
 
 #: bluebottle/slides/models.py:42

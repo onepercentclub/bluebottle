@@ -270,7 +270,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         _('create locations'),
         default=False,
         help_text=_(
-            "Create new office locations when a user logs in. "
+            "Create new work locations when a user logs in. "
             "Leave unchecked if only priorly specified ones should be used."
         ),
     )
@@ -278,7 +278,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     require_office = models.BooleanField(
         _('Work location'),
         default=False,
-        help_text=_('Require members to enter their office work location.')
+        help_text=_('Require members to enter their work location.')
     )
     require_address = models.BooleanField(
         _('Address'),

@@ -406,7 +406,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     enable_office_restrictions = models.BooleanField(
         default=False,
         help_text=_(
-            "Allow activity managers to specify office restrictions on activities."
+            "Allow activity managers to specify work location restrictions on activities."
         ),
     )
     default_office_restriction = models.CharField(

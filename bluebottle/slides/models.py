@@ -31,7 +31,7 @@ class Slide(PublishableModel):
         related_name='slides',
         verbose_name=_("Work location groups"),
         help_text=_(
-            "Select office groups to make the slide only visible to visitors from those "
+            "Select work location groups to make the slide only visible to visitors from those "
             "regions or leave empty to make the slide visible for everyone."
         )
     )

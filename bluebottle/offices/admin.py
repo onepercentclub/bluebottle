@@ -1,4 +1,3 @@
-from bluebottle.grant_management.models import GrantPayout
 from django.contrib import admin
 from django.db.models import Q
 from django.urls import reverse
@@ -8,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.funding.models import Payout
 from bluebottle.geo.models import Location
+from bluebottle.grant_management.models import GrantPayout
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
@@ -82,7 +82,8 @@ class OfficeRegionAdmin(admin.ModelAdmin):
             obj.id,
             len(OfficeSubRegion.objects.filter(region=obj))
         )
-    subregions_link.short_description = _('office groups')
+
+    subregions_link.short_description = _('work location groups')
 
     def offices(self, obj):
         return format_html(

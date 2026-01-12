@@ -222,7 +222,7 @@ class FundingAdmin(ActivityChildAdmin):
             if settings.enable_office_restrictions:
                 if "office_restriction" not in self.office_fields:
                     self.office_fields += ("office_restriction",)
-                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+                fieldsets.append((_("Work location"), {"fields": self.office_fields}))
 
         if request.user.is_superuser:
             fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))

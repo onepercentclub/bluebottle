@@ -368,14 +368,12 @@ class FollowingAdmin(FollowAdmin):
 
     def get_fieldsets(self, request, obj=None):
         if not obj:
-            # When adding a new Following
             return (
                 (None, {
                     'fields': ('platform_url', 'adoption_mode', 'adoption_type', 'default_owner'),
                 }),
             )
         else:
-            # When viewing/editing an existing Following
             return (
                 (None, {
                     'fields': ('object', 'accepted', 'adoption_mode', 'adoption_type', 'default_owner')
@@ -412,17 +410,15 @@ class FollowingAdmin(FollowAdmin):
         """Handle saving of new Following objects using adapter.follow()"""
         if not change and isinstance(form, FollowingAddForm):
 
-            # This is a new object using our custom add form
             platform_url = form.cleaned_data['platform_url']
             default_owner = form.cleaned_data.get('default_owner')
             try:
-                # Use adapter.follow to create the Follow object
                 follow_obj = adapter.follow(platform_url)
-                # Set the default_owner if provided
+                follow_obj.adoption_mode = form.cleaned_data.get('adoption_mode')
+                follow_obj.adoption_type = form.cleaned_data.get('adoption_type')
                 if default_owner:
                     follow_obj.default_owner = default_owner
                     follow_obj.save()
-                # Publish the Follow activity to the remote inbox
                 self.message_user(
                     request,
                     _(

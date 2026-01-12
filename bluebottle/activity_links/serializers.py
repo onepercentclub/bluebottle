@@ -70,7 +70,7 @@ class LinkedLocationSerializer(GeolocationSerializer):
     country = CountrySerializer(read_only=True)
 
     def to_internal_value(self, data):
-        if not data:
+        if not data or not data['id']:
             return {}
 
         lat = data.pop('latitude', None)
@@ -120,7 +120,7 @@ class LinkedLocationMixin(object):
         if location_data is None:
             instance.location = None
             instance.save(update_fields=['location'])
-            return instance
+            return None
 
         loc_id = location_data.get('id', None)
 

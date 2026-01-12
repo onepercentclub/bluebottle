@@ -268,10 +268,10 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
                 'title': '',
                 'start': slot.start,
                 'end': slot.end,
-                'locality': slot.location.locality,
-                'formatted_address': slot.location.formatted_address,
-                'country_code': slot.location.country.alpha2_code,
-                'country': slot.location.country.name,
+                'locality': slot.location.locality if slot.location else None,
+                'formatted_address': slot.location.formatted_address if slot.location else None,
+                'country_code': slot.location.country.alpha2_code if slot.location and slot.location.country else None,
+                'country': slot.location.country.name if slot.location and slot.location.country else None,
                 'is_online': False,
             }
             for slot in instance.slots.all()
@@ -296,7 +296,8 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
     def prepare_country(self, instance):
         countries = []
         for slot in instance.slots.all():
-            countries += get_translated_list(slot.location.country)
+            if slot.location and slot.location.country:
+                countries += get_translated_list(slot.location.country)
         return countries
 
     def prepare_start(self, instance):

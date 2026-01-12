@@ -215,7 +215,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
     )
     duration = serializers.DurationField(required=False, allow_null=True)
 
-    sub_event = SubEventSerializer(many=True, allow_null=True, required=False)
+    sub_event = SubEventSerializer(many=True, allow_null=True, required=False, include=True)
 
     class Meta(BaseEventSerializer.Meta):
         model = DoGoodEvent

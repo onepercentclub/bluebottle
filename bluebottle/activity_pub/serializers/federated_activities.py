@@ -236,7 +236,6 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     donated = serializers.DecimalField(source='amount_donated.amount', decimal_places=2, max_digits=10)
     donated_currency = serializers.CharField(source='amount_donated.currency')
 
-
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Funding
         fields = BaseFederatedActivitySerializer.Meta.fields + (

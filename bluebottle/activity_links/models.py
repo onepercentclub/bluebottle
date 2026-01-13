@@ -1,11 +1,11 @@
 from django.db import models
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
 from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
+from bluebottle.activity_pub.models import Publish
+from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import MoneyField, ImageField
 
@@ -33,7 +33,7 @@ class LinkedActivityManager(PolymorphicManager):
         )
 
 
-class LinkedActivity(PolymorphicModel):
+class LinkedActivity(TriggerMixin, PolymorphicModel):
     title = models.CharField(max_length=255)
     link = models.URLField()
     status = models.CharField(max_length=40)
@@ -109,18 +109,6 @@ class LinkedDateSlot(models.Model):
         if self.start and self.end:
             return self.end - self.start
         return None
-
-
-@receiver(post_save, sender=LinkedDeed)
-def es_upsert_linked_deed(sender, instance, **kwargs):
-    from bluebottle.activity_links.documents import LinkedDeedDocument
-    LinkedDeedDocument().update(instance, refresh="wait_for")
-
-
-@receiver(post_delete, sender=LinkedDeed)
-def es_delete_linked_deed(sender, instance, **kwargs):
-    from bluebottle.activity_links.documents import LinkedDeedDocument
-    LinkedDeedDocument().delete(instance, refresh="wait_for")
 
 
 from bluebottle.activity_links.signals import *  # noqa

@@ -350,6 +350,30 @@ class LinkTestCase(ActivityPubTestCase):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.title, title)
 
+    def test_cancel(self):
+        self.test_link()
+        self.model.states.cancel(save=True)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'cancelled')
+
+    def test_finish(self):
+        self.test_link()
+        self.model.states.succeed(save=True)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'succeeded')
+
+    def test_delete(self):
+        self.test_link()
+        self.model.delete()
+
+        with LocalTenant(self.other_tenant):
+            with self.assertRaises(LinkedActivity.DoesNotExist):
+                LinkedActivity.objects.get()
+
 
 class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DeedFactory
@@ -407,8 +431,20 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
         BudgetLineFactory.create_batch(2, activity=self.model)
         self.submit()
 
-    def test_adopt(self):
-        pass
+    def approve(self, activity):
+        BudgetLineFactory.create_batch(2, activity=activity)
+
+        activity.bank_account = ExternalAccountFactory.create(
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id",
+                status="verified",
+            )
+        )
+        activity.theme = ThemeFactory.create()
+        activity.states.submit()
+        activity.states.approve(save=True)
 
     def test_update_donated_amount(self):
         self.test_link()
@@ -510,6 +546,18 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
         )
 
 
+class LinkDeadlineActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = DeadlineActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            deadline=(datetime.now() + timedelta(days=20)).date()
+        )
+        self.submit()
+
+
 class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
 
@@ -526,6 +574,22 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.event.start_time.date(), self.model.start)
         self.assertEqual(self.event.end_time.date(), self.model.deadline)
+
+
+class LinkedDateActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self):
+        super().create(slots=[], organization=None)
+
+        DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.model,
+            location=None,
+            is_online=True
+        )
+
+        self.submit()
 
 
 class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
@@ -553,6 +617,21 @@ class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         with LocalTenant(self.other_tenant):
             self.assertEqual(self.adopted.slots.count(), 3)
+
+
+class LinkedSingleSlotDateActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self):
+        super().create(slots=[])
+
+        DateActivitySlotFactory.create_batch(
+            1,
+            activity=self.model,
+            location=GeolocationFactory.create(country=self.country),
+        )
+
+        self.submit()
 
 
 class AdoptSingleSlotDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):

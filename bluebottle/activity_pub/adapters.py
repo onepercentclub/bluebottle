@@ -4,18 +4,17 @@ from io import BytesIO
 import requests
 from celery import shared_task
 from django.db import connection
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_tools.middlewares.ThreadLocal import get_current_user
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import Follow, Publish, Event, Update
+from bluebottle.activity_pub.models import Follow, Publish, Event
 from bluebottle.activity_pub.models import Organization
 from bluebottle.activity_pub.models import Recipient
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.tasks import update_linked_activity
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
@@ -73,9 +72,9 @@ class JSONLDAdapter():
 
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
+
         actor = serializer.save()
         return Follow.objects.create(object=actor)
-
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -172,6 +171,7 @@ def publish_to_recipient(recipient, tenant):
             recipient.send = True
             recipient.save()
         except Exception as e:
+            __import__('ipdb').set_trace()
             logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
             raise
 
@@ -180,20 +180,6 @@ def publish_to_recipient(recipient, tenant):
 def publish_recipient(instance, created, **kwargs):
     if created:
         publish_to_recipient.delay(instance, connection.tenant)
-
-
-@receiver(pre_save, sender=Update)
-def update_event(sender, instance, **kwargs):
-    from bluebottle.activity_pub.serializers.json_ld import EventSerializer
-    if not instance.is_local and not instance.pk:
-        serializer = EventSerializer(
-            instance=instance.object,
-            data=adapter.fetch(instance.object.iri)
-        )
-        serializer.is_valid(raise_exception=True)
-        event = serializer.save()
-        if event.linked_activity:
-            update_linked_activity.delay(event.pk, connection.tenant)
 
 
 @receiver([post_save])

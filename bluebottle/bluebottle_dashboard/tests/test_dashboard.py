@@ -103,9 +103,9 @@ class AdminMenuTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         self.admin_url = reverse('admin:index')
 
-    def test_main_menu_options_disabeld(self):
+    def test_main_menu_options_disabled(self):
         response = self.client.get(self.admin_url)
-        self.assertNotContains(response, 'Office groups')
+        self.assertNotContains(response, 'Work location groups')
         self.assertNotContains(response, 'Impact types')
         self.assertNotContains(response, 'Segment types')
 
@@ -120,6 +120,6 @@ class AdminMenuTestCase(BluebottleAdminTestCase):
         initiative_settings.save()
 
         response = self.client.get(self.admin_url)
-        self.assertContains(response, 'Office groups')
+        self.assertContains(response, 'Work location groups')
         self.assertContains(response, 'Impact types')
         self.assertContains(response, 'All segment types')

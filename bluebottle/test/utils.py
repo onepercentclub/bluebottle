@@ -1032,7 +1032,7 @@ class override_properties(object):
 
 class JSONAPITestClient(Client):
 
-    def get(self, path, data=None, follow=False, secure=False, **extra):
+    def get(self, path, data='', follow=False, secure=False, **extra):
         return super(JSONAPITestClient, self).get(path, data, follow, secure, **extra)
 
     def patch(self, path, data='',

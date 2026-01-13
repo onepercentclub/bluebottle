@@ -47,15 +47,22 @@ class PageTranslateForm(Form):
         # If obj is provided, use its language
         if obj and hasattr(obj, 'language'):
             current_language = obj.language
-        super().__init__(*args, **kwargs)
-
+        
         # Get all available languages except the current one
         languages = Language.objects.all().order_by('language_name')
         choices = []
         for lang in languages:
             if lang.full_code != current_language:
                 choices.append((lang.full_code, lang.language_name))
+        
+        # Set choices on the base field before calling super().__init__()
+        # This ensures choices are available when Django validates the form data
+        self.base_fields['target_language'].choices = choices
+        
+        super().__init__(*args, **kwargs)
 
+        # Also set choices on the instance field after super().__init__()
+        # to ensure they're available for rendering
         self.fields['target_language'].choices = choices
 
 

@@ -81,7 +81,6 @@ class LinkedLocationSerializer(GeolocationSerializer):
             data['position'] = None
 
         address = data.pop('address', {})
-        country = None
         if address and isinstance(address, dict):
             if address.get('address_country', None):
                 country = Country.objects.filter(alpha2_code=address['address_country'].upper()).first()

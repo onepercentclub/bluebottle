@@ -171,7 +171,6 @@ def publish_to_recipient(recipient, tenant):
             recipient.send = True
             recipient.save()
         except Exception as e:
-            __import__('ipdb').set_trace()
             logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
             raise
 

@@ -317,7 +317,7 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
         return representation
 
     def create(self, validated_data):
-        iri = validated_data.pop('id')
+        iri = validated_data.pop('id', None)
         validated_data['origin'] = ActivityPubModel.objects.from_iri(iri)
 
         for field in self.fields.values():

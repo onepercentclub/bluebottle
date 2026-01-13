@@ -82,7 +82,7 @@ class LookerEmbedViewTest(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         response = self.client.get(self.embed_url)
         self.assertTrue(
-            urllib.parse.quote('hide_filter=Office') in response.content.decode()
+            "hide_filter%3DWork+location" in response.content.decode()
         )
         self.assertTrue(
             urllib.parse.quote('hide_filter=Category') in response.content.decode()

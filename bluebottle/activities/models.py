@@ -1,5 +1,6 @@
 import uuid
 from builtins import object, str
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import SET_NULL
@@ -88,7 +89,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     office_location = models.ForeignKey(
         "geo.Location",
-        verbose_name=_("Host office"),
+        verbose_name=_("Host work location"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

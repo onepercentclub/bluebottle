@@ -270,15 +270,15 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         _('create locations'),
         default=False,
         help_text=_(
-            "Create new office locations when a user logs in. "
+            "Create new work locations when a user logs in. "
             "Leave unchecked if only priorly specified ones should be used."
         ),
     )
 
     require_office = models.BooleanField(
-        _('Office location'),
+        _('Work location'),
         default=False,
-        help_text=_('Require members to enter their office location.')
+        help_text=_('Require members to enter their work location.')
     )
     require_address = models.BooleanField(
         _('Address'),
@@ -297,9 +297,9 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     verify_office = models.BooleanField(
-        _('Verify SSO data office location'),
+        _('Verify SSO data work location'),
         default=False,
-        help_text=_('Require members to verify their office location once if it is filled via SSO.')
+        help_text=_('Require members to verify their work location once if it is filled via SSO.')
     )
 
     display_member_names = models.CharField(
@@ -401,7 +401,7 @@ class Member(BlueBottleBaseUser):
 
     subregion_manager = models.ManyToManyField(
         OfficeSubRegion,
-        verbose_name=_("Office groups managed"),
+        verbose_name=_("Work location groups managed"),
         help_text=_(
             "Select one or more groups to filter on. "
             "The user will only see data related to those selected groups. Leave empty to show all data."

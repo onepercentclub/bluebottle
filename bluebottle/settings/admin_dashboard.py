@@ -220,7 +220,7 @@ JET_SIDE_MENU_ITEMS = [
         ],  # Segment type items are added programmatically in bluebottle_dashboard/utils.py
     },
     {
-        "label": _("Offices"),
+        "label": _("Work locations"),
         "permissions": ["offices.change_officeregion"],
         "enabled": "initiatives.InitiativePlatformSettings.enable_office_regions",
         "items": [

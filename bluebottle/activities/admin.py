@@ -875,7 +875,7 @@ class ActivityChildAdmin(
                         'office_restriction',
                     )
                 fieldsets.append((
-                    _('Office'), {'fields': self.office_fields}
+                    _('Work location'), {'fields': self.office_fields}
                 ))
 
         if SegmentType.objects.count():
@@ -1062,7 +1062,7 @@ class ActivityAdmin(
         url = reverse('admin:geo_location_change', args=(obj.office_location.id,))
         return format_html('<a href="{}">{}</a>', url, obj.office_location)
 
-    location_link.short_description = _('office')
+    location_link.short_description = _('work location')
 
     def get_list_display(self, request):
         fields = list(self.list_display)

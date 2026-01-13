@@ -18,8 +18,8 @@ class LinkedActivityDocument(ActivityDocument):
     def get_queryset(self):
         return self.django.model._default_manager.all()
 
-    def prepare_kind(self, instance):
-        return "linked_activity"
+    def prepare_is_local(self, instance):
+        return False
 
     def get_doc_id(self, instance):
         return f"linked_{instance.pk}"
@@ -151,7 +151,6 @@ class LinkedDeedDocument(LinkedActivityDocument):
         return 'deed'
 
     def prepare_resource_name(self, instance):
-        __import__('ipdb').set_trace()
         return 'activities/deeds'
 
     def prepare_activity_type(self, instance):

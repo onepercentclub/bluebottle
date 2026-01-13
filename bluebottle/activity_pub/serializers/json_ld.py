@@ -167,6 +167,7 @@ class CrowdFundingSerializer(BaseEventSerializer):
     type = TypeField('CrowdFunding')
 
     end_time = serializers.DateTimeField(required=False, allow_null=True)
+    start_time = serializers.DateTimeField(required=False, allow_null=True)
 
     target = serializers.DecimalField(decimal_places=2, max_digits=10)
     target_currency = serializers.CharField()
@@ -178,7 +179,7 @@ class CrowdFundingSerializer(BaseEventSerializer):
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
         fields = BaseEventSerializer.Meta.fields + (
-            'end_time',
+            'end_time', 'start_time',
             'target', 'target_currency',
             'donated', 'donated_currency',
             'location'
@@ -226,7 +227,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
     )
     duration = serializers.DurationField(required=False, allow_null=True)
 
-    sub_event = SubEventSerializer(many=True, allow_null=True, required=False)
+    sub_event = SubEventSerializer(many=True, allow_null=True, required=False, include=True)
 
     class Meta(BaseEventSerializer.Meta):
         model = DoGoodEvent
@@ -261,7 +262,9 @@ class DoGoodEventSerializer(BaseEventSerializer):
 
 class EventSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        GoodDeedSerializer, CrowdFundingSerializer, DoGoodEventSerializer
+        GoodDeedSerializer,
+        CrowdFundingSerializer,
+        DoGoodEventSerializer
     ]
 
     class Meta:

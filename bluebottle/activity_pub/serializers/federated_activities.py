@@ -9,7 +9,7 @@ from django.core.files import File
 from django.db import connection, models
 from django.urls import reverse
 from djmoney.money import Money
-from rest_framework import serializers, exceptions
+from rest_framework import exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField
 
-from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices
+from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
+    SubEvent
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
@@ -26,6 +27,8 @@ from bluebottle.geo.models import Country, Geolocation
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity
 from bluebottle.utils.fields import RichTextField
+
+from rest_framework import serializers
 
 
 class ImageSerializer(FederatedObjectSerializer):
@@ -117,7 +120,7 @@ class CountryField(serializers.CharField):
 class AddressSerializer(FederatedObjectSerializer):
     id = FederatedIdField('json-ld:address')
 
-    street_address = serializers.CharField(source='street', required=False, allow_null=True)
+    street_address = serializers.CharField(source='street   ', required=False, allow_null=True)
     postal_code = serializers.CharField(required=False, allow_null=True)
 
     address_locality = serializers.CharField(source='locality', required=False, allow_null=True)
@@ -251,7 +254,6 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
             validated_data['amount_donated'] = Money(
                 **validated_data['amount_donated']
             )
-        print('validated_data', validated_data)
         return super().create(validated_data)
 
 
@@ -330,9 +332,30 @@ class SlotsSerializer(FederatedObjectSerializer):
 
         super().__init__(*args, **kwargs)
 
+    def create(self, validated_data):
+
+        iri = validated_data.get('id')
+        if iri:
+            try:
+                sub_event = SubEvent.objects.get(iri=iri)
+                activity = validated_data.get('activity')
+                if activity:
+                    existing_slot = DateActivitySlot.objects.filter(origin=sub_event, activity=activity).first()
+                    if existing_slot:
+                        for key, value in validated_data.items():
+                            if key not in ('id', 'origin'):
+                                setattr(existing_slot, key, value)
+                        existing_slot.save()
+                        return existing_slot
+                validated_data.pop('id', None)
+                validated_data['origin'] = sub_event
+            except SubEvent.DoesNotExist:
+                pass
+
+        return super().create(validated_data)
+
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivitySlot
-
         fields = FederatedObjectSerializer.Meta.fields + (
             'name', 'location', 'start_time', 'end_time',
             'event_attendance_mode', 'duration',

@@ -76,9 +76,9 @@ class LinkedDeed(LinkedActivity):
 class LinkedFunding(LinkedActivity):
     target = MoneyField()
     donated = MoneyField(default=Money('0.00', 'EUR'))
-    amount = MoneyField(default=Money('0.00', 'EUR'))
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
 
 
 class LinkedDeadlineActivity(LinkedActivity):
@@ -99,6 +99,15 @@ class LinkedDateSlot(models.Model):
     )
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+
+    status = 'open'
+
+    @property
+    def duration(self):
+        if self.start and self.end:
+            return self.end - self.start
+        return None
 
 
 

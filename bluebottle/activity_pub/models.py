@@ -230,6 +230,9 @@ class Place(ActivityPubModel):
 
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
 
+    def __str__(self):
+        return self.name or self.id
+
 
 class Event(ActivityPubModel):
     name = models.CharField(verbose_name=_('Activity title'))
@@ -282,8 +285,8 @@ class Event(ActivityPubModel):
             )
 
     class Meta:
-        verbose_name = _("Shared activity")
-        verbose_name_plural = _("Shared activities")
+        verbose_name = _("Shared/Received activity")
+        verbose_name_plural = _("Shared/Received activities")
 
 
 class PublishedActivity(Event):
@@ -291,7 +294,7 @@ class PublishedActivity(Event):
     class Meta:
         proxy = True
         verbose_name = _("Shared activity")
-        verbose_name_plural = _("Shated activities")
+        verbose_name_plural = _("Shared activities")
 
 
 class ReceivedActivity(Event):

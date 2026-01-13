@@ -8,6 +8,7 @@ from bluebottle.activity_pub.models import Publish
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import MoneyField, ImageField
+from bluebottle.activity_pub.models import Publish
 
 
 class LinkedActivityManager(PolymorphicManager):
@@ -29,7 +30,7 @@ class LinkedActivityManager(PolymorphicManager):
         organization = Publish.objects.filter(object=event).first().actor.organization
 
         return serializer.save(
-            event=event, host_organization=organization, status='open'
+            event=event, host_organization=organization
         )
 
 

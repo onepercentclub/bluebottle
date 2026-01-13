@@ -340,6 +340,9 @@ class LinkTestCase(ActivityPubTestCase):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.title, self.model.title)
 
+            announce = Announce.objects.get()
+            self.assertEqual(announce.object, link.event)
+
     def test_update(self):
         title = 'Some new title'
         self.test_link()

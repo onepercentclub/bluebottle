@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-22 15:10+0100\n"
-"PO-Revision-Date: 2025-12-22 14:12\n"
+"POT-Creation-Date: 2026-01-12 13:19+0100\n"
+"PO-Revision-Date: 2026-01-12 12:43\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -52,8 +52,8 @@ msgstr "Részletek"
 msgid "Super admin"
 msgstr "Szuper admin"
 
-#: bluebottle/activities/admin.py:227 bluebottle/activities/models.py:182
-#: bluebottle/activities/models.py:247 bluebottle/collect/admin.py:98
+#: bluebottle/activities/admin.py:227 bluebottle/activities/models.py:183
+#: bluebottle/activities/models.py:248 bluebottle/collect/admin.py:98
 #: bluebottle/funding/models.py:352 bluebottle/time_based/admin.py:1055
 #: bluebottle/updates/models.py:22
 msgid "Activity"
@@ -130,7 +130,7 @@ msgid_plural "{count} participants could not be added. Please check if the email
 msgstr[0] "{count} résztvevő nem lehetett hozzáadni. Kérlek, ellenőrizd, hogy az e-mail cím helyes-e."
 msgstr[1] "{count} résztvevő nem lehetett hozzáadni. Kérlek, ellenőrizd, hogy az e-mail címek helyesek-e."
 
-#: bluebottle/activities/admin.py:735 bluebottle/initiatives/models.py:174
+#: bluebottle/activities/admin.py:735 bluebottle/initiatives/models.py:173
 msgid "Initiative"
 msgstr "Kezdeményezés"
 
@@ -151,10 +151,11 @@ msgstr "Részvétel"
 
 #: bluebottle/activities/admin.py:758 bluebottle/bb_accounts/models.py:139
 #: bluebottle/funding/admin.py:225 bluebottle/grant_management/admin.py:549
-#: bluebottle/initiatives/models.py:283 bluebottle/initiatives/models.py:290
-#: bluebottle/initiatives/models.py:295
-msgid "Office"
-msgstr "Iroda"
+#: bluebottle/initiatives/models.py:135 bluebottle/initiatives/models.py:282
+#: bluebottle/initiatives/models.py:289 bluebottle/initiatives/models.py:294
+#: bluebottle/members/models.py:279
+msgid "Work location"
+msgstr "Munkavégzési hely"
 
 #: bluebottle/activities/admin.py:763 bluebottle/funding/admin.py:233
 #: bluebottle/grant_management/admin.py:557 bluebottle/members/admin.py:647
@@ -203,9 +204,8 @@ msgid "Request the activity manager to fill in the impact of this activity."
 msgstr "Kérd meg a tevékenység vezetőt, hogy töltse ki ennek a tevékenységnek a hatását."
 
 #: bluebottle/activities/admin.py:937 bluebottle/geo/models.py:178
-#: bluebottle/initiatives/models.py:136
-msgid "office"
-msgstr "iroda"
+msgid "work location"
+msgstr "munkavégzési hely"
 
 #: bluebottle/activities/admin.py:952 bluebottle/initiatives/admin.py:259
 msgid "Show on site"
@@ -566,48 +566,48 @@ msgctxt "email"
 msgid "A new activity has been published on {site_name}"
 msgstr "Egy új aktivitás közzétételre került a {site_name} oldalon"
 
-#: bluebottle/activities/models.py:36 bluebottle/notifications/models.py:59
+#: bluebottle/activities/models.py:37 bluebottle/notifications/models.py:59
 #: bluebottle/time_based/models.py:1539
 msgid "Teams"
 msgstr "Csapatok"
 
-#: bluebottle/activities/models.py:37
+#: bluebottle/activities/models.py:38
 msgid "Individuals"
 msgstr "Egyének"
 
-#: bluebottle/activities/models.py:41
+#: bluebottle/activities/models.py:42
 msgid "activity manager"
 msgstr "tevékenység vezető"
 
-#: bluebottle/activities/models.py:47
+#: bluebottle/activities/models.py:48
 msgid "Highlight this activity to show it on homepage"
 msgstr "Emeld ki ezt a tevékenységet, hogy megmutasd a kezdőoldalon"
 
-#: bluebottle/activities/models.py:72
+#: bluebottle/activities/models.py:73
 msgid "Partner organization"
-msgstr ""
+msgstr "Partnerszervezet"
 
-#: bluebottle/activities/models.py:81
-msgid "Host office"
-msgstr "Művelet iroda"
+#: bluebottle/activities/models.py:82
+msgid "Host work location"
+msgstr "Szállás munkavégzési hely"
 
-#: bluebottle/activities/models.py:88
+#: bluebottle/activities/models.py:89
 msgid "Restrictions"
 msgstr "Korlátozások"
 
-#: bluebottle/activities/models.py:97
+#: bluebottle/activities/models.py:98
 msgid "Has anonymised and/or deleted data"
 msgstr "Anonimizált és/vagy törölt adatok"
 
-#: bluebottle/activities/models.py:100
+#: bluebottle/activities/models.py:101
 msgid "Due to company policies and local laws, user data maybe deleted in this activity."
 msgstr "A vállalati politikák és a helyi törvények miatt a felhasználói adatokat törölhetik ezen a tevékenységen."
 
-#: bluebottle/activities/models.py:105
+#: bluebottle/activities/models.py:106
 msgid "Number of deleted successful contributors"
 msgstr "A törölt sikeres hozzájárulók száma"
 
-#: bluebottle/activities/models.py:108 bluebottle/cms/models.py:49
+#: bluebottle/activities/models.py:109 bluebottle/cms/models.py:49
 #: bluebottle/cms/models.py:125 bluebottle/cms/models.py:142
 #: bluebottle/funding/models.py:349 bluebottle/news/models.py:22
 #: bluebottle/pages/models.py:232 bluebottle/pages/models.py:324
@@ -615,185 +615,185 @@ msgstr "A törölt sikeres hozzájárulók száma"
 msgid "Title"
 msgstr "Cím"
 
-#: bluebottle/activities/models.py:109 bluebottle/cms/models.py:50
+#: bluebottle/activities/models.py:110 bluebottle/cms/models.py:50
 #: bluebottle/news/models.py:23 bluebottle/pages/models.py:233
 #: bluebottle/slides/models.py:27
 msgid "Slug"
 msgstr "Slug"
 
-#: bluebottle/activities/models.py:110 bluebottle/cms/models.py:51
+#: bluebottle/activities/models.py:111 bluebottle/cms/models.py:51
 #: bluebottle/funding/models.py:350
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
 #: bluebottle/grant_management/models.py:468
 msgid "Description"
 msgstr "Leírás"
 
-#: bluebottle/activities/models.py:112
+#: bluebottle/activities/models.py:113
 msgid "participation"
 msgstr "részvétel"
 
-#: bluebottle/activities/models.py:117
+#: bluebottle/activities/models.py:118
 msgid "Is this activity open for individuals or can only teams sign up?"
 msgstr "Ez a tevékenység nyitva áll az egyének számára, vagy csak csapatok regisztrálhatnak?"
 
-#: bluebottle/activities/models.py:122 bluebottle/initiatives/models.py:114
+#: bluebottle/activities/models.py:123 bluebottle/initiatives/models.py:113
 msgid "video"
 msgstr "videó"
 
-#: bluebottle/activities/models.py:128
+#: bluebottle/activities/models.py:129
 msgid "Make your activity come alive with a video. You can paste the link to YouTube or Vimeo here."
 msgstr "Légy aktív a tevékenységeddel egy videóval. Itt beillesztheted a YouTube vagy Vimeo linket."
 
-#: bluebottle/activities/models.py:134
+#: bluebottle/activities/models.py:135
 msgid "Redirect step link"
 msgstr "Átirányítás lépés link"
 
-#: bluebottle/activities/models.py:140
+#: bluebottle/activities/models.py:141
 msgid "This link is shown after a user joined as the next step for the activity"
 msgstr "Ez a link akkor jelenik meg, miután a felhasználó csatlakozott a következő lépéshez."
 
-#: bluebottle/activities/models.py:145
+#: bluebottle/activities/models.py:146
 msgid "Redirect step title"
 msgstr "Átirányítás lépés cím"
 
-#: bluebottle/activities/models.py:150
+#: bluebottle/activities/models.py:151
 msgid "The title in the popup after a user joined the activity"
 msgstr "A cím a felugró ablakban, miután a felhasználó csatlakozott a tevékenységhez"
 
-#: bluebottle/activities/models.py:154
+#: bluebottle/activities/models.py:155
 msgid "Redirect step button label"
 msgstr "Átirányítás lépés gomb címke"
 
-#: bluebottle/activities/models.py:159
+#: bluebottle/activities/models.py:160
 msgid "The title on the next link button"
 msgstr "A cím a következő link gombon"
 
-#: bluebottle/activities/models.py:163
+#: bluebottle/activities/models.py:164
 msgid "Redirect step description"
 msgstr "Átirányítás lépés leírás"
 
-#: bluebottle/activities/models.py:167
+#: bluebottle/activities/models.py:168
 msgid "A description to explain what the next step is"
 msgstr "Leírás, hogy elmagyarázza, mi a következő lépés"
 
-#: bluebottle/activities/models.py:172 bluebottle/members/models.py:428
+#: bluebottle/activities/models.py:173 bluebottle/members/models.py:428
 msgid "Segment"
 msgstr "Szegmens"
 
-#: bluebottle/activities/models.py:187
+#: bluebottle/activities/models.py:188
 msgid "Terms of Service accepted"
 msgstr "A Szolgáltatási Feltételek elfogadva"
 
-#: bluebottle/activities/models.py:189
+#: bluebottle/activities/models.py:190
 msgid "Has the user accepted the terms of service for this activity?"
 msgstr "Elfogadta a felhasználó a szolgáltatási feltételeket az aktivitás számára?"
 
-#: bluebottle/activities/models.py:248
+#: bluebottle/activities/models.py:249
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:87
 #: bluebottle/cms/models.py:374 bluebottle/segments/admin.py:108
 msgid "Activities"
 msgstr "Tevékenységek"
 
-#: bluebottle/activities/models.py:255 bluebottle/initiatives/models.py:195
+#: bluebottle/activities/models.py:256 bluebottle/initiatives/models.py:194
 #: bluebottle/slides/models.py:107
 msgid "-empty-"
 msgstr "-üres-"
 
-#: bluebottle/activities/models.py:315
+#: bluebottle/activities/models.py:316
 msgid "Old team"
 msgstr "Régi csapat"
 
-#: bluebottle/activities/models.py:323
+#: bluebottle/activities/models.py:324
 msgid "user"
 msgstr "felhasználó"
 
-#: bluebottle/activities/models.py:352
+#: bluebottle/activities/models.py:353
 msgid "Contribution"
 msgstr "Hozzájárulás"
 
-#: bluebottle/activities/models.py:353 bluebottle/activities/models.py:416
+#: bluebottle/activities/models.py:354 bluebottle/activities/models.py:417
 #: bluebottle/funding/models.py:592 bluebottle/time_based/models.py:1088
 msgid "Contributions"
 msgstr "Hozzájárulások"
 
-#: bluebottle/activities/models.py:362 bluebottle/activities/models.py:460
+#: bluebottle/activities/models.py:363 bluebottle/activities/models.py:461
 msgid "Anonymous"
 msgstr "Névtelen"
 
-#: bluebottle/activities/models.py:368
+#: bluebottle/activities/models.py:369
 msgid "Activity owner"
 msgstr "Tevékenység tulajdonosa"
 
-#: bluebottle/activities/models.py:369
+#: bluebottle/activities/models.py:370
 msgid "Activity owners"
 msgstr "Tevékenység tulajdonosai"
 
-#: bluebottle/activities/models.py:379
+#: bluebottle/activities/models.py:380
 msgid "start"
 msgstr "kezdés"
 
-#: bluebottle/activities/models.py:380
+#: bluebottle/activities/models.py:381
 msgid "end"
 msgstr "befejezés"
 
-#: bluebottle/activities/models.py:396 bluebottle/activities/models.py:400
+#: bluebottle/activities/models.py:397 bluebottle/activities/models.py:401
 msgid "Contribution amount"
 msgstr "Hozzájárulás összege"
 
-#: bluebottle/activities/models.py:397
+#: bluebottle/activities/models.py:398
 msgid "Contribution amounts"
 msgstr "Hozzájárulás összeg"
 
-#: bluebottle/activities/models.py:405
+#: bluebottle/activities/models.py:406
 msgid "Activity Organizer"
 msgstr "Tevékenység Szervező"
 
-#: bluebottle/activities/models.py:406 bluebottle/deeds/models.py:128
+#: bluebottle/activities/models.py:407 bluebottle/deeds/models.py:128
 msgid "Deed participant"
 msgstr "Cselekvési résztvevő"
 
-#: bluebottle/activities/models.py:409 bluebottle/time_based/models.py:1069
+#: bluebottle/activities/models.py:410 bluebottle/time_based/models.py:1069
 msgid "Contribution type"
 msgstr "Hozzájárulás típusa"
 
-#: bluebottle/activities/models.py:415
+#: bluebottle/activities/models.py:416
 msgid "Effort"
 msgstr "Erőfeszítés"
 
-#: bluebottle/activities/models.py:449 bluebottle/time_based/models.py:1538
+#: bluebottle/activities/models.py:450 bluebottle/time_based/models.py:1538
 msgid "Team"
 msgstr "Csapat"
 
-#: bluebottle/activities/models.py:459 bluebottle/time_based/models.py:1563
+#: bluebottle/activities/models.py:460 bluebottle/time_based/models.py:1563
 #, python-brace-format
 msgid "Team {name}"
 msgstr "Csapat {name}"
 
-#: bluebottle/activities/models.py:479 bluebottle/activities/models.py:485
+#: bluebottle/activities/models.py:480 bluebottle/activities/models.py:486
 msgid "Everyone"
 msgstr "Mindenki"
 
-#: bluebottle/activities/models.py:480 bluebottle/activities/models.py:486
+#: bluebottle/activities/models.py:481 bluebottle/activities/models.py:487
 msgid "Managers"
 msgstr "Menedszerek"
 
-#: bluebottle/activities/models.py:490
+#: bluebottle/activities/models.py:491
 msgid "Label"
 msgstr "Címke"
 
-#: bluebottle/activities/models.py:492
+#: bluebottle/activities/models.py:493
 msgid "The label for this question. This is used for validation messages e.g. \"[label] is required\"."
 msgstr "A kérdés címkéje. Ezt az érvényesítő üzenetekhez használják, pl.: \"[label] szükséges\"."
 
-#: bluebottle/activities/models.py:508
+#: bluebottle/activities/models.py:509
 msgid "Who can see the answers?"
 msgstr "Ki láthatja a válaszokat?"
 
-#: bluebottle/activities/models.py:518
+#: bluebottle/activities/models.py:519
 msgid "Form question"
 msgstr "Űrlap kérdés"
 
-#: bluebottle/activities/models.py:519
+#: bluebottle/activities/models.py:520
 msgid "Form questions"
 msgstr "Űrlap kérdések"
 
@@ -1971,10 +1971,10 @@ msgid "last name"
 msgstr "vezetéknév"
 
 #: bluebottle/bb_accounts/models.py:144
-msgid "Office location is verified by the user"
-msgstr "A felhasználó hitelesítette az iroda helyét"
+msgid "Work location is verified by the user"
+msgstr "A munkavégzési helyet a felhasználó ellenőrizte"
 
-#: bluebottle/bb_accounts/models.py:150 bluebottle/initiatives/models.py:277
+#: bluebottle/bb_accounts/models.py:150 bluebottle/initiatives/models.py:276
 msgid "Distance"
 msgstr "Távolság"
 
@@ -2247,7 +2247,7 @@ msgid "Users"
 msgstr "Felhasználók"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
-#: bluebottle/initiatives/admin.py:396 bluebottle/initiatives/models.py:175
+#: bluebottle/initiatives/admin.py:396 bluebottle/initiatives/models.py:174
 #: bluebottle/members/admin.py:220 bluebottle/members/admin.py:824
 msgid "Initiatives"
 msgstr "Kezdeményezések"
@@ -2317,7 +2317,7 @@ msgstr "\n"
 "                  "
 
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:47
-#: bluebottle/geo/admin.py:79
+#: bluebottle/geo/admin.py:78
 #: bluebottle/geo/templates/admin/geo/location/change_form.html:6
 #: bluebottle/organizations/templates/admin/merge_preview.html:36
 #: bluebottle/segments/admin.py:56
@@ -2495,7 +2495,7 @@ msgid "You are about to disable two-factor authentication. This weakens your acc
 msgstr "Éppen most fogod letiltani a kétfaktoros hitelesítést. Ez gyengíti a fiókod biztonságát, biztos vagy benne?"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/disable.html:18
-#: bluebottle/funding_stripe/states.py:165 bluebottle/initiatives/models.py:330
+#: bluebottle/funding_stripe/states.py:165 bluebottle/initiatives/models.py:329
 msgid "Disable"
 msgstr "Letiltás"
 
@@ -2539,8 +2539,8 @@ msgid "initiatives"
 msgstr "kezdeményezések"
 
 #: bluebottle/categories/models.py:18 bluebottle/geo/models.py:136
-#: bluebottle/impact/models.py:37 bluebottle/initiatives/models.py:99
-#: bluebottle/initiatives/models.py:577 bluebottle/organizations/models.py:22
+#: bluebottle/impact/models.py:37 bluebottle/initiatives/models.py:98
+#: bluebottle/initiatives/models.py:576 bluebottle/organizations/models.py:22
 #: bluebottle/segments/models.py:23 bluebottle/segments/models.py:108
 msgid "slug"
 msgstr "slug"
@@ -2567,7 +2567,7 @@ msgstr "Kategória logó kép"
 #: bluebottle/geo/models.py:61 bluebottle/geo/models.py:74
 #: bluebottle/geo/models.py:89 bluebottle/geo/models.py:121
 #: bluebottle/geo/models.py:135 bluebottle/impact/models.py:49
-#: bluebottle/initiatives/models.py:581 bluebottle/looker/models.py:13
+#: bluebottle/initiatives/models.py:580 bluebottle/looker/models.py:13
 #: bluebottle/offices/models.py:9 bluebottle/offices/models.py:25
 #: bluebottle/organizations/models.py:21 bluebottle/organizations/models.py:77
 #: bluebottle/segments/models.py:22 bluebottle/segments/models.py:107
@@ -2578,7 +2578,7 @@ msgstr "név"
 #: bluebottle/categories/models.py:48 bluebottle/categories/models.py:92
 #: bluebottle/funding/models.py:397 bluebottle/funding/models.py:428
 #: bluebottle/geo/models.py:122 bluebottle/geo/models.py:160
-#: bluebottle/initiatives/models.py:582 bluebottle/offices/models.py:10
+#: bluebottle/initiatives/models.py:581 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:23
 #: bluebottle/time_based/models.py:1109
 msgid "description"
@@ -2593,7 +2593,7 @@ msgid "categories"
 msgstr "kategóriák"
 
 #: bluebottle/categories/models.py:87 bluebottle/funding/models.py:427
-#: bluebottle/initiatives/models.py:39 bluebottle/pages/models.py:58
+#: bluebottle/initiatives/models.py:38 bluebottle/pages/models.py:58
 #: bluebottle/time_based/models.py:299
 msgid "title"
 msgstr "cím"
@@ -2723,8 +2723,8 @@ msgstr "Fő"
 msgid "About"
 msgstr "Rólunk"
 
-#: bluebottle/cms/models.py:118 bluebottle/geo/admin.py:134
-#: bluebottle/geo/admin.py:185
+#: bluebottle/cms/models.py:118 bluebottle/geo/admin.py:135
+#: bluebottle/geo/admin.py:186
 msgid "Info"
 msgstr "Információ"
 
@@ -3243,7 +3243,7 @@ msgid "You have joined the activity \"{title}\""
 msgstr "Csatlakoztál a \"{title}\" tevékenységhez"
 
 #: bluebottle/collect/models.py:19 bluebottle/funding_stripe/states.py:157
-#: bluebottle/initiatives/models.py:578 bluebottle/time_based/models.py:1105
+#: bluebottle/initiatives/models.py:577 bluebottle/time_based/models.py:1105
 msgid "disabled"
 msgstr "letiltott"
 
@@ -3284,7 +3284,7 @@ msgstr "tétel"
 msgid "location hint"
 msgstr "helymegjelölési tipp"
 
-#: bluebottle/collect/models.py:75 bluebottle/initiatives/models.py:322
+#: bluebottle/collect/models.py:75 bluebottle/initiatives/models.py:321
 msgid "Collect activity"
 msgstr "Gyűjtő tevékenység"
 
@@ -3599,7 +3599,7 @@ msgid "The number of users you want to participate."
 msgstr "A felhasználók száma, akiket szeretnél, hogy részt vegyenek."
 
 #: bluebottle/deeds/models.py:26 bluebottle/deeds/models.py:33
-#: bluebottle/initiatives/models.py:321
+#: bluebottle/initiatives/models.py:320
 msgid "Deed"
 msgstr "Cselekedet"
 
@@ -3687,7 +3687,7 @@ msgstr "A befejező dátumnak a kezdő dátum után kell lennie"
 msgid "file"
 msgstr "fájl"
 
-#: bluebottle/files/models.py:40 bluebottle/initiatives/models.py:43
+#: bluebottle/files/models.py:40 bluebottle/initiatives/models.py:42
 #: bluebottle/organizations/models.py:31 bluebottle/organizations/models.py:81
 msgid "owner"
 msgstr "tulajdonos"
@@ -3812,15 +3812,15 @@ msgstr "Készen állsz a \"%(obj)s\" átállítására\n"
 msgid "You are about to <b>%(action_text)s</b> for <b>%(obj)s</b>."
 msgstr "A következőket készül csinálni: <b>%(action_text)s</b> a<b>%(obj)s</b> számára."
 
-#: bluebottle/fsm/templates/admin/change_effects_confirmation.html:72
+#: bluebottle/fsm/templates/admin/change_effects_confirmation.html:67
 msgid "Here is what will happen when you confirm this action:"
 msgstr "Ezek fognak történni, amikor megerősíted ezt a műveletet:"
 
-#: bluebottle/fsm/templates/admin/change_effects_confirmation.html:101
+#: bluebottle/fsm/templates/admin/change_effects_confirmation.html:96
 msgid " Yes, I'm sure"
 msgstr " Igen, biztos vagyok benne"
 
-#: bluebottle/fsm/templates/admin/change_effects_confirmation.html:102
+#: bluebottle/fsm/templates/admin/change_effects_confirmation.html:97
 #: bluebottle/members/templates/admin/members/set_retention_confirmation.html:83
 #: bluebottle/notifications/templates/admin/change_confirmation.html:54
 #: bluebottle/utils/templates/admin/confirmation.html:25
@@ -3828,7 +3828,7 @@ msgstr " Igen, biztos vagyok benne"
 msgid "No, take me back"
 msgstr "Nem, vigyél vissza"
 
-#: bluebottle/fsm/templates/admin/send_mail_check_box.html:13
+#: bluebottle/fsm/templates/admin/send_mail_check_box.html:17
 msgid "Unselect to continue without sending notifications"
 msgstr "Töröld a kiválasztást, hogy folytathasd értesítések küldése nélkül"
 
@@ -4297,7 +4297,7 @@ msgid "Crowdfunding campaign"
 msgstr "Adománygyűjtő kampány"
 
 #: bluebottle/funding/models.py:228 bluebottle/impact/models.py:28
-#: bluebottle/initiatives/models.py:313
+#: bluebottle/initiatives/models.py:312
 #: bluebottle/settings/admin_dashboard.py:116
 msgid "Funding"
 msgstr "Finanszírozás"
@@ -4442,11 +4442,11 @@ msgstr "A KYC folyamat során ellenőrizni kell, hogy a banki számlaszám és a
 
 #: bluebottle/funding/models.py:853
 msgid "Limit donations"
-msgstr ""
+msgstr "Adományok korlátozása"
 
 #: bluebottle/funding/models.py:856
 msgid "Automatically stop accepting donations once the target is reached."
-msgstr ""
+msgstr "Automatikusan leállítja az adományok fogadását, ha a cél elérve."
 
 #: bluebottle/funding/models.py:861
 msgid "Name to use for match funding"
@@ -5563,7 +5563,7 @@ msgid "Reward:"
 msgstr "Jutalom:"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:35
-#: bluebottle/initiatives/models.py:276 bluebottle/terms/models.py:43
+#: bluebottle/initiatives/models.py:275 bluebottle/terms/models.py:43
 #: bluebottle/time_based/admin.py:1146
 #: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:3
 msgid "Date"
@@ -5769,8 +5769,8 @@ msgstr "Pledge bankszámlák"
 
 #: bluebottle/funding_stripe/admin.py:69
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:25
-#: bluebottle/initiatives/admin.py:56 bluebottle/initiatives/models.py:275
-#: bluebottle/initiatives/models.py:291
+#: bluebottle/initiatives/admin.py:56 bluebottle/initiatives/models.py:274
+#: bluebottle/initiatives/models.py:290
 msgid "Country"
 msgstr "Ország"
 
@@ -5996,38 +5996,39 @@ msgstr "Vitepay bankszámlák"
 msgid "payment for {activity_title} on {tenant_name}"
 msgstr "fizetés a {activity_title} a {tenant_name} számára"
 
-#: bluebottle/geo/admin.py:38
+#: bluebottle/geo/admin.py:37
 #: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:14
 msgid "Location"
 msgstr "Helyszín"
 
-#: bluebottle/geo/admin.py:49
+#: bluebottle/geo/admin.py:48
 msgid "My location ({})"
 msgstr "Saját helyszín ({})"
 
-#: bluebottle/geo/admin.py:74 bluebottle/segments/admin.py:51
+#: bluebottle/geo/admin.py:73 bluebottle/segments/admin.py:51
 msgid "Merge with"
 msgstr "Összevonás"
 
-#: bluebottle/geo/admin.py:75 bluebottle/segments/admin.py:52
+#: bluebottle/geo/admin.py:74 bluebottle/segments/admin.py:52
 msgid "Choose location to merge with"
 msgstr "Válassza ki a helyszínt, amellyel összevonja"
 
-#: bluebottle/geo/admin.py:123 bluebottle/initiatives/models.py:284
-#: bluebottle/initiatives/models.py:296
-msgid "Office group"
-msgstr "Iroda csoport"
+#: bluebottle/geo/admin.py:123 bluebottle/initiatives/models.py:283
+#: bluebottle/initiatives/models.py:295 bluebottle/offices/models.py:35
+msgid "Work location group"
+msgstr "Munkavégzési hely csoport"
 
-#: bluebottle/geo/admin.py:130 bluebottle/initiatives/models.py:285
-#: bluebottle/initiatives/models.py:297
-msgid "Office region"
-msgstr "Iroda régió"
+#: bluebottle/geo/admin.py:131 bluebottle/initiatives/models.py:284
+#: bluebottle/initiatives/models.py:296 bluebottle/offices/models.py:14
+#: bluebottle/offices/models.py:29
+msgid "Work location region"
+msgstr "Munkavégzési hely régió"
 
-#: bluebottle/geo/admin.py:147 bluebottle/segments/admin.py:94
+#: bluebottle/geo/admin.py:148 bluebottle/segments/admin.py:94
 msgid "SSO"
 msgstr "SSO"
 
-#: bluebottle/geo/admin.py:184 bluebottle/geo/admin.py:197
+#: bluebottle/geo/admin.py:185 bluebottle/geo/admin.py:198
 msgid "Map"
 msgstr "Térkép"
 
@@ -6095,29 +6096,29 @@ msgstr "helyszíni csoport"
 msgid "location groups"
 msgstr "helyszíni csoportok"
 
-#: bluebottle/geo/models.py:148 bluebottle/offices/models.py:35
-msgid "office group"
-msgstr "iroda csoport"
+#: bluebottle/geo/models.py:148
+msgid "work location group"
+msgstr "munkavégzési hely csoport"
 
 #: bluebottle/geo/models.py:149
-msgid "The organisational group this office belongs too."
-msgstr "Ez az iroda a következő szervezeti csoportba tartozik."
+msgid "The organisational group this work location belongs too."
+msgstr "A munkavégzési helyhez tartozó szervezeti csoport."
 
 #: bluebottle/geo/models.py:153
 msgid "city"
 msgstr "város"
 
 #: bluebottle/geo/models.py:156
-msgid "The (geographic) country this office is located in."
-msgstr "Ez az iroda a következő (földrajzi) országban található."
+msgid "The (geographic) country this work location is located in."
+msgstr "A (földrajzi) ország, ahol a munkavégzési hely található."
 
 #: bluebottle/geo/models.py:163
-msgid "Office picture"
-msgstr "Iroda kép"
+msgid "Work location picture"
+msgstr "Munkavégzési hely kép"
 
 #: bluebottle/geo/models.py:179
-msgid "offices"
-msgstr "irodák"
+msgid "work locations"
+msgstr "munkavégzési helyek"
 
 #: bluebottle/geo/models.py:210 bluebottle/geo/models.py:254
 msgid "Street Number"
@@ -7032,11 +7033,11 @@ msgstr "Saját kezdeményezéseim"
 
 #: bluebottle/initiatives/admin.py:110
 msgid "Hide archived activities"
-msgstr ""
+msgstr "Archivált tevékenységek elrejtése"
 
 #: bluebottle/initiatives/admin.py:196
 msgid "Archive selected initiatives"
-msgstr ""
+msgstr "Kiválasztott kezdeményezések archiválása"
 
 #: bluebottle/initiatives/admin.py:235
 msgid "Organization"
@@ -7057,8 +7058,8 @@ msgstr "Tevékenységtípusok"
 
 #: bluebottle/initiatives/admin.py:330
 #: bluebottle/settings/admin_dashboard.py:186
-msgid "Offices"
-msgstr "Irodák"
+msgid "Work locations"
+msgstr "Munkavégzési helyek"
 
 #: bluebottle/initiatives/admin.py:340
 msgid "Options"
@@ -7068,7 +7069,7 @@ msgstr "Opciók"
 msgid "Terms of service"
 msgstr "Szolgáltatási feltételek"
 
-#: bluebottle/initiatives/admin.py:367 bluebottle/initiatives/models.py:449
+#: bluebottle/initiatives/admin.py:367 bluebottle/initiatives/models.py:448
 #: bluebottle/time_based/models.py:113
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:32
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:30
@@ -7088,7 +7089,7 @@ msgstr "Legutóbb közzétett kezdeményezések"
 msgid "Initiatives I'm reviewing"
 msgstr "Kezdeményezések, amelyeket felülvizsgálok"
 
-#: bluebottle/initiatives/filters.py:72 bluebottle/initiatives/models.py:294
+#: bluebottle/initiatives/filters.py:72 bluebottle/initiatives/models.py:293
 msgid "Open initiatives"
 msgstr "Nyitott kezdeményezések"
 
@@ -7156,265 +7157,265 @@ msgctxt "email"
 msgid "You are assigned to review \"{title}\"."
 msgstr "Te vagy megbízva a \"{title}\" áttekintésére."
 
-#: bluebottle/initiatives/models.py:52
+#: bluebottle/initiatives/models.py:51
 msgid "reviewer"
 msgstr "felülvizsgáló"
 
-#: bluebottle/initiatives/models.py:61
+#: bluebottle/initiatives/models.py:60
 msgid "co-initiator"
 msgstr "társgyártó"
 
-#: bluebottle/initiatives/models.py:63
+#: bluebottle/initiatives/models.py:62
 msgid "The co-initiator can create and edit activities for this initiative, but cannot edit the initiative itself."
 msgstr "A társgyártó létrehozhat és szerkeszthet tevékenységeket ehhez a kezdeményezéshez, de nem szerkesztheti magát a kezdeményezést."
 
-#: bluebottle/initiatives/models.py:73
+#: bluebottle/initiatives/models.py:72
 msgid "co-initiators"
 msgstr "társgyártók"
 
-#: bluebottle/initiatives/models.py:75
+#: bluebottle/initiatives/models.py:74
 msgid "Co-initiators can create and edit activities for this initiative, but cannot edit the initiative itself."
 msgstr "A társgyártók létrehozhatnak és szerkeszthetnek tevékenységeket ehhez a kezdeményezéshez, de nem szerkeszthetik magát a kezdeményezést."
 
-#: bluebottle/initiatives/models.py:82
+#: bluebottle/initiatives/models.py:81
 msgid "promoter"
 msgstr "promóter"
 
-#: bluebottle/initiatives/models.py:92
+#: bluebottle/initiatives/models.py:91
 msgid "Published date"
 msgstr "Közzététel dátuma"
 
-#: bluebottle/initiatives/models.py:93
+#: bluebottle/initiatives/models.py:92
 msgid "Date that the initiative went online."
 msgstr "A dátum, amikor a kezdeményezés online volt."
 
-#: bluebottle/initiatives/models.py:102
+#: bluebottle/initiatives/models.py:101
 msgid "pitch"
 msgstr "pályázat"
 
-#: bluebottle/initiatives/models.py:102
+#: bluebottle/initiatives/models.py:101
 msgid "Pitch your smart idea in one sentence"
 msgstr "Valósítsd meg okos ötletedet egy mondatban"
 
-#: bluebottle/initiatives/models.py:104
+#: bluebottle/initiatives/models.py:103
 msgid "story"
 msgstr "történet"
 
-#: bluebottle/initiatives/models.py:120
+#: bluebottle/initiatives/models.py:119
 msgid "Do you have a video pitch or a short movie that explains your initiative? Cool! We can't wait to see it! You can paste the link to YouTube or Vimeo video here"
 msgstr "Van egy videós pályázatod vagy egy rövid filmed, ami bemutatja a kezdeményezésed? Szuper! Alig várjuk, hogy lássuk! Itt beillesztheted a linket a YouTube vagy Vimeo videóhoz"
 
-#: bluebottle/initiatives/models.py:128
+#: bluebottle/initiatives/models.py:127
 msgid "Impact location"
 msgstr "Hatás helyszíne"
 
-#: bluebottle/initiatives/models.py:143
+#: bluebottle/initiatives/models.py:142
 msgid "is global"
 msgstr "globális"
 
-#: bluebottle/initiatives/models.py:145
+#: bluebottle/initiatives/models.py:144
 msgid "Global initiatives do not have a location. Instead the location is stored on the respective activities."
 msgstr "A globális kezdeményezéseknek nincs helyszínük. Ehelyett a helyszín a megfelelő tevékenységeken van tárolva."
 
-#: bluebottle/initiatives/models.py:164
+#: bluebottle/initiatives/models.py:163
 msgid "Is open"
 msgstr "Nyitva van"
 
-#: bluebottle/initiatives/models.py:166
+#: bluebottle/initiatives/models.py:165
 msgid "Any authenticated users can start an activity under this initiative."
 msgstr "Bármely hitelesített felhasználó elkezdhet egy tevékenységet e kezdeményezés keretében."
 
-#: bluebottle/initiatives/models.py:278
+#: bluebottle/initiatives/models.py:277
 msgid "Online / In-person"
 msgstr "Online / Személyesen"
 
-#: bluebottle/initiatives/models.py:279 bluebottle/time_based/models.py:1119
+#: bluebottle/initiatives/models.py:278 bluebottle/time_based/models.py:1119
 msgid "Skill"
 msgstr "Készség"
 
-#: bluebottle/initiatives/models.py:280
+#: bluebottle/initiatives/models.py:279
 msgid "Individual / Team"
 msgstr "Egyéni / Csapat"
 
-#: bluebottle/initiatives/models.py:281 bluebottle/initiatives/models.py:292
+#: bluebottle/initiatives/models.py:280 bluebottle/initiatives/models.py:291
 msgid "Theme"
 msgstr "Téma"
 
-#: bluebottle/initiatives/models.py:282 bluebottle/initiatives/models.py:293
+#: bluebottle/initiatives/models.py:281 bluebottle/initiatives/models.py:292
 msgid "Category"
 msgstr "Kategória"
 
-#: bluebottle/initiatives/models.py:314
+#: bluebottle/initiatives/models.py:313
 msgid "Grant Application"
 msgstr "Pályázat"
 
-#: bluebottle/initiatives/models.py:315
+#: bluebottle/initiatives/models.py:314
 msgid "Activity during a period"
 msgstr "Tevékenység időszak alatt"
 
-#: bluebottle/initiatives/models.py:316
+#: bluebottle/initiatives/models.py:315
 msgid "Activity on a specific date"
 msgstr "Tevékenység egy konkrét napon"
 
-#: bluebottle/initiatives/models.py:317
+#: bluebottle/initiatives/models.py:316
 msgid "Activity within a deadline"
 msgstr "Tevékenység határidőn belül"
 
-#: bluebottle/initiatives/models.py:318
+#: bluebottle/initiatives/models.py:317
 msgid "Scheduled activity"
 msgstr "Ütemezett tevékenység"
 
-#: bluebottle/initiatives/models.py:319
+#: bluebottle/initiatives/models.py:318
 msgid "Periodic Activity"
 msgstr "Időszakos tevékenység"
 
-#: bluebottle/initiatives/models.py:320 bluebottle/members/admin.py:880
+#: bluebottle/initiatives/models.py:319 bluebottle/members/admin.py:880
 #: bluebottle/time_based/models.py:886
 msgid "Past date activity"
 msgstr "Történeti dátumú tevékenység"
 
-#: bluebottle/initiatives/models.py:325
+#: bluebottle/initiatives/models.py:324
 msgid "E-mail"
 msgstr "E-mail"
 
-#: bluebottle/initiatives/models.py:326
+#: bluebottle/initiatives/models.py:325
 msgid "Phone"
 msgstr "Telefon"
 
-#: bluebottle/initiatives/models.py:331
+#: bluebottle/initiatives/models.py:330
 msgid "Unique per activity"
 msgstr "Egyedi minden tevékenységhez"
 
-#: bluebottle/initiatives/models.py:332
+#: bluebottle/initiatives/models.py:331
 msgid "Same for all activities"
 msgstr "Ugyanolyan minden tevékenységhez"
 
-#: bluebottle/initiatives/models.py:339
+#: bluebottle/initiatives/models.py:338
 msgid "Enable team activities where teams sign-up instead of individuals."
 msgstr "Engedélyezd a csapat tevékenységeket, ahol a csapatok regisztrálnak, nem pedig az egyének."
 
-#: bluebottle/initiatives/models.py:345
+#: bluebottle/initiatives/models.py:344
 msgid "Require initiators to specify a partner organisation when creating an initiative."
 msgstr "Kérjétek a kezdeményezőket, hogy jelöljék meg a partner szervezetet a kezdeményezés létrehozásakor."
 
-#: bluebottle/initiatives/models.py:350
+#: bluebottle/initiatives/models.py:349
 msgid "Terms of Service"
 msgstr "Szolgáltatási feltételek"
 
-#: bluebottle/initiatives/models.py:353
+#: bluebottle/initiatives/models.py:352
 msgid "Terms of service that is shown to users when they are on the create form."
 msgstr "A szolgáltatási feltételek, amelyet a felhasználók látnak, amikor a létrehozási űrlapon vannak."
 
-#: bluebottle/initiatives/models.py:358
+#: bluebottle/initiatives/models.py:357
 msgid "Email terms of service"
 msgstr "E-mail szolgáltatási feltételek"
 
-#: bluebottle/initiatives/models.py:361
+#: bluebottle/initiatives/models.py:360
 msgid "Send an email with the terms of service when an application is accepted."
 msgstr "Küldj e-mailt a szolgáltatási feltételekkel, amikor egy pályázatot elfogadnak."
 
-#: bluebottle/initiatives/models.py:366
+#: bluebottle/initiatives/models.py:365
 msgid "Custom terms of Service for email"
 msgstr "Személyre szabott szolgáltatási feltételek az e-mailhez"
 
-#: bluebottle/initiatives/models.py:369
+#: bluebottle/initiatives/models.py:368
 msgid "Leave emtpy if the Terms of Service sent by email is the same as the one above."
 msgstr "Hagyd üresen, ha az e-mailben küldött szolgáltatási feltételek megegyeznek a fent említettével."
 
-#: bluebottle/initiatives/models.py:374
+#: bluebottle/initiatives/models.py:373
 msgid "Bcc email with terms of service"
 msgstr "BCC e-mail a szolgáltatási feltételekkel"
 
-#: bluebottle/initiatives/models.py:377
+#: bluebottle/initiatives/models.py:376
 msgid "Enter the email address that should receive a Bcc (blind carbon copy) of the terms of service."
 msgstr "Add meg azt az e-mail címet, amelynek meg kell kapnia a szolgáltatási feltételek Bcc (vak másolat) másolatát."
 
-#: bluebottle/initiatives/models.py:385
+#: bluebottle/initiatives/models.py:384
 msgid "Activity search: more filters"
 msgstr "Tevékenység keresés: több szűrő"
 
-#: bluebottle/initiatives/models.py:395
+#: bluebottle/initiatives/models.py:394
 msgid "Include full activities in upcoming activities list"
 msgstr "Teljes tevékenységek beillesztése a közelgő tevékenységek listájába"
 
-#: bluebottle/initiatives/models.py:400
+#: bluebottle/initiatives/models.py:399
 msgid "Allow activity managers to indicate the impact they make."
 msgstr "Engedjétek meg a tevékenységvezetőknek, hogy jelezzék a hatást, amelyet elérnek."
 
-#: bluebottle/initiatives/models.py:404
-msgid "Allow admins to add (sub)regions to their offices."
-msgstr "Engedjétek meg az adminisztrátoroknak, hogy (al)területeket adjanak az irodáikhoz."
+#: bluebottle/initiatives/models.py:403
+msgid "Allow admins to add (sub)regions to their work location."
+msgstr "Engedélyezze az adminisztrátoroknak, hogy (alsó)regiókat adjanak meg a munkavégzési helyükhöz."
 
-#: bluebottle/initiatives/models.py:410
-msgid "Allow activity managers to specify office restrictions on activities."
-msgstr "Engedjétek meg a tevékenységvezetőknek, hogy irodai korlátozásokat szabjanak a tevékenységeken."
+#: bluebottle/initiatives/models.py:409
+msgid "Allow activity managers to specify work location restrictions on activities."
+msgstr "Engedélyezze a tevékenységmenedzsereknek, hogy munkavégzési helyi korlátozásokat határozzanak meg a tevékenységekre."
 
-#: bluebottle/initiatives/models.py:414
-msgid "Default office restriction"
-msgstr "Alapértelmezett irodai korlátozás"
+#: bluebottle/initiatives/models.py:413
+msgid "Default work location restriction"
+msgstr "Alapértelmezett munkavégzési hely korlátozás"
 
-#: bluebottle/initiatives/models.py:423
+#: bluebottle/initiatives/models.py:422
 msgid "Enable date activities to have multiple slots."
 msgstr "Engedjétek meg az időpont tevékenységeknek, hogy több időpontjuk legyen."
 
-#: bluebottle/initiatives/models.py:428
+#: bluebottle/initiatives/models.py:427
 msgid "Allow admins to open up initiatives for any user to add activities."
 msgstr "Engedjétek meg az adminisztrátoroknak, hogy megnyissák a kezdeményezéseket, hogy bármely felhasználó hozzátehesse a tevékenységeket."
 
-#: bluebottle/initiatives/models.py:434
+#: bluebottle/initiatives/models.py:433
 msgid "Add a link to activities so managers can download a contributor list."
 msgstr "Hozz létre egy linket a tevékenységekhez, hogy a menedzserek letölthessék a hozzájárulók listáját."
 
-#: bluebottle/initiatives/models.py:438
+#: bluebottle/initiatives/models.py:437
 msgid "Enable matching"
 msgstr "Engedélyezd az egyeztetést"
 
-#: bluebottle/initiatives/models.py:453
+#: bluebottle/initiatives/models.py:452
 msgid "Hour registration only applies to time-based activity types."
 msgstr "Az órás regisztráció csak az időalapú tevékenységtípusokra érvényes."
 
-#: bluebottle/initiatives/models.py:457
+#: bluebottle/initiatives/models.py:456
 msgid "Code / URL"
 msgstr "Kód / URL"
 
-#: bluebottle/initiatives/models.py:461
+#: bluebottle/initiatives/models.py:460
 msgid "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, this code or link will be used for every activity and can’t be changed."
 msgstr "Hagyd üresen, ha az 'egyedi minden tevékenységhez' lett kiválasztva. Ha a 'ugyanaz minden tevékenységhez' lett kiválasztva, ez a kód vagy link minden tevékenységhez használható, és nem módosítható."
 
-#: bluebottle/initiatives/models.py:467
+#: bluebottle/initiatives/models.py:466
 msgid "Enable reviewing"
 msgstr "Felülvizsgálat engedélyezése"
 
-#: bluebottle/initiatives/models.py:470
+#: bluebottle/initiatives/models.py:469
 msgid "Review initiatives and activities. Activities created within an initiative will not need to be reviewed. Crowdfunding activities will always need to be reviewed"
 msgstr "Felülvizsgálja a kezdeményezéseket és tevékenységeket. Az egy kezdeményezés keretein belül létrehozott tevékenységeknek nem szükséges felülvizsgálatra menniük. A crowdfunding tevékenységeknek mindig szükségük van felülvizsgálatra"
 
-#: bluebottle/initiatives/models.py:492 bluebottle/initiatives/models.py:493
+#: bluebottle/initiatives/models.py:491 bluebottle/initiatives/models.py:492
 msgid "Activity & initiative settings"
 msgstr "Tevékenység és kezdeményezés beállítások"
 
-#: bluebottle/initiatives/models.py:499
+#: bluebottle/initiatives/models.py:498
 msgid "Hour registration data is required when 'generic' hour registration is selected."
 msgstr "Az órás regisztráció adatai szükségesek, amikor az 'általános' órás regisztráció lett kiválasztva."
 
-#: bluebottle/initiatives/models.py:517
-msgid "Select office"
-msgstr "Válaszd ki az irodát"
+#: bluebottle/initiatives/models.py:516
+msgid "Select work location"
+msgstr "Válassza ki a munkavégzési helyet"
 
-#: bluebottle/initiatives/models.py:519
+#: bluebottle/initiatives/models.py:518
 msgid "Make a choice"
 msgstr "Válassz lehetőséget"
 
-#: bluebottle/initiatives/models.py:520
+#: bluebottle/initiatives/models.py:519
 #, python-brace-format
 msgid "Select {filter_name}"
 msgstr "Válaszd ki {filter_name}"
 
-#: bluebottle/initiatives/models.py:595
+#: bluebottle/initiatives/models.py:594
 msgid "theme"
 msgstr "téma"
 
-#: bluebottle/initiatives/models.py:596
+#: bluebottle/initiatives/models.py:595
 msgid "themes"
 msgstr "témák"
 
@@ -7491,11 +7492,11 @@ msgstr "A kezdeményezés látható a front-end-en és a befejezett tevékenysé
 
 #: bluebottle/initiatives/states.py:70
 msgid "Archived"
-msgstr ""
+msgstr "Archivált"
 
 #: bluebottle/initiatives/states.py:73
 msgid "The initiative is no longer visible in the frontend and hidden in the admin. Activities are still available and contributions still count in reporting."
-msgstr ""
+msgstr "A kezdeményezés már nem látható az előtérben és elrejtették az adminisztrációban. A tevékenységek továbbra is elérhetők és a hozzájárulások továbbra is számítanak a jelentésekben."
 
 #: bluebottle/initiatives/states.py:117
 msgid "The initiative will be created."
@@ -7535,19 +7536,19 @@ msgstr "A kezdeményezés állapota \"munkát igényel\". A kezdeményező szerk
 
 #: bluebottle/initiatives/states.py:229
 msgid "Archive"
-msgstr ""
+msgstr "Archív"
 
 #: bluebottle/initiatives/states.py:230
 msgid "The initiative will be archived."
-msgstr ""
+msgstr "A kezdeményezés archiválva lesz."
 
 #: bluebottle/initiatives/states.py:239
 msgid "Unarchive"
-msgstr ""
+msgstr "Kibővítés"
 
 #: bluebottle/initiatives/states.py:240
 msgid "The initiative will be approved again."
-msgstr ""
+msgstr "A kezdeményezés újra jóvá lesz hagyva."
 
 #: bluebottle/initiatives/templates/dashboard/recent_initiatives.html:14
 #: bluebottle/looker/templates/looker.html:19
@@ -8197,16 +8198,12 @@ msgid "create locations"
 msgstr "helyek létrehozása"
 
 #: bluebottle/members/models.py:273
-msgid "Create new office locations when a user logs in. Leave unchecked if only priorly specified ones should be used."
-msgstr "Új irodai helyszínek létrehozása, amikor a felhasználó bejelentkezik. Hagyd üresen, ha csak az előre megadottakat akarod használni."
-
-#: bluebottle/members/models.py:279
-msgid "Office location"
-msgstr "Irodahely"
+msgid "Create new work locations when a user logs in. Leave unchecked if only priorly specified ones should be used."
+msgstr "Hozzon létre új munkavégzési helyeket, amikor a felhasználó bejelentkezik. Hagyja üresen, ha csak a korábban megadottakat kell használni."
 
 #: bluebottle/members/models.py:281
-msgid "Require members to enter their office location."
-msgstr "Kérjük, kérje a tagokat, hogy adják meg az irodájuk helyét."
+msgid "Require members to enter their work location."
+msgstr "Kérje meg a tagokat, hogy adják meg a munkavégzési helyüket."
 
 #: bluebottle/members/models.py:286
 msgid "Require members to enter their address."
@@ -8225,12 +8222,12 @@ msgid "Require members to enter their date of birth."
 msgstr "Kérjük, hogy a tagok adják meg születési dátumukat."
 
 #: bluebottle/members/models.py:300
-msgid "Verify SSO data office location"
-msgstr "Ellenőrizze az SSO adatok hivatalának helyét"
+msgid "Verify SSO data work location"
+msgstr "SZO adat munkavégzési helyének ellenőrzése"
 
 #: bluebottle/members/models.py:302
-msgid "Require members to verify their office location once if it is filled via SSO."
-msgstr "Kérjük, hogy a tagok egyszer ellenőrizzék hivataluk helyét, ha az SSO-n keresztül van kitöltve."
+msgid "Require members to verify their work location once if it is filled via SSO."
+msgstr "Kérje meg a tagokat, hogy egyszer ellenőrizzék a munkavégzési helyüket, ha SZO-n keresztül érkezett."
 
 #: bluebottle/members/models.py:306
 msgid "Display member names"
@@ -8298,8 +8295,8 @@ msgid "external SCIM id"
 msgstr "külső SCIM azonosító"
 
 #: bluebottle/members/models.py:404
-msgid "Office groups managed"
-msgstr "Iroda csoportok kezelve"
+msgid "Work location groups managed"
+msgstr "Munkavégzési hely csoportok kezelve"
 
 #: bluebottle/members/models.py:406
 msgid "Select one or more groups to filter on. The user will only see data related to those selected groups. Leave empty to show all data."
@@ -8877,33 +8874,33 @@ msgstr "\n"
 "Szia %(receiver_name)s,\n"
 "Ez egy teszt üzenet!\n"
 
-#: bluebottle/offices/admin.py:85 bluebottle/offices/models.py:36
-msgid "office groups"
-msgstr "irodai csoportok"
-
-#: bluebottle/offices/models.py:14 bluebottle/offices/models.py:29
-msgid "office region"
-msgstr "irodai régió"
+#: bluebottle/offices/admin.py:86
+msgid "work location groups"
+msgstr "munkavégzési hely csoportok"
 
 #: bluebottle/offices/models.py:15
-msgid "office regions"
-msgstr "irodai régiók"
+msgid "Work location regions"
+msgstr "Munkavégzési helyek régiói"
+
+#: bluebottle/offices/models.py:36 bluebottle/slides/models.py:32
+msgid "Work location groups"
+msgstr "Munkavégzési hely csoportok"
 
 #: bluebottle/offices/models.py:48
-msgid "Open to people from the same office"
-msgstr "Nyitva a csoportján belüli azonos irodáktól származó emberek számára"
+msgid "Open to people from the same work location"
+msgstr "Nyitott emberek számára ugyanabból a munkavégzési helyből"
 
 #: bluebottle/offices/models.py:52
-msgid "Open to people from offices within the same group"
-msgstr "Nyitva az azonos csoportba tartozó irodákban dolgozók számára"
+msgid "Open to people from work locations within the same group"
+msgstr "Nyitott emberek számára a munkavégzési helyek ugyanazon csoportjában"
 
 #: bluebottle/offices/models.py:56
-msgid "Open to people from offices within the same region"
-msgstr "Nyitva az azonos régióban lévő irodákból érkező emberek számára"
+msgid "Open to people from work locations within the same region"
+msgstr "Nyitott emberek számára a munkavégzési helyek ugyanazon régiójában"
 
 #: bluebottle/offices/models.py:60
-msgid "Open to people from any office"
-msgstr "Nyitva bármilyen irodából érkező emberek számára"
+msgid "Open to people from any work location"
+msgstr "Nyitott emberek számára bármilyen munkavégzési helyről"
 
 #: bluebottle/organizations/models.py:28
 msgid "Verified"
@@ -8915,11 +8912,11 @@ msgstr "Partner Szervezet Logó"
 
 #: bluebottle/organizations/models.py:66
 msgid "partner organization"
-msgstr ""
+msgstr "partnerszervezet"
 
 #: bluebottle/organizations/models.py:67
 msgid "partner organizations"
-msgstr ""
+msgstr "partnerszervezetek"
 
 #: bluebottle/organizations/models.py:78
 msgid "email"
@@ -9431,7 +9428,8 @@ msgstr "Beállítások"
 msgid "Manage Reporting"
 msgstr "Jelentéskezelés"
 
-#: bluebottle/settings/testing.py:425 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:425
+#: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9444,26 +9442,28 @@ msgstr "Jelentéskezelés"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/impact-booster/settings.py:28
+#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
-#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
-#: tenants/maximising-potential/settings.py:27
-#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
+#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
+#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
+#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
+#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
-#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
+#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
+#: tenants/purpose-in-action/settings.py:27
+#: tenants/rhi-magnesita/settings.py:25
+#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
 #: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Angol"
 
-#: bluebottle/settings/testing.py:426 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
+#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:426
+#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
+#: tenants/aed-actie/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
@@ -9474,12 +9474,13 @@ msgstr "Angol"
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
-#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
+#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
+#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
+#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
-#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
-#: tenants/purpose-in-action/settings.py:26
+#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
+#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
+#: tenants/rabobank-cooperatief/settings.py:25
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -9494,28 +9495,31 @@ msgstr "Angol"
 msgid "Dutch"
 msgstr "Holland"
 
-#: bluebottle/settings/testing.py:427 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
+#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:427
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Francia"
 
-#: bluebottle/settings/testing.py:428
+#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:428
+#: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Spanyol"
 
-#: bluebottle/settings/testing.py:429
+#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:429
+#: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Német"
 
-#: bluebottle/settings/testing.py:430
+#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:430
 msgid "Portuguese"
 msgstr "Portugál"
 
-#: bluebottle/settings/testing.py:431
+#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:431
+#: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Magyar"
 
-#: bluebottle/settings/testing.py:432
+#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:432
 msgid "Bulgarian"
 msgstr "Bolgár"
 
@@ -9523,13 +9527,9 @@ msgstr "Bolgár"
 msgid "Contents"
 msgstr "Tartalom"
 
-#: bluebottle/slides/models.py:32
-msgid "Office groups"
-msgstr "Irodai csoportok"
-
 #: bluebottle/slides/models.py:34
-msgid "Select office groups to make the slide only visible to visitors from those regions or leave empty to make the slide visible for everyone."
-msgstr "Válassza ki az iroda csoportokat, hogy a dia csak azoknak a látogatóknak legyen látható, akik az adott területről jönnek, vagy hagyja üresen, hogy a dia mindenki számára látható legyen."
+msgid "Select work location groups to make the slide only visible to visitors from those regions or leave empty to make the slide visible for everyone."
+msgstr "Válassza ki a munkavégzési hely csoportokat, hogy a diát csak ezekből a régiókból érkező látogatók láthassák, vagy hagyja üresen, ha a dia mindenki számára látható legyen."
 
 #: bluebottle/slides/models.py:42
 msgid "Tab text"
@@ -11021,7 +11021,7 @@ msgid "Registration for this user already exists on this activity."
 msgstr "A regisztráció ennél a felhasználónál már létezik ezen a tevékenységen."
 
 #: bluebottle/time_based/serializers/registrations.py:102
-#: bluebottle/utils/fields.py:377
+#: bluebottle/utils/fields.py:373
 msgid "This field is required"
 msgstr "Ez a mező kötelező"
 
@@ -13632,4 +13632,8 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Másodperc"
 msgstr[1] "Másodpercek"
+
+#: tenants/goodup-nl/settings.py:27
+msgid "Nederlands"
+msgstr "Nederlands"
 

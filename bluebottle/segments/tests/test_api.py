@@ -1,7 +1,6 @@
 # coding=utf-8
-import json
-
 import datetime
+import json
 from builtins import range
 from builtins import str
 
@@ -180,7 +179,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertAttribute('name', self.model.name)
         self.assertAttribute('slug', self.model.slug)
         self.assertAttribute('email-domains', self.model.email_domains)
-        self.assertAttribute('tag-line', self.model.tag_line)
+        self.assertAttribute('tag-line', self.model.slogan)
         self.assertAttribute('story', self.model.story.html)
         self.assertAttribute('background-color', self.model.background_color)
         self.assertAttribute('text-color', self.model.text_color)

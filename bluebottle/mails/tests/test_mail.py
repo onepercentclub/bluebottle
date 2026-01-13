@@ -30,5 +30,4 @@ class TestMailLogo(BluebottleTestCase):
         BlueBottleUserFactory.create()
         email = mail.outbox[0]
         self.assertTrue('<img alt="logo"' in email.alternatives[0][0])
-        print(email.alternatives[0][0])
         self.assertTrue('http://test.localhost:3000/media/site_content/email-logo' in email.alternatives[0][0])

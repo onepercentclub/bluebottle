@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_links.models import LinkedActivity, LinkedDeed, LinkedDateActivity, LinkedDeadlineActivity, \
-    LinkedFunding
+    LinkedFunding, LinkedDateSlot
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer, PointSerializer, CountrySerializer
 from bluebottle.utils.fields import RichTextField
@@ -70,7 +70,7 @@ class LinkedLocationSerializer(GeolocationSerializer):
     country = CountrySerializer(read_only=True)
 
     def to_internal_value(self, data):
-        if not data:
+        if not data or not data['id']:
             return {}
 
         lat = data.pop('latitude', None)
@@ -110,27 +110,17 @@ class LinkedLocationSerializer(GeolocationSerializer):
         fields = GeolocationSerializer.Meta.fields + ('address', 'name', 'longitude', 'latitude')
 
 
-class BaseLinkedActivitySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='title')
-    summary = RichTextField(source='description')
-    url = serializers.URLField(source='link')
-    image = LinkedActivityImageField(required=False, allow_null=True)
+class LinkedLocationMixin(object):
 
-    class Meta:
-        model = LinkedActivity
-        fields = ('name', 'summary', 'url', 'image')
-
-    def update(self, instance, validated_data):
-        location_data = validated_data.pop('location', serializers.empty)
-        instance = super().update(instance, validated_data)
-
+    def _save_location(self, instance, location_data):
+        location_obj = None
         if location_data is serializers.empty:
             return instance
 
         if location_data is None:
             instance.location = None
             instance.save(update_fields=['location'])
-            return instance
+            return None
 
         loc_id = location_data.get('id', None)
 
@@ -151,10 +141,32 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
                 location_obj = Geolocation.objects.create(**location_fields)
             else:
                 location_obj = None
+        return location_obj
 
-        instance.location = location_obj
+    def create(self, validated_data):
+        location_data = validated_data.pop('location', serializers.empty)
+        instance = super().create(validated_data)
+        instance.location = self._save_location(instance, location_data)
         instance.save(update_fields=['location'])
         return instance
+
+    def update(self, instance, validated_data):
+        location_data = validated_data.pop('location', serializers.empty)
+        instance = super().update(instance, validated_data)
+        instance.location = self._save_location(instance, location_data)
+        instance.save(update_fields=['location'])
+        return instance
+
+
+class BaseLinkedActivitySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='title')
+    summary = RichTextField(source='description')
+    url = serializers.URLField(source='link')
+    image = LinkedActivityImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = LinkedActivity
+        fields = ('name', 'summary', 'url', 'image')
 
 
 class LinkedDeedSerializer(BaseLinkedActivitySerializer):
@@ -168,17 +180,57 @@ class LinkedDeedSerializer(BaseLinkedActivitySerializer):
         )
 
 
+class LinkedSlotSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    location = LinkedLocationSerializer(required=False, allow_null=True)
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedDateSlot
+        fields = (
+            'start_time', 'end_time',
+            'location'
+        )
+
+
 class LinkedDateActivitySerializer(BaseLinkedActivitySerializer):
+    sub_event = LinkedSlotSerializer(source='slots', many=True)
+
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDateActivity
+        fields = BaseLinkedActivitySerializer.Meta.fields + ('sub_event',)
+
+    def create(self, validated_data):
+        slots = validated_data.pop('slots', [])
+        result = super().create(validated_data)
+
+        field = self.fields['sub_event']
+        for slot in slots:
+            slot['activity'] = result
+
+        validated_data[field.source] = field.create(slots)
+
+        return result
+
+    def update(self, instance, validated_data):
+        slots = validated_data.pop('slots', [])
+        result = super().update(instance, validated_data)
+
+        field = self.fields['sub_event']
+        for slot in slots:
+            slot['activity'] = result
+
+        validated_data[field.source] = field.update(instance.slots.all(), slots)
+
+        return result
 
 
-class LinkedDeadlineActivitySerializer(BaseLinkedActivitySerializer):
+class LinkedDeadlineActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeadlineActivity
 
 
-class LinkedFundingSerializer(BaseLinkedActivitySerializer):
+class LinkedFundingSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
     location = LinkedLocationSerializer(required=False, allow_null=True)

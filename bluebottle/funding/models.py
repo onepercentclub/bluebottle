@@ -850,10 +850,10 @@ class FundingPlatformSettings(BasePlatformSettings):
     )
 
     fixed_target = models.BooleanField(
-        _('Cap donations'),
+        _('Limit donations'),
         default=False,
         help_text=_(
-            'Stop accepting donations as soon as the target is reached.'
+            'Automatically stop accepting donations once the target is reached.'
         )
     )
 

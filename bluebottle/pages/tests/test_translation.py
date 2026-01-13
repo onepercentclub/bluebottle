@@ -12,7 +12,7 @@ from bluebottle.pages.utils import copy_and_translate_blocks, _translate_block_f
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
-from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.test.utils import BluebottleAdminTestCase, JSONAPITestClient
 
 
 class TestPageTranslationUtils(BluebottleAdminTestCase):
@@ -21,6 +21,7 @@ class TestPageTranslationUtils(BluebottleAdminTestCase):
     def setUp(self):
         super(TestPageTranslationUtils, self).setUp()
         self.init_projects()
+        self.client = JSONAPITestClient()
         # Create languages
         self.en_lang = LanguageFactory.create(code='en', language_name='English', native_name='English')
         self.nl_lang = LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')

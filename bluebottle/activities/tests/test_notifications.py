@@ -219,8 +219,8 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
             "you’ll find many activities waiting for you."
         )
         self.assertActionTitle('Find activities')
-        self.assertActionLink('http://test.localhost:3000/en/initiatives/activities/list')
-        self.assertBodyContains('http://test.localhost:3000/en/member/profile')
+        self.assertActionLink('http://test.localhost:3000/initiatives/activities/list')
+        self.assertBodyContains('http://test.localhost:3000/member/profile')
 
     def test_reminder_q2(self):
         self.message_class = DoGoodHoursReminderQ2Notification

@@ -276,6 +276,7 @@ ACTIVITY_SEARCH_FILTERS = (
     ("date", _("Date")),
     ("distance", _("Distance")),
     ("is_online", _("Online / In-person")),
+    ("is_local", _("Local / From partner")),
     ("skill", _("Skill")),
     ("team_activity", _("Individual / Team")),
     ("theme", _("Theme")),

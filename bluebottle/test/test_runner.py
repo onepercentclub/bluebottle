@@ -2,10 +2,9 @@ import locale
 from builtins import range
 
 from django.conf import settings
-from django.db import IntegrityError, connection, connections
+from django.db import IntegrityError, connections
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
 from djmoney.contrib.exchange.models import ExchangeBackend, Rate
-from tenant_schemas.utils import get_tenant_model
 
 from bluebottle.test.utils import InitProjectDataMixin
 
@@ -19,30 +18,6 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         self.parallel = parallel
         # Set local explicitly so test also run on OSX
         locale.setlocale(locale.LC_ALL, 'en_GB.UTF-8')
-
-        connection.set_schema_to_public()
-
-        tenant2, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test2.localhost",
-            name="Test Too",
-            schema_name="test2",
-            client_name="test2",
-        )
-
-        connection.set_tenant(tenant2)
-        self.init_projects()
-
-        connection.set_schema_to_public()
-
-        tenant, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test.localhost",
-            name="Test",
-            schema_name="test",
-            client_name="test",
-        )
-
-        connection.set_tenant(tenant)
-        self.init_projects()
 
         try:
             backend, _created = ExchangeBackend.objects.get_or_create(

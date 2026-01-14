@@ -35,8 +35,6 @@ jobs:
 
     env:
       DJANGO_SETTINGS_MODULE: bluebottle.settings.testing
-      # If needed by your app:
-      # DATABASE_URL: postgres://testuser:password@postgres:5432/test_bluebottle_test
 
     steps:
       - name: Checkout
@@ -72,6 +70,8 @@ jobs:
           pip install setuptools==58.2.0
           pip install wheel
           pip install -e ".[test]" --trusted-host github.com
+        env:
+          PIP_CACHE_DIR: /tmp/pip-cache
 
       - name: Run tests (coverage)
         run: |

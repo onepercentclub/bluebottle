@@ -1,0 +1,105 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: debian-13
+
+    services:
+      postgres:
+        image: postgis/postgis:14-3.3
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.22
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd="curl -s http://localhost:9200 >/dev/null || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      DJANGO_SETTINGS_MODULE: bluebottle.settings.testing
+      # If your app expects DATABASE_URL, uncomment and adjust:
+      # DATABASE_URL: postgres://testuser:password@localhost:5432/test_bluebottle_test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+          cache: "pip"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxmlsec1 libxmlsec1-dev \
+            libgdal-dev swig \
+            openjdk-8-jdk-headless \
+            postgresql-client-14 \
+            postgis
+
+      - name: Wait for services
+        run: |
+          for i in {1..30}; do
+            (pg_isready -h 127.0.0.1 -p 5432 -U postgres && curl -s http://127.0.0.1:9200 >/dev/null) && break
+            sleep 2
+          done
+
+      - name: Bootstrap database
+        run: |
+          psql -h 127.0.0.1 -U postgres -c "CREATE USER testuser WITH PASSWORD 'password';"
+          psql -h 127.0.0.1 -U postgres -c "ALTER ROLE testuser SUPERUSER;"
+          createdb -h 127.0.0.1 -U testuser test_bluebottle_test
+          psql -h 127.0.0.1 -U testuser -d test_bluebottle_test -f testdata.sql
+        env:
+          PGPASSWORD: postgres
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip==20.2.1
+          pip install setuptools==58.2.0
+          pip install wheel
+          pip install -e ".[test]" --trusted-host github.com
+
+      - name: Run tests (coverage)
+        run: |
+          python -m coverage run --parallel-mode --source=bluebottle manage.py test --keepdb
+
+      - name: After success (post_travis + coverage report)
+        run: |
+          bash post_travis.sh
+          python -m coverage combine
+          python -m coverage report --omit "**/migrations/**"
+
+      - name: Coveralls
+        if: github.event_name == 'push'
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        run: |
+          pip install coveralls
+          coveralls

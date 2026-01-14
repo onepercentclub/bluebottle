@@ -62,6 +62,9 @@ jobs:
           PGPASSWORD=postgres psql -h postgres -p 5432 -U postgres -d postgres -c "ALTER ROLE testuser CREATEDB;"
           PGPASSWORD=password createdb -h postgres -p 5432 -U testuser test_bluebottle_test
           PGPASSWORD=password psql -h postgres -p 5432 -U testuser -d test_bluebottle_test -f testdata.sql
+          PGPASSWORD=postgres psql -h postgres -p 5432 -U postgres -d template1 -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+          PGPASSWORD=postgres psql -h postgres -p 5432 -U postgres -d template1 -c "CREATE EXTENSION IF NOT EXISTS postgis_topology;"
+          PGPASSWORD=postgres psql -h postgres -p 5432 -U postgres -d template1 -c "CREATE EXTENSION IF NOT EXISTS unaccent;"
 
       - name: Install Python dependencies
         run: |

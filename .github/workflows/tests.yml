@@ -48,7 +48,7 @@ jobs:
           apt-get install -y \
             libxmlsec1 libxmlsec1-dev \
             libgdal-dev swig \
-            postgresql-client-14 \
+            postgresql-client \
             curl
 
       - name: Wait for services

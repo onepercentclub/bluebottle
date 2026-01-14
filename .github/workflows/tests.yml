@@ -34,6 +34,8 @@ jobs:
 
     env:
       DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
+      LANG: en_GB.UTF-8
+      LC_ALL: en_GB.UTF-8
 
     steps:
       - name: Checkout
@@ -43,10 +45,14 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
+            locales \
             libxmlsec1 libxmlsec1-dev \
             libgdal-dev swig \
             postgresql-client \
             curl
+          sed -i 's/^# *\(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+          locale-gen
+          update-locale LANG=en_GB.UTF-8
 
       - name: Wait for services
         run: |

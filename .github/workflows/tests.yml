@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: Testing
-    container: python:3.9
+    container: python:3.9-bullseye    # <-- pin a Debian base you expect
     services:
       postgres:
         image: postgis/postgis:14-3.3
@@ -15,8 +15,6 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=10s
@@ -29,8 +27,6 @@ jobs:
           discovery.type: single-node
           xpack.security.enabled: "false"
           ES_JAVA_OPTS: "-Xms512m -Xmx512m"
-        ports:
-          - 9200:9200
         options: >-
           --health-cmd="curl -s http://localhost:9200 >/dev/null || exit 1"
           --health-interval=10s
@@ -39,42 +35,35 @@ jobs:
 
     env:
       DJANGO_SETTINGS_MODULE: bluebottle.settings.testing
-      # If your app expects DATABASE_URL, uncomment and adjust:
-      # DATABASE_URL: postgres://testuser:password@localhost:5432/test_bluebottle_test
+      # If needed by your app:
+      # DATABASE_URL: postgres://testuser:password@postgres:5432/test_bluebottle_test
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-          cache: "pip"
-
       - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y \
             libxmlsec1 libxmlsec1-dev \
             libgdal-dev swig \
-            openjdk-8-jdk-headless \
             postgresql-client-14 \
-            postgis
+            curl
 
       - name: Wait for services
         run: |
-          for i in {1..30}; do
-            (pg_isready -h 127.0.0.1 -p 5432 -U postgres && curl -s http://127.0.0.1:9200 >/dev/null) && break
+          for i in {1..60}; do
+            (pg_isready -h postgres -p 5432 -U postgres && curl -s http://elasticsearch:9200 >/dev/null) && break
             sleep 2
           done
 
       - name: Bootstrap database
         run: |
-          psql -h 127.0.0.1 -U postgres -c "CREATE USER testuser WITH PASSWORD 'password';"
-          psql -h 127.0.0.1 -U postgres -c "ALTER ROLE testuser SUPERUSER;"
-          createdb -h 127.0.0.1 -U testuser test_bluebottle_test
-          psql -h 127.0.0.1 -U testuser -d test_bluebottle_test -f testdata.sql
+          psql -h postgres -U postgres -c "CREATE USER testuser WITH PASSWORD 'password';"
+          psql -h postgres -U postgres -c "ALTER ROLE testuser SUPERUSER;"
+          createdb -h postgres -U testuser test_bluebottle_test
+          psql -h postgres -U testuser -d test_bluebottle_test -f testdata.sql
         env:
           PGPASSWORD: postgres
 
@@ -95,11 +84,3 @@ jobs:
           bash post_travis.sh
           python -m coverage combine
           python -m coverage report --omit "**/migrations/**"
-
-      - name: Coveralls
-        if: github.event_name == 'push'
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-        run: |
-          pip install coveralls
-          coveralls

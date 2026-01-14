@@ -33,7 +33,7 @@ jobs:
           --health-retries=20
 
     env:
-      DJANGO_SETTINGS_MODULE: bluebottle.settings.testing
+      DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
 
     steps:
       - name: Checkout
@@ -71,7 +71,7 @@ jobs:
           path: /tmp/pip-cache
           key: ${{ runner.os }}-py39-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml', '**/setup.cfg', '**/setup.py') }}
           restore-keys: |
-            ${{ runner.os }}-py39-pip-
+            ${{ runner.os }}-py39-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml', '**/setup.cfg', '**/setup.py') }}
 
       - name: Install Python dependencies
         env:

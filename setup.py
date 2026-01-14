@@ -85,6 +85,7 @@ install_requires = [
     'geopy==2.1.0',
     'html2text==2020.1.16',
     'html-sanitizer==2.5.0',
+    'http-message-signatures<2.0',
     'gunicorn==22.0.0',
     'html5lib==1.1',
     'icalendar==4.0.4',

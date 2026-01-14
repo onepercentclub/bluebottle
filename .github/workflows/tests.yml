@@ -77,7 +77,7 @@ jobs:
         env:
           PIP_CACHE_DIR: /tmp/pip-cache
         run: |
-          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install --upgrade "pip==24.0" "setuptools==58.2.0" wheel
           pip install -e ".[test]" --trusted-host github.com
 
       - name: Run tests (coverage)

@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    runs-on: debian-13
+    runs-on: Testing
 
     services:
       postgres:

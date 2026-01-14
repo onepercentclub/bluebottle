@@ -75,7 +75,7 @@ jobs:
 
       - name: Run tests (coverage)
         run: |
-          python -m coverage run --parallel-mode --source=bluebottle manage.py test --keepdb --parallel 8
+          python -m coverage run --parallel-mode --source=bluebottle manage.py test --keepdb --parallel 8 --settings bluebottle.settings.runner
 
       - name: After success (post_travis + coverage report)
         run: |

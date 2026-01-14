@@ -60,10 +60,10 @@ jobs:
 
       - name: Bootstrap database
         run: |
-          psql -h postgres -U postgres -c "CREATE USER testuser WITH PASSWORD 'password';"
-          psql -h postgres -U postgres -c "ALTER ROLE testuser SUPERUSER;"
-          createdb -h postgres -U testuser test_bluebottle_test
-          psql -h postgres -U testuser -d test_bluebottle_test -f testdata.sql
+          psql -h postgres -p 5432 -U postgres -c "CREATE USER testuser WITH PASSWORD 'password';"
+          psql -h postgres -p 5432 -U postgres -c "ALTER ROLE testuser SUPERUSER;"
+          createdb -h postgres -p 5432 -U testuser test_bluebottle_test
+          psql -h postgres -p 5432 -U testuser -d test_bluebottle_test -f testdata.sql
         env:
           PGPASSWORD: postgres
 

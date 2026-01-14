@@ -1262,11 +1262,34 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 
-        matching = DeadlineActivityFactory.create_batch(
-            2,
-            office_location=LocationFactory.create(country=matching_country),
-            status='open',
+        matching = [
+            DeadlineActivityFactory.create(
+                office_location=LocationFactory.create(country=matching_country),
+                status='open',
+            ),
+            DeadlineActivityFactory.create(
+                location=GeolocationFactory.create(country=matching_country),
+                status='open',
+            ),
+            FundingFactory.create(
+                impact_location=GeolocationFactory.create(country=matching_country),
+                status='open'
+
+            ),
+            DeedFactory.create(
+                office_location=LocationFactory.create(country=matching_country),
+                status='open'
+            )
+        ]
+
+        date_activity = DateActivityFactory.create(slots=[], status='open')
+        DateActivitySlotFactory.create(
+            activity=date_activity,
+            is_online=False,
+            location=GeolocationFactory.create(country=matching_country),
         )
+
+        matching.append(date_activity)
 
         other = DeadlineActivityFactory.create_batch(
             3,

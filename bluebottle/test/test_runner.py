@@ -2,6 +2,7 @@ import locale
 from builtins import range
 
 from django.conf import settings
+from django.core.management import call_command
 from django.db import IntegrityError, connection
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
 from djmoney.contrib.exchange.models import ExchangeBackend, Rate
@@ -9,8 +10,29 @@ from tenant_schemas.utils import get_tenant_model
 
 from bluebottle.test.utils import InitProjectDataMixin
 
+_ES_READY = False
 
 class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
+    def setup_test_environment(self, **kwargs):
+        super().setup_test_environment(**kwargs)
+
+        global _ES_READY
+        if _ES_READY:
+            return
+
+        # Make sure each worker has a stable prefix (you already do this)
+        # settings.ELASTICSEARCH_TEST_INDEX_PREFIX = ...
+
+        # 2) Always clean ES for this worker prefix, then create indices
+        # Fast + avoids alias rebuild collisions
+        call_command("search_index", "--delete", "-f", verbosity=0)
+        call_command("search_index", "--create", verbosity=0)
+
+        # Only if you really need a full reindex from DB:
+        # call_command("search_index", "--rebuild", "--use-alias", verbosity=0)
+
+        _ES_READY = True
+
     def setup_databases(self, *args, **kwargs):
         self.keepdb = getattr(settings, 'KEEPDB', self.keepdb)
         parallel = self.parallel

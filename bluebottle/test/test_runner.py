@@ -59,7 +59,7 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         if parallel > 1:
             for index in range(parallel):
                 connection.creation.clone_test_db(
-                    number=index + 1,
+                    suffix=index + 1,
                     verbosity=self.verbosity,
                     keepdb=self.keepdb,
                 )

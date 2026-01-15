@@ -1,4 +1,5 @@
 # flake8: noqa
+import os  # noqa
 
 SECRET_KEY = '1, 2, this is just a test!'
 

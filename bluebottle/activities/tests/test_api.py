@@ -1319,7 +1319,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             matching.append(DeadlineActivityFactory.create(location=location, status='open'))
 
         self.search({})
-        self.assertEqual(len(self.data['meta']['facets']['country']), 12)
+        self.assertEqual(len(self.data['meta']['facets']['country']), 24)
         self.assertFound(matching)
 
     def test_filter_country_slots(self):

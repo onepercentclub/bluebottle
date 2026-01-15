@@ -252,7 +252,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['funding']['allow_anonymous_rewards'], True)
 
     def test_member_platform_settings(self):
-        MemberPlatformSettings.objects.create(
+        MemberPlatformSettings.objects.get_or_create(
             closed=False,
             retention_anonymize=24,
             retention_delete=36
@@ -264,10 +264,10 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['members']['retention_delete'], 36)
 
     def test_member_platform_settings_closed(self):
-        MemberPlatformSettings.objects.create(
-            closed=True,
-            consent_link="example.com"
-        )
+        member_settings = MemberPlatformSettings.load()
+        member_settings.closed = True
+        member_settings.consent_link = 'example.com'
+        member_settings.save()
 
         user = BlueBottleUserFactory.create()
         user_token = "JWT {0}".format(user.get_jwt_token())
@@ -325,10 +325,10 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content'], content)
 
     def test_member_platform_required_settings(self):
-        MemberPlatformSettings.objects.create(
-            require_office=True,
-            verify_office=False
-        )
+        member_settings = MemberPlatformSettings.load()
+        member_settings.require_office = True
+        member_settings.verify_office = False
+        member_settings.save()
 
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['members']['require_office'], True)

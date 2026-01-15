@@ -1506,7 +1506,10 @@ class MemberSignUpAPITestCase(APITestCase):
         )
 
     def test_create_confirmation_enabled(self):
-        MemberPlatformSettings.objects.create(confirm_signup=True)
+        member_settings = MemberPlatformSettings.load()
+        member_settings.confirm_signup = True
+        member_settings.save()
+
         with self.closed_site():
             self.perform_create()
 

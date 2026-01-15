@@ -20711,7 +20711,7 @@ COPY test.cms_quote (id, block_id, name, quote, image, role) FROM stdin;
 --
 
 COPY test.cms_resultpage (id, start_date, end_date, image) FROM stdin;
-1	2016-01-01	2017-12-31	
+1	2016-01-01	2017-12-31
 \.
 
 
@@ -20755,11 +20755,11 @@ COPY test.cms_siteplatformsettings_translation (id, language_code, metadata_titl
 --
 
 COPY test.cms_stat (id, type, value, sequence, block_id, title) FROM stdin;
-6	people_involved	\N	0	1	
-8	activities_succeeded	\N	0	1	
-10	donated_total	\N	0	1	
-12	assignments_succeeded	\N	0	1	
-14	votes_cast	\N	0	1	
+6	people_involved	\N	0	1
+8	activities_succeeded	\N	0	1
+10	donated_total	\N	0	1
+12	assignments_succeeded	\N	0	1
+14	votes_cast	\N	0	1
 7	people_involved	\N	0	2	Supporters
 9	activities_succeeded	\N	0	2	Project gerealiseerd
 11	donated_total	\N	0	2	Gecrowdfund
@@ -20954,8 +20954,8 @@ COPY test.contentitem_cms_quotescontent (contentitem_ptr_id, title, sub_title) F
 --
 
 COPY test.contentitem_cms_shareresultscontent (contentitem_ptr_id, title, sub_title, share_text, share_title) FROM stdin;
-7	Inspire your network	Share our results	With {people} people, we realised {tasks} tasks	
-8	Inspireer je netwerk	Deel de resultaten	Met {people} people, {tasks} taken voltooid	
+7	Inspire your network	Share our results	With {people} people, we realised {tasks} tasks
+8	Inspireer je netwerk	Deel de resultaten	Met {people} people, {tasks} taken voltooid
 \.
 
 
@@ -23541,7 +23541,7 @@ COPY test.impact_impactgoal (id, target, realized, type_id, activity_id, realize
 COPY test.impact_impacttype (id, slug, active, icon) FROM stdin;
 1	co2	f	co2
 2	people	f	people
-3	food	f	
+3	food	f
 4	water	f	water
 5	plastic	f	plastic
 6	trees	f	trees
@@ -23794,7 +23794,7 @@ COPY test.members_member_user_permissions (id, member_id, permission_id) FROM st
 --
 
 COPY test.members_memberplatformsettings (id, update, consent_link, closed, confirm_signup, email_domain, login_methods, background, create_segments, session_only, enable_birthdate, enable_gender, enable_address, require_office, verify_office, display_member_names, require_address, require_birthdate, require_phone_number, required_questions_location, create_initiatives, do_good_hours, reminder_q1, reminder_q2, reminder_q3, reminder_q4, fiscal_month_offset, retention_anonymize, retention_delete, create_locations, disable_cookie_consent, gtm_code) FROM stdin;
-1	2025-01-03 16:19:41.450358+01	https://goodup.com/cookie-policy	f	f	\N	password		f	f	f	f	f	f	f	full_name	f	f	f	contribution	t	\N	f	f	f	f	0	\N	\N	f	f	
+1	2025-01-03 16:19:41.450358+01	https://goodup.com/cookie-policy	f	f	\N	password		f	f	f	f	f	f	f	full_name	f	f	f	contribution	t	\N	f	f	f	f	0	\N	\N	f	f
 \.
 
 
@@ -24551,8 +24551,8 @@ COPY test.updates_updateimage (id, image_id, update_id) FROM stdin;
 --
 
 COPY test.utils_language (id, code, language_name, native_name, "default", sub_code) FROM stdin;
-431	en	English	English	t	
-432	nl	Dutch	Nederlands	f	
+431	en	English	English	t
+432	nl	Dutch	Nederlands	f
 \.
 
 
@@ -27526,7 +27526,7 @@ COPY test2.cms_quote (id, block_id, name, quote, image, role) FROM stdin;
 --
 
 COPY test2.cms_resultpage (id, start_date, end_date, image) FROM stdin;
-1	2016-01-01	2017-12-31	
+1	2016-01-01	2017-12-31
 \.
 
 
@@ -27570,11 +27570,11 @@ COPY test2.cms_siteplatformsettings_translation (id, language_code, metadata_tit
 --
 
 COPY test2.cms_stat (id, type, value, sequence, block_id, title) FROM stdin;
-6	people_involved	\N	0	1	
-8	activities_succeeded	\N	0	1	
-10	donated_total	\N	0	1	
-12	assignments_succeeded	\N	0	1	
-14	votes_cast	\N	0	1	
+6	people_involved	\N	0	1
+8	activities_succeeded	\N	0	1
+10	donated_total	\N	0	1
+12	assignments_succeeded	\N	0	1
+14	votes_cast	\N	0	1
 7	people_involved	\N	0	2	Supporters
 9	activities_succeeded	\N	0	2	Project gerealiseerd
 11	donated_total	\N	0	2	Gecrowdfund
@@ -27769,8 +27769,8 @@ COPY test2.contentitem_cms_quotescontent (contentitem_ptr_id, title, sub_title) 
 --
 
 COPY test2.contentitem_cms_shareresultscontent (contentitem_ptr_id, title, sub_title, share_text, share_title) FROM stdin;
-7	Inspire your network	Share our results	With {people} people, we realised {tasks} tasks	
-8	Inspireer je netwerk	Deel de resultaten	Met {people} people, {tasks} taken voltooid	
+7	Inspire your network	Share our results	With {people} people, we realised {tasks} tasks
+8	Inspireer je netwerk	Deel de resultaten	Met {people} people, {tasks} taken voltooid
 \.
 
 
@@ -30356,7 +30356,7 @@ COPY test2.impact_impactgoal (id, target, realized, type_id, activity_id, realiz
 COPY test2.impact_impacttype (id, slug, active, icon) FROM stdin;
 1	co2	f	co2
 2	people	f	people
-3	food	f	
+3	food	f
 4	water	f	water
 5	plastic	f	plastic
 6	trees	f	trees
@@ -30609,7 +30609,7 @@ COPY test2.members_member_user_permissions (id, member_id, permission_id) FROM s
 --
 
 COPY test2.members_memberplatformsettings (id, update, consent_link, closed, confirm_signup, email_domain, login_methods, background, create_segments, session_only, enable_birthdate, enable_gender, enable_address, require_office, verify_office, display_member_names, require_address, require_birthdate, require_phone_number, required_questions_location, create_initiatives, do_good_hours, reminder_q1, reminder_q2, reminder_q3, reminder_q4, fiscal_month_offset, retention_anonymize, retention_delete, create_locations, disable_cookie_consent, gtm_code) FROM stdin;
-1	2025-01-03 16:18:34.17749+01	https://goodup.com/cookie-policy	f	f	\N	password		f	f	f	f	f	f	f	full_name	f	f	f	contribution	t	\N	f	f	f	f	0	\N	\N	f	f	
+1	2025-01-03 16:18:34.17749+01	https://goodup.com/cookie-policy	f	f	\N	password		f	f	f	f	f	f	f	full_name	f	f	f	contribution	t	\N	f	f	f	f	0	\N	\N	f	f
 \.
 
 
@@ -31366,8 +31366,8 @@ COPY test2.updates_updateimage (id, image_id, update_id) FROM stdin;
 --
 
 COPY test2.utils_language (id, code, language_name, native_name, "default", sub_code) FROM stdin;
-252	en	English	English	t	
-253	nl	Dutch	Nederlands	f	
+252	en	English	English	t
+253	nl	Dutch	Nederlands	f
 \.
 
 
@@ -49396,4 +49396,3 @@ ALTER TABLE ONLY test2.utils_translationplatformsettings_translation
 --
 -- PostgreSQL database dump complete
 --
-

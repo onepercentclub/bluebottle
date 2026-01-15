@@ -1,4 +1,6 @@
 # flake8: noqa
+import os  # noqa
+import uuid
 
 SECRET_KEY = '1, 2, this is just a test!'
 
@@ -172,6 +174,13 @@ except ImportError:
 
 ELASTICSEARCH_DSL_AUTOSYNC = False
 ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'django_elasticsearch_dsl.signals.RealTimeSignalProcessor'
+
+worker = os.environ.get("DJANGO_TEST_PROCESS_NUMBER", "0")
+es_prefix = f"test_p{worker}"
+
+RUN_ID = os.environ.get("TEST_RUN_ID") or uuid.uuid4().hex[:8]
+DJANGO_TEST_PROCESS_NUMBER = os.environ.get("DJANGO_TEST_PROCESS_NUMBER", "0")
+ELASTICSEARCH_TEST_INDEX_PREFIX = f"test_p{DJANGO_TEST_PROCESS_NUMBER}_{RUN_ID}"
 
 STRIPE = {
     'secret_key': 'test-key',

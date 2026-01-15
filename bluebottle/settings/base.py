@@ -749,6 +749,7 @@ ELASTICSEARCH_DSL = {
     },
 }
 ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'bluebottle.clients.signals.TenantCelerySignalProcessor'
+ELASTICSEARCH_TEST_INDEX_PREFIX = None
 
 LOGOUT_REDIRECT_URL = 'admin:index'
 LOGIN_REDIRECT_URL = 'admin:index'

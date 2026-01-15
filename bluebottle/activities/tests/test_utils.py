@@ -1,11 +1,11 @@
+from django.test import TestCase
+
+from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.deeds.models import DeedParticipant
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from django.test import TestCase
-
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.activities.utils import bulk_add_participants
 
 
 class BulkAddParticipantTestCase(TestCase):
@@ -56,7 +56,9 @@ class BulkAddParticipantTestCase(TestCase):
         self.assertParticipant(self.emails[0])
 
     def test_bulk_closed(self):
-        MemberPlatformSettings.objects.create(closed=True)
+        member_settings = MemberPlatformSettings.load()
+        member_settings.closed = True
+        member_settings.save()
         result = bulk_add_participants(self.activity, self.emails, False)
 
         self.assertEqual(result, {
@@ -67,8 +69,12 @@ class BulkAddParticipantTestCase(TestCase):
             self.assertParticipant(email)
 
     def test_bulk_add_scim(self):
-        MemberPlatformSettings.objects.create(closed=True)
-        SCIMPlatformSettings.objects.create(enabled=True)
+        member_settings = MemberPlatformSettings.load()
+        member_settings.closed = True
+        member_settings.save()
+        scim_settings = SCIMPlatformSettings.load()
+        scim_settings.enabled = True
+        scim_settings.save()
 
         result = bulk_add_participants(self.activity, self.emails, False)
 

@@ -1,7 +1,6 @@
 from builtins import object
 from itertools import groupby
 
-from bluebottle.scim.models import SCIMPlatformSettings
 from django.conf import settings
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
@@ -33,6 +32,7 @@ from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
+from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import (
     TimeContribution, DeadlineActivity, DeadlineParticipant,
@@ -784,8 +784,8 @@ def bulk_add_participants(activity, emails, send_messages):
     if isinstance(activity, RegisteredDateActivity):
         Participant = RegisteredDateParticipant
 
-    settings = MemberPlatformSettings.objects.get()
-    scim_settings = SCIMPlatformSettings.objects.get()
+    settings = MemberPlatformSettings.load()
+    scim_settings = SCIMPlatformSettings.load()
 
     if not Participant:
         raise AttributeError(f'Could not find participant type for {activity}')

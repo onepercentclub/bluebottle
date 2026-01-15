@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import connection
 
 from django_elasticsearch_dsl import Index, fields
@@ -18,10 +19,18 @@ class TextField(fields.TextField):
 
 
 class MultiTenantIndex(Index):
+
     @property
     def _name(self):
         if connection.tenant.schema_name != 'public':
-            return '{}-{}'.format(connection.tenant.schema_name, self.__name)
+            test_prefix = settings.ELASTICSEARCH_TEST_INDEX_PREFIX
+            name = '{}-{}'.format(connection.tenant.schema_name, self.__name)
+            if test_prefix:
+                name = '{}-{}'.format(test_prefix, name)
+
+            name.replace('_ded_test', '_dt')
+            return name
+
         return self.__name
 
     @_name.setter
@@ -29,5 +38,8 @@ class MultiTenantIndex(Index):
 
         if value and value.startswith(connection.tenant.schema_name):
             value = value.replace(connection.tenant.schema_name + '-', '')
+            test_prefix = settings.ELASTICSEARCH_TEST_INDEX_PREFIX
+            if test_prefix:
+                value = value.replace(test_prefix + '-', '')
 
         self.__name = value

@@ -11,7 +11,7 @@ from bluebottle.activities.tasks import (
     recommend, get_matching_activities, data_retention_contribution_task
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory
@@ -40,7 +40,10 @@ from bluebottle.time_based.tests.factories import (
 class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super().setUp()
-        self.settings = InitiativePlatformSettingsFactory.create(enable_matching_emails=True)
+
+        self.settings = InitiativePlatformSettings.load()
+        self.settings.enable_matching_emails = True
+        self.settings.save()
 
         self.amsterdam = Point(x=4.8981734, y=52.3790565)
         self.close_to_amsterdam = Point(x=4.9848386, y=52.3929661)

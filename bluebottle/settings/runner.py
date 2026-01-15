@@ -14,7 +14,7 @@ DATABASES = {
 
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'localhost:9200'
+        'hosts': 'os.environ.get("ESPORT", "localhost"),:os.environ.get("ESPORT", "9200"),'
     },
 
 }

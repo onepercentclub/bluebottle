@@ -45,15 +45,7 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
                 print(f"Using db {base_db_name}")
                 for index in range(1, parallel + 1):
                     clone_db_name = f"{base_db_name}_{index}"
-                    cursor.execute(
-                        "SELECT 1 FROM pg_database WHERE datname = %s",
-                        [clone_db_name],
-                    )
-                    exists = cursor.fetchone() is not None
-
-                    if exists:
-                        cursor.execute(f'DROP DATABASE "{clone_db_name}"')
-                        print(f"Dropping database {clone_db_name}")
+                    cursor.execute(f'DROP DATABASE IF EXISTS "{clone_db_name}"')
                     cursor.execute(
                         f'CREATE DATABASE "{clone_db_name}" TEMPLATE "{base_db_name}"'
                     )

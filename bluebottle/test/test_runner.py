@@ -2,7 +2,7 @@ import locale
 from builtins import range
 
 from django.conf import settings
-from django.db import IntegrityError, connections, connection
+from django.db import IntegrityError, connection
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
 from djmoney.contrib.exchange.models import ExchangeBackend, Rate
 from tenant_schemas.utils import get_tenant_model
@@ -57,22 +57,12 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
             pass
 
         if parallel > 1:
-            base_conn = connections['default']
-            base_db_name = base_conn.settings_dict['NAME']
-
-            # IMPORTANT: no open connections to the template DB
-            base_conn.close()
-
-            with base_conn.cursor() as cursor:
-                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DB MAGIC %%%%%%%%%%%%%%%%%%%%%%%%%%%")
-                print(f"Using db {base_db_name}")
-                for index in range(1, parallel + 1):
-                    clone_db_name = f"{base_db_name}_{index}"
-                    cursor.execute(f'DROP DATABASE IF EXISTS "{clone_db_name}"')
-                    cursor.execute(
-                        f'CREATE DATABASE "{clone_db_name}" TEMPLATE "{base_db_name}"'
-                    )
-                    print(f"Cloning database to {clone_db_name}")
+            for index in range(parallel):
+                connection.creation.clone_test_db(
+                    number=index + 1,
+                    verbosity=self.verbosity,
+                    keepdb=self.keepdb,
+                )
 
         return result
 

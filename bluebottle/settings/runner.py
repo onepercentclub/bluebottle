@@ -1,5 +1,3 @@
-import os
-
 from bluebottle.settings.testing import *  # noqa
 
 DATABASES = {
@@ -10,8 +8,6 @@ DATABASES = {
         "NAME": "bluebottle_test",
         "USER": "testuser",
         "PASSWORD": "password",
-        "DISABLE_SERVER_SIDE_CURSORS": True,
-        "MIGRATE": False,
     },
 
 }

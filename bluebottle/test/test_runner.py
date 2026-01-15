@@ -41,6 +41,8 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
             base_conn.close()
 
             with base_conn.cursor() as cursor:
+                print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DB MAGIC %%%%%%%%%%%%%%%%%%%%%%%%%%%")
+                print(f"Using db {base_db_name}")
                 for index in range(1, parallel + 1):
                     clone_db_name = f"{base_db_name}_{index}"
                     cursor.execute(
@@ -51,9 +53,11 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
 
                     if exists:
                         cursor.execute(f'DROP DATABASE "{clone_db_name}"')
+                        print(f"Dropping database {clone_db_name}")
                     cursor.execute(
                         f'CREATE DATABASE "{clone_db_name}" TEMPLATE "{base_db_name}"'
                     )
+                    print(f"Cloning database to {clone_db_name}")
 
         return result
 

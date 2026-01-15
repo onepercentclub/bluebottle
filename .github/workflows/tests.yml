@@ -120,6 +120,11 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PATH"
+          eval "$(pyenv init -)"
+          pyenv shell 3.9.19
+          python --version
           mkdir -p "$(dirname "$VENV_DIR")" "$PIP_CACHE_DIR"
           if [ ! -x "$VENV_DIR/bin/python" ]; then
             python -m venv "$VENV_DIR"

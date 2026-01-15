@@ -125,16 +125,31 @@ jobs:
           eval "$(pyenv init -)"
           pyenv shell 3.9.19
           python --version
+          
           mkdir -p "$(dirname "$VENV_DIR")" "$PIP_CACHE_DIR"
+          
+          # If venv exists but isn't Python 3.9, delete it
+          if [ -x "$VENV_DIR/bin/python" ]; then
+            VPY="$("$VENV_DIR/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+            if [ "$VPY" != "3.9" ]; then
+              echo "Existing venv is Python $VPY; recreating for 3.9"
+              rm -rf "$VENV_DIR"
+            fi
+          fi
+          
+          # Create venv with Python 3.9
           if [ ! -x "$VENV_DIR/bin/python" ]; then
             python -m venv "$VENV_DIR"
           fi
+          
           source "$VENV_DIR/bin/activate"
-          python -m pip install --upgrade pip wheel
-          python -m pip install --upgrade "setuptools==58.2.0"
-          python -m pip --version          
-          python -m pip install --no-build-isolation -e ".[test]" --trusted-host github.com
-      
+          python --version
+          
+          # Use sane tooling for Python 3.9
+          python -m pip install --upgrade "pip==24.0" wheel setuptools
+          python -m pip --version
+          
+          python -m pip install --no-build-isolation --no-use-pep517 -e ".[test]" --trusted-host github.com
 
       - name: Install Python dependencies only when setup.py changes
         shell: bash

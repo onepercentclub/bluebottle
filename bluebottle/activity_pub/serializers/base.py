@@ -1,14 +1,13 @@
 from urllib.parse import urlparse
 
 from django.urls import resolve
-
 from rest_framework import serializers, exceptions
 
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, ActivityPubIdField, TypeField
 from bluebottle.activity_pub.utils import is_local
-from bluebottle.activity_pub.adapters import adapter
 
 
 class ActivityPubListSerializer(serializers.ListSerializer):
@@ -21,10 +20,14 @@ class ActivityPubListSerializer(serializers.ListSerializer):
 
         return result
 
-    def update(self, instances, validated_data):
+    def create(self, validated_data):
         result = []
-        for index, instance in enumerate(instances):
-            result.append(self.child.update(instance, validated_data[index]))
+        for item in validated_data:
+            instance = ActivityPubModel.objects.from_iri(item.get('id'))
+            if instance:
+                result.append(self.child.update(instance, item))
+            else:
+                result.append(self.child.create(item))
 
         return result
 
@@ -86,17 +89,14 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
 
             if tuple(data.keys()) == ('id', ):
                 iri = data['id']
-                if not is_local(iri):
-                    try:
-                        instance = self.Meta.model.objects.get(iri=iri)
-                        return type(self)(instance=instance).data
-                    except self.Meta.model.DoesNotExist:
-                        data = adapter.fetch(iri)
-                        return super().to_internal_value(data)
-                else:
-                    resolved = resolve(urlparse(iri).path)
-                    instance = self.Meta.model.objects.get(pk=resolved.kwargs['pk'])
+                instance = self.Meta.model.objects.from_iri(iri)
+
+                if instance:
                     return type(self)(instance=instance).data
+                elif not is_local(iri):
+                    data = adapter.fetch(iri)
+                    return super().to_internal_value(data)
+
             else:
                 raise
 
@@ -104,15 +104,7 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         iri = self.validated_data.get('id', None)
 
         if iri:
-            model_class = self.Meta.model
-            try:
-                if not is_local(iri):
-                    self.instance = model_class.objects.get(iri=iri)
-                else:
-                    resolved = resolve(urlparse(iri).path)
-                    self.instance = self.Meta.model.objects.get(pk=resolved.kwargs['pk'])
-            except self.Meta.model.DoesNotExist:
-                pass
+            self.instance = self.Meta.model.objects.from_iri(iri)
 
         return super().save(**kwargs)
 
@@ -120,6 +112,9 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         iri = validated_data.pop('id', None)
         if iri and not is_local(iri):
             validated_data['iri'] = iri
+            instance = self.Meta.model.objects.filter(iri=iri).first()
+            if instance:
+                return self.update(instance, validated_data)
 
         for name, field in self.fields.items():
             if (
@@ -135,28 +130,20 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         return self.Meta.model.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        id = validated_data.pop('id', None)
+        validated_data.pop('id', None)
 
-        if (
-            is_local(id) and
-            self.context['request'].auth and
-            is_local(self.context['request'].auth.iri)
-        ):
+        for name, field in self.fields.items():
+            if isinstance(
+                field,
+                (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
+            ):
+                if validated_data.get(name, None):
+                    field.initial_data = validated_data[name]
+                    field.is_valid()
+                    validated_data[field.source] = field.save()
 
-            for name, field in self.fields.items():
-                if isinstance(
-                    field,
-                    (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
-                ):
-                    if validated_data.get(name, None):
-                        field.initial_data = validated_data[name]
-                        field.is_valid()
-                        validated_data[field.source] = field.save()
-
-            validated_data.pop('type', None)
-            return super().update(instance, validated_data)
-        else:
-            return instance
+        validated_data.pop('type', None)
+        return super().update(instance, validated_data)
 
     def get_value(self, data):
         result = super().get_value(data)
@@ -231,17 +218,12 @@ class PolymorphicActivityPubSerializer(
 
             if tuple(data.keys()) == ('id', ):
                 iri = data['id']
-                if not is_local(iri):
-                    try:
-                        instance = self.Meta.model.objects.get(iri=iri)
-                        return type(self)(instance=instance).data
-                    except self.Meta.model.DoesNotExist:
-                        data = adapter.fetch(iri)
-                        return self.get_serializer_from_data(data).to_internal_value(data)
-                else:
-                    resolved = resolve(urlparse(iri).path)
-                    instance = self.Meta.model.objects.get(pk=resolved.kwargs['pk'])
+                instance = self.Meta.model.objects.from_iri(iri)
+                if instance:
                     return type(self)(instance=instance).data
+                elif not is_local(iri):
+                    data = adapter.fetch(iri)
+                    return self.get_serializer_from_data(data).to_internal_value(data)
             else:
                 raise
 
@@ -335,7 +317,7 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
         return representation
 
     def create(self, validated_data):
-        iri = validated_data.pop('id')
+        iri = validated_data.pop('id', None)
         validated_data['origin'] = ActivityPubModel.objects.from_iri(iri)
 
         for field in self.fields.values():

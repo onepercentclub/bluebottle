@@ -17,9 +17,13 @@ from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine,
     EffortContributionStateMachine, ContributorStateMachine
 )
+from bluebottle.activity_pub.effects import (
+    AnnounceAdoptionEffect, PublishEffect, UpdateEventEffect,
+    CancelEffect, DeletedEffect
+)
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
-    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
+    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register, ModelChangedTrigger
 )
 from bluebottle.funding.models import Funding
 from bluebottle.impact.effects import UpdateImpactGoalEffect
@@ -70,6 +74,9 @@ def should_mail_tos(effect):
 
 class ActivityTriggers(TriggerManager):
     triggers = [
+        ModelDeletedTrigger(
+            effects=[DeletedEffect]
+        ),
         TransitionTrigger(
             ActivityStateMachine.initiate,
             effects=[
@@ -112,6 +119,7 @@ class ActivityTriggers(TriggerManager):
         TransitionTrigger(
             ActivityStateMachine.approve,
             effects=[
+                PublishEffect,
                 NotificationEffect(
                     ActivityApprovedNotification,
                     conditions=[is_not_funding]
@@ -140,7 +148,8 @@ class ActivityTriggers(TriggerManager):
                     'organizer',
                     OrganizerStateMachine.fail,
                     conditions=[has_organizer]
-                )
+                ),
+                CancelEffect,
             ]
         ),
 
@@ -160,6 +169,8 @@ class ActivityTriggers(TriggerManager):
             ActivityStateMachine.publish,
             effects=[
                 SetPublishedDateEffect,
+                AnnounceAdoptionEffect,
+                PublishEffect,
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.succeed,
@@ -177,7 +188,8 @@ class ActivityTriggers(TriggerManager):
                     'organizer',
                     OrganizerStateMachine.fail,
                     conditions=[has_organizer]
-                )
+                ),
+                CancelEffect
             ]
         ),
         TransitionTrigger(
@@ -200,8 +212,8 @@ class ActivityTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     'slots',
                     DateActivitySlotStateMachine.auto_cancel
-                )
-
+                ),
+                CancelEffect
             ]
         ),
 
@@ -211,7 +223,9 @@ class ActivityTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.fail,
-                    conditions=[has_organizer]),
+                    conditions=[has_organizer]
+                ),
+                CancelEffect
             ]
         ),
 
@@ -233,9 +247,16 @@ class ActivityTriggers(TriggerManager):
                     'organizer',
                     OrganizerStateMachine.fail,
                     conditions=[has_organizer]
-                )
+                ),
+                CancelEffect
             ]
         ),
+        ModelChangedTrigger(
+            ['title', 'description', 'status'],
+            effects=[
+                UpdateEventEffect,
+            ]
+        )
     ]
 
 

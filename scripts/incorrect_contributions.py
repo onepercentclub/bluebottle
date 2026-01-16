@@ -80,6 +80,77 @@ def run(*args):
                 succeeded_team_schedule_contributions
             )
 
+            new_date_contributions = TimeContribution.objects.filter(
+                status='new',
+                contributor__dateparticipant__isnull=False,
+                contributor__user__isnull=False,
+                contributor__dateparticipant__registration__isnull=False
+            ).exclude(
+                Q(contributor__dateparticipant__registration__status__in=('accepted', 'new')) &
+                Q(contributor__status__in=('new', 'succeeded', 'accepted')) &
+                Q(contributor__activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
+                ))
+            )
+            new_periodic_contributions = TimeContribution.objects.filter(
+                status='new',
+                contributor__periodicparticipant__isnull=False
+            ).exclude(
+                Q(contributor__periodicparticipant__registration__status__in=('accepted', 'new')) &
+                Q(contributor__status__in=('new', 'accepted', 'succeeded')) &
+                Q(contributor__activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
+                ))
+            )
+            new_deadline_contributions = TimeContribution.objects.filter(
+                status='new',
+                contributor__deadlineparticipant__isnull=False,
+                contributor__user__isnull=False
+            ).exclude(
+                Q(contributor__deadlineparticipant__registration__status__in=('accepted', 'new')) &
+                Q(contributor__status__in=('new', 'succeeded', 'accepted')) &
+                Q(contributor__activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
+                ))
+            )
+
+            new_schedule_contributions = TimeContribution.objects.filter(
+                status='new',
+                contributor__scheduleparticipant__isnull=False,
+                contributor__activity__team_activity='individuals'
+            ).exclude(
+                Q(contributor__scheduleparticipant__registration__status__in=('accepted', 'new')) &
+                Q(contributor__status__in=('new', 'succeeded', 'accepted', 'scheduled', 'unscheduled')) &
+                Q(contributor__activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
+                ))
+            )
+            new_team_schedule_contributions = TimeContribution.objects.filter(
+                status='new',
+                contributor__teamscheduleparticipant__isnull=False,
+                contributor__activity__team_activity='teams'
+            ).exclude(
+                Q(contributor__teamscheduleparticipant__team_member__status__in=(
+                    'active',
+                )) &
+                Q(contributor__teamscheduleparticipant__team_member__team__status__in=(
+                    'new', 'scheduled', 'accepted'
+                )) &
+                Q(contributor__status__in=('new', 'succeeded', 'accepted', 'scheduled')) &
+                Q(contributor__activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
+                ))
+            )
+            new_should_be_failed = (
+                new_schedule_contributions |
+                new_team_schedule_contributions |
+                new_schedule_contributions |
+                new_deadline_contributions |
+                new_date_contributions |
+                new_deadline_contributions |
+                new_periodic_contributions
+            )
+
             failed_date_contributions = TimeContribution.objects.filter(
                 status__in=['failed', 'new'],
                 contributor__dateparticipant__isnull=False,
@@ -128,11 +199,11 @@ def run(*args):
             )
 
             failed_contributions = (
-                failed_date_contributions |
-                failed_deadline_contributions |
-                failed_periodic_contributions |
-                failed_schedule_contributions |
-                failed_schedule_team_contributions
+                failed_date_contributions  # |
+                # failed_deadline_contributions |
+                # failed_periodic_contributions |
+                # failed_schedule_contributions |
+                # failed_schedule_team_contributions
             )
 
             failed_date_contributions_new = TimeContribution.objects.filter(
@@ -202,7 +273,8 @@ def run(*args):
                 succeeded_contributions.count() or
                 failed_contributions_new.count() or
                 registrations_without_participant.count() or
-                date_participants_without_registration.count()
+                date_participants_without_registration.count() or
+                new_should_be_failed.count()
             )
             if errors:
                 total_errors = True
@@ -220,6 +292,10 @@ def run(*args):
                     print(f'succeeded but should be failed: {succeeded_contributions.count()}')
                     if verbose:
                         print(f'IDs: {" ".join([str(c.id) for c in succeeded_contributions])}')
+                if new_should_be_failed.count():
+                    print(f'new but should be failed: {new_should_be_failed.count()}')
+                    if verbose:
+                        print(f'IDs: {" ".join([str(c.id) for c in new_should_be_failed])}')
                 if registrations_without_participant.count():
                     print(f'registrations without participant (single slot): '
                           f'{registrations_without_participant.count()}')
@@ -270,6 +346,7 @@ def run(*args):
                         activity.save()
 
                     succeeded_contributions.update(status='failed')
+                    new_should_be_failed.update(status='failed')
                     failed_contributions.update(status='succeeded')
                     failed_contributions_new.update(status='new')
                     for registration in registrations_without_participant.all():

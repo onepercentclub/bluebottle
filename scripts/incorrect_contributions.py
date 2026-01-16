@@ -81,7 +81,7 @@ def run(*args):
             )
 
             failed_date_contributions = TimeContribution.objects.filter(
-                status='failed',
+                status__in=['failed', 'new'],
                 contributor__dateparticipant__isnull=False,
                 contributor__user__isnull=False,
                 contributor__status__in=('accepted', 'registered', 'succeeded'),
@@ -90,7 +90,7 @@ def run(*args):
             )
 
             failed_deadline_contributions = TimeContribution.objects.filter(
-                status='failed',
+                status__in=['failed', 'new'],
                 contributor__deadlineparticipant__isnull=False,
                 contributor__user__isnull=False,
                 contributor__status__in=('accepted',),
@@ -98,7 +98,7 @@ def run(*args):
                 contributor__activity__status__in=('open', 'succeeded', 'full',)
             )
             failed_periodic_contributions = TimeContribution.objects.filter(
-                status='failed',
+                status__in=['failed', 'new'],
                 contributor__periodicparticipant__isnull=False,
                 contributor__user__isnull=False,
                 contributor__status__in=('accepted', 'stopped'),
@@ -107,7 +107,7 @@ def run(*args):
             )
 
             failed_schedule_contributions = TimeContribution.objects.filter(
-                status='failed',
+                status__in=['failed', 'new'],
                 contributor__activity__team_activity='individuals',
                 contributor__scheduleparticipant__isnull=False,
                 contributor__user__isnull=False,
@@ -116,7 +116,7 @@ def run(*args):
                 contributor__activity__status__in=('open', 'succeeded', 'full',)
             )
             failed_schedule_team_contributions = TimeContribution.objects.filter(
-                status='failed',
+                status__in=['failed', 'new'],
                 contributor__activity__team_activity='teams',
                 contributor__scheduleparticipant__isnull=False,
                 contributor__user__isnull=False,
@@ -209,7 +209,7 @@ def run(*args):
 
                 print("### Tenant {}:".format(client.name))
                 if failed_contributions.count():
-                    print(f'failed but should be succeeded: {failed_contributions.count()}')
+                    print(f'failed or new but should be succeeded: {failed_contributions.count()}')
                     if verbose:
                         print(f'IDs: {" ".join([str(c.id) for c in failed_contributions])}')
                 if failed_contributions_new.count():

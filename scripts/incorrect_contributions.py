@@ -412,7 +412,9 @@ def run(*args):
                         print(f'IDs: {" ".join([str(p.id) for p in pending_date_participant])}')
                 if pending_periodic_participant.count():
                     print(
-                        f'pending periodic participant with accepted registrations: : {pending_periodic_participant.count()}')
+                        f'pending periodic participant with accepted registrations:'
+                        f' {pending_periodic_participant.count()}'
+                    )
                     if verbose:
                         print(f'IDs: {" ".join([str(p.id) for p in pending_periodic_participant])}')
 

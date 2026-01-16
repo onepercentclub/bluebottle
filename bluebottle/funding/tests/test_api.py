@@ -905,6 +905,7 @@ class FundingTestCase(BluebottleTestCase):
 class DonationTestCase(BluebottleTestCase):
     def setUp(self):
         super(DonationTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -1859,6 +1860,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
     def setUp(self):
         super(FundingPlatformSettingsAPITestCase, self).setUp()
         self.user = BlueBottleUserFactory.create()
+        StripePaymentProviderFactory.create()
 
     def test_anonymous_donations_setting(self):
         funding_settings = FundingPlatformSettings.load()
@@ -1929,6 +1931,8 @@ class IbanCheckTestCase(APITestCase):
         self.url = reverse('funding-iban-check')
         self.user = BlueBottleUserFactory.create()
         self.stripe_token = stripe.Token("tok_test_token_id")
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
 
         self.stripe_token.bank_account = stripe.BankAccount()
         self.stripe_token.bank_account.update(munch.munchify({

@@ -3,19 +3,20 @@ from adminsortable.models import SortableMixin
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, connection
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.extensions import PluginImageField
 from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
+from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
-from django_quill.fields import QuillField
-
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
+from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileExtensionValidator, FileMimetypeValidator, validate_file_infection
@@ -680,6 +681,39 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         if ext not in valid_extensions:
             raise ValidationError(u'File not supported!')
 
+    SHARE_ACTIVITIES_CHOICES = (
+        ('supplier', _('Supplier')),
+        ('consumer', _('Consumer')),
+    )
+
+    share_activities = MultiSelectField(
+        _('Enable GoodUp Connect'),
+        choices=SHARE_ACTIVITIES_CHOICES,
+        help_text=_('Allow sharing and/or receiving activities with other connected partners.'),
+        default=[],
+        max_length=100,
+        blank=True
+    )
+
+    @property
+    def is_sharing_activities(self):
+        return self.is_publishing_activities or self.is_receiving_activities
+
+    @property
+    def is_publishing_activities(self):
+        return 'supplier' in (self.share_activities or [])
+
+    @property
+    def is_receiving_activities(self):
+        return 'consumer' in (self.share_activities or [])
+
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        verbose_name=_('GoodUp Connect name'),
+        null=True, blank=True, on_delete=models.SET_NULL,
+        help_text=_('The organization this platform belongs to.')
+    )
+
     action_color = ColorField(
         _('Action colour'), null=True, blank=True,
         help_text=_(
@@ -812,6 +846,20 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             help_text=_('Slug of the start initiative page')
         ),
     )
+
+    def save(self, *args, **kwargs):
+        if self.share_activities and not self.organization_id:
+            tenant = connection.tenant
+            self.organization = Organization.objects.create(
+                name=tenant.name,
+                logo=self.favicon,
+            )
+
+        if self.organization_id and not hasattr(self.organization, 'activity_pub_organization'):
+            from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
+            ActivityPubOrganization.objects.from_model(self.organization)
+
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name_plural = _('site platform settings')

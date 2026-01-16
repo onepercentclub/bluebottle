@@ -96,7 +96,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'is_superuser': False,
             'csrfmiddlewaretoken': csrf
         }
-        response = self.client.post(self.add_member_url, data)
+        response = self.client.post(self.add_member_url, data, format='multipart')
         self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
@@ -118,7 +118,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
-        response = self.client.post(reset_url, {'confirm': True})
+        response = self.client.post(reset_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
@@ -128,7 +128,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         user = BlueBottleUserFactory.create()
         self.client.logout()
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
-        response = self.client.post(reset_url, {'confirm': True})
+        response = self.client.post(reset_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 403)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -145,7 +145,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
-        response = self.client.post(welcome_email_url, {'confirm': True})
+        response = self.client.post(welcome_email_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
@@ -161,7 +161,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.client.logout()
 
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
-        response = self.client.post(welcome_email_url, {'confirm': True})
+        response = self.client.post(welcome_email_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 403)
 
 

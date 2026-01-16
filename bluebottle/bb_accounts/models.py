@@ -136,12 +136,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_('last name'), blank=True, max_length=100)
     location = models.ForeignKey(
         'geo.Location', blank=True,
-        verbose_name=_('Office'),
+        verbose_name=_('Work location'),
         null=True, on_delete=models.SET_NULL)
 
     location_verified = models.BooleanField(
         default=False,
-        help_text=_('Office location is verified by the user')
+        help_text=_('Work location is verified by the user')
     )
 
     favourite_themes = models.ManyToManyField(Theme, blank=True)

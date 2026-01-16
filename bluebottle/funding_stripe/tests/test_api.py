@@ -96,7 +96,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
                         "tenant_name": "test",
                         "activity_id": self.donation.activity.pk,
                         "activity_title": self.donation.activity.title,
-                        "tenant_domain": "testserver",
+                        "tenant_domain": "test.localhost",
                     },
                     statement_descriptor="Test",
                     statement_descriptor_suffix="Test",
@@ -135,7 +135,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
                         "tenant_name": "test",
                         "activity_id": self.donation.activity.pk,
                         "activity_title": self.donation.activity.title,
-                        "tenant_domain": "testserver",
+                        "tenant_domain": "test.localhost",
                     },
                     statement_descriptor="Test",
                     statement_descriptor_suffix="Test",
@@ -168,7 +168,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
                         "tenant_name": "test",
                         "activity_id": self.donation.activity.pk,
                         "activity_title": self.donation.activity.title,
-                        "tenant_domain": "testserver",
+                        "tenant_domain": "test.localhost",
                     },
                     statement_descriptor="Test",
                     statement_descriptor_suffix="Test",
@@ -198,7 +198,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
                         "tenant_name": "test",
                         "activity_id": self.donation.activity.pk,
                         "activity_title": self.donation.activity.title,
-                        "tenant_domain": "testserver",
+                        "tenant_domain": "test.localhost",
                     },
                     statement_descriptor="Test",
                     statement_descriptor_suffix="Test",
@@ -228,7 +228,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
                         "tenant_name": "test",
                         "activity_id": self.donation.activity.pk,
                         "activity_title": self.donation.activity.title,
-                        "tenant_domain": "testserver",
+                        "tenant_domain": "test.localhost",
                     },
                     statement_descriptor="Test",
                     statement_descriptor_suffix="Test",
@@ -344,7 +344,7 @@ class StripeBankTransferTestCase(BluebottleTestCase):
                 "client_secret": "some secret",
                 "next_action": {
                     "display_bank_transfer_instructions": {
-                        "hosted_instructions_url": "http://testserver/pay-here"
+                        "hosted_instructions_url": "http://test.localhost/pay-here"
                     }
                 }
             })
@@ -368,7 +368,7 @@ class StripeBankTransferTestCase(BluebottleTestCase):
                         statement_descriptor_suffix="Test",
                         metadata={
                             "tenant_name": "test",
-                            "tenant_domain": "testserver",
+                            "tenant_domain": "test.localhost",
                             "activity_id": self.donation.activity.pk,
                             "activity_title": self.donation.activity.title,
                         },
@@ -657,7 +657,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 call["metadata"],
                 {
                     "tenant_name": "test",
-                    "tenant_domain": "testserver",
+                    "tenant_domain": "test.localhost",
                     "member_id": self.user.pk,
                 },
             )

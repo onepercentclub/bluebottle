@@ -217,12 +217,13 @@ class FundingAdmin(ActivityChildAdmin):
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
             (_("Date & amount"), {"fields": self.campaign_fields}),
+            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
         ]
         if Location.objects.count():
             if settings.enable_office_restrictions:
                 if "office_restriction" not in self.office_fields:
                     self.office_fields += ("office_restriction",)
-                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+                fieldsets.append((_("Work location"), {"fields": self.office_fields}))
 
         if request.user.is_superuser:
             fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))

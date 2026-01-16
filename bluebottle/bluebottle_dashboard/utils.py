@@ -46,7 +46,8 @@ def get_menu_items(context):
                 group['hide'] = True
         for item in group['items']:
             name = item.get('name', None) or item.get('url', None)
-            properties = get_jet_item(group['label'], name)
+            model_name = name.split('.')[1] if name and '.' in name else name
+            properties = get_jet_item(group['label'], model_name)
             if properties and 'enabled' in properties and properties['enabled']:
                 prop = get_feature_flag(properties['enabled'])
                 if not prop:

@@ -1,11 +1,12 @@
 from __future__ import absolute_import
-from builtins import str
+
 from builtins import object
+from builtins import str
+
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
-
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
@@ -29,6 +30,10 @@ class Organization(ValidatedModelMixin, models.Model):
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
+    )
+
+    origin = models.ForeignKey(
+        'activity_pub.Organization', null=True, related_name="organizations", on_delete=models.SET_NULL
     )
 
     website = models.URLField(_('website'), blank=True)
@@ -63,8 +68,8 @@ class Organization(ValidatedModelMixin, models.Model):
 
     class Meta(object):
         ordering = ['name']
-        verbose_name = _("partner organization")
-        verbose_name_plural = _("partner organizations")
+        verbose_name = _("organisation")
+        verbose_name_plural = _("organisations")
 
     class JSONAPIMeta:
         resource_name = 'organizations'

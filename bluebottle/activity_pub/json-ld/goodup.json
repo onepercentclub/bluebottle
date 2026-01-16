@@ -1,0 +1,16 @@
+{
+  "@context": {
+    "@vocab": "_:",
+    "goodup": "https://goodup.com/json-ld#",
+    "GoodDeed": "goodup:GoodDeed",
+    "CrowdFunding": "goodup:CrowdFunding",
+    "subEvent": {"@id": "goodup:subEvent", "@type": "@id"},
+    "address": {"@id": "goodup:address", "@type": "@id"},
+    "postalCode": "goodup:postalCode",
+    "streetAddress": "goodup:streetAddress",
+    "country": "goodup:country",
+    "locality": "goodup:locality",
+    "target": "goodup:target",
+    "targetCurrency": "goodup:targetCurrency"
+  }
+}

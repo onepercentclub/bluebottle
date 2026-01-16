@@ -34,7 +34,7 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
             # Always default to https if not on local machine.
             # This will hopefully fix Safari problems.
 
-            if http_host in ['testserver', 'localhost', 'localhost:8000',
+            if http_host in ['test.localhost', 'localhost', 'localhost:8000',
                              'localhost:8081',
                              '127.0.0.1:8000', '127.0.0.1'] or \
                     http_host.split(":", 1)[0].endswith("localhost"):

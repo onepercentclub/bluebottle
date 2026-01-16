@@ -15,7 +15,9 @@ from bluebottle.activities.states import (
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
-from bluebottle.activity_pub.effects import AnnounceAdoptionEffect
+from bluebottle.activity_pub.effects import (
+    AnnounceAdoptionEffect, CancelEffect, UpdateEventEffect, FinishEffect
+)
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
@@ -105,6 +107,10 @@ def has_no_end_date(effect):
 @register(Deed)
 class DeedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
+        ModelChangedTrigger(
+            ['start', 'end', 'description', 'title', 'image'],
+            effects=[UpdateEventEffect]
+        ),
         ModelChangedTrigger(
             'end',
             effects=[
@@ -200,6 +206,7 @@ class DeedTriggers(ActivityTriggers):
                 ),
                 NotificationEffect(ActivitySucceededNotification),
                 SetEndDateEffect,
+                FinishEffect
             ]
         ),
 
@@ -208,6 +215,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityExpiredNotification),
+                CancelEffect
             ]
         ),
 
@@ -216,6 +224,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityRejectedNotification),
+                CancelEffect
             ]
         ),
 
@@ -224,7 +233,8 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
-            ]
+                CancelEffect
+            ],
         ),
 
         TransitionTrigger(

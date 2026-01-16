@@ -40,11 +40,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='member',
-            name='gender',
-            field=models.CharField(blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Non-binary'), ('none', 'I would rather not say')], max_length=8, verbose_name='gender'),
-        ),
-        migrations.AlterField(
-            model_name='member',
             name='location',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='geo.location', verbose_name='Work location'),
         ),
@@ -52,11 +47,6 @@ class Migration(migrations.Migration):
             model_name='member',
             name='location_verified',
             field=models.BooleanField(default=False, help_text='Work location is verified by the user'),
-        ),
-        migrations.AlterField(
-            model_name='member',
-            name='primary_language',
-            field=models.CharField(choices=[('en', 'English')], default='en', help_text='Language used for website and emails.', max_length=7, verbose_name='primary language'),
         ),
         migrations.AlterField(
             model_name='member',

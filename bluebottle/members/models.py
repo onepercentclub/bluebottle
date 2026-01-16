@@ -76,12 +76,6 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         ('instructions', _('People request access by following your instructions')),
     )
 
-    SUPPORT_BUSINESS_UNIT = (
-        ('/Civic', 'Civic'),
-        ('/Corporate', 'Corporate'),
-        ('/Society', 'Society'),
-    )
-
     closed = CheckboxField(
         _('Platform access'), default=False,
         inline_label=_('Require log in before accessing the platform'),
@@ -152,11 +146,11 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         default=list,
     )
 
-    support_business_unit = models.CharField(
-        _('Support login business unit'),
-        null=True,
-        help_text=_('Select a business unit that has support access to this platform'),
-        choices=SUPPORT_BUSINESS_UNIT
+    support_groups = ArrayField(
+        models.CharField(),
+        verbose_name=_('Support login groups'),
+        default=['Engineering', 'Support'],
+        help_text=_('Groups that can login in using support accounts'),
     )
 
     session_only = models.BooleanField(

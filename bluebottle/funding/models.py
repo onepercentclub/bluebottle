@@ -714,6 +714,9 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     def __str__(self):
         return "Payout account #{}".format(self.id)
 
+    class Meta:
+        ordering = ('-created',)
+
 
 class PlainPayoutAccount(PayoutAccount):
     document = PrivateDocumentField(

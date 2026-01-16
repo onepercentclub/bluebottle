@@ -6,13 +6,11 @@ from django.contrib.gis.geos import Point
 from django.core.cache import cache
 from django.db import connection
 from django.db.models import Q
-
 from rest_framework import generics, response
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_json_api.views import AutoPrefetchMixin
-
 
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.files.models import RelatedImage
@@ -209,7 +207,7 @@ class ThemeList(TranslatedApiViewMixin, JsonApiViewMixin, ListAPIView):
     pagination_class = NoPagination
 
     def get_queryset(self):
-        return super().get_queryset()
+        return super().get_queryset().order_by('translations__name').distinct()
 
 
 class ThemeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):

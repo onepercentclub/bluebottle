@@ -1160,6 +1160,7 @@ class Registration(TriggerMixin, PolymorphicModel):
     class Meta:
         verbose_name = _("Candidate")
         verbose_name_plural = _("Candidates")
+        ordering = ('-created',)
 
 
 class DateRegistration(Registration):
@@ -1372,7 +1373,7 @@ class PeriodicRegistration(Registration):
 
 
 class DeadlineParticipant(Participant, Contributor):
-    class Meta:
+    class Meta(Contributor.Meta):
         verbose_name = _("Participant to flexible activities")
         verbose_name_plural = _("Participants to flexible activities")
 
@@ -1639,7 +1640,7 @@ class ScheduleParticipant(Participant, Contributor):
         blank=True,
     )
 
-    class Meta:
+    class Meta(Contributor.Meta):
         verbose_name = _("Participant to schedule activities")
         verbose_name_plural = _("Participants to schedule activities")
 

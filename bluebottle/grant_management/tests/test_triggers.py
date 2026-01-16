@@ -8,6 +8,7 @@ from bluebottle.activities.messages.activity_manager import (
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.files.tests.factories import ImageFactory
+from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationPayoutAccountMarkedIncomplete,
     GrantApplicationPayoutAccountVerified,
@@ -44,7 +45,7 @@ from bluebottle.grant_management.tests.factories import (
 )
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
-    ExternalAccountFactory
+    ExternalAccountFactory, StripePaymentProviderFactory
 )
 
 from bluebottle.funding.messages.funding.platform_manager import LivePayoutAccountMarkedIncomplete
@@ -77,6 +78,8 @@ class GrantApplicationTriggersTestCase(TriggerTestCase):
             is_staff=True,
             submitted_initiative_notifications=True
         )
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
 
         image = ImageFactory()
 

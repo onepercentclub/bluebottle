@@ -3,9 +3,10 @@ from django.core import mail
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
+from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
-    ExternalAccountFactory,
+    ExternalAccountFactory, StripePaymentProviderFactory,
 )
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -21,6 +22,8 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
     def setUp(self):
         super(InitiativeReviewStateMachineTests, self).setUp()
         self.user = BlueBottleUserFactory.create(first_name='Bart', last_name='Lacroix')
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
         self.initiative = InitiativeFactory.create(
             has_organization=False,
             owner=self.user,

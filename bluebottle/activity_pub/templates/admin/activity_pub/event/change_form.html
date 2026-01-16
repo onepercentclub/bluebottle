@@ -1,0 +1,39 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+
+{% block object-tools %}
+    <div style="padding-bottom: 20px; text-align: right">
+    {% if original and not original.is_local %}
+        {% if original.adopted_activity %}
+            <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
+                <input type="button" value="View adopted activity" class="default" name="_adopt">
+            </a>
+        {% else %}
+            <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
+                <input type="button" value="Adopt activity" class="default" name="_adopt">
+            </a>
+        {% endif %}
+    {% endif %}
+    </div>
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+    
+    {% if original and not original.is_local %}
+        {% if original.adopted_activity %}
+            <div class="submit-row">
+                <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
+                    <input type="button" value="View adopted activity" class="default" name="_adopt">
+                </a>
+            </div>
+        {% else %}
+            <div class="submit-row">
+                <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
+                    <input type="button" value="Adopt activity" class="default" name="_adopt">
+                </a>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+

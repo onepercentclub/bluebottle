@@ -74,8 +74,8 @@ class HomeTestCase(APITestCase):
     model = HomePage
 
     def setUp(self):
-        super(HomeTestCase, self).setUp()
-        HomePage.objects.get(pk=1).delete()
+        super().setUp()
+        HomePage.objects.all().delete()
         self.page = HomePageFactory(pk=1)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('home-detail')

@@ -348,7 +348,7 @@ class Contributor(TriggerMixin, PolymorphicModel):
     def date(self):
         return self.activity.contributor_date
 
-    class Meta(object):
+    class Meta:
         ordering = ("-created",)
         verbose_name = _("Contribution")
         verbose_name_plural = _("Contributions")

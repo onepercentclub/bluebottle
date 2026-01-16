@@ -1,3 +1,5 @@
+import os
+import re
 from django.conf import settings
 from django.db import connection
 
@@ -26,7 +28,8 @@ class MultiTenantIndex(Index):
             name = '{}-{}'.format(connection.tenant.schema_name, self.__name)
             test_prefix = getattr(settings, 'ELASTICSEARCH_TEST_INDEX_PREFIX', None)
             if test_prefix:
-                name = '{}-{}'.format(test_prefix, name)
+                process_id = os.getpid()
+                name = '{}-pid{}-{}'.format(test_prefix, process_id, name)
             name = name.replace('_ded_test', '')
             return name
 
@@ -36,8 +39,9 @@ class MultiTenantIndex(Index):
     def _name(self, value):
         if value and value.startswith(connection.tenant.schema_name):
             value = value.replace(connection.tenant.schema_name + '-', '')
-            test_prefix = settings.ELASTICSEARCH_TEST_INDEX_PREFIX
+            test_prefix = getattr(settings, 'ELASTICSEARCH_TEST_INDEX_PREFIX', None)
             if test_prefix:
+                value = re.sub(r'{}-pid\d+-'.format(re.escape(test_prefix)), '', value)
                 value = value.replace(test_prefix + '-', '')
                 value = value.replace('_ded_test', '')
         self.__name = value

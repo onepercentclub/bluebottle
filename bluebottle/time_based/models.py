@@ -974,7 +974,7 @@ class Participant(Contributor):
         else:
             return []
 
-    class Meta:
+    class Meta(Contributor.Meta):
         abstract = True
 
 
@@ -1004,7 +1004,7 @@ class DateParticipant(Participant):
     def answer(self):
         return self.registration.answer
 
-    class Meta:
+    class Meta(Contributor.Meta):
         verbose_name = _("Participant to date activity slot")
         verbose_name_plural = _("Participants to date activity slot")
         permissions = (
@@ -1411,7 +1411,7 @@ class DeadlineParticipant(Participant, Contributor):
 
 
 class RegisteredDateParticipant(Contributor):
-    class Meta:
+    class Meta(Contributor.Meta):
         verbose_name = _("Participant to past date activity")
         verbose_name_plural = _("Participants to past date activity")
 

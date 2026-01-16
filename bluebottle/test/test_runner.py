@@ -1,4 +1,5 @@
 import locale
+import os
 from builtins import range
 
 from django.conf import settings
@@ -10,14 +11,16 @@ from tenant_schemas.utils import get_tenant_model
 
 from bluebottle.test.utils import InitProjectDataMixin
 
-_ES_READY = False
+# Use process-specific flags to allow parallel test execution
+_ES_READY = {}
 
 class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
     def setup_test_environment(self, **kwargs):
         super().setup_test_environment(**kwargs)
 
-        global _ES_READY
-        if _ES_READY:
+        # Use process ID to allow each parallel test process to create its own indices
+        process_id = os.getpid()
+        if _ES_READY.get(process_id, False):
             return
 
         # Make sure each worker has a stable prefix (you already do this)
@@ -25,13 +28,14 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
 
         # 2) Always clean ES for this worker prefix, then create indices
         # Fast + avoids alias rebuild collisions
+        # Each process needs to create its own indices with process-specific names
         call_command("search_index", "--delete", "-f", verbosity=0)
         call_command("search_index", "--create", verbosity=0)
 
         # Only if you really need a full reindex from DB:
         # call_command("search_index", "--rebuild", "--use-alias", verbosity=0)
 
-        _ES_READY = True
+        _ES_READY[process_id] = True
 
     def setup_databases(self, *args, **kwargs):
         self.keepdb = getattr(settings, 'KEEPDB', self.keepdb)

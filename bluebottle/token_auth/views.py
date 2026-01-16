@@ -44,7 +44,7 @@ class SAMLLoginView(View):
     def get_auth(self, request):
         return get_auth(request, self.settings)
 
-    def authenticated(self, user):
+    def authenticated(self, user, auth):
         pass
 
     def post(self, request):
@@ -57,7 +57,7 @@ class SAMLLoginView(View):
             url = '/token/error?message={0}'.format(e)
             return HttpResponseRedirect(url)
 
-        self.authenticated(user)
+        self.authenticated(user, auth)
 
         target_url = auth.target_url or "/"
 
@@ -85,8 +85,11 @@ class UserSAMLLoginView(SAMLLoginView):
 
 
 class SupportSAMLLoginView(SAMLLoginView):
-    def authenticated(self, user):
+    allowed_business_units = ['support', 'developers']
+    business_unit_uri = 'http://schemas.goodup.com/organization-unit'
 
+    def authenticated(self, user, auth):
+        __import__('ipdb').set_trace()
         if not user.is_superuser or not user.is_staff:
             user.is_staff = True
             user.is_superuser = True

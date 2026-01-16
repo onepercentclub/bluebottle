@@ -76,6 +76,12 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         ('instructions', _('People request access by following your instructions')),
     )
 
+    SUPPORT_BUSINESS_UNIT = (
+        ('/Civic', 'Civic'),
+        ('/Corporate', 'Corporate'),
+        ('/Society', 'Society'),
+    )
+
     closed = CheckboxField(
         _('Platform access'), default=False,
         inline_label=_('Require log in before accessing the platform'),
@@ -144,6 +150,13 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         verbose_name=_('Whitelisted email domains'),
         blank=True, null=True,
         default=list,
+    )
+
+    support_business_unit = models.CharField(
+        _('Support login business unit'),
+        null=True,
+        help_text=_('Select a business unit that has support access to this platform'),
+        choices=SUPPORT_BUSINESS_UNIT
     )
 
     session_only = models.BooleanField(

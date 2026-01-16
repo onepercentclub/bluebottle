@@ -2007,8 +2007,7 @@ msgstr "Aankondigen van adoptie"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/announce_adoption_effect.html:2
 msgid "Announce adoption"
-msgstr "\n"
-"    Kondig aan op het bronplatform dat deze activiteit is geadopteerd\n"
+msgstr "Kondig aan op het bronplatform dat deze activiteit is geadopteerd"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/announce_adoption_effect.html:5
 msgid "\n"
@@ -13932,4 +13931,3 @@ msgstr[1] "Seconden"
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr "Nederlands"
-

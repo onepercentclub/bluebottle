@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-13 09:04+0100\n"
+"POT-Creation-Date: 2026-01-16 10:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -137,7 +137,8 @@ msgid_plural ""
 msgstr[0] ""
 msgstr[1] ""
 
-#: bluebottle/activities/admin.py:751 bluebottle/initiatives/models.py:173
+#: bluebottle/activities/admin.py:751 bluebottle/activity_links/states.py:38
+#: bluebottle/initiatives/models.py:173
 msgid "Initiative"
 msgstr ""
 
@@ -1038,6 +1039,7 @@ msgstr ""
 #: bluebottle/activities/states.py:283
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:49
 #: bluebottle/activities/templates/admin/activities/share_publish.html:53
+#: bluebottle/activity_links/states.py:53
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:49
 #: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
 #: bluebottle/funding/states.py:121 bluebottle/grant_management/states.py:139
@@ -1174,7 +1176,9 @@ msgid "The user started a contribution"
 msgstr ""
 
 #: bluebottle/activities/states.py:387 bluebottle/activities/states.py:426
-#: bluebottle/funding/states.py:385 bluebottle/grant_management/states.py:28
+#: bluebottle/activity_links/states.py:24
+#: bluebottle/activity_links/states.py:45 bluebottle/funding/states.py:385
+#: bluebottle/grant_management/states.py:28
 #: bluebottle/grant_management/states.py:176
 #: bluebottle/time_based/states/participants.py:48
 #: bluebottle/time_based/states/teams.py:15
@@ -1815,6 +1819,43 @@ msgstr ""
 
 #: bluebottle/activities/views.py:324
 msgid "Already participating"
+msgstr ""
+
+#: bluebottle/activity_links/states.py:18
+msgid "Open"
+msgstr ""
+
+#: bluebottle/activity_links/states.py:20
+msgid "Open linked activities are shown in the open activities overview."
+msgstr ""
+
+#: bluebottle/activity_links/states.py:26
+msgid ""
+"Succeeded linked activities are shown in the succeeded activities overview."
+msgstr ""
+
+#: bluebottle/activity_links/states.py:30 bluebottle/initiatives/states.py:44
+#: bluebottle/time_based/states/participants.py:42
+#: bluebottle/time_based/states/slots.py:33
+#: bluebottle/time_based/states/teams.py:17
+#: bluebottle/time_based/states/teams.py:161
+msgid "Cancelled"
+msgstr ""
+
+#: bluebottle/activity_links/states.py:32
+msgid "Cancelled linked activities are never shown."
+msgstr ""
+
+#: bluebottle/activity_links/states.py:39
+msgid "The link will be created."
+msgstr ""
+
+#: bluebottle/activity_links/states.py:46
+msgid "The initiative will be isucceeded."
+msgstr ""
+
+#: bluebottle/activity_links/states.py:54
+msgid "The initiative will be cancelled."
 msgstr ""
 
 #: bluebottle/activity_pub/admin.py:75 bluebottle/activity_pub/models.py:386
@@ -4471,7 +4512,7 @@ msgid "Grant applications"
 msgstr ""
 
 #: bluebottle/funding/admin.py:649 bluebottle/funding/filters.py:11
-#: bluebottle/pages/admin.py:254 bluebottle/time_based/admin.py:244
+#: bluebottle/pages/admin.py:261 bluebottle/time_based/admin.py:244
 #: bluebottle/time_based/admin.py:333 bluebottle/time_based/admin.py:376
 #: bluebottle/time_based/admin.py:486 bluebottle/time_based/admin.py:544
 #: bluebottle/time_based/admin.py:921 bluebottle/time_based/admin.py:1134
@@ -5766,10 +5807,13 @@ msgstr ""
 msgctxt "email"
 msgid ""
 "\n"
-"            Unfortunately, the platform manager closed your crowdfunding "
-"campaign \"%(title)s\".\n"
-"            Didn’t expect this? Reach out to your platform manager to find "
-"out why.\n"
+"        Unfortunately, nobody donated to your campaign \"%(title)s\" before "
+"the deadline. That’s why we have cancelled your campaign.\n"
+"\n"
+"        Don’t worry, you can always create a new campaign and try again.\n"
+"\n"
+"        Need some tips to make your campaign stand out? Reach out to the "
+"platform manager by replying to this email.\n"
 "        "
 msgstr ""
 
@@ -7961,14 +8005,6 @@ msgid ""
 "back office and appear in your reporting."
 msgstr ""
 
-#: bluebottle/initiatives/states.py:44
-#: bluebottle/time_based/states/participants.py:42
-#: bluebottle/time_based/states/slots.py:33
-#: bluebottle/time_based/states/teams.py:17
-#: bluebottle/time_based/states/teams.py:161
-msgid "Cancelled"
-msgstr ""
-
 #: bluebottle/initiatives/states.py:47
 msgid ""
 "The initiative is not executed. The initiative won't show up on the search "
@@ -9105,24 +9141,24 @@ msgstr ""
 msgid "Select a JSON file exported from another platform"
 msgstr ""
 
-#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:88
+#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:95
 #: bluebottle/slides/admin.py:39
 msgid "Publication settings"
 msgstr ""
 
-#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:100
+#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:107
 msgid "Online"
 msgstr ""
 
-#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:101
+#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:108
 msgid "Offline"
 msgstr ""
 
-#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:103
+#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:110
 msgid "Is this item currently visible online or not."
 msgstr ""
 
-#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:266
+#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:273
 #: bluebottle/slides/admin.py:111
 msgid "Mark selected entries as published"
 msgstr ""
@@ -9135,7 +9171,7 @@ msgstr ""
 msgid "Export selected news items"
 msgstr ""
 
-#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:337
+#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:344
 msgid "Invalid JSON file. Please check the file format."
 msgstr ""
 
@@ -9499,42 +9535,42 @@ msgstr ""
 msgid "Translate page"
 msgstr ""
 
-#: bluebottle/pages/admin.py:212
+#: bluebottle/pages/admin.py:219
 msgid ""
 "You are trying to create a platform page. Please do so at <a "
 "href=\"{}\">Platform pages</a>."
 msgstr ""
 
-#: bluebottle/pages/admin.py:275
+#: bluebottle/pages/admin.py:282
 msgid "No pages were selected."
 msgstr ""
 
-#: bluebottle/pages/admin.py:287
+#: bluebottle/pages/admin.py:294
 msgid "Export selected pages"
 msgstr ""
 
-#: bluebottle/pages/admin.py:339
+#: bluebottle/pages/admin.py:346
 #, python-brace-format
 msgid "Error importing pages: {0}"
 msgstr ""
 
-#: bluebottle/pages/admin.py:350
+#: bluebottle/pages/admin.py:357
 #: bluebottle/pages/templates/admin/pages/page/change_list.html:8
 #: bluebottle/pages/templates/admin/pages/page/import.html:9
 msgid "Import pages"
 msgstr ""
 
-#: bluebottle/pages/admin.py:366
+#: bluebottle/pages/admin.py:373
 #, python-brace-format
 msgid "A page with slug \"{slug}\" already exists for language {language}."
 msgstr ""
 
-#: bluebottle/pages/admin.py:378
+#: bluebottle/pages/admin.py:385
 #, python-brace-format
 msgid "Page \"{title}\" has been translated to {language}."
 msgstr ""
 
-#: bluebottle/pages/admin.py:387
+#: bluebottle/pages/admin.py:394
 #, python-brace-format
 msgid "Error translating page: {error}"
 msgstr ""
@@ -9996,8 +10032,7 @@ msgstr ""
 msgid "Manage Reporting"
 msgstr ""
 
-#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:425
-#: tenants/accenture/settings.py:30
+#: bluebottle/settings/testing.py:425 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -10010,28 +10045,26 @@ msgstr ""
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
+#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
+#: tenants/maximising-potential/settings.py:27
+#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
-#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
+#: tenants/shell-disaster-relief/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
 #: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr ""
 
-#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:426
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/aed-actie/settings.py:26 tenants/almelo/settings.py:25
+#: bluebottle/settings/testing.py:426 tenants/abn/settings.py:26
+#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
@@ -10042,13 +10075,12 @@ msgstr ""
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:25
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -10063,31 +10095,28 @@ msgstr ""
 msgid "Dutch"
 msgstr ""
 
-#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:427
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+#: bluebottle/settings/testing.py:427 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
 msgid "French"
 msgstr ""
 
-#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:428
-#: tenants/mars/settings.py:28
+#: bluebottle/settings/testing.py:428
 msgid "Spanish"
 msgstr ""
 
-#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:429
-#: tenants/mars/settings.py:29
+#: bluebottle/settings/testing.py:429
 msgid "German"
 msgstr ""
 
-#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:430
+#: bluebottle/settings/testing.py:430
 msgid "Portuguese"
 msgstr ""
 
-#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:431
-#: tenants/mars/settings.py:30
+#: bluebottle/settings/testing.py:431
 msgid "Hungarian"
 msgstr ""
 
-#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:432
+#: bluebottle/settings/testing.py:432
 msgid "Bulgarian"
 msgstr ""
 
@@ -14283,7 +14312,3 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] ""
 msgstr[1] ""
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
-msgstr ""

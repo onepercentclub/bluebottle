@@ -244,7 +244,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
                 self.slug = "new"
 
         try:
-            if InitiativePlatformSettings.objects.get().require_organization:
+            if InitiativePlatformSettings.load().require_organization:
                 self.has_organization = True
         except InitiativePlatformSettings.DoesNotExist:
             pass

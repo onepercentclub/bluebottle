@@ -41,5 +41,5 @@ class MultiTenantIndex(Index):
             test_prefix = settings.ELASTICSEARCH_TEST_INDEX_PREFIX
             if test_prefix:
                 value = value.replace(test_prefix + '-', '')
-
+        value.replace('_ded_test', '_dt')
         self.__name = value

@@ -235,7 +235,7 @@ class TenantConditionalOpenClose(BasePermission):
 
     def has_object_action_permission(self, action, user, obj):
         try:
-            settings = MemberPlatformSettings.objects.get()
+            settings = MemberPlatformSettings.load()
             if settings.closed:
                 return user and user.is_authenticated
         except AttributeError:
@@ -244,7 +244,7 @@ class TenantConditionalOpenClose(BasePermission):
 
     def has_action_permission(self, action, user, model_cls):
         try:
-            settings = MemberPlatformSettings.objects.get()
+            settings = MemberPlatformSettings.load()
             if settings.closed:
                 return user and user.is_authenticated
         except AttributeError:

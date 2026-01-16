@@ -4,7 +4,7 @@ from django.db import migrations
 
 def set_consent_link(apps, schema_editor):
     MemberPlatformSettings = apps.get_model('members', 'MemberPlatformSettings')
-    settings = MemberPlatformSettings.objects.get()
+    settings = MemberPlatformSettings.load()
     settings.consent_link = "https://goodup.com/cookie-policy"
     settings.save()
 

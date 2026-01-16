@@ -292,7 +292,7 @@ class ParticipantCreateMixin:
                 except Exception:
                     raise ValidationError(_('Not a valid email address'), code="invalid")
                 member_settings = MemberPlatformSettings.load()
-                scim_settings = SCIMPlatformSettings.objects.get()
+                scim_settings = SCIMPlatformSettings.load()
 
                 if (
                     (member_settings.closed or member_settings.confirm_signup) and
@@ -442,7 +442,7 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
-        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+        context['display_member_names'] = MemberPlatformSettings.load().display_member_names
 
         activity = Activity.objects.get(pk=self.kwargs['activity_id'])
         context['owners'] = [activity.owner]

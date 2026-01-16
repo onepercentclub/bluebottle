@@ -383,7 +383,7 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
     related_permission_classes = {"connect_account": [IsOwner]}
 
     def get_queryset(self):
-        settings = FundingPlatformSettings.objects.get()
+        settings = FundingPlatformSettings.load()
         if settings.public_accounts:
             return self.queryset.order_by("-created").filter(
                 connect_account__public=True,

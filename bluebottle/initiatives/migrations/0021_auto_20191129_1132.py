@@ -16,7 +16,7 @@ INITIATIVE_SEARCH_FILTERS = (
 def set_search_filters(apps, schema_editor):
     InitiativePlatformSettings = apps.get_model("initiatives", "InitiativePlatformSettings")
 
-    settings = InitiativePlatformSettings.objects.get()
+    settings = InitiativePlatformSettings.load()
 
     settings.activity_search_filters = [
         'country' if filter == 'location' else filter for filter in settings.search_filters

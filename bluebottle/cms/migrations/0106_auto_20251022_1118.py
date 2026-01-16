@@ -6,8 +6,8 @@ def set_terminated(apps, schema_editor):
     SitePlatformSettings = apps.get_model('cms', 'SitePlatformSettings')
     AnalyticsPlatformSettings = apps.get_model('analytics', 'AnalyticsPlatformSettings')
 
-    analytics_settings = AnalyticsPlatformSettings.objects.get()
-    settings = SitePlatformSettings.objects.get()
+    analytics_settings = AnalyticsPlatformSettings.load()
+    settings = SitePlatformSettings.load()
 
     settings.terminated = analytics_settings.terminated
     settings.save()

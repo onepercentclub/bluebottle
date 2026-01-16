@@ -212,7 +212,7 @@ class FundingAdmin(ActivityChildAdmin):
     )
 
     def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
@@ -632,7 +632,7 @@ class PayoutAccountChildAdmin(PayoutAccountActivityLinkMixin, PolymorphicChildMo
 
     def get_basic_fields(self, request, obj):
         fields = ['owner', 'public', 'partner_organization']
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         if 'funding' in settings.activity_types:
             fields.append('funding_links')
         if 'grantapplication' in settings.activity_types:
@@ -684,7 +684,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
 
     def get_fields(self, request, obj):
         fields = list(super().get_fields(request, obj))
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         if 'funding' in settings.activity_types:
             fields.append('funding_links')
         if 'grantapplication' in settings.activity_types:

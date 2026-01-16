@@ -35,7 +35,7 @@ class TimeBasedActivityListAPITestCase:
                 'description': json.dumps({'html': 'test description', 'delta': ''}),
             }
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append(self.model_name)
         settings.save()
 
@@ -95,7 +95,7 @@ class TimeBasedActivityListAPITestCase:
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_create_disabled_activity_type(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
 
         settings.activity_types = [
             activity_type for activity_type in settings.activity_types

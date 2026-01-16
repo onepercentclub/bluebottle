@@ -11,7 +11,7 @@ from bluebottle.members.messages import AccountActivationMessage
 def send_welcome_mail(user=None):
 
     from bluebottle.members.models import MemberPlatformSettings
-    settings = MemberPlatformSettings.objects.get()
+    settings = MemberPlatformSettings.load()
 
     context = {
         'email': user.email,

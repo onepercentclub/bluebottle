@@ -226,7 +226,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
             user.is_superuser
         ) and (
             self.hide_last_name and
-            MemberPlatformSettings.objects.get().display_member_names == 'first_name'
+            MemberPlatformSettings.load().display_member_names == 'first_name'
         ):
             del representation['last_name']
             representation['full_name'] = representation['first_name']
@@ -510,7 +510,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         email = attrs.get('email', '')
         access_code = attrs.get('access_code', '')
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         email_domain = email.split('@')[1]
         email_domains = settings.email_domains
 
@@ -628,7 +628,7 @@ class MemberSignUpSerializer(serializers.ModelSerializer):
         return super(MemberSignUpSerializer, self).errors
 
     def validate(self, data):
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         if settings.confirm_signup:
             raise serializers.ValidationError(
                 {'email': _('Signup requires a confirmation token.')}
@@ -713,7 +713,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(_('Email confirmation mismatch'))
             del data['email_confirmation']
 
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
 
         if settings.confirm_signup:
             raise serializers.ValidationError(

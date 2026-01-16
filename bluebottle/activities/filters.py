@@ -102,7 +102,7 @@ class UpcomingFacet(Facet):
 
     def add_filter(self, filter_values):
         if filter_values == ["1"]:
-            settings = InitiativePlatformSettings.objects.get()
+            settings = InitiativePlatformSettings.load()
             statuses = ["open", "running"]
             if settings.include_full_activities:
                 statuses.append("full")
@@ -172,7 +172,7 @@ class MatchingFacet(BooleanFacet):
     def add_filter(self, filter_values):
         user = get_current_user()
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         statuses = ["open", "running"]
         if settings.include_full_activities:
             statuses.append("full")
@@ -475,7 +475,7 @@ class ActivitySearch(Search):
         return search
 
     def __new__(cls, *args, **kwargs):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
 
         # Create new instance with existing search filters from settings
         result = super().__new__(

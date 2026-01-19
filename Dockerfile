@@ -1,63 +1,67 @@
-# Based on best practices from Snyk: https://snyk.io/blog/best-practices-containerizing-python-docker/
-# It builds the container in two steps for maximum caching 
+# syntax=docker/dockerfile:1.7
 
 ################
 # DEPENDENCIES #
 ################
-FROM python:3.8 as deps
+FROM python:3.12-slim AS deps
 
-# Install missing dependencies
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends \
-  libxml2 \
-  libxmlsec1 \
-  libxmlsec1-dev
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
 
-# Disable pip version check
-ENV PIP_DISABLE_PIP_VERSION_CHECK 1
+# Build-time system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libxml2 \
+    libxmlsec1 \
+    libxmlsec1-dev \
+    build-essential \
+    git \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set work directory
-WORKDIR /bluebottle
+WORKDIR /app
 
-# Create the env (for caching)
-RUN python -m venv /bluebottle/venv
-ENV PATH="/bluebottle/venv/bin:$PATH"
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy files necessary for install
-RUN mkdir bluebottle
-COPY bluebottle/__init__.py ./bluebottle
-COPY ["README.rst", "setup.py", "./"]
+# Copy dependency-related files
+COPY README.rst setup.py ./
+COPY bluebottle/__init__.py bluebottle/__init__.py
 
-# Install any (missing) requirements
-RUN pip install -e .[env]
+# Pin pip for legacy Celery 4.3.1
+RUN pip install --upgrade "pip<24.1" setuptools wheel \
+    && pip install -e .[env]
 
-################
-#  BLUEBOTTLE  #
-################
+###############
+# RUNTIME     #
+###############
+FROM python:3.12-slim
 
-FROM python:3.8
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Install missing dependencies
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends \
-  postgresql \
-  postgis
+# Runtime-only dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client \
+    postgis \
+    && rm -rf /var/lib/apt/lists/*
 
-# Don't write .pyc files
-ENV PYTHONDONTWRITEBYTECODE 1  
-# Console output is not buffered by Docker
-ENV PYTHONUNBUFFERED 1
+WORKDIR /app
 
-# Set work directory
-WORKDIR /bluebottle
+# Copy virtualenv from deps stage
+COPY --from=deps /opt/venv /opt/venv
 
-# Copy files
-COPY --from=deps /bluebottle/venv ./venv
+# Copy application source
 COPY . .
 
-# Set the env
-ENV PATH="/bluebottle/venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Keep bash history
-#
+# Non-root user
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Optional: dev bash history
 ENV HISTFILE="/opt/data/.bash_history"
+

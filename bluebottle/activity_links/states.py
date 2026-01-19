@@ -12,6 +12,7 @@ from bluebottle.activity_links.models import LinkedActivity
 
 @register(LinkedActivity)
 class LinkedActivityStateMachine(ModelStateMachine):
+
     model = LinkedActivity
 
     open = State(

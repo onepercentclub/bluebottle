@@ -57,10 +57,12 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
 
 
 class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSerializerMetaclass):
-    def __init__(self, *args, **kwargs):
-        self.include = kwargs.pop('include', False)
+    def __init__(self, *args, full=False, include=False, **kwargs):
+        self.include = include
 
         super().__init__(*args, **kwargs)
+
+        self.context['full'] = full
 
     class Meta:
         list_serializer_class = ActivityPubListSerializer
@@ -72,7 +74,7 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         if not self.parent:
             return representation
         else:
-            if self.include:
+            if self.include or self.context['full']:
                 representation.pop('type', None)
                 return representation
             else:
@@ -110,6 +112,9 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         iri = validated_data.pop('id', None)
         if iri and not is_local(iri):
             validated_data['iri'] = iri
+            instance = self.Meta.model.objects.filter(iri=iri).first()
+            if instance:
+                return self.update(instance, validated_data)
 
         for name, field in self.fields.items():
             if (
@@ -163,11 +168,12 @@ class PolymorphicActivityPubSerializerMetaclass(serializers.SerializerMetaclass)
 class PolymorphicActivityPubSerializer(
     serializers.Serializer, metaclass=PolymorphicActivityPubSerializerMetaclass
 ):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, full=False, **kwargs):
+        full = full
         super().__init__(*args, **kwargs)
 
         self._serializers = [
-            serializer(*args, **kwargs) for serializer in self.polymorphic_serializers
+            serializer(*args, full=full, **kwargs) for serializer in self.polymorphic_serializers
         ]
 
     def get_serializer_from_model(self, model):
@@ -310,14 +316,8 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
 
         return representation
 
-    def to_internal_value(self, data):
-        if isinstance(data, str):
-            data = adapter.fetch(data)
-
-        return super().to_internal_value(data)
-
     def create(self, validated_data):
-        iri = validated_data.pop('id')
+        iri = validated_data.pop('id', None)
         validated_data['origin'] = ActivityPubModel.objects.from_iri(iri)
 
         for field in self.fields.values():

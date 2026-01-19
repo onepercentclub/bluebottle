@@ -80,7 +80,7 @@ class JSONLDAdapter():
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 
-        data = EventSerializer(instance=event).data
+        data = EventSerializer(instance=event, full=True).data
         serializer = FederatedActivitySerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
@@ -88,6 +88,30 @@ class JSONLDAdapter():
         organization = Publish.objects.filter(object=event).first().actor.organization
         owner = follow.default_owner or get_current_user()
         return serializer.save(owner=owner, host_organization=organization)
+
+    def link(self, event, request=None):
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+        from bluebottle.activity_links.serializers import LinkedActivitySerializer
+
+        data = EventSerializer(instance=event).data
+        linked_activity = event.linked_activity
+        serializer = LinkedActivitySerializer(
+            data=data,
+            instance=linked_activity,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        organization = Publish.objects.filter(object=event).first().actor.organization
+
+        save_kwargs = {
+            'host_organization': organization,
+            'event': event
+        }
+
+        if not linked_activity:
+            save_kwargs['status'] = 'open'
+
+        return serializer.save(**save_kwargs)
 
     def create_event(self, activity):
         from bluebottle.activities.models import Activity as BluebottleActivity
@@ -147,7 +171,6 @@ def publish_to_recipient(recipient, tenant):
             recipient.send = True
             recipient.save()
         except Exception as e:
-            __import__('ipdb').set_trace()
             logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
             raise
 

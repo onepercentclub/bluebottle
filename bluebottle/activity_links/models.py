@@ -8,6 +8,7 @@ from bluebottle.activity_pub.models import Publish
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import MoneyField, ImageField
+from bluebottle.activity_pub.models import Publish
 
 
 class LinkedActivityManager(PolymorphicManager):
@@ -29,7 +30,7 @@ class LinkedActivityManager(PolymorphicManager):
         organization = Publish.objects.filter(object=event).first().actor.organization
 
         return serializer.save(
-            event=event, host_organization=organization, status='open'
+            event=event, host_organization=organization
         )
 
 
@@ -77,9 +78,9 @@ class LinkedDeed(LinkedActivity):
 class LinkedFunding(LinkedActivity):
     target = MoneyField()
     donated = MoneyField(default=Money('0.00', 'EUR'))
-    amount = MoneyField(default=Money('0.00', 'EUR'))
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
 
 
 class LinkedDeadlineActivity(LinkedActivity):
@@ -100,6 +101,15 @@ class LinkedDateSlot(models.Model):
     )
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+
+    status = 'open'
+
+    @property
+    def duration(self):
+        if self.start and self.end:
+            return self.end - self.start
+        return None
 
 
 from bluebottle.activity_links.signals import *  # noqa

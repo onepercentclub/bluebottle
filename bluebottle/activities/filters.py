@@ -159,6 +159,12 @@ class BooleanFacet(Facet):
         return str(key[-1]) in filter_values
 
 
+class LocalFacet(BooleanFacet):
+    def __init__(self, *args, **kwargs):
+        labels = {'1': _("Local activities"), '0': _("Remote activities")}
+        super().__init__(*args, labels=labels, **kwargs)
+
+
 class TeamActivityFacet(BooleanFacet):
     def __init__(self, *args, **kwargs):
         labels = {"teams": _("With your team"), "individuals": _("As an individual")}
@@ -202,7 +208,12 @@ class MatchingFacet(BooleanFacet):
                     )
             filters = filters & Nested(path="office_restriction", query=office_filter)
 
-        if user.search_distance and user.place and not user.any_search_distance:
+        if (
+            user.search_distance and
+            user.place and
+            user.place.position
+            and not user.any_search_distance
+        ):
             place = user.place
             if user.exclude_online:
                 distance_filter = GeoDistance(
@@ -347,6 +358,7 @@ class ActivitySearch(Search):
         "is_online": BooleanFacet(
             field="is_online", labels={"0": _("In-person"), "1": _("Online/remote")}
         ),
+        "is_local": LocalFacet(field='is_local'),
         "team_activity": TeamActivityFacet(field="team_activity"),
         "date": ActivityDateRangeFacet(),
         "office": UntranslatedModelFacet("office", Location),

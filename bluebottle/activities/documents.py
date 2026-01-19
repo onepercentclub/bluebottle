@@ -41,6 +41,7 @@ class ActivityDocument(Document):
     resource_name = fields.KeywordField()
     manager = fields.KeywordField()
     link = fields.KeywordField()
+    is_local = fields.BooleanField()
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
@@ -65,6 +66,9 @@ class ActivityDocument(Document):
 
     def prepare_link(self, instance):
         return None
+
+    def prepare_is_local(self, instance):
+        return True
 
     current_status = fields.NestedField(properties={
         'name': fields.KeywordField(),

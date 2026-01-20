@@ -11,8 +11,8 @@ from bluebottle.activity_links.models import LinkedActivity
 
 
 @register(LinkedActivity)
-class ReviewStateMachine(ModelStateMachine):
-    field = "status"
+class LinkedActivityStateMachine(ModelStateMachine):
+
     model = LinkedActivity
 
     open = State(

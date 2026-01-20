@@ -1,3 +1,4 @@
+from datetime import timedelta  # noqa
 from urllib.parse import urlencode
 
 from django.db import models, connection

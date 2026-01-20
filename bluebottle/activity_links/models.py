@@ -13,6 +13,7 @@ class LinkedActivityManager(PolymorphicManager):
     def sync(self, event):
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
         from bluebottle.activity_links.serializers import LinkedActivitySerializer
+        from bluebottle.activity_pub.models import Publish
 
         try:
             instance = self.get(event=event)

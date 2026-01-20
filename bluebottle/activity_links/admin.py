@@ -11,7 +11,7 @@ class LinkedDeedAdmin(admin.ModelAdmin):
 
 
 @admin.register(LinkedCollectCampaign)
-class LinkedDeedAdmin(admin.ModelAdmin):
+class LinkedCollectCampaignAdmin(admin.ModelAdmin):
     raw_id_fields = ['event', 'host_organization']
 
 

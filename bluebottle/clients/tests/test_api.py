@@ -191,7 +191,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
                 copyright='Malle Eppie Ltd.',
                 powered_by_text='Powered by',
                 powered_by_link='https://epp.ie',
-                footer_banner=image
+                footer_banner_full=image
             )
 
         response = self.client.get(self.settings_url)
@@ -201,10 +201,12 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://epp.ie')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
         self.assertTrue(
-            response.data['platform']['content']['footer_banner'].startswith(
+            response.data['platform']['content']['footer_banner_full'].startswith(
                 '/media/'
             )
         )
+        self.assertIsNone(response.data['platform']['content']['footer_banner_color'])
+        self.assertIsNone(response.data['platform']['content']['footer_banner_logo'])
 
     def test_initiative_platform_settings(self):
         # Create initiative platform settings and confirm they end up correctly in settings api
@@ -309,7 +311,9 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             'footer_text_color': '#ffffff',
             'title_font': None,
             'body_font': None,
-            'footer_banner': None,
+            'footer_banner_full': None,
+            'footer_banner_color': None,
+            'footer_banner_logo': None,
         }
         members = {
             'closed': True,

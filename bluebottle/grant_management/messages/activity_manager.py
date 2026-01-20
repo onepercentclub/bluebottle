@@ -18,7 +18,9 @@ class GrantApplicationManagerMessage(TransitionMessage):
             self.obj = self.obj.funding.first() or self.obj.grant_application.first()
 
         context = super(GrantApplicationManagerMessage, self).get_context(recipient)
-        context['partner_organization'] = self.obj.organization and self.obj.organization.name
+        # Safely access organization attribute
+        organization = getattr(self.obj, 'organization', None)
+        context['partner_organization'] = organization and getattr(organization, 'name', None)
         return context
 
     @property

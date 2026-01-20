@@ -401,6 +401,14 @@ class MockFunding:
         return f"https://example.goodup.com/en/initiatives/activities/funding/{self.id}/{self.slug}"
 
 
+class MockOrganization:
+    """Mock Organization object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+
+
 class MockPayoutAccount:
     """Mock PayoutAccount object"""
 
@@ -408,6 +416,8 @@ class MockPayoutAccount:
         self.id = 111
         self.pk = 111
         self.funding = MockFunding(language)
+        self.organization = None
+        self.grant_application = MockGrantApplication(language)
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
@@ -424,7 +434,25 @@ class MockGrantPayout:
         self.pk = 111
         self.activity = MockGrantApplication(language)
         self.amount = Money(3500, 'EUR')
+        self.total_amount = Money(3500, 'EUR')
         self.grant = MockGrantDonor(language)
+        self.fund = MockGrantFund(language)
+        self._grants_list = [self.grant]
+
+    @property
+    def grants(self):
+        """Mock queryset-like object that supports .first() and .all()"""
+        class MockGrantsQuerySet:
+            def __init__(self, grants_list):
+                self.grants_list = grants_list
+
+            def first(self):
+                return self.grants_list[0] if self.grants_list else None
+
+            def all(self):
+                return self.grants_list
+
+        return MockGrantsQuerySet(self._grants_list)
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/admin/grant_management/grantpayout/{self.id}/change"
@@ -483,17 +511,36 @@ class MockGrantDonor:
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
 
 
+class MockGrantProvider:
+    """Mock Grant Application object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+
 class MockGrantPayment:
     """Mock Grant Application object"""
 
     def __init__(self, language='en'):
         self.id = 111
         self.pk = 111
-        self.payouts = Payout.objects.none()
-        self.total = Money(1700, 'EUR')
+        self._payout = MockGrantPayout(language)
+        class MockPayoutsQuerySet:
+            def __init__(self, payout):
+                self._payout = payout
+
+            def all(self):
+                return [self._payout]
+        self.payouts = MockPayoutsQuerySet(self._payout)
+        self.total = Money(3500, 'EUR')
+        self.grant_provider = MockGrantProvider(language)
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
 
 
 class MockDonation:
@@ -613,8 +660,7 @@ def get_mock_object_for_message(message_class, language='en'):
 
         if 'grant_management' in module_name:
             if 'PayoutAccount' in class_name:
-                from bluebottle.funding_stripe.models import StripePayoutAccount
-                return get_real_or_mock_object(StripePayoutAccount, MockPayoutAccount, language)
+                return MockPayoutAccount(language)
             try:
                 from bluebottle.grant_management.models import GrantApplication
                 grant_app = GrantApplication.objects.filter().first()

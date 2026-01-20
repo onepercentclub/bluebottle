@@ -314,6 +314,24 @@ class GoodDeed(Event):
         verbose_name_plural = _("Deeds")
 
 
+class CollectCampaign(Event):
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
+    location_hint = models.CharField(max_length=1000, null=True, blank=True)
+    target = models.FloatField(null=True)
+    amount = models.FloatField(null=True)
+    collect_type = models.CharField(
+        verbose_name=_("Type"),
+        max_length=200,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = _("Collect campaign")
+        verbose_name_plural = _("Collect campaigns")
+
+
 class CrowdFunding(Event):
     target = models.DecimalField(decimal_places=2, max_digits=10, default=0)
     target_currency = models.CharField(max_length=3, default='EUR')
@@ -323,7 +341,7 @@ class CrowdFunding(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
-    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = _("Funding")
@@ -382,7 +400,7 @@ class SubEvent(ActivityPubModel):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
-    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)
     event_attendance_mode = models.CharField(
         choices=EventAttendanceModeChoices.choices,
@@ -394,7 +412,7 @@ class SubEvent(ActivityPubModel):
         on_delete=models.CASCADE,
         related_name='sub_event'
     )
-    slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.CASCADE)
+    slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = _("Sub event")
@@ -406,7 +424,7 @@ class DoGoodEvent(Event):
     end_time = models.DateTimeField(null=True)
     registration_deadline = models.DateTimeField(null=True)
 
-    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)
     event_attendance_mode = models.CharField(
         choices=EventAttendanceModeChoices.choices,

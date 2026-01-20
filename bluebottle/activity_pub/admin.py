@@ -33,7 +33,7 @@ from bluebottle.activity_pub.models import (
     Announce,
     Organization,
     Following,
-    Follower, GoodDeed, CrowdFunding, DoGoodEvent,
+    Follower, GoodDeed, CrowdFunding, CollectCampaign, DoGoodEvent,
     Recipient, SubEvent, PublishedActivity, ReceivedActivity, Accept,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
@@ -62,6 +62,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Organization,
         GoodDeed,
         CrowdFunding,
+        CollectCampaign,
         DoGoodEvent,
         Place,
     )
@@ -779,7 +780,7 @@ class EventAdminMixin:
                 level="success",
             )
             return HttpResponseRedirect(
-                reverse("activity_links_linkedactivity_change", args=[activity.pk])
+                reverse("admin:activity_links_linkedactivity_change", args=[activity.pk])
             )
 
         except Exception as e:
@@ -796,6 +797,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     child_models = (
         GoodDeed,
         CrowdFunding,
+        CollectCampaign,
         DoGoodEvent,
         SubEvent
     )
@@ -886,12 +888,27 @@ class GoodDeedAdmin(EventChildAdmin):
 @admin.register(CrowdFunding)
 class CrowdFundingAdmin(EventChildAdmin):
     base_model = Event
-    model = GoodDeed
+    model = CrowdFunding
     readonly_fields = EventChildAdmin.readonly_fields + (
         'end_time',
         'target',
         'donated',
         'location'
+    )
+    fields = readonly_fields
+
+
+@admin.register(CollectCampaign)
+class CollectCampaignAdmin(EventChildAdmin):
+    base_model = Event
+    model = CollectCampaign
+    readonly_fields = EventChildAdmin.readonly_fields + (
+        'start_time',
+        'end_time',
+        'location',
+        'collect_type',
+        'target',
+        'amount'
     )
     fields = readonly_fields
 

@@ -4,11 +4,9 @@ from django_quill.fields import QuillField
 from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
-from bluebottle.activity_pub.models import Publish
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import MoneyField, ImageField
-from bluebottle.activity_pub.models import Publish
 
 
 class LinkedActivityManager(PolymorphicManager):
@@ -73,6 +71,17 @@ class LinkedDeed(LinkedActivity):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/deeds'
+
+
+class LinkedCollectCampaign(LinkedActivity):
+    start = models.DateTimeField(null=True, blank=True)
+    end = models.DateTimeField(null=True, blank=True)
+    collect_type = models.CharField(max_length=1000, null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+    location_hint = models.CharField(max_length=1000, null=True, blank=True)
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/collects'
 
 
 class LinkedFunding(LinkedActivity):

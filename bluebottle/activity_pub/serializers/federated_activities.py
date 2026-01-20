@@ -12,6 +12,9 @@ from djmoney.money import Money
 from rest_framework import exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
+from bluebottle.collect.models import CollectActivity, CollectType
+from bluebottle.utils.models import get_default_language
+
 logger = logging.getLogger(__name__)
 
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
@@ -225,6 +228,71 @@ class FederatedDeedSerializer(BaseFederatedActivitySerializer):
         )
 
 
+class ParlerNameRelatedField(serializers.RelatedField):
+    def __init__(self, *, name_field="name", create_if_missing=True, **kwargs):
+        self.name_field = name_field
+        self.create_if_missing = create_if_missing
+        super().__init__(**kwargs)
+
+    def to_representation(self, value):
+        lang = get_default_language()
+        translated = value.safe_translation_getter(
+            self.name_field,
+            language_code=lang,
+            any_language=True,
+        )
+        print('translated', translated)
+        return translated
+
+    def to_internal_value(self, data):
+        if data is None or data == "":
+            return None
+        if not isinstance(data, str):
+            raise serializers.ValidationError("Expected a string.")
+
+        lang = get_default_language()
+        qs = self.get_queryset()
+        if qs is None:
+            raise serializers.ValidationError("No queryset provided for related field.")
+
+        try:
+            obj = qs.translated(lang, **{self.name_field: data}).get()
+            return obj
+        except qs.model.DoesNotExist:
+            if not self.create_if_missing:
+                raise serializers.ValidationError(f"Unknown {qs.model.__name__}: {data}")
+
+        obj = qs.model()
+        obj.set_current_language(lang)
+        setattr(obj, self.name_field, data)
+        obj.save()
+        return obj
+
+
+class FederatedCollectSerializer(BaseFederatedActivitySerializer):
+    id = FederatedIdField('json-ld:collect-campaign')
+    start_time = DateField(source='start', allow_null=True)
+    end_time = DateField(source='end', allow_null=True)
+    collect_type = ParlerNameRelatedField(
+        queryset=CollectType.objects.all(),
+        allow_null=True,
+        required=False,
+        create_if_missing=True,
+    )
+    target = serializers.FloatField(allow_null=True, required=False)
+    amount = serializers.FloatField(source='realized', allow_null=True, required=False)
+    location = LocationSerializer(allow_null=True, required=False)
+    location_hint = serializers.CharField(allow_null=True, allow_blank=True, required=False, max_length=500)
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = CollectActivity
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time',
+            'collect_type', 'target', 'amount', 'realized',
+            'location', 'location_hint'
+        )
+
+
 class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:crowd-funding')
 
@@ -406,7 +474,8 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         FederatedDeadlineActivitySerializer,
         FederatedDeedSerializer,
         FederatedDateActivitySerializer,
-        FederatedFundingSerializer
+        FederatedFundingSerializer,
+        FederatedCollectSerializer
     ]
 
     model_type_mapping = {
@@ -414,6 +483,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         Funding: 'CrowdFunding',
         DateActivity: 'DoGoodEvent',
         DeadlineActivity: 'DoGoodEvent',
+        CollectActivity: 'CollectCampaign',
     }
 
     def __new__(cls, *args, **kwargs):

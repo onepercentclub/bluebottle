@@ -21,6 +21,7 @@ from bluebottle.activity_pub.models import (
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectTypeFactory
 from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
@@ -661,3 +662,62 @@ class AdoptSingleSlotDateActivityTestCase(ActivityPubTestCase, BluebottleTestCas
 
         with LocalTenant(self.other_tenant):
             self.assertEqual(self.adopted.slots.count(), 1)
+
+
+class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = CollectActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date(),
+            collect_type=CollectTypeFactory.create(),
+            organization=None
+        )
+        self.submit()
+
+    def test_update_collect_type(self):
+        self.test_link()
+
+        new_collect_type = CollectTypeFactory.create()
+        self.model.collect_type = new_collect_type
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            # Verify the linked activity was updated
+            self.assertIsNotNone(link)
+
+
+class AdoptCollectActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = CollectActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date(),
+            collect_type=CollectTypeFactory.create(),
+            organization=None
+        )
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.start_time.date(), self.model.start)
+            self.assertEqual(self.event.end_time.date(), self.model.end)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.end, self.model.end)
+        self.assertEqual(self.adopted.collect_type, self.model.collect_type)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )

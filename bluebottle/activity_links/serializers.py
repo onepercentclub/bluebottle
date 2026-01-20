@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_links.models import LinkedActivity, LinkedDeed, LinkedDateActivity, LinkedDeadlineActivity, \
-    LinkedFunding, LinkedDateSlot
+    LinkedFunding, LinkedDateSlot, LinkedCollectCampaign
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer, PointSerializer, CountrySerializer
 from bluebottle.utils.fields import RichTextField
@@ -179,6 +179,18 @@ class LinkedDeedSerializer(BaseLinkedActivitySerializer):
         )
 
 
+class LinkedCollectCampaignSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    location = LinkedLocationSerializer(required=False, allow_null=True)
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedCollectCampaign
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time', 'location', 'location_hint', 'collect_type'
+        )
+
+
 class LinkedSlotSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
@@ -249,7 +261,8 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedDeedSerializer,
         LinkedDateActivitySerializer,
         LinkedDeadlineActivitySerializer,
-        LinkedFundingSerializer
+        LinkedFundingSerializer,
+        LinkedCollectCampaign
     ]
 
     model_type_mapping = {
@@ -257,16 +270,16 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedDateActivity: 'DoGoodEvent',
         LinkedDeadlineActivity: 'DoGoodEvent',
         LinkedFunding: 'Funding',
+        LinkedCollectCampaign: 'CollectCampaign'
     }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Map resource types to models for polymorphic deserialization
         self.resource_type_model_mapping['DateActivity'] = LinkedDateActivity
         self.resource_type_model_mapping['DeadlineActivity'] = LinkedDeadlineActivity
         self.resource_type_model_mapping['Funding'] = LinkedFunding
         self.resource_type_model_mapping['GoodDeed'] = LinkedDeed
+        self.resource_type_model_mapping['CollectCampaign'] = LinkedCollectCampaign
 
     def _get_resource_type_from_mapping(self, data):
         event_type = data.get('type')
@@ -299,7 +312,8 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedDeed: LinkedDeedSerializer,
         LinkedDateActivity: LinkedDateActivitySerializer,
         LinkedDeadlineActivity: LinkedDeadlineActivitySerializer,
-        LinkedFunding: LinkedFundingSerializer
+        LinkedFunding: LinkedFundingSerializer,
+        LinkedCollectCampaign: LinkedCollectCampaignSerializer
     }
 
     class Meta:

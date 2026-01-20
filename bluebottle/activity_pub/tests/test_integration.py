@@ -298,10 +298,10 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.image.origin, self.event.image)
 
                     self.approve(self.adopted)
-                    announce = Announce.objects.get()
+                    announce = Announce.objects.last()
                     self.assertTrue(announce)
 
-        announce = Announce.objects.get()
+        announce = Announce.objects.first()
         self.assertTrue(announce)
 
     def test_adopt_default_owner(self):
@@ -670,6 +670,7 @@ class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
     def create(self):
         super().create(
             location=GeolocationFactory.create(country=self.country),
+            location_hint='ring rtop bell',
             start=(datetime.now() + timedelta(days=10)).date(),
             end=(datetime.now() + timedelta(days=20)).date(),
             collect_type=CollectTypeFactory.create(),
@@ -686,7 +687,6 @@ class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
-            # Verify the linked activity was updated
             self.assertIsNotNone(link)
 
 

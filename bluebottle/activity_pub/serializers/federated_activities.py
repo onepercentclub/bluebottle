@@ -241,7 +241,6 @@ class ParlerNameRelatedField(serializers.RelatedField):
             language_code=lang,
             any_language=True,
         )
-        print('translated', translated)
         return translated
 
     def to_internal_value(self, data):

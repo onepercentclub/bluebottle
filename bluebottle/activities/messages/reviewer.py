@@ -30,6 +30,8 @@ class ReviewerActivityNotification(TransitionMessage):
         from bluebottle.members.models import Member
 
         recipients = Member.objects.filter(
+            submitted_initiative_notifications=True
+        ).filter(
             Q(submitted_initiative_notifications=True)
             | Q(is_staff=True)
             | Q(is_superuser=True)

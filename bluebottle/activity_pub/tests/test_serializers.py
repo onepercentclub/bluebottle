@@ -1,21 +1,27 @@
 from io import BytesIO
+from pprint import pprint
 
 import mock
 from django.test import RequestFactory
 from requests import Response
 
 from bluebottle.activity_pub.models import GoodDeed, CrowdFunding
+from bluebottle.activity_pub.resources import Resource
 from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import (
     DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer
 )
+from bluebottle.activity_pub.serializers.triples import OrganizationSerializer
 from bluebottle.activity_pub.tests.factories import (
     DoGoodEventFactory
 )
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import DateActivityFactory
+
+from django.core.files.base import File
 
 
 class DoGoodEventSerializerTestCase(BluebottleTestCase):
@@ -243,3 +249,37 @@ class CrowdFundingSerializerTest(BluebottleTestCase):
 
         self.assertIn('url', data)
         self.assertIsNone(data['url'])
+
+
+class OrganizationSerializerTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.model = OrganizationFactory.create()
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+
+            self.model.logo = image
+            self.model.save()
+
+    def test_data(self):
+        serializer = OrganizationSerializer(instance=self.model)
+
+        data = serializer.data
+
+        resource = Resource.from_document(data)
+        resource.icon.save()
+
+        resource.save()
+
+        print(
+            resource.inbox,
+            resource.outbox,
+            resource.public_key,
+            resource.public_key.private_key
+        )
+
+        resource.name = 'some title'
+        resource.save()
+
+        resource = Resource.from_iri(resource.iri)
+        print(resource.title, resource.icon.url)

@@ -1,3 +1,4 @@
+from functools import cached_property
 from urllib.parse import urlparse
 
 from cryptography.hazmat.primitives import serialization
@@ -11,6 +12,16 @@ from polymorphic.models import PolymorphicManager, PolymorphicModel
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
+
+from bluebottle.activity_pub.processor import (
+    processed_context, processor, default_context
+)
+
+
+class Triple(models.Model):
+    subject = models.JSONField()
+    predicate = models.JSONField()
+    object = models.JSONField()
 
 
 class ActivityPubManager(PolymorphicManager):

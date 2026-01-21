@@ -27,6 +27,7 @@ from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -169,13 +170,16 @@ class ActivityPubTestCase:
             self.assertTrue(accept.actor.organization)
             self.assertTrue(accept.actor.organization.logo)
 
-    def create(self, **kwargs):
+    def create(self, closed_segment=False, **kwargs):
         self.model = self.factory.create(
             owner=self.user,
             initiative=None,
             image=ImageFactory.create(),
             **kwargs
         )
+        if closed_segment:
+            segment = SegmentFactory.create(closed=True)
+            self.model.segments.add(segment)
 
     def submit(self):
         self.model.states.submit()
@@ -263,6 +267,13 @@ class ActivityPubTestCase:
     def test_publish_no_accept(self):
         self.test_follow()
         self.create()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(Event.objects.count(), 0)
+
+    def test_publish_closed_segment(self):
+        self.test_follow()
+        self.create(closed_segment=True)
 
         with LocalTenant(self.other_tenant):
             self.assertEqual(Event.objects.count(), 0)
@@ -381,11 +392,12 @@ class LinkTestCase(ActivityPubTestCase):
 class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DeedFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(
             start=(datetime.now() + timedelta(days=10)).date(),
             end=(datetime.now() + timedelta(days=20)).date(),
-            organization=None
+            organization=None,
+            **kwargs
         )
         self.submit()
 
@@ -405,11 +417,12 @@ class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
 class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
     factory = DeedFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(
             start=(datetime.now() + timedelta(days=10)).date(),
             end=(datetime.now() + timedelta(days=20)).date(),
-            organization=None
+            organization=None,
+            **kwargs
         )
         self.submit()
 
@@ -417,7 +430,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
 class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
     factory = FundingFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(
             impact_location=GeolocationFactory.create(country=self.country),
             deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
@@ -428,7 +441,8 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
                     account_id="test-account-id",
                     status="verified",
                 ),
-            )
+            ),
+            **kwargs
         )
 
         BudgetLineFactory.create_batch(2, activity=self.model)
@@ -488,7 +502,7 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = FundingFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(
             impact_location=GeolocationFactory.create(country=self.country),
             deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
@@ -499,7 +513,8 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
                     account_id="test-account-id",
                     status="verified",
                 ),
-            )
+            ),
+            **kwargs
         )
 
         BudgetLineFactory.create_batch(2, activity=self.model)
@@ -552,11 +567,12 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
 class LinkDeadlineActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(
             location=GeolocationFactory.create(country=self.country),
             start=(datetime.now() + timedelta(days=10)).date(),
-            deadline=(datetime.now() + timedelta(days=20)).date()
+            deadline=(datetime.now() + timedelta(days=20)).date(),
+            **kwargs
         )
         self.submit()
 
@@ -564,11 +580,12 @@ class LinkDeadlineActivityTestCase(LinkTestCase, BluebottleTestCase):
 class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(
             location=GeolocationFactory.create(country=self.country),
             start=(datetime.now() + timedelta(days=10)).date(),
-            deadline=(datetime.now() + timedelta(days=20)).date()
+            deadline=(datetime.now() + timedelta(days=20)).date(),
+            **kwargs
         )
         self.submit()
 
@@ -582,14 +599,15 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 class LinkedDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(slots=[], organization=None)
 
         DateActivitySlotFactory.create_batch(
             3,
             activity=self.model,
             location=None,
-            is_online=True
+            is_online=True,
+            **kwargs
         )
 
         self.submit()
@@ -598,8 +616,8 @@ class LinkedDateActivityTestCase(LinkTestCase, BluebottleTestCase):
 class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
-    def create(self):
-        super().create(slots=[], organization=None)
+    def create(self, **kwargs):
+        super().create(slots=[], organization=None, **kwargs)
 
         DateActivitySlotFactory.create_batch(
             3,
@@ -625,8 +643,8 @@ class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 class LinkedSingleSlotDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
-    def create(self):
-        super().create(slots=[])
+    def create(self, **kwargs):
+        super().create(slots=[], **kwargs)
 
         DateActivitySlotFactory.create_batch(
             1,
@@ -640,8 +658,8 @@ class LinkedSingleSlotDateActivityTestCase(LinkTestCase, BluebottleTestCase):
 class AdoptSingleSlotDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
-    def create(self):
-        super().create(slots=[])
+    def create(self, **kwargs):
+        super().create(slots=[], **kwargs)
 
         DateActivitySlotFactory.create_batch(
             1,

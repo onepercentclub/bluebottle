@@ -17,7 +17,7 @@ from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionModeChoices, AdoptionTypeChoices, Announce, Follow, Accept, Event,
-    Recipient
+    Recipient, RepetitionModeChoices
 )
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -39,6 +39,7 @@ from bluebottle.time_based.tests.factories import (
     DateActivitySlotFactory,
     DeadlineActivityFactory,
     RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
+    PeriodicActivityFactory,
 )
 
 
@@ -592,6 +593,48 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.deadline, self.model.deadline)
         self.assertEqual(self.adopted.duration, self.model.duration)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )
+
+
+class LinkPeriodicActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = PeriodicActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
+        )
+        self.submit()
+
+
+class AdoptPeriodicActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = PeriodicActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
+        )
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.start_time.date(), self.model.start)
+            self.assertEqual(self.event.duration, self.model.duration)
+            self.assertEqual(self.event.repetition_mode, RepetitionModeChoices.weekly)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.duration, self.model.duration)
+        self.assertEqual(self.adopted.period, self.model.period)
         if self.model.location:
             self.assertEqual(
                 self.adopted.location.position,

@@ -123,4 +123,12 @@ class LinkedDateSlot(models.Model):
         return None
 
 
+class LinkedPeriodicActivity(LinkedActivity):
+    start = models.DateTimeField(null=True, blank=True)
+    end = models.DateTimeField(null=True, blank=True)
+    duration = models.DurationField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+    repetition_mode = models.CharField(null=True, blank=True, max_length=255)
+
+
 from bluebottle.activity_links.signals import *  # noqa

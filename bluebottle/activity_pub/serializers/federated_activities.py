@@ -526,9 +526,9 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:do-good-event')
 
     location = LocationSerializer(allow_null=True, required=False)
-
+    image = ImageSerializer(required=False, allow_null=True)
     start_time = DateField(source='start', allow_null=True)
-    end_time = DateField(source='end', allow_null=True, read_only=True)
+    end_time = DateField(source='deadline', allow_null=True, read_only=True)
     duration = serializers.DurationField(allow_null=True)
     repetition_mode = RepetitionModeField()
     event_attendance_mode = EventAttendanceModeField()

@@ -614,6 +614,12 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
                 CreateFirstSlotEffect,
             ]
         ),
+        ModelChangedTrigger(
+            ['title', 'description', 'start', 'deadline', 'location', 'duration', 'period'],
+            effects=[
+                UpdateEventEffect,
+            ]
+        )
     ]
 
 
@@ -766,10 +772,9 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             ]
         ),
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'duration', 'location', 'duration'],
+            ['title', 'description', 'start', 'deadline', 'location', 'duration'],
             effects=[
                 UpdateEventEffect,
             ]
         )
-
     ]

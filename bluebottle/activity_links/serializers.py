@@ -243,7 +243,9 @@ class LinkedDeadlineActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySe
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeadlineActivity
-        fields = BaseLinkedActivitySerializer.Meta.fields + ('start_time', 'end_time', 'location')
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time', 'location'
+        )
 
 
 class LinkedPeriodicActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
@@ -255,7 +257,7 @@ class LinkedPeriodicActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySe
         model = LinkedPeriodicActivity
         fields = BaseLinkedActivitySerializer.Meta.fields + (
             'start_time', 'end_time', 'location',
-            'duration', 'repetition'
+            'duration', 'repetition_mode'
         )
 
 
@@ -318,9 +320,9 @@ class LinkedActivitySerializer(PolymorphicSerializer):
 
         # Handle DoGoodEvent - check sub_event to distinguish DateActivity from DeadlineActivity
         if event_type == 'DoGoodEvent':
-            if data.get('repetition', 'once') not in ['once', None]:
+            if data.get('repetition', 'OnceRepetitionMode') not in ['OnceRepetitionMode', None]:
                 return 'PeriodicActivity'
-            if data.get('join_mode', None) == 'selected':
+            if data.get('join_mode', None) == 'SelectedJoinMode':
                 return 'RegisteredDateActivity'
             if len(data.get('sub_event', [])) > 0:
                 return 'DateActivity'

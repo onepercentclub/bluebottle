@@ -435,7 +435,6 @@ class DoGoodEvent(Event):
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)
     repetition_mode = models.CharField(
-        max_length=255,
         choices=RepetitionModeChoices.choices,
         default=RepetitionModeChoices.once,
         null=True

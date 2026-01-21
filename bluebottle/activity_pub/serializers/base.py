@@ -87,7 +87,7 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
             if isinstance(data, str):
                 data = {'id': data}
 
-            if tuple(data.keys()) == ('id', ):
+            if tuple(data.keys()) == ('id',):
                 iri = data['id']
                 instance = self.Meta.model.objects.from_iri(iri)
 

@@ -498,7 +498,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
     list_display = [
         "title",
         "target",
-        "status",
+        "state_name",
     ]
 
     def get_list_display(self, request):

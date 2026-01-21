@@ -356,6 +356,7 @@ class EventAttendanceModeChoices(DjangoChoices):
 class JoinModeChoices(DjangoChoices):
     open = ChoiceItem('OpenJoinMode')
     review = ChoiceItem('ReviewJoinMode')
+    selected = ChoiceItem('SelectedJoinMode')
 
 
 class AdoptionModeChoices(DjangoChoices):

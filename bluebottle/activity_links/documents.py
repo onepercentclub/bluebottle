@@ -4,7 +4,7 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity, \
-    LinkedCollectCampaign
+    LinkedCollectCampaign, LinkedDeadlineActivity
 from bluebottle.initiatives.documents import get_translated_list
 from bluebottle.utils.documents import TextField
 from bluebottle.utils.models import get_default_language
@@ -390,3 +390,70 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
 
     def prepare_activity_type(self, instance):
         return 'date'
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedDeadlineActivityDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedDeadlineActivity
+        related_models = ()
+
+    def prepare_location(self, instance):
+        locations = [
+            {
+                'name': instance.location.formatted_address,
+                'locality': instance.location.locality,
+                'country_code': instance.location.country.alpha2_code,
+                'country': instance.location.country.name,
+                'type': 'location'
+
+            }
+        ] if instance.location_id else []
+        return locations
+
+    def prepare_country(self, instance):
+        countries = []
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+        return countries
+
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.end]
+
+    def prepare_dates(self, instance):
+        return [
+            {
+                'start': instance.start,
+                'end': instance.end,
+            }
+        ]
+
+    def prepare_duration(self, instance):
+        return [
+            {'gte': instance.start, 'lte': instance.end}
+        ]
+
+    def prepare_contribution_duration(self, instance):
+        return [
+            {
+                'period': 'slot',
+                'start': instance.start,
+                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+            }
+        ]
+
+    def prepare_slug(self, instance):
+        return f'linked-deadline-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'deadline'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/time-based/deadlines'
+
+    def prepare_activity_type(self, instance):
+        return 'deadline'

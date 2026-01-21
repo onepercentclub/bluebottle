@@ -245,7 +245,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
         allow_null=True
     )
     join_mode = serializers.ChoiceField(
-        choices=['OpenJoinMode', 'ReviewJoinMode'],
+        choices=['OpenJoinMode', 'ReviewJoinMode', 'SelectedJoinMode'],
         required=False,
         allow_null=True
     )

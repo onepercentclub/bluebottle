@@ -586,6 +586,18 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
         self.assertEqual(self.event.start_time.date(), self.model.start)
         self.assertEqual(self.event.end_time.date(), self.model.deadline)
 
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.deadline, self.model.deadline)
+        self.assertEqual(self.adopted.duration, self.model.duration)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )
+
 
 class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = RegisteredDateActivityFactory

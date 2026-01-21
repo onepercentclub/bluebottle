@@ -263,10 +263,10 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         super().__init__(*args, **kwargs)
 
         # Map resource types to models for polymorphic deserialization
-        self.resource_type_model_mapping['DateActivity'] = LinkedDateActivity
-        self.resource_type_model_mapping['DeadlineActivity'] = LinkedDeadlineActivity
-        self.resource_type_model_mapping['Funding'] = LinkedFunding
-        self.resource_type_model_mapping['GoodDeed'] = LinkedDeed
+        self.resource_type_model_mapping['dateactivity'] = LinkedDateActivity
+        self.resource_type_model_mapping['deadlineactivity'] = LinkedDeadlineActivity
+        self.resource_type_model_mapping['funding'] = LinkedFunding
+        self.resource_type_model_mapping['deed'] = LinkedDeed
 
     def _get_resource_type_from_mapping(self, data):
         event_type = data.get('type')

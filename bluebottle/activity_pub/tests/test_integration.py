@@ -203,6 +203,20 @@ class ActivityPubTestCase:
             event = Event.objects.get()
             self.assertTrue(event.name, self.model.title)
 
+    def test_publish_both_closed(self):
+        MemberPlatformSettings.objects.create(closed=True)
+
+        with LocalTenant(self.other_tenant):
+            MemberPlatformSettings.objects.create(closed=True)
+
+        self.test_accept()
+        self.create()
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+
+            self.assertTrue(event.name, self.model.title)
+
     def test_publish_no_accept(self):
         self.test_follow()
         self.create()

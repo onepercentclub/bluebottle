@@ -3,6 +3,8 @@
     "@vocab": "_:",
     "goodup": "https://goodup.com/json-ld#",
     "GoodDeed": "goodup:GoodDeed",
+    "DoGoodEvent": "goodup:DoGoodEvent",
+    "CollectCampaign": "goodup:CollectCampaign",
     "CrowdFunding": "goodup:CrowdFunding",
     "subEvent": {"@id": "goodup:subEvent", "@type": "@id"},
     "address": {"@id": "goodup:address", "@type": "@id"},

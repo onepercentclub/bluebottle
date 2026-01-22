@@ -359,11 +359,22 @@ class JoinModeChoices(DjangoChoices):
     selected = ChoiceItem('SelectedJoinMode')
 
 
+class SlotModeChoices(DjangoChoices):
+    set = ChoiceItem('SetSlotMode')
+    scheduled = ChoiceItem('ScheduledSlotMode')
+    periodic = ChoiceItem('RepeatedSlotMode')
+
+
 class RepetitionModeChoices(DjangoChoices):
-    once = ChoiceItem('OnceRepetitionMode')
     daily = ChoiceItem('DailyRepetitionMode')
     weekly = ChoiceItem('WeeklyRepetitionMode')
     monthly = ChoiceItem('MonthlyRepetitionMode')
+
+
+class ParticipationModeChoices(DjangoChoices):
+    individuals = ChoiceItem('IndividualParticipationMode')
+    teams = ChoiceItem('TeamParticipationMode')
+    any = ChoiceItem('AnyParticipationMode')
 
 
 class AdoptionModeChoices(DjangoChoices):
@@ -436,7 +447,6 @@ class DoGoodEvent(Event):
     duration = models.DurationField(null=True)
     repetition_mode = models.CharField(
         choices=RepetitionModeChoices.choices,
-        default=RepetitionModeChoices.once,
         null=True
     )
     event_attendance_mode = models.CharField(
@@ -445,6 +455,12 @@ class DoGoodEvent(Event):
     )
     join_mode = models.CharField(
         choices=JoinModeChoices.choices,
+        null=True
+    )
+
+    slot_mode = models.CharField(
+        choices=SlotModeChoices.choices,
+        default=SlotModeChoices.set,
         null=True
     )
 

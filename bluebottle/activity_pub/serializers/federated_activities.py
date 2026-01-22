@@ -424,7 +424,7 @@ class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer)
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = RegisteredDateActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'location', 'start_time', 'end_time', 'registration_deadline',
+            'location', 'start_time', 'end_time',
             'duration', 'join_mode', 'event_attendance_mode'
         )
 
@@ -529,6 +529,7 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     image = ImageSerializer(required=False, allow_null=True)
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True, read_only=True)
+    registration_deadline = DateField(allow_null=True)
     duration = serializers.DurationField(allow_null=True)
     repetition_mode = RepetitionModeField()
     event_attendance_mode = EventAttendanceModeField()
@@ -626,11 +627,11 @@ class FederatedActivitySerializer(PolymorphicSerializer):
     def _get_resource_type_from_mapping(self, data):
         if data.get('type') == 'DoGoodEvent':
             if data.get('slot_mode', 'SetSlotMode') == 'ScheduleSlotMode':
-                return ScheduleActivity
+                return 'ScheduleActivity'
             elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
-                return PeriodicActivity
+                return 'PeriodicActivity'
             elif data.get('join_mode', None) in ('selected', JoinModeChoices.selected):
-                return RegisteredDateActivity
+                return 'RegisteredDateActivity'
             elif len(data.get('sub_event', [])) > 0:
                 return 'DateActivity'
             else:

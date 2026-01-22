@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-16 10:18+0100\n"
-"PO-Revision-Date: 2026-01-16 13:48\n"
+"POT-Creation-Date: 2026-01-20 13:49+0100\n"
+"PO-Revision-Date: 2026-01-22 08:47\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -130,8 +130,7 @@ msgid_plural "{count} participants could not be added. Please check if the email
 msgstr[0] "{count} Teilnehmer konnte nicht hinzugefügt werden. Bitte überprüfen Sie, ob die E-Mail-Adresse korrekt ist."
 msgstr[1] "{count} Teilnehmer konnten nicht hinzugefügt werden. Bitte überprüfen Sie, ob die E-Mail-Adresse korrekt ist."
 
-#: bluebottle/activities/admin.py:751 bluebottle/activity_links/states.py:38
-#: bluebottle/initiatives/models.py:173
+#: bluebottle/activities/admin.py:751 bluebottle/initiatives/models.py:173
 msgid "Initiative"
 msgstr "Initiative"
 
@@ -165,12 +164,12 @@ msgstr "Teilnahme"
 #: bluebottle/funding/admin.py:226 bluebottle/grant_management/admin.py:549
 #: bluebottle/initiatives/models.py:135 bluebottle/initiatives/models.py:282
 #: bluebottle/initiatives/models.py:289 bluebottle/initiatives/models.py:294
-#: bluebottle/members/models.py:279
+#: bluebottle/members/models.py:280
 msgid "Work location"
 msgstr "Arbeitsstandort"
 
 #: bluebottle/activities/admin.py:883 bluebottle/funding/admin.py:234
-#: bluebottle/grant_management/admin.py:557 bluebottle/members/admin.py:647
+#: bluebottle/grant_management/admin.py:557 bluebottle/members/admin.py:645
 #: bluebottle/settings/admin_dashboard.py:211
 msgid "Segments"
 msgstr "Segmente"
@@ -299,11 +298,11 @@ msgstr "Mit Ihrem Team"
 msgid "As an individual"
 msgstr "Als Einzelperson"
 
-#: bluebottle/activities/filters.py:348
+#: bluebottle/activities/filters.py:398
 msgid "In-person"
 msgstr "Persönlich"
 
-#: bluebottle/activities/filters.py:348
+#: bluebottle/activities/filters.py:398
 msgid "Online/remote"
 msgstr "Online/Remote"
 
@@ -561,18 +560,18 @@ msgctxt "email"
 msgid "Open your activity"
 msgstr "Öffne deine Aktivität"
 
-#: bluebottle/activities/messages/reviewer.py:17
+#: bluebottle/activities/messages/reviewer.py:22
 msgctxt "email"
 msgid "View this activity"
 msgstr "Diese Aktivität anzeigen"
 
-#: bluebottle/activities/messages/reviewer.py:49
+#: bluebottle/activities/messages/reviewer.py:66
 #, python-brace-format
 msgctxt "email"
 msgid "A new activity is ready to be reviewed on {site_name}"
 msgstr "Eine neue Aktivität kann auf {site_name} überprüft werden"
 
-#: bluebottle/activities/messages/reviewer.py:55
+#: bluebottle/activities/messages/reviewer.py:72
 #, python-brace-format
 msgctxt "email"
 msgid "A new activity has been published on {site_name}"
@@ -697,7 +696,7 @@ msgstr "Umleitungsschritt Beschreibung"
 msgid "A description to explain what the next step is"
 msgstr "Eine Beschreibung um zu erklären, was der nächste Schritt ist"
 
-#: bluebottle/activities/models.py:187 bluebottle/members/models.py:428
+#: bluebottle/activities/models.py:187 bluebottle/members/models.py:429
 msgid "Segment"
 msgstr "Segment"
 
@@ -715,106 +714,106 @@ msgstr "Hat der Nutzer die Nutzungsbedingungen für diese Aktivität akzeptiert?
 msgid "Activities"
 msgstr "Aktivitäten"
 
-#: bluebottle/activities/models.py:283 bluebottle/initiatives/models.py:194
+#: bluebottle/activities/models.py:284 bluebottle/initiatives/models.py:194
 #: bluebottle/slides/models.py:107
 msgid "-empty-"
 msgstr "-leer-"
 
-#: bluebottle/activities/models.py:343
+#: bluebottle/activities/models.py:344
 msgid "Old team"
 msgstr "Altes Team"
 
-#: bluebottle/activities/models.py:351
+#: bluebottle/activities/models.py:352
 msgid "user"
 msgstr "benutzer"
 
-#: bluebottle/activities/models.py:380
+#: bluebottle/activities/models.py:381
 msgid "Contribution"
 msgstr "Beitrag"
 
-#: bluebottle/activities/models.py:381 bluebottle/activities/models.py:444
+#: bluebottle/activities/models.py:382 bluebottle/activities/models.py:445
 #: bluebottle/funding/models.py:592 bluebottle/time_based/models.py:1105
 msgid "Contributions"
 msgstr "Beiträge"
 
-#: bluebottle/activities/models.py:390 bluebottle/activities/models.py:488
+#: bluebottle/activities/models.py:391 bluebottle/activities/models.py:489
 msgid "Anonymous"
 msgstr "Anonym"
 
-#: bluebottle/activities/models.py:396
+#: bluebottle/activities/models.py:397
 msgid "Activity owner"
 msgstr "Aktivitätsbesitzer"
 
-#: bluebottle/activities/models.py:397
+#: bluebottle/activities/models.py:398
 msgid "Activity owners"
 msgstr "Aktivitätsbesitzer"
 
-#: bluebottle/activities/models.py:407
+#: bluebottle/activities/models.py:408
 msgid "start"
 msgstr "anfangen"
 
-#: bluebottle/activities/models.py:408
+#: bluebottle/activities/models.py:409
 msgid "end"
 msgstr "ende"
 
-#: bluebottle/activities/models.py:424 bluebottle/activities/models.py:428
+#: bluebottle/activities/models.py:425 bluebottle/activities/models.py:429
 msgid "Contribution amount"
 msgstr "Spendenbetrag"
 
-#: bluebottle/activities/models.py:425
+#: bluebottle/activities/models.py:426
 msgid "Contribution amounts"
 msgstr "Spendenbeträge"
 
-#: bluebottle/activities/models.py:433
+#: bluebottle/activities/models.py:434
 msgid "Activity Organizer"
 msgstr "Aktivitätsorganisator"
 
-#: bluebottle/activities/models.py:434 bluebottle/deeds/models.py:128
+#: bluebottle/activities/models.py:435 bluebottle/deeds/models.py:128
 msgid "Deed participant"
 msgstr "Deed participant"
 
-#: bluebottle/activities/models.py:437 bluebottle/time_based/models.py:1086
+#: bluebottle/activities/models.py:438 bluebottle/time_based/models.py:1086
 msgid "Contribution type"
 msgstr "Beitragstyp"
 
-#: bluebottle/activities/models.py:443
+#: bluebottle/activities/models.py:444
 msgid "Effort"
 msgstr "Aufwand"
 
-#: bluebottle/activities/models.py:477 bluebottle/time_based/models.py:1555
+#: bluebottle/activities/models.py:478 bluebottle/time_based/models.py:1555
 msgid "Team"
 msgstr "Team"
 
-#: bluebottle/activities/models.py:487 bluebottle/time_based/models.py:1580
+#: bluebottle/activities/models.py:488 bluebottle/time_based/models.py:1580
 #, python-brace-format
 msgid "Team {name}"
 msgstr "Team- {name}"
 
-#: bluebottle/activities/models.py:507 bluebottle/activities/models.py:513
+#: bluebottle/activities/models.py:508 bluebottle/activities/models.py:514
 msgid "Everyone"
 msgstr "Alle"
 
-#: bluebottle/activities/models.py:508 bluebottle/activities/models.py:514
+#: bluebottle/activities/models.py:509 bluebottle/activities/models.py:515
 msgid "Managers"
 msgstr "Manager"
 
-#: bluebottle/activities/models.py:518
+#: bluebottle/activities/models.py:519
 msgid "Label"
 msgstr "Bezeichnung"
 
-#: bluebottle/activities/models.py:520
+#: bluebottle/activities/models.py:521
 msgid "The label for this question. This is used for validation messages e.g. \"[label] is required\"."
 msgstr "Die Bezeichnung für diese Frage. Dies wird für Validierungsnachrichten verwendet, z. B. \"[label] ist erforderlich\"."
 
-#: bluebottle/activities/models.py:536
+#: bluebottle/activities/models.py:537
 msgid "Who can see the answers?"
 msgstr "Wer kann die Antworten sehen?"
 
-#: bluebottle/activities/models.py:546
+#: bluebottle/activities/models.py:547
 msgid "Form question"
 msgstr "Formular Frage"
 
-#: bluebottle/activities/models.py:547
+#: bluebottle/activities/models.py:548
 msgid "Form questions"
 msgstr "Formular Fragen"
 
@@ -910,19 +909,19 @@ msgstr "erfolgreich"
 msgid "The activity has ended successfully."
 msgstr "Die Aktivität wurde erfolgreich beendet."
 
-#: bluebottle/activities/states.py:162
+#: bluebottle/activities/states.py:174
 msgid "Create"
 msgstr "Anlegen"
 
-#: bluebottle/activities/states.py:163
+#: bluebottle/activities/states.py:175
 msgid "The activity will be created."
 msgstr "Die Aktivität wird erstellt."
 
-#: bluebottle/activities/states.py:172 bluebottle/activities/states.py:185
+#: bluebottle/activities/states.py:184 bluebottle/activities/states.py:197
 msgid "The activity will be submitted for review."
 msgstr "Die Aktivität wird zur Überprüfung eingereicht."
 
-#: bluebottle/activities/states.py:174 bluebottle/activities/states.py:187
+#: bluebottle/activities/states.py:186 bluebottle/activities/states.py:199
 #: bluebottle/funding/states.py:88 bluebottle/funding/states.py:667
 #: bluebottle/grant_management/states.py:58
 #: bluebottle/grant_management/states.py:349
@@ -930,7 +929,7 @@ msgstr "Die Aktivität wird zur Überprüfung eingereicht."
 msgid "Submit"
 msgstr "Absenden"
 
-#: bluebottle/activities/states.py:194 bluebottle/funding/states.py:167
+#: bluebottle/activities/states.py:206 bluebottle/funding/states.py:167
 #: bluebottle/funding/states.py:604 bluebottle/funding/states.py:684
 #: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:217
 #: bluebottle/grant_management/states.py:110
@@ -945,60 +944,59 @@ msgstr "Absenden"
 msgid "Reject"
 msgstr "Ablehnen"
 
-#: bluebottle/activities/states.py:196
+#: bluebottle/activities/states.py:208
 msgid "Reject if the activity does not align with your program or guidelines The activity manager will not be able to edit or resubmit it, and it will not appear on the search page in the frontend. The activity will still be available in the back office and appear in your reporting."
 msgstr "Ablehnen, wenn die Aktivität nicht mit Ihrem Programm oder Ihren Richtlinien übereinstimmt. Der Aktivitätsmanager kann sie nicht bearbeiten oder erneut einreichen und es wird nicht auf der Suchseite im Frontend angezeigt. Die Aktivität wird weiterhin im Backoffice verfügbar sein und in Ihrer Berichterstattung erscheinen."
 
-#: bluebottle/activities/states.py:212 bluebottle/initiatives/states.py:132
+#: bluebottle/activities/states.py:224 bluebottle/initiatives/states.py:132
 #: bluebottle/news/templates/admin/blogs/change_form.html:119
 #: bluebottle/slides/templates/admin/banners/change_form.html:130
 msgid "Publish"
 msgstr "Veröffentlichen"
 
-#: bluebottle/activities/states.py:213
+#: bluebottle/activities/states.py:225
 msgid "Your activity will be open to contributions."
 msgstr "Ihre Aktivität ist offen für Beiträge."
 
-#: bluebottle/activities/states.py:215
+#: bluebottle/activities/states.py:227
 msgid "published"
 msgstr "veröffentlicht"
 
-#: bluebottle/activities/states.py:227
+#: bluebottle/activities/states.py:239
 msgid "Automatically publish activity when initiative is approved"
 msgstr "Aktivität automatisch veröffentlichen, wenn Initiative genehmigt wird"
 
-#: bluebottle/activities/states.py:229
+#: bluebottle/activities/states.py:241
 msgid "Auto-publish"
 msgstr "Auto-Veröffentlichung"
 
-#: bluebottle/activities/states.py:236 bluebottle/activities/states.py:252
+#: bluebottle/activities/states.py:248 bluebottle/activities/states.py:264
 #: bluebottle/funding/states.py:105 bluebottle/funding/states.py:515
 #: bluebottle/grant_management/states.py:72
 #: bluebottle/initiatives/states.py:141
 msgid "Approve"
 msgstr "Bestätigen"
 
-#: bluebottle/activities/states.py:240
+#: bluebottle/activities/states.py:252
 msgid "The activity will be visible in the frontend and people can apply to the activity."
 msgstr "Die Aktivität wird im Frontend sichtbar sein, und die Menschen können sich auf die Aktivität auswirken."
 
-#: bluebottle/activities/states.py:256
+#: bluebottle/activities/states.py:268
 msgid "The activity will be published and visible in the frontend for people to contribute to,"
 msgstr "Die Aktivität wird veröffentlicht und im Frontend sichtbar sein, an dem Menschen mitwirken können"
 
-#: bluebottle/activities/states.py:264 bluebottle/funding/states.py:596
+#: bluebottle/activities/states.py:276 bluebottle/funding/states.py:596
 #: bluebottle/grant_management/states.py:278
 msgid "Request changes"
 msgstr "Änderungen anfordern"
 
-#: bluebottle/activities/states.py:266
+#: bluebottle/activities/states.py:278
 msgid "The activity needs changes before it can be approved. Inform the activity manager of the changes required. The activity manager will then be able to edit and resubmit the activity."
 msgstr "Die Aktivität muss geändert werden, bevor sie genehmigt werden kann. Informieren Sie den Aktivitätsmanager der erforderlichen Änderungen. Der Aktivitätsmanager kann dann die Aktivität bearbeiten und erneut einreichen."
 
-#: bluebottle/activities/states.py:283
+#: bluebottle/activities/states.py:295
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:49
 #: bluebottle/activities/templates/admin/activities/share_publish.html:53
-#: bluebottle/activity_links/states.py:53
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:49
 #: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
 #: bluebottle/funding/states.py:121 bluebottle/grant_management/states.py:139
@@ -1016,25 +1014,25 @@ msgstr "Die Aktivität muss geändert werden, bevor sie genehmigt werden kann. I
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: bluebottle/activities/states.py:285
+#: bluebottle/activities/states.py:297
 msgid "Cancel if the activity will not be executed. An activity manager will no longer be able edit the activity and it won't show up on the search page in the frontend. The activity will still be visible in the back office and appear in your reporting."
 msgstr "Abbrechen, wenn die Aktivität nicht ausgeführt wird. Ein Aktivitätsmanager kann die Aktivität nicht mehr bearbeiten und erscheint nicht mehr auf der Suchseite im Frontend. Die Aktivität wird weiterhin im Back Office sichtbar sein und in Ihrer Berichterstattung erscheinen."
 
-#: bluebottle/activities/states.py:292
+#: bluebottle/activities/states.py:304
 msgid "The activity ends and people no longer register. All current participants will fail too."
 msgstr "Die Aktivität endet und die Leute melden sich nicht mehr an. Alle aktuellen Teilnehmer werden ebenfalls scheitern."
 
-#: bluebottle/activities/states.py:301
+#: bluebottle/activities/states.py:313
 #: bluebottle/time_based/states/slots.py:103
 #: bluebottle/time_based/states/slots.py:221
 msgid "Auto cancel"
 msgstr "Automatisch abbrechen"
 
-#: bluebottle/activities/states.py:303
+#: bluebottle/activities/states.py:315
 msgid "Cancel the activity automatically, because the initiative is cancelled."
 msgstr "Die Aktivität wird automatisch abgebrochen, da die Initiative abgebrochen wurde."
 
-#: bluebottle/activities/states.py:318 bluebottle/initiatives/states.py:217
+#: bluebottle/activities/states.py:330 bluebottle/initiatives/states.py:217
 #: bluebottle/time_based/states/participants.py:198
 #: bluebottle/time_based/states/participants.py:236
 #: bluebottle/time_based/states/participants.py:318
@@ -1045,15 +1043,15 @@ msgstr "Die Aktivität wird automatisch abgebrochen, da die Initiative abgebroch
 msgid "Restore"
 msgstr "Wiederherstellen"
 
-#: bluebottle/activities/states.py:320
+#: bluebottle/activities/states.py:332
 msgid "The activity status is changed to 'Needs work'. Then you can make changes to the activity and submit it again."
 msgstr "Der Aktivitätsstatus wird in \"Benötigt Arbeit\" geändert. Danach können Sie Änderungen an der Aktivität vornehmen und sie erneut einreichen."
 
-#: bluebottle/activities/states.py:324 bluebottle/deeds/states.py:75
+#: bluebottle/activities/states.py:336 bluebottle/deeds/states.py:75
 msgid "The activity will be set to the status ‘Needs work’. Then you can make changes to the activity and submit it again."
 msgstr "Die Aktivität wird auf den Status „Benötigt Arbeit“ gesetzt, dann können Sie Änderungen an der Aktivität vornehmen und sie erneut einreichen."
 
-#: bluebottle/activities/states.py:339 bluebottle/collect/states.py:57
+#: bluebottle/activities/states.py:351 bluebottle/collect/states.py:57
 #: bluebottle/collect/states.py:64 bluebottle/deeds/states.py:60
 #: bluebottle/deeds/states.py:70 bluebottle/time_based/states/slots.py:228
 #: bluebottle/time_based/states/states.py:57
@@ -1061,37 +1059,37 @@ msgstr "Die Aktivität wird auf den Status „Benötigt Arbeit“ gesetzt, dann 
 msgid "Reopen"
 msgstr "Wiederöffnen"
 
-#: bluebottle/activities/states.py:341
+#: bluebottle/activities/states.py:353
 msgid "Open the activity again, e.g. when a slot reopens."
 msgstr "Öffnen Sie die Aktivität erneut, z.B. wenn ein Slot wieder geöffnet wird."
 
-#: bluebottle/activities/states.py:349 bluebottle/collect/states.py:34
+#: bluebottle/activities/states.py:361 bluebottle/collect/states.py:34
 #: bluebottle/deeds/states.py:36 bluebottle/funding/states.py:186
 #: bluebottle/funding/states.py:360 bluebottle/time_based/states/states.py:127
 msgid "Expire"
 msgstr "Ablaufen"
 
-#: bluebottle/activities/states.py:351 bluebottle/deeds/states.py:38
+#: bluebottle/activities/states.py:363 bluebottle/deeds/states.py:38
 #: bluebottle/time_based/states/states.py:129
 msgid "The activity will be cancelled because no one has signed up for the registration deadline."
 msgstr "Die Aktivität wird abgebrochen, da sich niemand für die Registrierungsfrist angemeldet hat."
 
-#: bluebottle/activities/states.py:359
+#: bluebottle/activities/states.py:371
 #: bluebottle/bluebottle_dashboard/templates/admin/submit_line.html:7
-#: bluebottle/initiatives/states.py:205 bluebottle/members/models.py:331
+#: bluebottle/initiatives/states.py:205 bluebottle/members/models.py:332
 msgid "Delete"
 msgstr "Löschen"
 
-#: bluebottle/activities/states.py:364
+#: bluebottle/activities/states.py:376
 msgid "Delete the activity if you do not want it to be included in the report. The activity will no longer be visible on the platform, but will still be available in the back office."
 msgstr "Löschen Sie die Aktivität, wenn Sie nicht möchten, dass sie in den Bericht aufgenommen wird. Die Aktivität wird nicht mehr auf der Plattform sichtbar, sondern immer noch im Back Office verfügbar sein."
 
-#: bluebottle/activities/states.py:369
+#: bluebottle/activities/states.py:381
 msgid "Delete the activity. You will not be able to retrieve it afterwards."
 msgstr "Löschen Sie die Aktivität. Sie können sie danach nicht mehr abrufen."
 
-#: bluebottle/activities/states.py:379 bluebottle/activities/states.py:397
-#: bluebottle/activities/states.py:450 bluebottle/activities/states.py:471
+#: bluebottle/activities/states.py:391 bluebottle/activities/states.py:409
+#: bluebottle/activities/states.py:462 bluebottle/activities/states.py:483
 #: bluebottle/collect/states.py:24 bluebottle/collect/states.py:142
 #: bluebottle/deeds/states.py:25 bluebottle/deeds/states.py:47
 #: bluebottle/deeds/states.py:147 bluebottle/funding/states.py:218
@@ -1109,41 +1107,39 @@ msgstr "Löschen Sie die Aktivität. Sie können sie danach nicht mehr abrufen."
 msgid "Succeed"
 msgstr "Erfolgreich"
 
-#: bluebottle/activities/states.py:385 bluebottle/activities/states.py:424
+#: bluebottle/activities/states.py:397 bluebottle/activities/states.py:436
 #: bluebottle/contact/models.py:20 bluebottle/funding/states.py:369
 #: bluebottle/grant_management/states.py:173
 msgid "New"
 msgstr "Neu"
 
-#: bluebottle/activities/states.py:385 bluebottle/activities/states.py:424
+#: bluebottle/activities/states.py:397 bluebottle/activities/states.py:436
 msgid "The user started a contribution"
 msgstr "Der Benutzer hat einen Beitrag begonnen"
 
-#: bluebottle/activities/states.py:387 bluebottle/activities/states.py:426
-#: bluebottle/activity_links/states.py:24
-#: bluebottle/activity_links/states.py:45 bluebottle/funding/states.py:385
-#: bluebottle/grant_management/states.py:28
+#: bluebottle/activities/states.py:399 bluebottle/activities/states.py:438
+#: bluebottle/funding/states.py:385 bluebottle/grant_management/states.py:28
 #: bluebottle/grant_management/states.py:176
 #: bluebottle/time_based/states/participants.py:48
 #: bluebottle/time_based/states/teams.py:15
 msgid "Succeeded"
 msgstr "Erfolgreich"
 
-#: bluebottle/activities/states.py:387 bluebottle/activities/states.py:398
-#: bluebottle/activities/states.py:426
+#: bluebottle/activities/states.py:399 bluebottle/activities/states.py:410
+#: bluebottle/activities/states.py:438
 msgid "The contribution was successful."
 msgstr "Der Beitrag war erfolgreich."
 
-#: bluebottle/activities/states.py:389 bluebottle/activities/states.py:428
+#: bluebottle/activities/states.py:401 bluebottle/activities/states.py:440
 #: bluebottle/funding/states.py:390 bluebottle/grant_management/states.py:178
 msgid "Failed"
 msgstr "Fehler"
 
-#: bluebottle/activities/states.py:389 bluebottle/activities/states.py:428
+#: bluebottle/activities/states.py:401 bluebottle/activities/states.py:440
 msgid "The contribution failed."
 msgstr "Der Beitrag ist fehlgeschlagen."
 
-#: bluebottle/activities/states.py:404 bluebottle/activities/states.py:436
+#: bluebottle/activities/states.py:416 bluebottle/activities/states.py:448
 #: bluebottle/funding/states.py:415 bluebottle/funding/states.py:508
 #: bluebottle/funding/states.py:589 bluebottle/funding/states.py:660
 #: bluebottle/funding_stripe/states.py:207
@@ -1160,59 +1156,59 @@ msgstr "Der Beitrag ist fehlgeschlagen."
 msgid "Initiate"
 msgstr "Initiieren"
 
-#: bluebottle/activities/states.py:405 bluebottle/activities/states.py:437
+#: bluebottle/activities/states.py:417 bluebottle/activities/states.py:449
 #: bluebottle/collect/states.py:136 bluebottle/deeds/states.py:141
 msgid "The contribution was created."
 msgstr "Der Beitrag wurde erstellt."
 
-#: bluebottle/activities/states.py:411 bluebottle/activities/states.py:443
+#: bluebottle/activities/states.py:423 bluebottle/activities/states.py:455
 #: bluebottle/funding/states.py:326 bluebottle/funding/states.py:446
 #: bluebottle/funding/states.py:557 bluebottle/grant_management/states.py:165
 #: bluebottle/grant_management/states.py:211
 msgid "Fail"
 msgstr "Fehler"
 
-#: bluebottle/activities/states.py:412 bluebottle/activities/states.py:444
+#: bluebottle/activities/states.py:424 bluebottle/activities/states.py:456
 msgid "The contribution failed. It will not be visible in reports."
 msgstr "Der Beitrag ist fehlgeschlagen. Er wird in den Berichten nicht sichtbar sein."
 
-#: bluebottle/activities/states.py:418 bluebottle/activities/states.py:457
+#: bluebottle/activities/states.py:430 bluebottle/activities/states.py:469
 #: bluebottle/funding/states.py:540 bluebottle/grant_management/states.py:218
 #: bluebottle/time_based/states/participants.py:460
 #: bluebottle/time_based/states/slots.py:67
 msgid "Reset"
 msgstr "Reset"
 
-#: bluebottle/activities/states.py:419
+#: bluebottle/activities/states.py:431
 msgid "Reset the contribution to new."
 msgstr "Setze den Beitrag auf neu."
 
-#: bluebottle/activities/states.py:451
+#: bluebottle/activities/states.py:463
 msgid "The contribution succeeded. It will be visible in reports."
 msgstr "Der Beitrag war erfolgreich. Er wird in Berichten sichtbar sein."
 
-#: bluebottle/activities/states.py:458
+#: bluebottle/activities/states.py:470
 msgid "The contribution is reset."
 msgstr "Der Beitrag wird zurückgesetzt."
 
-#: bluebottle/activities/states.py:472
+#: bluebottle/activities/states.py:484
 msgid "The organizer was successful in setting up the activity."
 msgstr "Der Organisator war erfolgreich bei der Einrichtung der Aktivität."
 
-#: bluebottle/activities/states.py:481
+#: bluebottle/activities/states.py:493
 msgid "fail"
 msgstr "versagen"
 
-#: bluebottle/activities/states.py:482
+#: bluebottle/activities/states.py:494
 msgid "The organizer failed to set up the activity."
 msgstr "Der Organisator konnte die Aktivität nicht einrichten."
 
-#: bluebottle/activities/states.py:491
+#: bluebottle/activities/states.py:503
 #: bluebottle/time_based/states/participants.py:462
 msgid "reset"
 msgstr "reset"
 
-#: bluebottle/activities/states.py:492
+#: bluebottle/activities/states.py:504
 msgid "The organizer is still busy setting up the activity."
 msgstr "Der Veranstalter ist immer noch damit beschäftigt, die Aktivität einzurichten."
 
@@ -1403,7 +1399,7 @@ msgstr "Wenn du Fragen hast, kannst du dich an den Plattform-Manager wenden, ind
 #, python-format
 msgctxt "email"
 msgid "Unfortunately, nobody applied to your activity \"%(title)s\" before the deadline to apply. That’s why we have cancelled your activity."
-msgstr "Leider hat niemand Ihre Aktivität „%(title)s“ vor dem Anmeldetermin angewendet. Deshalb haben wir deine Aktivität abgebrochen."
+msgstr "Leider hat niemand Ihre Aktivität „%(title)s“ vor dem Bewerbungstermin angewendet. Deshalb haben wir deine Aktivität abgebrochen."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:10
 msgctxt "email"
@@ -1767,42 +1763,6 @@ msgstr "Benutzer mit E-Mail-Adresse nicht gefunden"
 msgid "Already participating"
 msgstr "Bereits beteiligt"
 
-#: bluebottle/activity_links/states.py:18
-msgid "Open"
-msgstr ""
-
-#: bluebottle/activity_links/states.py:20
-msgid "Open linked activities are shown in the open activities overview."
-msgstr ""
-
-#: bluebottle/activity_links/states.py:26
-msgid "Succeeded linked activities are shown in the succeeded activities overview."
-msgstr ""
-
-#: bluebottle/activity_links/states.py:30 bluebottle/initiatives/states.py:44
-#: bluebottle/time_based/states/participants.py:42
-#: bluebottle/time_based/states/slots.py:33
-#: bluebottle/time_based/states/teams.py:17
-#: bluebottle/time_based/states/teams.py:161
-msgid "Cancelled"
-msgstr "Abgebrochen"
-
-#: bluebottle/activity_links/states.py:32
-msgid "Cancelled linked activities are never shown."
-msgstr ""
-
-#: bluebottle/activity_links/states.py:39
-msgid "The link will be created."
-msgstr ""
-
-#: bluebottle/activity_links/states.py:46
-msgid "The initiative will be isucceeded."
-msgstr ""
-
-#: bluebottle/activity_links/states.py:54
-msgid "The initiative will be cancelled."
-msgstr ""
-
 #: bluebottle/activity_pub/admin.py:75 bluebottle/activity_pub/models.py:386
 msgid "Recipient"
 msgstr "Empfänger"
@@ -1873,7 +1833,7 @@ msgid "Could not determine platform information needed for subscribing. Are you 
 msgstr "Konnte die Plattforminformationen für das Abonnieren nicht ermitteln. Sind Sie sicher, dass die URL korrekt ist?"
 
 #: bluebottle/activity_pub/admin.py:369 bluebottle/activity_pub/admin.py:510
-#: bluebottle/members/models.py:372
+#: bluebottle/members/models.py:373
 #: bluebottle/time_based/states/registrations.py:18
 msgid "Accepted"
 msgstr "Akzeptiert"
@@ -2315,8 +2275,8 @@ msgstr "Schule"
 msgid "Club / association"
 msgstr "Club / Verein"
 
-#: bluebottle/bb_accounts/models.py:113 bluebottle/members/admin.py:407
-#: bluebottle/members/models.py:256
+#: bluebottle/bb_accounts/models.py:113 bluebottle/members/admin.py:408
+#: bluebottle/members/models.py:257
 msgid "email address"
 msgstr "e-Mail-Adresse"
 
@@ -2639,7 +2599,7 @@ msgstr "Benutzer"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
 #: bluebottle/initiatives/admin.py:396 bluebottle/initiatives/models.py:174
-#: bluebottle/members/admin.py:220 bluebottle/members/admin.py:824
+#: bluebottle/members/admin.py:220 bluebottle/members/admin.py:822
 msgid "Initiatives"
 msgstr "Initiativen"
 
@@ -2717,7 +2677,7 @@ msgid "Merge"
 msgstr "Zusammenführen"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/search_form.html:7
-#: bluebottle/members/admin.py:612
+#: bluebottle/members/admin.py:615
 msgid "Search"
 msgstr "Suchen"
 
@@ -2908,7 +2868,7 @@ msgid "If your primary method is not available, we are able to send backup token
 msgstr "Falls Ihre primäre Methode nicht verfügbar ist, können wir Backup-Token an die unten aufgeführten Telefonnummern senden."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:21
-#: bluebottle/members/admin.py:374 bluebottle/notifications/admin.py:81
+#: bluebottle/members/admin.py:375 bluebottle/notifications/admin.py:81
 msgid "Are you sure?"
 msgstr "Bist du sicher?"
 
@@ -3106,7 +3066,7 @@ msgstr "Soll die Erlaubnis vorhanden sein oder nicht auf den Link zugreifen?"
 msgid "Site links"
 msgstr "Site-Links"
 
-#: bluebottle/cms/models.py:117 bluebottle/members/admin.py:569
+#: bluebottle/cms/models.py:117 bluebottle/members/admin.py:570
 msgid "Main"
 msgstr "Haupt"
 
@@ -3257,7 +3217,7 @@ msgstr "Rolle"
 msgid "Email"
 msgstr "E-Mail"
 
-#: bluebottle/cms/models.py:226 bluebottle/members/models.py:289
+#: bluebottle/cms/models.py:226 bluebottle/members/models.py:290
 msgid "Phone number"
 msgstr "Telefonnummer"
 
@@ -3686,14 +3646,14 @@ msgstr "Kampagne sammeln"
 msgid "Collect Campaigns"
 msgstr "Sammle Kampagnen"
 
-#: bluebottle/collect/models.py:121 bluebottle/collect/views.py:134
+#: bluebottle/collect/models.py:121 bluebottle/collect/views.py:135
 #, python-brace-format
 msgid "\n"
 "Collecting {type}"
 msgstr "\n"
 "Sammeln {type}"
 
-#: bluebottle/collect/models.py:168 bluebottle/members/admin.py:919
+#: bluebottle/collect/models.py:168 bluebottle/members/admin.py:917
 msgid "Collect contributor"
 msgstr "Sammle Mitwirkende"
 
@@ -4344,8 +4304,8 @@ msgid "Basic"
 msgstr "Einfache"
 
 #: bluebottle/funding/admin.py:603 bluebottle/funding/admin.py:622
-#: bluebottle/members/admin.py:822 bluebottle/members/admin.py:850
-#: bluebottle/members/admin.py:892 bluebottle/members/admin.py:907
+#: bluebottle/members/admin.py:820 bluebottle/members/admin.py:848
+#: bluebottle/members/admin.py:890 bluebottle/members/admin.py:905
 msgid "None"
 msgstr "Keine"
 
@@ -4354,7 +4314,7 @@ msgid "Funding activities"
 msgstr "Finanzierungsaktivitäten"
 
 #: bluebottle/funding/admin.py:624 bluebottle/grant_management/models.py:426
-#: bluebottle/members/admin.py:909
+#: bluebottle/members/admin.py:907
 msgid "Grant applications"
 msgstr "Zuschussanträge"
 
@@ -4546,7 +4506,7 @@ msgstr "Du hast eine neue Spende!💰"
 #: bluebottle/funding/messages/funding/activity_manager.py:47
 msgctxt "email"
 msgid "Your crowdfunding campaign deadline passed"
-msgstr "Deine Crowdfunding-Kampagne ist abgelaufen"
+msgstr "Deine Crowdfunding-Kampagnen-Frist ist abgelaufen"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:55
 #, python-brace-format
@@ -4650,7 +4610,7 @@ msgstr "Unvollständiges Auszahlungskonto für laufende Kampagne"
 #, python-brace-format
 msgctxt "email"
 msgid "A new crowdfunding campaign is ready to be reviewed on {site_name}"
-msgstr "Eine neue Crowdfunding Kampagne kann auf {site_name} überprüft werden"
+msgstr "Eine neue Crowdfunding-Kampagne kann auf {site_name} überprüft werden"
 
 #: bluebottle/funding/models.py:54
 msgid "Payment currency"
@@ -5631,7 +5591,11 @@ msgid "\n"
 "        Don’t worry, you can always create a new campaign and try again.\n\n"
 "        Need some tips to make your campaign stand out? Reach out to the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"        Leider hat niemand vor dem Stichtag für deine Kampagne \"%(title)s\" gespendet. Daher haben wir deine Kampagne storniert.\n\n"
+"        Mach dir keine Sorgen, du kannst jederzeit eine neue Kampagne erstellen und es erneut versuchen.\n\n"
+"        Brauchst du Tipps, um deine Kampagne hervorzubringen? Kontaktiere den Plattform-Manager, indem du auf diese E-Mail antwortest.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_extended.html:6
 #, python-format
@@ -5716,7 +5680,7 @@ msgstr "\n"
 "<b>Wie es weitergeht</b>\n"
 "<ul>\n"
 "    <li>\n"
-"        Gehe auf die Seite deines Förderantrags, um deine Bankdaten zu übermitteln.\n"
+"        Gehe auf die Seite deines Zuschussantrags, um deine Bankdaten zu übermitteln.\n"
 "    </li>\n"
 "    <li>\n"
 "        Fahre mit unserem Verifizierungsprozess fort. Dies ist ein obligatorischer Schritt, bevor wir das Geld auf dein Bankkonto überweisen können.\n"
@@ -5844,10 +5808,10 @@ msgid "\n"
 "    <br />\n"
 "    Please do this as soon as possible. "
 msgstr "\n"
-"    Die Identitätsverifikation für eine von dir verwaltete Organisation ist fehlgeschlagen.\n"
+"    Die Identitätsüberprüfung für eine von dir verwaltete Organisation ist fehlgeschlagen.\n"
 "    <br />\n"
 "    <br />\n"
-"    Zuvor wurden Informationen zur Verifizierung deiner Identität übermittelt, aber\n"
+"    Zuvor wurden Informationen zur Überprüfung deiner Identität übermittelt, aber\n"
 "    aber leider war dies nicht erfolgreich. Dafür kann es verschiedene\n"
 "    Gründe geben. Bitte überprüfe den unten stehenden Link, um deine Daten zu aktualisieren.\n"
 "    Wenn du immer noch Probleme hast, kontaktiere den Plattform-Manager unter %(contact_email)s.\n"
@@ -5984,10 +5948,10 @@ msgid "\n"
 msgstr "\n"
 "            Hallo %(recipient_name)s,\n"
 "            <br/><br/>\n"
-"            die Identitätsverifizierung ist für eine laufende Crowdfunding-Kampagne fehlgeschlagen.\n"
+"            die Identitätsüberprüfung ist für eine laufende Crowdfunding-Kampagne fehlgeschlagen.\n"
 "            <br/><br/>\n"
-"            Eine Identitätsverifizierung ist erforderlich, um die Auszahlung der Kampagne zu bearbeiten.\n"
-"            Wenn die Verifizierung fehlschlägt, können wir die Auszahlung nicht bearbeiten. In diesem Fall werden alle Spenden an die Unterstützer zurückgegeben.\n"
+"            Eine Identitätsüberprüfung ist erforderlich, um die Auszahlung der Kampagne zu bearbeiten.\n"
+"            Wenn die Überprüfung fehlschlägt, können wir die Auszahlung nicht bearbeiten. In diesem Fall werden alle Spenden an die Unterstützer zurückgegeben.\n"
 "        "
 
 #: bluebottle/funding/templates/mails/messages/platform_manager/live_payout_account_rejected.html:19
@@ -6006,8 +5970,8 @@ msgid " Hi %(recipient_name)s,\n"
 "    "
 msgstr " Hallo %(recipient_name)s,\n"
 "    <br /><br />\n"
-"    bei einem öffentlichen Auszahlungskonto mit einer aktiven Crowdfunding-Kampagne auf %(site_name)s ist die Identitätsverifizierung unvollständig.\n\n"
-"    Bitte beachte: Ohne eine vollständige Identitätsverifizierung können die gesammelten Gelder nicht ausgezahlt werden. Außerdem können neue Spenden vorübergehend pausiert werden. Deshalb ist es wichtig, dass du die fehlenden Informationen so schnell wie möglich nachreichst.\n"
+"    bei einem öffentlichen Auszahlungskonto mit einer aktiven Crowdfunding-Kampagne auf %(site_name)s ist die Identitätsüberprüfung unvollständig.\n\n"
+"    Bitte beachte: Ohne eine vollständige Identitätsüberprüfung können die gesammelten Gelder nicht ausgezahlt werden. Außerdem können neue Spenden vorübergehend pausiert werden. Deshalb ist es wichtig, dass du die fehlenden Informationen so schnell wie möglich nachreichst.\n"
 "    "
 
 #: bluebottle/funding/validators.py:17
@@ -6343,7 +6307,6 @@ msgid "Bank name"
 msgstr "Bankname"
 
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/detail_fields.html:4
-#: bluebottle/members/models.py:57
 msgid "First name"
 msgstr "Vorname"
 
@@ -6524,7 +6487,7 @@ msgid "Province"
 msgstr "Provinz"
 
 #: bluebottle/geo/models.py:217 bluebottle/geo/models.py:262
-#: bluebottle/members/models.py:284
+#: bluebottle/members/models.py:285
 msgid "Address"
 msgstr "Adresse"
 
@@ -7227,7 +7190,7 @@ msgid "\n"
 "<br>\n"
 "%(initiator_name)s will be waiting for your review, so please respond promptly.<br>\n"
 msgstr "\n"
-"Der Förderantrag „%(title)s“ wurde von %(initiator_name)s eingereicht.<br>\n"
+"Der Zuschussantrag „%(title)s“ wurde von %(initiator_name)s eingereicht.<br>\n"
 "Bitte nimm dir einen Moment Zeit, um diesen Antrag zu prüfen und zu entscheiden, ob er für deine Plattform geeignet ist.<br>\n"
 "<br>\n"
 "%(initiator_name)s wartet auf deine Prüfung, also antworte bitte umgehend.<br>\n"
@@ -7242,7 +7205,7 @@ msgid "\n"
 "            %(initiator_name)s will be waiting for the payout, so please respond promptly.<br>\n"
 "        "
 msgstr "\n"
-"            Der Förderantrag „%(title)s“ ist bereit zur Auszahlung.<br>\n"
+"            Der Zuschussantrag „%(title)s“ ist bereit zur Auszahlung.<br>\n"
 "            Bitte nimm dir einen Moment Zeit, um diesen Antrag zu prüfen und zu entscheiden, ob er für deine Plattform geeignet ist.<br>\n"
 "            <br>\n"
 "            %(initiator_name)s wartet auf die Auszahlung, also antworte bitte umgehend.<br>\n"
@@ -7652,7 +7615,7 @@ msgstr "Geplante Aktivität"
 msgid "Periodic Activity"
 msgstr "Periodische Aktivität"
 
-#: bluebottle/initiatives/models.py:319 bluebottle/members/admin.py:880
+#: bluebottle/initiatives/models.py:319 bluebottle/members/admin.py:878
 #: bluebottle/time_based/models.py:903
 msgid "Past date activity"
 msgstr "Aktivität mit vergangenem Datum"
@@ -7802,12 +7765,12 @@ msgstr "Thema"
 msgid "themes"
 msgstr "themen"
 
-#: bluebottle/initiatives/serializers.py:483
-#: bluebottle/initiatives/serializers.py:500
+#: bluebottle/initiatives/serializers.py:484
+#: bluebottle/initiatives/serializers.py:501
 msgid "Name is required"
 msgstr "Name ist erforderlich"
 
-#: bluebottle/initiatives/serializers.py:501
+#: bluebottle/initiatives/serializers.py:502
 msgid "Email is required"
 msgstr "E-Mail ist erforderlich"
 
@@ -7845,11 +7808,19 @@ msgstr "Abgelehnt"
 msgid "The initiative does not align with your program or guidelines. The initiator will not be able to edit or resubmit it, and it will not appear on the search page in the front end. The initiative will still be available in the back office and appear in your reporting."
 msgstr "Die Initiative passt nicht zu Ihrem Programm oder Ihren Richtlinien. Der Initiator kann ihn nicht bearbeiten oder erneut einreichen, und er wird nicht auf der Suchseite im Frontend erscheinen. Die Initiative wird noch im Back Office verfügbar sein und in Ihrer Berichterstattung erscheinen."
 
+#: bluebottle/initiatives/states.py:44
+#: bluebottle/time_based/states/participants.py:42
+#: bluebottle/time_based/states/slots.py:33
+#: bluebottle/time_based/states/teams.py:17
+#: bluebottle/time_based/states/teams.py:161
+msgid "Cancelled"
+msgstr "Abgebrochen"
+
 #: bluebottle/initiatives/states.py:47
 msgid "The initiative is not executed. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
 msgstr "Die Initiative wird nicht ausgeführt. Die Initiative wird nicht auf der Suchseite im Frontend angezeigt, sondern zählt in der Berichterstattung. Die Initiative kann vom Initiator nicht bearbeitet werden."
 
-#: bluebottle/initiatives/states.py:54 bluebottle/members/admin.py:492
+#: bluebottle/initiatives/states.py:54 bluebottle/members/admin.py:493
 msgid "Deleted"
 msgstr "Gelöscht"
 
@@ -8116,7 +8087,7 @@ msgstr "Ein Benutzer mit dieser E-Mail existiert bereits."
 msgid "Email address"
 msgstr "E-Mail-Adresse"
 
-#: bluebottle/members/admin.py:104 bluebottle/members/admin.py:408
+#: bluebottle/members/admin.py:104 bluebottle/members/admin.py:409
 msgid "A valid, unique email address."
 msgstr "Eine gültige, eindeutige E-Mail-Adresse."
 
@@ -8140,7 +8111,7 @@ msgstr "Wenn Sie es Personen erlauben, den Zugriff zu beantragen, verwenden Sie 
 msgid "Login"
 msgstr "Anmelden"
 
-#: bluebottle/members/admin.py:176 bluebottle/members/admin.py:589
+#: bluebottle/members/admin.py:176 bluebottle/members/admin.py:590
 msgid "Profile"
 msgstr "Profil"
 
@@ -8152,7 +8123,7 @@ msgstr "Übersetzungen"
 msgid "Privacy"
 msgstr "Privatsphäre"
 
-#: bluebottle/members/admin.py:205 bluebottle/members/models.py:88
+#: bluebottle/members/admin.py:205 bluebottle/members/models.py:89
 msgid "Impact hours"
 msgstr "Beeinflussungsstunden"
 
@@ -8164,118 +8135,118 @@ msgstr "Benutzerdaten"
 msgid "User data can be anonymised and/or deleted after a set number of months from the time it was created to comply with company policies and local laws. User data includes names, contributions and wall posts. Please contact the support team at GoodUp for more information."
 msgstr "Benutzerdaten können anonymisiert und/oder nach einer bestimmten Anzahl von Monaten gelöscht werden, ab dem Zeitpunkt, an dem sie erstellt wurden, um den Unternehmensrichtlinien und den lokalen Gesetzen zu entsprechen. Benutzerdaten enthalten Namen, Beiträge und Wandbeiträge. Bitte kontaktieren Sie das Support-Team bei GoodUp für weitere Informationen."
 
-#: bluebottle/members/admin.py:267
+#: bluebottle/members/admin.py:268
 msgid "Members are required to fill out the fields listed below after log in or when contributing to an activity."
 msgstr "Mitglieder müssen die unten aufgelisteten Felder ausfüllen, wenn sie sich anmelden oder zu einer Aktivität beitragen."
 
-#: bluebottle/members/admin.py:270
+#: bluebottle/members/admin.py:271
 msgid "Members are required to fill out the fields listed below when contributing to an activity."
 msgstr "Mitglieder müssen die unten aufgeführten Felder ausfüllen, wenn sie zu einer Aktivität beitragen."
 
-#: bluebottle/members/admin.py:274
+#: bluebottle/members/admin.py:275
 msgid "Required fields"
 msgstr "Pflichtfelder"
 
-#: bluebottle/members/admin.py:313
+#: bluebottle/members/admin.py:314
 msgid "Access link"
 msgstr "Zugriff-Link"
 
-#: bluebottle/members/admin.py:347
+#: bluebottle/members/admin.py:348
 msgid "Access code has been renewed successfully."
 msgstr "Der Zugriffscode wurde erfolgreich erneuert."
 
-#: bluebottle/members/admin.py:601
+#: bluebottle/members/admin.py:604
 msgid "Permissions"
 msgstr "Berechtigungen"
 
-#: bluebottle/members/admin.py:605
+#: bluebottle/members/admin.py:608
 msgid "Engagement"
 msgstr "Engagement"
 
-#: bluebottle/members/admin.py:729
+#: bluebottle/members/admin.py:727
 #, python-brace-format
 msgid "Only data from the last {months} months is shown."
 msgstr "Nur Daten aus den letzten {months} Monaten werden angezeigt."
 
-#: bluebottle/members/admin.py:735
+#: bluebottle/members/admin.py:733
 msgid "Hours spent this year"
 msgstr "In diesem Jahr verbrachte Stunden"
 
-#: bluebottle/members/admin.py:740
+#: bluebottle/members/admin.py:738
 msgid "Hours planned this year"
 msgstr "In diesem Jahr geplante Stunden"
 
-#: bluebottle/members/admin.py:744
+#: bluebottle/members/admin.py:742
 msgid "Show all contributions"
 msgstr "Alle Beiträge anzeigen"
 
-#: bluebottle/members/admin.py:746
+#: bluebottle/members/admin.py:744
 msgid "All contributions"
 msgstr "Alle Beiträge"
 
-#: bluebottle/members/admin.py:855 bluebottle/time_based/models.py:253
+#: bluebottle/members/admin.py:853 bluebottle/time_based/models.py:253
 msgid "Activity on a date"
 msgstr "Aktivität an einem Datum"
 
-#: bluebottle/members/admin.py:860 bluebottle/time_based/models.py:801
+#: bluebottle/members/admin.py:858 bluebottle/time_based/models.py:801
 msgid "Recurring activity"
 msgstr "Wiederkehrende Aktivität"
 
-#: bluebottle/members/admin.py:865 bluebottle/time_based/models.py:654
+#: bluebottle/members/admin.py:863 bluebottle/time_based/models.py:654
 msgid "Flexible activity"
 msgstr "Flexible Aktivität"
 
-#: bluebottle/members/admin.py:870 bluebottle/time_based/models.py:750
+#: bluebottle/members/admin.py:868 bluebottle/time_based/models.py:750
 msgid "Schedule activity"
 msgstr "Aktivität planen"
 
-#: bluebottle/members/admin.py:875
+#: bluebottle/members/admin.py:873
 msgid "Team schedule activity"
 msgstr "Teamplan-Aktivität"
 
-#: bluebottle/members/admin.py:894
+#: bluebottle/members/admin.py:892
 msgid "Funding donations"
 msgstr "Finanzierung von Spenden"
 
-#: bluebottle/members/admin.py:914
+#: bluebottle/members/admin.py:912
 msgid "Deed participation"
 msgstr "Beteiligung an der Urkunde"
 
-#: bluebottle/members/admin.py:926
+#: bluebottle/members/admin.py:924
 msgid "Following"
 msgstr "Folgt"
 
-#: bluebottle/members/admin.py:934
+#: bluebottle/members/admin.py:932
 msgid "Send reset password mail"
 msgstr "Passwort zurücksetzen senden"
 
-#: bluebottle/members/admin.py:941
+#: bluebottle/members/admin.py:939
 msgid "Resend welcome email"
 msgstr "Willkommens-E-Mail erneut senden"
 
-#: bluebottle/members/admin.py:952
+#: bluebottle/members/admin.py:950
 msgid "accounts"
 msgstr "konten"
 
-#: bluebottle/members/admin.py:955
+#: bluebottle/members/admin.py:953
 msgid "KYC accounts"
 msgstr "KYC-Konten"
 
-#: bluebottle/members/admin.py:1010
+#: bluebottle/members/admin.py:1008
 #, python-brace-format
 msgid "User {name} will receive an email to reset password."
 msgstr "Benutzer {name} erhält eine E-Mail zum Zurücksetzen des Passworts."
 
-#: bluebottle/members/admin.py:1025
+#: bluebottle/members/admin.py:1023
 #, python-brace-format
 msgid "User {name} will receive an welcome email."
 msgstr "Benutzer {name} wird eine Willkommens-E-Mail erhalten."
 
-#: bluebottle/members/admin.py:1046
+#: bluebottle/members/admin.py:1044
 msgid "Login as user"
 msgstr "Als Benutzer anmelden"
 
-#: bluebottle/members/admin.py:1049 bluebottle/members/forms.py:6
+#: bluebottle/members/admin.py:1047 bluebottle/members/forms.py:6
 #: bluebottle/members/templates/admin/members/login_as.html:9
 msgid "Login as"
 msgstr "Anmelden als"
@@ -8340,363 +8311,371 @@ msgstr "E-Mail + Passwort"
 msgid "Full name"
 msgstr "Voller Name"
 
-#: bluebottle/members/models.py:61
+#: bluebottle/members/models.py:57
+msgid "First name (members)"
+msgstr "Vorname (Mitglieder)"
+
+#: bluebottle/members/models.py:58
+msgid "First name (also activity managers)"
+msgstr "Vorname (auch Aktivitätsmanager)"
+
+#: bluebottle/members/models.py:62
 msgid "After log in"
 msgstr "Nach der Anmeldung"
 
-#: bluebottle/members/models.py:62
+#: bluebottle/members/models.py:63
 msgid "When making a contribution"
 msgstr "Wenn Sie einen Beitrag leisten"
 
-#: bluebottle/members/models.py:66
+#: bluebottle/members/models.py:67
 msgid "Anyone can create an account"
 msgstr "Jeder kann ein Konto erstellen"
 
-#: bluebottle/members/models.py:67
+#: bluebottle/members/models.py:68
 msgid "Only people with a whitelisted domain can create an account"
 msgstr "Nur Personen mit einer auf der Whitelist stehenden Domain können ein Konto erstellen."
 
-#: bluebottle/members/models.py:70
+#: bluebottle/members/models.py:71
 msgid "People with a whitelisted domain can create an account; all others can request access"
 msgstr "Personen mit einer auf der Whitelist stehenden Domain können ein Konto erstellen; alle anderen können Zugriff beantragen"
 
-#: bluebottle/members/models.py:75
+#: bluebottle/members/models.py:76
 msgid "People request access by entering their email address"
 msgstr "Personen beantragen Zugang, indem sie ihre E-Mail-Adresse eingeben"
 
-#: bluebottle/members/models.py:76
+#: bluebottle/members/models.py:77
 msgid "People request access by following your instructions"
 msgstr "Personen beantragen Zugang, indem sie Ihren Anweisungen folgen"
 
-#: bluebottle/members/models.py:80
+#: bluebottle/members/models.py:81
 msgid "Platform access"
 msgstr "Plattformzugang"
 
-#: bluebottle/members/models.py:81
+#: bluebottle/members/models.py:82
 msgid "Require log in before accessing the platform"
 msgstr "Anmeldung vor dem Zugriff auf die Plattform erforderlich"
 
-#: bluebottle/members/models.py:82
+#: bluebottle/members/models.py:83
 msgid "Only logged-in users can view the platform."
 msgstr "Nur eingeloggte Benutzer können die Plattform anzeigen."
 
-#: bluebottle/members/models.py:85
+#: bluebottle/members/models.py:86
 msgid "create initiatives"
 msgstr "erstelle Initiativen"
 
-#: bluebottle/members/models.py:85
+#: bluebottle/members/models.py:86
 msgid "Members can create initiatives"
 msgstr "Mitglieder können Initiativen erstellen"
 
-#: bluebottle/members/models.py:90
+#: bluebottle/members/models.py:91
 msgid "Leave empty if this feature won't be used."
 msgstr "Leer lassen, wenn dieses Feature nicht verwendet wird."
 
-#: bluebottle/members/models.py:93
+#: bluebottle/members/models.py:94
 msgid "Fiscal year offset"
 msgstr "Geschäftsjahr Offset"
 
-#: bluebottle/members/models.py:95
+#: bluebottle/members/models.py:96
 msgid "Set how many months earlier your fiscal year starts compared to January. For example, if your fiscal year starts in September (which is 4 months before January), enter 4. This also affects how impact metrics are displayed on the homepage."
 msgstr "Legen Sie fest, wieviele Monate früher Ihr Geschäftsjahr im Vergleich zum Januar beginnt. Zum Beispiel, wenn Ihr Geschäftsjahr im September beginnt (4 Monate vor Januar), geben Sie 4. Dies beeinflusst auch, wie die Metriken auf der Homepage angezeigt werden."
 
-#: bluebottle/members/models.py:102
+#: bluebottle/members/models.py:103
 msgid "Reminder Q1"
 msgstr "Erinnerung Q1"
 
-#: bluebottle/members/models.py:106
+#: bluebottle/members/models.py:107
 msgid "Reminder Q2"
 msgstr "Erinnerung Q2"
 
-#: bluebottle/members/models.py:110
+#: bluebottle/members/models.py:111
 msgid "Reminder Q3"
 msgstr "Erinnerung Q3"
 
-#: bluebottle/members/models.py:114
+#: bluebottle/members/models.py:115
 msgid "Reminder Q4"
 msgstr "Erinnerung Q4"
 
-#: bluebottle/members/models.py:119
+#: bluebottle/members/models.py:120
 msgid "login methods"
 msgstr "Anmeldemethoden"
 
-#: bluebottle/members/models.py:121
+#: bluebottle/members/models.py:122
 msgid "People can use any selected method to sign up or log in. For social log in options, see the ‘Social log in’ tab."
 msgstr "Personen können jede ausgewählte Methode verwenden, um sich anzumelden oder einzuloggen. Für soziale Anmeldemöglichkeiten siehe den Tab 'Soziale Anmeldung'."
 
-#: bluebottle/members/models.py:129
+#: bluebottle/members/models.py:130
 msgid "verify email on sign up"
 msgstr "E-Mail bei der Anmeldung verifizieren"
 
-#: bluebottle/members/models.py:131
+#: bluebottle/members/models.py:132
 msgid "Require users to verify their email on sign-up"
 msgstr "Benutzer müssen ihre E-Mail bei der Anmeldung verifizieren"
 
-#: bluebottle/members/models.py:132 bluebottle/members/models.py:137
+#: bluebottle/members/models.py:133 bluebottle/members/models.py:138
 msgid "This rule only applies to the email + password method."
 msgstr "Diese Regel gilt nur für die Methode E-Mail + Passwort."
 
-#: bluebottle/members/models.py:136
+#: bluebottle/members/models.py:137
 msgid "account creation rules"
 msgstr "Regeln für die Kontoerstellung"
 
-#: bluebottle/members/models.py:144
+#: bluebottle/members/models.py:145
 msgid "Whitelisted email domains"
 msgstr "Auf der Whitelist stehende E-Mail-Domains"
 
-#: bluebottle/members/models.py:150
+#: bluebottle/members/models.py:151
 msgid "session only"
 msgstr "nur Session"
 
-#: bluebottle/members/models.py:152
+#: bluebottle/members/models.py:153
 msgid "Limit user session to browser session"
 msgstr "Benutzersitzung auf Browsersitzung beschränken"
 
-#: bluebottle/members/models.py:156
+#: bluebottle/members/models.py:157
 msgid "Explicit terms"
 msgstr "Explizite Bedingungen"
 
-#: bluebottle/members/models.py:158
+#: bluebottle/members/models.py:159
 msgid "Users have to explicitly accept terms when logging in"
 msgstr "Benutzer müssen die Bedingungen beim Anmelden ausdrücklich akzeptieren"
 
-#: bluebottle/members/models.py:162
+#: bluebottle/members/models.py:163
 msgid "request access method"
 msgstr "Zugriffsantrag-Methode"
 
-#: bluebottle/members/models.py:163
+#: bluebottle/members/models.py:164
 msgid "This rule only applies when requesting access is allowed."
 msgstr "Diese Regel gilt nur, wenn das Beantragen von Zugriff erlaubt ist."
 
-#: bluebottle/members/models.py:170
+#: bluebottle/members/models.py:171
 msgid "request access instructions"
 msgstr "Anweisungen zur Beantragung des Zugriffs"
 
-#: bluebottle/members/models.py:171
+#: bluebottle/members/models.py:172
 msgid "Explain how people can request access to the platform."
 msgstr "Erklären Sie, wie Personen Zugang zur Plattform beantragen können."
 
-#: bluebottle/members/models.py:179
+#: bluebottle/members/models.py:180
 msgid "Request access mail to address"
 msgstr "Zugriffsantrag senden an"
 
-#: bluebottle/members/models.py:180
+#: bluebottle/members/models.py:181
 msgid "Enter the email address where people should send their access request."
 msgstr "Geben Sie die E-Mail-Adresse ein, an die Personen ihren Zugriffsantrag senden sollen."
 
-#: bluebottle/members/models.py:186
+#: bluebottle/members/models.py:187
 msgid "Request access code"
 msgstr "Zugriffsantragscode"
 
-#: bluebottle/members/models.py:187
+#: bluebottle/members/models.py:188
 msgid "With this code people can sign-up without a white-listed email address."
 msgstr "Mit diesem Code können sich Personen ohne eine auf der Whitelist stehende E-Mail-Adresse anmelden."
 
-#: bluebottle/members/models.py:194
+#: bluebottle/members/models.py:195
 msgid "required questions location"
 msgstr "benötigter Ort der Fragen"
 
-#: bluebottle/members/models.py:199
+#: bluebottle/members/models.py:200
 msgid "When should the user be asked to complete their required profile fields?"
 msgstr "Wann soll der Benutzer gebeten werden, die gewünschten Profilfelder auszufüllen?"
 
-#: bluebottle/members/models.py:204
+#: bluebottle/members/models.py:205
 msgid "consent link"
 msgstr "einwilligungslink"
 
-#: bluebottle/members/models.py:206
+#: bluebottle/members/models.py:207
 msgid "Link more information about the platforms cookie policy"
 msgstr "Verknüpfen Sie weitere Informationen über die Cookie-Richtlinie der Plattformen"
 
-#: bluebottle/members/models.py:211
+#: bluebottle/members/models.py:212
 msgid "disable cookie consent"
 msgstr "Cookie-Genehmigung deaktivieren"
 
-#: bluebottle/members/models.py:214
+#: bluebottle/members/models.py:215
 msgid "Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)"
 msgstr "Cookie Zustimmung extern behandeln (z.B. Cookiebot) - (Wird benötigt, wenn GTM hinzugefügt wird.)"
 
-#: bluebottle/members/models.py:219
+#: bluebottle/members/models.py:220
 msgid "gtm code"
 msgstr "gtm code"
 
-#: bluebottle/members/models.py:220
+#: bluebottle/members/models.py:221
 msgid "Adding the GTM script to your platform allows you to manage and deploy third-party tools."
 msgstr "Das Hinzufügen des GTM-Skripts zu Ihrer Plattform ermöglicht Ihnen die Verwaltung und Bereitstellung von Drittanbieter-Tools."
 
-#: bluebottle/members/models.py:226
+#: bluebottle/members/models.py:227
 msgid "Sign up image"
 msgstr "Anmeldebilder"
 
-#: bluebottle/members/models.py:227
+#: bluebottle/members/models.py:228
 msgid "This image will be displayed on the sign up and log in pages."
 msgstr "Dieses Bild wird auf den Anmelde- und Einlogseiten angezeigt."
 
-#: bluebottle/members/models.py:238
+#: bluebottle/members/models.py:239
 msgid "translate user content"
 msgstr "Benutzoinhalte übersetzen"
 
-#: bluebottle/members/models.py:239
+#: bluebottle/members/models.py:240
 msgid "Give users the option to translate user generated content."
 msgstr "Gib den Nutzern die Möglichkeit, von Nutzern generierte Inhalte zu übersetzen."
 
-#: bluebottle/members/models.py:244
+#: bluebottle/members/models.py:245
 msgid "enable gender"
 msgstr "aktiviere Geschlecht"
 
-#: bluebottle/members/models.py:246
+#: bluebottle/members/models.py:247
 msgid "Show gender question in profile form"
 msgstr "Geschlechterfrage im Profilformular anzeigen"
 
-#: bluebottle/members/models.py:250
+#: bluebottle/members/models.py:251
 msgid "enable birthday"
 msgstr "Geburtstag aktivieren"
 
-#: bluebottle/members/models.py:252
+#: bluebottle/members/models.py:253
 msgid "Show birthdate question in profile form"
 msgstr "Geburtsdatumfrage im Profilformular anzeigen"
 
-#: bluebottle/members/models.py:258
+#: bluebottle/members/models.py:259
 msgid "Show address question in profile form"
 msgstr "Adressfrage im Profilformular anzeigen"
 
-#: bluebottle/members/models.py:262
+#: bluebottle/members/models.py:263
 msgid "create segments"
 msgstr "erstelle Segmente"
 
-#: bluebottle/members/models.py:265
+#: bluebottle/members/models.py:266
 msgid "Create new segments when a user logs in. Leave unchecked if only priorly specified ones should be used."
 msgstr "Erstelle neue Segmente, wenn sich ein Benutzer anmeldet. Lassen Sie diese Option deaktiviert, wenn nur vorher spezifizierte Segmente verwendet werden sollen."
 
-#: bluebottle/members/models.py:270
+#: bluebottle/members/models.py:271
 msgid "create locations"
 msgstr "erstelle Orte"
 
-#: bluebottle/members/models.py:273
+#: bluebottle/members/models.py:274
 msgid "Create new work locations when a user logs in. Leave unchecked if only priorly specified ones should be used."
 msgstr "Neue Arbeitsstandorte erstellen, wenn sich ein Benutzer anmeldet. Lassen Sie diese Option deaktiviert, wenn nur zuvor spezifizierte verwendet werden sollen."
 
-#: bluebottle/members/models.py:281
+#: bluebottle/members/models.py:282
 msgid "Require members to enter their work location."
 msgstr "Die Mitglieder müssen ihren Arbeitsstandort angeben."
 
-#: bluebottle/members/models.py:286
+#: bluebottle/members/models.py:287
 msgid "Require members to enter their address."
 msgstr "Mitglieder müssen ihre Adresse eingeben."
 
-#: bluebottle/members/models.py:291
+#: bluebottle/members/models.py:292
 msgid "Require members to enter their phone number."
 msgstr "Mitglieder müssen ihre Telefonnummer eingeben."
 
-#: bluebottle/members/models.py:294
+#: bluebottle/members/models.py:295
 msgid "Birthdate"
 msgstr "Geburtsdatum"
 
-#: bluebottle/members/models.py:296
+#: bluebottle/members/models.py:297
 msgid "Require members to enter their date of birth."
 msgstr "Erfordert die Eingabe des Geburtsdatums."
 
-#: bluebottle/members/models.py:300
+#: bluebottle/members/models.py:301
 msgid "Verify SSO data work location"
 msgstr "SSO-Daten Arbeitsstandort überprüfen"
 
-#: bluebottle/members/models.py:302
+#: bluebottle/members/models.py:303
 msgid "Require members to verify their work location once if it is filled via SSO."
 msgstr "Erfordert von den Mitgliedern, ihren Arbeitsstandort einmal zu überprüfen, wenn er über SSO ausgefüllt ist."
 
-#: bluebottle/members/models.py:306
+#: bluebottle/members/models.py:307
 msgid "Display member names"
 msgstr "Mitgliedernamen anzeigen"
 
-#: bluebottle/members/models.py:311
+#: bluebottle/members/models.py:312
 msgid "How names of members will be displayed for visitors and other members.If first name is selected, then the names of initiators and activity manager will remain displayed in full and Activity managers and initiators will see the full names of their participants. And staff members will see all names in full."
 msgstr "Wie Namen der Mitglieder für Besucher und andere Mitglieder angezeigt werden. f Vorname ist ausgewählt, dann bleiben die Namen der Initiatoren und des Aktivitätsmanagers vollständig angezeigt, und die Aktivitätsmanager und Initiatoren werden die vollständigen Namen ihrer Teilnehmer sehen. Und die Mitarbeiter werden alle Namen in vollem Umfang sehen."
 
-#: bluebottle/members/models.py:319
+#: bluebottle/members/models.py:320
 msgid "Anonymise"
 msgstr "Anonymise"
 
-#: bluebottle/members/models.py:324
+#: bluebottle/members/models.py:325
 msgid "Set the number of months after which user data will be anonymised. Leave the field empty or with ‘0’ if you do not wish to anonymise user data."
 msgstr "Legen Sie die Anzahl der Monate fest, nach denen Benutzerdaten anonymisiert werden. Lassen Sie das Feld leer oder mit '0', wenn Sie keine Benutzerdaten anonymisieren möchten."
 
-#: bluebottle/members/models.py:336
+#: bluebottle/members/models.py:337
 msgid "Set the number of months after which user data will be deleted. Leave the field empty or with ‘0’ if you do not wish to delete user data."
 msgstr "Legen Sie die Anzahl der Monate fest, nach denen Benutzerdaten gelöscht werden. Lassen Sie das Feld leer oder mit '0', wenn Sie keine Benutzerdaten löschen möchten."
 
-#: bluebottle/members/models.py:364 bluebottle/members/models.py:365
+#: bluebottle/members/models.py:365 bluebottle/members/models.py:366
 msgid "member platform settings"
 msgstr "Mitgliedsplattform-Einstellungen"
 
-#: bluebottle/members/models.py:370
+#: bluebottle/members/models.py:371
 msgid "Was verified for voting by recaptcha."
 msgstr "War für die Abstimmung durch recaptcha verifiziert."
 
-#: bluebottle/members/models.py:374
+#: bluebottle/members/models.py:375
 msgid "Was approved by platform manager."
 msgstr "Wurde vom Plattformmanager genehmigt."
 
-#: bluebottle/members/models.py:377
+#: bluebottle/members/models.py:378
 msgid "Matching"
 msgstr "Passend"
 
-#: bluebottle/members/models.py:379
+#: bluebottle/members/models.py:380
 msgid "Monthly overview of activities that match this person's profile"
 msgstr "Monatliche Übersicht der Aktivitäten, die dem Profil dieser Person entsprechen"
 
-#: bluebottle/members/models.py:382
+#: bluebottle/members/models.py:383
 msgid "Receive reminder emails"
 msgstr "Erinnerungs-E-Mails erhalten"
 
-#: bluebottle/members/models.py:384
+#: bluebottle/members/models.py:385
 msgid "User receives emails reminding them about their do good hours"
 msgstr "Benutzer erhält E-Mails, die ihn an seine guten Stunden erinnern"
 
-#: bluebottle/members/models.py:387 bluebottle/token_auth/tests/models.py:12
+#: bluebottle/members/models.py:388 bluebottle/token_auth/tests/models.py:12
 msgid "remote_id"
 msgstr "entfernte Id"
 
-#: bluebottle/members/models.py:391
+#: bluebottle/members/models.py:392
 msgid "Last Logout"
 msgstr "Letzte Abmeldung"
 
-#: bluebottle/members/models.py:394
+#: bluebottle/members/models.py:395
 msgid "external SCIM id"
 msgstr "externe SCIM-ID"
 
-#: bluebottle/members/models.py:404
+#: bluebottle/members/models.py:405
 msgid "Work location groups managed"
 msgstr "Verwaltete Arbeitsstandortsgruppen"
 
-#: bluebottle/members/models.py:406
+#: bluebottle/members/models.py:407
 msgid "Select one or more groups to filter on. The user will only see data related to those selected groups. Leave empty to show all data."
 msgstr "Wählen Sie eine oder mehrere Gruppen zum Filtern aus. Der Benutzer wird nur Daten zu den ausgewählten Gruppen sehen. Lassen Sie leer, um alle Daten anzuzeigen."
 
-#: bluebottle/members/models.py:414
+#: bluebottle/members/models.py:415
 msgid "Segments managed"
 msgstr "Verwaltete Segmente"
 
-#: bluebottle/members/models.py:416
+#: bluebottle/members/models.py:417
 msgid "Select one or more segments to filter on. The user will only get updates for activities with the selected segments."
 msgstr "Wählen Sie ein oder mehrere Segmente zur Filterung aus. Der Benutzer erhält nur Updates für Aktivitäten mit den ausgewählten Segmenten."
 
-#: bluebottle/members/models.py:423
+#: bluebottle/members/models.py:424
 msgid "When the user updated their matching preferences."
 msgstr "Wenn der Benutzer aktualisiert ihre passenden Einstellungen."
 
-#: bluebottle/members/models.py:437
+#: bluebottle/members/models.py:438
 msgid "Terms accepted"
 msgstr "Bedingungen akzeptiert"
 
-#: bluebottle/members/models.py:439
+#: bluebottle/members/models.py:440
 msgid "User has explicitly accepted the terms"
 msgstr "Benutzer hat die Bedingungen ausdrücklich akzeptiert"
 
-#: bluebottle/members/models.py:577
+#: bluebottle/members/models.py:573
 msgid "User activity"
 msgstr "Benutzeraktivität"
 
-#: bluebottle/members/models.py:578
+#: bluebottle/members/models.py:574
 msgid "User activities"
 msgstr "Benutzeraktivitäten"
 
@@ -8713,47 +8692,47 @@ msgstr "Wir können Sie mit der angegebenen E-Mail-Adresse und dem Passwort nich
 msgid "Must include \"{username_field}\" and \"password\"."
 msgstr "Muss \"{username_field}\" und \"Passwort\" enthalten."
 
-#: bluebottle/members/serializers.py:526
+#: bluebottle/members/serializers.py:528
 msgid "The access link you supplied is invalid. Please contact us to request a new access link."
 msgstr "Der von Ihnen bereitgestellte Zugriff-Link ist ungültig. Bitte kontaktieren Sie uns, um einen neuen Zugriff-Link zu beantragen."
 
-#: bluebottle/members/serializers.py:532
+#: bluebottle/members/serializers.py:534
 msgid "This email is not whitelisted, please contact us to request access."
 msgstr "Diese E-Mail ist nicht auf der Whitelist, bitte kontaktieren Sie uns, um Zugang zu beantragen."
 
-#: bluebottle/members/serializers.py:537
+#: bluebottle/members/serializers.py:539
 msgid "Only emails for specified domains are allowed. Please use your work e-mail address."
 msgstr "Nur E-Mails von bestimmten Domains sind erlaubt. Bitte verwenden Sie Ihre Arbeits-E-Mail-Adresse."
 
-#: bluebottle/members/serializers.py:594
+#: bluebottle/members/serializers.py:596
 msgid "A user with this email address already exists"
 msgstr "Ein Benutzer mit dieser E-Mail-Adresse existiert bereits"
 
-#: bluebottle/members/serializers.py:634
+#: bluebottle/members/serializers.py:636
 msgid "Signup requires a confirmation token."
 msgstr "Anmeldung erfordert einen Bestätigungs-Token."
 
-#: bluebottle/members/serializers.py:639
+#: bluebottle/members/serializers.py:641
 msgid "The platform is closed."
 msgstr "Die Plattform ist geschlossen."
 
-#: bluebottle/members/serializers.py:669
+#: bluebottle/members/serializers.py:671
 msgid "email_confirmation"
 msgstr "email_Bestätigung"
 
-#: bluebottle/members/serializers.py:713
+#: bluebottle/members/serializers.py:715
 msgid "Email confirmation mismatch"
 msgstr "E-Mail Bestätigung stimmt nicht überein"
 
-#: bluebottle/members/serializers.py:720
+#: bluebottle/members/serializers.py:722
 msgid "Signup requires a confirmation token"
 msgstr "Anmeldung erfordert ein Bestätigungs-Token"
 
-#: bluebottle/members/serializers.py:827
+#: bluebottle/members/serializers.py:829
 msgid "Password does not match"
 msgstr "Passwort stimmt nicht überein"
 
-#: bluebottle/members/serializers.py:890
+#: bluebottle/members/serializers.py:892
 msgid "The two password fields didn't match."
 msgstr "Die beiden Passwortfelder stimmen nicht überein."
 
@@ -9804,7 +9783,8 @@ msgstr "Einstellungen"
 msgid "Manage Reporting"
 msgstr "Berichte verwalten"
 
-#: bluebottle/settings/testing.py:425 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:425
+#: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9817,26 +9797,28 @@ msgstr "Berichte verwalten"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/impact-booster/settings.py:28
+#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
-#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
-#: tenants/maximising-potential/settings.py:27
-#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
+#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
+#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
+#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
+#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
-#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
+#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
+#: tenants/purpose-in-action/settings.py:27
+#: tenants/rhi-magnesita/settings.py:25
+#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
 #: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Englisch"
 
-#: bluebottle/settings/testing.py:426 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
+#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:426
+#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
+#: tenants/aed-actie/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
@@ -9847,12 +9829,13 @@ msgstr "Englisch"
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
-#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
+#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
+#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
+#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
-#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
-#: tenants/purpose-in-action/settings.py:26
+#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
+#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
+#: tenants/rabobank-cooperatief/settings.py:25
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -9867,28 +9850,31 @@ msgstr "Englisch"
 msgid "Dutch"
 msgstr "Niederländisch"
 
-#: bluebottle/settings/testing.py:427 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
+#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:427
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Französisch"
 
-#: bluebottle/settings/testing.py:428
+#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:428
+#: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Spanisch"
 
-#: bluebottle/settings/testing.py:429
+#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:429
+#: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Deutsch"
 
-#: bluebottle/settings/testing.py:430
+#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:430
 msgid "Portuguese"
 msgstr "Portugiesisch"
 
-#: bluebottle/settings/testing.py:431
+#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:431
+#: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Ungarisch"
 
-#: bluebottle/settings/testing.py:432
+#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:432
 msgid "Bulgarian"
 msgstr "Bulgarisch"
 
@@ -11008,7 +10994,7 @@ msgid "location"
 msgstr "standort"
 
 #: bluebottle/time_based/models.py:377 bluebottle/time_based/models.py:1843
-#: bluebottle/time_based/views/mixins.py:117
+#: bluebottle/time_based/views/mixins.py:121
 #: bluebottle/time_based/views/views.py:123
 #, python-brace-format
 msgid "\n"
@@ -12734,7 +12720,7 @@ msgid "\n"
 "          You are expected to contribute %(duration)s hours every %(period)s from %(start)s.\n"
 "        "
 msgstr "\n"
-"          Von dir wird erwartet, dassdue %(duration)s Stunden pro %(period)s von %(start)s beiträgst.\n"
+"          Von dir wird erwartet, dass du %(duration)s Stunden pro %(period)s von %(start)s beiträgst.\n"
 "        "
 
 #: bluebottle/time_based/templates/mails/messages/partial/periodic.html:12
@@ -12900,7 +12886,7 @@ msgid "\n"
 "            You joined an activity on <b>%(site_name)s!</b>\n"
 "        "
 msgstr "\n"
-"            Du bist einer Aktivität am <b>%(site_name)s beigetreten!</b>\n"
+"            Du bist einer Aktivität auf <b>%(site_name)s beigetreten!</b>\n"
 "        "
 
 #: bluebottle/time_based/templates/mails/messages/participant_rejected.html:4
@@ -12979,7 +12965,7 @@ msgid "\n"
 "            Make sure to register your hours using the code or URL found on the activity detail page.\n"
 "        "
 msgstr "\n"
-"            Vergiss nicht, deine Stunden mit dem Code oder der URL auf der Seite mit den Aktivitäts-Detailseite zu registrieren.\n"
+"            Vergiss nicht, deine Stunden mit dem Code oder der URL auf der Aktivitätsdetailseite zu registrieren.\n"
 "        "
 
 #: bluebottle/time_based/templates/mails/messages/participants/user_date_participant_withdrew.html:4
@@ -13086,7 +13072,7 @@ msgid "\n"
 "                Make sure to register your hours using the code or URL found on the activity detail page.\n"
 "            "
 msgstr "\n"
-"            Vergiss nicht, deine Stunden mit dem Code oder der URL auf der Aktivitäts-Detailseite zu registrieren.\n"
+"            Vergiss nicht, deine Stunden mit dem Code oder der URL auf der Aktivitätsdetailseite zu registrieren.\n"
 "            "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:25
@@ -13137,7 +13123,7 @@ msgid "\n"
 "                        Make sure to register your hours using the code or URL found on the activity detail page.\n"
 "                    "
 msgstr "\n"
-"            Vergiss nicht, deine Stunden mit dem Code oder der URL auf der Seite mit den Aktivitäts-Detailseite zu registrieren.\n"
+"            Vergiss nicht, deine Stunden mit dem Code oder der URL auf der Aktivitätsdetailseite zu registrieren.\n"
 "                    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_created.html:4
@@ -13215,7 +13201,6 @@ msgstr "\n"
 "        <li>Kontaktiere den Teamkapitän %(applicant_name)s, um ein bestimmtes Datum, eine Uhrzeit und einen Ort zu vereinbaren, an dem er an deiner Aktivität teilnehmen kann.</li>\n"
 "        <li>Füge diese Informationen dem Team über den Tab „Ungeplant“ in der Teamliste auf der Aktivitätsseite hinzu. Der Teamkapitän und die Teammitglieder werden benachrichtigt, wenn die Informationen hinzugefügt werden.</li>\n"
 "      </ol>\n"
-"      </ol>\n"
 "    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:24
@@ -13242,7 +13227,6 @@ msgstr "\n"
 "        <li>Gehe zu deiner Aktivität, um die Bewerbung zu überprüfen und sie anzunehmen oder abzulehnen.</li>\n"
 "        <li>Wenn du sie annimmst, kontaktiere den Teamkapitän %(applicant_name)s, um ein bestimmtes Datum, eine Uhrzeit und einen Ort zu vereinbaren, an dem er an deiner Aktivität teilnehmen kann.</li>\n"
 "        <li>Füge diese Informationen dem Team über den Tab „Ungeplant“ in der Teamliste auf der Aktivitätsseite hinzu. Der Teamkapitän und die Teammitglieder werden benachrichtigt, wenn die Informationen hinzugefügt werden.</li>\n"
-"      </ol>\n"
 "      </ol>\n"
 "    "
 
@@ -13587,7 +13571,7 @@ msgid "\n"
 "<p>You can view your team on the activity detail page.</p>\n"
 msgstr "\n"
 "<p>Dein Team wurde zur Aktivität „%(title)s“ hinzugefügt.</p>\n\n"
-"<p>Du kannst dein Team auf der Detailseite der Aktivität einsehen.</p>\n"
+"<p>Du kannst dein Team auf der Aktivitätsdetailseite einsehen.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_team_removed.html:4
 #, python-format
@@ -13815,12 +13799,12 @@ msgid "\n"
 msgstr "\n"
 "        <p>\n"
 "            Du hast diese E-Mail erhalten, weil du %(title)s unterstützt.\n"
-"            Möchtest du keine Aktualisierungen mehr erhalten?\n"
+"            Möchtest du keine Aktivitäts-Updates mehr erhalten?\n"
 "        </p>\n"
 "        <p>\n"
 "            <a href=\"%(site)s/member/profile\">\n"
-"                Abmelden\n"
-"            </a> über deine Kontoseite\n"
+"                Melde dich\n"
+"            </a> über deine Kontoseite ab\n"
 "        </p>\n"
 "    "
 
@@ -13880,22 +13864,22 @@ msgstr "Veröffentlichungsende Datum"
 msgid "%(name)s with ID “%(key)s” can’t be found. Perhaps you don’t have permission to view it or maybe it was deleted?"
 msgstr "%(name)s mit ID “%(key)s” kann nicht gefunden werden. Vielleicht haben Sie nicht die Berechtigung, sie anzusehen oder wurde vielleicht gelöscht?"
 
-#: bluebottle/utils/serializers.py:32
+#: bluebottle/utils/serializers.py:33
 #, python-format
 msgid "Ensure this value is less than or equal to %(limit_value)s."
 msgstr "Stellen Sie sicher, dass dieser Wert kleiner oder gleich %(limit_value)s ist."
 
-#: bluebottle/utils/serializers.py:38
+#: bluebottle/utils/serializers.py:39
 #, python-format
 msgid "Ensure this value is greater than or equal to %(limit_value)s."
 msgstr "Stelle sicher, dass dieser Wert größer oder gleich %(limit_value)s ist."
 
-#: bluebottle/utils/serializers.py:44
+#: bluebottle/utils/serializers.py:45
 #, python-brace-format
 msgid "Ensure this amount is less than or equal to {max_amount}."
 msgstr "Stelle sicher, dass dieser Betrag kleiner oder gleich {max_amount} ist."
 
-#: bluebottle/utils/serializers.py:45
+#: bluebottle/utils/serializers.py:46
 #, python-brace-format
 msgid "Ensure this amount is greater than or equal to {min_amount}."
 msgstr "Stelle sicher, dass dieser Betrag größer oder gleich {min_amount} ist."
@@ -14001,4 +13985,8 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Zweiter"
 msgstr[1] "Sekunden"
+
+#: tenants/goodup-nl/settings.py:27
+msgid "Nederlands"
+msgstr "Niederländisch"
 

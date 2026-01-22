@@ -4,7 +4,7 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity, \
-    LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity
+    LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity, LinkedScheduleActivity
 from bluebottle.initiatives.documents import get_translated_list
 from bluebottle.utils.documents import TextField
 from bluebottle.utils.models import get_default_language
@@ -448,6 +448,64 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
 
     def prepare_activity_type(self, instance):
         return 'deadline'
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedScheduleActivityDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedScheduleActivity
+        related_models = ()
+
+    def prepare_location(self, instance):
+        locations = [
+            {
+                'name': instance.location.formatted_address,
+                'locality': instance.location.locality,
+                'country_code': instance.location.country.alpha2_code,
+                'country': instance.location.country.name,
+                'type': 'location'
+
+            }
+        ] if instance.location_id else []
+        return locations
+
+    def prepare_country(self, instance):
+        countries = []
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+        return countries
+
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.end]
+
+    def prepare_dates(self, instance):
+        return [
+            {
+                'start': instance.start,
+                'end': instance.end,
+            }
+        ]
+
+    def prepare_duration(self, instance):
+        return [
+            instance.duration
+        ]
+
+    def prepare_slug(self, instance):
+        return f'linked-schedule-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'schedule'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/time-based/schedules'
+
+    def prepare_activity_type(self, instance):
+        return 'schedule'
 
 
 @registry.register_document

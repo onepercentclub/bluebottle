@@ -461,6 +461,7 @@ def run(*args):
                     new_should_be_succeeded.update(status='succeeded')
                     failed_contributions.update(status='succeeded')
                     failed_contributions_new.update(status='new')
+                    new_succeeded_collect_contributions.update(status='succeeded')
                     for registration in registrations_without_participant.all():
                         slot = registration.activity.slots.last()
                         participant = DateParticipant(

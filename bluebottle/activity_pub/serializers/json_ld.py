@@ -254,6 +254,12 @@ class DoGoodEventSerializer(BaseEventSerializer):
         required=False,
         allow_null=True
     )
+    slot_mode = serializers.ChoiceField(
+        choices=['PeriodicSlotMode', 'ScheduleSlotMode', 'SetSlotMode'],
+        required=False,
+        allow_null=True
+    )
+
     duration = serializers.DurationField(required=False, allow_null=True)
 
     sub_event = SubEventSerializer(many=True, allow_null=True, required=False, include=True)
@@ -262,7 +268,8 @@ class DoGoodEventSerializer(BaseEventSerializer):
         model = DoGoodEvent
         fields = BaseEventSerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'duration',
-            'event_attendance_mode', 'join_mode', 'repetition_mode',
+            'event_attendance_mode', 'join_mode',
+            'repetition_mode', 'slot_mode',
             'registration_deadline',
             'sub_event',
         )
@@ -295,7 +302,7 @@ class EventSerializer(PolymorphicActivityPubSerializer):
         GoodDeedSerializer,
         CrowdFundingSerializer,
         CollectCampaignSerializer,
-        DoGoodEventSerializer
+        DoGoodEventSerializer,
     ]
 
     class Meta:

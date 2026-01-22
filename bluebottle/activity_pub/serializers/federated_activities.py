@@ -533,12 +533,17 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     repetition_mode = RepetitionModeField()
     event_attendance_mode = EventAttendanceModeField()
     join_mode = JoinModeField()
+    slot_mode = serializers.SerializerMethodField()
+
+    def get_slot_mode(self, obj):
+        return 'PeriodicSlotMode'
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = PeriodicActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'registration_deadline',
-            'duration', 'join_mode', 'event_attendance_mode', 'repetition_mode'
+            'duration', 'join_mode', 'event_attendance_mode',
+            'repetition_mode', 'slot_mode'
         )
 
 
@@ -552,14 +557,19 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
     registration_deadline = DateField(allow_null=True)
 
     event_attendance_mode = EventAttendanceModeField()
-    join_mode = 'ScheduleJoinMode'
+    join_mode = JoinModeField()
     duration = serializers.DurationField(allow_null=True)
+
+    slot_mode = serializers.SerializerMethodField()
+
+    def get_slot_mode(self, obj):
+        return 'ScheduleSlotMode'
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = ScheduleActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'registration_deadline',
-            'event_attendance_mode', 'duration', 'join_mode'
+            'event_attendance_mode', 'duration', 'join_mode', 'slot_mode'
         )
 
 
@@ -615,9 +625,9 @@ class FederatedActivitySerializer(PolymorphicSerializer):
 
     def _get_resource_type_from_mapping(self, data):
         if data.get('type') == 'DoGoodEvent':
-            if data.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
+            if data.get('slot_mode', 'SetSlotMode') == 'ScheduleSlotMode':
                 return ScheduleActivity
-            elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode ':
+            elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
                 return PeriodicActivity
             elif data.get('join_mode', None) in ('selected', JoinModeChoices.selected):
                 return RegisteredDateActivity

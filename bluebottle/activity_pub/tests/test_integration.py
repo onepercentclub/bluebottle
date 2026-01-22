@@ -677,6 +677,8 @@ class AdoptPeriodicActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.duration, self.model.duration)
+        print(self.adopted, self.model)
+        print(self.model.event.slot_mode)
         self.assertEqual(self.adopted.period, self.model.period)
         if self.model.location:
             self.assertEqual(

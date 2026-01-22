@@ -772,7 +772,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             ]
         ),
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'deadline', 'location', 'duration'],
+            ['title', 'description', 'start', 'location', 'duration'],
             effects=[
                 UpdateEventEffect,
             ]

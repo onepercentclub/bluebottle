@@ -630,3 +630,7 @@ label.translatable-field:before {
     gap: 8px;
     align-items: center;
 }
+
+.field-activity_pub label {
+    display: none;
+}

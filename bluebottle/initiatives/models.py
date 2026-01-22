@@ -132,7 +132,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
 
     location = models.ForeignKey(
         "geo.Location",
-        verbose_name=_("office"),
+        verbose_name=_("Work location"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -279,21 +279,21 @@ ACTIVITY_SEARCH_FILTERS = (
     ("team_activity", _("Individual / Team")),
     ("theme", _("Theme")),
     ("category", _("Category")),
-    ("office", _("Office")),
-    ("office_subregion", _("Office group")),
-    ("office_region", _("Office region")),
+    ("office", _("Work location")),
+    ("office_subregion", _("Work location group")),
+    ("office_region", _("Work location region")),
 )
 
 
 INITIATIVE_SEARCH_FILTERS = (
-    ('office', _('Office')),
+    ('office', _('Work location')),
     ('country', _('Country')),
     ('theme', _('Theme')),
     ('category', _('Category')),
     ('open', _('Open initiatives')),
-    ('office', _('Office')),
-    ('office_subregion', _('Office group')),
-    ('office_region', _('Office region')),
+    ('office', _('Work location')),
+    ('office_subregion', _('Work location group')),
+    ('office_region', _('Work location region')),
 )
 
 
@@ -404,17 +404,17 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     enable_office_regions = models.BooleanField(
-        default=False, help_text=_("Allow admins to add (sub)regions to their offices.")
+        default=False, help_text=_("Allow admins to add (sub)regions to their work location.")
     )
 
     enable_office_restrictions = models.BooleanField(
         default=False,
         help_text=_(
-            "Allow activity managers to specify office restrictions on activities."
+            "Allow activity managers to specify work location restrictions on activities."
         ),
     )
     default_office_restriction = models.CharField(
-        _("Default office restriction"),
+        _("Default work location restriction"),
         default=OfficeRestrictionChoices.all,
         choices=OfficeRestrictionChoices.choices,
         blank=True,
@@ -517,7 +517,7 @@ class SearchFilter(SortableMixin, models.Model):
     @property
     def placeholder(self):
         if self.type == "office":
-            return _("Select office")
+            return _("Select work location")
         if self.type in ["is_online", "team_activity", "open"]:
             return _("Make a choice")
         return _("Select {filter_name}").format(filter_name=self.name.lower())

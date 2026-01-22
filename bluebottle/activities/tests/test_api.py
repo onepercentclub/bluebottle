@@ -5,6 +5,7 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
+from django.contrib.auth.models import Permission
 from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
@@ -22,6 +23,7 @@ from bluebottle.collect.tests.factories import (
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
+from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.initiatives.models import (
     ActivitySearchFilter,
     InitiativePlatformSettings,
@@ -466,6 +468,48 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(
             f'{self.url}?filter[search]={text}',
+        )
+
+        data = json.loads(response.content)
+        ids = [int(activity['id']) for activity in data['data']]
+
+        self.assertTrue(title.pk in ids)
+        self.assertTrue(description.pk in ids)
+        self.assertTrue(initiative_title.pk in ids)
+        self.assertTrue(initiative_pitch.pk in ids)
+        self.assertTrue(initiative_story.pk in ids)
+        self.assertTrue(slot_title.pk in ids)
+
+        self.assertEqual(data['meta']['pagination']['count'], 6)
+
+    def test_search_diacritics(self):
+        text = 'cônsectetur adïpiscing elit,'
+        title = DeadlineActivityFactory.create(
+            status="open", title=f'title with {text}',
+        )
+        description = DeadlineActivityFactory.create(
+            status="open", description=json.dumps({'html': f'description with {text}', 'delta': ''}),
+        )
+
+        initiative_title = DeadlineActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
+        )
+        initiative_story = DeadlineActivityFactory.create(
+            status="open",
+            initiative=InitiativeFactory.create(
+                story=json.dumps({'html': f'story with {text}', 'delta': ''})
+            ),
+        )
+
+        initiative_pitch = DeadlineActivityFactory.create(
+            status="open", initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
+        )
+
+        slot_title = DateActivityFactory.create(status="open")
+        DateActivitySlotFactory.create(activity=slot_title, title=f'slot title with {text}')
+
+        response = self.client.get(
+            f'{self.url}?filter[search]=consectetur adipiscing elit,',
         )
 
         data = json.loads(response.content)
@@ -1069,6 +1113,162 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound([])
 
+    def test_filter_reviewing_with_permission(self):
+        submitted = DeadlineActivityFactory.create(
+            status='submitted',
+        )
+        other = DeadlineActivityFactory.create(status='open')
+
+        reviewer = BlueBottleUserFactory.create()
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([submitted], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(submitted.pk), ids)
+        self.assertNotIn(str(other.pk), ids)
+
+    def test_filter_reviewing_with_superuser(self):
+        submitted = DeadlineActivityFactory.create(
+            status='submitted',
+        )
+        other = DeadlineActivityFactory.create(status='open')
+        admin = BlueBottleUserFactory.create(is_superuser=True)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=admin)
+
+        self.assertFound([submitted], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(submitted.pk), ids)
+        self.assertNotIn(str(other.pk), ids)
+
+    def test_filter_reviewing_subregion_manager(self):
+        managed_subregion = OfficeSubRegionFactory.create()
+        in_region = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=managed_subregion)
+        )
+        out_region = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create()
+        )
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.subregion_manager.add(managed_subregion)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([in_region], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(in_region.pk), ids)
+        self.assertNotIn(str(out_region.pk), ids)
+
+    def test_filter_reviewing_segment_manager(self):
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
+
+        no_segment = DeadlineActivityFactory.create(status='submitted')
+
+        in_segment = DeadlineActivityFactory.create(status='submitted')
+        in_segment.segments.add(managed_segment)
+
+        out_segment = DeadlineActivityFactory.create(status='submitted')
+        out_segment.segments.add(other_segment)
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.segment_manager.add(managed_segment)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([in_segment], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(in_segment.pk), ids)
+        self.assertNotIn(str(no_segment.pk), ids)
+        self.assertNotIn(str(out_segment.pk), ids)
+
+    def test_filter_reviewing_subregion_matches_segment_not(self):
+        """Test that when subregion matches but segment doesn't, no results are returned"""
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
+        managed_subregion = OfficeSubRegionFactory.create()
+
+        # Activity in managed subregion but with non-managed segment
+        activity = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=managed_subregion)
+        )
+        activity.segments.add(other_segment)
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.subregion_manager.add(managed_subregion)
+        reviewer.segment_manager.add(managed_segment)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        # Should return no results because segment doesn't match
+        self.assertFound([], count=0)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertNotIn(str(activity.pk), ids)
+
+    def test_filter_reviewing_segment_matches_subregion_not(self):
+        """Test that when segment matches but subregion doesn't, no results are returned"""
+        segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
+        managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
+        managed_subregion = OfficeSubRegionFactory.create()
+        other_subregion = OfficeSubRegionFactory.create()
+
+        # Activity with managed segment but in non-managed subregion
+        activity = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=LocationFactory.create(subregion=other_subregion)
+        )
+        activity.segments.add(managed_segment)
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.subregion_manager.add(managed_subregion)
+        reviewer.segment_manager.add(managed_segment)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        # Should return no results because subregion doesn't match
+        self.assertFound([], count=0)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertNotIn(str(activity.pk), ids)
+
+    def test_filter_reviewing_excludes_grant_application(self):
+        """Test that grant applications are excluded from reviewing filter"""
+        # Create a regular activity and a grant application, both submitted
+        regular_activity = DeadlineActivityFactory.create(status='submitted')
+        grant_application = GrantApplicationFactory.create(status='submitted')
+
+        reviewer = BlueBottleUserFactory.create()
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        # Should only return the regular activity, not the grant application
+        self.assertFound([regular_activity], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(regular_activity.pk), ids)
+        self.assertNotIn(str(grant_application.pk), ids)
+
     def test_filter_online(self):
         matching = DeadlineActivityFactory.create_batch(2, status="open", is_online=True)
         other = DeadlineActivityFactory.create_batch(3, status="open", is_online=False)
@@ -1220,11 +1420,34 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 
-        matching = DeadlineActivityFactory.create_batch(
-            2,
-            office_location=LocationFactory.create(country=matching_country),
-            status='open',
+        matching = [
+            DeadlineActivityFactory.create(
+                office_location=LocationFactory.create(country=matching_country),
+                status='open',
+            ),
+            DeadlineActivityFactory.create(
+                location=GeolocationFactory.create(country=matching_country),
+                status='open',
+            ),
+            FundingFactory.create(
+                impact_location=GeolocationFactory.create(country=matching_country),
+                status='open'
+
+            ),
+            DeedFactory.create(
+                office_location=LocationFactory.create(country=matching_country),
+                status='open'
+            )
+        ]
+
+        date_activity = DateActivityFactory.create(slots=[], status='open')
+        DateActivitySlotFactory.create(
+            activity=date_activity,
+            is_online=False,
+            location=GeolocationFactory.create(country=matching_country),
         )
+
+        matching.append(date_activity)
 
         other = DeadlineActivityFactory.create_batch(
             3,
@@ -1254,7 +1477,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             matching.append(DeadlineActivityFactory.create(location=location, status='open'))
 
         self.search({})
-        self.assertEqual(len(self.data['meta']['facets']['country']), 12)
+        self.assertEqual(len(self.data['meta']['facets']['country']), 24)
         self.assertFound(matching)
 
     def test_filter_country_slots(self):
@@ -1781,6 +2004,7 @@ class ActivityLocationAPITestCase(APITestCase):
     model = Activity
 
     def setUp(self):
+        super().setUp()
         self.user = BlueBottleUserFactory.create(
             location=LocationFactory.create(subregion=OfficeSubRegionFactory.create())
         )

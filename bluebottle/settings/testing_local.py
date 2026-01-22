@@ -27,3 +27,35 @@ ELASTICSEARCH_DSL_AUTOSYNC = False
 CELERY_MAIL = False
 
 DEBUG = False
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'propagate': False,
+            'level': 'INFO',
+        },
+        'bluebottle': {
+            'handlers': ['console'],
+            'propagate': False,
+            'level': 'INFO',
+        },
+    },
+    'root': {
+        'level': 'DEBUG',
+        'handlers': ['console']
+    }
+}

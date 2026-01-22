@@ -4,9 +4,8 @@ from django.contrib.gis.db.models import PointField
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from mapwidgets.widgets import MapboxPointFieldWidget
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
-
+from mapwidgets.widgets import MapboxPointFieldWidget
 from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.models import Activity
@@ -120,14 +119,16 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
             return "-"
         url = reverse('admin:offices_officesubregion_change', args=(obj.subregion_id,))
         return format_html('<a href="{}">{}</a>', url, obj.subregion)
-    subregion_link.short_description = _('Office group')
+
+    subregion_link.short_description = _('Work location group')
 
     def region_link(self, obj):
         if not obj.subregion_id or not obj.subregion.region_id:
             return "-"
         url = reverse('admin:offices_officeregion_change', args=(obj.subregion.region_id,))
         return format_html('<a href="{}">{}</a>', url, obj.subregion.region)
-    region_link.short_description = _('Office region')
+
+    region_link.short_description = _('Work location region')
 
     fieldsets = (
         (

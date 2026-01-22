@@ -49,7 +49,8 @@ class CollectActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
-        DeleteActivityPermission, ActivitySegmentPermission
+        DeleteActivityPermission,
+        ActivitySegmentPermission
     )
 
     queryset = CollectActivity.objects.all()

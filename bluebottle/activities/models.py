@@ -1,5 +1,6 @@
 import uuid
 from builtins import object, str
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import SET_NULL
@@ -69,16 +70,26 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     organization = models.ForeignKey(
         Organization,
-        verbose_name=_('Partner organization'),
+        verbose_name=_('Partner organisation'),
         null=True,
         blank=True,
         on_delete=SET_NULL,
         related_name="activities",
     )
 
+    host_organization = models.ForeignKey(
+        Organization,
+        verbose_name=_('Host organisation'),
+        help_text=_('The organisation that shared this activity from another platform'),
+        null=True,
+        blank=True,
+        on_delete=SET_NULL,
+        related_name="hosted_activities",
+    )
+
     office_location = models.ForeignKey(
         "geo.Location",
-        verbose_name=_("Host office"),
+        verbose_name=_("Host work location"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -117,6 +128,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         help_text=_("Is this activity open for individuals or can only teams sign up?"),
     )
     image = ImageField(blank=True, null=True)
+
+    origin = models.ForeignKey(
+        'activity_pub.Event', null=True, related_name="adopted_activities", on_delete=models.SET_NULL
+    )
 
     video_url = models.URLField(
         _("video"),
@@ -190,6 +205,19 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     @property
+    def event(self):
+        from bluebottle.activity_pub.models import Event
+        return Event.objects.get(object=self)
+
+    @property
+    def activity_pub_url(self):
+        from bluebottle.activity_pub.models import Event
+        try:
+            return self.event.iri
+        except Event.DoesNotExist:
+            return None
+
+    @property
     def owners(self):
         if self.owner_id:
             yield self.owner
@@ -249,6 +277,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         permissions = (
             ("api_read_activity", "Can view activity through the API"),
             ("api_read_own_activity", "Can view own activity through the API"),
+            ("api_review_activity", "Can review activities through the API"),
         )
 
     def __str__(self):

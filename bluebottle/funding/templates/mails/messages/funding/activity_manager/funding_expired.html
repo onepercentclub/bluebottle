@@ -4,8 +4,11 @@
 {% block message %}
     <p class="donation-intro">
         {% blocktrans context 'email' %}
-            Unfortunately, the platform manager closed your crowdfunding campaign "{{title}}".
-            Didn’t expect this? Reach out to your platform manager to find out why.
+        Unfortunately, nobody donated to your campaign "{{title}}" before the deadline. That’s why we have cancelled your campaign.
+
+        Don’t worry, you can always create a new campaign and try again.
+
+        Need some tips to make your campaign stand out? Reach out to the platform manager by replying to this email.
         {% endblocktrans %}
     </p>
 {% endblock %}

@@ -15,6 +15,7 @@ from bluebottle.time_based.models import (
     RegisteredDateActivity,
     RegisteredDateParticipant
 )
+from bluebottle.utils.documents import TextField
 
 SCORE_MAP = {
     'open': 1,
@@ -44,7 +45,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
     slots = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'status': fields.KeywordField(),
-        'title': fields.TextField(),
+        'title': TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
         'locality': fields.KeywordField(attr='location.locality'),
@@ -178,6 +179,13 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
             'period': 0,
         }]
 
+    def prepare_country(self, instance):
+        countries = super().prepare_country(instance)
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+
+        return deduplicate(countries)
+
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:
             position = instance.location.position
@@ -244,6 +252,13 @@ class PeriodicActivityDocument(RegistrationActivityDocument):
 @activity.doc_type
 class ScheduleActivityDocument(RegistrationActivityDocument):
     participant_class = ScheduleParticipant
+
+    def prepare_country(self, instance):
+        countries = super().prepare_country(instance)
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+
+        return deduplicate(countries)
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:

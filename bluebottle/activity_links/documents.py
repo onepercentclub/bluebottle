@@ -395,6 +395,10 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
 @registry.register_document
 @activity.doc_type
 class LinkedDeadlineActivityDocument(LinkedActivityDocument):
+    contribution_duration = fields.NestedField(properties={
+        'period': fields.KeywordField(),
+        'value': fields.FloatField()
+    })
     class Django:
         model = LinkedDeadlineActivity
         related_models = ()
@@ -433,9 +437,22 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
         ]
 
     def prepare_duration(self, instance):
-        return [
-            instance.duration
-        ]
+        if instance.start and instance.end and instance.start > instance.end:
+            return {}
+        return {"gte": instance.start, "lte": instance.end}
+
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [{
+                'period': 'once',
+                'start': instance.start,
+                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+            }]
+        return [{
+            'start': instance.start,
+            'value': 0,
+            'period': 0,
+        }]
 
     def prepare_slug(self, instance):
         return f'linked-deadline-{instance.id}'
@@ -453,6 +470,11 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
 @registry.register_document
 @activity.doc_type
 class LinkedScheduleActivityDocument(LinkedActivityDocument):
+    contribution_duration = fields.NestedField(properties={
+        'period': fields.KeywordField(),
+        'value': fields.FloatField()
+    })
+
     class Django:
         model = LinkedScheduleActivity
         related_models = ()
@@ -491,9 +513,22 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
         ]
 
     def prepare_duration(self, instance):
-        return [
-            instance.duration
-        ]
+        if instance.start and instance.end and instance.start > instance.end:
+            return {}
+        return {"gte": instance.start, "lte": instance.end}
+
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [{
+                'period': 'once',
+                'start': instance.start,
+                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+            }]
+        return [{
+            'start': instance.start,
+            'value': 0,
+            'period': 0,
+        }]
 
     def prepare_slug(self, instance):
         return f'linked-schedule-{instance.id}'
@@ -511,6 +546,11 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
 @registry.register_document
 @activity.doc_type
 class LinkedPeriodicActivityDocument(LinkedActivityDocument):
+    contribution_duration = fields.NestedField(properties={
+        'period': fields.KeywordField(),
+        'value': fields.FloatField()
+    })
+
     class Django:
         model = LinkedPeriodicActivity
         related_models = ()
@@ -549,9 +589,18 @@ class LinkedPeriodicActivityDocument(LinkedActivityDocument):
         ]
 
     def prepare_duration(self, instance):
-        return [
-            instance.duration
-        ]
+        if instance.start and instance.end and instance.start > instance.end:
+            return {}
+        return {"gte": instance.start, "lte": instance.end}
+
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [
+                {
+                    'period': instance.period,
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+                }
+            ]
 
     def prepare_slug(self, instance):
         return f'linked-periodic-{instance.id}'

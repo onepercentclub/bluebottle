@@ -3,7 +3,6 @@ from datetime import datetime, time
 import dateutil
 from django.db.models import Count, Sum
 from django.db.models.functions import Trunc
-
 from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError

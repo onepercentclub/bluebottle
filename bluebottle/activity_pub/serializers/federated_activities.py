@@ -21,14 +21,15 @@ from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField
 
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
-    SubEvent
+    SubEvent, RepetitionModeChoices
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.organizations.models import Organization
-from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity
+from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
+    PeriodicActivity
 from bluebottle.utils.fields import RichTextField
 
 from rest_framework import serializers
@@ -342,7 +343,7 @@ class EventAttendanceModeField(serializers.Field):
 
 class JoinModeField(serializers.Field):
     def __init__(self, *args, **kwargs):
-        kwargs['source'] = 'review'
+        kwargs['source'] = kwargs.get('source', 'review')
         kwargs['required'] = False
         kwargs['allow_null'] = True
 
@@ -358,6 +359,28 @@ class JoinModeField(serializers.Field):
             return True
         else:
             return False
+
+
+class RepetitionModeField(serializers.Field):
+    def __init__(self, *args, **kwargs):
+        kwargs['source'] = kwargs.get('source', 'period')
+        kwargs['required'] = False
+        kwargs['allow_null'] = True
+
+        super().__init__(*args, **kwargs)
+
+    mapping = {
+        'days': RepetitionModeChoices.daily,
+        'weeks': RepetitionModeChoices.weekly,
+        'months': RepetitionModeChoices.monthly,
+    }
+
+    def to_representation(self, value):
+        return self.mapping[value]
+
+    def to_internal_value(self, value):
+        mapping = {v: k for k, v in self.mapping.items()}
+        return mapping[value]
 
 
 class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
@@ -377,7 +400,7 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
         model = DeadlineActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'registration_deadline',
-            'event_attendance_mode', 'duration', 'join_mode',
+            'event_attendance_mode', 'duration', 'join_mode'
         )
 
 
@@ -499,6 +522,26 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
         return result
 
 
+class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
+    id = FederatedIdField('json-ld:do-good-event')
+
+    location = LocationSerializer(allow_null=True, required=False)
+    image = ImageSerializer(required=False, allow_null=True)
+    start_time = DateField(source='start', allow_null=True)
+    end_time = DateField(source='deadline', allow_null=True, read_only=True)
+    duration = serializers.DurationField(allow_null=True)
+    repetition_mode = RepetitionModeField()
+    event_attendance_mode = EventAttendanceModeField()
+    join_mode = JoinModeField()
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = PeriodicActivity
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'location', 'start_time', 'end_time', 'registration_deadline',
+            'duration', 'join_mode', 'event_attendance_mode', 'repetition_mode'
+        )
+
+
 class FederatedActivitySerializer(PolymorphicSerializer):
     resource_type_field_name = 'type'
 
@@ -508,16 +551,19 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         FederatedDateActivitySerializer,
         FederatedFundingSerializer,
         FederatedCollectSerializer,
-        FederatedRegisteredDateActivitySerializer
+        FederatedRegisteredDateActivitySerializer,
+        FederatedPeriodicActivitySerializer,
     ]
 
     model_type_mapping = {
         Deed: 'GoodDeed',
         Funding: 'CrowdFunding',
         DateActivity: 'DoGoodEvent',
+        PeriodicActivity: 'DoGoodEvent',
         RegisteredDateActivity: 'DoGoodEvent',
         DeadlineActivity: 'DoGoodEvent',
         CollectActivity: 'CollectCampaign',
+
     }
 
     def __new__(cls, *args, **kwargs):
@@ -533,6 +579,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         self.resource_type_model_mapping['DeadlineActivity'] = DeadlineActivity
         self.resource_type_model_mapping['DateActivity'] = DateActivity
         self.resource_type_model_mapping['RegisteredDateActivity'] = RegisteredDateActivity
+        self.resource_type_model_mapping['PeriodicActivity'] = PeriodicActivity
 
     def to_resource_type(self, model_or_instance):
         if isinstance(model_or_instance, models.Model):
@@ -544,6 +591,8 @@ class FederatedActivitySerializer(PolymorphicSerializer):
 
     def _get_resource_type_from_mapping(self, data):
         if data.get('type') == 'DoGoodEvent':
+            if data.get('repetition_mode', 'OnceRepetitionMode') in ['OnceRepetitionMode', None]:
+                return PeriodicActivity
             if data.get('join_mode', None) in ('selected', JoinModeChoices.selected):
                 return RegisteredDateActivity
             if len(data.get('sub_event', [])) > 0:

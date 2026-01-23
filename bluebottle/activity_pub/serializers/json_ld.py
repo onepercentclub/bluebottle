@@ -219,7 +219,7 @@ class SubEventSerializer(ActivityPubSerializer):
 
     location = PlaceSerializer(allow_null=True, include=True, required=False)
     event_attendance_mode = serializers.ChoiceField(
-        choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode']
+        choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode'],
     )
     duration = serializers.DurationField(required=False, allow_null=True)
 
@@ -249,6 +249,11 @@ class DoGoodEventSerializer(BaseEventSerializer):
         required=False,
         allow_null=True
     )
+    repetition_mode = serializers.ChoiceField(
+        choices=['DailyRepetitionMode', 'WeeklyRepetitionMode', 'MonthlyRepetitionMode', 'OnceRepetitionMode'],
+        required=False,
+        allow_null=True
+    )
     duration = serializers.DurationField(required=False, allow_null=True)
 
     sub_event = SubEventSerializer(many=True, allow_null=True, required=False, include=True)
@@ -257,7 +262,8 @@ class DoGoodEventSerializer(BaseEventSerializer):
         model = DoGoodEvent
         fields = BaseEventSerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'duration',
-            'event_attendance_mode', 'join_mode', 'registration_deadline',
+            'event_attendance_mode', 'join_mode', 'repetition_mode',
+            'registration_deadline',
             'sub_event',
         )
 

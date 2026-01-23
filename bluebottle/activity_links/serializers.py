@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_links.models import LinkedActivity, LinkedDeed, LinkedDateActivity, LinkedDeadlineActivity, \
-    LinkedFunding, LinkedDateSlot, LinkedCollectCampaign
+    LinkedFunding, LinkedDateSlot, LinkedCollectCampaign, LinkedPeriodicActivity
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer, PointSerializer, CountrySerializer
 from bluebottle.utils.fields import RichTextField
@@ -243,7 +243,22 @@ class LinkedDeadlineActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySe
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeadlineActivity
-        fields = BaseLinkedActivitySerializer.Meta.fields + ('start_time', 'end_time', 'location')
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time', 'location'
+        )
+
+
+class LinkedPeriodicActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    location = LinkedLocationSerializer(required=False, allow_null=True)
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedPeriodicActivity
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time', 'location',
+            'duration', 'repetition_mode'
+        )
 
 
 class LinkedRegisteredDateActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
@@ -271,6 +286,7 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedDeedSerializer,
         LinkedDateActivitySerializer,
         LinkedDeadlineActivitySerializer,
+        LinkedPeriodicActivitySerializer,
         LinkedRegisteredDateActivitySerializer,
         LinkedFundingSerializer,
         LinkedCollectCampaignSerializer,
@@ -279,6 +295,7 @@ class LinkedActivitySerializer(PolymorphicSerializer):
     model_type_mapping = {
         LinkedDeed: 'GoodDeed',
         LinkedDateActivity: 'DoGoodEvent',
+        LinkedPeriodicActivity: 'DoGoodEvent',
         LinkedDeadlineActivity: 'DoGoodEvent',
         LinkedFunding: 'Funding',
         LinkedCollectCampaign: 'CollectCampaign'
@@ -288,6 +305,7 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         super().__init__(*args, **kwargs)
         self.resource_type_model_mapping['DateActivity'] = LinkedDateActivity
         self.resource_type_model_mapping['DeadlineActivity'] = LinkedDeadlineActivity
+        self.resource_type_model_mapping['PeriodicActivity'] = LinkedPeriodicActivity
         self.resource_type_model_mapping['RegisteredDateActivity'] = LinkedDeadlineActivity
         self.resource_type_model_mapping['Funding'] = LinkedFunding
         self.resource_type_model_mapping['GoodDeed'] = LinkedDeed
@@ -302,7 +320,9 @@ class LinkedActivitySerializer(PolymorphicSerializer):
 
         # Handle DoGoodEvent - check sub_event to distinguish DateActivity from DeadlineActivity
         if event_type == 'DoGoodEvent':
-            if data.get('join_mode', None) == 'selected':
+            if data.get('repetition', 'OnceRepetitionMode') not in ['OnceRepetitionMode', None]:
+                return 'PeriodicActivity'
+            if data.get('join_mode', None) == 'SelectedJoinMode':
                 return 'RegisteredDateActivity'
             if len(data.get('sub_event', [])) > 0:
                 return 'DateActivity'
@@ -327,7 +347,8 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedDateActivity: LinkedDateActivitySerializer,
         LinkedDeadlineActivity: LinkedDeadlineActivitySerializer,
         LinkedFunding: LinkedFundingSerializer,
-        LinkedCollectCampaign: LinkedCollectCampaignSerializer
+        LinkedCollectCampaign: LinkedCollectCampaignSerializer,
+        LinkedPeriodicActivity: LinkedPeriodicActivitySerializer
     }
 
     class Meta:

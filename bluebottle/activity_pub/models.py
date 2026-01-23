@@ -359,6 +359,13 @@ class JoinModeChoices(DjangoChoices):
     selected = ChoiceItem('SelectedJoinMode')
 
 
+class RepetitionModeChoices(DjangoChoices):
+    once = ChoiceItem('OnceRepetitionMode')
+    daily = ChoiceItem('DailyRepetitionMode')
+    weekly = ChoiceItem('WeeklyRepetitionMode')
+    monthly = ChoiceItem('MonthlyRepetitionMode')
+
+
 class AdoptionModeChoices(DjangoChoices):
     manual = ChoiceItem(
         'manual',
@@ -427,6 +434,11 @@ class DoGoodEvent(Event):
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)
+    repetition_mode = models.CharField(
+        choices=RepetitionModeChoices.choices,
+        default=RepetitionModeChoices.once,
+        null=True
+    )
     event_attendance_mode = models.CharField(
         choices=EventAttendanceModeChoices.choices,
         null=True

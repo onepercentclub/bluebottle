@@ -46,8 +46,8 @@ class TranslatableLabelAdminMixin:
     def translatable_info(self, obj):
         return admin_info_box(
             _(
-                'Every change will apply to all languages. '
-                'Except for the fields that can be translated, which are marked with 🌐'
+                'Your changes apply to all languages. '
+                'Fields marked with the 🌐 icon can be translated separately.'
             ),
             'translatable-info',
         )

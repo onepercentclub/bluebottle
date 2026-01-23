@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-20 13:49+0100\n"
-"PO-Revision-Date: 2026-01-22 08:47\n"
+"POT-Creation-Date: 2026-01-23 12:37+0100\n"
+"PO-Revision-Date: 2026-01-23 11:40\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -13647,8 +13647,8 @@ msgid "Should have at least one time slot."
 msgstr "Moet minstens 1 tijdsblok bevatten."
 
 #: bluebottle/translations/admin.py:49
-msgid "Every change will apply to all languages. Except for the fields that can be translated, which are marked with 🌐"
-msgstr "Elke wijziging geldt voor alle talen. Behalve voor de velden die kunnen worden vertaald, die zijn gemarkeerd met 🌐"
+msgid "Your changes apply to all languages. Fields marked with the 🌐 icon can be translated separately."
+msgstr "Je wijzigingen zijn van toepassing op alle talen. Velden gemarkeerd met het 🌐-pictogram kunnen afzonderlijk worden vertaald."
 
 #: bluebottle/updates/dashboard.py:13
 msgid "Recent wall updates"

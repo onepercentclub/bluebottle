@@ -11,6 +11,7 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
+from bluebottle.activity_pub.effects import UpdateEventEffect
 from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
     CollectActivityDateChangedNotification, ParticipantJoinedNotification
@@ -111,6 +112,11 @@ class CollectActivityTriggers(ActivityTriggers):
                     ]
                 )
             ]
+        ),
+
+        ModelChangedTrigger(
+            ['start', 'end', 'title', 'description', 'location', 'image', 'collect_type'],
+            effects=[UpdateEventEffect]
         ),
 
         TransitionTrigger(

@@ -5,7 +5,7 @@ from rest_framework import generics, status, response
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Announce, Organization,
-    GoodDeed, Image, CrowdFunding, Place, Address, DoGoodEvent, SubEvent, Update,
+    GoodDeed, Image, CrowdFunding, CollectCampaign, Place, Address, DoGoodEvent, SubEvent, Update,
     Delete, Cancel, Finish
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
@@ -15,7 +15,7 @@ from bluebottle.activity_pub.serializers.json_ld import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
     AcceptSerializer, ActivitySerializer, PublishSerializer, AnnounceSerializer,
     OrganizationSerializer, GoodDeedSerializer, ImageSerializer,
-    CrowdFundingSerializer, PlaceSerializer, AddressSerializer,
+    CrowdFundingSerializer, CollectCampaignSerializer, PlaceSerializer, AddressSerializer,
     DoGoodEventSerializer, SubEventSerializer, UpdateSerializer,
     DeleteSerializer, CancelSerializer, FinishSerializer
 )
@@ -106,6 +106,11 @@ class GoodDeedView(ActivityPubView):
 class CrowdFundingView(ActivityPubView):
     serializer_class = CrowdFundingSerializer
     queryset = CrowdFunding.objects.all()
+
+
+class CollectCampaignView(ActivityPubView):
+    serializer_class = CollectCampaignSerializer
+    queryset = CollectCampaign.objects.all()
 
 
 class SubEventView(ActivityPubView):

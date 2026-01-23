@@ -2,11 +2,16 @@ from django.contrib import admin
 from polymorphic.admin import PolymorphicParentModelAdmin
 
 from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedDateActivity, LinkedActivity, \
-    LinkedDateSlot
+    LinkedDateSlot, LinkedCollectCampaign
 
 
 @admin.register(LinkedDeed)
 class LinkedDeedAdmin(admin.ModelAdmin):
+    raw_id_fields = ['event', 'host_organization']
+
+
+@admin.register(LinkedCollectCampaign)
+class LinkedCollectCampaignAdmin(admin.ModelAdmin):
     raw_id_fields = ['event', 'host_organization']
 
 
@@ -38,4 +43,4 @@ class LinkedDateActivityAdmin(admin.ModelAdmin):
 @admin.register(LinkedActivity)
 class LinkedActivityAdmin(PolymorphicParentModelAdmin):
     base_model = LinkedActivity
-    child_models = (LinkedDeed, LinkedFunding, LinkedDateActivity)
+    child_models = (LinkedDeed, LinkedFunding, LinkedDateActivity, LinkedCollectCampaign)

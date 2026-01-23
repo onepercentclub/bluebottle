@@ -3,9 +3,11 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
-from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity
+from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity, \
+    LinkedCollectCampaign
 from bluebottle.initiatives.documents import get_translated_list
 from bluebottle.utils.documents import TextField
+from bluebottle.utils.models import get_default_language
 
 
 class LinkedActivityDocument(ActivityDocument):
@@ -161,6 +163,50 @@ class LinkedDeedDocument(LinkedActivityDocument):
 
     def prepare_end(self, instance):
         return [instance.end]
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedCollectCampaignDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedCollectCampaign
+        related_models = ()
+
+    collect_type = fields.NestedField(
+        attr='collect_type',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
+    realized = fields.IntegerField()
+    collect_target = fields.IntegerField()
+
+    def prepare_slug(self, instance):
+        return f'linked-collect-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'collect'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/collects'
+
+    def prepare_activity_type(self, instance):
+        return 'collect'
+
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.end]
+
+    def prepare_collect_type(self, instance):
+        if not instance.collect_type:
+            return []
+        return [
+            {'name': instance.collect_type, 'language': get_default_language()}
+        ]
 
 
 @registry.register_document

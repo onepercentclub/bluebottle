@@ -8,9 +8,13 @@ from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
+from multiselectfield import MultiSelectField
+
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
+
+from bluebottle.initiatives.models import InitiativePlatformSettings
 
 
 class ActivityPubManager(PolymorphicManager):
@@ -309,6 +313,8 @@ class GoodDeed(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
+    activity_type = 'deed'
+
     class Meta:
         verbose_name = _("Deed")
         verbose_name_plural = _("Deeds")
@@ -342,6 +348,8 @@ class CrowdFunding(Event):
     end_time = models.DateTimeField(null=True)
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
+
+    activity_type = 'funding'
 
     class Meta:
         verbose_name = _("Funding")
@@ -458,6 +466,13 @@ class DoGoodEvent(Event):
         null=True
     )
 
+    @property
+    def activity_type(self):
+        if len(self.sub_event.all()) > 0:
+            return 'dateactivity'
+        else:
+            return 'deadlineactivity'
+
     slot_mode = models.CharField(
         choices=SlotModeChoices.choices,
         default=SlotModeChoices.set,
@@ -518,11 +533,10 @@ class Follow(Activity):
         on_delete=models.SET_NULL,
     )
 
-    adoption_mode = models.CharField(
-        choices=AdoptionModeChoices.choices,
-        default=AdoptionModeChoices.manual,
-        verbose_name=_("Adoption mode"),
-        help_text=_("Select what should happen when a new activity has been received."),
+    automatic_adoption_activity_types = MultiSelectField(
+        verbose_name=_("Automatically adopted these activity types"),
+        max_length=300, choices=InitiativePlatformSettings.ACTIVITY_TYPES,
+        help_text=_("Selected activity types are automatically adopted when they are published."),
     )
 
     adoption_type = models.CharField(

@@ -64,7 +64,7 @@ class JSONLDAdapter():
         auth = self.get_auth(get_platform_actor())
         return self.get(url, auth=auth)
 
-    def follow(self, url):
+    def follow(self, url, model=None):
         from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 
         discovered_url = client.get(url)
@@ -74,7 +74,10 @@ class JSONLDAdapter():
         serializer.is_valid(raise_exception=True)
 
         actor = serializer.save()
-        return Follow.objects.create(object=actor)
+        if model:
+            model.object = actor
+        else:
+            return Follow.objects.create(object=actor)
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer

@@ -16,7 +16,7 @@ from bluebottle.activity_links.models import LinkedActivity, LinkedFunding
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
-    AdoptionModeChoices, AdoptionTypeChoices, Announce, Follow, Accept, Event,
+    AdoptionTypeChoices, Announce, Follow, Accept, Event,
     Recipient, RepetitionModeChoices
 )
 from bluebottle.clients.models import Client
@@ -349,7 +349,9 @@ class LinkTestCase(ActivityPubTestCase):
         super().test_follow()
         with LocalTenant(self.other_tenant):
             follow = Follow.objects.get()
-            follow.adoption_mode = AdoptionModeChoices.automatic
+            follow.automatic_adoption_activity_types = [
+                self.factory._meta.model._meta.model_name
+            ]
             follow.adoption_type = AdoptionTypeChoices.link
             follow.save()
 
@@ -722,6 +724,7 @@ class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
 
     def test_cancel(self):
         pass
+
 
 class AdoptRegisteredDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = RegisteredDateActivityFactory

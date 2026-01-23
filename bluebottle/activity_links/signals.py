@@ -5,7 +5,7 @@ from django.dispatch import receiver
 
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.models import (
-    AdoptionModeChoices, AdoptionTypeChoices, Publish, Update, Follow, Cancel,
+    AdoptionTypeChoices, Publish, Update, Follow, Cancel,
     Finish, Delete
 )
 
@@ -19,7 +19,7 @@ def link(sender, instance, created, **kwargs):
             try:
                 follow = Follow.objects.get(object=instance.actor)
                 if (
-                    follow.adoption_mode == AdoptionModeChoices.automatic or
+                    instance.object.activity_type in follow.automatic_adoption_activity_types or
                     LinkedActivity.object.filter(event=instance.object).exists()
                 ) and follow.adoption_type == AdoptionTypeChoices.link:
                     instance.object.refresh_from_db()

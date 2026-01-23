@@ -318,7 +318,7 @@ class FollowingAddForm(forms.ModelForm):
 
     class Meta:
         model = Following
-        fields = ['default_owner', 'adoption_mode', 'adoption_type', 'platform_url']
+        fields = ['default_owner', 'automatic_adoption_activity_types', 'adoption_type', 'platform_url']
         widgets = {
             'default_owner': admin.widgets.ForeignKeyRawIdWidget(
                 Following._meta.get_field('default_owner').remote_field,
@@ -371,18 +371,24 @@ class FollowingAdmin(FollowAdmin):
         if not obj:
             return (
                 (None, {
-                    'fields': ('platform_url', 'adoption_mode', 'adoption_type', 'default_owner'),
+                    'fields': (
+                        'platform_url', 'automatic_adoption_activity_types', 'adoption_type',
+                        'default_owner'
+                    ),
                 }),
             )
         else:
             return (
                 (None, {
-                    'fields': ('object', 'accepted', 'adoption_mode', 'adoption_type', 'default_owner')
+                    'fields': (
+                        'object', 'accepted', 'automatic_adoption_activity_types',
+                        'adoption_type', 'default_owner'
+                    )
                 }),
             )
 
     def get_fields(self, request, obj=None):
-        fields = ['default_owner', 'adoption_mode']
+        fields = ['default_owner', 'automatic_adoption_activity_types']
         if not obj:
             fields = ['connect_info', 'platform_url'] + fields
         else:
@@ -410,16 +416,10 @@ class FollowingAdmin(FollowAdmin):
     def save_model(self, request, obj, form, change):
         """Handle saving of new Following objects using adapter.follow()"""
         if not change and isinstance(form, FollowingAddForm):
-
             platform_url = form.cleaned_data['platform_url']
-            default_owner = form.cleaned_data.get('default_owner')
             try:
-                follow_obj = adapter.follow(platform_url)
-                follow_obj.adoption_mode = form.cleaned_data.get('adoption_mode')
-                follow_obj.adoption_type = form.cleaned_data.get('adoption_type')
-                if default_owner:
-                    follow_obj.default_owner = default_owner
-                    follow_obj.save()
+                adapter.follow(platform_url, obj)
+
                 self.message_user(
                     request,
                     _(
@@ -443,9 +443,9 @@ class FollowingAdmin(FollowAdmin):
                     _("Error creating Follow relationship: %s") % str(error),
                     level="error"
                 )
-        else:
-            # For existing objects, use the default behavior
-            super().save_model(request, obj, form, change)
+
+        # For existing objects, use the default behavior
+        super().save_model(request, obj, form, change)
 
     def response_add(self, request, obj, post_url_continue=None):
         """Redirect to the changelist after adding"""
@@ -687,7 +687,9 @@ class EventAdminMixin:
         follow = event.source.follow if event.source else None
         extra_context["source"] = source
         extra_context["follow"] = follow
-        extra_context["adoption_mode"] = follow.adoption_mode if follow else None
+        extra_context["automatic_adoption_activity_types"] = (
+            follow.automatic_adoption_activity_types if follow else None
+        )
         extra_context["adoption_type"] = follow.adoption_type if follow else None
         return super().change_view(request, object_id, form_url, extra_context)
 

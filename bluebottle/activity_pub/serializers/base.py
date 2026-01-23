@@ -190,7 +190,7 @@ class PolymorphicActivityPubSerializer(
 
     def get_serializer_from_model(self, model):
         for serializer in self._serializers:
-            if serializer.Meta.model == model:
+            if issubclass(model, serializer.Meta.model):
                 return serializer
 
         raise TypeError(f'Missing serializer for model: {model}')

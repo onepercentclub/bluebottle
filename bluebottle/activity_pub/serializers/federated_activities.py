@@ -29,7 +29,7 @@ from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
-    PeriodicActivity
+    PeriodicActivity, ScheduleActivity
 from bluebottle.utils.fields import RichTextField
 
 from rest_framework import serializers
@@ -424,7 +424,7 @@ class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer)
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = RegisteredDateActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'location', 'start_time', 'end_time', 'registration_deadline',
+            'location', 'start_time', 'end_time',
             'duration', 'join_mode', 'event_attendance_mode'
         )
 
@@ -529,16 +529,48 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     image = ImageSerializer(required=False, allow_null=True)
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True, read_only=True)
+    registration_deadline = DateField(allow_null=True)
     duration = serializers.DurationField(allow_null=True)
     repetition_mode = RepetitionModeField()
     event_attendance_mode = EventAttendanceModeField()
     join_mode = JoinModeField()
+    slot_mode = serializers.SerializerMethodField()
+
+    def get_slot_mode(self, obj):
+        return 'PeriodicSlotMode'
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = PeriodicActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'registration_deadline',
-            'duration', 'join_mode', 'event_attendance_mode', 'repetition_mode'
+            'duration', 'join_mode', 'event_attendance_mode',
+            'repetition_mode', 'slot_mode'
+        )
+
+
+class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
+    id = FederatedIdField('json-ld:do-good-event')
+
+    location = LocationSerializer(allow_null=True, required=False)
+
+    start_time = DateField(source='start', allow_null=True)
+    end_time = DateField(source='deadline', allow_null=True)
+    registration_deadline = DateField(allow_null=True)
+
+    event_attendance_mode = EventAttendanceModeField()
+    join_mode = JoinModeField()
+    duration = serializers.DurationField(allow_null=True)
+
+    slot_mode = serializers.SerializerMethodField()
+
+    def get_slot_mode(self, obj):
+        return 'ScheduleSlotMode'
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = ScheduleActivity
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'location', 'start_time', 'end_time', 'registration_deadline',
+            'event_attendance_mode', 'duration', 'join_mode', 'slot_mode'
         )
 
 
@@ -553,6 +585,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         FederatedCollectSerializer,
         FederatedRegisteredDateActivitySerializer,
         FederatedPeriodicActivitySerializer,
+        FederatedScheduleActivitySerializer,
     ]
 
     model_type_mapping = {
@@ -562,6 +595,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         PeriodicActivity: 'DoGoodEvent',
         RegisteredDateActivity: 'DoGoodEvent',
         DeadlineActivity: 'DoGoodEvent',
+        ScheduleActivity: 'DoGoodEvent',
         CollectActivity: 'CollectCampaign',
 
     }
@@ -580,6 +614,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         self.resource_type_model_mapping['DateActivity'] = DateActivity
         self.resource_type_model_mapping['RegisteredDateActivity'] = RegisteredDateActivity
         self.resource_type_model_mapping['PeriodicActivity'] = PeriodicActivity
+        self.resource_type_model_mapping['ScheduleActivity'] = ScheduleActivity
 
     def to_resource_type(self, model_or_instance):
         if isinstance(model_or_instance, models.Model):
@@ -591,11 +626,13 @@ class FederatedActivitySerializer(PolymorphicSerializer):
 
     def _get_resource_type_from_mapping(self, data):
         if data.get('type') == 'DoGoodEvent':
-            if data.get('repetition_mode', 'OnceRepetitionMode') in ['OnceRepetitionMode', None]:
-                return PeriodicActivity
-            if data.get('join_mode', None) in ('selected', JoinModeChoices.selected):
-                return RegisteredDateActivity
-            if len(data.get('sub_event', [])) > 0:
+            if data.get('slot_mode', 'SetSlotMode') == 'ScheduleSlotMode':
+                return 'ScheduleActivity'
+            elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
+                return 'PeriodicActivity'
+            elif data.get('join_mode', None) in ('selected', JoinModeChoices.selected):
+                return 'RegisteredDateActivity'
+            elif len(data.get('sub_event', [])) > 0:
                 return 'DateActivity'
             else:
                 return 'DeadlineActivity'

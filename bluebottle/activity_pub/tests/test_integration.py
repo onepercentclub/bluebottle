@@ -40,6 +40,7 @@ from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
     PeriodicActivityFactory,
+    ScheduleActivityFactory,
 )
 
 
@@ -600,6 +601,48 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
             )
 
 
+class LinkScheduleActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = ScheduleActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
+        )
+        self.submit()
+
+
+class AdoptScheduleActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = ScheduleActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
+        )
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.start_time.date(), self.model.start)
+            self.assertEqual(self.event.end_time.date(), self.model.deadline)
+            self.assertEqual(self.event.duration, self.model.duration)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.deadline, self.model.deadline)
+        self.assertEqual(self.adopted.duration, self.model.duration)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )
+
+
 class LinkPeriodicActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory
 
@@ -634,6 +677,8 @@ class AdoptPeriodicActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.duration, self.model.duration)
+        print(self.adopted, self.model)
+        print(self.model.event.slot_mode)
         self.assertEqual(self.adopted.period, self.model.period)
         if self.model.location:
             self.assertEqual(
@@ -662,7 +707,7 @@ class AdoptRegisteredDateActivityTestCase(ActivityPubTestCase, BluebottleTestCas
     factory = RegisteredDateActivityFactory
 
     def create(self):
-        activity = super().create(
+        super().create(
             location=GeolocationFactory.create(country=self.country),
             start=datetime.now(tz=UTC) - timedelta(days=10),
             organization=None

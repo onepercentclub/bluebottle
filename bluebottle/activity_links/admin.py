@@ -12,7 +12,7 @@ class LinkedDeedAdmin(admin.ModelAdmin):
 
 @admin.register(LinkedCollectCampaign)
 class LinkedCollectCampaignAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization']
+    raw_id_fields = ['event', 'host_organization', 'location']
 
 
 @admin.register(LinkedFunding)
@@ -42,17 +42,17 @@ class LinkedDateActivityAdmin(admin.ModelAdmin):
 
 @admin.register(LinkedDeadlineActivity)
 class LinkedDeadlineActivityAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization']
+    raw_id_fields = ['event', 'host_organization', 'location']
 
 
 @admin.register(LinkedPeriodicActivity)
 class LinkedPeriodicActivityAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization']
+    raw_id_fields = ['event', 'host_organization', 'location']
 
 
 @admin.register(LinkedScheduleActivity)
 class LinkedScheduleActivityAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization']
+    raw_id_fields = ['event', 'host_organization', 'location']
 
 
 @admin.register(LinkedActivity)

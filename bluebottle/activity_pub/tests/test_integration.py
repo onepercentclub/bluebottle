@@ -180,16 +180,13 @@ class ActivityPubTestCase:
             self.assertTrue(accept.actor.organization)
             self.assertTrue(accept.actor.organization.logo)
 
-    def create(self, closed_segment=False, **kwargs):
+    def create(self, **kwargs):
         self.model = self.factory.create(
             owner=self.user,
             initiative=None,
             image=ImageFactory.create(),
             **kwargs
         )
-        if closed_segment:
-            segment = SegmentFactory.create(closed=True)
-            self.model.segments.add(segment)
 
     def submit(self):
         self.model.states.submit()
@@ -283,7 +280,9 @@ class ActivityPubTestCase:
 
     def test_publish_closed_segment(self):
         self.test_follow()
-        self.create(closed_segment=True)
+        self.create()
+        segment = SegmentFactory.create(closed=True)
+        self.model.segments.add(segment)
 
         with LocalTenant(self.other_tenant):
             self.assertEqual(Event.objects.count(), 0)
@@ -360,7 +359,6 @@ class LinkTestCase(ActivityPubTestCase):
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.title, self.model.title)
-
             announce = Announce.objects.get()
             self.assertEqual(announce.object, link.event)
 
@@ -628,6 +626,9 @@ class LinkScheduleActivityTestCase(LinkTestCase, BluebottleTestCase):
         )
         self.submit()
 
+    def test_link(self):
+        super().test_link()
+
 
 class AdoptScheduleActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
@@ -719,6 +720,8 @@ class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     def test_finish(self):
         pass
 
+    def test_cancel(self):
+        pass
 
 class AdoptRegisteredDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = RegisteredDateActivityFactory
@@ -890,7 +893,7 @@ class AdoptCollectActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.end, self.model.end)
-        self.assertEqual(self.adopted.collect_type, self.model.collect_type)
+        self.assertEqual(self.adopted.collect_type.name, self.model.collect_type.name)
         if self.model.location:
             self.assertEqual(
                 self.adopted.location.position,

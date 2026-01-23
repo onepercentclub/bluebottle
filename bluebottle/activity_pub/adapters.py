@@ -108,9 +108,6 @@ class JSONLDAdapter():
             'event': event
         }
 
-        if not linked_activity:
-            save_kwargs['status'] = 'open'
-
         return serializer.save(**save_kwargs)
 
     def create_event(self, activity):

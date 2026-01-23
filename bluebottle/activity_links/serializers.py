@@ -336,8 +336,8 @@ class LinkedActivitySerializer(PolymorphicSerializer):
 
         # Handle DoGoodEvent - check sub_event to distinguish DateActivity from DeadlineActivity
         if event_type == 'DoGoodEvent':
-            if data.get('slot_mode', 'SetSlotMode') == 'ScheduleSlotMode':
-                return 'SeheduleActivity'
+            if data.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
+                return 'ScheduleActivity'
             elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
                 return 'PeriodicActivity'
             elif data.get('join_mode', None) == 'SelectedJoinMode':

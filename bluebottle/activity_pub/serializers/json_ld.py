@@ -255,7 +255,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
         allow_null=True
     )
     slot_mode = serializers.ChoiceField(
-        choices=['PeriodicSlotMode', 'ScheduleSlotMode', 'SetSlotMode'],
+        choices=['PeriodicSlotMode', 'ScheduledSlotMode', 'SetSlotMode'],
         required=False,
         allow_null=True
     )

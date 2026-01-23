@@ -362,7 +362,7 @@ class JoinModeChoices(DjangoChoices):
 class SlotModeChoices(DjangoChoices):
     set = ChoiceItem('SetSlotMode')
     scheduled = ChoiceItem('ScheduledSlotMode')
-    periodic = ChoiceItem('RepeatedSlotMode')
+    periodic = ChoiceItem('PeriodicSlotMode')
 
 
 class RepetitionModeChoices(DjangoChoices):

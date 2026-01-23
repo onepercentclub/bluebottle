@@ -21,7 +21,7 @@ from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField
 
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
-    SubEvent, RepetitionModeChoices
+    SubEvent, RepetitionModeChoices, SlotModeChoices
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
@@ -413,13 +413,8 @@ class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer)
     end_time = serializers.DateTimeField(source='end', allow_null=True, read_only=True)
     duration = serializers.DurationField(allow_null=True)
 
-    registration_deadline = None
     event_attendance_mode = serializers.SerializerMethodField()
-    join_mode = serializers.ChoiceField(
-        choices=[JoinModeChoices.selected],
-        default=JoinModeChoices.selected,
-        required=False
-    )
+    join_mode = serializers.SerializerMethodField()
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = RegisteredDateActivity
@@ -428,8 +423,8 @@ class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer)
             'duration', 'join_mode', 'event_attendance_mode'
         )
 
-    def get_registration_deadline(self, obj):
-        return None
+    def get_join_mode(self, obj):
+        return JoinModeChoices.selected
 
     def get_event_attendance_mode(self, obj):
         return (
@@ -537,7 +532,7 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     slot_mode = serializers.SerializerMethodField()
 
     def get_slot_mode(self, obj):
-        return 'PeriodicSlotMode'
+        return SlotModeChoices.periodic
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = PeriodicActivity
@@ -556,15 +551,14 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True)
     registration_deadline = DateField(allow_null=True)
+    duration = serializers.DurationField(allow_null=True)
 
     event_attendance_mode = EventAttendanceModeField()
     join_mode = JoinModeField()
-    duration = serializers.DurationField(allow_null=True)
-
     slot_mode = serializers.SerializerMethodField()
 
     def get_slot_mode(self, obj):
-        return 'ScheduleSlotMode'
+        return SlotModeChoices.scheduled
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = ScheduleActivity
@@ -626,7 +620,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
 
     def _get_resource_type_from_mapping(self, data):
         if data.get('type') == 'DoGoodEvent':
-            if data.get('slot_mode', 'SetSlotMode') == 'ScheduleSlotMode':
+            if data.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
                 return 'ScheduleActivity'
             elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
                 return 'PeriodicActivity'

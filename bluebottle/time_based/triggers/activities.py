@@ -658,6 +658,8 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.auto_publish,
             effects=[
+                AnnounceAdoptionEffect,
+                PublishEffect,
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,
                     conditions=[
@@ -676,6 +678,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             RegisteredDateActivityStateMachine.approve,
             effects=[
                 PublishEffect,
+                AnnounceAdoptionEffect,
                 NotificationEffect(
                     PastActivityApprovedNotification
                 ),

@@ -964,6 +964,7 @@ class DoGoodEventAdmin(EventChildAdmin):
         'event_attendance_mode',
         'repetition_mode',
         'join_mode',
+        'slot_mode'
 
     )
     fields = readonly_fields

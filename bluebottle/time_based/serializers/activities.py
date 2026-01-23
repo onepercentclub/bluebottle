@@ -3,7 +3,6 @@ from datetime import datetime, time
 import dateutil
 from django.db.models import Count, Sum
 from django.db.models.functions import Trunc
-
 from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -343,6 +342,22 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     )
 
 
+class PeriodChoiceField(serializers.CharField):
+    mapping = {
+        "days": "DailyRepetitionMode",
+        "weeks": "WeeklyRepetitionMode",
+        "months": "MonthlyRepetitionMode",
+    }
+
+    def to_representation(self, value):
+        return self.mapping[value]
+
+    def to_internal_value(self, data):
+        for k, v in self.mapping.items():
+            if v in data:
+                return k
+
+
 class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'periodic-detail'
     export_view_name = 'periodic-participant-export'
@@ -350,6 +365,7 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
+    period = PeriodChoiceField()
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,

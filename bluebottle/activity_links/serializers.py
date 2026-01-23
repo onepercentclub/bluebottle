@@ -244,7 +244,7 @@ class LinkedDeadlineActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySe
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeadlineActivity
         fields = BaseLinkedActivitySerializer.Meta.fields + (
-            'start_time', 'end_time', 'location'
+            'start_time', 'end_time', 'location', 'duration'
         )
 
 

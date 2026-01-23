@@ -960,6 +960,7 @@ class DoGoodEventAdmin(EventChildAdmin):
     readonly_fields = EventChildAdmin.readonly_fields + (
         'start_time',
         'end_time',
+        'duration',
         'registration_deadline',
         'event_attendance_mode',
         'repetition_mode',

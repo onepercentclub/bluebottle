@@ -444,7 +444,7 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
     def prepare_contribution_duration(self, instance):
         if instance.duration:
             return [{
-                'period': 0,
+                'period': 'once',
                 'start': instance.start,
                 'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
             }]

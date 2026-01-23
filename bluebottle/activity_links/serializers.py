@@ -248,10 +248,27 @@ class LinkedDeadlineActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySe
         )
 
 
+class PeriodChoiceField(serializers.CharField):
+    mapping = {
+        "days": "DailyRepetitionMode",
+        "weeks": "WeeklyRepetitionMode",
+        "months": "MonthlyRepetitionMode",
+    }
+
+    def to_representation(self, value):
+        return self.mapping[value]
+
+    def to_internal_value(self, data):
+        for k, v in self.mapping.items():
+            if v in data:
+                return k
+
+
 class LinkedPeriodicActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
     location = LinkedLocationSerializer(required=False, allow_null=True)
+    repetition_mode = PeriodChoiceField(source='period')
 
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedPeriodicActivity

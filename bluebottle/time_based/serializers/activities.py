@@ -342,22 +342,6 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     )
 
 
-class PeriodChoiceField(serializers.CharField):
-    mapping = {
-        "days": "DailyRepetitionMode",
-        "weeks": "WeeklyRepetitionMode",
-        "months": "MonthlyRepetitionMode",
-    }
-
-    def to_representation(self, value):
-        return self.mapping[value]
-
-    def to_internal_value(self, data):
-        for k, v in self.mapping.items():
-            if v in data:
-                return k
-
-
 class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'periodic-detail'
     export_view_name = 'periodic-participant-export'
@@ -365,7 +349,6 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
-    period = PeriodChoiceField()
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,

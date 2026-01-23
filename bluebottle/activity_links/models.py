@@ -128,7 +128,7 @@ class LinkedPeriodicActivity(LinkedActivity):
     end = models.DateTimeField(null=True, blank=True)
     duration = models.DurationField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
-    repetition_mode = models.CharField(null=True, blank=True, max_length=255)
+    period = models.CharField(null=True, blank=True, max_length=255)
 
 
 class LinkedScheduleActivity(LinkedActivity):

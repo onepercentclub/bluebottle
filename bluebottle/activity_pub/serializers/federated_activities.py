@@ -28,7 +28,7 @@ from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.organizations.models import Organization
-from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity
+from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity
 from bluebottle.utils.fields import RichTextField
 
 from rest_framework import serializers
@@ -361,7 +361,7 @@ class JoinModeField(serializers.Field):
 
 
 class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
-    id = FederatedIdField('json-ld:crowd-funding')
+    id = FederatedIdField('json-ld:do-good-event')
 
     location = LocationSerializer(allow_null=True, required=False)
 
@@ -378,6 +378,39 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
         fields = BaseFederatedActivitySerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'registration_deadline',
             'event_attendance_mode', 'duration', 'join_mode',
+        )
+
+
+class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer):
+    id = FederatedIdField('json-ld:do-good-event')
+
+    location = LocationSerializer(allow_null=True, required=False)
+
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    end_time = serializers.DateTimeField(source='end', allow_null=True, read_only=True)
+    duration = serializers.DurationField(allow_null=True)
+
+    registration_deadline = None
+    event_attendance_mode = serializers.SerializerMethodField()
+    join_mode = serializers.ChoiceField(
+        choices=[JoinModeChoices.selected],
+        default=JoinModeChoices.selected,
+        required=False
+    )
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = RegisteredDateActivity
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'location', 'start_time', 'end_time', 'registration_deadline',
+            'duration', 'join_mode', 'event_attendance_mode'
+        )
+
+    def get_registration_deadline(self, obj):
+        return None
+
+    def get_event_attendance_mode(self, obj):
+        return (
+            EventAttendanceModeChoices.online if obj.location else EventAttendanceModeChoices.offline
         )
 
 
@@ -474,13 +507,15 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         FederatedDeedSerializer,
         FederatedDateActivitySerializer,
         FederatedFundingSerializer,
-        FederatedCollectSerializer
+        FederatedCollectSerializer,
+        FederatedRegisteredDateActivitySerializer
     ]
 
     model_type_mapping = {
         Deed: 'GoodDeed',
         Funding: 'CrowdFunding',
         DateActivity: 'DoGoodEvent',
+        RegisteredDateActivity: 'DoGoodEvent',
         DeadlineActivity: 'DoGoodEvent',
         CollectActivity: 'CollectCampaign',
     }
@@ -497,6 +532,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
 
         self.resource_type_model_mapping['DeadlineActivity'] = DeadlineActivity
         self.resource_type_model_mapping['DateActivity'] = DateActivity
+        self.resource_type_model_mapping['RegisteredDateActivity'] = RegisteredDateActivity
 
     def to_resource_type(self, model_or_instance):
         if isinstance(model_or_instance, models.Model):
@@ -508,6 +544,8 @@ class FederatedActivitySerializer(PolymorphicSerializer):
 
     def _get_resource_type_from_mapping(self, data):
         if data.get('type') == 'DoGoodEvent':
+            if data.get('join_mode', None) in ('selected', JoinModeChoices.selected):
+                return RegisteredDateActivity
             if len(data.get('sub_event', [])) > 0:
                 return 'DateActivity'
             else:

@@ -237,6 +237,16 @@ class LinkedDateActivitySerializer(BaseLinkedActivitySerializer):
 
 
 class LinkedDeadlineActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    location = LinkedLocationSerializer(required=False, allow_null=True)
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedDeadlineActivity
+        fields = BaseLinkedActivitySerializer.Meta.fields + ('start_time', 'end_time', 'location')
+
+
+class LinkedRegisteredDateActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeadlineActivity
 
@@ -261,8 +271,9 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedDeedSerializer,
         LinkedDateActivitySerializer,
         LinkedDeadlineActivitySerializer,
+        LinkedRegisteredDateActivitySerializer,
         LinkedFundingSerializer,
-        LinkedCollectCampaign
+        LinkedCollectCampaignSerializer,
     ]
 
     model_type_mapping = {
@@ -277,6 +288,7 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         super().__init__(*args, **kwargs)
         self.resource_type_model_mapping['DateActivity'] = LinkedDateActivity
         self.resource_type_model_mapping['DeadlineActivity'] = LinkedDeadlineActivity
+        self.resource_type_model_mapping['RegisteredDateActivity'] = LinkedDeadlineActivity
         self.resource_type_model_mapping['Funding'] = LinkedFunding
         self.resource_type_model_mapping['GoodDeed'] = LinkedDeed
         self.resource_type_model_mapping['CollectCampaign'] = LinkedCollectCampaign
@@ -290,6 +302,8 @@ class LinkedActivitySerializer(PolymorphicSerializer):
 
         # Handle DoGoodEvent - check sub_event to distinguish DateActivity from DeadlineActivity
         if event_type == 'DoGoodEvent':
+            if data.get('join_mode', None) == 'selected':
+                return 'RegisteredDateActivity'
             if len(data.get('sub_event', [])) > 0:
                 return 'DateActivity'
             else:

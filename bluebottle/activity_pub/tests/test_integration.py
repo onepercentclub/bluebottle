@@ -9,6 +9,7 @@ from django.test import Client as TestClient
 from django.test.client import RequestFactory
 from django.utils.timezone import get_current_timezone
 from djmoney.money import Money
+from pytz import UTC
 from requests import Request, Response
 
 from bluebottle.activity_links.models import LinkedActivity, LinkedFunding
@@ -32,7 +33,13 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
+from bluebottle.time_based.models import RegisteredDateActivity
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DeadlineActivityFactory,
+    RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
+)
 
 
 class ActivityPubClient(TestClient):
@@ -578,6 +585,68 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.event.start_time.date(), self.model.start)
         self.assertEqual(self.event.end_time.date(), self.model.deadline)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.deadline, self.model.deadline)
+        self.assertEqual(self.adopted.duration, self.model.duration)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )
+
+
+class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = RegisteredDateActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=datetime.now(tz=UTC) - timedelta(days=10),
+            organization=None
+        )
+        RegisteredDateParticipantFactory.create(activity=self.model)
+        self.submit()
+
+    def test_finish(self):
+        pass
+
+
+class AdoptRegisteredDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = RegisteredDateActivityFactory
+
+    def create(self):
+        activity = super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=datetime.now(tz=UTC) - timedelta(days=10),
+            organization=None
+        )
+        RegisteredDateParticipantFactory.create(activity=self.model)
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.start_time.date(), self.model.start.date())
+            if self.model.end:
+                self.assertEqual(self.event.end_time.date(), self.model.end.date())
+            self.assertEqual(self.event.duration, self.model.duration)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertIsInstance(self.adopted, RegisteredDateActivity)
+        self.assertEqual(self.adopted.start.date(), self.model.start.date())
+        self.assertEqual(self.adopted.duration, self.model.duration)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )
 
 
 class LinkedDateActivityTestCase(LinkTestCase, BluebottleTestCase):

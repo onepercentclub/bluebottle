@@ -707,7 +707,7 @@ class AdoptRegisteredDateActivityTestCase(ActivityPubTestCase, BluebottleTestCas
     factory = RegisteredDateActivityFactory
 
     def create(self):
-        activity = super().create(
+        super().create(
             location=GeolocationFactory.create(country=self.country),
             start=datetime.now(tz=UTC) - timedelta(days=10),
             organization=None

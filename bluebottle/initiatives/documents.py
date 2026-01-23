@@ -40,6 +40,7 @@ def deduplicate(items):
 
 def get_translated_list(obj, field='name'):
     data = []
+    current_language = obj._current_language
 
     for lang in Language.objects.all():
         obj.set_current_language(lang.full_code)
@@ -50,6 +51,7 @@ def get_translated_list(obj, field='name'):
                 'language': lang.full_code
             }
         )
+    obj._current_language = current_language
     return data
 
 

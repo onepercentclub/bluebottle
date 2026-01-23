@@ -375,8 +375,11 @@ class ActivityPreviewSerializer(ModelSerializer):
             if len(set(slot.locality for slot in slots)) == 1:
                 location = slots[0]
 
-        elif type == "funding":
-            places = [location for location in obj.location if location.type == "place"]
+        elif obj.type == "funding":
+            places = [
+                location for location in obj.location if
+                location.type in ("impact_location", "location")
+            ]
             if places:
                 location = places[0]
         elif len(obj.location):

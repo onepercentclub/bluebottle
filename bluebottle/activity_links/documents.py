@@ -92,7 +92,7 @@ class LinkedActivityDocument(ActivityDocument):
             return {
                 'id': instance.pk,
                 'file': instance.image.file.name,
-                'type': 'activity'
+                'type': 'link'
             }
         return {}
 

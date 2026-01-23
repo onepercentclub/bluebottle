@@ -38,7 +38,7 @@ class LinkedActivity(TriggerMixin, PolymorphicModel):
     link = models.URLField()
     status = models.CharField(max_length=40)
     description = QuillField(_("Description"), blank=True)
-    image = ImageField(blank=True, null=True)
+    image = ImageField(blank=True, null=True, upload_to="activity_links")
     event = models.ForeignKey(
         'activity_pub.Event',
         related_name='linked_activities',

@@ -356,11 +356,13 @@ class LinkTestCase(ActivityPubTestCase):
             follow.save()
 
     def test_link(self):
-        self.test_publish()
+        with mock.patch('requests.get', return_value=self.mock_response):
+            self.test_publish()
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.title, self.model.title)
+            self.assertTrue(link.image)
             announce = Announce.objects.get()
             self.assertEqual(announce.object, link.event)
 
@@ -368,7 +370,9 @@ class LinkTestCase(ActivityPubTestCase):
         title = 'Some new title'
         self.test_link()
         self.model.title = title
-        self.model.save()
+
+        with mock.patch('requests.get', return_value=self.mock_response):
+            self.model.save()
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()

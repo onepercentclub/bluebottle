@@ -15,8 +15,6 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 from bluebottle.collect.models import CollectActivity, CollectType
 from bluebottle.utils.models import get_default_language
 
-logger = logging.getLogger(__name__)
-
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField
 
@@ -33,6 +31,8 @@ from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, Dat
 from bluebottle.utils.fields import RichTextField
 
 from rest_framework import serializers
+
+logger = logging.getLogger(__name__)
 
 
 class ImageSerializer(FederatedObjectSerializer):

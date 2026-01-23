@@ -399,6 +399,7 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
         'period': fields.KeywordField(),
         'value': fields.FloatField()
     })
+
     class Django:
         model = LinkedDeadlineActivity
         related_models = ()

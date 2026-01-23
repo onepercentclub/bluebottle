@@ -18,7 +18,6 @@ def link(sender, instance, created, **kwargs):
         if not instance.is_local and created:
             try:
                 follow = Follow.objects.get(object=instance.actor)
-
                 if (
                     instance.object.activity_type in follow.automatic_adoption_activity_types or
                     LinkedActivity.object.filter(event=instance.object).exists()

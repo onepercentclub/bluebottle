@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 
+from django.db import connection
 from django.urls import resolve
 from rest_framework import serializers, exceptions
 
@@ -84,10 +85,21 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         try:
             return super().to_internal_value(data)
         except exceptions.ValidationError:
+            if not isinstance(data, (dict, str)) and 'url' in self.fields:
+                url = getattr(data, 'url', None)
+                if not url and hasattr(data, 'file'):
+                    url = getattr(data.file, 'url', None)
+                if url:
+                    if isinstance(url, str) and url.startswith('/'):
+                        url = connection.tenant.build_absolute_url(url)
+                    name = getattr(data, 'name', None)
+                    if not name and hasattr(data, 'file'):
+                        name = getattr(data.file, 'name', None)
+                    return super().to_internal_value({'url': url, 'name': name})
             if isinstance(data, str):
                 data = {'id': data}
 
-            if tuple(data.keys()) == ('id', ):
+            if tuple(data.keys()) == ('id',):
                 iri = data['id']
                 instance = self.Meta.model.objects.from_iri(iri)
 

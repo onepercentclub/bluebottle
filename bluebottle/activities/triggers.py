@@ -120,6 +120,7 @@ class ActivityTriggers(TriggerManager):
             ActivityStateMachine.approve,
             effects=[
                 PublishEffect,
+                AnnounceAdoptionEffect,
                 NotificationEffect(
                     ActivityApprovedNotification,
                     conditions=[is_not_funding]

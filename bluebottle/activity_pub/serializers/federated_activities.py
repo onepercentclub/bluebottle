@@ -12,20 +12,24 @@ from djmoney.money import Money
 from rest_framework import exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
+from bluebottle.collect.models import CollectActivity, CollectType
+from bluebottle.utils.models import get_default_language
+
 logger = logging.getLogger(__name__)
 
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField
 
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
-    SubEvent
+    SubEvent, RepetitionModeChoices, SlotModeChoices
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.organizations.models import Organization
-from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity
+from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
+    PeriodicActivity, ScheduleActivity
 from bluebottle.utils.fields import RichTextField
 
 from rest_framework import serializers
@@ -225,6 +229,70 @@ class FederatedDeedSerializer(BaseFederatedActivitySerializer):
         )
 
 
+class ParlerNameRelatedField(serializers.RelatedField):
+    def __init__(self, *, name_field="name", create_if_missing=True, **kwargs):
+        self.name_field = name_field
+        self.create_if_missing = create_if_missing
+        super().__init__(**kwargs)
+
+    def to_representation(self, value):
+        lang = get_default_language()
+        translated = value.safe_translation_getter(
+            self.name_field,
+            language_code=lang,
+            any_language=True,
+        )
+        return translated
+
+    def to_internal_value(self, data):
+        if data is None or data == "":
+            return None
+        if not isinstance(data, str):
+            raise serializers.ValidationError("Expected a string.")
+
+        lang = get_default_language()
+        qs = self.get_queryset()
+        if qs is None:
+            raise serializers.ValidationError("No queryset provided for related field.")
+
+        try:
+            obj = qs.translated(lang, **{self.name_field: data}).get()
+            return obj
+        except qs.model.DoesNotExist:
+            if not self.create_if_missing:
+                raise serializers.ValidationError(f"Unknown {qs.model.__name__}: {data}")
+
+        obj = qs.model()
+        obj.set_current_language(lang)
+        setattr(obj, self.name_field, data)
+        obj.save()
+        return obj
+
+
+class FederatedCollectSerializer(BaseFederatedActivitySerializer):
+    id = FederatedIdField('json-ld:collect-campaign')
+    start_time = DateField(source='start', allow_null=True)
+    end_time = DateField(source='end', allow_null=True)
+    collect_type = ParlerNameRelatedField(
+        queryset=CollectType.objects.all(),
+        allow_null=True,
+        required=False,
+        create_if_missing=True,
+    )
+    target = serializers.FloatField(allow_null=True, required=False)
+    amount = serializers.FloatField(source='realized', allow_null=True, required=False)
+    location = LocationSerializer(allow_null=True, required=False)
+    location_hint = serializers.CharField(allow_null=True, allow_blank=True, required=False, max_length=500)
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = CollectActivity
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time',
+            'collect_type', 'target', 'amount', 'realized',
+            'location', 'location_hint'
+        )
+
+
 class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:crowd-funding')
 
@@ -275,7 +343,7 @@ class EventAttendanceModeField(serializers.Field):
 
 class JoinModeField(serializers.Field):
     def __init__(self, *args, **kwargs):
-        kwargs['source'] = 'review'
+        kwargs['source'] = kwargs.get('source', 'review')
         kwargs['required'] = False
         kwargs['allow_null'] = True
 
@@ -293,8 +361,30 @@ class JoinModeField(serializers.Field):
             return False
 
 
+class RepetitionModeField(serializers.Field):
+    def __init__(self, *args, **kwargs):
+        kwargs['source'] = kwargs.get('source', 'period')
+        kwargs['required'] = False
+        kwargs['allow_null'] = True
+
+        super().__init__(*args, **kwargs)
+
+    mapping = {
+        'days': RepetitionModeChoices.daily,
+        'weeks': RepetitionModeChoices.weekly,
+        'months': RepetitionModeChoices.monthly,
+    }
+
+    def to_representation(self, value):
+        return self.mapping[value]
+
+    def to_internal_value(self, value):
+        mapping = {v: k for k, v in self.mapping.items()}
+        return mapping[value]
+
+
 class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
-    id = FederatedIdField('json-ld:crowd-funding')
+    id = FederatedIdField('json-ld:do-good-event')
 
     location = LocationSerializer(allow_null=True, required=False)
 
@@ -310,7 +400,35 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
         model = DeadlineActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'registration_deadline',
-            'event_attendance_mode', 'duration', 'join_mode',
+            'event_attendance_mode', 'duration', 'join_mode'
+        )
+
+
+class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer):
+    id = FederatedIdField('json-ld:do-good-event')
+
+    location = LocationSerializer(allow_null=True, required=False)
+
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    end_time = serializers.DateTimeField(source='end', allow_null=True, read_only=True)
+    duration = serializers.DurationField(allow_null=True)
+
+    event_attendance_mode = serializers.SerializerMethodField()
+    join_mode = serializers.SerializerMethodField()
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = RegisteredDateActivity
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'location', 'start_time', 'end_time',
+            'duration', 'join_mode', 'event_attendance_mode'
+        )
+
+    def get_join_mode(self, obj):
+        return JoinModeChoices.selected
+
+    def get_event_attendance_mode(self, obj):
+        return (
+            EventAttendanceModeChoices.online if obj.location else EventAttendanceModeChoices.offline
         )
 
 
@@ -399,6 +517,57 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
         return result
 
 
+class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
+    id = FederatedIdField('json-ld:do-good-event')
+
+    location = LocationSerializer(allow_null=True, required=False)
+    image = ImageSerializer(required=False, allow_null=True)
+    start_time = DateField(source='start', allow_null=True)
+    end_time = DateField(source='deadline', allow_null=True, read_only=True)
+    registration_deadline = DateField(allow_null=True)
+    duration = serializers.DurationField(allow_null=True)
+    repetition_mode = RepetitionModeField()
+    event_attendance_mode = EventAttendanceModeField()
+    join_mode = JoinModeField()
+    slot_mode = serializers.SerializerMethodField()
+
+    def get_slot_mode(self, obj):
+        return SlotModeChoices.periodic
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = PeriodicActivity
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'location', 'start_time', 'end_time', 'registration_deadline',
+            'duration', 'join_mode', 'event_attendance_mode',
+            'repetition_mode', 'slot_mode'
+        )
+
+
+class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
+    id = FederatedIdField('json-ld:do-good-event')
+
+    location = LocationSerializer(allow_null=True, required=False)
+
+    start_time = DateField(source='start', allow_null=True)
+    end_time = DateField(source='deadline', allow_null=True)
+    registration_deadline = DateField(allow_null=True)
+    duration = serializers.DurationField(allow_null=True)
+
+    event_attendance_mode = EventAttendanceModeField()
+    join_mode = JoinModeField()
+    slot_mode = serializers.SerializerMethodField()
+
+    def get_slot_mode(self, obj):
+        return SlotModeChoices.scheduled
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = ScheduleActivity
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'location', 'start_time', 'end_time', 'registration_deadline',
+            'event_attendance_mode', 'duration', 'join_mode', 'slot_mode'
+        )
+
+
 class FederatedActivitySerializer(PolymorphicSerializer):
     resource_type_field_name = 'type'
 
@@ -406,14 +575,23 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         FederatedDeadlineActivitySerializer,
         FederatedDeedSerializer,
         FederatedDateActivitySerializer,
-        FederatedFundingSerializer
+        FederatedFundingSerializer,
+        FederatedCollectSerializer,
+        FederatedRegisteredDateActivitySerializer,
+        FederatedPeriodicActivitySerializer,
+        FederatedScheduleActivitySerializer,
     ]
 
     model_type_mapping = {
         Deed: 'GoodDeed',
         Funding: 'CrowdFunding',
         DateActivity: 'DoGoodEvent',
+        PeriodicActivity: 'DoGoodEvent',
+        RegisteredDateActivity: 'DoGoodEvent',
         DeadlineActivity: 'DoGoodEvent',
+        ScheduleActivity: 'DoGoodEvent',
+        CollectActivity: 'CollectCampaign',
+
     }
 
     def __new__(cls, *args, **kwargs):
@@ -428,6 +606,9 @@ class FederatedActivitySerializer(PolymorphicSerializer):
 
         self.resource_type_model_mapping['DeadlineActivity'] = DeadlineActivity
         self.resource_type_model_mapping['DateActivity'] = DateActivity
+        self.resource_type_model_mapping['RegisteredDateActivity'] = RegisteredDateActivity
+        self.resource_type_model_mapping['PeriodicActivity'] = PeriodicActivity
+        self.resource_type_model_mapping['ScheduleActivity'] = ScheduleActivity
 
     def to_resource_type(self, model_or_instance):
         if isinstance(model_or_instance, models.Model):
@@ -439,7 +620,13 @@ class FederatedActivitySerializer(PolymorphicSerializer):
 
     def _get_resource_type_from_mapping(self, data):
         if data.get('type') == 'DoGoodEvent':
-            if len(data.get('sub_event', [])) > 0:
+            if data.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
+                return 'ScheduleActivity'
+            elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
+                return 'PeriodicActivity'
+            elif data.get('join_mode', None) in ('selected', JoinModeChoices.selected):
+                return 'RegisteredDateActivity'
+            elif len(data.get('sub_event', [])) > 0:
                 return 'DateActivity'
             else:
                 return 'DeadlineActivity'

@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_links.models import LinkedActivity, LinkedDeed, LinkedDateActivity, LinkedDeadlineActivity, \
-    LinkedFunding, LinkedDateSlot
+    LinkedFunding, LinkedDateSlot, LinkedCollectCampaign, LinkedPeriodicActivity, LinkedScheduleActivity
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer, PointSerializer, CountrySerializer
 from bluebottle.utils.fields import RichTextField
@@ -179,6 +179,18 @@ class LinkedDeedSerializer(BaseLinkedActivitySerializer):
         )
 
 
+class LinkedCollectCampaignSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    location = LinkedLocationSerializer(required=False, allow_null=True)
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedCollectCampaign
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time', 'location', 'location_hint', 'collect_type'
+        )
+
+
 class LinkedSlotSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
@@ -225,6 +237,44 @@ class LinkedDateActivitySerializer(BaseLinkedActivitySerializer):
 
 
 class LinkedDeadlineActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    location = LinkedLocationSerializer(required=False, allow_null=True)
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedDeadlineActivity
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time', 'location'
+        )
+
+
+class LinkedPeriodicActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    location = LinkedLocationSerializer(required=False, allow_null=True)
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedPeriodicActivity
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time', 'location',
+            'duration', 'repetition_mode'
+        )
+
+
+class LinkedScheduleActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    location = LinkedLocationSerializer(required=False, allow_null=True)
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedScheduleActivity
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'start_time', 'end_time', 'location',
+            'duration'
+        )
+
+
+class LinkedRegisteredDateActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeadlineActivity
 
@@ -249,24 +299,33 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedDeedSerializer,
         LinkedDateActivitySerializer,
         LinkedDeadlineActivitySerializer,
-        LinkedFundingSerializer
+        LinkedPeriodicActivitySerializer,
+        LinkedRegisteredDateActivitySerializer,
+        LinkedScheduleActivitySerializer,
+        LinkedFundingSerializer,
+        LinkedCollectCampaignSerializer,
     ]
 
     model_type_mapping = {
         LinkedDeed: 'GoodDeed',
         LinkedDateActivity: 'DoGoodEvent',
+        LinkedPeriodicActivity: 'DoGoodEvent',
         LinkedDeadlineActivity: 'DoGoodEvent',
         LinkedFunding: 'Funding',
+        LinkedCollectCampaign: 'CollectCampaign',
+        LinkedScheduleActivity: 'ScheduleActivity',
     }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Map resource types to models for polymorphic deserialization
-        self.resource_type_model_mapping['dateactivity'] = LinkedDateActivity
-        self.resource_type_model_mapping['deadlineactivity'] = LinkedDeadlineActivity
-        self.resource_type_model_mapping['funding'] = LinkedFunding
-        self.resource_type_model_mapping['deed'] = LinkedDeed
+        self.resource_type_model_mapping['DateActivity'] = LinkedDateActivity
+        self.resource_type_model_mapping['DeadlineActivity'] = LinkedDeadlineActivity
+        self.resource_type_model_mapping['PeriodicActivity'] = LinkedPeriodicActivity
+        self.resource_type_model_mapping['RegisteredDateActivity'] = LinkedDeadlineActivity
+        self.resource_type_model_mapping['ScheduleActivity'] = LinkedScheduleActivity
+        self.resource_type_model_mapping['Funding'] = LinkedFunding
+        self.resource_type_model_mapping['GoodDeed'] = LinkedDeed
+        self.resource_type_model_mapping['CollectCampaign'] = LinkedCollectCampaign
 
     def _get_resource_type_from_mapping(self, data):
         event_type = data.get('type')
@@ -277,7 +336,13 @@ class LinkedActivitySerializer(PolymorphicSerializer):
 
         # Handle DoGoodEvent - check sub_event to distinguish DateActivity from DeadlineActivity
         if event_type == 'DoGoodEvent':
-            if len(data.get('sub_event', [])) > 0:
+            if data.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
+                return 'ScheduleActivity'
+            elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
+                return 'PeriodicActivity'
+            elif data.get('join_mode', None) == 'SelectedJoinMode':
+                return 'RegisteredDateActivity'
+            elif len(data.get('sub_event', [])) > 0:
                 return 'DateActivity'
             else:
                 return 'DeadlineActivity'
@@ -299,7 +364,10 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedDeed: LinkedDeedSerializer,
         LinkedDateActivity: LinkedDateActivitySerializer,
         LinkedDeadlineActivity: LinkedDeadlineActivitySerializer,
-        LinkedFunding: LinkedFundingSerializer
+        LinkedFunding: LinkedFundingSerializer,
+        LinkedCollectCampaign: LinkedCollectCampaignSerializer,
+        LinkedPeriodicActivity: LinkedPeriodicActivitySerializer,
+        LinkedScheduleActivity: LinkedScheduleActivitySerializer,
     }
 
     class Meta:

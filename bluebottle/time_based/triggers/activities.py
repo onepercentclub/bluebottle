@@ -15,7 +15,7 @@ from bluebottle.activities.messages.reviewer import (
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
 from bluebottle.activity_pub.effects import (
-    AnnounceAdoptionEffect, PublishEffect, CancelEffect, FinishEffect
+    AnnounceAdoptionEffect, PublishEffect, CancelEffect, FinishEffect, UpdateEventEffect
 )
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
@@ -247,6 +247,7 @@ class TimeBasedTriggers(ActivityTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.publish,
             effects=[
+                PublishEffect,
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
             ]
         ),
@@ -613,6 +614,12 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
                 CreateFirstSlotEffect,
             ]
         ),
+        ModelChangedTrigger(
+            ['title', 'description', 'start', 'deadline', 'location', 'duration', 'period'],
+            effects=[
+                UpdateEventEffect,
+            ]
+        )
     ]
 
 
@@ -651,6 +658,8 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.auto_publish,
             effects=[
+                AnnounceAdoptionEffect,
+                PublishEffect,
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,
                     conditions=[
@@ -668,6 +677,8 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.approve,
             effects=[
+                PublishEffect,
+                AnnounceAdoptionEffect,
                 NotificationEffect(
                     PastActivityApprovedNotification
                 ),
@@ -759,8 +770,14 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         ModelChangedTrigger(
             'duration',
             effects=[
+                UpdateEventEffect,
                 RescheduleRelatedTimeContributionsEffect,
             ]
+        ),
+        ModelChangedTrigger(
+            ['title', 'description', 'start', 'location', 'duration'],
+            effects=[
+                UpdateEventEffect,
+            ]
         )
-
     ]

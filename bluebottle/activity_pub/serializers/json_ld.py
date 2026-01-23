@@ -1,9 +1,11 @@
 from rest_framework import serializers
 
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Accept,
     Announce,
     CrowdFunding,
+    CollectCampaign,
     Address,
     Place,
     Follow,
@@ -29,7 +31,6 @@ from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, PolymorphicActivityPubSerializer
 )
 from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
-from bluebottle.activity_pub.adapters import adapter
 
 
 class InboxSerializer(ActivityPubSerializer):
@@ -190,6 +191,25 @@ class CrowdFundingSerializer(BaseEventSerializer):
         )
 
 
+class CollectCampaignSerializer(BaseEventSerializer):
+    id = ActivityPubIdField(url_name='json-ld:collect-campaign')
+    type = TypeField('CollectCampaign')
+
+    start_time = serializers.DateTimeField(required=False, allow_null=True)
+    end_time = serializers.DateTimeField(required=False, allow_null=True)
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
+    location_hint = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    collect_type = serializers.CharField(required=False, allow_null=True)
+    target = serializers.FloatField(required=False, allow_null=True)
+    amount = serializers.FloatField(required=False, allow_null=True)
+
+    class Meta(BaseEventSerializer.Meta):
+        model = CollectCampaign
+        fields = BaseEventSerializer.Meta.fields + (
+            'start_time', 'end_time', 'location', 'location_hint', 'collect_type', 'target', 'amount'
+        )
+
+
 class SubEventSerializer(ActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:sub-event')
     type = TypeField('Event')
@@ -199,7 +219,7 @@ class SubEventSerializer(ActivityPubSerializer):
 
     location = PlaceSerializer(allow_null=True, include=True, required=False)
     event_attendance_mode = serializers.ChoiceField(
-        choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode']
+        choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode'],
     )
     duration = serializers.DurationField(required=False, allow_null=True)
 
@@ -225,10 +245,21 @@ class DoGoodEventSerializer(BaseEventSerializer):
         allow_null=True
     )
     join_mode = serializers.ChoiceField(
-        choices=['OpenJoinMode', 'ReviewJoinMode'],
+        choices=['OpenJoinMode', 'ReviewJoinMode', 'SelectedJoinMode', 'ScheduleJoinMode'],
         required=False,
         allow_null=True
     )
+    repetition_mode = serializers.ChoiceField(
+        choices=['DailyRepetitionMode', 'WeeklyRepetitionMode', 'MonthlyRepetitionMode', 'OnceRepetitionMode'],
+        required=False,
+        allow_null=True
+    )
+    slot_mode = serializers.ChoiceField(
+        choices=['PeriodicSlotMode', 'ScheduledSlotMode', 'SetSlotMode'],
+        required=False,
+        allow_null=True
+    )
+
     duration = serializers.DurationField(required=False, allow_null=True)
 
     sub_event = SubEventSerializer(many=True, allow_null=True, required=False, include=True)
@@ -237,7 +268,9 @@ class DoGoodEventSerializer(BaseEventSerializer):
         model = DoGoodEvent
         fields = BaseEventSerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'duration',
-            'event_attendance_mode', 'join_mode', 'registration_deadline',
+            'event_attendance_mode', 'join_mode',
+            'repetition_mode', 'slot_mode',
+            'registration_deadline',
             'sub_event',
         )
 
@@ -268,7 +301,8 @@ class EventSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
         GoodDeedSerializer,
         CrowdFundingSerializer,
-        DoGoodEventSerializer
+        CollectCampaignSerializer,
+        DoGoodEventSerializer,
     ]
 
     class Meta:

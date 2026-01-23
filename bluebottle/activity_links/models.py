@@ -4,7 +4,6 @@ from django_quill.fields import QuillField
 from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
-from bluebottle.activity_pub.models import Publish
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import MoneyField, ImageField
@@ -14,6 +13,7 @@ class LinkedActivityManager(PolymorphicManager):
     def sync(self, event):
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
         from bluebottle.activity_links.serializers import LinkedActivitySerializer
+        from bluebottle.activity_pub.models import Publish
 
         try:
             instance = self.get(event=event)
@@ -74,6 +74,17 @@ class LinkedDeed(LinkedActivity):
         resource_name = 'activities/deeds'
 
 
+class LinkedCollectCampaign(LinkedActivity):
+    start = models.DateTimeField(null=True, blank=True)
+    end = models.DateTimeField(null=True, blank=True)
+    collect_type = models.CharField(max_length=1000, null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+    location_hint = models.CharField(max_length=1000, null=True, blank=True)
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/collects'
+
+
 class LinkedFunding(LinkedActivity):
     target = MoneyField()
     donated = MoneyField(default=Money('0.00', 'EUR'))
@@ -86,6 +97,7 @@ class LinkedDeadlineActivity(LinkedActivity):
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
     duration = models.DurationField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
 
 
 class LinkedDateActivity(LinkedActivity):
@@ -109,6 +121,21 @@ class LinkedDateSlot(models.Model):
         if self.start and self.end:
             return self.end - self.start
         return None
+
+
+class LinkedPeriodicActivity(LinkedActivity):
+    start = models.DateTimeField(null=True, blank=True)
+    end = models.DateTimeField(null=True, blank=True)
+    duration = models.DurationField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+    repetition_mode = models.CharField(null=True, blank=True, max_length=255)
+
+
+class LinkedScheduleActivity(LinkedActivity):
+    start = models.DateTimeField(null=True, blank=True)
+    end = models.DateTimeField(null=True, blank=True)
+    duration = models.DurationField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
 
 
 from bluebottle.activity_links.signals import *  # noqa

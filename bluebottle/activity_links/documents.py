@@ -3,9 +3,11 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
-from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity
+from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity, \
+    LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity, LinkedScheduleActivity
 from bluebottle.initiatives.documents import get_translated_list
 from bluebottle.utils.documents import TextField
+from bluebottle.utils.models import get_default_language
 
 
 class LinkedActivityDocument(ActivityDocument):
@@ -161,6 +163,50 @@ class LinkedDeedDocument(LinkedActivityDocument):
 
     def prepare_end(self, instance):
         return [instance.end]
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedCollectCampaignDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedCollectCampaign
+        related_models = ()
+
+    collect_type = fields.NestedField(
+        attr='collect_type',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
+    realized = fields.IntegerField()
+    collect_target = fields.IntegerField()
+
+    def prepare_slug(self, instance):
+        return f'linked-collect-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'collect'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/collects'
+
+    def prepare_activity_type(self, instance):
+        return 'collect'
+
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.end]
+
+    def prepare_collect_type(self, instance):
+        if not instance.collect_type:
+            return []
+        return [
+            {'name': instance.collect_type, 'language': get_default_language()}
+        ]
 
 
 @registry.register_document
@@ -344,3 +390,177 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
 
     def prepare_activity_type(self, instance):
         return 'date'
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedDeadlineActivityDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedDeadlineActivity
+        related_models = ()
+
+    def prepare_location(self, instance):
+        locations = [
+            {
+                'name': instance.location.formatted_address,
+                'locality': instance.location.locality,
+                'country_code': instance.location.country.alpha2_code,
+                'country': instance.location.country.name,
+                'type': 'location'
+
+            }
+        ] if instance.location_id else []
+        return locations
+
+    def prepare_country(self, instance):
+        countries = []
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+        return countries
+
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.end]
+
+    def prepare_dates(self, instance):
+        return [
+            {
+                'start': instance.start,
+                'end': instance.end,
+            }
+        ]
+
+    def prepare_duration(self, instance):
+        return [
+            instance.duration
+        ]
+
+    def prepare_slug(self, instance):
+        return f'linked-deadline-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'deadline'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/time-based/deadlines'
+
+    def prepare_activity_type(self, instance):
+        return 'deadline'
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedScheduleActivityDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedScheduleActivity
+        related_models = ()
+
+    def prepare_location(self, instance):
+        locations = [
+            {
+                'name': instance.location.formatted_address,
+                'locality': instance.location.locality,
+                'country_code': instance.location.country.alpha2_code,
+                'country': instance.location.country.name,
+                'type': 'location'
+
+            }
+        ] if instance.location_id else []
+        return locations
+
+    def prepare_country(self, instance):
+        countries = []
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+        return countries
+
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.end]
+
+    def prepare_dates(self, instance):
+        return [
+            {
+                'start': instance.start,
+                'end': instance.end,
+            }
+        ]
+
+    def prepare_duration(self, instance):
+        return [
+            instance.duration
+        ]
+
+    def prepare_slug(self, instance):
+        return f'linked-schedule-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'schedule'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/time-based/schedules'
+
+    def prepare_activity_type(self, instance):
+        return 'schedule'
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedPeriodicActivityDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedPeriodicActivity
+        related_models = ()
+
+    def prepare_location(self, instance):
+        locations = [
+            {
+                'name': instance.location.formatted_address,
+                'locality': instance.location.locality,
+                'country_code': instance.location.country.alpha2_code,
+                'country': instance.location.country.name,
+                'type': 'location'
+
+            }
+        ] if instance.location_id else []
+        return locations
+
+    def prepare_country(self, instance):
+        countries = []
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+        return countries
+
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.end]
+
+    def prepare_dates(self, instance):
+        return [
+            {
+                'start': instance.start,
+                'end': instance.end,
+            }
+        ]
+
+    def prepare_duration(self, instance):
+        return [
+            instance.duration
+        ]
+
+    def prepare_slug(self, instance):
+        return f'linked-periodic-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'periodic'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/time-based/periodics'
+
+    def prepare_activity_type(self, instance):
+        return 'periodic'

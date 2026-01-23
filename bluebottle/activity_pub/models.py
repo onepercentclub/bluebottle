@@ -320,6 +320,24 @@ class GoodDeed(Event):
         verbose_name_plural = _("Deeds")
 
 
+class CollectCampaign(Event):
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
+    location_hint = models.CharField(max_length=1000, null=True, blank=True)
+    target = models.FloatField(null=True)
+    amount = models.FloatField(null=True)
+    collect_type = models.CharField(
+        verbose_name=_("Type"),
+        max_length=200,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = _("Collect campaign")
+        verbose_name_plural = _("Collect campaigns")
+
+
 class CrowdFunding(Event):
     target = models.DecimalField(decimal_places=2, max_digits=10, default=0)
     target_currency = models.CharField(max_length=3, default='EUR')
@@ -329,7 +347,7 @@ class CrowdFunding(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
-    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
 
     activity_type = 'funding'
 
@@ -346,6 +364,25 @@ class EventAttendanceModeChoices(DjangoChoices):
 class JoinModeChoices(DjangoChoices):
     open = ChoiceItem('OpenJoinMode')
     review = ChoiceItem('ReviewJoinMode')
+    selected = ChoiceItem('SelectedJoinMode')
+
+
+class SlotModeChoices(DjangoChoices):
+    set = ChoiceItem('SetSlotMode')
+    scheduled = ChoiceItem('ScheduledSlotMode')
+    periodic = ChoiceItem('PeriodicSlotMode')
+
+
+class RepetitionModeChoices(DjangoChoices):
+    daily = ChoiceItem('DailyRepetitionMode')
+    weekly = ChoiceItem('WeeklyRepetitionMode')
+    monthly = ChoiceItem('MonthlyRepetitionMode')
+
+
+class ParticipationModeChoices(DjangoChoices):
+    individuals = ChoiceItem('IndividualParticipationMode')
+    teams = ChoiceItem('TeamParticipationMode')
+    any = ChoiceItem('AnyParticipationMode')
 
 
 class AdoptionModeChoices(DjangoChoices):
@@ -390,7 +427,7 @@ class SubEvent(ActivityPubModel):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
-    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)
     event_attendance_mode = models.CharField(
         choices=EventAttendanceModeChoices.choices,
@@ -402,7 +439,7 @@ class SubEvent(ActivityPubModel):
         on_delete=models.CASCADE,
         related_name='sub_event'
     )
-    slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.CASCADE)
+    slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = _("Sub event")
@@ -414,8 +451,12 @@ class DoGoodEvent(Event):
     end_time = models.DateTimeField(null=True)
     registration_deadline = models.DateTimeField(null=True)
 
-    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)
+    repetition_mode = models.CharField(
+        choices=RepetitionModeChoices.choices,
+        null=True
+    )
     event_attendance_mode = models.CharField(
         choices=EventAttendanceModeChoices.choices,
         null=True
@@ -431,6 +472,12 @@ class DoGoodEvent(Event):
             return 'dateactivity'
         else:
             return 'deadlineactivity'
+
+    slot_mode = models.CharField(
+        choices=SlotModeChoices.choices,
+        default=SlotModeChoices.set,
+        null=True
+    )
 
     class Meta(Event.Meta):
         verbose_name = _('Date activity')
@@ -486,15 +533,10 @@ class Follow(Activity):
         on_delete=models.SET_NULL,
     )
 
-    adoption_mode = models.CharField(
-        choices=AdoptionModeChoices.choices,
-        default=AdoptionModeChoices.manual,
-        verbose_name=_("Adoption mode"),
-        help_text=_("Select what should happen when a new activity has been received."),
-    )
-
     automatic_adoption_activity_types = MultiSelectField(
-        max_length=300, choices=InitiativePlatformSettings.ACTIVITY_TYPES
+        verbose_name=_("Automatically adopted these activity types"),
+        max_length=300, choices=InitiativePlatformSettings.ACTIVITY_TYPES,
+        help_text=_("Selected activity types are automatically adopted when they are published."),
     )
 
     adoption_type = models.CharField(

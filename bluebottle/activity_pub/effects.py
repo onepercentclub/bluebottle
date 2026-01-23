@@ -38,8 +38,12 @@ class PublishEffect(Effect):
         return followers
 
     @property
+    def is_open(self):
+        return not self.instance.segments.filter(closed=True).exists()
+
+    @property
     def is_valid(self):
-        return self.followers.exists()
+        return self.is_open and self.followers.exists()
 
     def __str__(self):
         return str(_('Publish activity to followers'))

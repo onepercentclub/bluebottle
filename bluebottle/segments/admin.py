@@ -90,7 +90,7 @@ class SegmentAdmin(
     list_display = ['name', 'segment_type', 'activities_link', ]
 
     list_filter = ['segment_type']
-    search_fields = ['name']
+    search_fields = ['translations__name']
     fieldsets = (
         (None, {
             'fields': [

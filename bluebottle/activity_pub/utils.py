@@ -1,9 +1,9 @@
 from urllib.parse import urlparse
 
+from django.db import connection
 import inflection
 
 from bluebottle.activity_pub.models import Organization as Organization
-from bluebottle.clients import properties
 from bluebottle.cms.models import SitePlatformSettings
 
 
@@ -31,7 +31,7 @@ def camelize(data, initial=True):
 
 
 def is_local(url):
-    return urlparse(url).hostname == properties.tenant.domain_url
+    return urlparse(url).hostname == connection.tenant.domain_url
 
 
 def get_platform_actor():

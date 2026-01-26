@@ -4,47 +4,57 @@ import requests
 from django.contrib.gis.geos import Point
 from django.core.files import File
 from django.db import models
+
 from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
-from bluebottle.activity_links.models import LinkedActivity, LinkedDeed, LinkedDateActivity, LinkedDeadlineActivity, \
-    LinkedFunding, LinkedDateSlot, LinkedCollectCampaign, LinkedPeriodicActivity, LinkedScheduleActivity
+from bluebottle.activity_links.models import (
+    LinkedActivity, LinkedDeed, LinkedDateActivity, LinkedDeadlineActivity,
+    LinkedFunding, LinkedDateSlot, LinkedCollectCampaign, LinkedPeriodicActivity,
+    LinkedScheduleActivity
+)
+
+from bluebottle.activity_pub.models import Image as ActivityPubImage
+from bluebottle.files.models import Image
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer, PointSerializer, CountrySerializer
 from bluebottle.utils.fields import RichTextField
 
 
-class LinkedActivityImageField(serializers.Field):
-    """Custom field to handle image conversion from JSON-LD format to File object"""
+class LinkedActivityImageSerializer(serializers.ModelSerializer):
+    id = serializers.CharField()
+    url = serializers.CharField()
+    name = serializers.CharField(allow_null=True, allow_blank=True, required=False)
 
-    def to_internal_value(self, data):
-        if not data:
-            return None
+    def create(self, validated_data):
+        image = ActivityPubImage.objects.from_iri(validated_data['id'])
 
-        if isinstance(data, dict):
-            image_url = data.get('url') or data.get('id')
-            image_name = data.get('name', 'image')
-        else:
-            image_url = data
-            image_name = 'image'
+        response = requests.get(image.url, timeout=30)
+        response.raise_for_status()
 
-        if not image_url:
-            return None
+        file = File(BytesIO(response.content), name=validated_data['name'])
 
-        try:
-            response = requests.get(image_url, timeout=30)
-            response.raise_for_status()
-            return File(BytesIO(response.content), name=image_name)
-        except requests.exceptions.RequestException as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Could not fetch image from {image_url}: {e}")
-            return None
+        return super().create({
+            'file': file,
+            'name': validated_data['name']
+        })
 
-    def to_representation(self, value):
-        if not value:
-            return None
-        return value
+    def update(self, instance, validated_data):
+        image = ActivityPubImage.objects.from_iri(validated_data['id'])
+
+        response = requests.get(image.url, timeout=30)
+        response.raise_for_status()
+
+        file = File(BytesIO(response.content), name=validated_data['name'])
+
+        return super().update(instance, {
+            'file': file,
+            'name': validated_data['name']
+        })
+
+    class Meta:
+        model = Image
+        fields = ('id', 'url', 'name')
 
 
 class AddressSerializer(serializers.Serializer):
@@ -161,11 +171,31 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
     url = serializers.URLField(source='link')
-    image = LinkedActivityImageField(required=False, allow_null=True)
+    image = LinkedActivityImageSerializer(required=False, allow_null=True)
 
     class Meta:
         model = LinkedActivity
         fields = ('name', 'summary', 'url', 'image')
+
+    def create(self, validated_data):
+        image = validated_data.pop('image', None)
+        if image:
+            serializer = LinkedActivityImageSerializer(data=image)
+            serializer.is_valid(raise_exception=True)
+            validated_data['image'] = serializer.save()
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        image = validated_data.pop('image', None)
+        if image:
+            serializer = LinkedActivityImageSerializer(
+                data=image, instance=getattr(instance, 'image')
+            )
+            serializer.is_valid(raise_exception=True)
+            validated_data['image'] = serializer.save()
+
+        return super().update(instance, validated_data)
 
 
 class LinkedDeedSerializer(BaseLinkedActivitySerializer):

@@ -39,7 +39,8 @@ class File(models.Model):
         'members.Member',
         verbose_name=_('owner'),
         related_name='own_%(class)s',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True
     )
     used = models.BooleanField(_('used'), default=False)
     name = models.CharField(null=True, blank=True, max_length=500)

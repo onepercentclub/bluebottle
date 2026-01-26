@@ -1,4 +1,3 @@
-import os
 import hashlib
 from builtins import object
 from collections import namedtuple
@@ -428,8 +427,13 @@ class ActivityPreviewSerializer(ModelSerializer):
                     ),
                 )
             if obj.image.type == "link":
-                _, file_name = os.path.split(obj.image.file)
-                url = self.context['request'].build_absolute_uri(settings.MEDIA_URL + 'activity_links/' + file_name)
+                url = reverse(
+                    "activity_links:image",
+                    args=(
+                        obj.image.id,
+                        IMAGE_SIZES["large"],
+                    ),
+                )
 
             return f"{url}?_={hash}"
 

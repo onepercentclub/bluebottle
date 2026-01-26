@@ -6,7 +6,9 @@ from polymorphic.models import PolymorphicModel, PolymorphicManager
 
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization
-from bluebottle.utils.fields import MoneyField, ImageField
+
+from bluebottle.utils.fields import MoneyField
+from bluebottle.files.fields import ImageField
 
 
 class LinkedActivityManager(PolymorphicManager):
@@ -38,7 +40,9 @@ class LinkedActivity(TriggerMixin, PolymorphicModel):
     link = models.URLField()
     status = models.CharField(max_length=40)
     description = QuillField(_("Description"), blank=True)
-    image = ImageField(blank=True, null=True, upload_to="activity_links")
+
+    image = ImageField(blank=True, null=True)
+
     event = models.ForeignKey(
         'activity_pub.Event',
         related_name='linked_activities',

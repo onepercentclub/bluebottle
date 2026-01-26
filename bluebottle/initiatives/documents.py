@@ -133,6 +133,7 @@ class InitiativeDocument(Document):
             'type': fields.KeywordField(attr='segment_type.slug'),
             'name': fields.KeywordField(),
             'closed': fields.BooleanField(),
+            'language': fields.KeywordField(),
         }
     )
 

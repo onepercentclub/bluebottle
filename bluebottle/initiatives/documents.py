@@ -55,6 +55,25 @@ def get_translated_list(obj, field='name'):
     return data
 
 
+def get_translated_segments(segment):
+    data = []
+    current_language = segment._current_language
+
+    for lang in Language.objects.all():
+        segment.set_current_language(lang.full_code)
+        data.append(
+            {
+                'id': segment.pk,
+                'type': segment.segment_type.slug,
+                'name': segment.name,
+                'language': lang.full_code,
+                'closed': segment.closed
+            }
+        )
+    segment._current_language = current_language
+    return data
+
+
 @registry.register_document
 @initiative.document
 class InitiativeDocument(Document):
@@ -295,15 +314,8 @@ class InitiativeDocument(Document):
         segments = []
 
         for activity in instance.activities.all():
-            segments += [
-                {
-                    'id': segment.pk,
-                    'type': segment.segment_type.slug,
-                    'name': segment.name,
-                    'closed': segment.closed,
-                }
-                for segment in activity.segments.all()
-            ]
+            for segment in activity.segments.all():
+                segments += get_translated_list(segment)
 
         return deduplicate(segments)
 

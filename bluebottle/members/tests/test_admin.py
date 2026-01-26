@@ -521,9 +521,9 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers, [
             'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
-            'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
-        self.assertEqual(user_data[12], 'Bier')
-        self.assertEqual(user_data[13], 'Bitterballen')
+            'amount donated', 'time spent', 'subscribed to matching projects', 'Food', 'Drinks'])
+        self.assertEqual(user_data[12], 'Bitterballen')
+        self.assertEqual(user_data[13], 'Bier')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

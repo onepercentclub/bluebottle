@@ -1,5 +1,6 @@
 import hashlib
 import re
+
 from django.http.response import HttpResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -359,9 +360,12 @@ class SupportersExportView(PrivateFileView):
             for segment_type in self.get_segment_types():
                 if donor.user:
                     segments = ", ".join(
-                        donor.user.segments.filter(
-                            segment_type=segment_type
-                        ).values_list('name', flat=True)
+                        [
+                            d.name for d in
+                            donor.user.segments.filter(
+                                segment_type=segment_type
+                            )
+                        ]
                     )
                     row.append(segments)
             sheet.append(row)

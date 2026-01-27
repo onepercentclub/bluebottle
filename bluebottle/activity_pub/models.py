@@ -139,7 +139,7 @@ class OrganizationManager(ActivityPubManager):
                 outbox=outbox,
                 public_key=public_key,
                 name=model.name,
-                logo=Image.objects.create(
+                icon=Image.objects.create(
                     url=logo_url,
                     name=model.logo.name
                 ) if logo_url else None,
@@ -159,7 +159,7 @@ class Organization(Actor):
     content = models.TextField(null=True, blank=True)
 
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
-    logo = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
+    icon = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
 
     organization = models.OneToOneField(
         BluebottleOrganization,
@@ -219,12 +219,15 @@ class PublicKey(ActivityPubModel):
 
 
 class Address(ActivityPubModel):
+    summary = models.TextField(null=True, blank=True)
+
     street_address = models.CharField(max_length=1000, null=True)
     postal_code = models.CharField(max_length=1000, null=True)
 
-    address_locality = models.CharField(max_length=1000, null=True)
-    address_region = models.CharField(max_length=1000, null=True)
-    address_country = models.CharField(max_length=1000, null=True)
+    locality = models.CharField(max_length=1000, null=True)
+    region = models.CharField(max_length=1000, null=True)
+    country = models.CharField(max_length=1000, null=True)
+
 
 
 class Place(ActivityPubModel):
@@ -324,9 +327,8 @@ class CollectCampaign(Event):
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
-    location_hint = models.CharField(max_length=1000, null=True, blank=True)
     target = models.FloatField(null=True)
-    amount = models.FloatField(null=True)
+    donated = models.FloatField(null=True)
     collect_type = models.CharField(
         verbose_name=_("Type"),
         max_length=200,
@@ -449,7 +451,7 @@ class SubEvent(ActivityPubModel):
 class DoGoodEvent(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
-    registration_deadline = models.DateTimeField(null=True)
+    application_deadline = models.DateTimeField(null=True)
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)

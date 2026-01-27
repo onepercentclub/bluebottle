@@ -61,13 +61,13 @@ class AddressSerializer(serializers.Serializer):
     street_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     postal_code = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    address_locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    address_region = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    address_country = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    region = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    country = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         fields = (
-            'street_address', 'postal_code', 'address_locality', 'address_region', 'address_country',
+            'street_address', 'postal_code', 'locality', 'region', 'country',
         )
 
 
@@ -92,12 +92,12 @@ class LinkedLocationSerializer(GeolocationSerializer):
 
         address = data.pop('address', {})
         if address and isinstance(address, dict):
-            if address.get('address_country', None):
-                country = Country.objects.filter(alpha2_code=address['address_country'].upper()).first()
+            if address.get('country', None):
+                country = Country.objects.filter(alpha2_code=address['country'].upper()).first()
                 if country:
                     data['country'] = country
-            data['province'] = address.get('address_region', None)
-            data['locality'] = address.get('address_locality', None)
+            data['province'] = address.get('region', None)
+            data['locality'] = address.get('locality', None)
             data['postal_code'] = address.get('postal_code', None)
             data['street'] = address.get('street_address', None)
 

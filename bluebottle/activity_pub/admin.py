@@ -910,7 +910,7 @@ class CollectCampaignAdmin(EventChildAdmin):
         'location',
         'collect_type',
         'target',
-        'amount'
+        'donated'
     )
     fields = readonly_fields
 
@@ -963,7 +963,7 @@ class DoGoodEventAdmin(EventChildAdmin):
         'start_time',
         'end_time',
         'duration',
-        'registration_deadline',
+        'application_deadline',
         'event_attendance_mode',
         'repetition_mode',
         'join_mode',

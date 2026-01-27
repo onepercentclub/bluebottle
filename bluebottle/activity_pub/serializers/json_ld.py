@@ -35,7 +35,7 @@ from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeF
 
 class InboxSerializer(ActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:inbox')
-    type = TypeField('Inbox')
+    type = TypeField('inbox')
 
     class Meta(ActivityPubSerializer.Meta):
         model = Inbox
@@ -43,7 +43,7 @@ class InboxSerializer(ActivityPubSerializer):
 
 class OutboxSerializer(ActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:outbox')
-    type = TypeField('Outbox')
+    type = TypeField('outbox')
 
     class Meta(ActivityPubSerializer.Meta):
         model = Outbox
@@ -51,7 +51,7 @@ class OutboxSerializer(ActivityPubSerializer):
 
 class PublicKeySerializer(ActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:public-key')
-    type = TypeField('PublicKey')
+    type = TypeField('publicKey')
     public_key_pem = serializers.CharField(allow_blank=True)
 
     class Meta(ActivityPubSerializer.Meta):
@@ -91,11 +91,11 @@ class OrganizationSerializer(ActivityPubSerializer):
     name = serializers.CharField()
     summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    logo = ImageSerializer(required=False, allow_null=True)
+    icon = ImageSerializer(required=False, allow_null=True)
 
     class Meta(ActivityPubSerializer.Meta):
         fields = ActivityPubSerializer.Meta.fields + (
-            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content', 'image', 'logo'
+            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content', 'image', 'icon'
         )
         model = Organization
 
@@ -113,17 +113,19 @@ class AddressSerializer(ActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:address')
     type = TypeField('Address')
 
+    summary = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
     street_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     postal_code = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    address_locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    address_region = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    address_country = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    region = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    country = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta(ActivityPubSerializer.Meta):
         model = Address
         fields = ActivityPubSerializer.Meta.fields + (
-            'street_address', 'postal_code', 'address_locality', 'address_region', 'address_country',
+            'street_address', 'postal_code', 'locality', 'region', 'country', 'summary'
         )
 
 
@@ -198,10 +200,9 @@ class CollectCampaignSerializer(BaseEventSerializer):
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
     location = PlaceSerializer(allow_null=True, include=True, required=False)
-    location_hint = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     collect_type = serializers.CharField(required=False, allow_null=True)
     target = serializers.FloatField(required=False, allow_null=True)
-    amount = serializers.FloatField(required=False, allow_null=True)
+    donated = serializers.FloatField(required=False, allow_null=True)
 
     class Meta(BaseEventSerializer.Meta):
         model = CollectCampaign
@@ -236,7 +237,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
-    registration_deadline = serializers.DateTimeField(required=False, allow_null=True)
+    application_deadline = serializers.DateTimeField(required=False, allow_null=True)
 
     location = PlaceSerializer(allow_null=True, include=True, required=False)
     event_attendance_mode = serializers.ChoiceField(
@@ -337,7 +338,7 @@ class AcceptSerializer(BaseActivitySerializer):
 
 class PublishSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:publish')
-    type = TypeField('Publish')
+    type = TypeField('Create')
     object = EventSerializer()
 
     class Meta(BaseActivitySerializer.Meta):

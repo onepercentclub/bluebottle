@@ -1,11 +1,12 @@
+from celery import shared_task
 from django.db import connection
 from rest_framework import generics, status, response
-from celery import shared_task
 
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Announce, Organization,
-    GoodDeed, Image, CrowdFunding, Place, Address, DoGoodEvent, SubEvent
+    GoodDeed, Image, CrowdFunding, CollectCampaign, Place, Address, DoGoodEvent, SubEvent, Update,
+    Delete, Cancel, Finish
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import InboxPermission, ActivityPubPermission
@@ -14,8 +15,9 @@ from bluebottle.activity_pub.serializers.json_ld import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
     AcceptSerializer, ActivitySerializer, PublishSerializer, AnnounceSerializer,
     OrganizationSerializer, GoodDeedSerializer, ImageSerializer,
-    CrowdFundingSerializer, PlaceSerializer, AddressSerializer,
-    DoGoodEventSerializer, SubEventSerializer
+    CrowdFundingSerializer, CollectCampaignSerializer, PlaceSerializer, AddressSerializer,
+    DoGoodEventSerializer, SubEventSerializer, UpdateSerializer,
+    DeleteSerializer, CancelSerializer, FinishSerializer
 )
 from bluebottle.clients.utils import LocalTenant
 
@@ -106,6 +108,11 @@ class CrowdFundingView(ActivityPubView):
     queryset = CrowdFunding.objects.all()
 
 
+class CollectCampaignView(ActivityPubView):
+    serializer_class = CollectCampaignSerializer
+    queryset = CollectCampaign.objects.all()
+
+
 class SubEventView(ActivityPubView):
     serializer_class = SubEventSerializer
     queryset = SubEvent.objects.all()
@@ -134,6 +141,26 @@ class AcceptView(ActivityPubView):
 class PublishView(ActivityPubView):
     serializer_class = PublishSerializer
     queryset = Publish.objects.all()
+
+
+class UpdateView(ActivityPubView):
+    serializer_class = UpdateSerializer
+    queryset = Update.objects.all()
+
+
+class CancelView(ActivityPubView):
+    serializer_class = CancelSerializer
+    queryset = Cancel.objects.all()
+
+
+class FinishView(ActivityPubView):
+    serializer_class = FinishSerializer
+    queryset = Finish.objects.all()
+
+
+class DeleteView(ActivityPubView):
+    serializer_class = DeleteSerializer
+    queryset = Delete.objects.all()
 
 
 class AnnounceView(ActivityPubView):

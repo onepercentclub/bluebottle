@@ -146,7 +146,10 @@ class ImageContentView(FileContentView):
                 cropbox = None
 
         try:
-            width, height = size.split('x')
+            if 'x' in size:
+                width, height = size.split('x')
+            else:
+                width = height = size
             if width == height and int(width) < 300:
                 thumbnail = get_thumbnail(file, size, crop='center', cropbox=cropbox)
             else:

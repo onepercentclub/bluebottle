@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta  # noqa
 from urllib.parse import urlencode
 
 from django.db import models, connection
@@ -71,6 +71,10 @@ class CollectActivity(Activity):
 
     target = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
     realized = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
+
+    @property
+    def type(self):
+        return self.collect_type.translations.name
 
     activity_type = _('Collect activity')
 

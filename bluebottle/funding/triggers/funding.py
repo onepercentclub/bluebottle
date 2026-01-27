@@ -4,7 +4,9 @@ from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
 from bluebottle.activities.triggers import ContributorTriggers
-from bluebottle.activity_pub.effects import AnnounceAdoptionEffect
+from bluebottle.activity_pub.effects import (
+    AnnounceAdoptionEffect, PublishEffect, UpdateEventEffect, CancelEffect, FinishEffect
+)
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -136,6 +138,7 @@ class FundingTriggers(ActivityTriggers):
                     conditions=[should_finish]
                 ),
                 NotificationEffect(FundingApprovedMessage),
+                PublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),
@@ -144,7 +147,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                NotificationEffect(FundingCancelledMessage)
+                NotificationEffect(FundingCancelledMessage),
+                CancelEffect,
             ]
         ),
 
@@ -152,7 +156,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.reject,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                NotificationEffect(FundingRejectedMessage)
+                NotificationEffect(FundingRejectedMessage),
+                CancelEffect
             ]
         ),
 
@@ -168,6 +173,7 @@ class FundingTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(FundingExpiredMessage),
+                CancelEffect
             ]
         ),
 
@@ -183,7 +189,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.succeed,
             effects=[
                 GeneratePayoutsEffect,
-                NotificationEffect(FundingRealisedOwnerMessage)
+                NotificationEffect(FundingRealisedOwnerMessage),
+                FinishEffect
             ]
         ),
 
@@ -198,7 +205,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.partial,
             effects=[
                 GeneratePayoutsEffect,
-                NotificationEffect(FundingPartiallyFundedMessage)
+                NotificationEffect(FundingPartiallyFundedMessage),
+                FinishEffect
             ]
         ),
 
@@ -289,6 +297,12 @@ class FundingTriggers(ActivityTriggers):
                     FundingStateMachine.succeed,
                     conditions=[fixed_target, target_reached]
                 ),
+            ]
+        ),
+        ModelChangedTrigger(
+            ['target', 'amount_donated', 'deadline'],
+            effects=[
+                UpdateEventEffect,
             ]
         )
     ]

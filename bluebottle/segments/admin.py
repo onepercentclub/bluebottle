@@ -7,7 +7,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _, get_language
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
-from parler.admin import TranslatableAdmin
+from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.fsm.forms import StateMachineModelFormMetaClass
@@ -41,21 +41,13 @@ class SegmentAdminFormMetaClass(ModelFormMetaclass):
         return super(SegmentAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
-class SegmentInline(TabularInlinePaginated):
+class SegmentInline(TranslatableTabularInline, TabularInlinePaginated):
     model = Segment
-    fields = ('segment_name', 'slug')
+    fields = ('name', 'slug')
     show_change_link = True
     can_delete = True
-    readonly_fields = ('segment_name',)
 
     extra = 0
-
-    def segment_name(self, obj):
-        if obj and obj.pk:
-            return obj.safe_translation_getter('name', obj.slug)
-        return ''
-
-    segment_name.short_description = _('Name')
 
 
 class SegmentMergeForm(forms.Form):

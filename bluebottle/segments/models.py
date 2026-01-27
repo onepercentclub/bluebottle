@@ -96,7 +96,7 @@ class SegmentType(TranslatableModel, models.Model):
         super(SegmentType, self).save(**kwargs)
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', f'Segment #{self.id}')
 
     class JSONAPIMeta(object):
         resource_name = 'segment-types'
@@ -198,11 +198,16 @@ class Segment(TranslatableModel, models.Model):
     )
 
     def save(self, *args, **kwargs):
-        if self.name not in self.alternate_names:
-            self.alternate_names.append(self.name)
+        if self.pk:
+            name_value = self.safe_translation_getter('name', default=None, any_language=True)
+        else:
+            name_value = self.safe_translation_getter('name', default=None)
 
-        if not self.slug:
-            self.slug = slugify(self.name)
+        if name_value and name_value not in self.alternate_names:
+            self.alternate_names.append(name_value)
+
+        if not self.slug and name_value:
+            self.slug = slugify(name_value)
 
         super().save(*args, **kwargs)
 
@@ -235,7 +240,7 @@ class Segment(TranslatableModel, models.Model):
             return "text"
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', f'Segment #{self.id}')
 
     def get_absolute_url(self):
         domain = get_current_host()

@@ -5,10 +5,10 @@ from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Donor
-from bluebottle.segments.models import Segment
 from bluebottle.geo.models import Location
-from bluebottle.initiatives.documents import deduplicate, get_translated_list
+from bluebottle.initiatives.documents import deduplicate, get_translated_list, get_translated_segments
 from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.segments.models import Segment
 from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.utils.search import Search
 
@@ -382,15 +382,11 @@ class ActivityDocument(Document):
         return categories
 
     def prepare_segments(self, instance):
-        return [
-            {
-                'id': segment.pk,
-                'type': segment.segment_type.slug,
-                'name': segment.name,
-                'closed': segment.closed,
-            }
-            for segment in instance.segments.all()
-        ]
+
+        segments = []
+        for segment in instance.segments.all():
+            segments += get_translated_segments(segment)
+        return segments
 
     def prepare_is_online(self, instance):
         if hasattr(instance, 'is_online'):

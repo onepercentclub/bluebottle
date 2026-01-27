@@ -8,9 +8,9 @@ from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
-from future.utils import python_2_unicode_compatible
-
 from django_quill.fields import QuillField
+from future.utils import python_2_unicode_compatible
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -18,8 +18,11 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 
 
 @python_2_unicode_compatible
-class SegmentType(models.Model):
-    name = models.CharField(_('name'), max_length=255)
+class SegmentType(TranslatableModel, models.Model):
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=255),
+    )
+
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
 
     inherit = models.BooleanField(
@@ -93,18 +96,29 @@ class SegmentType(models.Model):
         super(SegmentType, self).save(**kwargs)
 
     def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ('name',)
+        return self.safe_translation_getter('name', f'Segment #{self.id}')
 
     class JSONAPIMeta(object):
         resource_name = 'segment-types'
 
 
 @python_2_unicode_compatible
-class Segment(models.Model):
-    name = models.CharField(_('name'), max_length=255)
+class Segment(TranslatableModel, models.Model):
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=255),
+        slogan=models.CharField(
+            _('Slogan'), max_length=255, null=True, blank=True,
+            help_text=_(
+                'A short sentence to explain your segment. This sentence is directly visible on the page.'
+            )),
+        story=QuillField(
+            _('Story'), blank=True, null=True,
+            help_text=_(
+                'A more detailed story for your segment. This story can be accessed via a link on the page.'
+            )
+        )
+    )
+
     slug = models.CharField(_('slug'), max_length=255)
 
     alternate_names = ArrayField(
@@ -125,20 +139,6 @@ class Segment(models.Model):
         default=list,
         blank=True,
         help_text=_('Users with email addresses for this domain are automatically added to this segment.')
-    )
-
-    tag_line = models.CharField(
-        _('Slogan'), max_length=255, null=True, blank=True,
-        help_text=_(
-            'A short sentence to explain your segment. This sentence is directly visible on the page.'
-        )
-    )
-
-    story = QuillField(
-        _('Story'), blank=True, null=True,
-        help_text=_(
-            'A more detailed story for your segment. This story can be accessed via a link on the page.'
-        )
     )
 
     logo = ImageField(
@@ -198,11 +198,16 @@ class Segment(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        if self.name not in self.alternate_names:
-            self.alternate_names.append(self.name)
+        if self.pk:
+            name_value = self.safe_translation_getter('name', default=None, any_language=True)
+        else:
+            name_value = self.safe_translation_getter('name', default=None)
 
-        if not self.slug:
-            self.slug = slugify(self.name)
+        if name_value and name_value not in self.alternate_names:
+            self.alternate_names.append(name_value)
+
+        if not self.slug and name_value:
+            self.slug = slugify(name_value)
 
         super().save(*args, **kwargs)
 
@@ -235,7 +240,7 @@ class Segment(models.Model):
             return "text"
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', f'Segment #{self.id}')
 
     def get_absolute_url(self):
         domain = get_current_host()
@@ -247,7 +252,6 @@ class Segment(models.Model):
         )
 
     class Meta:
-        ordering = ('name',)
         unique_together = (('slug', 'segment_type'), )
 
     class JSONAPIMeta(object):

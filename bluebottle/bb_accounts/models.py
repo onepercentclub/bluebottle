@@ -136,12 +136,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_('last name'), blank=True, max_length=100)
     location = models.ForeignKey(
         'geo.Location', blank=True,
-        verbose_name=_('Office'),
+        verbose_name=_('Work location'),
         null=True, on_delete=models.SET_NULL)
 
     location_verified = models.BooleanField(
         default=False,
-        help_text=_('Office location is verified by the user')
+        help_text=_('Work location is verified by the user')
     )
 
     favourite_themes = models.ManyToManyField(Theme, blank=True)
@@ -292,7 +292,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """
         Returns the first_name plus the last_name, with a space in between.
         """
+        from ..members.models import MemberPlatformSettings
+        member_settings = MemberPlatformSettings.load()
         full_name = u'{0} {1}'.format(self.first_name, self.last_name)
+        if member_settings.display_member_names == 'first_name_strict':
+            full_name = self.first_name
         return full_name.strip()
 
     def anonymize(self):

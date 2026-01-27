@@ -14,6 +14,11 @@ class ReviewerActivityNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_admin_url()
 
+    def get_action_link(self, recipient):
+        if not recipient.is_staff and not recipient.is_superuser:
+            return self.obj.get_absolute_url()
+        return super().get_action_link(recipient)
+
     action_title = pgettext("email", "View this activity")
 
     @property
@@ -25,8 +30,20 @@ class ReviewerActivityNotification(TransitionMessage):
         from bluebottle.members.models import Member
 
         recipients = Member.objects.filter(
-            Q(is_staff=True) | Q(is_superuser=True)
-        ).filter(submitted_initiative_notifications=True)
+            submitted_initiative_notifications=True
+        ).filter(
+            Q(submitted_initiative_notifications=True)
+            | Q(is_staff=True)
+            | Q(is_superuser=True)
+            | Q(
+                user_permissions__codename='api_review_activity',
+                user_permissions__content_type__app_label='activities'
+            )
+            | Q(
+                groups__permissions__codename='api_review_activity',
+                groups__permissions__content_type__app_label='activities'
+            )
+        ).distinct()
 
         if self.activity.office_location and self.activity.office_location.subregion:
             recipients = recipients.filter(

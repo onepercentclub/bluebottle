@@ -625,6 +625,11 @@ label.translatable-field:before {
     vertical-align: middle;
 }
 
+.dynamic-array-widget .array-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
 
 .field-activity_pub label {
     display: none;

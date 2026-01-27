@@ -145,22 +145,22 @@ class Location(models.Model):
     )
     subregion = models.ForeignKey(
         'offices.OfficeSubRegion',
-        verbose_name=_('office group'),
-        help_text=_('The organisational group this office belongs too.'),
+        verbose_name=_('work location group'),
+        help_text=_('The organisational group this work location belongs too.'),
         null=True, blank=True,
         on_delete=models.SET_NULL
     )
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
     country = models.ForeignKey(
         'geo.Country',
-        help_text=_('The (geographic) country this office is located in.'),
+        help_text=_('The (geographic) country this work location is located in.'),
         blank=True, null=True,
         on_delete=models.CASCADE
     )
     description = models.TextField(_('description'), blank=True)
     image = ImageField(
         _('image'), max_length=255, null=True, blank=True,
-        upload_to='location_images/', help_text=_('Office picture'),
+        upload_to='location_images/', help_text=_('Work location picture'),
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
@@ -175,8 +175,8 @@ class Location(models.Model):
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']
-        verbose_name = _('office')
-        verbose_name_plural = _('offices')
+        verbose_name = _('work location')
+        verbose_name_plural = _('work locations')
 
     def save(self, *args, **kwargs):
         if not self.slug:

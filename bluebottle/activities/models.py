@@ -89,7 +89,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     office_location = models.ForeignKey(
         "geo.Location",
-        verbose_name=_("Host office"),
+        verbose_name=_("Host work location"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -281,6 +281,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         permissions = (
             ("api_read_activity", "Can view activity through the API"),
             ("api_read_own_activity", "Can view own activity through the API"),
+            ("api_review_activity", "Can review activities through the API"),
         )
 
     def __str__(self):

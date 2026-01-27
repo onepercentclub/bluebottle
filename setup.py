@@ -87,6 +87,7 @@ install_requires = [
     'html-sanitizer==2.5.0',
     'gunicorn==22.0.0',
     'html5lib==1.1',
+    'http-message-signatures==1.0.0',
     'icalendar==4.0.4',
     'importlib_resources==5.12.0',
     'influxdb==4.1.1',

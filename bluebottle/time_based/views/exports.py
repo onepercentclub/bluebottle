@@ -35,9 +35,10 @@ class TimeBasedExportView(ExportView):
                 if instance.user:
                     row.append(
                         ", ".join(
-                            instance.user.segments.filter(
-                                segment_type_id=field.split('.')[-1]
-                            ).values_list('name', flat=True)
+                            [
+                                s.name for s in
+                                instance.user.segments.filter(segment_type_id=field.split('.')[-1])
+                            ]
                         )
                     )
                 else:

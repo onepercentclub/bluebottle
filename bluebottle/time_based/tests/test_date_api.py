@@ -244,9 +244,6 @@ class DateActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase
 
         sheet = workbook.get_active_sheet()
 
-        import ipdb;
-        ipdb.set_trace()
-
         self.assertEqual(
             tuple(sheet.values)[0],
             ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer',)

@@ -361,10 +361,7 @@ class SupportersExportView(PrivateFileView):
                 if donor.user:
                     segments = ", ".join(
                         [
-                            d.name for d in
-                            donor.user.segments.filter(
-                                segment_type=segment_type
-                            )
+                            s.name for s in donor.user.segments.filter(segment_type=segment_type)
                         ]
                     )
                     row.append(segments)

@@ -17,7 +17,7 @@ from polymorphic.admin import (
 )
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm
+from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
@@ -460,7 +460,7 @@ class FollowingAdmin(FollowAdmin):
 class FollowerAdmin(FollowAdmin):
     list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
     actions = ['accept_follow_requests']
-    readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities")
+    readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities", "publish_activities_button")
     fields = readonly_fields
 
     def platform(self, obj):
@@ -496,6 +496,11 @@ class FollowerAdmin(FollowAdmin):
                 "<path:pk>/accept/",
                 self.admin_site.admin_view(self.accept_follow_request),
                 name="activity_pub_follower_accept",
+            ),
+            path(
+                "<path:pk>/publish-activities/",
+                self.admin_site.admin_view(self.publish_activities),
+                name="activity_pub_publish_activities",
             ),
         ]
         return custom_urls + urls
@@ -538,6 +543,10 @@ class FollowerAdmin(FollowAdmin):
                 level="success"
             )
 
+        return HttpResponseRedirect(reverse('admin:activity_pub_follower_changelist'))
+
+    @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_activities.html')
+    def publish_activities(self, request, follow, form):
         return HttpResponseRedirect(reverse('admin:activity_pub_follower_changelist'))
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
@@ -602,6 +611,16 @@ class FollowerAdmin(FollowAdmin):
             )
 
     accept_follow_requests.short_description = "Accept selected follow requests"
+
+    def publish_activities_button(self, obj):
+        unpublished = Activity.objects.filter(
+            status__in=['open', 'full', 'running', 'partially_funded', 'succeeded'],
+            event__isnull=True
+        ).count()
+
+        return format_html('<a class="button">Publish</a> {unpublished} open and succeeded activities', unpublished)
+
+    publish_activities_button.short_description = _("Publish selected follow requests")
 
 
 @admin.register(Place)

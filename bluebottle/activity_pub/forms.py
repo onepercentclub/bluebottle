@@ -72,3 +72,7 @@ class AcceptFollowPublishModeForm(forms.Form):
         super().__init__(*args, **kwargs)
         if obj:
             self.fields['publish_mode'].initial = obj.publish_mode
+
+
+class PublishActivitiesForm(forms.Form):
+    title = _('Publish all activities')

@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='memberplatformsettings',
             name='support_groups',
-            field=django_better_admin_arrayfield.models.fields.ArrayField(base_field=models.CharField(), default=['Engineering', 'Support'], help_text='Groups that can login in using support accounts', size=None, verbose_name='Support login groups'),
+            field=django_better_admin_arrayfield.models.fields.ArrayField(base_field=models.CharField(), default=['Engineering Team', 'Support'], help_text='Groups that can login in using support accounts', size=None, verbose_name='Support login groups'),
         ),
     ]

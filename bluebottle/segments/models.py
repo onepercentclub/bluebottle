@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, get_language
 from django_better_admin_arrayfield.models.fields import ArrayField
 from django_quill.fields import QuillField
 from future.utils import python_2_unicode_compatible
@@ -197,6 +197,10 @@ class Segment(TranslatableModel, models.Model):
         )
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._name_cache = {}
+
     def save(self, *args, **kwargs):
         if self.pk:
             name_value = self.safe_translation_getter('name', default=None, any_language=True)
@@ -240,7 +244,8 @@ class Segment(TranslatableModel, models.Model):
             return "text"
 
     def __str__(self):
-        return self.safe_translation_getter('name', f'Segment #{self.id}')
+        lang = get_language()
+        return self._name_cache.setdefault(lang, self.name)
 
     def get_absolute_url(self):
         domain = get_current_host()

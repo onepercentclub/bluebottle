@@ -109,7 +109,7 @@ class SegmentAdmin(
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.translated(get_language()).order_by('translations__name')
+        return qs.active_translations(get_language()).order_by('translations__name')
 
     def has_add_permission(self, *args, **kwargs):
         return False
@@ -160,4 +160,4 @@ class SegmentTypeAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, admin.Mod
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.translated(get_language()).order_by('translations__name')
+        return qs.active_translations(get_language()).order_by('translations__name')

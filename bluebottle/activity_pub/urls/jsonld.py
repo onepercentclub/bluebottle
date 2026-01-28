@@ -2,7 +2,7 @@ from django.urls import re_path
 
 from bluebottle.activity_pub.views import (
     PersonView, InboxView, OutBoxView, PublicKeyView, FollowView,
-    AcceptView, PublishView, AnnounceView, OrganizationView,
+    AcceptView, CreateView, AnnounceView, OrganizationView,
     GoodDeedView, ImageView, CrowdFundingView, CollectCampaignView, PlaceView, AddressView,
     DoGoodEventView, SubEventView, UpdateView,
     DeleteView, CancelView, FinishView
@@ -25,7 +25,7 @@ urlpatterns = [
     re_path(r'^collect-campaign/(?P<pk>\d+)$', CollectCampaignView.as_view(), name='collect-campaign'),
     re_path(r'^do-good-event/(?P<pk>\d+)$', DoGoodEventView.as_view(), name='do-good-event'),
     re_path(r'^sub-event/(?P<pk>\d+)$', SubEventView.as_view(), name='sub-event'),
-    re_path(r'^publish/(?P<pk>\d+)$', PublishView.as_view(), name='publish'),
+    re_path(r'^create/(?P<pk>\d+)$', CreateView.as_view(), name='create'),
     re_path(r'^update/(?P<pk>\d+)$', UpdateView.as_view(), name='update'),
     re_path(r'^delete/(?P<pk>\d+)$', DeleteView.as_view(), name='delete'),
     re_path(r'^cancel/(?P<pk>\d+)$', CancelView.as_view(), name='cancel'),

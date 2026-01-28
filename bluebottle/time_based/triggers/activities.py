@@ -15,7 +15,7 @@ from bluebottle.activities.messages.reviewer import (
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
 from bluebottle.activity_pub.effects import (
-    AnnounceAdoptionEffect, PublishEffect, CancelEffect, FinishEffect, UpdateEventEffect
+    AnnounceAdoptionEffect, CreateEffect, CancelEffect, FinishEffect, UpdateEventEffect
 )
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
@@ -247,7 +247,7 @@ class TimeBasedTriggers(ActivityTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.publish,
             effects=[
-                PublishEffect,
+                CreateEffect,
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
             ]
         ),
@@ -371,7 +371,7 @@ class DateActivityTriggers(TimeBasedTriggers):
             RegistrationActivityStateMachine.approve,
             effects=[
                 AnnounceAdoptionEffect,
-                PublishEffect
+                CreateEffect
             ]
         ),
 
@@ -379,7 +379,7 @@ class DateActivityTriggers(TimeBasedTriggers):
             DateStateMachine.publish,
             effects=[
                 AnnounceAdoptionEffect,
-                PublishEffect,
+                CreateEffect,
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.succeed,
@@ -530,14 +530,14 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
             RegistrationActivityStateMachine.approve,
             effects=[
                 AnnounceAdoptionEffect,
-                PublishEffect
+                CreateEffect
             ]
         ),
         TransitionTrigger(
             RegistrationActivityStateMachine.publish,
             effects=[
                 AnnounceAdoptionEffect,
-                PublishEffect
+                CreateEffect
             ]
         ),
     ]
@@ -659,7 +659,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             RegisteredDateActivityStateMachine.auto_publish,
             effects=[
                 AnnounceAdoptionEffect,
-                PublishEffect,
+                CreateEffect,
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,
                     conditions=[
@@ -677,7 +677,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.approve,
             effects=[
-                PublishEffect,
+                CreateEffect,
                 AnnounceAdoptionEffect,
                 NotificationEffect(
                     PastActivityApprovedNotification

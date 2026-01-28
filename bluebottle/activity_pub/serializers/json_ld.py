@@ -13,7 +13,7 @@ from bluebottle.activity_pub.models import (
     Outbox,
     Person,
     PublicKey,
-    Publish,
+    Create,
     Update,
     Delete,
     Cancel,
@@ -336,13 +336,13 @@ class AcceptSerializer(BaseActivitySerializer):
         model = Accept
 
 
-class PublishSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:publish')
+class CreateSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:create')
     type = TypeField('Create')
     object = EventSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
-        model = Publish
+        model = Create
 
 
 class UpdateSerializer(BaseActivitySerializer):
@@ -396,7 +396,7 @@ class AnnounceSerializer(BaseActivitySerializer):
 
 class ActivitySerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        FollowSerializer, AcceptSerializer, PublishSerializer,
+        FollowSerializer, AcceptSerializer, CreateSerializer,
         AnnounceSerializer, UpdateSerializer, CancelSerializer,
         DeleteSerializer, FinishSerializer
     ]

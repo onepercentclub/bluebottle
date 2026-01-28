@@ -29,7 +29,7 @@ from bluebottle.activity_pub.models import (
     Person,
     Place,  # Add Place import
     PublicKey,
-    Publish,
+    Create,
     Announce,
     Organization,
     Following,
@@ -56,7 +56,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Actor,
         Follow,
         PublicKey,
-        Publish,
+        Create,
         Announce,
         Event,
         Organization,
@@ -236,7 +236,7 @@ class PublicKeyAdmin(ActivityPubModelChildAdmin):
     list_display = ("id", 'inbox', 'outbox')
 
 
-@admin.register(Publish)
+@admin.register(Create)
 class PublishAdmin(ActivityPubModelChildAdmin):
     list_display = ("id", "actor", "object")
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')

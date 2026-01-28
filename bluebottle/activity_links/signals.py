@@ -5,14 +5,14 @@ from django.dispatch import receiver
 
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.models import (
-    AdoptionTypeChoices, Publish, Update, Follow, Cancel,
+    AdoptionTypeChoices, Create, Update, Follow, Cancel,
     Finish, Delete
 )
 
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=Publish)
+@receiver(post_save, sender=Create)
 def link(sender, instance, created, **kwargs):
     try:
         if not instance.is_local and created:

@@ -2,16 +2,16 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Publish, Announce, Recipient, Follow, Update, Cancel, Delete, Finish
+    Create, Announce, Recipient, Follow, Update, Cancel, Delete, Finish
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
 from bluebottle.activity_links.models import LinkedActivity
 
 
-class PublishEffect(Effect):
+class CreateEffect(Effect):
     display = True
-    template = 'admin/activity_pub/publish_effect.html'
+    template = 'admin/activity_pub/create_effect.html'
 
     def post_save(self, **kwargs):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -26,7 +26,7 @@ class PublishEffect(Effect):
             serializer.is_valid(raise_exception=True)
             event = serializer.save(activity=activity)
 
-        publish = Publish.objects.create(actor=get_platform_actor(), object=event)
+        publish = Create.objects.create(actor=get_platform_actor(), object=event)
 
         for follower in self.followers:
             Recipient.objects.create(actor=follower.actor, activity=publish)

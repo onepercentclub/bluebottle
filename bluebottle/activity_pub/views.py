@@ -4,7 +4,7 @@ from rest_framework import generics, status, response
 
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Announce, Organization,
+    Person, Inbox, Outbox, PublicKey, Follow, Accept, Create, Announce, Organization,
     GoodDeed, Image, CrowdFunding, CollectCampaign, Place, Address, DoGoodEvent, SubEvent, Update,
     Delete, Cancel, Finish
 )
@@ -13,7 +13,7 @@ from bluebottle.activity_pub.permissions import InboxPermission, ActivityPubPerm
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers.json_ld import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
-    AcceptSerializer, ActivitySerializer, PublishSerializer, AnnounceSerializer,
+    AcceptSerializer, ActivitySerializer, CreateSerializer, AnnounceSerializer,
     OrganizationSerializer, GoodDeedSerializer, ImageSerializer,
     CrowdFundingSerializer, CollectCampaignSerializer, PlaceSerializer, AddressSerializer,
     DoGoodEventSerializer, SubEventSerializer, UpdateSerializer,
@@ -138,9 +138,9 @@ class AcceptView(ActivityPubView):
     queryset = Accept.objects.all()
 
 
-class PublishView(ActivityPubView):
-    serializer_class = PublishSerializer
-    queryset = Publish.objects.all()
+class CreateView(ActivityPubView):
+    serializer_class = CreateSerializer
+    queryset = Create.objects.all()
 
 
 class UpdateView(ActivityPubView):

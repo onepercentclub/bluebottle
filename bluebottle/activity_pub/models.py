@@ -611,7 +611,7 @@ class Accept(Activity):
         return [self.object.actor]
 
 
-class Publish(Activity):
+class Create(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
 

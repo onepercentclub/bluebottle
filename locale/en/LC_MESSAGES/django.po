@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-28 10:28+0100\n"
+"POT-Creation-Date: 2026-01-28 10:56+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -9057,7 +9057,6 @@ msgid "Yes, I'm sure"
 msgstr ""
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:10
-#: bluebottle/members/templates/mails/messages/sign_up_token.html:6
 #, python-format
 msgctxt "email"
 msgid "Hi %(first_name)s,"
@@ -9087,6 +9086,11 @@ msgstr ""
 #: bluebottle/members/templates/mails/messages/account_activation.html:31
 msgctxt "email"
 msgid "Take me there"
+msgstr ""
+
+#: bluebottle/members/templates/mails/messages/sign_up_token.html:6
+msgctxt "email"
+msgid "Hi,"
 msgstr ""
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:9

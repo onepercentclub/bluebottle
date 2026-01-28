@@ -356,7 +356,7 @@ class EffortContributionAdmin(ContributionChildAdmin):
 class ActivityFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs and connection.tenant.schema_name != 'public':
-            segment_types = SegmentType.objects.prefetch_related('segments').all()
+            segment_types = SegmentType.objects.all()
 
             for segment_type in segment_types:
 

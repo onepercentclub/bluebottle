@@ -144,6 +144,18 @@ class ActivityStateMachine(ModelStateMachine):
         """user is a staff member"""
         return user.is_staff or user.is_superuser
 
+    def can_approve(self, user):
+        """user has approve permission"""
+        from bluebottle.activities.permissions import user_can_review_activity
+
+        if not user.is_authenticated:
+            return False
+
+        if user_can_review_activity(user, self.instance):
+            return True
+
+        return user.is_staff or user.is_superuser
+
     def is_owner(self, user):
         """user is the owner"""
         return (
@@ -199,7 +211,7 @@ class ActivityStateMachine(ModelStateMachine):
             "be available in the back office and appear in your reporting."
         ),
         automatic=False,
-        permission=is_staff,
+        permission=can_approve,
     )
 
     publish = Transition(
@@ -251,7 +263,7 @@ class ActivityStateMachine(ModelStateMachine):
         open,
         name=_("Approve"),
         automatic=False,
-        permission=is_staff,
+        permission=can_approve,
         description=_(
             "The activity will be published and visible in the frontend for people to contribute to,"
         ),
@@ -269,7 +281,7 @@ class ActivityStateMachine(ModelStateMachine):
         ),
         conditions=[],
         automatic=False,
-        permission=is_staff,
+        permission=can_approve,
     )
 
     cancel = Transition(

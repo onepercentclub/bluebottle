@@ -40,6 +40,7 @@ def deduplicate(items):
 
 def get_translated_list(obj, field='name'):
     data = []
+    current_language = obj._current_language
 
     for lang in Language.objects.all():
         obj.set_current_language(lang.full_code)
@@ -50,6 +51,26 @@ def get_translated_list(obj, field='name'):
                 'language': lang.full_code
             }
         )
+    obj._current_language = current_language
+    return data
+
+
+def get_translated_segments(segment):
+    data = []
+    current_language = segment._current_language
+
+    for lang in Language.objects.all():
+        segment.set_current_language(lang.full_code)
+        data.append(
+            {
+                'id': segment.pk,
+                'type': segment.segment_type.slug,
+                'name': segment.name,
+                'language': lang.full_code,
+                'closed': segment.closed
+            }
+        )
+    segment._current_language = current_language
     return data
 
 
@@ -112,6 +133,7 @@ class InitiativeDocument(Document):
             'type': fields.KeywordField(attr='segment_type.slug'),
             'name': fields.KeywordField(),
             'closed': fields.BooleanField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -293,15 +315,8 @@ class InitiativeDocument(Document):
         segments = []
 
         for activity in instance.activities.all():
-            segments += [
-                {
-                    'id': segment.pk,
-                    'type': segment.segment_type.slug,
-                    'name': segment.name,
-                    'closed': segment.closed,
-                }
-                for segment in activity.segments.all()
-            ]
+            for segment in activity.segments.all():
+                segments += get_translated_list(segment)
 
         return deduplicate(segments)
 

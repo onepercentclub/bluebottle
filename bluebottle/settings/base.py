@@ -814,19 +814,3 @@ IBAN_CHECK_API = {
 
 DEEPL_API_KEY = "deepl-key"
 DEEPL_API_URL = "deepl-url"
-
-PARLER_LANGUAGES = {
-    None: (
-        {"code": "en"},
-        {"code": "nl"},
-        {"code": "de"},
-        {"code": "hu"},
-        {"code": "pt"},
-        {"code": "fr"},
-        {"code": "es"},
-    ),
-    "default": {
-        "fallbacks": ["en", "nl"],
-        "hide_untranslated": False,
-    }
-}

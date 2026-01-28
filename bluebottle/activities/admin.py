@@ -368,6 +368,7 @@ class ActivityFormMetaClass(StateMachineModelFormMetaClass):
 
         return super().__new__(cls, name, bases, attrs)
 
+
 class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
     def __init__(self, *args, **kwargs):
         super(ActivityForm, self).__init__(*args, **kwargs)

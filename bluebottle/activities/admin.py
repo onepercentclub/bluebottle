@@ -68,7 +68,7 @@ from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.filters import ActivitySegmentAdminMixin
-from bluebottle.segments.models import SegmentType
+from bluebottle.segments.models import SegmentType, Segment
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
@@ -356,15 +356,21 @@ class EffortContributionAdmin(ContributionChildAdmin):
 class ActivityFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs and connection.tenant.schema_name != 'public':
-            for segment_type in SegmentType.objects.all():
+            segment_types = SegmentType.objects.all()
+
+            for segment_type in segment_types:
+                # Pre-build choices list to avoid repeated __str__ calls
+                segments = Segment.objects.prefetch_related('translations').filter(
+                    segment_type=segment_type
+                )
+
                 attrs[segment_type.field_name] = forms.ModelMultipleChoiceField(
                     required=False,
                     label=segment_type.name,
-                    queryset=segment_type.segments,
+                    queryset=segments,
                 )
 
         return super().__new__(cls, name, bases, attrs)
-
 
 class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
     def __init__(self, *args, **kwargs):
@@ -375,9 +381,9 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
 
         if connection.tenant.schema_name != 'public':
             for segment_type in SegmentType.objects.all():
+                selected = self.instance.segments.filter(segment_type=segment_type).all()
                 if self.instance.pk:
-                    self.initial[segment_type.field_name] = self.instance.segments.filter(
-                        segment_type=segment_type).all()
+                    self.initial[segment_type.field_name] = selected
 
 
 class TeamInline(admin.TabularInline):

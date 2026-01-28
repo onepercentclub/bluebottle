@@ -2,7 +2,8 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
-from django.db import models
+from django.core.cache import cache
+from django.db import models, connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
@@ -13,6 +14,7 @@ from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import Language
 from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
@@ -215,6 +217,10 @@ class Segment(TranslatableModel, models.Model):
 
         super().save(*args, **kwargs)
 
+        for lang in Language.objects.all():
+            cache_key = f'segment_name_{self.pk}_{connection.tenant.schema_name}_{lang.code}'
+            cache.delete(cache_key)
+
     def merge(self, other):
         self.alternate_names += other.alternate_names
 
@@ -243,9 +249,19 @@ class Segment(TranslatableModel, models.Model):
         else:
             return "text"
 
+    @property
+    def cached_name(self):
+        cache_key = f'segment_name_{self.pk}_{connection.tenant.schema_name}_{get_language()}'
+        cached_name = cache.get(cache_key)
+
+        if cached_name is None:
+            cached_name = str(self.name)
+            cache.set(cache_key, cached_name)
+
+        return cached_name
+
     def __str__(self):
-        lang = get_language()
-        return self._name_cache.setdefault(lang, self.name)
+        return self.name
 
     def get_absolute_url(self):
         domain = get_current_host()

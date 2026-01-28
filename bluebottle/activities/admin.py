@@ -68,7 +68,7 @@ from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.filters import ActivitySegmentAdminMixin
-from bluebottle.segments.models import SegmentType, Segment
+from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
@@ -356,17 +356,14 @@ class EffortContributionAdmin(ContributionChildAdmin):
 class ActivityFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs and connection.tenant.schema_name != 'public':
-            segment_types = SegmentType.objects.all()
+            segment_types = SegmentType.objects.prefetch_related('segments').all()
 
             for segment_type in segment_types:
-                segments = Segment.objects.filter(
-                    segment_type=segment_type
-                )
 
                 attrs[segment_type.field_name] = forms.ModelMultipleChoiceField(
                     required=False,
                     label=segment_type.name,
-                    queryset=segments,
+                    queryset=segment_type.segments,
                 )
 
         return super().__new__(cls, name, bases, attrs)

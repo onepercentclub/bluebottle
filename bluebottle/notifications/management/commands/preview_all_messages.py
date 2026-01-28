@@ -408,6 +408,7 @@ class MockTeamMember:
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/teams/{self.id}"
 
+
 class MockFunding:
     """Mock Funding/Campaign object"""
 

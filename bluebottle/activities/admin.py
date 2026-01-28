@@ -359,8 +359,7 @@ class ActivityFormMetaClass(StateMachineModelFormMetaClass):
             segment_types = SegmentType.objects.all()
 
             for segment_type in segment_types:
-                # Pre-build choices list to avoid repeated __str__ calls
-                segments = Segment.objects.prefetch_related('translations').filter(
+                segments = Segment.objects.filter(
                     segment_type=segment_type
                 )
 

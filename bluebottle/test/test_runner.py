@@ -1,16 +1,43 @@
 import locale
+import os
 from builtins import range
 
 from django.conf import settings
+from django.core.management import call_command
 from django.db import IntegrityError, connection
+from django.test import runner as django_test_runner
+from django.test.runner import ParallelTestSuite
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
 from djmoney.contrib.exchange.models import ExchangeBackend, Rate
 from tenant_schemas.utils import get_tenant_model
 
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.test.utils import InitProjectDataMixin
 
 
+def _setup_es_indices():
+    Tenant = get_tenant_model()
+    for tenant in Tenant.objects.exclude(schema_name='public'):
+        with LocalTenant(tenant):
+            call_command("search_index", "--delete", "-f", verbosity=0)
+            call_command("search_index", "--create", verbosity=0)
+
+
+def _init_worker_with_es(*args, **kwargs):
+    django_test_runner._init_worker(*args, **kwargs)
+    worker_id = getattr(django_test_runner, "_worker_id", 0)
+    if worker_id:
+        os.environ["DJANGO_TEST_PROCESS_NUMBER"] = str(worker_id)
+    _setup_es_indices()
+
+
+class ParallelTestSuiteWithES(ParallelTestSuite):
+    init_worker = staticmethod(_init_worker_with_es)
+
+
 class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
+    parallel_test_suite = ParallelTestSuiteWithES
+
     def setup_databases(self, *args, **kwargs):
         self.keepdb = getattr(settings, 'KEEPDB', self.keepdb)
         parallel = self.parallel
@@ -57,6 +84,9 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
             Rate.objects.update_or_create(backend=backend, currency='KES', defaults={'value': 100})
         except IntegrityError:
             pass
+
+        if parallel <= 1:
+            _setup_es_indices()
 
         if parallel > 1:
             for index in range(parallel):

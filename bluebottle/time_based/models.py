@@ -1193,7 +1193,7 @@ class DateRegistration(Registration):
             return self.participants.exclude(status='withdrawn')
         return Registration.objects.none()
 
-    class Meta:
+    class Meta(Registration.Meta):
         verbose_name = _("Candidate for date activities")
         verbose_name_plural = _("Candidates for date activities")
 

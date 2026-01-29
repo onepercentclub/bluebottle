@@ -11,7 +11,6 @@ from bluebottle.initiatives.documents import deduplicate, get_translated_list, g
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.segments.models import Segment
 from bluebottle.utils.documents import MultiTenantIndex, TextField
-from bluebottle.segments.models import Segment
 from bluebottle.utils.search import Search
 
 

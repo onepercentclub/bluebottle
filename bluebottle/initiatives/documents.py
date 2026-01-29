@@ -44,10 +44,13 @@ def get_translated_list(obj, field='name'):
 
     for lang in Language.objects.all():
         obj.set_current_language(lang.full_code)
+        value = obj.safe_translation_getter(field, any_language=True)
+        if value is None:
+            continue
         data.append(
             {
                 'id': obj.pk,
-                field: getattr(obj, field),
+                field: value,
                 'language': lang.full_code
             }
         )
@@ -61,11 +64,14 @@ def get_translated_segments(segment):
 
     for lang in Language.objects.all():
         segment.set_current_language(lang.full_code)
+        name = segment.safe_translation_getter('name', any_language=True)
+        if name is None:
+            continue
         data.append(
             {
                 'id': segment.pk,
                 'type': segment.segment_type.slug,
-                'name': segment.name,
+                'name': name,
                 'language': lang.full_code,
                 'closed': segment.closed
             }

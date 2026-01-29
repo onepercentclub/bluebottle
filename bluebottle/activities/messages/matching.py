@@ -49,8 +49,12 @@ class MatchingActivitiesNotification(TransitionMessage):
                     "initiative-image", args=(activity.initiative.pk, "200x200")
                 )
             ),
-            'expertise': activity.expertise.name if activity.expertise else None,
-            'theme': activity.initiative.theme.name,
+            'expertise': (
+                activity.expertise.safe_translation_getter('name', any_language=True)
+                if activity.expertise
+                else None
+            ),
+            'theme': activity.initiative.theme.safe_translation_getter('name', any_language=True),
         }
         if isinstance(activity, DateActivity):
             slots = activity.slots.filter(status='open')

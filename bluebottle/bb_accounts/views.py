@@ -297,7 +297,7 @@ class UserCreate(generics.CreateAPIView):
         return "Users"
 
     def perform_create(self, serializer):
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         if settings.closed:
             raise PermissionDenied()
         if 'primary_language' not in serializer.validated_data:

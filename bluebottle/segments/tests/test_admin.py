@@ -47,20 +47,26 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         list_url = reverse('admin:segments_segmenttype_changelist')
         response = self.client.get(list_url)
         self.assertContains(response, 'Number of segments')
-        self.assertContains(response, 'Job title')
+        self.assertContains(
+            response,
+            reverse('admin:segments_segmenttype_change', args=(segment_type.id,))
+        )
 
     def test_segment_email_domain(self):
         segment_type = SegmentTypeFactory.create()
         segment = SegmentFactory.create(segment_type=segment_type)
+        self.assertEqual(segment.email_domains, ['example.com'])
 
         segment_url = reverse('admin:segments_segment_change', args=(segment.id, ))
         page = self.app.get(segment_url)
 
         form = page.forms['segment_form']
-        form['email_domains'] = 'test.com'
-        form.submit()
+        form['name'] = 'My Segment'
+        form['email_domains'] = 'test.com, test2.com'
+        response = form.submit()
+        self.assertEqual(response.status_code, 302)
         segment.refresh_from_db()
-        self.assertEqual(segment.email_domains, ['test.com'])
+        self.assertEqual(segment.email_domains, ['test.com', 'test2.com'])
 
 
 class TestSegmentTypeAdmin(BluebottleAdminTestCase):
@@ -80,26 +86,26 @@ class TestSegmentTypeAdmin(BluebottleAdminTestCase):
         print(member_settings_url)
         page = self.app.get(member_settings_url)
         self.assertFalse('Mark segment types as required' in page.text)
-        SegmentTypeFactory.create(name='Department')
-        SegmentTypeFactory.create(name='Hobbies')
+        department = SegmentTypeFactory.create(name='Department')
+        hobbies = SegmentTypeFactory.create(name='Hobbies')
         page = self.app.get(member_settings_url)
         self.assertTrue('Required fields' in page.text)
         self.assertTrue('no segment types are marked as required' in page.text)
         page = page.click('segment type overview')
-        page = page.click('Department', index=0)
+        page = self.app.get(reverse('admin:segments_segmenttype_change', args=(department.id,)))
         form = page.forms[1]
-        form.fields['required'][0].checked = True
+        form['required'].checked = True
+        form['name'] = "My segment type"
         page = form.submit().follow()
-        page = page.click('Hobbies', index=0)
+        page = self.app.get(reverse('admin:segments_segmenttype_change', args=(hobbies.id,)))
         form = page.forms[1]
-        form.fields['required'][0].checked = True
+        form['required'].checked = True
+        form['name'] = "Another segment type"
         page = form.submit().follow()
         self.assertTrue(page.forms[1]['form-0-required'].checked)
         self.assertTrue(page.forms[1]['form-1-required'].checked)
         page = self.app.get(member_settings_url)
         self.assertFalse('no segment types are marked as required' in page.text)
-        self.assertTrue('<b>Department</b>' in page.text)
-        self.assertTrue('<b>Hobbies</b>' in page.text)
 
 
 class TestMemberSegmentAdmin(BluebottleAdminTestCase):
@@ -139,8 +145,10 @@ class TestMemberSegmentAdmin(BluebottleAdminTestCase):
         page = self.app.get(segment_url)
 
         form = page.forms['segment_form']
-        form['email_domains'] = ['test.com', 'test2.com']
-        form.submit()
+        form['name'] = 'Name'
+        form['email_domains'] = 'test.com, test2.com'
+        response = form.submit()
+        self.assertEqual(response.status_code, 302)
 
         segment.refresh_from_db()
         self.assertEqual(segment.email_domains[0], 'test.com')

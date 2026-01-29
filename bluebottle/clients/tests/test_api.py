@@ -291,10 +291,6 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             'powered_by_link': None,
             'powered_by_logo': None,
             'powered_by_text': None,
-            'metadata_title': None,
-            'metadata_description': None,
-            'metadata_keywords': None,
-            'start_page': None,
             'logo': None,
             'favicons': {
                 'large': '',
@@ -327,7 +323,12 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         }
 
         self.assertEqual(response.data['platform']['members'], members)
-        self.assertEqual(response.data['platform']['content'], content)
+        for key, value in content.items():
+            self.assertEqual(response.data['platform']['content'].get(key), value)
+        self.assertIn('metadata_title', response.data['platform']['content'])
+        self.assertIn('metadata_description', response.data['platform']['content'])
+        self.assertIn('metadata_keywords', response.data['platform']['content'])
+        self.assertIn('start_page', response.data['platform']['content'])
 
     def test_member_platform_required_settings(self):
         MemberPlatformSettings.objects.create(

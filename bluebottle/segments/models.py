@@ -98,7 +98,7 @@ class SegmentType(TranslatableModel, models.Model):
         super(SegmentType, self).save(**kwargs)
 
     def __str__(self):
-        return self.safe_translation_getter('name', f'Segment #{self.id}')
+        return self.name
 
     class JSONAPIMeta(object):
         resource_name = 'segment-types'
@@ -205,9 +205,9 @@ class Segment(TranslatableModel, models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk:
-            name_value = self.safe_translation_getter('name', default=None, any_language=True)
+            name_value = self.name
         else:
-            name_value = self.safe_translation_getter('name', default=None)
+            name_value = self.name
 
         if name_value and name_value not in self.alternate_names:
             self.alternate_names.append(name_value)

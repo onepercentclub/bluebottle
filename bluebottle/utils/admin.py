@@ -111,7 +111,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             if queryset.model is Member or issubclass(queryset.model, Contributor):
                 for segment_type in SegmentType.objects.all():
                     # Get translated name for segment type
-                    segment_type_name = segment_type.safe_translation_getter('name', segment_type.slug)
+                    segment_type_name = segment_type.name
                     labels.append(segment_type_name)
             writer.writerow([escape_csv_formulas(item) for item in row])
 
@@ -129,7 +129,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     # Get translated names for segments
                     segment_list = []
                     for segment in obj.segments.filter(segment_type=segment_type):
-                        segment_name = segment.safe_translation_getter('name', segment.slug)
+                        segment_name = segment.name
                         segment_list.append(segment_name)
                     segments = " | ".join(segment_list)
                     row.append(segments)
@@ -139,7 +139,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                         # Get translated names for segments
                         segment_list = []
                         for segment in obj.user.segments.filter(segment_type=segment_type):
-                            segment_name = segment.safe_translation_getter('name', segment.slug)
+                            segment_name = segment.name
                             segment_list.append(segment_name)
                         segments = " | ".join(segment_list)
                     else:

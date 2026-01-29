@@ -5,7 +5,7 @@ from bluebottle.utils.permissions import IsOwner
 
 class DonorOwnerOrSucceededPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         if (not settings.closed or request.user.is_authenticated) \
                 and obj.status == 'succeeded' and request.method == 'GET':
             return True

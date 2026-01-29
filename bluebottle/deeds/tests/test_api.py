@@ -43,7 +43,7 @@ class DeedsListViewAPITestCase(APITestCase):
 
         self.fields = ['initiative', 'start', 'end', 'title', 'description', 'theme']
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append('deed')
         settings.save()
 
@@ -118,7 +118,7 @@ class DeedsListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_create_disabled_activity_type(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.remove('deed')
         settings.save()
 

@@ -45,7 +45,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
             'location', 'theme'
         ]
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append('collect')
         settings.save()
 
@@ -102,7 +102,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_create_disabled_activity_type(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.remove('collect')
         settings.save()
 

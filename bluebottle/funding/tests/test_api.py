@@ -811,7 +811,7 @@ class FundingTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create(owner=self.user)
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append('funding')
         settings.save()
 

@@ -570,7 +570,6 @@ class DonorSerializer(BaseContributorSerializer):
 
     user = ResourceRelatedField(
         queryset=Member.objects.all(),
-        default=serializers.CurrentUserDefault(),
         allow_null=True,
         required=False
     )

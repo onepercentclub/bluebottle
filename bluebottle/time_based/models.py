@@ -1,5 +1,4 @@
 import uuid
-from html import unescape
 from urllib.parse import urlencode
 
 import pytz
@@ -7,7 +6,6 @@ from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
 from django.utils import timezone
-from django.utils.timezone import now
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
@@ -26,7 +24,7 @@ from bluebottle.time_based.validators import (
     RegistrationLinkValidator,
 )
 from bluebottle.utils.models import ValidatedModelMixin
-from bluebottle.utils.utils import get_current_host, get_current_language, to_text
+from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.widgets import get_human_readable_duration
 
 tf = TimezoneFinder()
@@ -199,15 +197,6 @@ class TimeBasedActivity(Activity):
             status='succeeded'
         )
 
-    @property
-    def details(self):
-        details = unescape(
-            u'{}\n{}'.format(
-                to_text.handle(self.description.html), self.get_absolute_url()
-            )
-        )
-        return details
-
 
 class SlotSelectionChoices(DjangoChoices):
     all = ChoiceItem('all', label=_("All"))
@@ -215,6 +204,12 @@ class SlotSelectionChoices(DjangoChoices):
 
 
 class DateActivity(TimeBasedActivity):
+    """
+    An activity that takes place on one or more specific dates.
+    """
+
+    include_in_documentation = True
+
     old_online_meeting_url = models.TextField(
         _('online meeting link'),
         blank=True, default='',
@@ -348,6 +343,17 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
         return self.activity.owner
 
     @property
+    def details(self):
+        details = f"{self.activity.description.html}, {self.get_absolute_url()}"
+        if self.is_online and self.online_meeting_url:
+            details += _("\nJoin: {url}").format(url=self.online_meeting_url)
+
+        return details
+
+    def get_absolute_url(self):
+        return self.activity.get_absolute_url()
+
+    @property
     def initiative(self):
         return self.activity.initiative
 
@@ -428,36 +434,17 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     def organizer(self):
         return self.activity.owner
 
-    @property
-    def event_data(self):
-        if self.end < now() or self.status not in ['open', 'full']:
-            return None
-        title = f'{self.activity.title} - {self.title or self.id}'
-        location = ''
-        if self.is_online:
-            location = _('Anywhere/Online')
-        elif self.location:
-            location = self.location.locality or self.location.formatted_address or ''
-            if self.location_hint:
-                location += f" {self.location_hint}"
-
-        return {
-            'uid': f"{connection.tenant.client_name}-{self.id}",
-            'summary': title,
-            'description': self.activity.description.html,
-            'organizer': self.organizer.email,
-            'url': self.activity.get_absolute_url(),
-            'location': location,
-            'start_time': self.start,
-            'end_time': self.end,
-        }
-
     class Meta:
         abstract = True
         ordering = ['start', 'id']
 
 
 class DateActivitySlot(ActivitySlot):
+    """
+    A time slot for a date activity.
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(DateActivity, related_name='slots', on_delete=models.CASCADE)
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
@@ -637,6 +624,10 @@ class RegistrationActivity(TimeBasedActivity):
 
 
 class DeadlineActivity(RegistrationActivity):
+    """
+    A flexible activity. The participant decides when to contribute or execute the task before a deadline (if set).
+    """
+    include_in_documentation = True
     url_pattern = "{}/{}/activities/details/deadline/{}/{}"
 
     duration = models.DurationField(
@@ -694,6 +685,11 @@ class DeadlineActivity(RegistrationActivity):
 
 
 class ScheduleActivity(RegistrationActivity):
+    """
+    An activity where the activity manager schedules the participants after they sign up.
+    """
+    include_in_documentation = True
+
     url_pattern = "{}/{}/activities/details/schedule/{}/{}"
 
     start = models.DateField(
@@ -777,6 +773,11 @@ class PeriodChoices(DjangoChoices):
 
 
 class PeriodicActivity(RegistrationActivity):
+    """
+    An activity that takes place every day, week or month.
+    """
+    include_in_documentation = True
+
     period = models.CharField(
         _('Period'),
         help_text=_('When should the activity be repeated?'),
@@ -841,6 +842,11 @@ class PeriodicActivity(RegistrationActivity):
 
 
 class RegisteredDateActivity(TimeBasedActivity):
+    """
+    An activity that was registered after it took place.
+    """
+    include_in_documentation = True
+
     url_pattern = "{}/{}/activities/details/registered-date/{}/{}"
 
     duration = models.DurationField(
@@ -996,6 +1002,11 @@ class Participant(Contributor):
 
 
 class DateParticipant(Participant):
+    """
+    A participant in a date activity slot.
+    """
+    include_in_documentation = True
+
     registration = models.ForeignKey(
         'time_based.DateRegistration',
         related_name='participants',
@@ -1021,7 +1032,7 @@ class DateParticipant(Participant):
     def answer(self):
         return self.registration.answer
 
-    class Meta:
+    class Meta(Participant.Meta):
         verbose_name = _("Participant to date activity slot")
         verbose_name_plural = _("Participants to date activity slot")
         permissions = (
@@ -1049,6 +1060,11 @@ class DateParticipant(Participant):
 
 
 class PeriodParticipant(Participant, Contributor):
+    """
+    A participant in a recurring activity.
+    """
+    include_in_documentation = True
+
     motivation = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(blank=True, null=True, view_name='period-participant-document')
 
@@ -1080,6 +1096,11 @@ class ContributionTypeChoices(DjangoChoices):
 
 
 class TimeContribution(Contribution):
+    """
+    A time contribution. For reporting purposes
+    """
+    include_in_documentation = True
+
     value = models.DurationField(_('value'))
 
     contribution_type = models.CharField(
@@ -1127,7 +1148,7 @@ class Skill(TranslatableModel):
     )
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', default=f'Skill #{self.id}', any_language=True)
 
     class Meta():
         permissions = (
@@ -1175,11 +1196,17 @@ class Registration(TriggerMixin, PolymorphicModel):
         return _('Candidate {name}').format(name=self.user)
 
     class Meta:
+        ordering = ('-created',)
         verbose_name = _("Candidate")
         verbose_name_plural = _("Candidates")
 
 
 class DateRegistration(Registration):
+    """
+    A candidate for a date activity. A candidate can sign up for multiple slots, through a participant model.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/date-registrations'
 
@@ -1228,6 +1255,11 @@ class DateRegistration(Registration):
 
 
 class DeadlineRegistration(Registration):
+    """
+    A candidate for a flexible activity.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/deadline-registrations'
 
@@ -1273,6 +1305,11 @@ class DeadlineRegistration(Registration):
 
 
 class ScheduleRegistration(Registration):
+    """
+    A candidate for a schedule activity.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/schedule-registrations'
 
@@ -1315,6 +1352,11 @@ class ScheduleRegistration(Registration):
 
 
 class PeriodicRegistration(Registration):
+    """
+    A candidate for a recurring activity.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/periodic-registrations'
 
@@ -1389,7 +1431,12 @@ class PeriodicRegistration(Registration):
 
 
 class DeadlineParticipant(Participant, Contributor):
-    class Meta:
+    """
+    A candidate for a flexible activity.
+    """
+    include_in_documentation = True
+
+    class Meta(Participant.Meta):
         verbose_name = _("Participant to flexible activities")
         verbose_name_plural = _("Participants to flexible activities")
 
@@ -1427,6 +1474,11 @@ class DeadlineParticipant(Participant, Contributor):
 
 
 class RegisteredDateParticipant(Contributor):
+    """
+    A participant in a past activity which was registered after it took place.
+    """
+    include_in_documentation = True
+
     class Meta:
         verbose_name = _("Participant to past date activity")
         verbose_name_plural = _("Participants to past date activity")
@@ -1465,6 +1517,11 @@ class RegisteredDateParticipant(Contributor):
 
 
 class TeamScheduleRegistration(Registration):
+    """
+    A regsitration of a team to a schedule activity.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-registrations'
 
@@ -1508,6 +1565,11 @@ class TeamScheduleRegistration(Registration):
 
 
 class Team(TriggerMixin, models.Model):
+    """
+    A team of participants.
+    """
+    include_in_documentation = True
+
     invite_code = models.UUIDField(default=uuid.uuid4)
 
     registration = models.OneToOneField(
@@ -1583,6 +1645,11 @@ class Team(TriggerMixin, models.Model):
 
 
 class TeamMember(TriggerMixin, models.Model):
+    """
+    A team member
+    """
+    include_in_documentation = True
+
     invite_code = models.UUIDField(blank=True, null=True)
 
     team = models.ForeignKey(
@@ -1640,6 +1707,11 @@ class TeamMember(TriggerMixin, models.Model):
 
 
 class ScheduleParticipant(Participant, Contributor):
+    """
+    A participant in an activity that is scheduled after sign-up
+    """
+    include_in_documentation = True
+
     registration = models.ForeignKey(
         'time_based.ScheduleRegistration',
         related_name='participants',
@@ -1656,7 +1728,7 @@ class ScheduleParticipant(Participant, Contributor):
         blank=True,
     )
 
-    class Meta:
+    class Meta(Contributor.Meta):
         verbose_name = _("Participant to schedule activities")
         verbose_name_plural = _("Participants to schedule activities")
 
@@ -1694,6 +1766,11 @@ class ScheduleParticipant(Participant, Contributor):
 
 
 class TeamScheduleParticipant(Participant, Contributor):
+    """
+    A team participation in an activity that is scheduled after sign-up
+    """
+    include_in_documentation = True
+
     registration = models.ForeignKey(
         'time_based.TeamScheduleRegistration',
         related_name='participants',
@@ -1838,7 +1915,7 @@ class Slot(models.Model):
             if date:
                 return date.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
-        details = self.activity.details
+        details = self.details
         if self.is_online and self.online_meeting_url:
             details += _("\nJoin: {url}").format(url=self.online_meeting_url)
 
@@ -1862,44 +1939,36 @@ class Slot(models.Model):
 
     @property
     def organizer(self):
+        return self.owner
+
+    @property
+    def owner(self):
         return self.activity.owner
 
     @property
-    def event_data(self):
-        if not self.end or self.end < now() or self.status not in ['open', 'full', 'scheduled']:
-            return None
-        title = f'{self.activity.title} - {self.id}'
-        location = ''
-        if self.is_online:
-            location = _('Anywhere/Online')
-        elif self.location:
-            location = self.location.locality or self.location.formatted_address or ''
-            if self.location_hint:
-                location += f" {self.location_hint}"
+    def details(self):
+        details = f"{self.activity.description.html}, {self.get_absolute_url()}"
+        if self.is_online and self.online_meeting_url:
+            details += _("\nJoin: {url}").format(url=self.online_meeting_url)
 
-        return {
-            'uid': f"{connection.tenant.client_name}-{self.id}",
-            'summary': title,
-            'description': self.activity.description.html,
-            'organizer': self.organizer.email,
-            'url': self.activity.get_absolute_url(),
-            'location': location,
-            'start_time': self.start,
-            'end_time': self.end,
-        }
+        return details
+
+    def get_absolute_url(self):
+        return self.activity.get_absolute_url()
 
 
 class PeriodicSlot(TriggerMixin, Slot):
+    """
+    A slot in a recurring activity.
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(
         PeriodicActivity, on_delete=models.CASCADE, related_name="slots"
     )
 
     duration = models.DurationField(_("duration"), null=True, blank=True)
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
-
-    @property
-    def owner(self):
-        return self.activity.owner
 
     @property
     def initiative(self):
@@ -1960,6 +2029,11 @@ class BaseScheduleSlot(TriggerMixin, Slot):
 
 
 class ScheduleSlot(BaseScheduleSlot):
+    """
+    A slot that was scheduled after sign-up.
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(
         ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
     )
@@ -1975,6 +2049,11 @@ class ScheduleSlot(BaseScheduleSlot):
 
 
 class TeamScheduleSlot(BaseScheduleSlot):
+    """
+    A slot for a team that was scheduled after sign-up.
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(
         ScheduleActivity, on_delete=models.CASCADE, related_name="team_slots"
     )
@@ -2008,6 +2087,11 @@ class TeamScheduleSlot(BaseScheduleSlot):
 
 
 class PeriodicParticipant(Participant, Contributor):
+    """
+    A participant in a slot of a periodic activity, e.g. the participant joined this week.
+    """
+    include_in_documentation = True
+
     slot = models.ForeignKey(
         PeriodicSlot,
         on_delete=models.CASCADE,

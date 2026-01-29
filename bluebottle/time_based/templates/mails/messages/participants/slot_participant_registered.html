@@ -1,14 +1,14 @@
 {% extends "mails/messages/participant_base.html" %}
 {% load i18n %}
 
-{% block message %}{% blocktrans context 'email' %}
+{% block message %}{% blocktrans context 'platform-email' %}
 <p>You are registered for a time slot for the activity "{{ title }}"!</p>
 {% endblocktrans %}
 
 {% include 'mails/messages/partial/slot.html' %}
 {% if hour_registration %}
     <p>
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             Make sure to register your hours using the code or URL found on the activity detail page.
         {% endblocktrans %}
     </p>

@@ -5,6 +5,7 @@ from django.utils.timezone import get_current_timezone
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
+from bluebottle.activities.ical import ActivityIcal
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
@@ -71,7 +72,7 @@ class DeadlineChangedNotification(TransitionMessage):
     """
     The deadline of the activity changed
     """
-    subject = pgettext('email', 'The deadline for your activity "{title}" changed')
+    subject = pgettext('platform-email', 'The deadline for your activity "{title}" changed')
     template = 'messages/deadline_changed'
     context = {
         'title': 'title',
@@ -81,7 +82,7 @@ class DeadlineChangedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -94,17 +95,17 @@ class DeadlineChangedNotification(TransitionMessage):
 
         if self.obj.start:
             context['start'] = pgettext(
-                'emai', 'on {start}'
+                'platform-email', 'on {start}'
             ).format(start=defaultfilters.date(self.obj.start))
         else:
-            context['start'] = pgettext('emai', 'immediately')
+            context['start'] = pgettext('platform-email', 'immediately')
 
         if self.obj.deadline:
             context['end'] = pgettext(
-                'emai', 'ends on {end}'
+                'platform-email', 'ends on {end}'
             ).format(end=defaultfilters.date(self.obj.deadline))
         else:
-            context['end'] = pgettext('emai', 'runs indefinitely')
+            context['end'] = pgettext('platform-email', 'runs indefinitely')
 
         return context
 
@@ -113,7 +114,7 @@ class ReminderSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Reminder notification for a single date activity
     """
-    subject = pgettext('email', 'The activity "{title}" will take place in a few days!')
+    subject = pgettext('platform-email', 'The activity "{title}" will take place in a few days!')
     template = 'messages/reminder_single_date'
     send_once = True
     context = {
@@ -124,7 +125,7 @@ class ReminderSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -137,7 +138,7 @@ class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Reminder notification for a date activity slot
     """
-    subject = pgettext('email', 'The activity "{title}" will take place tomorrow!')
+    subject = pgettext('platform-email', 'The activity "{title}" will take place tomorrow!')
     template = 'messages/reminder_slot'
     send_once = True
 
@@ -163,7 +164,7 @@ class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -176,7 +177,7 @@ class ReminderTeamSlotNotification(TransitionMessage):
     """
     Reminder notification for a team activity slot
     """
-    subject = pgettext('email', 'The team activity "{title}" will take place in a few days!')
+    subject = pgettext('platform-email', 'The team activity "{title}" will take place in a few days!')
     template = 'messages/reminder_team_slot'
     send_once = True
 
@@ -202,7 +203,7 @@ class ReminderTeamSlotNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -215,7 +216,7 @@ class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for a single date activity
     """
-    subject = pgettext('email', 'The details of activity "{title}" have changed')
+    subject = pgettext('platform-email', 'The details of activity "{title}" have changed')
     template = 'messages/changed_single_date'
     context = {
         'title': 'activity.title',
@@ -225,7 +226,7 @@ class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
@@ -243,7 +244,7 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for a single date activity
     """
-    subject = pgettext('email', 'The details of activity "{title}" have changed')
+    subject = pgettext('platform-email', 'The details of activity "{title}" have changed')
     template = 'messages/changed_multiple_dates'
     context = {
         'title': 'activity.title',
@@ -264,7 +265,7 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
         context['slots'] = [get_slot_info(slot) for slot in slots]
         return context
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -278,7 +279,7 @@ class TeamSlotChangedNotification(TransitionMessage):
     """
     Notification when slot details (date, time or location) changed for a team activity
     """
-    subject = pgettext('email', 'The details of the team activity "{title}" have changed')
+    subject = pgettext('platform-email', 'The details of the team activity "{title}" have changed')
     template = 'messages/changed_team_date'
     context = {
         'title': 'activity.title',
@@ -291,14 +292,14 @@ class TeamSlotChangedNotification(TransitionMessage):
         'timezone': 'timezone',
     }
 
-    def get_event_data(self, recipient=None):
-        return self.obj.event_data
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.obj).to_attachment()]
 
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """team members"""
@@ -311,7 +312,7 @@ class ActivitySucceededManuallyNotification(TransitionMessage):
     """
     The activity was set to succeeded manually
     """
-    subject = pgettext('email', 'The activity "{title}" has succeeded 🎉')
+    subject = pgettext('platform-email', 'The activity "{title}" has succeeded 🎉')
     template = 'messages/activity_succeeded_manually'
     context = {
         'title': 'title',
@@ -321,7 +322,7 @@ class ActivitySucceededManuallyNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
@@ -334,7 +335,7 @@ class ParticipantAddedNotification(TransitionMessage):
     """
     A participant was added manually (through back-office)
     """
-    subject = pgettext('email', 'You have been added to the activity "{title}" 🎉')
+    subject = pgettext('platform-email', 'You have been added to the activity "{title}" 🎉')
     template = 'messages/participant_added'
     context = {
         'title': 'activity.title',
@@ -344,7 +345,7 @@ class ParticipantAddedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -359,7 +360,7 @@ class TeamAddedNotification(TransitionMessage):
     A team was added manually (through back-office)
     """
 
-    subject = pgettext("email", 'Your team was added to the activity "{title}" 🎉')
+    subject = pgettext("platform-email", 'Your team was added to the activity "{title}" 🎉')
     template = "messages/team_added"
     context = {
         "title": "activity.title",
@@ -369,7 +370,7 @@ class TeamAddedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext("email", "View activity")
+    action_title = pgettext("platform-email", "View activity")
 
     def get_recipients(self):
         """participant"""
@@ -383,7 +384,7 @@ class TeamParticipantAddedNotification(TransitionMessage):
     """
     A participant was added to a team manually (through back-office)
     """
-    subject = pgettext('email', 'You have been added to a team on "{site_name}" 🎉')
+    subject = pgettext('platform-email', 'You have been added to a team on "{site_name}" 🎉')
     template = 'messages/team_participant_added'
     context = {
         'title': 'activity.title',
@@ -394,7 +395,7 @@ class TeamParticipantAddedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -408,7 +409,7 @@ class ParticipantCreatedNotification(TransitionMessage):
     """
     A participant applied  for the activity and should be reviewed
     """
-    subject = pgettext('email', 'You have a new participant for your activity "{title}" 🎉')
+    subject = pgettext('platform-email', 'You have a new participant for your activity "{title}" 🎉')
     template = 'messages/participant_created'
     context = {
         'title': 'activity.title',
@@ -420,7 +421,7 @@ class ParticipantCreatedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -431,7 +432,7 @@ class NewParticipantNotification(TransitionMessage):
     """
     A participant joined the activity (no review required)
     """
-    subject = pgettext('email', 'A new participant has joined your activity "{title}" 🎉')
+    subject = pgettext('platform-email', 'A new participant has joined your activity "{title}" 🎉')
     template = 'messages/new_participant'
     context = {
         'title': 'activity.title',
@@ -444,7 +445,7 @@ class NewParticipantNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -466,7 +467,7 @@ class ParticipantNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -477,7 +478,7 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant joined
     """
-    subject = pgettext('email', 'You have joined the activity "{title}"')
+    subject = pgettext('platform-email', 'You have joined the activity "{title}"')
     template = 'messages/participant_joined'
     context = {
         'title': 'activity.title',
@@ -500,7 +501,7 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -511,7 +512,7 @@ class TeamParticipantJoinedNotification(TransitionMessage):
     """
     The participant joined
     """
-    subject = pgettext('email', 'You have registered your team for "{title}"')
+    subject = pgettext('platform-email', 'You have registered your team for "{title}"')
     template = 'messages/team_participant_joined'
     context = {
         'title': 'activity.title',
@@ -523,7 +524,7 @@ class TeamParticipantJoinedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """team captain"""
@@ -534,7 +535,7 @@ class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant withdrew or applied to a slot when already applied to other slots
     """
-    subject = pgettext('email', 'You have changed your application on the activity "{title}"')
+    subject = pgettext('platform-email', 'You have changed your application on the activity "{title}"')
     template = 'messages/participant_changed'
     context = {
         'title': 'activity.title',
@@ -546,7 +547,7 @@ class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -557,7 +558,7 @@ class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant joined
     """
-    subject = pgettext('email', 'You have applied to the activity "{title}"')
+    subject = pgettext('platform-email', 'You have applied to the activity "{title}"')
     template = 'messages/participant_applied'
     context = {
         'title': 'activity.title',
@@ -568,7 +569,7 @@ class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -579,7 +580,7 @@ class TeamParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant joined as a team joined
     """
-    subject = pgettext('email', 'You have registered your team for "{title}"')
+    subject = pgettext('platform-email', 'You have registered your team for "{title}"')
     template = 'messages/team_participant_applied'
     context = {
         'title': 'activity.title',
@@ -590,7 +591,7 @@ class TeamParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -601,7 +602,7 @@ class TeamMemberJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant joined as a team joined
     """
-    subject = pgettext('email', 'You have joined {team_name} for "{title}"')
+    subject = pgettext('platform-email', 'You have joined {team_name} for "{title}"')
     template = 'messages/team_member_joined'
     context = {
         'title': 'activity.title',
@@ -613,7 +614,7 @@ class TeamMemberJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -624,7 +625,7 @@ class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     The participant got accepted after review
     """
-    subject = pgettext('email', 'You have been selected for the activity "{title}" 🎉')
+    subject = pgettext('platform-email', 'You have been selected for the activity "{title}" 🎉')
     template = 'messages/participant_accepted'
     context = {
         'title': 'activity.title',
@@ -634,10 +635,14 @@ class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
-    def get_event_data(self, recipient=None):
-        return [slot_participant.slot.event_data for slot_participant in self.obj.slot_participants.all()]
+    def attachments(self, recipient=None):
+        return [
+            ActivityIcal(
+                [slot_participant.slot for slot_participant in self.obj.slot_participants.all()]
+            ).to_attachment()
+        ]
 
     def get_recipients(self):
         """participant"""
@@ -648,7 +653,7 @@ class ParticipantRejectedNotification(TransitionMessage):
     """
     The participant got rejected after review
     """
-    subject = pgettext('email', 'You have not been selected for the activity "{title}"')
+    subject = pgettext('platform-email', 'You have not been selected for the activity "{title}"')
     template = 'messages/participant_rejected'
     context = {
         'title': 'activity.title',
@@ -658,7 +663,7 @@ class ParticipantRejectedNotification(TransitionMessage):
     def action_link(self):
         return tenant_url('/initiatives/activities/list')
 
-    action_title = pgettext('email', 'View all activities')
+    action_title = pgettext('platform-email', 'View all activities')
 
     def get_recipients(self):
         """participant"""
@@ -669,7 +674,7 @@ class ParticipantRemovedNotification(TransitionMessage):
     """
     The participant was removed from the activity
     """
-    subject = pgettext('email', 'You have been removed as participant for the activity "{title}"')
+    subject = pgettext('platform-email', 'You have been removed as participant for the activity "{title}"')
     template = 'messages/participant_removed'
     context = {
         'title': 'activity.title',
@@ -679,7 +684,7 @@ class ParticipantRemovedNotification(TransitionMessage):
     def action_link(self):
         return tenant_url('/initiatives/activities/list')
 
-    action_title = pgettext('email', 'View all activities')
+    action_title = pgettext('platform-email', 'View all activities')
 
     def get_recipients(self):
         """participant"""
@@ -690,7 +695,7 @@ class TeamParticipantRemovedNotification(TransitionMessage):
     """
     The participant was removed from the activity
     """
-    subject = pgettext('email', 'Your team participation in ‘{title}’ has been cancelled')
+    subject = pgettext('platform-email', 'Your team participation in ‘{title}’ has been cancelled')
     template = 'messages/team_participant_removed'
     context = {
         'title': 'activity.title',
@@ -701,7 +706,7 @@ class TeamParticipantRemovedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -712,7 +717,7 @@ class ParticipantFinishedNotification(TransitionMessage):
     """
     The participant was finished
     """
-    subject = pgettext('email', 'Your contribution to the activity "{title}" is successful 🎉')
+    subject = pgettext('platform-email', 'Your contribution to the activity "{title}" is successful 🎉')
     template = 'messages/participant_finished'
     context = {
         'title': 'activity.title',
@@ -722,7 +727,7 @@ class ParticipantFinishedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -733,7 +738,7 @@ class ParticipantWithdrewNotification(TransitionMessage):
     """
     A participant withdrew from your activity
     """
-    subject = pgettext('email', 'A participant has withdrawn from your activity "{title}"')
+    subject = pgettext('platform-email', 'A participant has withdrawn from your activity "{title}"')
     template = 'messages/participant_withdrew'
     context = {
         'title': 'activity.title',
@@ -744,7 +749,7 @@ class ParticipantWithdrewNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -755,7 +760,7 @@ class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
     """
     A slot participant withdrew from a time slot for your activity
     """
-    subject = pgettext('email', 'A participant has withdrawn from a time slot for your activity "{title}"')
+    subject = pgettext('platform-email', 'A participant has withdrawn from a time slot for your activity "{title}"')
     template = 'messages/manager/slot_participant_withdrew'
     context = {
         'title': 'activity.title',
@@ -771,7 +776,7 @@ class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
     def action_link(self):
         return self.obj.slot.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -782,7 +787,7 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     """
     A slot participant registered from a time slot for your activity
     """
-    subject = pgettext('email', 'A participant has registered for a time slot for your activity "{title}"')
+    subject = pgettext('platform-email', 'A participant has registered for a time slot for your activity "{title}"')
     template = 'messages/manager/slot_participant_registered'
     context = {
         'title': 'activity.title',
@@ -800,7 +805,7 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     def action_link(self):
         return self.obj.slot.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View your activity')
+    action_title = pgettext('platform-email', 'View your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -812,15 +817,15 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     """
     Slot participant registered for a time slot for an activity
     """
-    subject = pgettext('email', 'You\'ve registered for a time slot for the activity "{title}"')
+    subject = pgettext('platform-email', 'You\'ve registered for a time slot for the activity "{title}"')
     template = 'messages/participants/slot_participant_registered'
     context = {
         'title': 'activity.title',
         'participant_name': 'participant.user.full_name',
     }
 
-    def get_event_data(self, recipient):
-        return self.obj.slot.event_data
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.obj.slot).to_attachment()]
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
@@ -831,7 +836,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     def action_link(self):
         return self.obj.slot.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -843,7 +848,7 @@ class ManagerParticipantAddedOwnerNotification(TransitionMessage):
     """
     A participant added notify owner
     """
-    subject = pgettext('email', 'A participant has been added to your activity "{title}" 🎉')
+    subject = pgettext('platform-email', 'A participant has been added to your activity "{title}" 🎉')
     template = 'messages/participant_added_owner'
     context = {
         'title': 'activity.title',
@@ -854,7 +859,7 @@ class ManagerParticipantAddedOwnerNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -869,7 +874,7 @@ class ManagerTeamAddedOwnerNotification(TransitionMessage):
     A team added notify owner
     """
 
-    subject = pgettext("email", 'A team has been added to your activity "{title}" 🎉')
+    subject = pgettext("platform-email", 'A team has been added to your activity "{title}" 🎉')
     template = "messages/teams/manager_team_added"
     context = {"title": "activity.title", "participant_name": "user.full_name"}
 
@@ -877,7 +882,7 @@ class ManagerTeamAddedOwnerNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext("email", "Open your activity")
+    action_title = pgettext("platform-email", "Open your activity")
 
     def get_recipients(self):
         """activity owner"""
@@ -891,7 +896,7 @@ class ParticipantRemovedOwnerNotification(TransitionMessage):
     """
     A participant removed notify owner
     """
-    subject = pgettext('email', 'A participant has been removed from your activity "{title}"')
+    subject = pgettext('platform-email', 'A participant has been removed from your activity "{title}"')
     template = 'messages/participant_removed_owner'
     context = {
         'title': 'activity.title',
@@ -902,7 +907,7 @@ class ParticipantRemovedOwnerNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -913,7 +918,7 @@ class SlotCancelledNotification(TransitionMessage):
     """
     The activity slot got cancelled
     """
-    subject = pgettext('email', 'A slot for your activity "{title}" has been cancelled')
+    subject = pgettext('platform-email', 'A slot for your activity "{title}" has been cancelled')
     template = 'messages/slot_cancelled'
 
     context = {
@@ -939,4 +944,4 @@ class SlotCancelledNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')

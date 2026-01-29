@@ -34,6 +34,12 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 @python_2_unicode_compatible
 class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
+    """
+    An initiative has a collection of activities that are related to a common goal.
+    """
+
+    include_in_documentation = True
+
     status = models.CharField(max_length=40)
     title = models.CharField(_("title"), blank=True, max_length=255)
 
@@ -244,7 +250,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
                 self.slug = "new"
 
         try:
-            if InitiativePlatformSettings.objects.get().require_organization:
+            if InitiativePlatformSettings.load().require_organization:
                 self.has_organization = True
         except InitiativePlatformSettings.DoesNotExist:
             pass
@@ -586,7 +592,7 @@ class Theme(SortableTranslatableModel):
     )
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', default=f'Theme #{self.id}', any_language=True)
 
     def save(self, **kwargs):
         if not self.slug:

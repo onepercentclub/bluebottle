@@ -111,19 +111,6 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'owner': ['owner'],
     }
 
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        serializer.save(owner=self.request.user)
-
 
 class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Funding.objects.select_related(
@@ -276,9 +263,6 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'reward': ['reward'],
         'fundraiser': ['fundraiser'],
     }
-
-    def perform_create(self, serializer):
-        serializer.save(user=(self.request.user if self.request.user.is_authenticated else None))
 
 
 class ActivityDonationList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):

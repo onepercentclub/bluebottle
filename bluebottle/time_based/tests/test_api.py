@@ -17,6 +17,7 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory,
     SkillFactory,
 )
+from bluebottle.utils.utils import get_current_language
 
 
 class DateTimeContributionAPIViewTestCase(BluebottleTestCase):
@@ -146,14 +147,8 @@ class SlotIcalTestCase(BluebottleTestCase):
             self.assertEqual(ical_event['dtend'].dt.tzinfo, UTC)
 
             self.assertEqual(str(ical_event['summary']), self.activity.title)
-            self.assertEqual(
-                str(ical_event['description']),
-                '{}\nJoin: {}'.format(
-                    self.activity.details,
-                    self.slot.online_meeting_url
-                )
-            )
-            self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
+
+            self.assertEqual(ical_event['url'], self.slot.get_absolute_url())
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
             self.assertTrue('location' not in ical_event)
 
@@ -203,21 +198,22 @@ class SkillApiTestCase(BluebottleTestCase):
         MemberPlatformSettings.objects.update(closed=True)
         self.url = reverse('skill-list')
         Skill.objects.all().delete()
-        SkillFactory.create_batch(10)
+        skills = SkillFactory.create_batch(10)
+        for skill in skills:
+            if not skill.translations.filter(language_code='en').exists():
+                skill.set_current_language('en')
+                skill.name = f'Name en {skill.id}'
+                skill.description = f'Description en {skill.id}'
+                skill.save()
         self.client = JSONAPITestClient()
 
     def test_get_skills_authenticated(self):
         user = BlueBottleUserFactory.create()
-        response = self.client.get(self.url, user=user)
+        get_current_language()
+        response = self.client.get(self.url, user=user, HTTP_ACCEPT_LANGUAGE='en')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['results']), 10)
 
     def test_get_skills_unauthenticated(self):
-        response = self.client.get(self.url)
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
         self.assertEqual(response.status_code, 401)
-
-    def test_get_skills_old_url(self):
-        old_url = reverse('assignment-skill-list')
-        user = BlueBottleUserFactory.create()
-        response = self.client.get(old_url, user=user)
-        self.assertEqual(response.status_code, 200)

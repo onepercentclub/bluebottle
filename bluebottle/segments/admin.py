@@ -7,7 +7,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
-from parler.admin import TranslatableAdmin, TranslatableTabularInline
+from parler.admin import TranslatableAdmin, TranslatableModelForm, TranslatableTabularInline
 
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.fsm.forms import StateMachineModelFormMetaClass
@@ -70,15 +70,39 @@ class SegmentMergeForm(forms.Form):
         )
 
 
+class SegmentAdminForm(TranslatableModelForm):
+    email_domains = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3}),
+        help_text=_("Enter one domain per line or separate by commas."),
+        label=_("Email domains"),
+    )
+
+    class Meta:
+        model = Segment
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.initial["email_domains"] = "\n".join(self.instance.email_domains or [])
+
+    def clean_email_domains(self):
+        raw_value = self.cleaned_data.get("email_domains", "") or ""
+        # Accept both comma-separated and newline-separated input.
+        values = raw_value.replace(",", "\n").splitlines()
+        return [value.strip() for value in values if value.strip()]
+
+
 @admin.register(Segment)
 class SegmentAdmin(
     TranslatableLabelAdminMixin,
     AdminMergeMixin,
     TranslatableAdminOrderingMixin,
-    TranslatableAdmin,
-    DynamicArrayMixin
+    TranslatableAdmin
 ):
     model = Segment
+    form = SegmentAdminForm
 
     readonly_fields = ('translatable_info', 'text_color', 'activities_link', 'members_link', 'type_link')
 

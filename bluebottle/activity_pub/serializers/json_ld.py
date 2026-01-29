@@ -207,7 +207,7 @@ class CollectCampaignSerializer(BaseEventSerializer):
     class Meta(BaseEventSerializer.Meta):
         model = CollectCampaign
         fields = BaseEventSerializer.Meta.fields + (
-            'start_time', 'end_time', 'location', 'location_hint', 'collect_type', 'target', 'amount'
+            'start_time', 'end_time', 'location', 'collect_type', 'target', 'donated'
         )
 
 
@@ -271,7 +271,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
             'location', 'start_time', 'end_time', 'duration',
             'event_attendance_mode', 'join_mode',
             'repetition_mode', 'slot_mode',
-            'registration_deadline',
+            'application_deadline',
             'sub_event',
         )
 

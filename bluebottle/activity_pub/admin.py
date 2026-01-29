@@ -300,7 +300,7 @@ class SourceFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            queryset = queryset.filter(publishes__actor=self.value())
+            queryset = queryset.filter(create__actor=self.value())
         return queryset
 
 
@@ -832,7 +832,7 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
     list_display_links = ("name_link",)
 
     def shared(self, obj):
-        publish = Publish.objects.filter(object=obj).first()
+        publish = Create.objects.filter(object=obj).first()
         return publish.recipients.filter(send=True).count()
 
     def adopted(self, obj):

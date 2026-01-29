@@ -22,5 +22,6 @@ processed_context = processor.process_context(
     }
 )
 
+
 def expand_iri(iri):
     return processor._expand_iri(processed_context, iri, None, True)

@@ -300,7 +300,10 @@ class FundingTriggers(ActivityTriggers):
             ]
         ),
         ModelChangedTrigger(
-            ['target', 'amount_donated', 'deadline'],
+            [
+                'target', 'amount_donated', 'amount_matching', 'amount_pledged',
+                'deadline', 'impact_location'
+            ],
             effects=[
                 UpdateEventEffect,
             ]

@@ -229,7 +229,6 @@ class Address(ActivityPubModel):
     country = models.CharField(max_length=1000, null=True)
 
 
-
 class Place(ActivityPubModel):
     name = models.CharField(max_length=1000)
     latitude = models.FloatField(null=True)
@@ -256,9 +255,9 @@ class Event(ActivityPubModel):
 
     @property
     def source(self):
-        publish = Publish.objects.filter(object=self).first()
-        if publish:
-            return publish.actor
+        create = Create.objects.filter(object=self).first()
+        if create:
+            return create.actor
 
     @property
     def adopted_activity(self):
@@ -316,8 +315,6 @@ class GoodDeed(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
-    activity_type = 'deed'
-
     class Meta:
         verbose_name = _("Deed")
         verbose_name_plural = _("Deeds")
@@ -350,8 +347,6 @@ class CrowdFunding(Event):
     end_time = models.DateTimeField(null=True)
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
-
-    activity_type = 'funding'
 
     class Meta:
         verbose_name = _("Funding")
@@ -468,13 +463,6 @@ class DoGoodEvent(Event):
         null=True
     )
 
-    @property
-    def activity_type(self):
-        if len(self.sub_event.all()) > 0:
-            return 'dateactivity'
-        else:
-            return 'deadlineactivity'
-
     slot_mode = models.CharField(
         choices=SlotModeChoices.choices,
         default=SlotModeChoices.set,
@@ -563,11 +551,11 @@ class Follow(Activity):
     def shared_activities(self):
         if self.is_local:
             return Event.objects.filter(
-                publish__actor=self.object,
+                create__actor=self.object,
             ).count()
         return Recipient.objects.filter(
             actor=self.actor,
-            activity__publish__isnull=False,
+            activity__create__isnull=False,
             send=True
         ).count()
 
@@ -620,8 +608,8 @@ class Update(Activity):
 
     @property
     def default_recipients(self):
-        for publish in self.object.publish_set.all():
-            for recipient in publish.recipients.all():
+        for create in self.object.create_set.all():
+            for recipient in create.recipients.all():
                 yield recipient.actor
 
 
@@ -630,8 +618,8 @@ class Announce(Activity):
 
     @property
     def default_recipients(self):
-        publish = self.object.publish_set.first()
-        return [publish.actor]
+        create = self.object.create_set.first()
+        return [create.actor]
 
 
 class Transition(Activity):
@@ -639,8 +627,8 @@ class Transition(Activity):
 
     @property
     def default_recipients(self):
-        for publish in self.object.publish_set.all():
-            for recipient in publish.recipients.all():
+        for create in self.object.create_set.all():
+            for recipient in create.recipients.all():
                 yield recipient.actor
 
     class Meta:

@@ -3,11 +3,15 @@ from io import BytesIO
 from urllib.parse import urlparse
 
 import mock
+import httmock
+
 from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
 from django.utils.timezone import get_current_timezone
+from django.test.utils import override_settings
+
 from djmoney.money import Money
 from pytz import UTC
 from requests import Request, Response
@@ -196,7 +200,7 @@ class ActivityPubTestCase:
     def test_publish(self):
         self.test_accept()
         self.create()
-        publish = self.model.event.publish_set.first()
+        publish = self.model.event.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -215,7 +219,7 @@ class ActivityPubTestCase:
         activity = DeedFactory.create(status='submitted')
         activity.states.approve(save=True)
 
-        publish = activity.event.publish_set.first()
+        publish = activity.event.create_set.first()
         self.assertIsNotNone(publish)
         self.assertTrue(
             Recipient.objects.filter(activity=publish, actor=self.follow.actor).exists()
@@ -250,7 +254,7 @@ class ActivityPubTestCase:
         activity.states.approve(save=True)
 
         adapter.create_event(activity)
-        publish = activity.event.publish_set.first()
+        publish = activity.event.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -264,7 +268,7 @@ class ActivityPubTestCase:
         self.test_accept()
         self.create()
 
-        publish = self.model.event.publish_set.first()
+        publish = self.model.event.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -356,7 +360,11 @@ class LinkTestCase(ActivityPubTestCase):
             follow.save()
 
     def test_link(self):
-        with mock.patch('requests.get', return_value=self.mock_response):
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
+        with httmock.HTTMock(image_mock):
             self.test_publish()
 
         with LocalTenant(self.other_tenant):
@@ -441,6 +449,9 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
         self.submit()
 
 
+@override_settings(
+    MAPBOX_API_KEY=None
+)
 class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
     factory = FundingFactory
 
@@ -480,8 +491,9 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
     def test_update_donated_amount(self):
         self.test_link()
 
-        self.model.amount_donated = Money(12, 'EUR')
-        self.model.save()
+        with mock.patch('requests.get', return_value=self.mock_response):
+            self.model.amount_donated = Money(12, 'EUR')
+            self.model.save()
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
@@ -510,7 +522,10 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
             self.assertIsNotNone(self.model.impact_location)
             self.assertIsNotNone(link.location)
             self.assertEqual(link.location.locality, self.model.impact_location.locality)
-            self.assertEqual(link.location.country, self.model.impact_location.country)
+            self.assertEqual(
+                link.location.country.alpha2_code,
+                self.model.impact_location.country.alpha2_code
+            )
 
 
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
@@ -561,10 +576,10 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
             self.assertEqual(self.event.location.longitude, self.model.impact_location.position.y)
             self.assertEqual(self.event.location.name, self.model.impact_location.formatted_address)
             self.assertEqual(
-                self.event.location.address.address_country, self.model.impact_location.country.code
+                self.event.location.address.country, self.model.impact_location.country.code
             )
             self.assertEqual(
-                self.event.location.address.address_locality, self.model.impact_location.locality
+                self.event.location.address.locality, self.model.impact_location.locality
             )
 
     def test_adopt(self):
@@ -578,6 +593,9 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
         )
 
 
+@override_settings(
+    MAPBOX_API_KEY=None
+)
 class LinkDeadlineActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
 
@@ -622,6 +640,9 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
             )
 
 
+@override_settings(
+    MAPBOX_API_KEY=None
+)
 class LinkScheduleActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
 
@@ -667,6 +688,9 @@ class AdoptScheduleActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
             )
 
 
+@override_settings(
+    MAPBOX_API_KEY=None
+)
 class LinkPeriodicActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory
 
@@ -701,9 +725,8 @@ class AdoptPeriodicActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.duration, self.model.duration)
-        print(self.adopted, self.model)
-        print(self.model.event.slot_mode)
         self.assertEqual(self.adopted.period, self.model.period)
+
         if self.model.location:
             self.assertEqual(
                 self.adopted.location.position,
@@ -711,6 +734,9 @@ class AdoptPeriodicActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
             )
 
 
+@override_settings(
+    MAPBOX_API_KEY=None
+)
 class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = RegisteredDateActivityFactory
 
@@ -764,6 +790,9 @@ class AdoptRegisteredDateActivityTestCase(ActivityPubTestCase, BluebottleTestCas
             )
 
 
+@override_settings(
+    MAPBOX_API_KEY=None
+)
 class LinkedDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
@@ -808,6 +837,9 @@ class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
             self.assertEqual(self.adopted.slots.count(), 3)
 
 
+@override_settings(
+    MAPBOX_API_KEY=None
+)
 class LinkedSingleSlotDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
@@ -849,6 +881,9 @@ class AdoptSingleSlotDateActivityTestCase(ActivityPubTestCase, BluebottleTestCas
             self.assertEqual(self.adopted.slots.count(), 1)
 
 
+@override_settings(
+    MAPBOX_API_KEY=None
+)
 class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
 

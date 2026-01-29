@@ -127,7 +127,7 @@ class AddressSerializer(FederatedObjectSerializer):
     street_address = serializers.CharField(source='street', required=False, allow_null=True)
     postal_code = serializers.CharField(required=False, allow_null=True)
 
-    locality = serializers.CharField(source='locality', required=False, allow_null=True)
+    locality = serializers.CharField(required=False, allow_null=True)
     region = serializers.CharField(source='province', required=False, allow_null=True)
     country = CountryField(source='country.code', required=False, allow_null=True)
 
@@ -282,14 +282,13 @@ class FederatedCollectSerializer(BaseFederatedActivitySerializer):
     target = serializers.FloatField(allow_null=True, required=False)
     donated = serializers.FloatField(source='realized', allow_null=True, required=False)
     location = LocationSerializer(allow_null=True, required=False)
-    location_hint = serializers.CharField(allow_null=True, allow_blank=True, required=False, max_length=500)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = CollectActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
             'start_time', 'end_time',
-            'collect_type', 'target', 'amount', 'realized',
-            'location', 'location_hint'
+            'collect_type', 'target', 'donated', 'realized',
+            'location',
         )
 
 
@@ -390,7 +389,7 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
 
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True)
-    application_deadline = DateField(allow_null=True)
+    application_deadline = DateField(source='registration_deadline', allow_null=True)
 
     event_attendance_mode = EventAttendanceModeField()
     join_mode = JoinModeField()
@@ -484,7 +483,7 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
 
     sub_event = SlotsSerializer(many=True, source='slots')
     join_mode = JoinModeField()
-    application_deadline = DateField(allow_null=True)
+    application_deadline = DateField(source='registration_deadline', allow_null=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivity
@@ -524,7 +523,7 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     image = ImageSerializer(required=False, allow_null=True)
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True, read_only=True)
-    application_deadline = DateField(allow_null=True)
+    application_deadline = DateField(source='registration_deadline', allow_null=True)
     duration = serializers.DurationField(allow_null=True)
     repetition_mode = RepetitionModeField()
     event_attendance_mode = EventAttendanceModeField()
@@ -550,7 +549,7 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
 
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True)
-    application_deadline = DateField(allow_null=True)
+    application_deadline = DateField(source='registration_deadline', allow_null=True)
     duration = serializers.DurationField(allow_null=True)
 
     event_attendance_mode = EventAttendanceModeField()

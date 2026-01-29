@@ -1127,7 +1127,7 @@ class Skill(TranslatableModel):
     )
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', default=f'Skill #{self.id}', any_language=True)
 
     class Meta():
         permissions = (
@@ -1175,6 +1175,7 @@ class Registration(TriggerMixin, PolymorphicModel):
         return _('Candidate {name}').format(name=self.user)
 
     class Meta:
+        ordering = ('-created',)
         verbose_name = _("Candidate")
         verbose_name_plural = _("Candidates")
 

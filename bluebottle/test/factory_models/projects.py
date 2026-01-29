@@ -14,7 +14,7 @@ class ThemeFactory(factory.DjangoModelFactory):
     def _create(cls, model_class, *args, **kwargs):
         obj = super(ThemeFactory, cls)._create(model_class, *args, **kwargs)
         for language in Language.objects.all():
-            obj.set_current_language(language.code)
+            obj.set_current_language(language.full_code)
             obj.name = "Name {} {}".format(language.code, obj.id)
         obj.save()
         return obj

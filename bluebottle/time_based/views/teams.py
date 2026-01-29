@@ -89,7 +89,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
         context["display_member_names"] = (
-            MemberPlatformSettings.objects.get().display_member_names
+            MemberPlatformSettings.load().display_member_names
         )
 
         activity = Activity.objects.get(pk=self.kwargs["activity_id"])

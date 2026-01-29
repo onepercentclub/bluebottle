@@ -13,6 +13,7 @@ from django.core import mail
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connection
 from django.test import TestCase, SimpleTestCase, Client
+from django.utils.translation import activate
 from django.test.utils import override_settings
 from django_webtest import WebTestMixin
 from munch import munchify
@@ -163,6 +164,24 @@ class ApiClient(RestAPIClient):
 @override_settings(DEBUG=True)
 class BluebottleTestCase(InitProjectDataMixin, TestCase):
     def setUp(self):
+        connection.set_tenant(self.__class__.tenant)
+        activate(settings.LANGUAGE_CODE)
+        for code, title in settings.LANGUAGES:
+            base, _, sub = code.partition('-')
+            Language.objects.get_or_create(
+                code=base,
+                sub_code=sub,
+                defaults={
+                    'language_name': str(title),
+                    'native_name': str(title),
+                    'default': False,
+                }
+            )
+        if not Language.objects.filter(default=True).exists():
+            en_language = Language.objects.filter(code='en', sub_code='').first()
+            if en_language and not en_language.default:
+                en_language.default = True
+                en_language.save(update_fields=['default'])
         self.client = ApiClient(self.__class__.tenant)
 
     def included_by_type(self, response, type):

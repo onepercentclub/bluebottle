@@ -18,7 +18,7 @@ from bluebottle.activities.states import (
     EffortContributionStateMachine, ContributorStateMachine
 )
 from bluebottle.activity_pub.effects import (
-    AnnounceAdoptionEffect, CreateEffect, UpdateEventEffect,
+    PublishAdoptionEffect, CreateEffect, UpdateEventEffect,
     CancelEffect, DeletedEffect
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -120,7 +120,7 @@ class ActivityTriggers(TriggerManager):
             ActivityStateMachine.approve,
             effects=[
                 CreateEffect,
-                AnnounceAdoptionEffect,
+                PublishAdoptionEffect,
                 NotificationEffect(
                     ActivityApprovedNotification,
                     conditions=[is_not_funding]
@@ -170,7 +170,7 @@ class ActivityTriggers(TriggerManager):
             ActivityStateMachine.publish,
             effects=[
                 SetPublishedDateEffect,
-                AnnounceAdoptionEffect,
+                PublishAdoptionEffect,
                 CreateEffect,
                 RelatedTransitionEffect(
                     'organizer',

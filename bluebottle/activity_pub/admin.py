@@ -30,7 +30,6 @@ from bluebottle.activity_pub.models import (
     Place,  # Add Place import
     PublicKey,
     Create,
-    Announce,
     Organization,
     Following,
     Follower, GoodDeed, CrowdFunding, CollectCampaign, DoGoodEvent,
@@ -57,7 +56,6 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Follow,
         PublicKey,
         Create,
-        Announce,
         Event,
         Organization,
         GoodDeed,
@@ -248,29 +246,6 @@ class AcceptAdmin(ActivityAdmin):
     list_display = ("id", "actor", "object")
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')
     inlines = [RecipientInline]
-
-
-@admin.register(Announce)
-class AnnounceAdmin(ActivityAdmin):
-    list_display = ("id", "actor", "object")
-    inlines = [RecipientInline]
-
-
-class AnnouncementInline(admin.StackedInline):
-    verbose_name = _("Adoption")
-    verbose_name_plural = _("Adoptions")
-    model = Announce
-    extra = 0
-    fk_name = "object"
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 class AdoptedFilter(admin.SimpleListFilter):
@@ -836,7 +811,7 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
         return publish.recipients.filter(send=True).count()
 
     def adopted(self, obj):
-        return Announce.objects.filter(object=obj).count()
+        return Accept.objects.filter(object=obj).count()
 
     def get_queryset(self, request):
         return Event.objects.filter(iri__isnull=True)

@@ -20,7 +20,7 @@ from bluebottle.activity_links.models import LinkedActivity, LinkedFunding
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
-    AdoptionTypeChoices, Announce, Follow, Accept, Event,
+    AdoptionTypeChoices, Follow, Accept, Event,
     Recipient, RepetitionModeChoices
 )
 from bluebottle.clients.models import Client
@@ -321,11 +321,11 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.image.origin, self.event.image)
 
                     self.approve(self.adopted)
-                    announce = Announce.objects.last()
-                    self.assertTrue(announce)
+                    accept = Accept.objects.last()
+                    self.assertTrue(accept)
 
-        announce = Announce.objects.first()
-        self.assertTrue(announce)
+        accept = Accept.objects.first()
+        self.assertTrue(accept)
 
     def test_adopt_default_owner(self):
         self.test_publish()
@@ -371,8 +371,8 @@ class LinkTestCase(ActivityPubTestCase):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.title, self.model.title)
             self.assertTrue(link.image)
-            announce = Announce.objects.get()
-            self.assertEqual(announce.object, link.event)
+            accept = Accept.objects.get(object=link.event)
+            self.assertEqual(accept.actor, Follow.objects.get().actor)
 
     def test_update(self):
         title = 'Some new title'

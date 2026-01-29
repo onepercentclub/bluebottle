@@ -16,7 +16,7 @@ from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
 from bluebottle.activity_pub.effects import (
-    AnnounceAdoptionEffect, CancelEffect, UpdateEventEffect, FinishEffect
+    PublishAdoptionEffect, CancelEffect, UpdateEventEffect, FinishEffect
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
@@ -166,7 +166,7 @@ class DeedTriggers(ActivityTriggers):
         TransitionTrigger(
             ActivityStateMachine.approve,
             effects=[
-                AnnounceAdoptionEffect
+                PublishAdoptionEffect
             ]
         ),
 
@@ -181,7 +181,7 @@ class DeedTriggers(ActivityTriggers):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
-                AnnounceAdoptionEffect
+                PublishAdoptionEffect
             ]
         ),
 

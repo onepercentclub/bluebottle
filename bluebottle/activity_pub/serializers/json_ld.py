@@ -3,7 +3,6 @@ from rest_framework import serializers
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Accept,
-    Announce,
     CrowdFunding,
     CollectCampaign,
     Address,
@@ -385,19 +384,10 @@ class FinishSerializer(BaseActivitySerializer):
         model = Finish
 
 
-class AnnounceSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:announce')
-    type = TypeField('Announce')
-    object = EventSerializer()
-
-    class Meta(BaseActivitySerializer.Meta):
-        model = Announce
-
-
 class ActivitySerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
         FollowSerializer, AcceptSerializer, CreateSerializer,
-        AnnounceSerializer, UpdateSerializer, CancelSerializer,
+        UpdateSerializer, CancelSerializer,
         DeleteSerializer, FinishSerializer
     ]
 

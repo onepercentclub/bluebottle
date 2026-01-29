@@ -561,7 +561,7 @@ class Follow(Activity):
 
     @property
     def adopted_activities(self):
-        return Announce.objects.filter(actor=self.actor).count()
+        return Accept.objects.filter(actor=self.actor).count()
 
     def __str__(self):
         return str(self.object)
@@ -592,11 +592,15 @@ class Following(Follow):
 
 
 class Accept(Activity):
-    object = models.ForeignKey('activity_pub.Follow', on_delete=models.CASCADE)
+    object = models.ForeignKey('activity_pub.ActivityPubModel', on_delete=models.CASCADE)
 
     @property
     def default_recipients(self):
-        return [self.object.actor]
+        if isinstance(self.object, Follow):
+            return [self.object.actor]
+        elif isinstance(self.object, Event):
+            create = self.object.create_set.first()
+            return [create.actor]
 
 
 class Create(Activity):
@@ -611,15 +615,6 @@ class Update(Activity):
         for create in self.object.create_set.all():
             for recipient in create.recipients.all():
                 yield recipient.actor
-
-
-class Announce(Activity):
-    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
-
-    @property
-    def default_recipients(self):
-        create = self.object.create_set.first()
-        return [create.actor]
 
 
 class Transition(Activity):

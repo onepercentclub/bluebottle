@@ -13,7 +13,7 @@ from bluebottle.activities.triggers import (
 )
 
 from bluebottle.activity_pub.effects import (
-    AnnounceAdoptionEffect, CancelEffect, UpdateEventEffect, FinishEffect
+    PublishAdoptionEffect, CancelEffect, UpdateEventEffect, FinishEffect
 )
 from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
@@ -138,7 +138,7 @@ class CollectActivityTriggers(ActivityTriggers):
         TransitionTrigger(
             CollectActivityStateMachine.publish,
             effects=[
-                AnnounceAdoptionEffect,
+                PublishAdoptionEffect,
                 TransitionEffect(CollectActivityStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(
                     CollectActivityStateMachine.succeed, conditions=[is_finished, has_contributors]

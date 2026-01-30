@@ -16,6 +16,7 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 
+from bluebottle.activities.models import Activity as DoGoodActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
@@ -461,7 +462,7 @@ class FollowerAdmin(FollowAdmin):
     list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
     actions = ['accept_follow_requests']
     readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities", "publish_activities_button")
-    fields = readonly_fields
+    fields = ('platform', 'accepted')
 
     def platform(self, obj):
         return obj.actor
@@ -486,7 +487,7 @@ class FollowerAdmin(FollowAdmin):
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         if obj and self.accepted(obj):
-            fields += ('publish_mode',)
+            fields += ('publish_mode', "shared_activities", "adopted_activities", "publish_activities_button")
         return fields
 
     def get_urls(self):
@@ -507,7 +508,6 @@ class FollowerAdmin(FollowAdmin):
 
     @admin_form(AcceptFollowPublishModeForm, Follow, 'admin/activity_pub/follow/accept_publish_mode.html')
     def accept_follow_request(self, request, follow, form):
-        """Accept a single follow request allowing publish_mode selection"""
         from bluebottle.activity_pub.models import Accept
 
         platform_actor = get_platform_actor()
@@ -547,7 +547,25 @@ class FollowerAdmin(FollowAdmin):
 
     @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_activities.html')
     def publish_activities(self, request, follow, form):
-        return HttpResponseRedirect(reverse('admin:activity_pub_follower_changelist'))
+        unpublished = DoGoodActivity.objects.filter(
+            status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
+            event__isnull=True,
+            grantapplication__isnull=True,
+        ).all()
+        for activity in unpublished:
+            if not hasattr(activity, 'event'):
+                adapter.create_event(activity)
+
+            publish = activity.event.publish_set.first()
+            Recipient.objects.create(actor=follow.actor, activity=publish)
+
+        self.message_user(
+            request,
+            f"Publishing {unpublished.count()} activities. This may take a few minutes.",
+            level="success"
+        )
+
+        return HttpResponseRedirect(reverse('admin:activity_pub_follower_change', args=(follow.id,)))
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         """Override change view to add accept button context"""
@@ -613,12 +631,19 @@ class FollowerAdmin(FollowAdmin):
     accept_follow_requests.short_description = "Accept selected follow requests"
 
     def publish_activities_button(self, obj):
-        unpublished = Activity.objects.filter(
-            status__in=['open', 'full', 'running', 'partially_funded', 'succeeded'],
+        unpublished = DoGoodActivity.objects.filter(
+            status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
             event__isnull=True
         ).count()
 
-        return format_html('<a class="button">Publish</a> {unpublished} open and succeeded activities', unpublished)
+        url = reverse('admin:activity_pub_publish_activities', args=(obj.id,))
+
+        return format_html(
+            "{} open and succeeded activities<br/>"
+            "<a href=\"{}\" class=\"button\">Publish</a>",
+            unpublished,
+            url
+        )
 
     publish_activities_button.short_description = _("Publish selected follow requests")
 

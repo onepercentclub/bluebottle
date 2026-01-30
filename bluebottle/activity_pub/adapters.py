@@ -138,7 +138,6 @@ class JSONLDAdapter():
             Publish.objects.create(actor=get_platform_actor(), object=event)
         return event
 
-
 adapter = JSONLDAdapter()
 
 
@@ -148,7 +147,6 @@ adapter = JSONLDAdapter()
 )
 def publish_to_recipient(recipient, tenant):
     from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
-
     with LocalTenant(tenant, clear_tenant=True):
         activity = recipient.activity
         actor = recipient.actor

@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    <p>{% trans 'Select how activities from this partner should be shared before accepting the follow request.' %}</p>
+    <p>{% trans 'Publish all open and succeeded activities.' %}</p>
     <p><strong>{% trans 'Partner:' %}</strong> {{ obj.actor }}</p>
 
     <form method="post">
@@ -37,9 +37,8 @@
         </fieldset>
 
         <div class="submit-row flex-row">
-            <input type="submit" name="confirm" value="{% trans 'Accept follow request' %}" class="default"/>
+            <input type="submit" name="confirm" value="{% trans 'Publish activities' %}" class="default"/>
             <a href="{% url opts|admin_urlname:'change' obj.pk %}" class="button">{% trans 'Cancel' %}</a>
         </div>
     </form>
 {% endblock %}
-

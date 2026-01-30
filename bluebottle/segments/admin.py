@@ -20,7 +20,7 @@ class SegmentStateMachineModelFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
-                field_name = field.safe_translation_getter('name', field.slug)
+                field_name = field.name
                 attrs[field.field_name] = forms.CharField(
                     required=False,
                     label=field_name
@@ -33,7 +33,7 @@ class SegmentAdminFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
-                field_name = field.safe_translation_getter('name', field.slug)
+                field_name = field.name
                 attrs[field.field_name] = forms.CharField(
                     required=False,
                     label=field_name
@@ -127,7 +127,7 @@ class SegmentAdmin(
 
     def type_link(self, obj):
         url = "{}".format(reverse('admin:segments_segmenttype_change', args=(obj.segment_type.pk, )))
-        segment_type_name = obj.segment_type.safe_translation_getter('name', obj.segment_type.slug)
+        segment_type_name = obj.segment_type.name
         return format_html("<a href='{}'>{}</a>", url, segment_type_name)
 
     type_link.short_description = _('Segment type')

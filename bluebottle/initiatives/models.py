@@ -307,7 +307,7 @@ def get_search_filters(filters):
                     segment_name = segment.name
                 except (ValueError, AttributeError):
                     segment_name = segment.slug
-                filters.append((f"segment.{segment.slug}", segment_name))
+                filters = filters + [(f"segment.{segment.slug}", segment_name), ]
         return filters
     except ProgrammingError:
         return []

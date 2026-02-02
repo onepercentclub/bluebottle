@@ -2,14 +2,12 @@ from django.db import connection
 from django.urls import reverse
 
 from bluebottle.activity_pub.models import Person
-
-from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
-
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.test.factory_models.organizations import OrganizationFactory
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 
 
 class ActivityPubTestCase(BluebottleTestCase):
@@ -54,7 +52,7 @@ class PersonAPITestCase(ActivityPubTestCase):
                     'https://goodup.com/json-ld'
                 ],
                 'id': self.build_absolute_url(reverse('json-ld:inbox', args=(self.person.inbox.pk, ))),
-                'type': 'Inbox'
+                'type': 'inbox'
             }
         )
 

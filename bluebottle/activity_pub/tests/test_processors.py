@@ -1,4 +1,5 @@
 import datetime
+
 from bluebottle.activity_pub.parsers import default_context, processor
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -169,7 +170,7 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
             '@id',
             'https://www.w3.org/ns/activitystreams#longitude',
             'https://www.w3.org/ns/activitystreams#latitude',
-            'https://goodup.com/json-ld#address',
+            'https://www.w3.org/ns/activitystreams#address',
 
         }
         location = sub_event['https://www.w3.org/ns/activitystreams#location'][0]
@@ -180,13 +181,12 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
 
         address_attributes = {
             '@id',
-            'https://goodup.com/json-ld#postalCode',
-            'https://goodup.com/json-ld#streetAddress',
-            'https://goodup.com/json-ld#locality',
-            'https://goodup.com/json-ld#country',
-
+            'https://schema.org/addressLocality',
+            'https://schema.org/addressCountry',
+            'https://schema.org/postalCode',
+            'https://schema.org/streetAddress'
         }
-        address = location['https://goodup.com/json-ld#address'][0]
+        address = location['https://www.w3.org/ns/activitystreams#address'][0]
         self.assertEqual(
             address_attributes,
             set(address.keys())

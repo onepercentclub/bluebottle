@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Create, Accept, Recipient, Follow, Update, Cancel, Delete, Finish
+    Accept, Follow, Update, Cancel, Delete, Finish
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -14,22 +14,7 @@ class CreateEffect(Effect):
     template = 'admin/activity_pub/create_effect.html'
 
     def post_save(self, **kwargs):
-        from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
-        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
-        activity = self.instance
-
-        if getattr(activity, 'event', None):
-            event = activity.event
-        else:
-            federated_serializer = FederatedActivitySerializer(activity)
-            serializer = EventSerializer(data=federated_serializer.data)
-            serializer.is_valid(raise_exception=True)
-            event = serializer.save(activity=activity)
-
-        publish = Create.objects.create(actor=get_platform_actor(), object=event)
-
-        for follower in self.followers:
-            Recipient.objects.create(actor=follower.actor, activity=publish)
+        adapter.create_or_update_event(self.instance)
 
     @property
     def followers(self):
@@ -78,10 +63,9 @@ class UpdateEventEffect(Effect):
     template = 'admin/activity_pub/update_event_effect.html'
 
     def post_save(self, **kwargs):
-        event = adapter.create_event(self.instance)
-
+        adapter.create_or_update_event(self.instance)
         Update.objects.create(
-            object=event
+            object=self.instance.event
         )
 
     @property

@@ -270,7 +270,7 @@ class SourceFilter(admin.SimpleListFilter):
     parameter_name = 'partner'
 
     def lookups(self, request, model_admin):
-        options = Organization.objects.values_list('id', 'name')
+        options = Following.objects.values_list('object__organization__id', 'object__organization__name')
         return options
 
     def queryset(self, request, queryset):
@@ -861,11 +861,18 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
         return Event.objects.filter(iri__isnull=True)
 
 
+@admin.action(description="Adopt selected as links")
+def adopt_events_as_links(self, request, events):
+    for event in events:
+        adapter.link(event)
+
+
 @admin.register(ReceivedActivity)
 class ReceivedActivityAdmin(EventPolymorphicAdmin):
     model = ReceivedActivity
     list_display = ("name_link", "type", "source", "adopted", "linked")
     list_display_links = ("name_link",)
+    actions = [adopt_events_as_links]
 
     def source(self, obj):
         return obj.source

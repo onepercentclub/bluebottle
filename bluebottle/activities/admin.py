@@ -808,7 +808,7 @@ class ActivityChildAdmin(
             raise PermissionDenied
 
         if not hasattr(activity, 'event'):
-            adapter.create_event(activity)
+            adapter.create_or_update_event(activity)
 
         publish = activity.event.create_set.first()
         new_recipients = form.cleaned_data.get('recipients') or []

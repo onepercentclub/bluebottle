@@ -195,7 +195,7 @@ class ActivityPubTestCase:
     def submit(self):
         self.model.states.submit()
         self.model.states.approve(save=True)
-        adapter.create_event(self.model)
+        adapter.create_or_update_event(self.model)
 
     def test_publish(self):
         self.test_accept()
@@ -253,7 +253,7 @@ class ActivityPubTestCase:
         activity = DeedFactory.create(status='submitted')
         activity.states.approve(save=True)
 
-        adapter.create_event(activity)
+        adapter.create_or_update_event(activity)
         publish = activity.event.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
@@ -446,7 +446,60 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             organization=None,
             **kwargs
         )
-        self.submit()
+        if 'status' not in kwargs:
+            self.submit()
+
+    def test_link_succeeded(self):
+        self.test_accept()
+        self.follow.publish_mode = 'automatic'
+        self.follow.save(update_fields=['publish_mode'])
+
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
+        with httmock.HTTMock(image_mock):
+            self.create(status='succeeded')
+            adapter.create_or_update_event(self.model)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'succeeded')
+
+    def test_link_cancelled(self):
+        self.test_accept()
+        self.follow.publish_mode = 'automatic'
+        self.follow.save(update_fields=['publish_mode'])
+
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
+        with httmock.HTTMock(image_mock):
+            self.create(status='cancelled')
+            adapter.create_or_update_event(self.model)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'cancelled')
+
+    def test_link_manual_succeeded(self):
+        self.test_accept()
+
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
+        with httmock.HTTMock(image_mock):
+            self.create(status='succeeded')
+
+            adapter.create_or_update_event(self.model)
+            publish = self.model.event.create_set.first()
+            Recipient.objects.create(actor=self.follow.actor, activity=publish)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'succeeded')
 
 
 @override_settings(

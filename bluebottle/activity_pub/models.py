@@ -614,6 +614,18 @@ class Accept(Activity):
 class Create(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
+    @property
+    def followers(self):
+        from bluebottle.activity_pub.utils import get_platform_actor
+
+        actor = get_platform_actor()
+        followers = Follow.objects.filter(publish_mode='automatic', accept__actor=actor)
+        return followers
+
+    @property
+    def default_recipients(self):
+        return [follower.actor for follower in self.followers]
+
 
 class Update(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)

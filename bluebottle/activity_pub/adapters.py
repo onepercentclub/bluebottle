@@ -10,9 +10,9 @@ from django_tools.middlewares.ThreadLocal import get_current_user
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import Follow, Create, Event
-from bluebottle.activity_pub.models import Organization
-from bluebottle.activity_pub.models import Recipient
+from bluebottle.activity_pub.models import (
+    Organization, Recipient, Follow, Create, Event, Finish, Cancel
+)
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
@@ -113,7 +113,7 @@ class JSONLDAdapter():
 
         return serializer.save(**save_kwargs)
 
-    def create_event(self, activity):
+    def create_or_update_event(self, activity):
         from bluebottle.activities.models import Activity as BluebottleActivity
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
@@ -136,6 +136,13 @@ class JSONLDAdapter():
 
         if not event.create_set.exists():
             Create.objects.create(actor=get_platform_actor(), object=event)
+
+            if activity.status != 'open':
+                if activity.status == 'succeeded':
+                    Finish.objects.create(object=event)
+                else:
+                    Cancel.objects.create(object=event)
+
         return event
 
 adapter = JSONLDAdapter()
@@ -191,6 +198,16 @@ def publish_to_recipient(recipient, tenant):
 def publish_recipient(instance, created, **kwargs):
     if created:
         publish_to_recipient.delay(instance, connection.tenant)
+
+        # Sometimes we need to send follow up activities to the recipient,
+        # for example when the activity transitioned before the recipient was created
+        for transition_cls in [Finish, Cancel]:
+            if isinstance(instance.activity, Create):
+                for transition in transition_cls.objects.filter(object=instance.activity.object):
+                    Recipient.objects.create(
+                        actor=instance.actor,
+                        activity=transition
+                    )
 
 
 @receiver([post_save])

@@ -10,7 +10,7 @@ from django_tools.middlewares.ThreadLocal import get_current_user
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import Follow, Publish, Event
+from bluebottle.activity_pub.models import Follow, Create, Event
 from bluebottle.activity_pub.models import Organization
 from bluebottle.activity_pub.models import Recipient
 from bluebottle.activity_pub.parsers import JSONLDParser
@@ -88,7 +88,7 @@ class JSONLDAdapter():
         serializer.is_valid(raise_exception=True)
 
         follow = Follow.objects.get(object=event.source)
-        organization = Publish.objects.filter(object=event).first().actor.organization
+        organization = Create.objects.filter(object=event).first().actor.organization
         owner = follow.default_owner or get_current_user()
         return serializer.save(owner=owner, host_organization=organization)
 
@@ -104,7 +104,7 @@ class JSONLDAdapter():
             context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
-        organization = Publish.objects.filter(object=event).first().actor.organization
+        organization = Create.objects.filter(object=event).first().actor.organization
 
         save_kwargs = {
             'host_organization': organization,
@@ -134,8 +134,8 @@ class JSONLDAdapter():
         serializer.is_valid(raise_exception=True)
         event = serializer.save(activity=activity)
 
-        if not event.publish_set.exists():
-            Publish.objects.create(actor=get_platform_actor(), object=event)
+        if not event.create_set.exists():
+            Create.objects.create(actor=get_platform_actor(), object=event)
         return event
 
 adapter = JSONLDAdapter()

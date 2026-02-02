@@ -29,8 +29,7 @@ from bluebottle.activity_pub.models import (
     Person,
     Place,  # Add Place import
     PublicKey,
-    Publish,
-    Announce,
+    Create,
     Organization,
     Following,
     Follower, GoodDeed, CrowdFunding, CollectCampaign, DoGoodEvent,
@@ -56,8 +55,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Actor,
         Follow,
         PublicKey,
-        Publish,
-        Announce,
+        Create,
         Event,
         Organization,
         GoodDeed,
@@ -236,7 +234,7 @@ class PublicKeyAdmin(ActivityPubModelChildAdmin):
     list_display = ("id", 'inbox', 'outbox')
 
 
-@admin.register(Publish)
+@admin.register(Create)
 class PublishAdmin(ActivityPubModelChildAdmin):
     list_display = ("id", "actor", "object")
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')
@@ -248,29 +246,6 @@ class AcceptAdmin(ActivityAdmin):
     list_display = ("id", "actor", "object")
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')
     inlines = [RecipientInline]
-
-
-@admin.register(Announce)
-class AnnounceAdmin(ActivityAdmin):
-    list_display = ("id", "actor", "object")
-    inlines = [RecipientInline]
-
-
-class AnnouncementInline(admin.StackedInline):
-    verbose_name = _("Adoption")
-    verbose_name_plural = _("Adoptions")
-    model = Announce
-    extra = 0
-    fk_name = "object"
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 class AdoptedFilter(admin.SimpleListFilter):
@@ -300,7 +275,7 @@ class SourceFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            queryset = queryset.filter(publishes__actor=self.value())
+            queryset = queryset.filter(create__actor=self.value())
         return queryset
 
 
@@ -876,11 +851,11 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
     list_display_links = ("name_link",)
 
     def shared(self, obj):
-        publish = Publish.objects.filter(object=obj).first()
+        publish = Create.objects.filter(object=obj).first()
         return publish.recipients.filter(send=True).count()
 
     def adopted(self, obj):
-        return Announce.objects.filter(object=obj).count()
+        return Accept.objects.filter(object=obj).count()
 
     def get_queryset(self, request):
         return Event.objects.filter(iri__isnull=True)
@@ -954,7 +929,7 @@ class CollectCampaignAdmin(EventChildAdmin):
         'location',
         'collect_type',
         'target',
-        'amount'
+        'donated'
     )
     fields = readonly_fields
 
@@ -1007,7 +982,7 @@ class DoGoodEventAdmin(EventChildAdmin):
         'start_time',
         'end_time',
         'duration',
-        'registration_deadline',
+        'application_deadline',
         'event_attendance_mode',
         'repetition_mode',
         'join_mode',

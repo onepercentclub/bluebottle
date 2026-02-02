@@ -771,7 +771,7 @@ class ActivityChildAdmin(
         try:
             event = obj.event
             if event:
-                publishes = event.publish_set.all().prefetch_related("recipients__actor")
+                publishes = event.create_set.all().prefetch_related("recipients__actor")
                 for publish in publishes:
                     for recipient in publish.recipients.all():
                         actor = recipient.actor
@@ -810,7 +810,7 @@ class ActivityChildAdmin(
         if not hasattr(activity, 'event'):
             adapter.create_event(activity)
 
-        publish = activity.event.publish_set.first()
+        publish = activity.event.create_set.first()
         new_recipients = form.cleaned_data.get('recipients') or []
         for actor in new_recipients:
             Recipient.objects.create(actor=actor, activity=publish)

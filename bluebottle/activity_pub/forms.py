@@ -29,7 +29,7 @@ class SharePublishForm(forms.Form):
         old_recipient_ids = []
         old_recipients = []
         try:
-            publish = obj.event.publish_set.first()
+            publish = obj.event.create_set.first()
             if publish:
                 # Recipients are Recipient objects, extract the actors
                 old_recipients = [r.actor for r in publish.recipients.all()]

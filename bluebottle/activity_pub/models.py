@@ -137,7 +137,7 @@ class OrganizationManager(ActivityPubManager):
                 outbox=outbox,
                 public_key=public_key,
                 name=model.name,
-                logo=Image.objects.create(
+                icon=Image.objects.create(
                     url=logo_url,
                     name=model.logo.name
                 ) if logo_url else None,
@@ -157,7 +157,7 @@ class Organization(Actor):
     content = models.TextField(null=True, blank=True)
 
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
-    logo = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
+    icon = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
 
     organization = models.OneToOneField(
         BluebottleOrganization,
@@ -217,12 +217,14 @@ class PublicKey(ActivityPubModel):
 
 
 class Address(ActivityPubModel):
+    summary = models.TextField(null=True, blank=True)
+
     street_address = models.CharField(max_length=1000, null=True)
     postal_code = models.CharField(max_length=1000, null=True)
 
-    address_locality = models.CharField(max_length=1000, null=True)
-    address_region = models.CharField(max_length=1000, null=True)
-    address_country = models.CharField(max_length=1000, null=True)
+    locality = models.CharField(max_length=1000, null=True)
+    region = models.CharField(max_length=1000, null=True)
+    country = models.CharField(max_length=1000, null=True)
 
 
 class Place(ActivityPubModel):
@@ -251,9 +253,9 @@ class Event(ActivityPubModel):
 
     @property
     def source(self):
-        publish = Publish.objects.filter(object=self).first()
-        if publish:
-            return publish.actor
+        create = Create.objects.filter(object=self).first()
+        if create:
+            return create.actor
 
     @property
     def adopted_activity(self):
@@ -311,8 +313,6 @@ class GoodDeed(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
-    activity_type = 'deed'
-
     class Meta:
         verbose_name = _("Deed")
         verbose_name_plural = _("Deeds")
@@ -322,9 +322,8 @@ class CollectCampaign(Event):
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
-    location_hint = models.CharField(max_length=1000, null=True, blank=True)
     target = models.FloatField(null=True)
-    amount = models.FloatField(null=True)
+    donated = models.FloatField(null=True)
     collect_type = models.CharField(
         verbose_name=_("Type"),
         max_length=200,
@@ -346,8 +345,6 @@ class CrowdFunding(Event):
     end_time = models.DateTimeField(null=True)
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
-
-    activity_type = 'funding'
 
     class Meta:
         verbose_name = _("Funding")
@@ -448,7 +445,7 @@ class SubEvent(ActivityPubModel):
 class DoGoodEvent(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
-    registration_deadline = models.DateTimeField(null=True)
+    application_deadline = models.DateTimeField(null=True)
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
     duration = models.DurationField(null=True)
@@ -465,13 +462,6 @@ class DoGoodEvent(Event):
         choices=JoinModeChoices.choices,
         null=True
     )
-
-    @property
-    def activity_type(self):
-        if len(self.sub_event.all()) > 0:
-            return 'dateactivity'
-        else:
-            return 'deadlineactivity'
 
     slot_mode = models.CharField(
         choices=SlotModeChoices.choices,
@@ -561,17 +551,17 @@ class Follow(Activity):
     def shared_activities(self):
         if self.is_local:
             return Event.objects.filter(
-                publish__actor=self.object,
+                create__actor=self.object,
             )
         return Recipient.objects.filter(
             actor=self.actor,
-            activity__publish__isnull=False,
+            activity__create__isnull=False,
             send=True
         )
 
     @property
     def adopted_activities(self):
-        return Announce.objects.filter(actor=self.actor)
+        return Accept.objects.filter(actor=self.actor).count()
 
     @property
     def unpublished_activities(self):
@@ -610,14 +600,18 @@ class Following(Follow):
 
 
 class Accept(Activity):
-    object = models.ForeignKey('activity_pub.Follow', on_delete=models.CASCADE)
+    object = models.ForeignKey('activity_pub.ActivityPubModel', on_delete=models.CASCADE)
 
     @property
     def default_recipients(self):
-        return [self.object.actor]
+        if isinstance(self.object, Follow):
+            return [self.object.actor]
+        elif isinstance(self.object, Event):
+            create = self.object.create_set.first()
+            return [create.actor]
 
 
-class Publish(Activity):
+class Create(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
 
@@ -626,18 +620,9 @@ class Update(Activity):
 
     @property
     def default_recipients(self):
-        for publish in self.object.publish_set.all():
-            for recipient in publish.recipients.all():
+        for create in self.object.create_set.all():
+            for recipient in create.recipients.all():
                 yield recipient.actor
-
-
-class Announce(Activity):
-    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
-
-    @property
-    def default_recipients(self):
-        publish = self.object.publish_set.first()
-        return [publish.actor]
 
 
 class Transition(Activity):
@@ -645,8 +630,8 @@ class Transition(Activity):
 
     @property
     def default_recipients(self):
-        for publish in self.object.publish_set.all():
-            for recipient in publish.recipients.all():
+        for create in self.object.create_set.all():
+            for recipient in create.recipients.all():
                 yield recipient.actor
 
     class Meta:

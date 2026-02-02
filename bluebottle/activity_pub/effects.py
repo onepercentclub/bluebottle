@@ -2,16 +2,16 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Publish, Announce, Recipient, Follow, Update, Cancel, Delete, Finish
+    Create, Accept, Recipient, Follow, Update, Cancel, Delete, Finish
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
 from bluebottle.activity_links.models import LinkedActivity
 
 
-class PublishEffect(Effect):
+class CreateEffect(Effect):
     display = True
-    template = 'admin/activity_pub/publish_effect.html'
+    template = 'admin/activity_pub/create_effect.html'
 
     def post_save(self, **kwargs):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -26,7 +26,7 @@ class PublishEffect(Effect):
             serializer.is_valid(raise_exception=True)
             event = serializer.save(activity=activity)
 
-        publish = Publish.objects.create(actor=get_platform_actor(), object=event)
+        publish = Create.objects.create(actor=get_platform_actor(), object=event)
 
         for follower in self.followers:
             Recipient.objects.create(actor=follower.actor, activity=publish)
@@ -49,9 +49,9 @@ class PublishEffect(Effect):
         return str(_('Publish activity to followers'))
 
 
-class AnnounceAdoptionEffect(Effect):
+class PublishAdoptionEffect(Effect):
     display = True
-    template = 'admin/activity_pub/announce_adoption_effect.html'
+    template = 'admin/activity_pub/publish_adoption_effect.html'
 
     def post_save(self, **kwargs):
         if hasattr(self.instance, 'origin'):
@@ -60,7 +60,7 @@ class AnnounceAdoptionEffect(Effect):
             event = self.instance.event
 
         actor = get_platform_actor()
-        Announce.objects.create(actor=actor, object=event)
+        Accept.objects.create(actor=actor, object=event)
 
     @property
     def is_valid(self):
@@ -70,7 +70,7 @@ class AnnounceAdoptionEffect(Effect):
         ) and get_platform_actor() is not None
 
     def __str__(self):
-        return str(_('Announce that the activity has been adopted'))
+        return str(_('Publish that the activity has been adopted'))
 
 
 class UpdateEventEffect(Effect):

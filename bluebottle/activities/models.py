@@ -15,7 +15,7 @@ from multiselectfield import MultiSelectField
 from parler.managers import TranslatableManager, TranslatableQuerySet
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.managers import PolymorphicManager
-from polymorphic.models import PolymorphicModel
+from polymorphic.models import PolymorphicModel, PolymorphicTypeInvalid
 from polymorphic.query import PolymorphicQuerySet
 
 from bluebottle.files.fields import ImageField, PrivateDocumentField
@@ -308,7 +308,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        type = self.get_real_instance().__class__.__name__.lower()
+        try:
+            type = self.get_real_instance().__class__.__name__.lower()
+        except PolymorphicTypeInvalid:
+            type = self.__class__.__name__.lower()
         return (
             f"{domain}/{language}/activities/details/{type}/{self.id}/{self.slug}"
         )

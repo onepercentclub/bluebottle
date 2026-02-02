@@ -10,16 +10,14 @@ from django.db import connection, models
 from django.urls import reverse
 from djmoney.money import Money
 from rest_framework import exceptions
+from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
-
-from bluebottle.collect.models import CollectActivity, CollectType
-from bluebottle.utils.models import get_default_language
-
-from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
-from bluebottle.activity_pub.serializers.fields import FederatedIdField
 
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
     SubEvent, RepetitionModeChoices, SlotModeChoices
+from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
+from bluebottle.activity_pub.serializers.fields import FederatedIdField
+from bluebottle.collect.models import CollectActivity, CollectType
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
@@ -29,8 +27,7 @@ from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
     PeriodicActivity, ScheduleActivity
 from bluebottle.utils.fields import RichTextField
-
-from rest_framework import serializers
+from bluebottle.utils.models import get_default_language
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +192,7 @@ class LocationSerializer(FederatedObjectSerializer):
 
 class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     name = serializers.CharField(source='title')
-    summary = RichTextField(source='description')
+    summary = RichTextField(source='description', allow_blank=True, allow_null=True)
     image = ImageSerializer(required=False, allow_null=True)
     organization = OrganizationSerializer(required=False, allow_null=True)
     url = serializers.SerializerMethodField()

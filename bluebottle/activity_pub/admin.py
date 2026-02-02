@@ -16,8 +16,7 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 
-from bluebottle.activities.models import Activity as DoGoodActivity
-from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.adapters import adapter, publish_activities
 from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
     Activity,
@@ -356,6 +355,12 @@ class FollowingAdmin(FollowAdmin):
 
     readonly_fields = ('object', 'accepted', "shared_activities", "adopted_activities")
 
+    def shared_activities(self, obj):
+        return obj.shared_activities.count()
+
+    def adopted_activities(self, obj):
+        return obj.adopted_activities.count()
+
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
         from bluebottle.activity_pub.models import Accept
@@ -464,6 +469,12 @@ class FollowerAdmin(FollowAdmin):
     readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities", "publish_activities_button")
     fields = ('platform', 'accepted')
 
+    def shared_activities(self, obj):
+        return obj.shared_activities.count()
+
+    def adopted_activities(self, obj):
+        return obj.adopted_activities.count()
+
     def platform(self, obj):
         return obj.actor
 
@@ -547,21 +558,12 @@ class FollowerAdmin(FollowAdmin):
 
     @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_activities.html')
     def publish_activities(self, request, follow, form):
-        unpublished = DoGoodActivity.objects.filter(
-            status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
-            event__isnull=True,
-            grantapplication__isnull=True,
-        ).all()
-        for activity in unpublished:
-            if not hasattr(activity, 'event'):
-                adapter.create_event(activity)
-
-            publish = activity.event.publish_set.first()
-            Recipient.objects.create(actor=follow.actor, activity=publish)
+        unpublished = follow.unpublished_activities.all()
+        publish_activities.delay(follow.actor, unpublished, connection.tenant)
 
         self.message_user(
             request,
-            f"Publishing {unpublished.count()} activities. This may take a few minutes.",
+            f"Publishing {unpublished.count()} activities. This may take a few minutes. You can refresh this page to see the progress.",
             level="success"
         )
 
@@ -631,21 +633,19 @@ class FollowerAdmin(FollowAdmin):
     accept_follow_requests.short_description = "Accept selected follow requests"
 
     def publish_activities_button(self, obj):
-        unpublished = DoGoodActivity.objects.filter(
-            status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
-            event__isnull=True
-        ).count()
+
 
         url = reverse('admin:activity_pub_publish_activities', args=(obj.id,))
 
         return format_html(
-            "{} open and succeeded activities<br/>"
-            "<a href=\"{}\" class=\"button\">Publish</a>",
-            unpublished,
+            "<div style='display: inline-block; gap: 8px'>"
+            "<p>{} open and succeeded activities<p/>"
+            "<a href=\"{}\" class=\"button\">Publish</a></div>",
+            obj.unpublished_activities.count(),
             url
         )
 
-    publish_activities_button.short_description = _("Publish selected follow requests")
+    publish_activities_button.short_description = _("Publish activities")
 
 
 @admin.register(Place)

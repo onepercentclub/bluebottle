@@ -20,18 +20,11 @@
         <fieldset class="module aligned">
             <div class="form-row">
                 <div>
-                    <label for="{{ form.publish_mode.id_for_label }}">{{ form.publish_mode.label }}:</label>
-                    {{ form.publish_mode }}
-                    {% if form.publish_mode.help_text %}
-                        <p class="help">{{ form.publish_mode.help_text }}</p>
-                    {% endif %}
-                    {% if form.publish_mode.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.publish_mode.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                    <p>
+                        {% blocktrans with count=obj.unpublished_activities.count actor=obj.actor %}
+                            Are you sure you want to publish {{ count }} activities to {{ actor }}?
+                        {% endblocktrans %}
+                    </p>
                 </div>
             </div>
         </fieldset>

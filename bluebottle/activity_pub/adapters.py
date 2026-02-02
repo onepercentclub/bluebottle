@@ -143,6 +143,20 @@ adapter = JSONLDAdapter()
 
 @shared_task(
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
+    name="bluebottle.activity_pub.adapters.publish_activities"
+)
+def publish_activities(recipient, activities, tenant):
+    with LocalTenant(tenant, clear_tenant=True):
+        for activity in activities:
+            if not hasattr(activity, 'event'):
+                adapter.create_event(activity)
+
+            publish = activity.event.publish_set.first()
+            Recipient.objects.create(actor=recipient, activity=publish)
+
+
+@shared_task(
+    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
     name="bluebottle.activity_pub.adapters.publish_to_recipient"
 )
 def publish_to_recipient(recipient, tenant):

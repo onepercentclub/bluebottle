@@ -151,7 +151,7 @@ def publish_activities(recipient, activities, tenant):
             if not hasattr(activity, 'event'):
                 adapter.create_event(activity)
 
-            publish = activity.event.publish_set.first()
+            publish = activity.event.create_set.first()
             Recipient.objects.create(actor=recipient, activity=publish)
 
 

@@ -1,6 +1,7 @@
 import requests
 from django import forms
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.admin.utils import unquote
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -529,7 +530,7 @@ class FollowerAdmin(FollowAdmin):
                 level="success"
             )
 
-        return HttpResponseRedirect(reverse('admin:activity_pub_follower_changelist'))
+        return HttpResponseRedirect(reverse('admin:activity_pub_follower_change', args=(follow.id,)))
 
     @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_activities.html')
     def publish_activities(self, request, follow, form):
@@ -861,10 +862,18 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
         return Event.objects.filter(iri__isnull=True)
 
 
-@admin.action(description="Adopt selected as links")
-def adopt_events_as_links(self, request, events):
+@admin.action(description="Adopt selected activities")
+def adopt_events(modeladmin, request, events):
     for event in events:
-        adapter.link(event)
+        if event.source.follow.adoption_type == 'link':
+            adapter.link(event)
+        if event.source.follow.adoption_type == 'template':
+            adapter.adopt(event)
+    modeladmin.message_user(
+        request,
+        _('{amount} activities have been adopted.').format(amount=len(events)),
+        messages.SUCCESS,
+    )
 
 
 @admin.register(ReceivedActivity)
@@ -872,7 +881,7 @@ class ReceivedActivityAdmin(EventPolymorphicAdmin):
     model = ReceivedActivity
     list_display = ("name_link", "type", "source", "adopted", "linked")
     list_display_links = ("name_link",)
-    actions = [adopt_events_as_links]
+    actions = [adopt_events]
 
     def source(self, obj):
         return obj.source

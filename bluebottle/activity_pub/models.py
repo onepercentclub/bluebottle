@@ -561,7 +561,7 @@ class Follow(Activity):
 
     @property
     def adopted_activities(self):
-        return Accept.objects.filter(actor=self.actor).count()
+        return Accept.objects.filter(actor=self.actor)
 
     @property
     def unpublished_activities(self):

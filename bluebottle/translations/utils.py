@@ -56,7 +56,8 @@ def get_translation_response(text, target_language):
 
 def translate_text_cached(text, target_language):
     if not text:
-        return ""
+        return None
+
     trans = Translation.objects.filter(
         text=text,
         target_language=target_language
@@ -67,12 +68,15 @@ def translate_text_cached(text, target_language):
             "source_language": trans.source_language,
         }
 
-    translated = get_translation_response(text, target_language)
+    try:
+        translated = get_translation_response(text, target_language)
 
-    Translation.objects.create(
-        target_language=target_language,
-        source_language=translated["source_language"],
-        text=text,
-        translation=translated["value"],
-    )
-    return translated
+        Translation.objects.create(
+            target_language=target_language,
+            source_language=translated["source_language"],
+            text=text,
+            translation=translated["value"],
+        )
+        return translated
+    except Exception:
+        return None

@@ -17,7 +17,7 @@ from bluebottle.activity_links.models import (
 from bluebottle.activity_pub.models import Image as ActivityPubImage
 from bluebottle.files.models import Image
 from bluebottle.geo.models import Geolocation, Country
-from bluebottle.geo.serializers import GeolocationSerializer, PointSerializer, CountrySerializer
+from bluebottle.geo.serializers import GeolocationSerializer
 from bluebottle.utils.fields import RichTextField
 
 
@@ -61,13 +61,13 @@ class AddressSerializer(serializers.Serializer):
     street_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     postal_code = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    address_locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    address_region = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    address_country = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    region = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    country = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         fields = (
-            'street_address', 'postal_code', 'address_locality', 'address_region', 'address_country',
+            'street_address', 'postal_code', 'locality', 'region', 'country',
         )
 
 
@@ -76,95 +76,29 @@ class LinkedLocationSerializer(GeolocationSerializer):
     name = serializers.CharField(source='formatted_address', write_only=True, required=False)
     latitude = serializers.FloatField(write_only=True, required=False)
     longitude = serializers.FloatField(write_only=True, required=False)
-    position = PointSerializer(read_only=True)
-    country = CountrySerializer(read_only=True)
 
     def to_internal_value(self, data):
-        if not data or not data['id']:
-            return {}
+        result = dict(**super().to_internal_value(data))
+        address = result['address']
 
-        lat = data.pop('latitude', None)
-        long = data.pop('longitude', None)
-        if lat is not None and long is not None:
-            data['position'] = Point(float(lat), float(long))
-        else:
-            data['position'] = None
+        country = Country.objects.filter(alpha2_code=address['country']).first()
 
-        address = data.pop('address', {})
-        if address and isinstance(address, dict):
-            if address.get('address_country', None):
-                country = Country.objects.filter(alpha2_code=address['address_country'].upper()).first()
-                if country:
-                    data['country'] = country
-            data['province'] = address.get('address_region', None)
-            data['locality'] = address.get('address_locality', None)
-            data['postal_code'] = address.get('postal_code', None)
-            data['street'] = address.get('street_address', None)
-
-        if 'name' in data:
-            data['formatted_address'] = data.pop('name', None)
-
-        location = None
-        if data.get('position'):
-            location = Geolocation.objects.filter(position=data['position']).first()
-
-        if location:
-            data['id'] = location.id
-        else:
-            data['id'] = None
-        return data
+        return {
+            'position': Point(
+                result['longitude'], result['latitude']
+            ),
+            'formatted_address': result['formatted_address'],
+            'locality': address['locality'],
+            'street': address['street_address'],
+            'postal_code': address['postal_code'],
+            'country': country
+        }
 
     class Meta:
         model = Geolocation
-        fields = GeolocationSerializer.Meta.fields + ('address', 'name', 'longitude', 'latitude')
-
-
-class LinkedLocationMixin(object):
-
-    def _save_location(self, instance, location_data):
-        location_obj = None
-        if location_data is serializers.empty:
-            return instance
-
-        if location_data is None:
-            instance.location = None
-            instance.save(update_fields=['location'])
-            return None
-
-        loc_id = location_data.get('id', None)
-
-        location_fields = dict(location_data)
-
-        position = location_data.get('position', None)
-        if position:
-            location_fields['position'] = position
-
-        if loc_id:
-            location_obj = Geolocation.objects.select_for_update().get(id=loc_id)
-            for attr, value in location_fields.items():
-                if value is not None:
-                    setattr(location_obj, attr, value)
-            location_obj.save()
-        else:
-            if location_fields:
-                location_obj = Geolocation.objects.create(**location_fields)
-            else:
-                location_obj = None
-        return location_obj
-
-    def create(self, validated_data):
-        location_data = validated_data.pop('location', serializers.empty)
-        instance = super().create(validated_data)
-        instance.location = self._save_location(instance, location_data)
-        instance.save(update_fields=['location'])
-        return instance
-
-    def update(self, instance, validated_data):
-        location_data = validated_data.pop('location', serializers.empty)
-        instance = super().update(instance, validated_data)
-        instance.location = self._save_location(instance, location_data)
-        instance.save(update_fields=['location'])
-        return instance
+        fields = (
+            'address', 'name', 'longitude', 'latitude'
+        )
 
 
 class BaseLinkedActivitySerializer(serializers.ModelSerializer):
@@ -184,6 +118,12 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
             serializer.is_valid(raise_exception=True)
             validated_data['image'] = serializer.save()
 
+        location = validated_data.pop('location', None)
+        if location:
+            serializer = LinkedLocationSerializer(data=self.initial_data['location'])
+            serializer.is_valid(raise_exception=True)
+            validated_data['location'] = serializer.save()
+
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
@@ -194,6 +134,14 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
             )
             serializer.is_valid(raise_exception=True)
             validated_data['image'] = serializer.save()
+
+        location = validated_data.pop('location', None)
+        if location:
+            serializer = LinkedLocationSerializer(
+                data=self.initial_data['location'], instance=getattr(instance, 'location')
+            )
+            serializer.is_valid(raise_exception=True)
+            validated_data['location'] = serializer.save()
 
         return super().update(instance, validated_data)
 
@@ -209,7 +157,7 @@ class LinkedDeedSerializer(BaseLinkedActivitySerializer):
         )
 
 
-class LinkedCollectCampaignSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+class LinkedCollectCampaignSerializer(BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
     location = LinkedLocationSerializer(required=False, allow_null=True)
@@ -221,7 +169,7 @@ class LinkedCollectCampaignSerializer(LinkedLocationMixin, BaseLinkedActivitySer
         )
 
 
-class LinkedSlotSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+class LinkedSlotSerializer(BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
     location = LinkedLocationSerializer(required=False, allow_null=True)
@@ -266,7 +214,7 @@ class LinkedDateActivitySerializer(BaseLinkedActivitySerializer):
         return result
 
 
-class LinkedDeadlineActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+class LinkedDeadlineActivitySerializer(BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
     location = LinkedLocationSerializer(required=False, allow_null=True)
@@ -294,7 +242,7 @@ class PeriodChoiceField(serializers.CharField):
                 return k
 
 
-class LinkedPeriodicActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+class LinkedPeriodicActivitySerializer(BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
     location = LinkedLocationSerializer(required=False, allow_null=True)
@@ -308,7 +256,7 @@ class LinkedPeriodicActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySe
         )
 
 
-class LinkedScheduleActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+class LinkedScheduleActivitySerializer(BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
     location = LinkedLocationSerializer(required=False, allow_null=True)
@@ -321,12 +269,12 @@ class LinkedScheduleActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySe
         )
 
 
-class LinkedRegisteredDateActivitySerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+class LinkedRegisteredDateActivitySerializer(BaseLinkedActivitySerializer):
     class Meta(BaseLinkedActivitySerializer.Meta):
         model = LinkedDeadlineActivity
 
 
-class LinkedFundingSerializer(LinkedLocationMixin, BaseLinkedActivitySerializer):
+class LinkedFundingSerializer(BaseLinkedActivitySerializer):
     end_time = serializers.DateTimeField(source='end', allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True)
     location = LinkedLocationSerializer(required=False, allow_null=True)

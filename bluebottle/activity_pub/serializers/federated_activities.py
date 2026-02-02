@@ -127,15 +127,15 @@ class AddressSerializer(FederatedObjectSerializer):
     street_address = serializers.CharField(source='street', required=False, allow_null=True)
     postal_code = serializers.CharField(required=False, allow_null=True)
 
-    address_locality = serializers.CharField(source='locality', required=False, allow_null=True)
-    address_region = serializers.CharField(source='province', required=False, allow_null=True)
-    address_country = CountryField(source='country.code', required=False, allow_null=True)
+    locality = serializers.CharField(required=False, allow_null=True)
+    region = serializers.CharField(source='province', required=False, allow_null=True)
+    country = CountryField(source='country.code', required=False, allow_null=True)
 
     class Meta:
         model = Geolocation
         fields = (
-            'id', 'street_address', 'postal_code', 'address_locality',
-            'address_region', 'address_country'
+            'id', 'street_address', 'postal_code', 'locality',
+            'region', 'country'
         )
 
     def to_internal_value(self, data):
@@ -155,11 +155,11 @@ class OrganizationSerializer(FederatedObjectSerializer):
         allow_null=True,
         required=False
     )
-    logo = ImageField(required=False, allow_null=True)
+    icon = ImageField(source='logo', required=False, allow_null=True)
 
     class Meta:
         model = Organization
-        fields = ('id', 'name', 'summary', 'logo')
+        fields = ('id', 'name', 'summary', 'icon')
 
 
 class LocationSerializer(FederatedObjectSerializer):
@@ -280,16 +280,15 @@ class FederatedCollectSerializer(BaseFederatedActivitySerializer):
         create_if_missing=True,
     )
     target = serializers.FloatField(allow_null=True, required=False)
-    amount = serializers.FloatField(source='realized', allow_null=True, required=False)
+    donated = serializers.FloatField(source='realized', allow_null=True, required=False)
     location = LocationSerializer(allow_null=True, required=False)
-    location_hint = serializers.CharField(allow_null=True, allow_blank=True, required=False, max_length=500)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = CollectActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
             'start_time', 'end_time',
-            'collect_type', 'target', 'amount', 'realized',
-            'location', 'location_hint'
+            'collect_type', 'target', 'donated', 'realized',
+            'location',
         )
 
 
@@ -390,7 +389,7 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
 
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True)
-    registration_deadline = DateField(allow_null=True)
+    application_deadline = DateField(source='registration_deadline', allow_null=True)
 
     event_attendance_mode = EventAttendanceModeField()
     join_mode = JoinModeField()
@@ -399,7 +398,7 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DeadlineActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'location', 'start_time', 'end_time', 'registration_deadline',
+            'location', 'start_time', 'end_time', 'application_deadline',
             'event_attendance_mode', 'duration', 'join_mode'
         )
 
@@ -484,12 +483,12 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
 
     sub_event = SlotsSerializer(many=True, source='slots')
     join_mode = JoinModeField()
-    registration_deadline = DateField(allow_null=True)
+    application_deadline = DateField(source='registration_deadline', allow_null=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'sub_event', 'review', 'join_mode', 'registration_deadline',
+            'sub_event', 'review', 'join_mode', 'application_deadline',
         )
 
     def create(self, validated_data):
@@ -524,7 +523,7 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     image = ImageSerializer(required=False, allow_null=True)
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True, read_only=True)
-    registration_deadline = DateField(allow_null=True)
+    application_deadline = DateField(source='registration_deadline', allow_null=True)
     duration = serializers.DurationField(allow_null=True)
     repetition_mode = RepetitionModeField()
     event_attendance_mode = EventAttendanceModeField()
@@ -537,7 +536,7 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = PeriodicActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'location', 'start_time', 'end_time', 'registration_deadline',
+            'location', 'start_time', 'end_time', 'application_deadline',
             'duration', 'join_mode', 'event_attendance_mode',
             'repetition_mode', 'slot_mode'
         )
@@ -550,7 +549,7 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
 
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True)
-    registration_deadline = DateField(allow_null=True)
+    application_deadline = DateField(source='registration_deadline', allow_null=True)
     duration = serializers.DurationField(allow_null=True)
 
     event_attendance_mode = EventAttendanceModeField()
@@ -563,7 +562,7 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = ScheduleActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'location', 'start_time', 'end_time', 'registration_deadline',
+            'location', 'start_time', 'end_time', 'application_deadline',
             'event_attendance_mode', 'duration', 'join_mode', 'slot_mode'
         )
 

@@ -2,11 +2,12 @@ from urllib.parse import urlparse
 
 from django.db import connection
 from django.urls import resolve
+import inflection
 from rest_framework import serializers, exceptions
 
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import ActivityPubModel
-from bluebottle.activity_pub.processor import default_context
+from bluebottle.activity_pub.processor import default_context, expand_iri
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, ActivityPubIdField, TypeField
 from bluebottle.activity_pub.utils import is_local
 
@@ -53,6 +54,19 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
 
             if 'type' not in attrs or not isinstance(attrs['type'], TypeField):
                 raise TypeError(f'{name} is missing a TypeField')
+
+            if expand_iri(attrs['type'].type).startswith('_:'):
+                raise TypeError(f'{attrs["type"].type} is not a correct ActivityPub type')
+
+            for [attr, field] in attrs.items():
+                if (
+                    isinstance(field, (ActivityPubSerializer, serializers.Field)) and
+                    attr not in ('id', 'type', )
+                ):
+                    if expand_iri(inflection.camelize(attr, False)).startswith('_:'):
+                        raise TypeError(
+                            f'{attr} is not a correct ActivityPub type'
+                        )
 
         return super().__new__(cls, name, bases, attrs)
 

@@ -21,3 +21,7 @@ processed_context = processor.process_context(
         'documentLoader': local_document_loader
     }
 )
+
+
+def expand_iri(iri):
+    return processor._expand_iri(processed_context, iri, None, True)

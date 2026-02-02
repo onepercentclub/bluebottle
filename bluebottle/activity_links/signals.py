@@ -5,23 +5,20 @@ from django.dispatch import receiver
 
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.models import (
-    AdoptionTypeChoices, Publish, Update, Follow, Cancel,
+    AdoptionTypeChoices, Create, Update, Follow, Cancel,
     Finish, Delete
 )
 
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=Publish)
+@receiver(post_save, sender=Create)
 def link(sender, instance, created, **kwargs):
     try:
         if not instance.is_local and created:
             try:
                 follow = Follow.objects.get(object=instance.actor)
-                if (
-                    instance.object.activity_type in follow.automatic_adoption_activity_types or
-                    LinkedActivity.object.filter(event=instance.object).exists()
-                ) and follow.adoption_type == AdoptionTypeChoices.link:
+                if follow.adoption_type == AdoptionTypeChoices.link:
                     instance.object.refresh_from_db()
                     LinkedActivity.objects.sync(instance.object)
             except Follow.DoesNotExist:

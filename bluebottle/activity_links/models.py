@@ -10,12 +10,13 @@ from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import MoneyField
 from bluebottle.files.fields import ImageField
 
+from bluebottle.activity_pub.models import Create, Follow
+
 
 class LinkedActivityManager(PolymorphicManager):
     def sync(self, event):
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
         from bluebottle.activity_links.serializers import LinkedActivitySerializer
-        from bluebottle.activity_pub.models import Publish
 
         try:
             instance = self.get(event=event)
@@ -28,11 +29,24 @@ class LinkedActivityManager(PolymorphicManager):
         )
         serializer.is_valid(raise_exception=True)
 
-        organization = Publish.objects.filter(object=event).first().actor.organization
+        follow = Follow.objects.get(object=event.create_set.first().actor)
 
-        return serializer.save(
-            event=event, host_organization=organization
-        )
+        activity_type = serializer.validated_data['type'].lower()
+        if activity_type == 'collectcampaign':
+            activity_type = 'collectactivity'
+
+        if activity_type == 'gooddeed':
+            activity_type = 'deed'
+
+        if (
+            activity_type in follow.automatic_adoption_activity_types or
+            serializer.instance
+        ):
+            organization = Create.objects.filter(object=event).first().actor.organization
+
+            return serializer.save(
+                event=event, host_organization=organization
+            )
 
 
 class LinkedActivity(TriggerMixin, PolymorphicModel):

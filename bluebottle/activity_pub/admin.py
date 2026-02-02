@@ -57,6 +57,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Follow,
         PublicKey,
         Create,
+        Accept,
         Event,
         Organization,
         GoodDeed,
@@ -236,7 +237,7 @@ class PublicKeyAdmin(ActivityPubModelChildAdmin):
 
 
 @admin.register(Create)
-class PublishAdmin(ActivityPubModelChildAdmin):
+class CreateAdmin(ActivityPubModelChildAdmin):
     list_display = ("id", "actor", "object")
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')
     inlines = [RecipientInline]

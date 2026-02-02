@@ -138,8 +138,21 @@ class JSONLDAdapter():
             Create.objects.create(actor=get_platform_actor(), object=event)
         return event
 
-
 adapter = JSONLDAdapter()
+
+
+@shared_task(
+    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
+    name="bluebottle.activity_pub.adapters.publish_activities"
+)
+def publish_activities(recipient, activities, tenant):
+    with LocalTenant(tenant, clear_tenant=True):
+        for activity in activities:
+            if not hasattr(activity, 'event'):
+                adapter.create_event(activity)
+
+            publish = activity.event.create_set.first()
+            Recipient.objects.create(actor=recipient, activity=publish)
 
 
 @shared_task(
@@ -148,7 +161,6 @@ adapter = JSONLDAdapter()
 )
 def publish_to_recipient(recipient, tenant):
     from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
-
     with LocalTenant(tenant, clear_tenant=True):
         activity = recipient.activity
         actor = recipient.actor

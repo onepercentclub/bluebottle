@@ -1,6 +1,7 @@
 import requests
 from django import forms
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.admin.utils import unquote
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -16,8 +17,8 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 
-from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm
+from bluebottle.activity_pub.adapters import adapter, publish_activities
+from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
@@ -56,6 +57,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Follow,
         PublicKey,
         Create,
+        Accept,
         Event,
         Organization,
         GoodDeed,
@@ -235,7 +237,7 @@ class PublicKeyAdmin(ActivityPubModelChildAdmin):
 
 
 @admin.register(Create)
-class PublishAdmin(ActivityPubModelChildAdmin):
+class CreateAdmin(ActivityPubModelChildAdmin):
     list_display = ("id", "actor", "object")
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')
     inlines = [RecipientInline]
@@ -270,7 +272,7 @@ class SourceFilter(admin.SimpleListFilter):
     parameter_name = 'partner'
 
     def lookups(self, request, model_admin):
-        options = Organization.objects.values_list('id', 'name')
+        options = Following.objects.values_list('object__organization__id', 'object__organization__name')
         return options
 
     def queryset(self, request, queryset):
@@ -329,6 +331,12 @@ class FollowingAdmin(FollowAdmin):
     raw_id_fields = ('default_owner',)
 
     readonly_fields = ('object', 'accepted', "shared_activities", "adopted_activities")
+
+    def shared_activities(self, obj):
+        return obj.shared_activities.count()
+
+    def adopted_activities(self, obj):
+        return obj.adopted_activities.count()
 
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
@@ -435,8 +443,14 @@ class FollowingAdmin(FollowAdmin):
 class FollowerAdmin(FollowAdmin):
     list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
     actions = ['accept_follow_requests']
-    readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities")
-    fields = readonly_fields
+    readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities", "publish_activities_button")
+    fields = ('platform', 'accepted')
+
+    def shared_activities(self, obj):
+        return obj.shared_activities.count()
+
+    def adopted_activities(self, obj):
+        return obj.adopted_activities.count()
 
     def platform(self, obj):
         return obj.actor
@@ -461,7 +475,7 @@ class FollowerAdmin(FollowAdmin):
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         if obj and self.accepted(obj):
-            fields += ('publish_mode',)
+            fields += ('publish_mode', "shared_activities", "adopted_activities", "publish_activities_button")
         return fields
 
     def get_urls(self):
@@ -472,12 +486,16 @@ class FollowerAdmin(FollowAdmin):
                 self.admin_site.admin_view(self.accept_follow_request),
                 name="activity_pub_follower_accept",
             ),
+            path(
+                "<path:pk>/publish-activities/",
+                self.admin_site.admin_view(self.publish_activities),
+                name="activity_pub_publish_activities",
+            ),
         ]
         return custom_urls + urls
 
     @admin_form(AcceptFollowPublishModeForm, Follow, 'admin/activity_pub/follow/accept_publish_mode.html')
     def accept_follow_request(self, request, follow, form):
-        """Accept a single follow request allowing publish_mode selection"""
         from bluebottle.activity_pub.models import Accept
 
         platform_actor = get_platform_actor()
@@ -513,7 +531,20 @@ class FollowerAdmin(FollowAdmin):
                 level="success"
             )
 
-        return HttpResponseRedirect(reverse('admin:activity_pub_follower_changelist'))
+        return HttpResponseRedirect(reverse('admin:activity_pub_follower_change', args=(follow.id,)))
+
+    @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_activities.html')
+    def publish_activities(self, request, follow, form):
+        unpublished = follow.unpublished_activities.all()
+        publish_activities.delay(follow.actor, unpublished, connection.tenant)
+
+        self.message_user(
+            request,
+            f"Publishing {unpublished.count()} activities. This may take a few minutes. You can refresh this page to see the progress.",
+            level="success"
+        )
+
+        return HttpResponseRedirect(reverse('admin:activity_pub_follower_change', args=(follow.id,)))
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         """Override change view to add accept button context"""
@@ -577,6 +608,21 @@ class FollowerAdmin(FollowAdmin):
             )
 
     accept_follow_requests.short_description = "Accept selected follow requests"
+
+    def publish_activities_button(self, obj):
+
+
+        url = reverse('admin:activity_pub_publish_activities', args=(obj.id,))
+
+        return format_html(
+            "<div style='display: inline-block; gap: 8px'>"
+            "<p>{} open and succeeded activities<p/>"
+            "<a href=\"{}\" class=\"button\">Publish</a></div>",
+            obj.unpublished_activities.count(),
+            url
+        )
+
+    publish_activities_button.short_description = _("Publish activities")
 
 
 @admin.register(Place)
@@ -817,11 +863,26 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
         return Event.objects.filter(iri__isnull=True)
 
 
+@admin.action(description="Adopt selected activities")
+def adopt_events(modeladmin, request, events):
+    for event in events:
+        if event.source.follow.adoption_type == 'link':
+            adapter.link(event)
+        if event.source.follow.adoption_type == 'template':
+            adapter.adopt(event)
+    modeladmin.message_user(
+        request,
+        _('{amount} activities have been adopted.').format(amount=len(events)),
+        messages.SUCCESS,
+    )
+
+
 @admin.register(ReceivedActivity)
 class ReceivedActivityAdmin(EventPolymorphicAdmin):
     model = ReceivedActivity
     list_display = ("name_link", "type", "source", "adopted", "linked")
     list_display_links = ("name_link",)
+    actions = [adopt_events]
 
     def source(self, obj):
         return obj.source

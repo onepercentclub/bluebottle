@@ -4,7 +4,6 @@ import requests
 from django.contrib.gis.geos import Point
 from django.core.files import File
 from django.db import models
-
 from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
@@ -13,7 +12,6 @@ from bluebottle.activity_links.models import (
     LinkedFunding, LinkedDateSlot, LinkedCollectCampaign, LinkedPeriodicActivity,
     LinkedScheduleActivity
 )
-
 from bluebottle.activity_pub.models import Image as ActivityPubImage
 from bluebottle.files.models import Image
 from bluebottle.geo.models import Geolocation, Country
@@ -79,6 +77,7 @@ class LinkedLocationSerializer(GeolocationSerializer):
 
     def to_internal_value(self, data):
         result = dict(**super().to_internal_value(data))
+
         address = result['address']
 
         country = Country.objects.filter(alpha2_code=address['country']).first()
@@ -112,36 +111,36 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
         fields = ('name', 'summary', 'url', 'image')
 
     def create(self, validated_data):
-        image = validated_data.pop('image', None)
-        if image:
-            serializer = LinkedActivityImageSerializer(data=image)
-            serializer.is_valid(raise_exception=True)
-            validated_data['image'] = serializer.save()
+        image_data = validated_data.pop('image', None)
+        if image_data:
+            # This one is also redundant, but not shape-breaking
+            validated_data['image'] = LinkedActivityImageSerializer().create(image_data)
 
-        location = validated_data.pop('location', None)
-        if location:
-            serializer = LinkedLocationSerializer(data=self.initial_data['location'])
-            serializer.is_valid(raise_exception=True)
-            validated_data['location'] = serializer.save()
+        location_data = validated_data.pop('location', None)
+        if location_data:
+            validated_data['location'] = Geolocation.objects.create(**location_data)
 
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        image = validated_data.pop('image', None)
-        if image:
-            serializer = LinkedActivityImageSerializer(
-                data=image, instance=getattr(instance, 'image')
-            )
-            serializer.is_valid(raise_exception=True)
-            validated_data['image'] = serializer.save()
+        image_data = validated_data.pop('image', None)
+        if image_data:
+            image_instance = getattr(instance, 'image', None)
+            if image_instance:
+                validated_data['image'] = LinkedActivityImageSerializer().update(image_instance, image_data)
+            else:
+                validated_data['image'] = LinkedActivityImageSerializer().create(image_data)
 
-        location = validated_data.pop('location', None)
-        if location:
-            serializer = LinkedLocationSerializer(
-                data=self.initial_data['location'], instance=getattr(instance, 'location')
-            )
-            serializer.is_valid(raise_exception=True)
-            validated_data['location'] = serializer.save()
+        location_data = validated_data.pop('location', None)
+        if location_data:
+            location_instance = getattr(instance, 'location', None)
+            if location_instance:
+                for k, v in location_data.items():
+                    setattr(location_instance, k, v)
+                location_instance.save()
+                validated_data['location'] = location_instance
+            else:
+                validated_data['location'] = Geolocation.objects.create(**location_data)
 
         return super().update(instance, validated_data)
 

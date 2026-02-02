@@ -191,7 +191,8 @@ class FundingAdmin(ActivityChildAdmin):
         "video_url",
         "theme",
         "impact_location",
-        "categories"
+        "categories",
+        "organization",
     )
 
     status_fields = (

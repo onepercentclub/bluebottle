@@ -145,7 +145,7 @@ class PlaceSerializer(ActivityPubSerializer):
 
 class BaseEventSerializer(ActivityPubSerializer):
     name = serializers.CharField()
-    summary = serializers.CharField()
+    summary = serializers.CharField(allow_null=True, allow_blank=True, required=False)
     image = ImageSerializer(include=True, allow_null=True, required=False)
     organization = OrganizationSerializer(include=True, allow_null=True, required=False)
     url = serializers.URLField()
@@ -220,6 +220,8 @@ class SubEventSerializer(ActivityPubSerializer):
     location = PlaceSerializer(allow_null=True, include=True, required=False)
     event_attendance_mode = serializers.ChoiceField(
         choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode'],
+        required=False,
+        allow_null=True,
     )
     duration = serializers.DurationField(required=False, allow_null=True)
 

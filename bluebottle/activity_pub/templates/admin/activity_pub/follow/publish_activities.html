@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+        &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+        &rsaquo; <a href="{% url opts|admin_urlname:'change' obj.pk %}">{{ obj }}</a>
+        &rsaquo; {% trans 'Accept follow request' %}
+    </div>
+{% endblock %}
+
+{% block content %}
+    <p>{% trans 'Publish all open and succeeded activities.' %}</p>
+    <p><strong>{% trans 'Partner:' %}</strong> {{ obj.actor }}</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            <div class="form-row">
+                <div>
+                    <p>
+                        {% blocktrans with count=obj.unpublished_activities.count actor=obj.actor %}
+                            Are you sure you want to publish {{ count }} activities to {{ actor }}?
+                        {% endblocktrans %}
+                    </p>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row flex-row">
+            <input type="submit" name="confirm" value="{% trans 'Publish activities' %}" class="default"/>
+            <a href="{% url opts|admin_urlname:'change' obj.pk %}" class="button">{% trans 'Cancel' %}</a>
+        </div>
+    </form>
+{% endblock %}

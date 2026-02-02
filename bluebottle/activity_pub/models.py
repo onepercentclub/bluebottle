@@ -6,15 +6,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
 from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
+from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
-from multiselectfield import MultiSelectField
-
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
-
-from bluebottle.initiatives.models import InitiativePlatformSettings
 
 
 class ActivityPubManager(PolymorphicManager):
@@ -242,7 +240,7 @@ class Place(ActivityPubModel):
 
 class Event(ActivityPubModel):
     name = models.CharField(verbose_name=_('Activity title'))
-    summary = models.TextField()
+    summary = models.TextField(blank=True, null=True)
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
@@ -428,7 +426,8 @@ class SubEvent(ActivityPubModel):
     duration = models.DurationField(null=True)
     event_attendance_mode = models.CharField(
         choices=EventAttendanceModeChoices.choices,
-        null=True
+        null=True,
+        blank=True,
     )
     parent = models.ForeignKey(
         'activity_pub.DoGoodEvent',
@@ -456,7 +455,8 @@ class DoGoodEvent(Event):
     )
     event_attendance_mode = models.CharField(
         choices=EventAttendanceModeChoices.choices,
-        null=True
+        null=True,
+        blank=True,
     )
     join_mode = models.CharField(
         choices=JoinModeChoices.choices,
@@ -552,16 +552,24 @@ class Follow(Activity):
         if self.is_local:
             return Event.objects.filter(
                 create__actor=self.object,
-            ).count()
+            )
         return Recipient.objects.filter(
             actor=self.actor,
             activity__create__isnull=False,
             send=True
-        ).count()
+        )
 
     @property
     def adopted_activities(self):
-        return Accept.objects.filter(actor=self.actor).count()
+        return Accept.objects.filter(actor=self.actor)
+
+    @property
+    def unpublished_activities(self):
+        from bluebottle.activities.models import Activity as DoGoodActivity
+        return DoGoodActivity.objects.filter(
+            status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
+            event__isnull=True
+        )
 
     def __str__(self):
         return str(self.object)

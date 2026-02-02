@@ -145,6 +145,7 @@ class JSONLDAdapter():
 
         return event
 
+
 adapter = JSONLDAdapter()
 
 

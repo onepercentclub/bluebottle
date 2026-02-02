@@ -540,7 +540,10 @@ class FollowerAdmin(FollowAdmin):
 
         self.message_user(
             request,
-            f"Publishing {unpublished.count()} activities. This may take a few minutes. You can refresh this page to see the progress.",
+            _(
+                "Publishing {count} activities. "
+                "This may take a few minutes. You can refresh this page to see the progress.",
+            ).format(count=unpublished.count()),
             level="success"
         )
 
@@ -610,8 +613,6 @@ class FollowerAdmin(FollowAdmin):
     accept_follow_requests.short_description = "Accept selected follow requests"
 
     def publish_activities_button(self, obj):
-
-
         url = reverse('admin:activity_pub_publish_activities', args=(obj.id,))
 
         return format_html(

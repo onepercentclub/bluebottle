@@ -568,7 +568,8 @@ class Follow(Activity):
         from bluebottle.activities.models import Activity as DoGoodActivity
         return DoGoodActivity.objects.filter(
             status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
-            event__isnull=True
+        ).exclude(
+            event__create__recipients__actor=self.actor,
         )
 
     def __str__(self):

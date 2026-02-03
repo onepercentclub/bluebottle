@@ -157,7 +157,7 @@ def publish_activities(recipient, activities, tenant):
     with LocalTenant(tenant, clear_tenant=True):
         for activity in activities:
             if not hasattr(activity, 'event'):
-                adapter.create_event(activity)
+                adapter.create_or_update_event(activity)
 
             publish = activity.event.create_set.first()
             Recipient.objects.create(actor=recipient, activity=publish)

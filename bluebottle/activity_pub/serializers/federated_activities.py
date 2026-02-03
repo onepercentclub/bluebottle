@@ -202,7 +202,7 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
             obj.get_absolute_url()
         )
 
-    class Meta:
+    class Meta(FederatedObjectSerializer.Meta):
         fields = FederatedObjectSerializer.Meta.fields + (
             'name', 'summary', 'image', 'organization', 'url'
         )

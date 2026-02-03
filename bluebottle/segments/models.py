@@ -261,7 +261,7 @@ class Segment(TranslatableModel, models.Model):
         return cached_name
 
     def __str__(self):
-        return self.name
+        return self.cached_name
 
     def get_absolute_url(self):
         domain = get_current_host()

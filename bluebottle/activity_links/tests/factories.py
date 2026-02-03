@@ -1,13 +1,12 @@
-from datetime import timedelta
 from builtins import object
-from moneyed import Money
-
-from bluebottle.test.factory_models import generate_rich_text
-from django.utils.timezone import now
+from datetime import timedelta
 
 import factory.fuzzy
+from django.utils.timezone import now
+from moneyed import Money
 
 from bluebottle.activity_links.models import LinkedDeed, LinkedFunding
+from bluebottle.test.factory_models import generate_rich_text
 
 
 class LinkedDeedFactory(factory.DjangoModelFactory):
@@ -39,5 +38,4 @@ class LinkedFundingFactory(factory.DjangoModelFactory):
     description = factory.LazyFunction(generate_rich_text)
 
     target = Money(5000, 'EUR')
-    amount = Money(0, 'EUR')
     donated = Money(1000, 'EUR')

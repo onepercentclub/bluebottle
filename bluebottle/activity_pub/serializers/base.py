@@ -33,6 +33,16 @@ class ActivityPubListSerializer(serializers.ListSerializer):
 
         return result
 
+    def update(self, instances, validated_data):
+        result = []
+        for (instance, item) in zip(instances, validated_data):
+            if instance:
+                result.append(self.child.update(instance, item))
+            else:
+                result.append(self.child.create(item))
+
+        return result
+
 
 class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
     def __new__(cls, name, bases, attrs):

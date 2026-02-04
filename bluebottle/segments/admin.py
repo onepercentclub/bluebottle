@@ -1,19 +1,23 @@
 from django import forms
 from django.contrib import admin
 from django.db import connection
+from django.http import HttpResponseRedirect
 from django.forms.models import ModelFormMetaclass
-from django.urls import reverse
+from django.urls import reverse, re_path
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
+from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.serializers.federated_activities import SegmentTypeSerializer
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.fsm.forms import StateMachineModelFormMetaClass
 from bluebottle.segments.models import SegmentType, Segment
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
+from bluebottle.activity_pub.serializers.json_ld import CollectionSerializer
 
 
 class SegmentStateMachineModelFormMetaClass(StateMachineModelFormMetaClass):
@@ -156,10 +160,48 @@ class SegmentTypeAdmin(
 
     segments.short_description = _('Number of segments')
 
+    def get_urls(self):
+        urls = super().get_urls()
+
+        extra_urls = [
+            re_path(
+                r"^(?P<pk>\d+)/sync/$",
+                self.admin_site.admin_view(self.sync),
+                name=f"{self.model._meta.app_label}_{self.model._meta.model_name}_sync",
+            ),
+        ]
+        return extra_urls + urls
+
+    def sync(self, request, pk, *args, **kwargs):
+        instance = self.model.objects.get(pk=pk)
+        data = adapter.fetch(
+            instance.external_url,
+        )
+
+        serializer = CollectionSerializer(
+            data=data
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        federated_serializer = SegmentTypeSerializer(
+            data=serializer.validated_data, instance=instance
+        )
+        federated_serializer.is_valid(raise_exception=True)
+        federated_serializer.save()
+
+        change_url = reverse(
+            f"admin:{self.model._meta.app_label}_{self.model._meta.model_name}_change",
+            args=(pk,),
+        )
+        return HttpResponseRedirect(change_url)
+
     list_display = ['name', 'slug', 'segments', 'is_active', 'required', 'visibility']
     list_editable = ['is_active', 'required', 'visibility']
 
-    fields = ['name', 'slug', 'inherit', 'visibility', 'required', 'needs_verification', 'is_active', 'user_editable',
-              'enable_search', 'admin_user_filter', 'admin_activity_filter']
+    fields = [
+        'name', 'slug', 'inherit', 'visibility', 'required', 'needs_verification', 'is_active', 'user_editable',
+        'enable_search', 'admin_user_filter', 'admin_activity_filter', 'external_url'
+    ]
 
     translatable_ordering = 'translations__name'

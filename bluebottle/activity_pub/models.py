@@ -33,6 +33,10 @@ class ActivityPubModel(PolymorphicModel):
         super().__init__(*args, **kwargs)
 
     iri = models.URLField(null=True, unique=True)
+    part_of = models.ForeignKey(
+        'activity_pub.Collection', null=True, on_delete=models.SET_NULL,
+        related_name='items'
+    )
 
     objects = ActivityPubManager()
 
@@ -149,6 +153,18 @@ class OrganizationManager(ActivityPubManager):
 class Image(ActivityPubModel):
     name = models.CharField(max_length=1000, null=True)
     url = models.URLField(null=True)
+
+
+class Document(ActivityPubModel):
+    name = models.CharField(max_length=1000, null=True)
+    url = models.URLField(null=True)
+    icon = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
+    summary = models.TextField(null=True, blank=True)
+
+
+class Collection(ActivityPubModel):
+    name = models.CharField(max_length=1000, null=True)
+    summary = models.TextField(null=True, blank=True)
 
 
 class Organization(Actor):

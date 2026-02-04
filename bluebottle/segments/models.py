@@ -85,6 +85,13 @@ class SegmentType(TranslatableModel, models.Model):
         default=False,
     )
 
+    external_url = models.URLField(
+        _('External reference url'),
+        help_text=_('When set, GoodUp Connect will be used to retrieve the segments'),
+        null=True,
+        blank=True
+    )
+
     @property
     def field_name(self):
         return 'segment__' + self.slug.replace('-', '_')
@@ -197,6 +204,10 @@ class Segment(TranslatableModel, models.Model):
         help_text=_(
             'Closed segments will only be accessible to members that belong to this segment.'
         )
+    )
+
+    origin = models.ForeignKey(
+        'activity_pub.Document', null=True, related_name="adopted_segment", on_delete=models.SET_NULL
     )
 
     def __init__(self, *args, **kwargs):

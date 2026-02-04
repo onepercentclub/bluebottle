@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
@@ -22,6 +22,8 @@ from bluebottle.activity_pub.models import (
     Activity,
     GoodDeed,
     Image,
+    Document,
+    Collection,
     Event,
     DoGoodEvent,
     SubEvent,
@@ -74,11 +76,59 @@ class ImageSerializer(ActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:image')
     type = TypeField('Image')
     url = serializers.URLField()
-    name = serializers.CharField(allow_null=True, allow_blank=True)
+    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta(ActivityPubSerializer.Meta):
         model = Image
         fields = ActivityPubSerializer.Meta.fields + ('url', 'name', )
+
+    def to_internal_value(self, data):
+        try:
+            return super().to_internal_value(data)
+        except exceptions.ParseError:
+            return super().to_internal_value({
+                'id': data['id'],
+                'type': 'Image',
+                'url': data['id']
+            })
+
+
+class DocumentSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:document')
+    type = TypeField('Document')
+    url = serializers.URLField()
+    name = serializers.CharField(allow_null=True, allow_blank=True)
+    summary = serializers.CharField(allow_null=True, allow_blank=True)
+    icon = ImageSerializer(required=False, allow_null=True)
+
+    class Meta(ActivityPubSerializer.Meta):
+        model = Document
+        fields = ActivityPubSerializer.Meta.fields + ('url', 'name', 'summary', 'icon')
+
+
+class CollectionSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:collection')
+    type = TypeField('Collection')
+    name = serializers.CharField(allow_null=True, allow_blank=True, required=False)
+    summary = serializers.CharField(allow_null=True, allow_blank=True, required=False)
+    items = DocumentSerializer(many=True, required=False)
+
+    class Meta(ActivityPubSerializer.Meta):
+        model = Collection
+        fields = ActivityPubSerializer.Meta.fields + ('name', 'summary', 'items')
+
+    def save(self, **kwargs):
+        items = self.validated_data.pop('items')
+
+        instance = super().save()
+
+        self.validated_data['items'] = items
+
+        self.fields['items'].initial_data = items
+        self.fields['items'].is_valid(raise_exception=True)
+        self.fields['items'].save(part_of=instance)
+
+        return instance
 
 
 class OrganizationSerializer(ActivityPubSerializer):

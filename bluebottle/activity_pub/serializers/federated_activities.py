@@ -20,6 +20,7 @@ from bluebottle.activity_pub.serializers.fields import FederatedIdField
 from bluebottle.collect.models import CollectActivity, CollectType
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
+from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Country, Geolocation
@@ -74,7 +75,7 @@ class ImageField(serializers.Field):
             response = requests.get(image_url, timeout=30)
             response.raise_for_status()
 
-            return File(BytesIO(response.content), name=image.name)
+            return File(BytesIO(response.content), name=image.name or 'image.png')
         except requests.exceptions.HTTPError as e:
             # If image is not found (404), log and return None since logo is an optional field
             if e.response.status_code == 404:
@@ -157,6 +158,61 @@ class OrganizationSerializer(FederatedObjectSerializer):
     class Meta:
         model = Organization
         fields = ('id', 'name', 'summary', 'icon')
+
+
+class SegmentSerializer(FederatedObjectSerializer):
+    id = FederatedIdField('json-ld:document')
+    name = serializers.CharField(allow_null=True)
+
+    summary = RichTextField(
+        source='story',
+        allow_blank=True,
+        allow_null=True,
+        required=True
+    )
+    icon = ImageField(source='logo', required=False, allow_null=True)
+
+    class Meta(FederatedObjectSerializer.Meta):
+        model = Segment
+        fields = ('id', 'name', 'summary', 'icon')
+
+
+class SegmentTypeSerializer(FederatedObjectSerializer):
+    id = FederatedIdField('json-ld:collection')
+    name = serializers.CharField(allow_null=True, required=False)
+    items = SegmentSerializer(source='segments', many=True)
+
+    class Meta(FederatedObjectSerializer.Meta):
+        model = SegmentType
+        fields = ('id', 'name', 'items')
+
+    def create(self, validated_data):
+        segments = validated_data.pop('segments', [])
+        result = super().create(validated_data)
+
+        field = self.fields['items']
+
+        for segment in segments:
+            segment['segment_type'] = result
+
+        validated_data[field.source] = field.create(segments, segment_type=result)
+
+        return result
+
+    def update(self, instance, validated_data):
+        segments = self.initial_data['items']
+        validated_data.pop('segments')
+        result = super().update(instance, validated_data)
+
+        for segment in segments:
+            serializer = SegmentSerializer(
+                data=segment,
+                instance=result.segments.filter(origin__iri=segment['id']).first()
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(segment_type=result)
+
+        return result
 
 
 class LocationSerializer(FederatedObjectSerializer):

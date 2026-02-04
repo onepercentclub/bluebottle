@@ -111,6 +111,13 @@ class LinkedFunding(LinkedActivity):
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
 
 
+class LinkedGrantApplication(LinkedActivity):
+    target = MoneyField(null=True, blank=True)
+    start = models.DateTimeField(null=True, blank=True)
+    end = models.DateTimeField(null=True, blank=True)
+    location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+
+
 class LinkedDeadlineActivity(LinkedActivity):
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)

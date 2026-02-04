@@ -22,6 +22,7 @@ from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
+from bluebottle.grant_management.models import GrantApplication
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
@@ -320,6 +321,36 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
         return super().create(validated_data)
 
 
+class FederatedGrantApplicationSerializer(BaseFederatedActivitySerializer):
+    id = FederatedIdField('json-ld:grant-application')
+
+    location = LocationSerializer(source='impact_location', allow_null=True, required=False)
+
+    start_time = serializers.DateTimeField(source='started', required=False, allow_null=True)
+    target = serializers.DecimalField(
+        source='target.amount',
+        decimal_places=2,
+        max_digits=10,
+        required=False,
+        allow_null=True,
+    )
+    target_currency = serializers.CharField(source='target.currency', required=False, allow_null=True)
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = GrantApplication
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'location', 'start_time',
+            'target', 'target_currency',
+        )
+
+    def create(self, validated_data):
+        if validated_data.get('target'):
+            validated_data['target'] = Money(
+                **validated_data['target']
+            )
+        return super().create(validated_data)
+
+
 class EventAttendanceModeField(serializers.Field):
     def __init__(self, *args, **kwargs):
         kwargs['source'] = 'is_online'
@@ -572,6 +603,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         FederatedDeedSerializer,
         FederatedDateActivitySerializer,
         FederatedFundingSerializer,
+        FederatedGrantApplicationSerializer,
         FederatedCollectSerializer,
         FederatedRegisteredDateActivitySerializer,
         FederatedPeriodicActivitySerializer,
@@ -581,6 +613,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
     model_type_mapping = {
         Deed: 'GoodDeed',
         Funding: 'CrowdFunding',
+        GrantApplication: 'GrantApplication',
         DateActivity: 'DoGoodEvent',
         PeriodicActivity: 'DoGoodEvent',
         RegisteredDateActivity: 'DoGoodEvent',

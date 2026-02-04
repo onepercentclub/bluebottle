@@ -4,10 +4,10 @@ import mock
 from django.test import RequestFactory
 from requests import Response
 
-from bluebottle.activity_pub.models import GoodDeed, CrowdFunding
+from bluebottle.activity_pub.models import GoodDeed, CrowdFunding, GrantApplication
 from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import (
-    DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer
+    DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer, GrantApplicationSerializer
 )
 from bluebottle.activity_pub.tests.factories import (
     DoGoodEventFactory
@@ -238,6 +238,52 @@ class CrowdFundingSerializerTest(BluebottleTestCase):
 
         serializer = self.serializer_class(
             instance=crowd_funding, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertIsNone(data['url'])
+
+
+class GrantApplicationSerializerTest(BluebottleTestCase):
+    serializer_class = GrantApplicationSerializer
+
+    @property
+    def context(self):
+        request = RequestFactory().get('/')
+        request.user = BlueBottleUserFactory.create()
+        return {'request': request}
+
+    def test_url_field_included_when_set(self):
+        """Test that url field is included in GrantApplicationSerializer when it's set."""
+        grant_application = GrantApplication.objects.create(
+            name='Test Grant Application',
+            summary='Test summary',
+            url='https://example.com/grant-application',
+            target=1000.00,
+            target_currency='EUR'
+        )
+
+        serializer = self.serializer_class(
+            instance=grant_application, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertEqual(data['url'], 'https://example.com/grant-application')
+
+    def test_url_field_included_when_none(self):
+        """Test that url field is included in GrantApplicationSerializer even when it's None."""
+        grant_application = GrantApplication.objects.create(
+            name='Test Grant Application',
+            summary='Test summary',
+            url=None,
+            target=1000.00,
+            target_currency='EUR'
+        )
+
+        serializer = self.serializer_class(
+            instance=grant_application, context=self.context
         )
         data = serializer.data
 

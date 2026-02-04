@@ -25,6 +25,7 @@ from bluebottle.activity_pub.models import (
     Event,
     DoGoodEvent,
     SubEvent,
+    GrantApplication,
 )
 from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, PolymorphicActivityPubSerializer
@@ -192,6 +193,25 @@ class CrowdFundingSerializer(BaseEventSerializer):
         )
 
 
+class GrantApplicationSerializer(BaseEventSerializer):
+    id = ActivityPubIdField(url_name='json-ld:grant-application')
+    type = TypeField('GrantApplication')
+
+    start_time = serializers.DateTimeField(required=False, allow_null=True)
+    end_time = serializers.DateTimeField(required=False, allow_null=True)
+    target = serializers.DecimalField(decimal_places=2, max_digits=10, required=False, allow_null=True)
+    target_currency = serializers.CharField(required=False, allow_null=True)
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
+
+    class Meta(BaseEventSerializer.Meta):
+        model = GrantApplication
+        fields = BaseEventSerializer.Meta.fields + (
+            'end_time', 'start_time',
+            'target', 'target_currency',
+            'location'
+        )
+
+
 class CollectCampaignSerializer(BaseEventSerializer):
     id = ActivityPubIdField(url_name='json-ld:collect-campaign')
     type = TypeField('CollectCampaign')
@@ -303,6 +323,7 @@ class EventSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
         GoodDeedSerializer,
         CrowdFundingSerializer,
+        GrantApplicationSerializer,
         CollectCampaignSerializer,
         DoGoodEventSerializer,
     ]

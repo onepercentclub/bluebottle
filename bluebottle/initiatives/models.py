@@ -304,10 +304,10 @@ def get_search_filters(filters):
         if connection.tenant.schema_name != "public":
             for segment in SegmentType.objects.all():
                 try:
-                    segment_name = segment.safe_translation_getter('name', segment.slug)
+                    segment_name = segment.name
                 except (ValueError, AttributeError):
                     segment_name = segment.slug
-                filters.append((f"segment.{segment.slug}", segment_name))
+                filters = filters + [(f"segment.{segment.slug}", segment_name), ]
         return filters
     except ProgrammingError:
         return []

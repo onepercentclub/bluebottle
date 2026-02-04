@@ -484,6 +484,26 @@ class DeedsDetailViewAPITestCase(APITestCase):
             self.assertEqual(data['data']['meta']['translations']['description']['value'], 'In het Nederlands')
             self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'en')
 
+    def test_meta_translations_in_response_exception(self):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.translate_user_content = True
+        member_settings.save()
+
+        with mock.patch(
+            'bluebottle.translations.utils.get_translation_response',
+            side_effect=Exception('Something went wrong')
+        ):
+            response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content)
+
+        self.assertIn('meta', data['data'])
+
+        self.assertIn('translations', data['data']['meta'])
+
+        self.assertNotIn('description', data['data']['meta']['translations'])
+
     def test_meta_translations_advanced_mock(self):
         from bluebottle.test.factory_models.utils import LanguageFactory
         member_settings = MemberPlatformSettings.load()

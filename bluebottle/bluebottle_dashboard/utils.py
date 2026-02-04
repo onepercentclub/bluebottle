@@ -93,7 +93,7 @@ def get_menu_items(context):
                     "url_blank": False,
                     "name": "segmenttype",
                     "object_name": "SegmentType",
-                    "label": segment_type.safe_translation_getter('name'),
+                    "label": segment_type.name,
                     "has_perms": True,
                     "current": False,
                 }

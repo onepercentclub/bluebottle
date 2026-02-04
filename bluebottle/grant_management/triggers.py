@@ -1,6 +1,7 @@
 from bluebottle.activities.messages.activity_manager import TermsOfServiceNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, should_mail_tos
+from bluebottle.activity_pub.effects import FinishEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     ModelChangedTrigger, TransitionTrigger, register, TriggerManager
@@ -142,7 +143,8 @@ class GrantApplicationTriggers(ActivityTriggers):
                 NotificationEffect(
                     TermsOfServiceNotification,
                     conditions=[should_mail_tos]
-                )
+                ),
+                FinishEffect
             ]
         ),
         TransitionTrigger(

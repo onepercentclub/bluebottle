@@ -5,7 +5,7 @@ import factory.fuzzy
 from django.utils.timezone import now
 from moneyed import Money
 
-from bluebottle.activity_links.models import LinkedDeed, LinkedFunding
+from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedGrantApplication
 from bluebottle.test.factory_models import generate_rich_text
 
 
@@ -39,3 +39,15 @@ class LinkedFundingFactory(factory.DjangoModelFactory):
 
     target = Money(5000, 'EUR')
     donated = Money(1000, 'EUR')
+
+
+class LinkedGrantApplicationFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = LinkedGrantApplication
+
+    status = 'open'
+
+    title = factory.Faker('sentence')
+    description = factory.LazyFunction(generate_rich_text)
+
+    target = Money(2500, 'EUR')

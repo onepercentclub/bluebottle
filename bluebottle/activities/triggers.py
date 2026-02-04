@@ -19,7 +19,7 @@ from bluebottle.activities.states import (
 )
 from bluebottle.activity_pub.effects import (
     PublishAdoptionEffect, CreateEffect, UpdateEventEffect,
-    CancelEffect, DeletedEffect
+    CancelEffect, DeletedEffect, FinishEffect
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -305,7 +305,8 @@ class OrganizerTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'contributions', EffortContributionStateMachine.succeed, display=True
-                )
+                ),
+                FinishEffect
             ]
         ),
     ]

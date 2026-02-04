@@ -9,6 +9,7 @@
     "DoGoodEvent": "goodup:DoGoodEvent",
     "CollectCampaign": "goodup:CollectCampaign",
     "CrowdFunding": "goodup:CrowdFunding",
+    "GrantApplication": "goodup:GrantApplication",
     "subEvent": { "@id": "goodup:subEvent", "@type": "@id" },
     "Address": "schema:PostalAddress",
     "postalCode": "schema:postalCode",

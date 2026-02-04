@@ -10,7 +10,7 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 from bluebottle.activity_links.models import (
     LinkedActivity, LinkedDeed, LinkedDateActivity, LinkedDeadlineActivity,
     LinkedFunding, LinkedDateSlot, LinkedCollectCampaign, LinkedPeriodicActivity,
-    LinkedScheduleActivity
+    LinkedScheduleActivity, LinkedGrantApplication
 )
 from bluebottle.activity_pub.models import Image as ActivityPubImage
 from bluebottle.files.models import Image
@@ -286,6 +286,19 @@ class LinkedFundingSerializer(BaseLinkedActivitySerializer):
         )
 
 
+class LinkedGrantApplicationSerializer(BaseLinkedActivitySerializer):
+    end_time = serializers.DateTimeField(source='end', allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True)
+    location = LinkedLocationSerializer(required=False, allow_null=True)
+
+    class Meta(BaseLinkedActivitySerializer.Meta):
+        model = LinkedGrantApplication
+        fields = BaseLinkedActivitySerializer.Meta.fields + (
+            'target',
+            'start_time', 'end_time', 'location'
+        )
+
+
 class LinkedActivitySerializer(PolymorphicSerializer):
     resource_type_field_name = 'type'
 
@@ -297,6 +310,7 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedRegisteredDateActivitySerializer,
         LinkedScheduleActivitySerializer,
         LinkedFundingSerializer,
+        LinkedGrantApplicationSerializer,
         LinkedCollectCampaignSerializer,
     ]
 
@@ -306,6 +320,7 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedPeriodicActivity: 'DoGoodEvent',
         LinkedDeadlineActivity: 'DoGoodEvent',
         LinkedFunding: 'Funding',
+        LinkedGrantApplication: 'GrantApplication',
         LinkedCollectCampaign: 'CollectCampaign',
         LinkedScheduleActivity: 'ScheduleActivity',
     }
@@ -318,6 +333,7 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         self.resource_type_model_mapping['RegisteredDateActivity'] = LinkedDeadlineActivity
         self.resource_type_model_mapping['ScheduleActivity'] = LinkedScheduleActivity
         self.resource_type_model_mapping['Funding'] = LinkedFunding
+        self.resource_type_model_mapping['GrantApplication'] = LinkedGrantApplication
         self.resource_type_model_mapping['GoodDeed'] = LinkedDeed
         self.resource_type_model_mapping['CollectCampaign'] = LinkedCollectCampaign
 
@@ -327,6 +343,9 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         # Map CrowdFunding to Funding for LinkedFunding
         if event_type == 'CrowdFunding':
             return 'Funding'
+
+        if event_type == 'GrantApplication':
+            return 'GrantApplication'
 
         # Handle DoGoodEvent - check sub_event to distinguish DateActivity from DeadlineActivity
         if event_type == 'DoGoodEvent':
@@ -359,6 +378,7 @@ class LinkedActivitySerializer(PolymorphicSerializer):
         LinkedDateActivity: LinkedDateActivitySerializer,
         LinkedDeadlineActivity: LinkedDeadlineActivitySerializer,
         LinkedFunding: LinkedFundingSerializer,
+        LinkedGrantApplication: LinkedGrantApplicationSerializer,
         LinkedCollectCampaign: LinkedCollectCampaignSerializer,
         LinkedPeriodicActivity: LinkedPeriodicActivitySerializer,
         LinkedScheduleActivity: LinkedScheduleActivitySerializer,

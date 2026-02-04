@@ -33,7 +33,7 @@ from bluebottle.activity_pub.models import (
     Create,
     Organization,
     Following,
-    Follower, GoodDeed, CrowdFunding, CollectCampaign, DoGoodEvent,
+    Follower, GoodDeed, CrowdFunding, CollectCampaign, DoGoodEvent, GrantApplication,
     Recipient, SubEvent, PublishedActivity, ReceivedActivity, Accept,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
@@ -62,6 +62,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Organization,
         GoodDeed,
         CrowdFunding,
+        GrantApplication,
         CollectCampaign,
         DoGoodEvent,
         Place,
@@ -821,6 +822,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     child_models = (
         GoodDeed,
         CrowdFunding,
+        GrantApplication,
         CollectCampaign,
         DoGoodEvent,
         SubEvent
@@ -932,6 +934,19 @@ class CrowdFundingAdmin(EventChildAdmin):
         'end_time',
         'target',
         'donated',
+        'location'
+    )
+    fields = readonly_fields
+
+
+@admin.register(GrantApplication)
+class GrantApplicationAdmin(EventChildAdmin):
+    base_model = Event
+    model = GrantApplication
+    readonly_fields = EventChildAdmin.readonly_fields + (
+        'start_time',
+        'end_time',
+        'target',
         'location'
     )
     fields = readonly_fields

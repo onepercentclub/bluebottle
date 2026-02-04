@@ -117,6 +117,33 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
 
         self.assertEqual(result['@type'], ['https://goodup.com/json-ld#CrowdFunding'])
 
+    def test_expand_grant_application(self):
+        data = {
+            '@context': default_context,
+            'id': 'https://example.com/grant-application',
+            'name': 'Grant application title',
+            'summary': 'Some grant application description',
+            'startTime': datetime.date(2026, 1, 1).isoformat(),
+            'endTime': datetime.date(2026, 2, 1).isoformat(),
+            'target': 2500,
+            'targetCurrency': 'eur',
+            'type': 'GrantApplication',
+        }
+        result = self.expand(data)
+        attributes = {
+            '@id',
+            '@type',
+            'https://www.w3.org/ns/activitystreams#name',
+            'https://www.w3.org/ns/activitystreams#summary',
+            'https://www.w3.org/ns/activitystreams#startTime',
+            'https://www.w3.org/ns/activitystreams#endTime',
+            'https://goodup.com/json-ld#target',
+            'https://goodup.com/json-ld#targetCurrency',
+        }
+        self.assertEqual(attributes, set(result.keys()))
+
+        self.assertEqual(result['@type'], ['https://goodup.com/json-ld#GrantApplication'])
+
     def test_expand_date_activity(self):
         data = {
             '@context': default_context,

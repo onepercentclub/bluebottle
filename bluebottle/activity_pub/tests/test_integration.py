@@ -2,21 +2,19 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from urllib.parse import urlparse
 
-import mock
 import httmock
-
+import mock
 from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
-from django.utils.timezone import get_current_timezone
 from django.test.utils import override_settings
-
+from django.utils.timezone import get_current_timezone
 from djmoney.money import Money
 from pytz import UTC
 from requests import Request, Response
 
-from bluebottle.activity_links.models import LinkedActivity, LinkedFunding
+from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, LinkedGrantApplication
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
@@ -32,6 +30,7 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.geo.models import Geolocation
+from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -319,7 +318,7 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
-
+                    self.adopted.states.submit(save=True)
                     self.approve(self.adopted)
                     accept = Accept.objects.last()
                     self.assertTrue(accept)
@@ -644,6 +643,97 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
             self.adopted.impact_location.country.alpha2_code,
             self.model.impact_location.country.alpha2_code
         )
+
+
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
+    factory = GrantApplicationFactory
+
+    def create(self, **kwargs):
+        super().create(
+            impact_location=GeolocationFactory.create(country=self.country),
+            started=datetime.now(get_current_timezone()),
+            **kwargs
+        )
+        self.submit()
+
+    def test_target_maps_to_linked_grant_application(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedGrantApplication.objects.get()
+            self.assertEqual(link.target, self.model.target)
+
+    def test_start_maps_to_linked_grant_application(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedGrantApplication.objects.get()
+            self.assertEqual(link.start, self.model.started)
+
+    def test_impact_location_maps_to_linked_grant_application_location(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedGrantApplication.objects.get()
+            self.assertIsNotNone(self.model.impact_location)
+            self.assertIsNotNone(link.location)
+            self.assertEqual(link.location.locality, self.model.impact_location.locality)
+            self.assertEqual(
+                link.location.country.alpha2_code,
+                self.model.impact_location.country.alpha2_code
+            )
+
+
+class GrantApplicationTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = GrantApplicationFactory
+
+    def create(self, **kwargs):
+        super().create(
+            impact_location=GeolocationFactory.create(country=self.country),
+            started=datetime.now(get_current_timezone()),
+            **kwargs
+        )
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        adapter.create_or_update_event(self.model)
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.target, self.model.target.amount)
+            self.assertEqual(self.event.target_currency, str(self.model.target.currency))
+            self.assertEqual(self.event.start_time, self.model.started)
+            self.assertEqual(self.event.location.latitude, self.model.impact_location.position.x)
+            self.assertEqual(self.event.location.longitude, self.model.impact_location.position.y)
+            self.assertEqual(self.event.location.name, self.model.impact_location.formatted_address)
+            self.assertEqual(
+                self.event.location.address.country, self.model.impact_location.country.code
+            )
+            self.assertEqual(
+                self.event.location.address.locality, self.model.impact_location.locality
+            )
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.target, self.model.target)
+        self.assertEqual(self.adopted.impact_location.position, self.model.impact_location.position)
+        self.assertEqual(
+            self.adopted.impact_location.country.alpha2_code,
+            self.model.impact_location.country.alpha2_code
+        )
+
+    def test_finish(self):
+        self.test_link()
+        self.model.states.approve(save=True)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'succeeded')
 
 
 @override_settings(

@@ -4,7 +4,8 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity, \
-    LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity, LinkedScheduleActivity
+    LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity, LinkedScheduleActivity, \
+    LinkedGrantApplication
 from bluebottle.initiatives.documents import get_translated_list
 from bluebottle.utils.documents import TextField
 from bluebottle.utils.models import get_default_language
@@ -261,6 +262,62 @@ class LinkedFundingDocument(LinkedActivityDocument):
         if not hasattr(instance, 'donated'):
             return None
         return self.prepare_amount(instance.donated)
+
+    def prepare_country(self, instance):
+        countries = []
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+        return countries
+
+    def prepare_location(self, instance):
+        locations = []
+        if hasattr(instance, 'location') and instance.location:
+            locations.append({
+                'id': instance.location.id,
+                'name': instance.location.formatted_address,
+                'locality': instance.location.locality,
+                'country_code': instance.location.country.alpha2_code if instance.location.country else None,
+                'country': instance.location.country.name if instance.location.country else None,
+                'type': 'location'
+            })
+        return locations
+
+
+@registry.register_document
+@activity.doc_type
+class LinkedGrantApplicationDocument(LinkedActivityDocument):
+    class Django:
+        model = LinkedGrantApplication
+        related_models = ()
+
+    target = fields.NestedField(properties={
+        'currency': fields.KeywordField(),
+        'amount': fields.FloatField(),
+    })
+
+    def prepare_end(self, instance):
+        return [instance.end]
+
+    def prepare_slug(self, instance):
+        return f'linked-grant-application-{instance.id}'
+
+    def prepare_type(self, instance):
+        return 'grantapplication'
+
+    def prepare_resource_name(self, instance):
+        return 'activities/grant-applications'
+
+    def prepare_activity_type(self, instance):
+        return 'grantapplication'
+
+    def prepare_amount(self, amount):
+        if amount:
+            return {'amount': amount.amount, 'currency': str(amount.currency)}
+
+    def prepare_target(self, instance):
+        if not hasattr(instance, 'target'):
+            return None
+        return self.prepare_amount(instance.target)
 
     def prepare_country(self, instance):
         countries = []

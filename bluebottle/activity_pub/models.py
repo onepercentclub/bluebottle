@@ -351,6 +351,18 @@ class CrowdFunding(Event):
         verbose_name_plural = _("Funding")
 
 
+class GrantApplication(Event):
+    target = models.DecimalField(decimal_places=2, max_digits=10, null=True, blank=True)
+    target_currency = models.CharField(max_length=3, null=True, blank=True)
+    start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _("Grant application")
+        verbose_name_plural = _("Grant applications")
+
+
 class EventAttendanceModeChoices(DjangoChoices):
     online = ChoiceItem('OnlineEventAttendanceMode')
     offline = ChoiceItem('OfflineEventAttendanceMode')

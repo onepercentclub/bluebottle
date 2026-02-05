@@ -33,5 +33,5 @@ def check_grant_payment_readiness():
 
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            for payment in GrantPayment.objects.filter():
+            for payment in GrantPayment.objects.filter(status='pending'):
                 payment.check_status()

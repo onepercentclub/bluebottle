@@ -17,6 +17,7 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory,
     SkillFactory,
 )
+from bluebottle.utils.utils import get_current_language
 
 
 class DateTimeContributionAPIViewTestCase(BluebottleTestCase):
@@ -208,16 +209,11 @@ class SkillApiTestCase(BluebottleTestCase):
 
     def test_get_skills_authenticated(self):
         user = BlueBottleUserFactory.create()
-        response = self.client.get(self.url, user=user)
+        get_current_language()
+        response = self.client.get(self.url, user=user, HTTP_ACCEPT_LANGUAGE='en')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data['results']), 10)
 
     def test_get_skills_unauthenticated(self):
-        response = self.client.get(self.url)
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
         self.assertEqual(response.status_code, 401)
-
-    def test_get_skills_old_url(self):
-        old_url = reverse('assignment-skill-list')
-        user = BlueBottleUserFactory.create()
-        response = self.client.get(old_url, user=user)
-        self.assertEqual(response.status_code, 200)

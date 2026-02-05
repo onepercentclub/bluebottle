@@ -19,7 +19,7 @@ class SegmentTypeFactory(factory.DjangoModelFactory):
         base_name = obj.name
 
         for language in Language.objects.all():
-            obj.set_current_language(language.code)
+            obj.set_current_language(language.full_code)
             obj.name = base_name
 
         obj.save()
@@ -55,7 +55,7 @@ class SegmentFactory(factory.DjangoModelFactory):
         base_name = obj.name
 
         for language in Language.objects.all():
-            obj.set_current_language(language.code)
+            obj.set_current_language(language.full_code)
             obj.name = base_name
 
         obj.save()

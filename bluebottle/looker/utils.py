@@ -75,8 +75,8 @@ class LookerSSOEmbed(object):
     @property
     def url(self):
         schema_name = connection.tenant.schema_name
-        analytics_settings = AnalyticsPlatformSettings.objects.get()
-        member_settings = MemberPlatformSettings.objects.get()
+        analytics_settings = AnalyticsPlatformSettings.load()
+        member_settings = MemberPlatformSettings.load()
 
         subregions = list(self.user.subregion_manager.values_list('id', flat=True))
         subregions = ";".join(map(str, subregions))

@@ -51,7 +51,7 @@ class SCIMUser(object):
 
 class SCIMAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
-        token = SCIMPlatformSettings.objects.get().bearer_token
+        token = SCIMPlatformSettings.load().bearer_token
         if request.META.get('HTTP_AUTHORIZATION') == 'Bearer {}'.format(token):
             return (SCIMUser(), None)
 

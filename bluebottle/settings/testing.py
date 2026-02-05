@@ -180,6 +180,8 @@ except ImportError:
 
 ELASTICSEARCH_DSL_AUTOSYNC = False
 ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'django_elasticsearch_dsl.signals.RealTimeSignalProcessor'
+# Per-worker index prefix for parallel tests so workers don't share ES indices
+ELASTICSEARCH_TEST_INDEX_PREFIX = 'test'
 
 STRIPE = {
     'secret_key': 'test-key',

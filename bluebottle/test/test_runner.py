@@ -23,16 +23,52 @@ def _setup_es_indices():
             call_command("search_index", "--create", verbosity=0)
 
 
-def _init_worker_with_es(*args, **kwargs):
-    django_test_runner._init_worker(*args, **kwargs)
-    worker_id = getattr(django_test_runner, "_worker_id", 0)
+def _init_worker_with_es(
+    counter,
+    initial_settings=None,
+    serialized_contents=None,
+    process_setup=None,
+    process_setup_args=None,
+    debug_mode=None,
+):
+    with counter.get_lock():
+        counter.value += 1
+        worker_id = counter.value
+
+    try:
+        max_workers = int(os.environ.get("DJANGO_TEST_WORKERS", "0") or 0)
+    except ValueError:
+        max_workers = 0
+
+    if max_workers > 0:
+        worker_id = ((worker_id - 1) % max_workers) + 1
+
+    django_test_runner._worker_id = worker_id
+
+    start_method = django_test_runner.multiprocessing.get_start_method()
+    if start_method == "spawn":
+        if process_setup and callable(process_setup):
+            if process_setup_args is None:
+                process_setup_args = ()
+            process_setup(*process_setup_args)
+        django_test_runner.django.setup()
+        django_test_runner.setup_test_environment(debug=debug_mode)
+
+    for alias in django_test_runner.connections:
+        connection = django_test_runner.connections[alias]
+        if start_method == "spawn":
+            connection.settings_dict.update(initial_settings[alias])
+            if serialized_contents and serialized_contents.get(alias):
+                connection._test_serialized_contents = serialized_contents[alias]
+        connection.creation.setup_worker_connection(worker_id)
+
     if worker_id:
         os.environ["DJANGO_TEST_PROCESS_NUMBER"] = str(worker_id)
     _setup_es_indices()
 
 
 class ParallelTestSuiteWithES(ParallelTestSuite):
-    init_worker = staticmethod(_init_worker_with_es)
+    init_worker = _init_worker_with_es
 
 
 class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
@@ -41,6 +77,8 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
     def setup_databases(self, *args, **kwargs):
         self.keepdb = getattr(settings, 'KEEPDB', self.keepdb)
         parallel = self.parallel
+        if parallel:
+            os.environ["DJANGO_TEST_WORKERS"] = str(parallel)
         self.parallel = 0
         result = super(MultiTenantRunner, self).setup_databases(**kwargs)
         self.parallel = parallel

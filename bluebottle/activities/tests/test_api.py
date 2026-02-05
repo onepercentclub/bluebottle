@@ -11,6 +11,7 @@ from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
+from django.utils.translation import activate, get_language
 from django_elasticsearch_dsl.test import ESTestCase
 from pytz import UTC
 from rest_framework import status
@@ -19,6 +20,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.collect.tests.factories import (
     CollectActivityFactory,
     CollectContributorFactory,
+    CollectTypeFactory,
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
@@ -61,6 +63,11 @@ from bluebottle.time_based.tests.factories import (
 class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super(ActivityListSearchAPITestCase, self).setUp()
+        # Ensure each test starts in the default language to avoid leakage from
+        # earlier tests (some tests activate other languages).
+        self._prev_language = get_language()
+        activate('en')
+        self.addCleanup(activate, self._prev_language)
 
         self.client = JSONAPITestClient()
         self.url = reverse('activity-preview-list')
@@ -426,11 +433,27 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
     def test_collect_preview_dutch(self):
-        activity = CollectActivityFactory.create(status='open')
+        # Use explicitly created theme and collect_type so they have all language
+        # translations (including Dutch), avoiding fixture/parallel ordering issues.
+        theme = ThemeFactory.create()
+        collect_type = CollectTypeFactory.create()
+        activity = CollectActivityFactory.create(
+            status='open', theme=theme, collect_type=collect_type
+        )
+        # Ensure Dutch translations exist (ThemeFactory/CollectTypeFactory use
+        # Language.objects.all(); in parallel workers nl may be missing).
+        if not activity.theme.translations.filter(language_code='nl').exists():
+            activity.theme.set_current_language('nl')
+            activity.theme.name = 'Theme NL'
+            activity.theme.save()
+        if not activity.collect_type.translations.filter(language_code='nl').exists():
+            activity.collect_type.set_current_language('nl')
+            activity.collect_type.name = 'CollectType NL'
+            activity.collect_type.save()
+
         theme_translation = activity.theme.translations.get(
             language_code='nl'
         )
-
         collect_type_translation = activity.collect_type.translations.get(
             language_code='nl'
         )

@@ -1004,6 +1004,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching_theme, other_theme = ThemeFactory.create_batch(2)
 
+        # Ensure Dutch translations exist (ThemeFactory uses Language.objects.all();
+        # in parallel workers nl may be missing).
+        for theme in (matching_theme, other_theme):
+            if not theme.translations.filter(language_code='nl').exists():
+                theme.set_current_language('nl')
+                theme.name = f'{theme.slug} NL'
+                theme.save()
+
         matching = DeedFactory.create_batch(3, status="open", theme=matching_theme)
         other = DeedFactory.create_batch(2, status="open", theme=other_theme)
 

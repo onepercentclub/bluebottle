@@ -63,7 +63,7 @@ class CountryListTestCase(GeoTestCase):
 
         countries = response.data
         self.assertTrue('Abchazië' in [c['name'] for c in countries])
-        self.assertTrue('Zwitserland' in [c['name'] for c in countries])
+        self.assertTrue('Zuid-Soedan' in [c['name'] for c in countries])
 
 
 class UsedCountryListTestCase(GeoTestCase):

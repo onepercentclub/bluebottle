@@ -148,11 +148,12 @@ class TeamMemberSerializer(ModelSerializer):
     permissions = ResourcePermissionField("team-member-detail", view_args=("pk",))
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
-    invite_code = serializers.CharField(write_only=True)
+    invite_code = serializers.CharField(write_only=True, required=False)
+    email = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = TeamMember
-        fields = ("id", "team", "user", "invite_code", "participants")
+        fields = ("id", "team", "user", "invite_code", "participants", "email")
         meta_fields = ("permissions", "transitions", "current_status")
 
     class JSONAPIMeta:

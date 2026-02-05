@@ -200,6 +200,15 @@ class GrantPayment(TriggerMixin, models.Model):
                 f"Total currency ({currency}) must match line item currency ({list(donation_currencies)[0]})."
             )
 
+        if donations:
+            total_amount = sum(
+                (donation.amount for donation in donations),
+                Money(0, donations[0].amount.currency),
+            )
+            if self.total != total_amount:
+                self.total = total_amount
+                self.save(update_fields=["total", "updated"])
+
         metadata = {
             "tenant_name": connection.tenant.client_name,
             "tenant_domain": connection.tenant.domain_url,
@@ -241,7 +250,7 @@ class GrantPayment(TriggerMixin, models.Model):
                 currency=currency,
                 product=product["id"],
             )
-            line_items.append({"price": price.id, "quantity": 1})
+            line_items.append({"price": price['id'], "quantity": 1})
 
         init_args = {
             "payment_intent_data": {"metadata": metadata},

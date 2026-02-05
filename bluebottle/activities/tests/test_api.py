@@ -11,7 +11,6 @@ from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
-from django.utils.translation import activate, get_language
 from django_elasticsearch_dsl.test import ESTestCase
 from pytz import UTC
 from rest_framework import status
@@ -63,12 +62,6 @@ from bluebottle.time_based.tests.factories import (
 class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super(ActivityListSearchAPITestCase, self).setUp()
-        # Ensure each test starts in the default language to avoid leakage from
-        # earlier tests (some tests activate other languages).
-        self._prev_language = get_language()
-        activate('en')
-        self.addCleanup(activate, self._prev_language)
-
         self.client = JSONAPITestClient()
         self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
@@ -97,7 +90,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         response = self.client.get(
             url,
             user=user,
-            **headers
+            **headers,
+            HTTP_ACCEPT_LANGUAGE='en'
         )
 
         self.data = json.loads(response.content)
@@ -132,7 +126,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DeadlineActivityFactory.create(status='open', image=ImageFactory.create())
         FundingFactory.create(review_status='open', image=ImageFactory.create())
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
 
         for activity in response.json()['data']:
             self.assertTrue(
@@ -141,7 +135,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_deed_preview(self):
         activity = DeedFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -155,7 +149,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -182,7 +176,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(
             status='succeeded', activity=activity, start=now() - timedelta(days=10)
         )
-        response = self.client.get(self.url + '?filter[upcoming]=1', user=self.owner)
+        response = self.client.get(self.url + '?filter[upcoming]=1', user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -211,7 +205,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity = DateActivityFactory.create(status='open', slots=[])
         location = GeolocationFactory.create()
         DateActivitySlotFactory.create_batch(3, activity=activity, location=location)
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -235,7 +229,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(activity=activity, status='draft', is_online=None)
         open_slot = DateActivitySlotFactory.create(activity=activity)
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slot-count'], 1)
@@ -264,7 +258,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.url + '?filter[date]={},{}'.format(
                 start.strftime('%Y-%m-%d'),
                 end.strftime('%Y-%m-%d')
-            )
+            ),
+            HTTP_ACCEPT_LANGUAGE='en'
         )
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 1)
@@ -288,7 +283,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity.status = 'succeeded'
         activity.save()
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 0)
 
@@ -301,7 +296,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_date_preview_all_full(self):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create_batch(3, activity=activity, status='full')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['is-full'], True)
 
@@ -310,7 +305,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create_batch(
             3, activity=activity, location=None, is_online=True, status='full'
         )
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['is-online'], True)
 
@@ -335,7 +330,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.owner.save()
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['matching-properties']['theme'], True)
         self.assertEqual(attributes['matching-properties']['skill'], True)
@@ -343,7 +338,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_deadline_preview(self):
         activity = DeadlineActivityFactory.create(status='open', is_online=False)
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -381,7 +376,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.owner.save()
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['matching-properties']['theme'], True)
         self.assertEqual(attributes['matching-properties']['skill'], True)
@@ -389,7 +384,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_funding_preview(self):
         activity = FundingFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -411,7 +406,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_collect_preview(self):
         activity = CollectActivityFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)

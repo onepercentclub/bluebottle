@@ -1,6 +1,6 @@
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
+    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
 )
 from bluebottle.activities.views import RelatedContributorListView, ParticipantCreateMixin
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -9,7 +9,6 @@ from bluebottle.deeds.serializers import (
     DeedParticipantTransitionSerializer
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
-from bluebottle.time_based.permissions import CreateByEmailPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
@@ -71,8 +70,7 @@ class DeedRelatedParticipantList(RelatedContributorListView):
 
 class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, ListCreateAPIView):
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-        CreateByEmailPermission
+        OneOf(ResourcePermission, ResourceOwnerPermission, ActivityManagerPermission),
     )
     queryset = DeedParticipant.objects.all()
     serializer_class = DeedParticipantSerializer

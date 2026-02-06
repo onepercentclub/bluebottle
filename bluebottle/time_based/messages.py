@@ -383,7 +383,7 @@ class TeamParticipantAddedNotification(TransitionMessage):
     """
     A participant was added to a team manually (through back-office)
     """
-    subject = pgettext('email', 'You have been added to a team for "{title}" 🎉')
+    subject = pgettext('email', 'You have been added to a team on "{site_name}" 🎉')
     template = 'messages/team_participant_added'
     context = {
         'title': 'activity.title',

@@ -202,7 +202,12 @@ class MatchingFacet(BooleanFacet):
                     )
             filters = filters & Nested(path="office_restriction", query=office_filter)
 
-        if user.search_distance and user.place and not user.any_search_distance:
+        if (
+            user.search_distance and
+            user.place and
+            user.place.position and
+            not user.any_search_distance
+        ):
             place = user.place
             if user.exclude_online:
                 distance_filter = GeoDistance(

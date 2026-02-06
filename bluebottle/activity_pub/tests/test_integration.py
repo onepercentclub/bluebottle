@@ -318,6 +318,7 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
+                    self.adopted.theme = ThemeFactory.create()
                     self.adopted.states.submit(save=True)
                     self.approve(self.adopted)
                     accept = Accept.objects.last()

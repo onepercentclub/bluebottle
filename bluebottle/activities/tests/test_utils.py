@@ -1,11 +1,11 @@
+from django.test import TestCase
+
+from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.deeds.models import DeedParticipant
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from django.test import TestCase
-
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.activities.utils import bulk_add_participants
 
 
 class BulkAddParticipantTestCase(TestCase):
@@ -13,7 +13,6 @@ class BulkAddParticipantTestCase(TestCase):
 
     def setUp(self):
         self.activity = DeedFactory.create()
-
         self.member = BlueBottleUserFactory.create(email=self.emails[0])
 
     def assertParticipant(self, email):

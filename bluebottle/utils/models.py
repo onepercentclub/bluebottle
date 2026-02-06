@@ -177,7 +177,7 @@ class BasePlatformSettings(SingletonModel):
     @classmethod
     def load(cls):
         try:
-            return cls.objects.get()
+            return cls.objects.first()
         except cls.DoesNotExist:
             return cls()
 

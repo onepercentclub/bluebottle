@@ -552,7 +552,6 @@ class Follow(Activity):
         choices=PublishModeChoices.choices,
         default=PublishModeChoices.manual,
         verbose_name=_("Publish mode"),
-        help_text=_("Select how you want to share activities."),
     )
 
     @property

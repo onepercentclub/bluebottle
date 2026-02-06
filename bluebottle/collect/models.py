@@ -74,7 +74,7 @@ class CollectActivity(Activity):
 
     @property
     def type(self):
-        return self.collect_type.translations.name
+        return self.collect_type.translations.name if self.collect_type else None
 
     activity_type = _('Collect activity')
 

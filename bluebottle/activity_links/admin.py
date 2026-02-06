@@ -74,3 +74,7 @@ class LinkedActivityAdmin(PolymorphicParentModelAdmin):
         LinkedCollectCampaign,
         LinkedScheduleActivity
     )
+
+    list_display = [
+        'title', 'status'
+    ]

@@ -66,6 +66,7 @@ class AcceptFollowPublishModeForm(forms.Form):
         choices=PublishModeChoices.choices,
         required=True,
         help_text=_('Select how activities from this partner should be shared.'),
+        widget=forms.RadioSelect()
     )
 
     def __init__(self, *args, obj=None, **kwargs):

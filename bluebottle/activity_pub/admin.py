@@ -34,7 +34,7 @@ from bluebottle.activity_pub.models import (
     Organization,
     Following,
     Follower, GoodDeed, CrowdFunding, CollectCampaign, DoGoodEvent, GrantApplication,
-    Recipient, SubEvent, PublishedActivity, ReceivedActivity, Accept,
+    Recipient, SubEvent, PublishedActivity, ReceivedActivity, Accept, PublishModeChoices, AdoptionTypeChoices,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -293,6 +293,14 @@ class FollowingAddForm(forms.ModelForm):
         help_text=_("This person will be the activity manager of the activities that are adopted."),
         required=False
     )
+    adoption_type = forms.ChoiceField(
+        label=_("Adoption type"),
+        widget=forms.RadioSelect(),
+        choices=AdoptionTypeChoices.choices,
+        initial=AdoptionTypeChoices.template,
+        required=True,
+        help_text=_('Select how a received activity should be adopted.')
+    )
 
     class Meta:
         model = Following
@@ -323,6 +331,27 @@ class FollowingAddForm(forms.ModelForm):
                         "Are you sure the url is correct?",
                     )
                 })
+
+
+class FollowingAdminForm(forms.ModelForm):
+    adoption_type = forms.ChoiceField(
+        label=_("Adoption type"),
+        widget=forms.RadioSelect(),
+        choices=AdoptionTypeChoices.choices,
+        initial=AdoptionTypeChoices.template,
+        required=True,
+        help_text=_('Select how a received activity should be adopted.')
+    )
+    default_owner = forms.ModelChoiceField(
+        Member.objects.all(),
+        widget=ForeignKeyRawIdWidget(Following._meta.get_field("default_owner").remote_field, admin.site),
+        help_text=_("This person will be the activity manager of the activities that are adopted."),
+        required=False
+    )
+
+    class Meta:
+        model = Following
+        fields = '__all__'
 
 
 @admin.register(Following)
@@ -395,7 +424,7 @@ class FollowingAdmin(FollowAdmin):
         """Use custom form for adding new Following objects"""
         if obj is None:
             return FollowingAddForm
-        return super().get_form(request, obj, **kwargs)
+        return FollowingAdminForm
 
     def save_model(self, request, obj, form, change):
         """Handle saving of new Following objects using adapter.follow()"""
@@ -440,12 +469,29 @@ class FollowingAdmin(FollowAdmin):
         return super().response_add(request, obj, post_url_continue)
 
 
+class FollowerAdminForm(forms.ModelForm):
+    publish_mode = forms.ChoiceField(
+        label=_("Publish mode"),
+        widget=forms.RadioSelect(),
+        choices=PublishModeChoices.choices,
+        initial=PublishModeChoices.manual,
+        required=True,
+        help_text=_('Select how you want to share activities.')
+    )
+
+    class Meta:
+        model = Follower
+        fields = '__all__'
+
+
 @admin.register(Follower)
 class FollowerAdmin(FollowAdmin):
     list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
     actions = ['accept_follow_requests']
     readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities", "publish_activities_button")
     fields = ('platform', 'accepted')
+
+    form = FollowerAdminForm
 
     def shared_activities(self, obj):
         return obj.shared_activities.count()

@@ -35,6 +35,12 @@ from django.core.exceptions import ValidationError
 
 @python_2_unicode_compatible
 class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
+    """
+    An initiative has a collection of activities that are related to a common goal.
+    """
+
+    include_in_documentation = True
+
     status = models.CharField(max_length=40)
     title = models.CharField(_("title"), blank=True, max_length=255)
 

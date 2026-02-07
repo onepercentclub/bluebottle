@@ -6,6 +6,9 @@ from bluebottle.fsm.effects import Effect
 
 
 class PublishEffect(Effect):
+    """
+    Publish the activity to the followers of the actor through GoodUp Connect
+    """
     display = True
     template = 'admin/activity_pub/publish_effect.html'
 
@@ -30,6 +33,9 @@ class PublishEffect(Effect):
 
 
 class AnnounceAdoptionEffect(Effect):
+    """
+    Announce that the activity has been adopted through GoodUp Connect.
+    """
     display = True
     template = 'admin/activity_pub/announce_adoption_effect.html'
 

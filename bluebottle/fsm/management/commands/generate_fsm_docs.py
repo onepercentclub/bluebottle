@@ -8,27 +8,40 @@ from django.core.management.base import BaseCommand
 from django.utils.html import escape
 
 from bluebottle.fsm.triggers import TransitionTrigger
-from bluebottle.fsm.utils import get_doc
+from bluebottle.fsm.utils import get_doc, setup_instance
 
 
-def _effect_notification_detail(effect_cls):
+def _effect_notification_detail(effect_cls, instance=None):
     """If effect is NotificationEffect, return message class name, subject, template, docstring, recipients."""
     if getattr(effect_cls, '__name__', '') != '_NotificationEffect' and not hasattr(effect_cls, 'message'):
         return None
-    message = getattr(effect_cls, 'message', None)
-    if message is None:
+    message_cls = getattr(effect_cls, 'message', None)
+    if message_cls is None:
         return None
     recipients_doc = None
-    if hasattr(message, 'get_recipients'):
-        rec_doc = get_doc(message.get_recipients)
+    if hasattr(message_cls, 'get_recipients'):
+        rec_doc = get_doc(message_cls.get_recipients)
         if rec_doc and '(documentation missing)' not in str(rec_doc):
             recipients_doc = rec_doc
+    template_path = getattr(message_cls, 'template', '')
+    template_rendered = None
+    if template_path and instance is not None:
+        try:
+            message = message_cls(instance)
+            template_rendered = getattr(message, 'generic_content_html', None) or getattr(
+                message, 'generic_content', None
+            )
+            if template_rendered is not None:
+                template_rendered = str(template_rendered)
+        except Exception:
+            template_rendered = None
     return {
-        'message_class': getattr(message, '__name__', str(message)),
-        'subject': getattr(message, 'subject', ''),
-        'template': getattr(message, 'template', ''),
-        'message_doc': get_doc(message),
+        'message_class': getattr(message_cls, '__name__', str(message_cls)),
+        'subject': getattr(message_cls, 'subject', ''),
+        'template': template_path,
+        'message_doc': get_doc(message_cls),
         'recipients_doc': recipients_doc,
+        'template_rendered': template_rendered,
     }
 
 
@@ -200,7 +213,32 @@ def _is_redundant_effect_doc(doc_str, detail):
     return False
 
 
-def _render_effect_html(e):
+def _slug_id(name):
+    """Slug for state/transition anchor (lowercase, spaces to dashes)."""
+    return (name or '').lower().replace(' ', '-')
+
+
+def _link_to_state(base_id, state_name):
+    """Return HTML link to state section."""
+    if not base_id or not state_name:
+        return escape(str(state_name or ''))
+    slug = _slug_id(state_name)
+    return '<a href="#{}-state-{}" class="state-link-inline">{}</a>'.format(
+        base_id, slug, escape(str(state_name))
+    )
+
+
+def _link_to_transition(base_id, trans_name):
+    """Return HTML link to transition section."""
+    if not base_id or not trans_name:
+        return escape(str(trans_name or ''))
+    slug = _slug_id(trans_name)
+    return '<a href="#{}-trans-{}" class="transition-link-inline">{}</a>'.format(
+        base_id, slug, escape(str(trans_name))
+    )
+
+
+def _render_effect_html(e, base_id=None):
     """Render a single effect (dict with summary/detail or legacy string) to HTML."""
     if isinstance(e, dict):
         summary = escape(str(e.get('summary', '')))
@@ -224,17 +262,31 @@ def _render_effect_html(e):
             if msg_doc and '(documentation missing)' not in str(msg_doc):
                 parts.append('<br><em>{}</em>'.format(escape(str(msg_doc))))
             parts.append('</p>')
+            if notif.get('template_rendered'):
+                parts.append(
+                    '<div class="effect-template-preview">'
+                    '<strong>Template preview:</strong>'
+                    '<div class="effect-template-body">'
+                )
+                parts.append(notif['template_rendered'])
+                parts.append('</div></div>')
         transition = detail.get('transition')
         if transition:
             parts.append('<p class="effect-related">')
             parts.append('<strong>Transition:</strong> ')
             if transition.get('sources'):
-                src_str = escape(' | '.join(transition['sources']))
-                tgt_str = escape(transition.get('target', ''))
-                parts.append('{} → {} '.format(src_str, tgt_str))
+                src_links = ' | '.join(
+                    _link_to_state(base_id, s) for s in transition['sources']
+                )
+                tgt_link = _link_to_state(base_id, transition.get('target', ''))
+                parts.append('{} → {} '.format(src_links, tgt_link))
             else:
-                parts.append('→ {} '.format(escape(transition.get('target', ''))))
-            parts.append('via <em>{}</em>'.format(escape(transition.get('transition_name', ''))))
+                tgt_link = _link_to_state(base_id, transition.get('target', ''))
+                parts.append('→ {} '.format(tgt_link))
+            trans_link = _link_to_transition(
+                base_id, transition.get('transition_name', '')
+            )
+            parts.append('via <em>{}</em>'.format(trans_link))
             parts.append('</p>')
         related = detail.get('related')
         if related:
@@ -244,12 +296,18 @@ def _render_effect_html(e):
                 '<strong>Related transition:</strong> relation <code>{}</code> '.format(rel_code)
             )
             if related.get('sources'):
-                rel_src = escape(' | '.join(related['sources']))
-                rel_tgt = escape(related.get('target', ''))
-                parts.append('({} → {}) '.format(rel_src, rel_tgt))
+                rel_src_links = ' | '.join(
+                    _link_to_state(base_id, s) for s in related['sources']
+                )
+                rel_tgt_link = _link_to_state(base_id, related.get('target', ''))
+                parts.append('({} → {}) '.format(rel_src_links, rel_tgt_link))
             else:
-                parts.append('→ {} '.format(escape(related.get('target', ''))))
-            parts.append('via transition <em>{}</em>'.format(escape(related.get('transition_name', ''))))
+                rel_tgt_link = _link_to_state(base_id, related.get('target', ''))
+                parts.append('→ {} '.format(rel_tgt_link))
+            rel_trans_link = _link_to_transition(
+                base_id, related.get('transition_name', '')
+            )
+            parts.append('via transition <em>{}</em>'.format(rel_trans_link))
             parts.append('</p>')
         parts.append('</li>')
         return ''.join(parts)
@@ -275,6 +333,10 @@ def document_fsm_from_classes(model):
     machine_class = model._state_machines.get('states')
     if not machine_class:
         return {'states': [], 'transitions': [], 'triggers': []}
+    try:
+        instance = setup_instance(model)
+    except Exception:
+        instance = None
     states = list(machine_class.states.values())
     transitions = list(machine_class.transitions.values())
     doc = {
@@ -305,7 +367,7 @@ def document_fsm_from_classes(model):
                     summary = _format_effect_summary(effect_cls, cond_str)
                     detail = {
                         'doc': _effect_docstring(effect_cls),
-                        'notification': _effect_notification_detail(effect_cls),
+                        'notification': _effect_notification_detail(effect_cls, instance=instance),
                         'transition': _effect_transition_detail(effect_cls),
                         'related': _effect_related_detail(effect_cls),
                     }
@@ -363,7 +425,7 @@ def document_fsm_from_classes(model):
                 summary = _format_effect_summary(effect_cls, cond_str)
                 detail = {
                     'doc': _effect_docstring(effect_cls),
-                    'notification': _effect_notification_detail(effect_cls),
+                    'notification': _effect_notification_detail(effect_cls, instance=instance),
                     'transition': _effect_transition_detail(effect_cls),
                     'related': _effect_related_detail(effect_cls),
                 }
@@ -391,7 +453,7 @@ def document_fsm_from_classes(model):
                 summary = _format_effect_summary(effect_cls, cond_str)
                 detail = {
                     'doc': _effect_docstring(effect_cls),
-                    'notification': _effect_notification_detail(effect_cls),
+                    'notification': _effect_notification_detail(effect_cls, instance=instance),
                     'transition': _effect_transition_detail(effect_cls),
                     'related': _effect_related_detail(effect_cls),
                 }
@@ -515,6 +577,7 @@ def render_fsm_section(model_name, model_label, doc, base_id):
         from_states = t.get('from', [])
         to_state = t.get('to', '')
         manual = t.get('manual', '')
+        # Note: state names not linked here to avoid nested <a> (row is a link)
         sections.append(
             '<li class="transition-item" id="{}">'
             '<a href="#{}" class="transition-link">'
@@ -540,7 +603,7 @@ def render_fsm_section(model_name, model_label, doc, base_id):
             sections.append('<p><strong>Permission:</strong> {}</p>'.format(escape(t['permission_doc'])))
         sections.append('<p><strong>When this transition runs, effects:</strong></p><ul>')
         for e in t.get('effects', []):
-            sections.append(_render_effect_html(e))
+            sections.append(_render_effect_html(e, base_id=base_id))
         sections.append('</ul>')
         caused = t.get('caused_by', [])
         if caused:
@@ -570,7 +633,7 @@ def render_fsm_section(model_name, model_label, doc, base_id):
             )
             sections.append('<ul>')
             for e in tr.get('effects', []):
-                sections.append(_render_effect_html(e))
+                sections.append(_render_effect_html(e, base_id=base_id))
             sections.append('</ul></li>')
         sections.append('</ul></section>')
 
@@ -591,7 +654,7 @@ def render_fsm_section(model_name, model_label, doc, base_id):
                 sections.append('<p class="task-description">{}</p>'.format(escape(str(pt['description']))))
             sections.append('<ul>')
             for e in pt.get('effects', []):
-                sections.append(_render_effect_html(e))
+                sections.append(_render_effect_html(e, base_id=base_id))
             sections.append('</ul></li>')
         sections.append('</ul></section>')
 
@@ -677,30 +740,55 @@ nav a:hover {{ text-decoration: underline; }}
   margin-bottom: 30px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }}
+.fsm-block-sticky-header {{
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  background: white;
+  border-radius: 12px 12px 0 0;
+}}
+.fsm-block-sticky-header.is-stuck {{
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: calc(50vw - 50% + 30px);
+  padding-right: calc(50vw - 50% + 30px);
+  border-radius: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}}
 .fsm-block-header {{
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
-  flex-wrap: wrap;
 }}
 .fsm-block h1 {{
   color: #667eea;
-  border-bottom: 2px solid #667eea;
-  padding-bottom: 10px;
-  margin-bottom: 6px;
+  margin-bottom: 0;
   font-size: 28px;
-  flex: 1;
   min-width: 0;
 }}
-.fsm-block .back-to-top {{
-  flex-shrink: 0;
-  font-size: 0.9rem;
-  color: #667eea;
+.back-to-top-fixed {{
+  position: fixed;
+  top: 1rem;
+  right: 1.5rem;
+  z-index: 1000;
+  background: #667eea;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   text-decoration: none;
-  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }}
-.fsm-block .back-to-top:hover {{ text-decoration: underline; }}
+.back-to-top-fixed:hover {{
+  background: #5a6fd6;
+  color: white;
+  text-decoration: none;
+}}
 .fsm-class-path {{
   font-size: 0.85rem;
   color: #666;
@@ -732,6 +820,8 @@ nav a:hover {{ text-decoration: underline; }}
 .state-desc, .trans-description {{ color: #666; font-size: 0.9rem; margin: 0.35rem 0 0; }}
 .state-trans {{ font-size: 0.85rem; margin: 0.35rem 0 0; color: #666; }}
 .state-trans a {{ color: #667eea; margin-right: 0.25rem; }}
+.state-link-inline, .transition-link-inline {{ color: #667eea; text-decoration: none; }}
+.state-link-inline:hover, .transition-link-inline:hover {{ text-decoration: underline; }}
 .trans-arrow {{ color: #28a745; }}
 .trans-type {{ font-size: 0.85rem; color: #fd7e14; margin-left: 0.5rem; }}
 .transition-detail {{
@@ -758,6 +848,25 @@ nav a:hover {{ text-decoration: underline; }}
 .effect-notification code, .effect-related code {{
   font-size: 0.8rem; background: #e9ecef; padding: 2px 5px; border-radius: 3px;
 }}
+.effect-template-preview {{
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}}
+.effect-template-preview strong {{
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #495057;
+}}
+.effect-template-body {{
+  max-height: 200px;
+  overflow: auto;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}}
+.effect-template-body p {{ margin: 0.35rem 0; }}
 @media (max-width: 768px) {{
   header h1 {{ font-size: 32px; }}
   .fsm-block {{ padding: 20px; }}
@@ -784,9 +893,10 @@ nav a:hover {{ text-decoration: underline; }}
         class_path = '{}.{}'.format(model.__module__, model.__name__)
         html += (
             '<div class="fsm-block" id="{}">\n'
-            '  <div class="fsm-block-header">\n'
-            '    <h1>{}</h1>\n'
-            '    <a href="#top" class="back-to-top">Back to top</a>\n'
+            '  <div class="fsm-block-sticky-header">\n'
+            '    <div class="fsm-block-header">\n'
+            '      <h1>{}</h1>\n'
+            '    </div>\n'
             '  </div>\n'
             '  <p class="fsm-class-path"><code>{}</code></p>\n'
         ).format(base_id, escape(label), escape(class_path))
@@ -800,6 +910,7 @@ nav a:hover {{ text-decoration: underline; }}
 
     html += '''
 </div>
+<a href="#top" class="back-to-top-fixed" aria-label="Back to top">Back to top</a>
 <script>
 (function(){
   function openDetail(id) {
@@ -828,6 +939,27 @@ nav a:hover {{ text-decoration: underline; }}
       }
     });
   });
+  function updateStickyHeaders() {
+    document.querySelectorAll('.fsm-block-sticky-header').forEach(function(header) {
+      var rect = header.getBoundingClientRect();
+      if (rect.top <= 2) {
+        header.classList.add('is-stuck');
+      } else {
+        header.classList.remove('is-stuck');
+      }
+    });
+  }
+  var scrollTicking = false;
+  window.addEventListener('scroll', function() {
+    if (!scrollTicking) {
+      window.requestAnimationFrame(function() {
+        updateStickyHeaders();
+        scrollTicking = false;
+      });
+      scrollTicking = true;
+    }
+  }, { passive: true });
+  updateStickyHeaders();
 })();
 </script>
 </body>

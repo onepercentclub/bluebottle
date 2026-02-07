@@ -450,7 +450,7 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
         return {
             'uid': f"{connection.tenant.client_name}-{self.id}",
             'summary': title,
-            'description': self.activity.description,
+            'description': self.activity.description.html,
             'organizer': self.organizer.email,
             'url': self.activity.get_absolute_url(),
             'location': location,
@@ -1243,7 +1243,7 @@ class DateRegistration(Registration):
             return self.participants.exclude(status='withdrawn')
         return Registration.objects.none()
 
-    class Meta:
+    class Meta(Registration.Meta):
         verbose_name = _("Candidate for date activities")
         verbose_name_plural = _("Candidates for date activities")
 

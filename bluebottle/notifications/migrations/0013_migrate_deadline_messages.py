@@ -3,21 +3,6 @@
 from django.db import migrations
 
 
-def migrate_deadline_messages(apps, schema_editor):
-    ContentType = apps.get_model("contenttypes", "ContentType")
-    DeadlineActivity = apps.get_model("time_based", "DeadlineActivity")
-    PeriodActivity = apps.get_model("time_based", "PeriodActivity")
-
-    Message = apps.get_model("notifications", "Message")
-
-    deadline_activity_ctype = ContentType.objects.get_for_model(DeadlineActivity)
-    period_activity_ctype = ContentType.objects.get_for_model(PeriodActivity)
-
-    messages = Message.objects.filter(
-        content_type=period_activity_ctype, object_id__in=DeadlineActivity.objects.all()
-    )
-    messages.update(content_type_id=deadline_activity_ctype)
-
 
 class Migration(migrations.Migration):
 
@@ -27,5 +12,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_deadline_messages, migrations.RunPython.noop)
     ]

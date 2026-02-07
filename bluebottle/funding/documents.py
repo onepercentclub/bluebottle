@@ -1,4 +1,5 @@
 from datetime import datetime
+from bluebottle.initiatives.documents import deduplicate, get_translated_list
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
@@ -39,6 +40,13 @@ class FundingDocument(ActivityDocument):
 
         if isinstance(related_instance, Donor):
             return Funding.objects.filter(contributors=related_instance)
+
+    def prepare_country(self, instance):
+        countries = super().prepare_country(instance)
+        if instance.impact_location and instance.impact_location.country:
+            countries += get_translated_list(instance.impact_location.country)
+
+        return deduplicate(countries)
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)

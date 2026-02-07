@@ -703,7 +703,7 @@ def get_stats_for_activities(activities):
 
     collected = [
         {
-            'name': type_dict[int(col['collect_type_id'])].safe_translation_getter('name'),
+            'name': type_dict[int(col['collect_type_id'])].name,
             'value': col['amount']
         }
         for col in collect

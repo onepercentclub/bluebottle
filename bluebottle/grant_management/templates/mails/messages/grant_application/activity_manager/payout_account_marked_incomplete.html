@@ -7,13 +7,14 @@
             You are working on a grant application on {{ site_name }}.
             <br/><br/>
 
-            You submitted some information to verify you or an organisations identity, but in some cases we need extra information for a successful verification. 
+            You submitted some information to verify you or an organisations identity, but in some cases we need extra
+            information for a successful verification.
             <br/></br>
             Please provide this as soon as possible to avoid issues with your grant application or to resolve them quickly.
         {% endblocktrans %}
     </p>
 
-{% endblock content %}
+{% endblock %}
 
 {% block action %}
     <a href="{{ site }}/activities/stripe/kyc/{{ obj.pk }}" class="action-email">

@@ -2,24 +2,29 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
-from django.db import models
+from django.core.cache import cache
+from django.db import models, connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, get_language
 from django_better_admin_arrayfield.models.fields import ArrayField
-from future.utils import python_2_unicode_compatible
-
 from django_quill.fields import QuillField
+from future.utils import python_2_unicode_compatible
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import Language
 from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
-class SegmentType(models.Model):
-    name = models.CharField(_('name'), max_length=255)
+class SegmentType(TranslatableModel, models.Model):
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=255),
+    )
+
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
 
     inherit = models.BooleanField(
@@ -95,16 +100,27 @@ class SegmentType(models.Model):
     def __str__(self):
         return self.name
 
-    class Meta:
-        ordering = ('name',)
-
     class JSONAPIMeta(object):
         resource_name = 'segment-types'
 
 
 @python_2_unicode_compatible
-class Segment(models.Model):
-    name = models.CharField(_('name'), max_length=255)
+class Segment(TranslatableModel, models.Model):
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=255),
+        slogan=models.CharField(
+            _('Slogan'), max_length=255, null=True, blank=True,
+            help_text=_(
+                'A short sentence to explain your segment. This sentence is directly visible on the page.'
+            )),
+        story=QuillField(
+            _('Story'), blank=True, null=True,
+            help_text=_(
+                'A more detailed story for your segment. This story can be accessed via a link on the page.'
+            )
+        )
+    )
+
     slug = models.CharField(_('slug'), max_length=255)
 
     alternate_names = ArrayField(
@@ -125,20 +141,6 @@ class Segment(models.Model):
         default=list,
         blank=True,
         help_text=_('Users with email addresses for this domain are automatically added to this segment.')
-    )
-
-    tag_line = models.CharField(
-        _('Slogan'), max_length=255, null=True, blank=True,
-        help_text=_(
-            'A short sentence to explain your segment. This sentence is directly visible on the page.'
-        )
-    )
-
-    story = QuillField(
-        _('Story'), blank=True, null=True,
-        help_text=_(
-            'A more detailed story for your segment. This story can be accessed via a link on the page.'
-        )
     )
 
     logo = ImageField(
@@ -197,14 +199,27 @@ class Segment(models.Model):
         )
     )
 
-    def save(self, *args, **kwargs):
-        if self.name not in self.alternate_names:
-            self.alternate_names.append(self.name)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._name_cache = {}
 
-        if not self.slug:
-            self.slug = slugify(self.name)
+    def save(self, *args, **kwargs):
+        if self.pk:
+            name_value = self.name
+        else:
+            name_value = self.name
+
+        if name_value and name_value not in self.alternate_names:
+            self.alternate_names.append(name_value)
+
+        if not self.slug and name_value:
+            self.slug = slugify(name_value)
 
         super().save(*args, **kwargs)
+
+        for lang in Language.objects.all():
+            cache_key = f'segment_name_{self.pk}_{connection.tenant.schema_name}_{lang.code}'
+            cache.delete(cache_key)
 
     def merge(self, other):
         self.alternate_names += other.alternate_names
@@ -234,8 +249,19 @@ class Segment(models.Model):
         else:
             return "text"
 
+    @property
+    def cached_name(self):
+        cache_key = f'segment_name_{self.pk}_{connection.tenant.schema_name}_{get_language()}'
+        cached_name = cache.get(cache_key)
+
+        if cached_name is None:
+            cached_name = str(self.name)
+            cache.set(cache_key, cached_name)
+
+        return cached_name
+
     def __str__(self):
-        return self.name
+        return self.cached_name
 
     def get_absolute_url(self):
         domain = get_current_host()
@@ -247,7 +273,6 @@ class Segment(models.Model):
         )
 
     class Meta:
-        ordering = ('name',)
         unique_together = (('slug', 'segment_type'), )
 
     class JSONAPIMeta(object):

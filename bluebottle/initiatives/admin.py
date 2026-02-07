@@ -327,7 +327,7 @@ class InitiativePlatformSettingsAdmin(
             },
         ),
         (
-            _("Offices"),
+            _("Work locations"),
             {
                 "fields": (
                     "enable_office_regions",

@@ -94,7 +94,10 @@ class SegmentFacet(ModelFacet):
 
     @property
     def filter(self):
-        return Term(**{'segments.type': self.segment_type.slug})
+        return Bool(filter=[
+            Term(**{'segments.type': self.segment_type.slug}),
+            super().filter
+        ])
 
 
 class DateRangeFacet(Facet):

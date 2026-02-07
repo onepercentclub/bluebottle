@@ -1,6 +1,12 @@
 from datetime import date, timedelta
+from io import BytesIO
+
+from django.utils.timezone import now
+from openpyxl import load_workbook
+from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
@@ -194,3 +200,47 @@ class DeadlineActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
         'start': date.today() + timedelta(days=10),
         'deadline': date.today() + timedelta(days=20),
     }
+
+    def test_get_with_segments(self):
+        segment_type = SegmentTypeFactory.create()
+        segment1 = SegmentFactory.create(segment_type=segment_type)
+        segment1.name = 'Vis'
+        segment1.save()
+        segment2 = SegmentFactory.create(segment_type=segment_type)
+        segment2.name = 'Vlees'
+        segment2.save()
+        self.participants[0].user.segments.add(segment1)
+        reg_date = now() - timedelta(days=10)
+        self.participants[1].user.segments.add(segment1)
+        self.participants[1].user.segments.add(segment2)
+        for p in self.participants:
+            p.created = reg_date
+            p.save()
+
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        self.assertEqual(len(workbook.worksheets), 1)
+
+        sheet = workbook.get_active_sheet()
+
+        self.assertEqual(
+            tuple(sheet.values)[0],
+            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', segment_type.name)
+        )
+
+        user = self.participants[0].user
+
+        self.assertEqual(
+            tuple(sheet.values)[1],
+            (user.email, user.full_name, reg_date.strftime('%d-%m-%y %H:%M'), 'new', None, segment1.name)
+        )
+
+        user = self.participants[1].user
+        self.assertEqual(
+            tuple(sheet.values)[2],
+            (user.email, user.full_name, reg_date.strftime('%d-%m-%y %H:%M'), 'new', None,
+             f"{segment1.name}, {segment2.name}")
+        )

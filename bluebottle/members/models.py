@@ -54,7 +54,8 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
 
     DISPLAY_MEMBER_OPTIONS = (
         ('full_name', _('Full name')),
-        ('first_name', _('First name')),
+        ('first_name', _('First name (members)')),
+        ('first_name_strict', _('First name (also activity managers)')),
     )
 
     REQUIRED_QUESTIONS_OPTIONS = (
@@ -270,15 +271,15 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         _('create locations'),
         default=False,
         help_text=_(
-            "Create new office locations when a user logs in. "
+            "Create new work locations when a user logs in. "
             "Leave unchecked if only priorly specified ones should be used."
         ),
     )
 
     require_office = models.BooleanField(
-        _('Office location'),
+        _('Work location'),
         default=False,
-        help_text=_('Require members to enter their office location.')
+        help_text=_('Require members to enter their work location.')
     )
     require_address = models.BooleanField(
         _('Address'),
@@ -297,15 +298,15 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     verify_office = models.BooleanField(
-        _('Verify SSO data office location'),
+        _('Verify SSO data work location'),
         default=False,
-        help_text=_('Require members to verify their office location once if it is filled via SSO.')
+        help_text=_('Require members to verify their work location once if it is filled via SSO.')
     )
 
     display_member_names = models.CharField(
         _('Display member names'),
         choices=DISPLAY_MEMBER_OPTIONS,
-        max_length=12,
+        max_length=50,
         default='full_name',
         help_text=_(
             'How names of members will be displayed for visitors and other members.'
@@ -401,7 +402,7 @@ class Member(BlueBottleBaseUser):
 
     subregion_manager = models.ManyToManyField(
         OfficeSubRegion,
-        verbose_name=_("Office groups managed"),
+        verbose_name=_("Work location groups managed"),
         help_text=_(
             "Select one or more groups to filter on. "
             "The user will only see data related to those selected groups. Leave empty to show all data."
@@ -555,11 +556,6 @@ class Member(BlueBottleBaseUser):
     @property
     def hours_planned(self):
         return self.get_hours('new')
-
-    def save(self, *args, **kwargs):
-        if not (self.is_staff or self.is_superuser) and self.submitted_initiative_notifications:
-            self.submitted_initiative_notifications = False
-        super(Member, self).save(*args, **kwargs)
 
 
 class UserSegment(models.Model):

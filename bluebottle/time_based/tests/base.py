@@ -1014,7 +1014,10 @@ class TimeBasedActivityAPIExportTestCase:
             initiative=InitiativeFactory.create(status='approved'),
             status='open',
         )
-        self.participant_factory.create_batch(4, activity=self.activity)
+        self.participants = self.participant_factory.create_batch(
+            4,
+            activity=self.activity,
+        )
 
         response = self.client.get(
             reverse(self.url_name, args=(self.activity.pk, )),

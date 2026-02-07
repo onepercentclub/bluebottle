@@ -8,6 +8,7 @@ from future import standard_library
 from mock import patch, MagicMock
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
+from bluebottle.clients import properties
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -16,8 +17,7 @@ from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.models import SAMLLog
 from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS, TOKEN_AUTH_SETTINGS
-
-from bluebottle.clients import properties
+from bluebottle.utils import translation
 
 standard_library.install_aliases()
 
@@ -779,26 +779,27 @@ class TestSAMLTokenAuthentication(TestCase):
             }
         )
 
+        language = properties.LANGUAGE_CODE
         with self.settings(TOKEN_AUTH=settings):
+            with translation.override(language):
+                request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+                auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
-            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
-
-            result = auth_backend.parse_user({
-                'team': ['Marketing'],
-                'team_name': ['Online Marketing'],
-                'mail': ['test@example.com'],
-                'nameId': ['1234325']
-            })
-            self.assertEqual(
-                result['remote_id'], '1234325'
-            )
-            self.assertEqual(
-                result['email'], 'test@example.com'
-            )
-            self.assertEqual(
-                result['segment.team'], ['Marketing', 'Online Marketing']
-            )
+                result = auth_backend.parse_user({
+                    'team': ['Marketing'],
+                    'team_name': ['Online Marketing'],
+                    'mail': ['test@example.com'],
+                    'nameId': ['1234325']
+                })
+                self.assertEqual(
+                    result['remote_id'], '1234325'
+                )
+                self.assertEqual(
+                    result['email'], 'test@example.com'
+                )
+                self.assertEqual(
+                    result['segment.team'], ['Marketing', 'Online Marketing']
+                )
 
     def test_parse_segments(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)
@@ -821,6 +822,8 @@ class TestSAMLTokenAuthentication(TestCase):
             name='Sales'
         )
 
+        language = properties.LANGUAGE_CODE
+
         with self.settings(TOKEN_AUTH=settings):
             user = BlueBottleUserFactory.create()
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
@@ -830,23 +833,163 @@ class TestSAMLTokenAuthentication(TestCase):
                 'segment.segment': ['Online Marketing', 'Marketing']
             })
             self.assertEqual(
-                list(user.segments.values_list('name', flat=True)),
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
                 ['Marketing']
             )
             auth_backend.set_segments(user, {
                 'segment.segment': ['Sales', 'Marketing']
             })
             self.assertEqual(
-                list(user.segments.values_list('name', flat=True)),
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
                 ['Marketing', 'Sales']
             )
             auth_backend.set_segments(user, {
                 'segment.segment': ['markeTING']
             })
             self.assertEqual(
-                list(user.segments.values_list('name', flat=True)),
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
                 ['Marketing']
             )
+
+    def test_parse_segments_translated_names(self):
+        """Test that segment matching works with translated segment names."""
+        from bluebottle.utils.models import Language
+
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings.update(
+            assertion_mapping={
+                'email': 'mail',
+                'remote_id': 'nameId',
+                'segment.segment': ['segment', 'section'],
+            }
+        )
+
+        en_lang, _ = Language.objects.get_or_create(code='en', defaults={'default': True})
+        nl_lang, _ = Language.objects.get_or_create(code='nl', defaults={'default': False})
+
+        segment_type = SegmentTypeFactory.create(slug='segment')
+
+        marketing_segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Marketing',
+            alternate_names=['MarkCom', 'Propaganda', 'Online Marketing']
+        )
+        marketing_segment.set_current_language('nl')
+        marketing_segment.name = 'Prodaganda'
+        marketing_segment.save()
+
+        sales_segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Sales',
+            alternate_names=['Sales Team']
+        )
+        sales_segment.set_current_language('nl')
+        sales_segment.name = 'Verkoop'
+        sales_segment.save()
+        sales_segment.alternate_names.append('Verkoop')
+        sales_segment.save()
+
+        language = properties.LANGUAGE_CODE
+
+        with self.settings(TOKEN_AUTH=settings):
+            user = BlueBottleUserFactory.create()
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            # Test matching with Dutch translated name in alternate_names
+            auth_backend.set_segments(user, {
+                'segment.segment': ['Verkoop']
+            })
+            self.assertEqual(
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
+                ['Sales']
+            )
+            # Verify it matches the correct segment by checking Dutch translation
+            with translation.override('nl'):
+                self.assertEqual(
+                    list(user.segments.translated('nl').values_list('translations__name', flat=True)),
+                    ['Verkoop']
+                )
+
+            # Test case-insensitive matching with translated name
+            auth_backend.set_segments(user, {
+                'segment.segment': ['VERKOOP']
+            })
+            self.assertEqual(
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
+                ['Sales']
+            )
+
+            # Test matching with English name still works
+            auth_backend.set_segments(user, {
+                'segment.segment': ['Sales', 'Marketing']
+            })
+            self.assertEqual(
+                sorted(list(user.segments.translated(language).values_list('translations__name', flat=True))),
+                ['Marketing', 'Sales']
+            )
+
+            # Test matching with both English and Dutch names
+            auth_backend.set_segments(user, {
+                'segment.segment': ['Verkoop', 'Marketing']
+            })
+            self.assertEqual(
+                sorted(list(user.segments.translated(language).values_list('translations__name', flat=True))),
+                ['Marketing', 'Sales']
+            )
+
+    def test_parse_segments_translated_names_slug_match(self):
+        """Test that segment matching works with translated names via slug matching."""
+        from bluebottle.utils.models import Language
+
+        settings = dict(**TOKEN_AUTH_SETTINGS)
+        settings.update(
+            assertion_mapping={
+                'email': 'mail',
+                'remote_id': 'nameId',
+                'segment.segment': ['segment', 'section'],
+            }
+        )
+
+        # Ensure we have at least English and Dutch languages
+        en_lang, _ = Language.objects.get_or_create(code='en', defaults={'default': True})
+        nl_lang, _ = Language.objects.get_or_create(code='nl', defaults={'default': False})
+
+        segment_type = SegmentTypeFactory.create(slug='segment')
+
+        # Create a segment with English name "Support" and Dutch name "Ondersteuning"
+        # The slug will be based on the English name
+        support_segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Support',
+            alternate_names=[]  # No alternate names, so it will match via slug
+        )
+        # Set Dutch translation
+        support_segment.set_current_language('nl')
+        support_segment.name = 'Ondersteuning'
+        support_segment.save()
+
+        language = properties.LANGUAGE_CODE
+
+        with self.settings(TOKEN_AUTH=settings):
+            user = BlueBottleUserFactory.create()
+            request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            # Test matching via slug (the slug is based on English name "support")
+            auth_backend.set_segments(user, {
+                'segment.segment': ['support']  # This will match via slug
+            })
+            self.assertEqual(
+                list(user.segments.translated(language).values_list('translations__name', flat=True)),
+                ['Support']
+            )
+            # Verify Dutch translation is correct
+            with translation.override('nl'):
+                self.assertEqual(
+                    list(user.segments.translated('nl').values_list('translations__name', flat=True)),
+                    ['Ondersteuning']
+                )
 
     def test_parse_user_missing(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)

@@ -521,9 +521,9 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers, [
             'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
-            'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
-        self.assertEqual(user_data[12], 'Bier')
-        self.assertEqual(user_data[13], 'Bitterballen')
+            'amount donated', 'time spent', 'subscribed to matching projects', 'Food', 'Drinks'])
+        self.assertEqual(user_data[12], 'Bitterballen')
+        self.assertEqual(user_data[13], 'Bier')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)
@@ -687,33 +687,16 @@ class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
             args=(self.user.id,)
         )
 
-    def test_initiative_admin(self):
+    def test_set_reviewer_notifications(self):
         self.app.set_user(self.staff_member)
+        self.assertFalse(self.user.submitted_initiative_notifications)
 
-        # Normal user should not have submitted_initiative_notifications checkbox
-        page = self.app.get(self.member_admin_url)
-        self.assertFalse('id_submitted_initiative_notifications' in page.text)
-        form = page.forms[1]
-        form.set('is_staff', True)
-        form.submit()
-
-        # Made user into a staff member
-        # Should have submitted_initiative_notifications checkbox now
         page = self.app.get(self.member_admin_url)
         self.assertTrue('id_submitted_initiative_notifications' in page.text)
+
         form = page.forms[1]
         form.set('submitted_initiative_notifications', True)
         form.submit()
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.submitted_initiative_notifications)
-
-        # Demote user into normal member
-        # Should unset submitted_initiative_notifications boolean
-        page = self.app.get(self.member_admin_url)
-        form = page.forms[1]
-        form.set('is_staff', False)
-        form.submit()
-
-        self.user.refresh_from_db()
-        self.assertFalse(self.user.submitted_initiative_notifications)

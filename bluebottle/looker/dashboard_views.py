@@ -26,15 +26,15 @@ class LookerEmbedView(DetailView):
         hide_filters = []
 
         if not Location.objects.exists():
-            hide_filters.append('Office')
-            hide_filters.append('Office group')
-            hide_filters.append('Office region')
-            hide_filters.append('Member office')
-            hide_filters.append('Member office group')
-            hide_filters.append('Member office region')
-            hide_filters.append('Activity office')
-            hide_filters.append('Activity office group')
-            hide_filters.append('Activity office region')
+            hide_filters.append('Work location')
+            hide_filters.append('Work location group')
+            hide_filters.append('Work location region')
+            hide_filters.append('Member work location')
+            hide_filters.append('Member work location group')
+            hide_filters.append('Member work location region')
+            hide_filters.append('Activity work location')
+            hide_filters.append('Activity work location group')
+            hide_filters.append('Activity work location region')
 
         if not Category.objects.exists():
             hide_filters.append('Category')

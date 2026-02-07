@@ -477,3 +477,81 @@ class GrantPaymentTriggersTestCase(TriggerTestCase):
         )
         payment = GrantPayment.objects.first()
         self.assertEqual(payment.status, 'pending')
+
+    @mock.patch("bluebottle.grant_management.models.get_stripe")
+    def test_generate_payment_link_updates_amount_for_new_payouts(self, get_stripe):
+        class DummySession:
+            created = []
+
+            @classmethod
+            def create(cls, **kwargs):
+                cls.created.append(kwargs)
+                return munch.munchify({"id": "cs_test", "url": "https://example.com/pay"})
+
+        class DummyProduct:
+            created = []
+
+            @classmethod
+            def create(cls, **kwargs):
+                data = {"id": f"prod_{len(cls.created)}", **kwargs}
+                cls.created.append(data)
+                return data
+
+        class DummyPrice:
+            created = []
+
+            @classmethod
+            def create(cls, **kwargs):
+                data = {"id": f"price_{len(cls.created)}", **kwargs}
+                cls.created.append(data)
+                return data
+
+        get_stripe.return_value = munch.munchify(
+            {
+                "checkout": munch.munchify({"Session": DummySession}),
+                "Product": DummyProduct,
+                "Price": DummyPrice,
+            }
+        )
+
+        provider = GrantProviderFactory.create()
+        fund = GrantFundFactory.create(grant_provider=provider)
+
+        first_payout = GrantPayoutFactory.create(currency="EUR", status="approved")
+        GrantDonorFactory.create(
+            fund=fund,
+            payout=first_payout,
+            activity=first_payout.activity,
+            amount=Money(100, "EUR"),
+        )
+
+        second_payout = GrantPayoutFactory.create(currency="EUR", status="approved")
+        GrantDonorFactory.create(
+            fund=fund,
+            payout=second_payout,
+            activity=second_payout.activity,
+            amount=Money(150, "EUR"),
+        )
+
+        payment = provider.create_payment()
+
+        extra_payout = GrantPayoutFactory.create(currency="EUR", status="approved")
+        GrantDonorFactory.create(
+            fund=fund,
+            payout=extra_payout,
+            activity=extra_payout.activity,
+            amount=Money(200, "EUR"),
+        )
+        extra_payout.payment = payment
+        extra_payout.save()
+
+        payment.generate_payment_link()
+        payment.refresh_from_db()
+
+        self.assertEqual(payment.total, Money(450, "EUR"))
+        self.assertEqual(len(DummySession.created), 1)
+        self.assertEqual(len(DummySession.created[0]["line_items"]), 3)
+        self.assertEqual(
+            sum(price["unit_amount"] for price in DummyPrice.created),
+            45000,
+        )

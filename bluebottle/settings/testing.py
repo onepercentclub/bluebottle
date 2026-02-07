@@ -184,7 +184,9 @@ STRIPE = {
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/tmp/django_cache',
+        'TIMEOUT': 86400,
     },
     'axes_cache': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',

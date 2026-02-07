@@ -739,6 +739,7 @@ nav a:hover {{ text-decoration: underline; }}
   padding: 30px;
   margin-bottom: 30px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  scroll-margin-top: 5rem;
 }}
 .fsm-block-sticky-header {{
   position: sticky;
@@ -814,6 +815,7 @@ nav a:hover {{ text-decoration: underline; }}
   padding: 15px;
   margin-bottom: 10px;
   border-left: 4px solid #667eea;
+  scroll-margin-top: 5rem;
 }}
 .state-link, .transition-link {{ font-weight: 600; color: #333; text-decoration: none; }}
 .state-link:hover, .transition-link:hover {{ color: #667eea; text-decoration: underline; }}
@@ -833,6 +835,7 @@ nav a:hover {{ text-decoration: underline; }}
   border-radius: 4px;
   font-size: 0.9rem;
   color: #495057;
+  scroll-margin-top: 5rem;
 }}
 .transition-detail ul {{ margin: 0.35rem 0; padding-left: 1.25rem; }}
 .transition-detail strong {{ color: #667eea; }}

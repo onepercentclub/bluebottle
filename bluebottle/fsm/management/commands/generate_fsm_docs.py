@@ -296,18 +296,14 @@ def _render_effect_html(e, base_id=None):
                 '<strong>Related transition:</strong> relation <code>{}</code> '.format(rel_code)
             )
             if related.get('sources'):
-                rel_src_links = ' | '.join(
-                    _link_to_state(base_id, s) for s in related['sources']
-                )
-                rel_tgt_link = _link_to_state(base_id, related.get('target', ''))
-                parts.append('({} → {}) '.format(rel_src_links, rel_tgt_link))
+                rel_src = escape(' | '.join(related['sources']))
+                rel_tgt = escape(related.get('target', ''))
+                parts.append('({} → {}) '.format(rel_src, rel_tgt))
             else:
-                rel_tgt_link = _link_to_state(base_id, related.get('target', ''))
-                parts.append('→ {} '.format(rel_tgt_link))
-            rel_trans_link = _link_to_transition(
-                base_id, related.get('transition_name', '')
-            )
-            parts.append('via transition <em>{}</em>'.format(rel_trans_link))
+                rel_tgt = escape(related.get('target', ''))
+                parts.append('→ {} '.format(rel_tgt))
+            rel_trans = escape(related.get('transition_name', ''))
+            parts.append('via transition <em>{}</em>'.format(rel_trans))
             parts.append('</p>')
         parts.append('</li>')
         return ''.join(parts)

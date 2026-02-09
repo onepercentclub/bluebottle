@@ -35,8 +35,7 @@ from bluebottle.time_based.tests.factories import (
     DeadlineParticipantFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    DateRegistrationFactory,
-)
+    DateRegistrationFactory, )
 
 
 def get_include(response, name):
@@ -1291,12 +1290,12 @@ class ThemeApiTestCase(BluebottleTestCase):
         self.url = reverse('initiative-theme-list')
         self.client = JSONAPITestClient()
 
-    def test_get_skills_authenticated(self):
+    def test_get_themes_authenticated(self):
         user = BlueBottleUserFactory.create()
-        response = self.client.get(self.url, user=user)
+        response = self.client.get(self.url, user=user, HTTP_X_APPLICATION_LANGUAGE='en')
         self.assertEqual(response.status_code, 200)
 
-    def test_get_skills_unauthenticated(self):
+    def test_get_themes_unauthenticated(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 401)
 

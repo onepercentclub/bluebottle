@@ -348,7 +348,7 @@ class DateSlotDetailAPITestCase(APITestCase):
             )
 
     def test_export_download_anonymous(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.enable_participant_exports = True
         settings.save()
 
@@ -360,7 +360,7 @@ class DateSlotDetailAPITestCase(APITestCase):
         self.assertIsNone(self.response.json()['data']['attributes']['participants-export-url'])
 
     def test_export_download_owner(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.enable_participant_exports = True
         settings.save()
 
@@ -640,7 +640,7 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
         self.owner = BlueBottleUserFactory.create()
         self.initiative = InitiativeFactory.create(status='approved', owner=self.owner)
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append('dateactivity')
         settings.save()
 

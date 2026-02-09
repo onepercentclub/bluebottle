@@ -211,8 +211,8 @@ class MatchingFacet(BooleanFacet):
         if (
             user.search_distance and
             user.place and
-            user.place.position
-            and not user.any_search_distance
+            user.place.position and
+            not user.any_search_distance
         ):
             place = user.place
             if user.exclude_online:

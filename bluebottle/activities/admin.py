@@ -376,11 +376,10 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
 
-        if connection.tenant.schema_name != 'public':
+        if connection.tenant.schema_name != 'public' and self.instance.pk:
             for segment_type in SegmentType.objects.all():
                 selected = self.instance.segments.filter(segment_type=segment_type).all()
-                if self.instance.pk:
-                    self.initial[segment_type.field_name] = selected
+                self.initial[segment_type.field_name] = selected
 
 
 class TeamInline(admin.TabularInline):

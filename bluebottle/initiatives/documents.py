@@ -316,7 +316,7 @@ class InitiativeDocument(Document):
 
         for activity in instance.activities.all():
             for segment in activity.segments.all():
-                segments += get_translated_list(segment)
+                segments += get_translated_segments(segment)
 
         return deduplicate(segments)
 

@@ -160,7 +160,7 @@ def publish_activities(recipient, activities, tenant):
                 adapter.create_or_update_event(activity)
 
             publish = activity.event.create_set.first()
-            Recipient.objects.create(actor=recipient, activity=publish)
+            Recipient.objects.get_or_create(actor=recipient, activity=publish)
 
 
 @shared_task(
@@ -205,7 +205,7 @@ def publish_recipient(instance, created, **kwargs):
         for transition_cls in [Finish, Cancel]:
             if isinstance(instance.activity, Create):
                 for transition in transition_cls.objects.filter(object=instance.activity.object):
-                    Recipient.objects.create(
+                    Recipient.objects.get_or_create(
                         actor=instance.actor,
                         activity=transition
                     )

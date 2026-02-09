@@ -3,6 +3,7 @@ from rest_framework import serializers
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Accept,
+    ActivityPubModel,
     CrowdFunding,
     CollectCampaign,
     Address,
@@ -348,11 +349,22 @@ class FollowSerializer(BaseActivitySerializer):
         model = Follow
 
 
+class AcceptObjectSerializer(PolymorphicActivityPubSerializer):
+    """Accept.object can be a Follow (Activity) or an Event (e.g. CrowdFunding)."""
+    polymorphic_serializers = [
+        FollowSerializer,
+        EventSerializer,
+    ]
+
+    class Meta:
+        model = ActivityPubModel
+
+
 class AcceptSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:accept')
     type = TypeField('Accept')
 
-    object = FollowSerializer()
+    object = AcceptObjectSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Accept

@@ -1,23 +1,18 @@
 from django.core.exceptions import ValidationError
-from django.forms import CharField, ModelChoiceField, Textarea
+from django.forms import CharField, ModelChoiceField, Textarea, BooleanField
 from django.utils.translation import gettext_lazy as _
 
 from .models import GrantDonor, GrantFund
 from ..utils.fields import MoneyFormField
 from ..utils.forms import TransitionConfirmationForm
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
+
 
 class GrantApplicationApproveForm(TransitionConfirmationForm):
     """
     Form for creating a GrantDonor object for a GrantApplication.
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if self.instance and self.instance.target:
-            self.fields["amount"].initial = self.instance.target
-
     fund = ModelChoiceField(
         queryset=GrantFund.objects.all(),
         label=_("Grant Fund"),
@@ -31,6 +26,19 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         required=True,
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.target:
+            self.fields["amount"].initial = self.instance.target
+
+        settings = InitiativePlatformSettings.load()
+        if settings.vet_organizations and self.instance.organization:
+            self.fields['vet_organizations'] = BooleanField(
+                label=_("Partner organization is vetted"),
+                required=False
+            )
+
     def clean(self):
         amount = self.cleaned_data['amount']
         fund = self.cleaned_data['fund']
@@ -40,6 +48,14 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
 
         if amount.amount > fund.eventual_balance().amount:
             raise ValidationError({'amount': _('Insufficient funds')})
+
+        settings = InitiativePlatformSettings.load()
+        if (
+            settings.vet_organizations and
+            self.instance.organization and
+            not self.cleaned_data.get('vet_organizations')
+        ):
+            raise ValidationError({'vet_organizations': _('Please vet the organization before continueing')})
 
     def save(self, user=None):
         """

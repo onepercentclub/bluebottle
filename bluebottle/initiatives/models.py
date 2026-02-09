@@ -351,6 +351,13 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
+    vet_organizations = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Require reviewers to vet the organization before reviewing grant applications"
+        ),
+    )
+
     terms_of_service = models.TextField(
         _("Terms of Service"),
         blank=True,

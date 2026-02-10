@@ -171,6 +171,10 @@ class TeamTriggers(TriggerManager):
 
 @register(TeamMember)
 class TeamMemberTriggers(TriggerManager):
+    def current_user_is_not_captain(self):
+        user = self.options.get('user')
+        return user != self.instance.team.user
+
     def is_not_captain(self):
         return (
             self.instance.team.user != self.instance.user
@@ -187,7 +191,7 @@ class TeamMemberTriggers(TriggerManager):
                 ),
                 NotificationEffect(
                     CaptainTeamMemberJoinedNotification,
-                    conditions=[is_not_captain],
+                    conditions=[is_not_captain, current_user_is_not_captain],
                 ),
             ]
         ),

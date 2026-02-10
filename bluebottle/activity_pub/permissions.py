@@ -39,8 +39,7 @@ class InboxPermission(permissions.BasePermission):
                         if isinstance(object, Follow):
                             return Follow.objects.filter(object=request.auth).exists()
                         else:
-                            # Accept.object is a polymorphic FK to ActivityPubModel.
-                            # For non-Follow objects, check Accepts of Follows whose actor is the sender.
+                            # If it's an Accept on an Event, make sure we accepted the related follow
                             return Accept.objects.filter(
                                 object__in=Follow.objects.filter(actor=request.auth)
                             ).exists()

@@ -183,16 +183,14 @@ def add_staff_and_partner_permissions(apps, schema_editor):
             perm = perm_mapping[perm_str]
             partner_group.permissions.add(perm)
         except KeyError:
-            import ipdb;
-            ipdb.set_trace()
+            print(f'Permission {perm_str} not found')
     staff_group, _ = Group.objects.get_or_create(name='Staff')
     for perm_str in staff_permissions:
         try:
             perm = perm_mapping[perm_str]
             staff_group.permissions.add(perm)
         except KeyError:
-            import ipdb;
-            ipdb.set_trace()
+            print(f'Permission {perm_str} not found')
     staff_group.save()
 
 

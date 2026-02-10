@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
+from django.db.models import Q
 from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
@@ -572,7 +573,11 @@ class Follow(Activity):
 
     @property
     def adopted_activities(self):
-        return Accept.objects.filter(actor=self.actor)
+        return Event.objects.filter(
+            create__actor=self.object,
+        ).filter(
+            Q(linked_activities__isnull=False) | Q(adopted_activities__isnull=False)
+        )
 
     @property
     def unpublished_activities(self):

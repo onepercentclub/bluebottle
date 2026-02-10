@@ -359,6 +359,21 @@ class AcceptObjectSerializer(PolymorphicActivityPubSerializer):
     class Meta:
         model = ActivityPubModel
 
+    def get_serializer_from_data(self, data):
+        """
+        Accept.object may be:
+        - a Follow (Activity)              -> handled by FollowSerializer
+        - an Event subtype (e.g. DoGoodEvent) -> handled by EventSerializer's own polymorphism
+        """
+        # If it's not a Follow, delegate to EventSerializer's get_serializer_from_data
+        if isinstance(data, dict) and data.get("type") != "Follow":
+            for serializer in self._serializers:
+                if isinstance(serializer, EventSerializer):
+                    return serializer.get_serializer_from_data(data)
+
+        # Fallback to the default polymorphic resolution (e.g. for Follow)
+        return super().get_serializer_from_data(data)
+
 
 class AcceptSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:accept')

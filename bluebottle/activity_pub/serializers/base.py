@@ -231,7 +231,10 @@ class PolymorphicActivityPubSerializer(
             raise exceptions.ValidationError({'type': 'Missing type information'})
 
         for serializer in self._serializers:
-            if data['type'] == serializer.fields['type'].type:
+            type_field = serializer.fields.get('type')
+            # Some nested polymorphic serializers (e.g. EventSerializer) don't
+            # expose a concrete `type` field themselves; skip those here.
+            if type_field is not None and data['type'] == type_field.type:
                 return serializer
 
         raise exceptions.ValidationError(f'Missing serializer for type: {data["type"]}')

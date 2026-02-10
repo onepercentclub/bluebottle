@@ -359,6 +359,12 @@ class AcceptObjectSerializer(PolymorphicActivityPubSerializer):
     class Meta:
         model = ActivityPubModel
 
+    def get_serializer_from_data(self, data):
+        if isinstance(data, dict) and data.get("type") != "Follow":
+            return EventSerializer().get_serializer_from_data(data)
+
+        return super().get_serializer_from_data(data)
+
 
 class AcceptSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:accept')

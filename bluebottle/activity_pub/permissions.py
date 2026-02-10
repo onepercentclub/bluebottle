@@ -39,7 +39,10 @@ class InboxPermission(permissions.BasePermission):
                         if isinstance(object, Follow):
                             return Follow.objects.filter(object=request.auth).exists()
                         else:
-                            return Accept.objects.filter(object__actor=request.auth).exists()
+                            # If it's an Accept on an Event, make sure we accepted the related follow
+                            return Accept.objects.filter(
+                                object__in=Follow.objects.filter(actor=request.auth)
+                            ).exists()
                     except ActivityPubModel.DoesNotExist:
                         return False
 

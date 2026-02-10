@@ -57,7 +57,8 @@ class InviteCodePermission(BasePermission):
             str(obj.invite_code) == str(obj.team.invite_code) or
             request.user.is_staff or
             request.user.is_superuser or
-            request.user == obj.team.owner
+            request.user == obj.team.owner or
+            request.user in obj.team.activity.owners
         )
 
     def has_action_permission(self, action, user, model_cls):

@@ -17,6 +17,7 @@ from bluebottle.time_based.views.mixins import (
     CreatePermissionMixin,
     FilterRelatedUserMixin,
 )
+from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
@@ -157,19 +158,12 @@ class TeamMemberExportView(ExportView):
         return fields
 
 
-class TeamMemberList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
-
-    permission_classes = (InviteCodePermission,)
-    queryset = Team.objects.prefetch_related("team", "user", "participants")
+class TeamMemberList(
+    JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, CreatePermissionMixin
+):
+    permission_classes = (InviteCodePermission, )
+    queryset = TeamMember.objects.prefetch_related("team", "user", "participants")
     serializer_class = TeamMemberSerializer
-
-    def perform_create(self, serializer):
-        if hasattr(serializer.Meta, 'model'):
-            self.check_object_permissions(
-                self.request,
-                serializer.Meta.model(**serializer.validated_data)
-            )
-        serializer.save(user=self.request.user)
 
 
 class TeamMemberDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

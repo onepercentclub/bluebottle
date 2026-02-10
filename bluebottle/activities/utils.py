@@ -35,13 +35,18 @@ from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import (
-    TimeContribution, DeadlineActivity, DeadlineParticipant,
-    DateActivitySlot, DateParticipant, RegisteredDateParticipant, RegisteredDateActivity
+    TeamMember, TeamScheduleParticipant, TimeContribution, DeadlineActivity, DeadlineParticipant,
+    DateActivitySlot, DateParticipant, RegisteredDateParticipant, RegisteredDateActivity,
+    Team as ScheduleTeam
 )
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):
@@ -789,6 +794,8 @@ def bulk_add_participants(activity, emails, send_messages):
         Participant = DateParticipant
     if isinstance(activity, RegisteredDateActivity):
         Participant = RegisteredDateParticipant
+    if isinstance(activity, ScheduleTeam):
+        Participant = TeamScheduleParticipant
 
     settings = MemberPlatformSettings.objects.get()
     scim_settings = SCIMPlatformSettings.objects.get()
@@ -824,6 +831,17 @@ def bulk_add_participants(activity, emails, send_messages):
                         added += 1
                 else:
                     existing += 1
+            if isinstance(activity, ScheduleTeam):
+                team = activity
+                member, cr = TeamMember.objects.get_or_create(
+                    user=user,
+                    team=team
+                )
+                if cr:
+                    if not new:
+                        added += 1
+                else:
+                    existing += 1
             else:
                 if Participant.objects.filter(user=user, activity=activity).exists():
                     existing += 1
@@ -835,8 +853,10 @@ def bulk_add_participants(activity, emails, send_messages):
                         activity=activity,
                         send_messages=send_messages
                     )
-        except Exception:
+        except Exception as e:
+            logger.error(e)
             failed += 1
+
     return {
         'added': added,
         'existing': existing,

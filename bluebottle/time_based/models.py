@@ -215,6 +215,12 @@ class SlotSelectionChoices(DjangoChoices):
 
 
 class DateActivity(TimeBasedActivity):
+    """
+    An activity that takes place on one or more specific dates.
+    """
+
+    include_in_documentation = True
+
     old_online_meeting_url = models.TextField(
         _('online meeting link'),
         blank=True, default='',
@@ -458,6 +464,11 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
 
 
 class DateActivitySlot(ActivitySlot):
+    """
+    A time slot for a date activity.
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(DateActivity, related_name='slots', on_delete=models.CASCADE)
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
@@ -637,6 +648,10 @@ class RegistrationActivity(TimeBasedActivity):
 
 
 class DeadlineActivity(RegistrationActivity):
+    """
+    A flexible activity. The participant decides when to contribute or execute the task before a deadline (if set).
+    """
+    include_in_documentation = True
     url_pattern = "{}/{}/activities/details/deadline/{}/{}"
 
     duration = models.DurationField(
@@ -694,6 +709,11 @@ class DeadlineActivity(RegistrationActivity):
 
 
 class ScheduleActivity(RegistrationActivity):
+    """
+    An activity where the activity manager schedules the participants after they sign up.
+    """
+    include_in_documentation = True
+
     url_pattern = "{}/{}/activities/details/schedule/{}/{}"
 
     start = models.DateField(
@@ -777,6 +797,11 @@ class PeriodChoices(DjangoChoices):
 
 
 class PeriodicActivity(RegistrationActivity):
+    """
+    An activity that takes place every day, week or month.
+    """
+    include_in_documentation = True
+
     period = models.CharField(
         _('Period'),
         help_text=_('When should the activity be repeated?'),
@@ -841,6 +866,11 @@ class PeriodicActivity(RegistrationActivity):
 
 
 class RegisteredDateActivity(TimeBasedActivity):
+    """
+    An activity that was registered after it took place.
+    """
+    include_in_documentation = True
+
     url_pattern = "{}/{}/activities/details/registered-date/{}/{}"
 
     duration = models.DurationField(
@@ -996,6 +1026,11 @@ class Participant(Contributor):
 
 
 class DateParticipant(Participant):
+    """
+    A participant in a date activity slot.
+    """
+    include_in_documentation = True
+
     registration = models.ForeignKey(
         'time_based.DateRegistration',
         related_name='participants',
@@ -1049,6 +1084,11 @@ class DateParticipant(Participant):
 
 
 class PeriodParticipant(Participant, Contributor):
+    """
+    A participant in a recurring activity.
+    """
+    include_in_documentation = True
+
     motivation = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(blank=True, null=True, view_name='period-participant-document')
 
@@ -1080,6 +1120,11 @@ class ContributionTypeChoices(DjangoChoices):
 
 
 class TimeContribution(Contribution):
+    """
+    A time contribution. For reporting purposes
+    """
+    include_in_documentation = True
+
     value = models.DurationField(_('value'))
 
     contribution_type = models.CharField(
@@ -1180,6 +1225,11 @@ class Registration(TriggerMixin, PolymorphicModel):
 
 
 class DateRegistration(Registration):
+    """
+    A candidate for a date activity. A candidate can sign up for multiple slots, through a participant model.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/date-registrations'
 
@@ -1228,6 +1278,11 @@ class DateRegistration(Registration):
 
 
 class DeadlineRegistration(Registration):
+    """
+    A candidate for a flexible activity.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/deadline-registrations'
 
@@ -1273,6 +1328,11 @@ class DeadlineRegistration(Registration):
 
 
 class ScheduleRegistration(Registration):
+    """
+    A candidate for a schedule activity.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/schedule-registrations'
 
@@ -1315,6 +1375,11 @@ class ScheduleRegistration(Registration):
 
 
 class PeriodicRegistration(Registration):
+    """
+    A candidate for a recurring activity.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/periodic-registrations'
 
@@ -1389,6 +1454,11 @@ class PeriodicRegistration(Registration):
 
 
 class DeadlineParticipant(Participant, Contributor):
+    """
+    A candidate for a flexible activity.
+    """
+    include_in_documentation = True
+
     class Meta:
         verbose_name = _("Participant to flexible activities")
         verbose_name_plural = _("Participants to flexible activities")
@@ -1427,6 +1497,11 @@ class DeadlineParticipant(Participant, Contributor):
 
 
 class RegisteredDateParticipant(Contributor):
+    """
+    A participant in a past activity which was registered after it took place.
+    """
+    include_in_documentation = True
+
     class Meta:
         verbose_name = _("Participant to past date activity")
         verbose_name_plural = _("Participants to past date activity")
@@ -1465,6 +1540,11 @@ class RegisteredDateParticipant(Contributor):
 
 
 class TeamScheduleRegistration(Registration):
+    """
+    A regsitration of a team to a schedule activity.
+    """
+    include_in_documentation = True
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-registrations'
 
@@ -1508,6 +1588,11 @@ class TeamScheduleRegistration(Registration):
 
 
 class Team(TriggerMixin, models.Model):
+    """
+    A team of participants.
+    """
+    include_in_documentation = True
+
     invite_code = models.UUIDField(default=uuid.uuid4)
 
     registration = models.OneToOneField(
@@ -1583,6 +1668,11 @@ class Team(TriggerMixin, models.Model):
 
 
 class TeamMember(TriggerMixin, models.Model):
+    """
+    A team member
+    """
+    include_in_documentation = True
+
     invite_code = models.UUIDField(blank=True, null=True)
 
     team = models.ForeignKey(
@@ -1640,6 +1730,11 @@ class TeamMember(TriggerMixin, models.Model):
 
 
 class ScheduleParticipant(Participant, Contributor):
+    """
+    A participant in an activity that is scheduled after sign-up
+    """
+    include_in_documentation = True
+
     registration = models.ForeignKey(
         'time_based.ScheduleRegistration',
         related_name='participants',
@@ -1694,6 +1789,11 @@ class ScheduleParticipant(Participant, Contributor):
 
 
 class TeamScheduleParticipant(Participant, Contributor):
+    """
+    A team participation in an activity that is scheduled after sign-up
+    """
+    include_in_documentation = True
+
     registration = models.ForeignKey(
         'time_based.TeamScheduleRegistration',
         related_name='participants',
@@ -1890,6 +1990,11 @@ class Slot(models.Model):
 
 
 class PeriodicSlot(TriggerMixin, Slot):
+    """
+    A slot in a recurring activity.
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(
         PeriodicActivity, on_delete=models.CASCADE, related_name="slots"
     )
@@ -1960,6 +2065,11 @@ class BaseScheduleSlot(TriggerMixin, Slot):
 
 
 class ScheduleSlot(BaseScheduleSlot):
+    """
+    A slot that was scheduled after sign-up.
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(
         ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
     )
@@ -1975,6 +2085,11 @@ class ScheduleSlot(BaseScheduleSlot):
 
 
 class TeamScheduleSlot(BaseScheduleSlot):
+    """
+    A slot for a team that was scheduled after sign-up.
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(
         ScheduleActivity, on_delete=models.CASCADE, related_name="team_slots"
     )
@@ -2008,6 +2123,11 @@ class TeamScheduleSlot(BaseScheduleSlot):
 
 
 class PeriodicParticipant(Participant, Contributor):
+    """
+    A participant in a slot of a periodic activity, e.g. the participant joined this week.
+    """
+    include_in_documentation = True
+
     slot = models.ForeignKey(
         PeriodicSlot,
         on_delete=models.CASCADE,

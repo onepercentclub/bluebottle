@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import icalendar
 from html import unescape
 
@@ -27,8 +29,17 @@ class ActivityIcal:
         event.add('description', details)
         event.add('uid', instance.uid)
         event.add('url', instance.get_absolute_url())
-        event.add('dtstart', instance.start.astimezone(utc))
-        event.add('dtend', instance.end.astimezone(utc))
+
+        if isinstance(instance.start, datetime):
+            event.add('dtstart', instance.start.astimezone(utc))
+        else:
+            event.add('dtstart', instance.start)
+
+        if isinstance(instance.end, datetime):
+            event.add('dtend', instance.end.astimezone(utc))
+        else:
+            event.add('dtend', instance.end)
+
         event['uid'] = instance.uid
 
         organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))

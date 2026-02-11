@@ -1,5 +1,3 @@
-from django.utils.translation import gettext_lazy as _
-
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
@@ -127,7 +125,3 @@ class CollectIcalView(IcalView):
     queryset = CollectActivity.objects.exclude(
         status__in=['cancelled', 'deleted', 'rejected'],
     )
-
-    @property
-    def details(self):
-        return super().details + _('\nCollecting {type}').format(type=self.get_object().collect_type)

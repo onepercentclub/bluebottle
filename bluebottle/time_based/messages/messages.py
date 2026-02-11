@@ -5,6 +5,7 @@ from django.utils.timezone import get_current_timezone
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
+from bluebottle.activities.ical import ActivityIcal
 from bluebottle.clients.utils import tenant_url
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
@@ -294,8 +295,8 @@ class TeamSlotChangedNotification(TransitionMessage):
         'timezone': 'timezone',
     }
 
-    def get_event_data(self, recipient=None):
-        return self.obj.event_data
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.obj).to_attachments()]
 
     @property
     def action_link(self):
@@ -642,8 +643,13 @@ class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     action_title = pgettext('email', 'View activity')
 
-    def get_event_data(self, recipient=None):
-        return [slot_participant.slot.event_data for slot_participant in self.obj.slot_participants.all()]
+    def attachments(self, recipient=None):
+        return [
+            ActivityIcal([
+                slot_participant.slot for slot_participant in
+                self.obj.slot_participants.all()
+            ]).to_attachments()
+        ]
 
     def get_recipients(self):
         """participant"""
@@ -831,8 +837,8 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
         'participant_name': 'participant.user.full_name',
     }
 
-    def get_event_data(self, recipient):
-        return self.obj.slot.event_data
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.obj.slot).to_attachment()]
 
     def get_context(self, recipient):
         context = super().get_context(recipient)

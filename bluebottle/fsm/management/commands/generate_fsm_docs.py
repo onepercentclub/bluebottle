@@ -441,16 +441,23 @@ def get_fsm_models_for_apps(app_labels):
 def _state_links_from_doc(doc, base_id):
     """
     Build per-state from/to transition links (structured data for the template).
-    Returns dict: state_name -> {'from_transitions': [(trans_name, trans_id)], 'to_transitions': [(trans_name, trans_id)]}.
+    Returns dict: state_name -> {'from_transitions': [(trans_name, trans_id)],
+    'to_transitions': [(trans_name, trans_id)]}.
     """
     result = {}
     for t in doc.get('transitions', []):
         trans_id = '{}-trans-{}'.format(base_id, t.get('id', ''))
         trans_name = t.get('name', '')
         for from_s in t.get('from_states', []):
-            result.setdefault(from_s, {'from_transitions': [], 'to_transitions': []})['from_transitions'].append((trans_name, trans_id))
+            result.setdefault(
+                from_s,
+                {'from_transitions': [], 'to_transitions': []}
+            )['from_transitions'].append((trans_name, trans_id))
         to_s = t.get('to', '')
-        result.setdefault(to_s, {'from_transitions': [], 'to_transitions': []})['to_transitions'].append((trans_name, trans_id))
+        result.setdefault(
+            to_s,
+            {'from_transitions': [], 'to_transitions': []}
+        )['to_transitions'].append((trans_name, trans_id))
     return result
 
 

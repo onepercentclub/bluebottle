@@ -103,7 +103,7 @@ class TransitionMessage(object):
     def get_content_text(self, recipient):
         return to_text.handle(self.get_content_html(recipient))
 
-    def get_attachments(self, recipients):
+    def attachments(self, recipients):
         pass
 
     def get_context(self, recipient):
@@ -128,7 +128,7 @@ class TransitionMessage(object):
         if 'context' in self.options:
             context.update(self.options['context'])
 
-        attachments = self.get_attachments(recipient)
+        attachments = self.attachments(recipient)
         if attachments:
             context['attachments'] = attachments
         return context

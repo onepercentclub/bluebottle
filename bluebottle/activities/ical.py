@@ -1,7 +1,7 @@
 import icalendar
 from html import unescape
 
--from django.utils.timezone import utc
+from django.utils.timezone import utc
 
 from bluebottle.utils.utils import to_text
 

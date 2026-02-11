@@ -130,7 +130,6 @@ class TransitionMessage(object):
 
         attachments = self.get_attachments(recipient)
         if attachments:
-            __import__('ipdb').set_trace()
             context['attachments'] = attachments
         return context
 

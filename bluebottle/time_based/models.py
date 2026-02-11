@@ -1,5 +1,4 @@
 import uuid
-from html import unescape
 from urllib.parse import urlencode
 
 import pytz
@@ -7,7 +6,6 @@ from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
 from django.utils import timezone
-from django.utils.timezone import now
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
@@ -26,7 +24,7 @@ from bluebottle.time_based.validators import (
     RegistrationLinkValidator,
 )
 from bluebottle.utils.models import ValidatedModelMixin
-from bluebottle.utils.utils import get_current_host, get_current_language, to_text
+from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.widgets import get_human_readable_duration
 
 tf = TimezoneFinder()
@@ -199,15 +197,6 @@ class TimeBasedActivity(Activity):
             status='succeeded'
         )
 
-    @property
-    def details(self):
-        details = unescape(
-            u'{}\n{}'.format(
-                to_text.handle(self.description.html), self.get_absolute_url()
-            )
-        )
-        return details
-
 
 class SlotSelectionChoices(DjangoChoices):
     all = ChoiceItem('all', label=_("All"))
@@ -354,6 +343,17 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
         return self.activity.owner
 
     @property
+    def details(self):
+        details = f"{self.activity.description.html}, {self.get_absolute_url()}"
+        if self.is_online and self.online_meeting_url:
+            details += _("\nJoin: {url}").format(url=self.online_meeting_url)
+
+        return details
+
+    def get_absolute_url(self):
+        return self.activity.get_absolute_url()
+
+    @property
     def initiative(self):
         return self.activity.initiative
 
@@ -433,30 +433,6 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     @property
     def organizer(self):
         return self.activity.owner
-
-    @property
-    def event_data(self):
-        if self.end < now() or self.status not in ['open', 'full']:
-            return None
-        title = f'{self.activity.title} - {self.title or self.id}'
-        location = ''
-        if self.is_online:
-            location = _('Anywhere/Online')
-        elif self.location:
-            location = self.location.locality or self.location.formatted_address or ''
-            if self.location_hint:
-                location += f" {self.location_hint}"
-
-        return {
-            'uid': f"{connection.tenant.client_name}-{self.id}",
-            'summary': title,
-            'description': self.activity.description.html,
-            'organizer': self.organizer.email,
-            'url': self.activity.get_absolute_url(),
-            'location': location,
-            'start_time': self.start,
-            'end_time': self.end,
-        }
 
     class Meta:
         abstract = True
@@ -1938,7 +1914,7 @@ class Slot(models.Model):
             if date:
                 return date.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
-        details = self.activity.details
+        details = self.details
         if self.is_online and self.online_meeting_url:
             details += _("\nJoin: {url}").format(url=self.online_meeting_url)
 
@@ -1962,31 +1938,22 @@ class Slot(models.Model):
 
     @property
     def organizer(self):
+        return self.owner
+
+    @property
+    def owner(self):
         return self.activity.owner
 
     @property
-    def event_data(self):
-        if not self.end or self.end < now() or self.status not in ['open', 'full', 'scheduled']:
-            return None
-        title = f'{self.activity.title} - {self.id}'
-        location = ''
-        if self.is_online:
-            location = _('Anywhere/Online')
-        elif self.location:
-            location = self.location.locality or self.location.formatted_address or ''
-            if self.location_hint:
-                location += f" {self.location_hint}"
+    def details(self):
+        details = f"{self.activity.description.html}, {self.get_absolute_url()}"
+        if self.is_online and self.online_meeting_url:
+            details += _("\nJoin: {url}").format(url=self.online_meeting_url)
 
-        return {
-            'uid': f"{connection.tenant.client_name}-{self.id}",
-            'summary': title,
-            'description': self.activity.description.html,
-            'organizer': self.organizer.email,
-            'url': self.activity.get_absolute_url(),
-            'location': location,
-            'start_time': self.start,
-            'end_time': self.end,
-        }
+        return details
+
+    def get_absolute_url(self):
+        return self.activity.get_absolute_url()
 
 
 class PeriodicSlot(TriggerMixin, Slot):
@@ -2001,10 +1968,6 @@ class PeriodicSlot(TriggerMixin, Slot):
 
     duration = models.DurationField(_("duration"), null=True, blank=True)
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
-
-    @property
-    def owner(self):
-        return self.activity.owner
 
     @property
     def initiative(self):

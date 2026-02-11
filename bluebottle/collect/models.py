@@ -119,6 +119,11 @@ class CollectActivity(Activity):
         return '{}-collect-{}'.format(connection.tenant.client_name, self.pk)
 
     @property
+    def details(self):
+        collect_type = _('Collecting {type}').format(type=self.collect_type)
+        return f"{self.description.html},\n {collect_type}, {self.get_absolute_url()}"
+
+    @property
     def google_calendar_link(self):
 
         details = self.description.html

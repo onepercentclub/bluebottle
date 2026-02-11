@@ -1,6 +1,8 @@
 import icalendar
 from html import unescape
 
+-from django.utils.timezone import utc
+
 from bluebottle.utils.utils import to_text
 
 
@@ -25,8 +27,8 @@ class ActivityIcal:
         event.add('description', details)
         event.add('uid', instance.uid)
         event.add('url', instance.get_absolute_url())
-        event.add('dtstart', instance.start)
-        event.add('dtend', instance.end)
+        event.add('dtstart', instance.start.astimezone(utc))
+        event.add('dtend', instance.end.astimezone(utc))
         event['uid'] = instance.uid
 
         organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))

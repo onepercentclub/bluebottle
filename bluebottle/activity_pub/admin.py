@@ -366,7 +366,7 @@ class FollowingAdminForm(forms.ModelForm):
 
     class Meta:
         model = Following
-        fields = '__all__'
+        fields = ['default_owner', 'automatic_adoption_activity_types', 'adoption_type']
 
 
 @admin.register(Following)
@@ -415,15 +415,6 @@ class FollowingAdmin(FollowAdmin):
                 }),
             )
 
-    def get_fields(self, request, obj=None):
-        fields = ['default_owner', 'automatic_adoption_activity_types']
-        if not obj:
-            fields = ['connect_info', 'platform_url'] + fields
-        else:
-            fields = ['object', 'accepted'] + fields
-
-        return fields
-
     def has_change_permission(self, request, obj=None):
         return True
 
@@ -443,7 +434,7 @@ class FollowingAdmin(FollowAdmin):
 
     def save_model(self, request, obj, form, change):
         """Handle saving of new Following objects using adapter.follow()"""
-        if not change and isinstance(form, FollowingAddForm):
+        if not change:
             platform_url = form.cleaned_data['platform_url']
             try:
                 adapter.follow(platform_url, obj)
@@ -471,8 +462,6 @@ class FollowingAdmin(FollowAdmin):
                     _("Error creating Follow relationship: %s") % str(error),
                     level="error"
                 )
-
-        # For existing objects, use the default behavior
         super().save_model(request, obj, form, change)
 
     def response_add(self, request, obj, post_url_continue=None):
@@ -505,8 +494,8 @@ class FollowerAdmin(FollowAdmin):
     actions = ['accept_follow_requests']
     readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities", "publish_activities_button")
     fields = ('platform', 'accepted')
-
     form = FollowerAdminForm
+    inlines = []
 
     def shared_activities(self, obj):
         return obj.shared_activities.count()

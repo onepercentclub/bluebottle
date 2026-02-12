@@ -374,6 +374,12 @@ class LinkTestCase(ActivityPubTestCase):
             accept = Accept.objects.get(object=link.event)
             self.assertEqual(accept.actor, Follow.objects.get().actor)
 
+    def test_link_notifies_source_platform(self):
+        self.test_link()
+
+        accept = Accept.objects.get(object=self.model.event)
+        self.assertEqual(accept.actor, self.follow.actor)
+
     def test_update(self):
         title = 'Some new title'
         self.test_link()

@@ -573,10 +573,14 @@ class Follow(Activity):
 
     @property
     def adopted_activities(self):
-        return Event.objects.filter(
-            create__actor=self.object,
-        ).filter(
-            Q(linked_activities__isnull=False) | Q(adopted_activities__isnull=False)
+        if self.is_local:
+            return Event.objects.filter(
+                create__actor=self.object,
+            ).filter(
+                Q(linked_activities__isnull=False) | Q(adopted_activities__isnull=False)
+            )
+        return Accept.objects.filter(
+            actor=self.actor,
         )
 
     @property

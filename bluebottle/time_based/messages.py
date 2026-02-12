@@ -5,6 +5,7 @@ from django.utils.timezone import get_current_timezone
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
+from bluebottle.activities.ical import ActivityIcal
 from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
@@ -291,8 +292,8 @@ class TeamSlotChangedNotification(TransitionMessage):
         'timezone': 'timezone',
     }
 
-    def get_event_data(self, recipient=None):
-        return self.obj.event_data
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.obj).to_attachment()]
 
     @property
     def action_link(self):
@@ -383,7 +384,7 @@ class TeamParticipantAddedNotification(TransitionMessage):
     """
     A participant was added to a team manually (through back-office)
     """
-    subject = pgettext('email', 'You have been added to a team for "{title}" 🎉')
+    subject = pgettext('email', 'You have been added to a team on "{site_name}" 🎉')
     template = 'messages/team_participant_added'
     context = {
         'title': 'activity.title',
@@ -636,8 +637,12 @@ class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     action_title = pgettext('email', 'View activity')
 
-    def get_event_data(self, recipient=None):
-        return [slot_participant.slot.event_data for slot_participant in self.obj.slot_participants.all()]
+    def attachments(self, recipient=None):
+        return [
+            ActivityIcal(
+                [slot_participant.slot for slot_participant in self.obj.slot_participants.all()]
+            ).to_attachment()
+        ]
 
     def get_recipients(self):
         """participant"""
@@ -819,8 +824,8 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
         'participant_name': 'participant.user.full_name',
     }
 
-    def get_event_data(self, recipient):
-        return self.obj.slot.event_data
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.obj.slot).to_attachment()]
 
     def get_context(self, recipient):
         context = super().get_context(recipient)

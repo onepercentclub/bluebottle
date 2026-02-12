@@ -10,6 +10,10 @@ from bluebottle.activity_links.models import LinkedActivity
 
 
 class CreateEffect(Effect):
+    """
+    Publish the activity to the followers of the actor through GoodUp Connect
+    """
+
     display = True
     template = 'admin/activity_pub/create_effect.html'
 
@@ -35,6 +39,9 @@ class CreateEffect(Effect):
 
 
 class PublishAdoptionEffect(Effect):
+    """
+    Announce that the activity has been adopted through GoodUp Connect.
+    """
     display = True
     template = 'admin/activity_pub/publish_adoption_effect.html'
 

@@ -222,6 +222,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
             return None
 
     @property
+    def details(self):
+        return f"{self.description.html}, {self.get_absolute_url()}"
+
+    @property
     def owners(self):
         if self.owner_id:
             yield self.owner

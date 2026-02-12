@@ -33,6 +33,7 @@ class GrantProvider(TriggerMixin, models.Model):
     """
     A provider of grants, e.g. a foundation or government body.
     """
+    include_in_documentation = True
 
     FREQUENCY_CHOICES = (
         ("1", _("Every week")),
@@ -97,6 +98,7 @@ class GrantPayment(TriggerMixin, models.Model):
     """
     A payment made to a grant donor.
     """
+    include_in_documentation = True
 
     total = MoneyField(default=Money(0, "EUR"), null=True, blank=True)
     status = models.CharField(max_length=40)
@@ -283,6 +285,11 @@ class GrantPayment(TriggerMixin, models.Model):
 
 
 class GrantPayout(TriggerMixin, models.Model):
+    """
+    The payout of a awarded grant
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(
         'grant_management.GrantApplication',
         verbose_name=_("Grant application"),
@@ -372,6 +379,11 @@ class GrantPayout(TriggerMixin, models.Model):
 
 
 class GrantApplication(Activity):
+    """
+    An application for a grant. This is a type of activity.
+    """
+    include_in_documentation = True
+
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
 
     impact_location = models.ForeignKey(
@@ -566,6 +578,11 @@ class GrantFund(models.Model):
 
 
 class LedgerItem(TriggerMixin, models.Model):
+    """
+    Ledger item for a grant. For accounting purposes.
+    """
+    include_in_documentation = True
+
     status = models.CharField(max_length=40)
 
     amount = MoneyField()
@@ -589,6 +606,11 @@ class LedgerItem(TriggerMixin, models.Model):
 
 
 class GrantDonor(Contributor):
+    """
+    The granted amount to a grant application. This is a type of contribution.
+    """
+    include_in_documentation = True
+
     amount = MoneyField()
     fund = models.ForeignKey(
         GrantFund,

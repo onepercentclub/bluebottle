@@ -812,7 +812,7 @@ class ActivityChildAdmin(
         publish = activity.event.create_set.first()
         new_recipients = form.cleaned_data.get('recipients') or []
         for actor in new_recipients:
-            Recipient.objects.create(actor=actor, activity=publish)
+            Recipient.objects.get_or_create(actor=actor, activity=publish)
 
         self.message_user(
             request,

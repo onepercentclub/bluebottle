@@ -354,6 +354,11 @@ class AcceptObjectSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
         FollowSerializer,
         EventSerializer,
+        GoodDeedSerializer,
+        CrowdFundingSerializer,
+        GrantApplicationSerializer,
+        CollectCampaignSerializer,
+        DoGoodEventSerializer,
     ]
 
     class Meta:

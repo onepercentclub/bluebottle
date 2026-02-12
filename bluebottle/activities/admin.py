@@ -777,7 +777,7 @@ class ActivityChildAdmin(
                         recipients.append(
                             {
                                 "actor": actor,
-                                "adopted": event.announce_set.filter(actor=actor).exists(),
+                                "adopted": event.accept_set.filter(actor=actor).exists(),
                             }
                         )
         except ObjectDoesNotExist:

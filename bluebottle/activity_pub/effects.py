@@ -1,12 +1,12 @@
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Accept, Follow, Update, Cancel, Delete, Finish
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
-from bluebottle.activity_links.models import LinkedActivity
 
 
 class CreateEffect(Effect):
@@ -84,6 +84,8 @@ class UpdateEventEffect(Effect):
 
 
 class CancelEffect(Effect):
+    template = 'admin/activity_pub/cancel_effect.html'
+
     def post_save(self, **kwargs):
         Cancel.objects.create(
             object=self.instance.event
@@ -98,6 +100,7 @@ class CancelEffect(Effect):
 
 
 class FinishEffect(Effect):
+    template = 'admin/activity_pub/finish_effect.html'
     def post_save(self, **kwargs):
         Finish.objects.create(
             object=self.instance.event
@@ -112,6 +115,7 @@ class FinishEffect(Effect):
 
 
 class DeletedEffect(Effect):
+    template = 'admin/activity_pub/delete_effect.html'
     def post_save(self, **kwargs):
         Delete.objects.create(
             object=self.instance.event

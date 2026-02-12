@@ -14,6 +14,7 @@ from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
+from bluebottle.activity_pub.models import Following
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
 from bluebottle.organizations.models import Organization
@@ -706,6 +707,10 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     @property
     def is_receiving_activities(self):
         return 'consumer' in (self.share_activities or [])
+
+    @property
+    def is_linking_activities(self):
+        return Following.objects.filter(adoption_type='link').exists()
 
     organization = models.ForeignKey(
         'organizations.Organization',

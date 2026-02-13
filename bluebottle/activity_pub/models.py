@@ -538,7 +538,10 @@ class Follow(Activity):
 
     automatic_adoption_activity_types = MultiSelectField(
         verbose_name=_("Automatically adopted these activity types"),
-        max_length=300, choices=InitiativePlatformSettings.ACTIVITY_TYPES,
+        max_length=300,
+        choices=InitiativePlatformSettings.ACTIVITY_TYPES,
+        null=True,
+        blank=True,
         help_text=_("Selected activity types are automatically adopted when they are published."),
     )
 

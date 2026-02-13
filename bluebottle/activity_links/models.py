@@ -55,6 +55,12 @@ class LinkedActivity(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
     description = QuillField(_("Description"), blank=True)
 
+    archived = models.BooleanField(
+        _('Archive'),
+        help_text=_('Archive this link. It will no longer appear in search results.'),
+        default=False
+    )
+
     image = ImageField(blank=True, null=True)
 
     event = models.ForeignKey(

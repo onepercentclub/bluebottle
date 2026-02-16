@@ -13,10 +13,10 @@
     </p>
 
     <p>
-        {% translate "What's next:" %}
+        {% translate "What's next:" context 'email' %}
         <ul>
             <li>
-                <b>{% translate "Contribute" %}</b> -
+                <b>{% translate "Contribute" context 'email' %}</b> -
                 {% if hours == 1 %}
                     {% blocktrans context 'email' %}
                         Expect to spend around {{ duration }} hour during the set period, although the actual time may vary.  If no period is defined, then you can contribute at anytime that suits you.
@@ -29,7 +29,7 @@
             </li>
             {% if hour_registration %}
                 <li>
-                    <b>{% translate "Hour registration" %}</b> -
+                    <b>{% translate "Hour registration" context 'email' %}</b> -
                     {% blocktrans context 'email' %}
                         Make sure to register your hours using the code or URL found on the activity detail page.
                     {% endblocktrans %}

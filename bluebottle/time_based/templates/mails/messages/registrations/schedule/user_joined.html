@@ -13,15 +13,15 @@
     </p>
 
     <p>
-        {% translate "What's next:" %}
+        {% translate "What's next:" context 'email' %}
         <ul>
             <li>
-                <b>{% translate "Schedule" %}</b> -
-                {% translate "The activity manager will contact you to discuss a specific date, time and location." %}
+                <b>{% translate "Schedule" context 'email' %}</b> -
+                {% translate "The activity manager will contact you to discuss a specific date, time and location." context 'email' %}
             </li>
             {% if hour_registration %}
                 <li>
-                    <b>{% translate "Hour registration" %}</b> -
+                    <b>{% translate "Hour registration" context 'email' %}</b> -
                     {% blocktrans context 'email' %}
                         Make sure to register your hours using the code or URL found on the activity detail page.
                     {% endblocktrans %}

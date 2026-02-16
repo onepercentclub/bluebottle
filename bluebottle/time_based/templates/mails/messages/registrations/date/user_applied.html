@@ -13,15 +13,15 @@
     </p>
 
     <p>
-        {% translate "What's next:" %}
+        {% translate "What's next:" context 'email' %}
         <ul>
             <li>
-                <b>{% translate "Review" %}</b> -
-                {% translate "The activity manager will review your application." %}
+                <b>{% translate "Review" context 'email' %}</b> -
+                {% translate "The activity manager will review your application." context 'email' %}
             </li>
             <li>
-                <b>{% translate "Contribute" %}</b> -
-                {% blocktrans %}
+                <b>{% translate "Contribute" context 'email' %}</b> -
+                {% blocktrans context 'email' %}
                     When you are accepted you can participate at the place and time indicated below.
                 {% endblocktrans %}
             </li>

@@ -15,7 +15,7 @@
 
     {% if review_link %}
         <p>
-            {% blocktrans %}
+            {% blocktrans context 'email' %}
                 <a href="{{ review_link }}">Revisit the external link</a> that was shown when you signed up for this activity.
             {% endblocktrans %}
         </p>
@@ -27,5 +27,3 @@
   <a href="{% message_url action_link %}"
        class="action-email">{{ action_title }}</a>
 {% endblock %}`
-
-

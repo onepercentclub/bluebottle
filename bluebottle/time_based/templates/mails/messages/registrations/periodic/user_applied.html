@@ -13,21 +13,21 @@
     </p>
 
     <p>
-        {% translate "What's next:" %}
+        {% translate "What's next:" context 'email' %}
         <ul>
             <li>
-                <b>{% translate "Review" %}</b> -
-                {% translate "The activity manager will review your application." %}
+                <b>{% translate "Review" context 'email' %}</b> -
+                {% translate "The activity manager will review your application." context 'email' %}
             </li>
             <li>
-                <b>{% translate "Contribute" %}</b> -
-                {% blocktrans %}
+                <b>{% translate "Contribute" context 'email' %}</b> -
+                {% blocktrans context 'email' %}
                     Once accepted, you are expected to spend around {{ duration }} hour(s) every {{ period }}, although the actual time may vary.
                 {% endblocktrans %}
             </li>
             <li>
-                <b>{% translate "Update" %}</b> -
-                {% translate "If you would like to stop contributing to the activity, make sure you stop your participation from the activity detail page." %}
+                <b>{% translate "Update" context 'email' %}</b> -
+                {% translate "If you would like to stop contributing to the activity, make sure you stop your participation from the activity detail page." context 'email' %}
             </li>
         </ul>
     </p>

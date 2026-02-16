@@ -12,15 +12,15 @@
         <b>{{ title }}</b>
     </p>
     <p>
-        {% translate "What's next:" %}
+        {% translate "What's next:" context 'email' %}
         <ul>
             <li>
-                <b>{% translate "Review" %}</b> -
-                {% translate "The activity manager will review your application." %}
+                <b>{% translate "Review" context 'email' %}</b> -
+                {% translate "The activity manager will review your application." context 'email' %}
             </li>
             <li>
-                <b>{% translate "Schedule" %}</b> -
-                {% translate "When you are accepted the activity manager will contact you to discuss a specific date, time and location." %}
+                <b>{% translate "Schedule" context 'email' %}</b> -
+                {% translate "When you are accepted the activity manager will contact you to discuss a specific date, time and location." context 'email' %}
             </li>
         </ul>
     </p>

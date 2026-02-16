@@ -9,15 +9,15 @@
   </p>
 
     <p>
-        {% translate "What's next:" %}
+        {% translate "What's next:" context 'email' %}
         <ul>
             <li>
-                <b>{% translate "Schedule" %}</b> -
-                {% translate "The activity manager will contact you to discuss a specific date, time and location." %}
+                <b>{% translate "Schedule" context 'email' %}</b> -
+                {% translate "The activity manager will contact you to discuss a specific date, time and location." context 'email' %}
             </li>
             <li>
-                <b>{% translate "Invite" %}</b> -
-                {% translate "You can invite people to your team while you wait to be scheduled or do it when the date, time and location is confirmed." %}
+                <b>{% translate "Invite" context 'email' %}</b> -
+                {% translate "You can invite people to your team while you wait to be scheduled or do it when the date, time and location is confirmed." context 'email' %}
             </li>
         </ul>
     </p>

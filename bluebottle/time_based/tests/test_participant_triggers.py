@@ -303,6 +303,31 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.assertEqual(self.participant.contributions.first().status, "succeeded")
         self.assertEqual(self.participant.activity.status, "succeeded")
 
+    def test_initial_started_activity(self):
+        self.activity.start = date.today() - timedelta(days=4)
+        self.activity.save()
+
+        self.create(as_user=self.admin_user)
+
+        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.contributions.first().status, "succeeded")
+        self.assertEqual(self.participant.activity.status, "open")
+
+    def test_initial_not_started_activity(self):
+        self.activity.start = date.today() + timedelta(days=4)
+        self.activity.save()
+
+        self.create(as_user=self.admin_user)
+
+        self.assertEqual(self.participant.status, "accepted")
+        self.assertEqual(
+            self.participant.contributions.exclude(
+                timecontribution__contribution_type='preparation'
+            ).first().status,
+            "new"
+        )
+        self.assertEqual(self.participant.activity.status, "open")
+
     def test_expire(self):
         self.test_initial_succeed_activity()
 

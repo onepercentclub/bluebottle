@@ -218,6 +218,16 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         automatic=True,
     )
 
+    reset = Transition(
+        [
+            ParticipantStateMachine.succeeded,
+        ],
+        ParticipantStateMachine.new,
+        name=_("Reset"),
+        description=_("Reset this participant to new after being succeeded."),
+        automatic=True,
+    )
+
     reject = Transition(
         [
             ContributorStateMachine.new,

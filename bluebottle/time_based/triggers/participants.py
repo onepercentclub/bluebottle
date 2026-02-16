@@ -273,10 +273,18 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.accept,
             effects=[
                 FollowActivityEffect,
-                TransitionEffect(DeadlineParticipantStateMachine.succeed),
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[
+                        activity_has_started
+                    ]
+                ),
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.succeed,
+                    conditions=[
+                        activity_has_started
+                    ]
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -285,6 +293,19 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                         activity_no_spots_left
                     ]
                 )
+            ]
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.reset,
+            effects=[
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted],
+                ),
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
             ]
         ),
         TransitionTrigger(
@@ -326,6 +347,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
                         registration_is_accepted,
+                        activity_has_started
                     ],
                 ),
                 RelatedTransitionEffect(
@@ -368,6 +390,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
                         registration_is_accepted,
+                        activity_has_started
                     ],
                 ),
                 RelatedTransitionEffect(
@@ -384,6 +407,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
                         registration_is_accepted,
+                        activity_has_started
                     ]
                 ),
                 RelatedTransitionEffect(
@@ -403,6 +427,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
                         registration_is_accepted,
+                        activity_has_started
                     ],
                 ),
                 RelatedTransitionEffect(

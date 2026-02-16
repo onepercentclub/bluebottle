@@ -47,6 +47,7 @@ from bluebottle.time_based.states import (
     DateActivitySlotStateMachine
 )
 from bluebottle.time_based.states.participants import (
+    DeadlineParticipantStateMachine,
     RegistrationParticipantStateMachine,
 )
 from bluebottle.time_based.states.slots import (
@@ -197,6 +198,20 @@ def is_locked(effect):
     is locked
     """
     return effect.instance.status == 'full'
+
+
+def has_started(effect):
+    """
+    has started
+    """
+    return effect.instance.start < now().date()
+
+
+def has_not_started(effect):
+    """
+    has not started
+    """
+    return not has_started(effect)
 
 
 class TimeBasedTriggers(ActivityTriggers):
@@ -521,6 +536,21 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
             effects=[
                 AnnounceAdoptionEffect
             ]
+        ),
+        ModelChangedTrigger(
+            "start",
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[has_started],
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    DeadlineParticipantStateMachine.reset,
+                    conditions=[has_not_started],
+                ),
+            ],
         ),
         TransitionTrigger(
             RegistrationActivityStateMachine.publish,

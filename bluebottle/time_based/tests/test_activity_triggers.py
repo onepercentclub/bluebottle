@@ -157,6 +157,24 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         for registration in self.registrations:
             self.assertEqual(registration.participants.first().status, "cancelled")
 
+    def test_start(self):
+        self.activity.start = date.today() + timedelta(days=4)
+        self.activity.save()
+
+        self.create_participants()
+
+        for registration in self.registrations:
+            self.assertEqual(
+                registration.participants.first().status,
+                "accepted"
+            )
+
+        self.activity.start = date.today() - timedelta(days=4)
+        self.activity.save()
+
+        for registration in self.registrations:
+            self.assertEqual(registration.participants.first().status, "succeeded")
+
 
 class PeriodicActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory

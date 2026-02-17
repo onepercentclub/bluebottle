@@ -3,7 +3,7 @@
 
 {% block message %}
   <p>
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
       You joined an activity on <b>{{ site_name }}!</b>
     {% endblocktrans %}
   </p>
@@ -13,22 +13,22 @@
   </p>
 
     <p>
-        {% translate "What's next:" context 'email' %}
+        {% translate "What's next:" context 'platform-email' %}
         <ul>
             <li>
-                <b>{% translate "Contribute" context 'email' %}</b> -
-                {% blocktrans context 'email' %}
+                <b>{% translate "Contribute" context 'platform-email' %}</b> -
+                {% blocktrans context 'platform-email' %}
                     Expect to spend around {{ duration }} hour(s) every {{ period }}, although the actual time may vary.
                 {% endblocktrans %}
             </li>
             <li>
-                <b>{% translate "Update" context 'email' %}</b> -
-                {% translate "If you would like to stop contributing to the activity, make sure you stop your participation from the activity detail page." context 'email' %}
+                <b>{% translate "Update" context 'platform-email' %}</b> -
+                {% translate "If you would like to stop contributing to the activity, make sure you stop your participation from the activity detail page." context 'platform-email' %}
             </li>
             {% if hour_registration %}
                 <li>
-                    <b>{% translate "Hour registration" context 'email' %}</b> -
-                    {% blocktrans context 'email' %}
+                    <b>{% translate "Hour registration" context 'platform-email' %}</b> -
+                    {% blocktrans context 'platform-email' %}
                         Make sure to register your hours using the code or URL found on the activity detail page.
                     {% endblocktrans %}
                 </li>

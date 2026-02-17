@@ -7,13 +7,13 @@
     {{ body_html }}
 {% else %}
 <p>
-    {% blocktrans context 'email' %}Hi {{ first_name }},{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}Hi {{ first_name }},{% endblocktrans %}
 </p>
 
-{% blocktrans context 'email' %}
+{% blocktrans context 'platform-email' %}
 <p >You’re now officially part of the {{ site_name }} community. Connect, share and work with others on initiatives that you care about.</p>
 {% endblocktrans %}
-{% blocktrans context 'email' %}
+{% blocktrans context 'platform-email' %}
 <p>If you have any questions please don’t hesitate to contact {{ contact_email }}</p>
 {% endblocktrans %}
 {% endif %}
@@ -24,10 +24,10 @@
 
 {% with url='/auth/set-password/?token='|add:uid|add:'-'|add:token %}
 <a href={% message_url url %}"
-       class="action-email">{% trans 'Set password' context 'email' %}</a>
+       class="action-email">{% trans 'Set password' context 'platform-email' %}</a>
 {% endwith %}
 {% else %}
     <a href="{% message_url %}"
-           class="action-email">{% trans "Take me there" context 'email' %}</a>
+           class="action-email">{% trans "Take me there" context 'platform-email' %}</a>
 {% endif %}
 {% endblock %}

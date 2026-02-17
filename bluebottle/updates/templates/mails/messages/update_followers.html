@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with text=obj.message|truncatechars:250 context 'email' %}
+    {% blocktrans with text=obj.message|truncatechars:250 context 'platform-email' %}
         Hi {{ recipient_name }},
         <br><br>
         {{ author }} posted an update to {{ title }}:
@@ -14,11 +14,11 @@
 
 {% block action %}
     <a href="{{ action_link }}"
-       class="action-email">{% blocktrans context 'email' %}View message{% endblocktrans %}</a>
+       class="action-email">{% blocktrans context 'platform-email' %}View message{% endblocktrans %}</a>
 {% endblock %}`
 
 {% block end_message %}
-    {% blocktrans with title=obj.content_object.title context 'email' %}
+    {% blocktrans with title=obj.content_object.title context 'platform-email' %}
         <p>
             You received this email because you support {{ title }}.
             Don't want to receive activity updates anymore?

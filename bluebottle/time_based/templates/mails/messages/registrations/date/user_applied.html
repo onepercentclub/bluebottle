@@ -3,7 +3,7 @@
 
 {% block message %}
     <p>
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             You applied to an activity on <b>{{ site_name }}!</b>
         {% endblocktrans %}
     </p>
@@ -13,15 +13,15 @@
     </p>
 
     <p>
-        {% translate "What's next:" context 'email' %}
+        {% translate "What's next:" context 'platform-email' %}
         <ul>
             <li>
-                <b>{% translate "Review" context 'email' %}</b> -
-                {% translate "The activity manager will review your application." context 'email' %}
+                <b>{% translate "Review" context 'platform-email' %}</b> -
+                {% translate "The activity manager will review your application." context 'platform-email' %}
             </li>
             <li>
-                <b>{% translate "Contribute" context 'email' %}</b> -
-                {% blocktrans context 'email' %}
+                <b>{% translate "Contribute" context 'platform-email' %}</b> -
+                {% blocktrans context 'platform-email' %}
                     When you are accepted you can participate at the place and time indicated below.
                 {% endblocktrans %}
             </li>

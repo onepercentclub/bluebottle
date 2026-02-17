@@ -3,7 +3,7 @@
 {% load message_url %}
 
 {% block content %}
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
         <p>Hi {{ recipient_name }},</p>
     {% endblocktrans %}
     {% if custom_message %}
@@ -15,7 +15,7 @@
 
     {% if review_link %}
         <p>
-            {% blocktrans context 'email' %}
+            {% blocktrans context 'platform-email' %}
                 <a href="{{ review_link }}">Revisit the external link</a> that was shown when you signed up for this activity.
             {% endblocktrans %}
         </p>

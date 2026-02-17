@@ -3,7 +3,7 @@
 
 {% block message %}
     <p>
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             You applied to an activity on <b>{{ site_name }}!</b>
         {% endblocktrans %}
     </p>
@@ -13,20 +13,20 @@
     </p >
 
     <p>
-        {% translate "What's next:" context 'email' %}
+        {% translate "What's next:" context 'platform-email' %}
         <ul>
             <li>
-                <b>{% translate "Review" context 'email' %}</b> -
-                {% translate "The activity manager will review your application." context 'email' %}
+                <b>{% translate "Review" context 'platform-email' %}</b> -
+                {% translate "The activity manager will review your application." context 'platform-email' %}
             </li>
             <li>
-                <b>{% translate "Contribute" context 'email' %}</b> -
+                <b>{% translate "Contribute" context 'platform-email' %}</b> -
                 {% if hours == 1 %}
-                    {% blocktrans context 'email' %}
+                    {% blocktrans context 'platform-email' %}
                         Once accepted, you are expected to spend around {{ duration }} hour during the set period, although the actual time may vary. If no period is defined, then you can contribute at anytime that suits you.
                     {% endblocktrans %}
                 {% else %}
-                    {% blocktrans context 'email' %}
+                    {% blocktrans context 'platform-email' %}
                         Once accepted, you are expected to spend around {{ duration }} hours during the set period, although the actual time may vary. If no period is defined, then you can contribute at anytime that suits you.
                     {% endblocktrans %}
                 {% endif %}
@@ -36,7 +36,7 @@
 
     <p>
         <i>
-            {% blocktrans context 'email' %}
+            {% blocktrans context 'platform-email' %}
                 You will receive a notification by email when the activity manager accepts your application.
             {% endblocktrans %}
         </i>

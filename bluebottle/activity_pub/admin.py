@@ -678,9 +678,7 @@ class FollowerAdmin(FollowAdmin):
         url = reverse('admin:activity_pub_publish_activities', args=(obj.id,))
 
         return format_html(
-            "<div style='display: inline-block; gap: 8px'>"
-            "<p>{} open and succeeded activities<p/>"
-            "<a href=\"{}\" class=\"button\">Publish</a></div>",
+            "<a href=\"{}\" class=\"button\">Publish all {} unpublished activities</a></div>",
             obj.unpublished_activities.count(),
             url
         )

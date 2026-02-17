@@ -422,11 +422,11 @@ class AdoptionTypeChoices(DjangoChoices):
 class PublishModeChoices(DjangoChoices):
     manual = ChoiceItem(
         'manual',
-        _('Activities will be shared manually.')
+        _('Choose which activities you want to share')
     )
     automatic = ChoiceItem(
         'automatic',
-        _('Activities are automatically shared once they go live.')
+        _('Activities will be shared when they go live.')
     )
 
 
@@ -532,7 +532,11 @@ class Follow(Activity):
         null=True,
         blank=True,
         verbose_name=_("Default activity owner"),
-        help_text=_("This person will be the activity manager of the activities that are adopted."),
+        help_text=_(
+            "This user will be assigned as the activity manager for any activity "
+            "adopted as a template. It can be left empty and no activity manager "
+            "will be assigned by default."
+        ),
         on_delete=models.SET_NULL,
     )
 

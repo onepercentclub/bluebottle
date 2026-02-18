@@ -30,7 +30,10 @@ class InboxPermission(permissions.BasePermission):
                     'Create', 'Update', 'Cancel', 'Finish', 'Delete'
                 ):
                     # Only actors we follow can post publish activities
-                    return Follow.objects.filter(object=request.auth).exists()
+                    return (
+                        Follow.objects.filter(object=request.auth).exists() or
+                        Follow.objects.filter(actor=request.auth).exists()
+                    )
                 if request.data['type'] in ('Accept', ):
                     # Only actors that we accepted us can announce
                     try:

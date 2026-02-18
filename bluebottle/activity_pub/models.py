@@ -675,13 +675,19 @@ class Create(Activity):
 
 
 class Update(Activity):
-    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+    object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
 
     @property
     def default_recipients(self):
-        for create in self.object.create_set.all():
-            for recipient in create.recipients.all():
-                yield recipient.actor
+        if isinstance(self.object, Follow):
+            yield self.object.object
+
+        elif isinstance(self.object, Event):
+            for create in self.object.create_set.all():
+                for recipient in create.recipients.all():
+                    yield recipient.actor
+        else:
+            raise TypeError(f'Cannot create Update for {self.object}')
 
 
 class Transition(Activity):

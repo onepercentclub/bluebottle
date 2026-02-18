@@ -344,9 +344,24 @@ class FollowSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:follow')
     type = TypeField('Follow')
     object = ActorSerializer()
+    adoption_type = serializers.ChoiceField(
+        choices=['link', 'template'],
+        required=False,
+        allow_null=True
+    )
 
     class Meta(BaseActivitySerializer.Meta):
         model = Follow
+        fields = BaseActivitySerializer.Meta.fields + ('adoption_type', )
+
+
+class EventOrFollowSerializer(EventSerializer):
+    polymorphic_serializers = EventSerializer.polymorphic_serializers + [
+        FollowSerializer,
+    ]
+
+    class Meta(EventSerializer.Meta):
+        model = ActivityPubModel
 
 
 class AcceptObjectSerializer(PolymorphicActivityPubSerializer):
@@ -387,7 +402,7 @@ class CreateSerializer(BaseActivitySerializer):
 class UpdateSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:update')
     type = TypeField('Update')
-    object = EventSerializer()
+    object = EventOrFollowSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Update

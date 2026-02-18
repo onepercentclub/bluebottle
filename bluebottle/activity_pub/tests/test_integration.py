@@ -350,14 +350,36 @@ class ActivityPubTestCase:
 
 class LinkTestCase(ActivityPubTestCase):
     def test_follow(self):
-        super().test_follow()
+        platform_url = self.build_absolute_url('/')
+
+        with LocalTenant(self.other_tenant):
+            with mock.patch('requests.get', return_value=self.mock_response):
+                follow = Follow(
+                    automatic_adoption_activity_types=[
+                        self.factory._meta.model._meta.model_name
+                    ],
+                    adoption_type=AdoptionTypeChoices.link
+                )
+                adapter.follow(platform_url, follow)
+                follow.save()
+
+        self.follow = Follow.objects.get(object=get_platform_actor())
+
+        self.assertTrue(self.follow)
+        self.assertTrue(self.follow.actor.organization)
+        self.assertTrue(self.follow.actor.organization.logo)
+        self.assertEqual(self.follow.adoption_type, AdoptionTypeChoices.link)
+
+    def test_update_follow(self):
+        self.test_follow()
+
         with LocalTenant(self.other_tenant):
             follow = Follow.objects.get()
-            follow.automatic_adoption_activity_types = [
-                self.factory._meta.model._meta.model_name
-            ]
-            follow.adoption_type = AdoptionTypeChoices.link
+            follow.adoption_type = AdoptionTypeChoices.template
             follow.save()
+
+        follow = Follow.objects.get(object=get_platform_actor())
+        self.assertEqual(follow.adoption_type, AdoptionTypeChoices.template)
 
     def test_link(self):
         @httmock.urlmatch(netloc='test.localhost')

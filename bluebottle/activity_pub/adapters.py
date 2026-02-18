@@ -11,7 +11,7 @@ from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import (
-    Organization, Recipient, Follow, Create, Event, Finish, Cancel
+    Following, Organization, Recipient, Follow, Create, Event, Finish, Cancel, Update
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
@@ -193,6 +193,14 @@ def publish_to_recipient(recipient, tenant):
         except Exception as e:
             logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
             raise
+
+
+@receiver(post_save, sender=Following)
+def publish_update(instance, created, **kwargs):
+    if isinstance(instance, (Follow, Following)) and not created and instance.is_local:
+        Update.objects.create(
+            object=instance
+        )
 
 
 @receiver(post_save, sender=Recipient)

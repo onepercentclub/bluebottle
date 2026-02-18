@@ -264,15 +264,18 @@ class Event(ActivityPubModel):
 
     @property
     def adopted(self):
-        return self.adopted_activity is not None
+        return (
+            self.adopted_activity is not None or
+            self.linked_activity is not None
+        )
 
     @property
     def linked_activity(self):
         return self.linked_activities.first()
 
     @property
-    def linked(self):
-        return self.linked_activity is not None
+    def adoption_type(self):
+        return self.create_set.get().actor.follow.short_adoption_type
 
     def __str__(self):
         return self.name
@@ -416,6 +419,21 @@ class AdoptionTypeChoices(DjangoChoices):
     hosted = ChoiceItem(
         'hosted',
         _('Activities are managed by the partner platform, sign ups are synced.')
+    )
+
+
+class ShortAdoptionTypeChoices(DjangoChoices):
+    template = ChoiceItem(
+        'template',
+        _('Template')
+    )
+    link = ChoiceItem(
+        'link',
+        _('Link')
+    )
+    hosted = ChoiceItem(
+        'hosted',
+        _('Fully synced')
     )
 
 
@@ -574,6 +592,10 @@ class Follow(Activity):
             activity__create__isnull=False,
             send=True
         )
+
+    @property
+    def short_adoption_type(self):
+        return ShortAdoptionTypeChoices.labels[self.adoption_type]
 
     @property
     def adopted_activities(self):

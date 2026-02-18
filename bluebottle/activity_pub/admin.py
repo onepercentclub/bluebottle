@@ -372,7 +372,7 @@ class FollowingAdminForm(forms.ModelForm):
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
     model = Following
-    list_display = ("object", "shared_activities", "adopted_activities", "accepted")
+    list_display = ("object", "shared_activities", "adopted_activities", "accepted", "short_adoption_type")
     raw_id_fields = ('default_owner',)
 
     readonly_fields = ('object', 'accepted', "shared_activities", "adopted_activities")
@@ -678,9 +678,9 @@ class FollowerAdmin(FollowAdmin):
         url = reverse('admin:activity_pub_publish_activities', args=(obj.id,))
 
         return format_html(
-            "<a href=\"{}\" class=\"button\">Publish all {} unpublished activities</a></div>",
-            obj.unpublished_activities.count(),
-            url
+            "<a href=\"{}\" class=\"button\">Publish all {} unpublished activities</a>",
+            url,
+            obj.unpublished_activities.count()
         )
 
     publish_activities_button.short_description = _("Publish activities")
@@ -942,7 +942,7 @@ def adopt_events(modeladmin, request, events):
 @admin.register(ReceivedActivity)
 class ReceivedActivityAdmin(EventPolymorphicAdmin):
     model = ReceivedActivity
-    list_display = ("name_link", "type", "source", "adopted", "linked")
+    list_display = ("name_link", "type", "source", "adopted", 'adoption_type')
     list_display_links = ("name_link",)
     actions = [adopt_events]
 

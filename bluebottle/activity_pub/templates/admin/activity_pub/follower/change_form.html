@@ -4,9 +4,6 @@
 {% block submit_buttons_bottom %}
     {% if original %}
         {% if is_accepted %}
-            <div class="submit-row">
-                <p style="color: green; font-weight: bold;">✓ {% trans "This connection has already been accepted" %}</p>
-            </div>
             {{ block.super }}
         {% else %}
             <div class="submit-row">
@@ -20,11 +17,7 @@
 
 {% block submit_buttons_top %}
     {% if original %}
-        {% if is_accepted %}
-            <div class="submit-row">
-                <p style="color: green; font-weight: bold;">✓ {% trans "This connection has already been accepted" %}</p>
-            </div>
-        {% else %}
+        {% if not is_accepted %}
             <div class="submit-row">
                 <a href="{{ accept_url }}">
                     <input type="button" value="{% trans 'Accept connection' %}" class="default" name="_accept">

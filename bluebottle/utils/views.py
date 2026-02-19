@@ -1,11 +1,16 @@
+import json
 import mimetypes
 import os
 import re
 from io import BytesIO
 from operator import attrgetter
 
+from django.db.models.manager import Manager
 import magic
 import xlsxwriter
+
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
+from django.contrib.admin.options import get_content_type_for_model
 from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
 from django.db.models import Case, When, IntegerField
@@ -30,6 +35,7 @@ from bluebottle.activities.ical import ActivityIcal
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
 from bluebottle.utils.admin import prep_field
+from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.permissions import ResourcePermission
 from .models import Language
 from .serializers import LanguageSerializer
@@ -138,16 +144,65 @@ class RelatedPermissionMixin():
                     )
 
 
-class ListCreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.ListCreateAPIView):
+class LogUpdateMixin:
+    def get_changed_fields(self, serializer):
+        changed_fields = []
+
+        for key, value in serializer.validated_data.items():
+            current_value = getattr(serializer.instance, key)
+            if key in serializer.fields and isinstance(serializer.fields[key], RichTextField):
+                current_value = json.dumps({'html': current_value.html, 'delta': ''})
+
+            if isinstance(current_value, Manager):
+                current_value = list(current_value.all())
+
+            if current_value != value:
+                changed_fields.append(key)
+
+        return changed_fields
+
+    def perform_create(self, serializer, **kwargs):
+        super().perform_create(serializer, **kwargs)
+
+        LogEntry.objects.log_action(
+            self.request.user.pk,
+            get_content_type_for_model(serializer.Meta.model).pk,
+            serializer.instance.pk,
+            str(serializer.instance),
+            ADDITION,
+            json.dumps(
+                [{'added': {}}]
+            )
+
+        )
+
+    def perform_update(self, serializer):
+        changed_fields = self.get_changed_fields(serializer)
+
+        LogEntry.objects.log_action(
+            self.request.user.pk,
+            get_content_type_for_model(serializer.Meta.model).pk,
+            serializer.instance.pk,
+            str(serializer.instance),
+            CHANGE,
+            json.dumps(
+                [{'changed': {'fields': changed_fields}}]
+            )
+
+        )
+
+        super().perform_update(serializer)
+
+
+class ListCreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, LogUpdateMixin, generics.ListCreateAPIView):
     permission_classes = (ResourcePermission,)
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer, **kwargs):
         self.check_object_permissions(
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
-
-        serializer.save()
+        super().perform_create(serializer)
 
 
 class CreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.CreateAPIView):
@@ -159,17 +214,18 @@ class CreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.Creat
                 self.request,
                 serializer.Meta.model(**serializer.validated_data)
             )
-        serializer.save()
+
+        super().perform_create(serializer)
 
 
 class RetrieveUpdateAPIView(
-    RelatedPermissionMixin, ViewPermissionsMixin, generics.RetrieveUpdateAPIView
+    RelatedPermissionMixin, ViewPermissionsMixin, LogUpdateMixin, generics.RetrieveUpdateAPIView
 ):
     base_permission_classes = (ResourcePermission,)
 
 
 class RetrieveUpdateDestroyAPIView(
-    RelatedPermissionMixin, ViewPermissionsMixin, generics.RetrieveUpdateDestroyAPIView
+    RelatedPermissionMixin, ViewPermissionsMixin, LogUpdateMixin, generics.RetrieveUpdateDestroyAPIView
 ):
     base_permission_classes = (ResourcePermission,)
 

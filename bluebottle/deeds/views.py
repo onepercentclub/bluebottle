@@ -30,16 +30,8 @@ class DeedListView(JsonApiViewMixin, ListCreateAPIView):
     )
 
     def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        serializer.save(owner=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
 
 class DeedDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):

@@ -38,7 +38,8 @@ class OrganizationContactList(AutoPrefetchMixin, generics.CreateAPIView):
     )
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
 
 class OrganizationContactDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
@@ -76,7 +77,8 @@ class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
     )
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
     prefetch_for_includes = {
         'owner': ['owner'],

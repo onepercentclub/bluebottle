@@ -75,7 +75,8 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
                 ]
             )
 
-        serializer.save(owner=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
 
 class PrivateFileList(FileList):

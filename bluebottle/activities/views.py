@@ -282,7 +282,6 @@ class ParticipantCreateMixin:
 
     def perform_create(self, serializer):
         email = serializer.validated_data.pop('email', None)
-        send_messages = serializer.validated_data.pop('send_messages', True)
 
         if email:
             user = Member.objects.filter(email__iexact=email).first()
@@ -307,15 +306,6 @@ class ParticipantCreateMixin:
         else:
             user = self.request.user
 
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
         if not email:
             if self.request.user.required:
                 raise ValidationError('Required fields', code="required")
@@ -323,7 +313,8 @@ class ParticipantCreateMixin:
         if self.queryset.filter(user=user, **serializer.validated_data).exists():
             raise ValidationError(_('Already participating'), code="exists")
 
-        serializer.save(user=user, send_messages=send_messages)
+        serializer.validated_data['user'] = user
+        super().perform_create(serializer)
 
 
 class ActivityImage(ImageContentView):

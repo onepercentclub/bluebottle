@@ -29,10 +29,6 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView, CreatePermi
         OneOf(ResourcePermission, ActivityOwnerPermission, IsStaffMember),
     )
 
-    def perform_create(self, serializer):
-        serializer.validated_data['owner'] = self.request.user
-        super().perform_create(serializer)
-
 
 class TimeBasedActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (

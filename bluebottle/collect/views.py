@@ -2,7 +2,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
 )
-from bluebottle.activities.views import RelatedContributorListView, ParticipantCreateMixin
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
@@ -28,10 +28,6 @@ class CollectActivityListView(JsonApiViewMixin, ListCreateAPIView):
         ActivityTypePermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
-
-    def perform_create(self, serializer):
-        serializer.validated_data['owner'] = self.request.user
-        super().perform_create(serializer)
 
 
 class CollectActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
@@ -60,7 +56,7 @@ class CollectActivityRelatedCollectContributorList(RelatedContributorListView):
     serializer_class = CollectContributorSerializer
 
 
-class CollectContributorList(JsonApiViewMixin, ParticipantCreateMixin, ListCreateAPIView):
+class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission, ActivityManagerPermission),
     )

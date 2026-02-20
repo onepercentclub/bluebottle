@@ -37,10 +37,6 @@ class OrganizationContactList(AutoPrefetchMixin, generics.CreateAPIView):
         JSONWebTokenAuthentication,
     )
 
-    def perform_create(self, serializer):
-        serializer.validated_data['owner'] = self.request.user
-        super().perform_create(serializer)
-
 
 class OrganizationContactDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
     queryset = OrganizationContact.objects.all()
@@ -75,10 +71,6 @@ class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
     authentication_classes = (
         JSONWebTokenAuthentication,
     )
-
-    def perform_create(self, serializer):
-        serializer.validated_data['owner'] = self.request.user
-        super().perform_create(serializer)
 
     prefetch_for_includes = {
         'owner': ['owner'],

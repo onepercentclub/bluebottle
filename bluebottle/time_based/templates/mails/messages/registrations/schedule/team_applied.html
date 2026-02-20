@@ -3,26 +3,26 @@
 
 {% block message %}
     <p>
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
           You have registered your team for <b>{{ title }}!</b>
         {% endblocktrans %}
     </p>
 
     <p>
     <p>
-        {% translate "What's next:" %}
+        {% translate "What's next:" context 'platform-email' %}
         <ul>
             <li>
-                <b>{% translate "Review" %}</b> -
-                {% translate "The activity manager will review your application." %}
+                <b>{% translate "Review" context 'platform-email' %}</b> -
+                {% translate "The activity manager will review your application." context 'platform-email' %}
             </li>
             <li>
-                <b>{% translate "Schedule" %}</b> -
-                {% translate "When you are accepted the activity manager will contact you to discuss a specific date, time and location." %}
+                <b>{% translate "Schedule" context 'platform-email' %}</b> -
+                {% translate "When you are accepted the activity manager will contact you to discuss a specific date, time and location." context 'platform-email' %}
             </li>
             <li>
-                <b>{% translate "Invite" %}</b> -
-                {% translate "You can invite people to your team while you wait to be scheduled or do it when the date, time and location is confirmed." %}
+                <b>{% translate "Invite" context 'platform-email' %}</b> -
+                {% translate "You can invite people to your team while you wait to be scheduled or do it when the date, time and location is confirmed." context 'platform-email' %}
             </li>
         </ul>
     </p>

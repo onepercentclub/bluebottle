@@ -6,7 +6,7 @@
     {% trans 'Time' %}: {{ start|date:'TIME_FORMAT' }} - {{ end|date:'TIME_FORMAT' }} {{ timezone }}
 </p>
 {% if is_online %}
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
         Anywhere/Online
     {% endblocktrans %}
 {% else %}

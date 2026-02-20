@@ -7,7 +7,7 @@ from bluebottle.notifications.messages import TransitionMessage
 
 
 class InactiveParticipantAddedNotification(TransitionMessage):
-    subject = pgettext('email', "You have been added to the activity {title}")
+    subject = pgettext('platform-email', "You have been added to the activity {title}")
     template = 'messages/participant/inactive_participant_added'
 
     context = {
@@ -41,10 +41,10 @@ class ParticipantWithdrewConfirmationNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
+    subject = pgettext('platform-email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participant/participant_withdrew_confirmation'
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""

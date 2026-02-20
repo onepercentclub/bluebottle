@@ -3,12 +3,12 @@
 
 {% block message %}
     <p>
-        {% blocktrans context 'email' %}Unfortunately your slot for the activity "{{ title }}" has been cancelled.{% endblocktrans %}
+        {% blocktrans context 'platform-email' %}Unfortunately your slot for the activity "{{ title }}" has been cancelled.{% endblocktrans %}
     </p>
     <p>
         {% include 'mails/messages/partial/slots.html' %}
     </p>
     <p>
-        {% blocktrans context 'email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
+        {% blocktrans context 'platform-email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
     </p>
 {% endblock %}

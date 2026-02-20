@@ -9,7 +9,7 @@ class LivePayoutAccountMarkedIncomplete(TransitionMessage):
     """
     A payout account that is connected to a live crowdfunding campaign was marked incomplete
     """
-    subject = pgettext('email', u'Live campaign identity verification failed!')
+    subject = pgettext('platform-email', u'Live campaign identity verification failed!')
     template = 'messages/platform_manager/live_payout_account_rejected'
 
     context = {
@@ -31,5 +31,5 @@ class LivePublicPayoutAccountMarkedIncomplete(LivePayoutAccountMarkedIncomplete)
     """
     A public payout account that is connected to a live crowdfunding campaign was marked incomplete
     """
-    subject = pgettext('email', u'Incomplete payout account for running campaign')
+    subject = pgettext('platform-email', u'Incomplete payout account for running campaign')
     template = 'messages/platform_manager/live_public_payout_account_rejected'

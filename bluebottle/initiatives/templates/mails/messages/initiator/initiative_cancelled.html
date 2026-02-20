@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}
-    {% blocktrans with recipient_name=to.first_name context 'email' %}
+    {% blocktrans with recipient_name=to.first_name context 'platform-email' %}
         Unfortunately, the initiative "{{ title }}" has been cancelled.
     {% endblocktrans %}
 {% endblock %}

@@ -3,10 +3,10 @@
 
 {% block message %}
     <p>
-        {% blocktrans context 'email' %}{{ participant_name }} has been added to your activity "{{ title }}"!{% endblocktrans %}
+        {% blocktrans context 'platform-email' %}{{ participant_name }} has been added to your activity "{{ title }}"!{% endblocktrans %}
     </p>
 
     <p>
-        {% blocktrans context 'email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
+        {% blocktrans context 'platform-email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
     </p>
 {% endblock %}

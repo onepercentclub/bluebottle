@@ -3,7 +3,7 @@
 
 {% block message %}
     <p>
-        {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+        {% blocktrans with manager=obj.activity.owner.full_name context 'platform-email' %}
             <p>Good news, you have been accepted for the activity "{{ title }}"!</p>
         {% endblocktrans %}
     </p>
@@ -12,7 +12,7 @@
     {% endif %}
     {% if hour_registration %}
         <p>
-            {% blocktrans context 'email' %}
+            {% blocktrans context 'platform-email' %}
                 Make sure to register your hours using the code or URL found on the activity detail page.
             {% endblocktrans %}
         </p>

@@ -15,7 +15,7 @@ class ManagerParticipantNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')
 
     def get_recipients(self):
         """manager"""
@@ -29,7 +29,7 @@ class ManagerParticipantRemovedNotification(ManagerParticipantNotification):
     """
     A participant removed notify owner
     """
-    subject = pgettext('email', 'A participant has been removed from your activity "{title}"')
+    subject = pgettext('platform-email', 'A participant has been removed from your activity "{title}"')
     template = 'messages/participants/manager_participant_removed'
 
 
@@ -37,7 +37,7 @@ class ManagerParticipantWithdrewNotification(ManagerParticipantNotification):
     """
     A participant withdrew from your activity
     """
-    subject = pgettext('email', 'A participant has withdrawn from your activity "{title}"')
+    subject = pgettext('platform-email', 'A participant has withdrawn from your activity "{title}"')
     template = 'messages/participants/manager_participant_withdrew'
 
 
@@ -62,7 +62,7 @@ class UserParticipantNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""
@@ -76,7 +76,7 @@ class UserParticipantRemovedNotification(UserParticipantNotification):
     """
     The participant was removed from the activity
     """
-    subject = pgettext('email', 'You have been removed as participant for the activity "{title}"')
+    subject = pgettext('platform-email', 'You have been removed as participant for the activity "{title}"')
     template = 'messages/participants/user_participant_removed'
 
 
@@ -84,7 +84,7 @@ class UserParticipantWithdrewNotification(UserParticipantNotification):
     """
     The participant was removed from the activity
     """
-    subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
+    subject = pgettext('platform-email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participants/user_participant_withdrew'
 
 
@@ -92,7 +92,7 @@ class UserDateParticipantWithdrewNotification(UserParticipantNotification):
     """
     The participant was removed from the activity
     """
-    subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
+    subject = pgettext('platform-email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participants/user_date_participant_withdrew'
 
     def get_context(self, recipient):
@@ -106,7 +106,7 @@ class UserScheduledNotification(UserParticipantNotification):
     """
     The participant was removed from the activity
     """
-    subject = pgettext('email', 'You have been scheduled for the activity "{title}"')
+    subject = pgettext('platform-email', 'You have been scheduled for the activity "{title}"')
     template = 'messages/participants/user_participant_scheduled'
 
     def get_context(self, recipient):
@@ -120,7 +120,7 @@ class RegisteredActivityParticipantAddedNotification(TransitionMessage):
     """
     A participant was added
     """
-    subject = pgettext('email', 'You have been added to the activity "{title}"')
+    subject = pgettext('platform-email', 'You have been added to the activity "{title}"')
     template = 'messages/participants/registered_date_participant_added'
     context = {
         'title': 'activity.title',
@@ -130,7 +130,7 @@ class RegisteredActivityParticipantAddedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""

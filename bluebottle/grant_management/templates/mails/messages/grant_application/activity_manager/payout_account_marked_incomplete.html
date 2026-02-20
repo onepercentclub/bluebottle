@@ -3,7 +3,7 @@
 
 {% block message %}
     <p class="donation-intro">
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             You are working on a grant application on {{ site_name }}.
             <br/><br/>
 
@@ -18,6 +18,6 @@
 
 {% block action %}
     <a href="{{ site }}/activities/stripe/kyc/{{ obj.pk }}" class="action-email">
-       {% trans 'Provide additional details' context 'email' %}
+       {% trans 'Provide additional details' context 'platform-email' %}
     </a>
 {% endblock %}`

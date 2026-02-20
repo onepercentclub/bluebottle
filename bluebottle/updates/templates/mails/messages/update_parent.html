@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
         Hi {{ recipient_name }},
         <br><br>
         {{ author }} replied to your message on '{{ title }}'.
@@ -11,5 +11,5 @@
 
 {% block action %}
     <a href="{{ action_link }}"
-       class="action-email">{% blocktrans context 'email' %}View reply{% endblocktrans %}</a>
+       class="action-email">{% blocktrans context 'platform-email' %}View reply{% endblocktrans %}</a>
 {% endblock %}`

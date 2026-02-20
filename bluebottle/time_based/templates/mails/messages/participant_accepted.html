@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}
-    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+    {% blocktrans with manager=obj.activity.owner.full_name context 'platform-email' %}
         <p>Good news, you have been accepted for the activity "{{ title }}"!</p>
     {% endblocktrans %}
 {% endblock %}

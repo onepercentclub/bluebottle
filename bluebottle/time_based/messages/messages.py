@@ -98,17 +98,17 @@ class DeadlineChangedNotification(TransitionMessage):
 
         if self.obj.start:
             context['start'] = pgettext(
-                'emai', 'on {start}'
+                'platform-email', 'on {start}'
             ).format(start=defaultfilters.date(self.obj.start))
         else:
-            context['start'] = pgettext('emai', 'immediately')
+            context['start'] = pgettext('lemai', 'immediately')
 
         if self.obj.deadline:
             context['end'] = pgettext(
-                'emai', 'ends on {end}'
+                'platform-email', 'ends on {end}'
             ).format(end=defaultfilters.date(self.obj.deadline))
         else:
-            context['end'] = pgettext('emai', 'runs indefinitely')
+            context['end'] = pgettext('platform-email', 'runs indefinitely')
 
         return context
 
@@ -363,7 +363,7 @@ class TeamAddedNotification(TransitionMessage):
     A team was added manually (through back-office)
     """
 
-    subject = pgettext("email", 'Your team was added to the activity "{title}" 🎉')
+    subject = pgettext("platform-email", 'Your team was added to the activity "{title}" 🎉')
     template = "messages/teams/user_team_added"
     context = {
         "title": "activity.title",
@@ -373,7 +373,7 @@ class TeamAddedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext("email", "View activity")
+    action_title = pgettext("platform-email", "View activity")
 
     def get_recipients(self):
         """participant"""
@@ -893,7 +893,7 @@ class ManagerTeamAddedOwnerNotification(TransitionMessage):
     A team added notify owner
     """
 
-    subject = pgettext("email", 'A team has been added to your activity "{title}" 🎉')
+    subject = pgettext("platform-email", 'A team has been added to your activity "{title}" 🎉')
     template = "messages/teams/manager_team_added"
     context = {"title": "activity.title", "participant_name": "user.full_name"}
 
@@ -901,7 +901,7 @@ class ManagerTeamAddedOwnerNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext("email", "Open your activity")
+    action_title = pgettext("platform-email", "Open your activity")
 
     def get_recipients(self):
         """activity owner"""

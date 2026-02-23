@@ -5,7 +5,7 @@ from bluebottle.notifications.messages import TransitionMessage
 
 class GrantPaymentRequestMessage(TransitionMessage):
     subject = pgettext(
-        "email",
+        "platform-email",
         "A grant payment request is ready on {site_name}"
     )
     template = 'messages/grant_application/grant_provider/grant_payment_request'
@@ -30,7 +30,7 @@ class GrantPaymentRequestMessage(TransitionMessage):
         ]
         return context
 
-    action_title = pgettext("email", "Pay now")
+    action_title = pgettext("platform-email", "Pay now")
 
     @property
     def action_link(self):

@@ -19,7 +19,7 @@ class ReviewerActivityNotification(TransitionMessage):
             return self.obj.get_absolute_url()
         return super().get_action_link(recipient)
 
-    action_title = pgettext("email", "View this activity")
+    action_title = pgettext("platform-email", "View this activity")
 
     @property
     def activity(self):
@@ -63,13 +63,13 @@ class ReviewerActivityNotification(TransitionMessage):
 
 class ActivitySubmittedReviewerNotification(ReviewerActivityNotification):
 
-    subject = pgettext("email", "A new activity is ready to be reviewed on {site_name}")
+    subject = pgettext("platform-email", "A new activity is ready to be reviewed on {site_name}")
     template = "messages/reviewer/activity_submitted"
 
 
 class ActivityPublishedReviewerNotification(ReviewerActivityNotification):
 
-    subject = pgettext("email", "A new activity has been published on {site_name}")
+    subject = pgettext("platform-email", "A new activity has been published on {site_name}")
     template = "messages/reviewer/activity_published"
 
     @property

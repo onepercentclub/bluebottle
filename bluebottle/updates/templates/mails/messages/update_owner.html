@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
         Hi {{ recipient_name }},
         <br/>
         <br/>
@@ -12,5 +12,5 @@
 
 {% block action %}
     <a href="{{ action_link }}"
-       class="action-email">{% blocktrans context 'email' %}View message{% endblocktrans %}</a>
+       class="action-email">{% blocktrans context 'platform-email' %}View message{% endblocktrans %}</a>
 {% endblock %}`

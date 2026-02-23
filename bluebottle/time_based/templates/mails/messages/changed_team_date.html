@@ -2,12 +2,12 @@
 {% load i18n %}
 {% block message %}
 <p>
-{% blocktrans context 'email' %}
+{% blocktrans context 'platform-email' %}
 Some details of the team activity you are a part of have changed:
 {% endblocktrans %}
 </p>
 <p>
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
         Updated details below:
     {% endblocktrans %}
 </p>
@@ -21,7 +21,7 @@ Some details of the team activity you are a part of have changed:
 {% include 'mails/messages/partial/team_slot.html' %}
 
 <p>
-{% blocktrans context 'email' %}
+{% blocktrans context 'platform-email' %}
 Please view your team from the activity page to see the changes.
 {% endblocktrans %}
 </p>

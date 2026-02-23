@@ -3,17 +3,17 @@
 
 {% block message %}
   <p>
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
       {{ applicant_name }} has registered their team for your activity "{{ title }}"!
     {% endblocktrans %}
   </p>
   <p>
     <b>
-      {% blocktrans context 'email' %}
+      {% blocktrans context 'platform-email' %}
         Next steps:
       {% endblocktrans %}
     </b>
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
       <ol>
         <li>Contact the team captain {{ applicant_name }} to discuss a specific date, time and location for when they can take part in your activity.</li>
         <li>Add this information to the team via the ‘Unscheduled’ tab on the team list on the activity page. The team captain and team members will be notified when the information is added.</li>
@@ -21,7 +21,7 @@
     {% endblocktrans %}
   </p>
   <p>
-      {% blocktrans context 'email' %}
+      {% blocktrans context 'platform-email' %}
         Team captain contact details:
       {% endblocktrans %}
       <br />

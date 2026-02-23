@@ -28,7 +28,7 @@ jobs:
         env:
           discovery.type: single-node
           xpack.security.enabled: "false"
-          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+          ES_JAVA_OPTS: "-Xms1g -Xmx1g"
         ports:
           - 9200/tcp
         options: >-
@@ -83,7 +83,10 @@ jobs:
         run: |
           echo "Waiting for Postgres on $PGHOST:$PGPORT and Elasticsearch on $ESHOST:$ESPORT"
           for i in {1..60}; do
-            (pg_isready -h "$PGHOST" -p "$PGPORT" -U postgres && curl -s "http://$ESHOST:$ESPORT" >/dev/null) && exit 0
+            if pg_isready -h "$PGHOST" -p "$PGPORT" -U postgres >/dev/null 2>&1 && \
+               curl -fsS "http://$ESHOST:$ESPORT/_cluster/health?wait_for_status=yellow&timeout=5s" | grep -q '"timed_out":false'; then
+              exit 0
+            fi
             sleep 2
           done
           echo "Services did not become ready"
@@ -238,4 +241,4 @@ jobs:
           set -euxo pipefail
           source "$VENV_DIR/bin/activate"
           python -c "import pkg_resources"
-          python manage.py test --parallel 20 --keepdb --settings bluebottle.settings.runner
+          python manage.py test --parallel 8 --keepdb --settings bluebottle.settings.runner

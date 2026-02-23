@@ -41,7 +41,7 @@ jobs:
       DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
       LANG: en_GB.UTF-8
       LC_ALL: en_GB.UTF-8
-      VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py311
+      VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py39
       PIP_CACHE_DIR: /home/github_actions_runner/.cache/pip
 
     steps:
@@ -63,7 +63,18 @@ jobs:
             libxmlsec1-dev \
             libgdal-dev swig \
             postgresql-client \
-            curl
+            curl \
+            git \
+            build-essential \
+            libssl-dev \
+            zlib1g-dev \
+            libbz2-dev \
+            libreadline-dev \
+            libsqlite3-dev \
+            libffi-dev \
+            liblzma-dev \
+            xz-utils \
+            tk-dev
           sudo sed -i 's/^# *\(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
           sudo locale-gen
           sudo update-locale LANG=en_GB.UTF-8
@@ -118,37 +129,56 @@ jobs:
           # Load test data
           PGPASSWORD=password psql -h "$PGHOST" -p "$PGPORT" -U testuser -d test_bluebottle_test -f testdata.sql
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      - name: Ensure pyenv + Python 3.9.19
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PATH"
+
+          if ! command -v pyenv >/dev/null 2>&1; then
+            curl -fsSL https://pyenv.run | bash
+          fi
+
+          export PATH="$PYENV_ROOT/bin:$PATH"
+          eval "$(pyenv init -)"
+          pyenv install -s 3.9.19
+          pyenv global 3.9.19
+          python --version
 
       - name: Create/upgrade persistent venv
         shell: bash
         run: |
           set -euxo pipefail
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PATH"
+          eval "$(pyenv init -)"
+          pyenv shell 3.9.19
           python --version
 
           # Fallback to HOME-based paths when configured paths are not writable on this runner user.
           if [ ! -w "$(dirname "$VENV_DIR")" ]; then
-            VENV_DIR="$HOME/venvs/bluebottle-py311"
+            VENV_DIR="$HOME/venvs/bluebottle-py39"
           fi
           if [ ! -w "$(dirname "$PIP_CACHE_DIR")" ]; then
             PIP_CACHE_DIR="$HOME/.cache/pip"
           fi
+
+          echo "VENV_DIR=$VENV_DIR" >> "$GITHUB_ENV"
+          echo "PIP_CACHE_DIR=$PIP_CACHE_DIR" >> "$GITHUB_ENV"
           
           mkdir -p "$(dirname "$VENV_DIR")" "$PIP_CACHE_DIR"
           
-          # If venv exists but isn't Python 3.11, delete it
+          # If venv exists but isn't Python 3.9, delete it
           if [ -x "$VENV_DIR/bin/python" ]; then
             VPY="$("$VENV_DIR/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
-            if [ "$VPY" != "3.11" ]; then
-              echo "Existing venv is Python $VPY; recreating for 3.11"
+            if [ "$VPY" != "3.9" ]; then
+              echo "Existing venv is Python $VPY; recreating for 3.9"
               rm -rf "$VENV_DIR"
             fi
           fi
           
-          # Create venv with Python 3.11
+          # Create venv with Python 3.9
           if [ ! -x "$VENV_DIR/bin/python" ]; then
             python -m venv "$VENV_DIR"
           fi

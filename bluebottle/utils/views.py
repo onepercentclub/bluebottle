@@ -149,47 +149,47 @@ class LogUpdateMixin:
         changed_fields = []
 
         for key, value in serializer.validated_data.items():
-            current_value = getattr(serializer.instance, key)
-            if key in serializer.fields and isinstance(serializer.fields[key], RichTextField):
-                current_value = json.dumps({'html': current_value.html, 'delta': ''})
+            if hasattr(serializer.instance, key):
+                current_value = getattr(serializer.instance, key)
+                if key in serializer.fields and isinstance(serializer.fields[key], RichTextField):
+                    current_value = json.dumps({'html': current_value.html, 'delta': ''})
 
-            if isinstance(current_value, Manager):
-                current_value = list(current_value.all())
+                if isinstance(current_value, Manager):
+                    current_value = list(current_value.all())
 
-            if current_value != value:
-                changed_fields.append(key)
+                if current_value != value:
+                    changed_fields.append(key)
 
         return changed_fields
 
     def perform_create(self, serializer, **kwargs):
         super().perform_create(serializer, **kwargs)
+        if self.request.user.is_authenticated:
+            LogEntry.objects.log_action(
+                self.request.user.pk,
+                get_content_type_for_model(serializer.Meta.model).pk,
+                serializer.instance.pk,
+                str(serializer.instance),
+                ADDITION,
+                json.dumps(
+                    [{'added': {}}]
+                )
 
-        LogEntry.objects.log_action(
-            self.request.user.pk,
-            get_content_type_for_model(serializer.Meta.model).pk,
-            serializer.instance.pk,
-            str(serializer.instance),
-            ADDITION,
-            json.dumps(
-                [{'added': {}}]
             )
-
-        )
 
     def perform_update(self, serializer):
         changed_fields = self.get_changed_fields(serializer)
-
-        LogEntry.objects.log_action(
-            self.request.user.pk,
-            get_content_type_for_model(serializer.Meta.model).pk,
-            serializer.instance.pk,
-            str(serializer.instance),
-            CHANGE,
-            json.dumps(
-                [{'changed': {'fields': changed_fields}}]
+        if self.request.user.is_authenticated:
+            LogEntry.objects.log_action(
+                self.request.user.pk,
+                get_content_type_for_model(serializer.Meta.model).pk,
+                serializer.instance.pk,
+                str(serializer.instance),
+                CHANGE,
+                json.dumps(
+                    [{'changed': {'fields': changed_fields}}]
+                )
             )
-
-        )
 
         super().perform_update(serializer)
 
@@ -198,10 +198,16 @@ class ListCreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, LogUpdateM
     permission_classes = (ResourcePermission,)
 
     def perform_create(self, serializer, **kwargs):
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
+        if hasattr(serializer.Meta, 'model'):
+            data = dict(
+                (key, value) for key, value in serializer.validated_data.items()
+                if getattr(serializer.Meta.model, key, None)
+            )
+            self.check_object_permissions(
+                self.request,
+                serializer.Meta.model(**data)
+            )
+
         super().perform_create(serializer)
 
 
@@ -210,9 +216,13 @@ class CreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.Creat
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, 'model'):
+            data = dict(
+                (key, value) for key, value in serializer.validated_data.items()
+                if getattr(serializer.Meta.model, key, None)
+            )
             self.check_object_permissions(
                 self.request,
-                serializer.Meta.model(**serializer.validated_data)
+                serializer.Meta.model(**data)
             )
 
         super().perform_create(serializer)

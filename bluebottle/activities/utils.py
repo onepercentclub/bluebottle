@@ -613,11 +613,9 @@ class BaseContributorSerializer(ModelSerializer):
         email = data.pop('email', None)
         send_messages = data.pop('send_messages', True)
 
-        user = None
-
         if email:
-            user = Member.objects.filter(email__iexact=email).first()
-            if not user:
+            data['user'] = Member.objects.filter(email__iexact=email).first()
+            if not data['user']:
                 try:
                     validate_email(email)
                 except Exception:
@@ -630,21 +628,20 @@ class BaseContributorSerializer(ModelSerializer):
                     not scim_settings.enabled
                 ):
                     try:
-                        user = Member.create_by_email(email.strip())
+                        data['user'] = Member.create_by_email(email.strip())
                     except Exception:
                         raise ValidationError(_('Not a valid email address'), code="invalid")
                 else:
                     raise ValidationError(_('User with email address not found'), code="not_found")
         elif self.context['request'].user.is_authenticated:
-            user = self.context['request'].user
+            data['user'] = self.context['request'].user
 
-            if user.required:
+            if data['user'].required:
                 raise ValidationError('Required fields', code="required")
 
-        if user and self.Meta.model.objects.filter(user=user, **data).exists():
+        if data.get('user') and self.Meta.model.objects.filter(**data).exists():
             raise ValidationError(_('Already participating'), code="exists")
 
-        data['user'] = user
         data['send_messages'] = send_messages
 
         return data

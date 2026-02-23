@@ -133,7 +133,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
             **init_args
         )
         serializer.validated_data['intent_id'] = intent.id
-        serializer.validated_data['client_secret'] - intent.client_secret
+        serializer.validated_data['client_secret'] = intent.client_secret
         super().perform_create(serializer)
 
 
@@ -252,8 +252,9 @@ class StripeBankTransferList(PaymentList):
 
         donation.payment_intent = serializer.instance
         donation.save()
+
         StripePayment.objects.create(
-            payment_intent=intent,
+            payment_intent=serializer.instance,
             donation=donation,
         )
 

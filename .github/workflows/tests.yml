@@ -41,7 +41,7 @@ jobs:
       DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
       LANG: en_GB.UTF-8
       LC_ALL: en_GB.UTF-8
-      VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py39
+      VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py311
       PIP_CACHE_DIR: /home/github_actions_runner/.cache/pip
 
     steps:
@@ -118,10 +118,10 @@ jobs:
           # Load test data
           PGPASSWORD=password psql -h "$PGHOST" -p "$PGPORT" -U testuser -d test_bluebottle_test -f testdata.sql
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.11"
 
       - name: Create/upgrade persistent venv
         shell: bash
@@ -131,7 +131,7 @@ jobs:
 
           # Fallback to HOME-based paths when configured paths are not writable on this runner user.
           if [ ! -w "$(dirname "$VENV_DIR")" ]; then
-            VENV_DIR="$HOME/venvs/bluebottle-py39"
+            VENV_DIR="$HOME/venvs/bluebottle-py311"
           fi
           if [ ! -w "$(dirname "$PIP_CACHE_DIR")" ]; then
             PIP_CACHE_DIR="$HOME/.cache/pip"
@@ -139,16 +139,16 @@ jobs:
           
           mkdir -p "$(dirname "$VENV_DIR")" "$PIP_CACHE_DIR"
           
-          # If venv exists but isn't Python 3.9, delete it
+          # If venv exists but isn't Python 3.11, delete it
           if [ -x "$VENV_DIR/bin/python" ]; then
             VPY="$("$VENV_DIR/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
-            if [ "$VPY" != "3.9" ]; then
-              echo "Existing venv is Python $VPY; recreating for 3.9"
+            if [ "$VPY" != "3.11" ]; then
+              echo "Existing venv is Python $VPY; recreating for 3.11"
               rm -rf "$VENV_DIR"
             fi
           fi
           
-          # Create venv with Python 3.9
+          # Create venv with Python 3.11
           if [ ! -x "$VENV_DIR/bin/python" ]; then
             python -m venv "$VENV_DIR"
           fi

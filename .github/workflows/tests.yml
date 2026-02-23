@@ -207,4 +207,4 @@ jobs:
           set -euxo pipefail
           source "$VENV_DIR/bin/activate"
           python -c "import pkg_resources"
-          python manage.py test --parallel 8 --keepdb --settings bluebottle.settings.runner
+          python manage.py test --parallel 12 --keepdb --settings bluebottle.settings.runner -v3

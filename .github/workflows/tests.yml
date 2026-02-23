@@ -129,7 +129,7 @@ jobs:
           # Load test data
           PGPASSWORD=password psql -h "$PGHOST" -p "$PGPORT" -U testuser -d test_bluebottle_test -f testdata.sql
 
-      - name: Ensure pyenv + Python 3.9.19
+      - name: Ensure persistent pyenv + venv + deps
         shell: bash
         run: |
           set -euxo pipefail
@@ -142,18 +142,9 @@ jobs:
 
           export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init -)"
+          pyenv shell 3.9.19
           pyenv install -s 3.9.19
           pyenv global 3.9.19
-          python --version
-
-      - name: Create/upgrade persistent venv
-        shell: bash
-        run: |
-          set -euxo pipefail
-          export PYENV_ROOT="$HOME/.pyenv"
-          export PATH="$PYENV_ROOT/bin:$PATH"
-          eval "$(pyenv init -)"
-          pyenv shell 3.9.19
           python --version
 
           # Fallback to HOME-based paths when configured paths are not writable on this runner user.
@@ -166,6 +157,7 @@ jobs:
 
           echo "VENV_DIR=$VENV_DIR" >> "$GITHUB_ENV"
           echo "PIP_CACHE_DIR=$PIP_CACHE_DIR" >> "$GITHUB_ENV"
+          echo "PYENV_ROOT=$PYENV_ROOT" >> "$GITHUB_ENV"
           
           mkdir -p "$(dirname "$VENV_DIR")" "$PIP_CACHE_DIR"
           
@@ -187,16 +179,9 @@ jobs:
           python --version
           
           # Use sane tooling for Python 3.9
-          python -m pip install --upgrade "pip==24.0" wheel setuptools
+          python -m pip install --upgrade "pip==24.0" "setuptools==69.5.1" wheel
           python -m pip --version
-          
-          python -m pip install --no-build-isolation --no-use-pep517 -e ".[test]" --trusted-host github.com
-
-      - name: Install Python dependencies only when setup.py changes
-        shell: bash
-        run: |
-          set -euxo pipefail
-          source "$VENV_DIR/bin/activate"
+          python -c "import pkg_resources"
 
           NEW_SHA="$(python - <<'PY'
           import hashlib
@@ -210,7 +195,7 @@ jobs:
 
           if [ "$NEW_SHA" != "$OLD_SHA" ]; then
             echo "Dependency definition changed; installing..."
-            python -m pip install -e ".[test]" --trusted-host github.com
+            python -m pip install --no-build-isolation --no-use-pep517 -e ".[test]" --trusted-host github.com
             echo "$NEW_SHA" > "$STAMP"
           else
             echo "setup.py unchanged; skipping dependency install."
@@ -221,4 +206,5 @@ jobs:
         run: |
           set -euxo pipefail
           source "$VENV_DIR/bin/activate"
+          python -c "import pkg_resources"
           python manage.py test --parallel 8 --keepdb --settings bluebottle.settings.runner

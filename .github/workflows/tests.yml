@@ -118,15 +118,24 @@ jobs:
           # Load test data
           PGPASSWORD=password psql -h "$PGHOST" -p "$PGPORT" -U testuser -d test_bluebottle_test -f testdata.sql
 
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
       - name: Create/upgrade persistent venv
         shell: bash
         run: |
           set -euxo pipefail
-          export PYENV_ROOT="$HOME/.pyenv"
-          export PATH="$PYENV_ROOT/bin:$PATH"
-          eval "$(pyenv init -)"
-          pyenv shell 3.9.19
           python --version
+
+          # Fallback to HOME-based paths when configured paths are not writable on this runner user.
+          if [ ! -w "$(dirname "$VENV_DIR")" ]; then
+            VENV_DIR="$HOME/venvs/bluebottle-py39"
+          fi
+          if [ ! -w "$(dirname "$PIP_CACHE_DIR")" ]; then
+            PIP_CACHE_DIR="$HOME/.cache/pip"
+          fi
           
           mkdir -p "$(dirname "$VENV_DIR")" "$PIP_CACHE_DIR"
           

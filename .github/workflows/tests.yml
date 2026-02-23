@@ -6,7 +6,7 @@ on:
 jobs:
   test:
     name: Run automated tests
-    runs-on: Testing
+    runs-on: Bluebottle
 
     services:
       postgres:

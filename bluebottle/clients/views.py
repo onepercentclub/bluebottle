@@ -54,6 +54,7 @@ class SettingsView(views.APIView):
                         'request_access_method': member_settings['request_access_method'],
                         'request_access_instructions': member_settings['request_access_instructions'],
                         'request_access_email': member_settings['request_access_email'],
+                        'account_creation_rules': member_settings['account_creation_rules'],
                     }
                 }
             }

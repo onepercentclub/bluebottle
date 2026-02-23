@@ -8,23 +8,23 @@ from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedDa
 
 class LinkedBaseAdmin(admin.ModelAdmin):
     readonly_fields = ["title", "link", "status", "host_organization"]
-    fields = readonly_fields + ['show']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedDeed)
 class LinkedDeedAdmin(LinkedBaseAdmin):
     readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end']
-    fields = readonly_fields + ['show']
+    fields = readonly_fields + ['archived']
 
 @admin.register(LinkedCollectCampaign)
 class LinkedCollectCampaignAdmin(LinkedBaseAdmin):
     readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'collect_type']
-    fields = readonly_fields + ['show']
+    fields = readonly_fields + ['archived']
 
 @admin.register(LinkedFunding)
 class LinkedFundingAdmin(LinkedBaseAdmin):
     readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'target', 'donated']
-    fields = readonly_fields + ['show']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedGrantApplication)
@@ -51,25 +51,25 @@ class LinkedDateSlotInline(admin.TabularInline):
 class LinkedDateActivityAdmin(LinkedBaseAdmin):
     inlines = [LinkedDateSlotInline]
     readonly_fields = LinkedBaseAdmin.readonly_fields
-    fields = readonly_fields + ['show']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedDeadlineActivity)
 class LinkedDeadlineActivityAdmin(LinkedBaseAdmin):
     readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration']
-    fields = readonly_fields + ['show']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedPeriodicActivity)
 class LinkedPeriodicActivityAdmin(LinkedBaseAdmin):
     readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'period']
-    fields = readonly_fields + ['show']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedScheduleActivity)
 class LinkedScheduleActivityAdmin(LinkedBaseAdmin):
     readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration']
-    fields = readonly_fields + ['show']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedActivity)

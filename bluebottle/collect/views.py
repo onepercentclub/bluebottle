@@ -1,8 +1,6 @@
-from django.utils.translation import gettext_lazy as _
-
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
+    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
 )
 from bluebottle.activities.views import RelatedContributorListView, ParticipantCreateMixin
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
@@ -11,7 +9,6 @@ from bluebottle.collect.serializers import (
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
-from bluebottle.time_based.permissions import CreateByEmailPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -73,8 +70,7 @@ class CollectActivityRelatedCollectContributorList(RelatedContributorListView):
 
 class CollectContributorList(JsonApiViewMixin, ParticipantCreateMixin, ListCreateAPIView):
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-        CreateByEmailPermission
+        OneOf(ResourcePermission, ResourceOwnerPermission, ActivityManagerPermission),
     )
     queryset = CollectContributor.objects.all()
     serializer_class = CollectContributorSerializer
@@ -129,7 +125,3 @@ class CollectIcalView(IcalView):
     queryset = CollectActivity.objects.exclude(
         status__in=['cancelled', 'deleted', 'rejected'],
     )
-
-    @property
-    def details(self):
-        return super().details + _('\nCollecting {type}').format(type=self.get_object().collect_type)

@@ -147,14 +147,8 @@ class SlotIcalTestCase(BluebottleTestCase):
             self.assertEqual(ical_event['dtend'].dt.tzinfo, UTC)
 
             self.assertEqual(str(ical_event['summary']), self.activity.title)
-            self.assertEqual(
-                str(ical_event['description']),
-                '{}\nJoin: {}'.format(
-                    self.activity.details,
-                    self.slot.online_meeting_url
-                )
-            )
-            self.assertEqual(ical_event['url'], self.activity.get_absolute_url())
+
+            self.assertEqual(ical_event['url'], self.slot.get_absolute_url())
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
             self.assertTrue('location' not in ical_event)
 

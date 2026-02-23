@@ -77,6 +77,11 @@ class PaymentIntent(models.Model):
 
 
 class StripePayment(Payment):
+    """
+    A payment through stripe, related to a donation to a crowdfunding campaign.
+    """
+    include_in_documentation = True
+
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment', on_delete=models.CASCADE)
 
     provider = 'stripe'
@@ -340,6 +345,11 @@ class VerificationMethodChoices(DjangoChoices):
 
 
 class StripePayoutAccount(PayoutAccount):
+    """
+    Stripe payout account (KYC) for a beneficiary.
+    """
+    include_in_documentation = True
+
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2, null=True)
     business_type = models.CharField(
@@ -644,6 +654,12 @@ class StripePayoutAccount(PayoutAccount):
 
 @python_2_unicode_compatible
 class ExternalAccount(BankAccount):
+    """
+    Bank account (in Stripe) connected to a payout account.
+    """
+
+    include_in_documentation = True
+
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'ba_...'"))
     provider_class = StripePaymentProvider
     currency = models.CharField(max_length=10, null=True, blank=True)

@@ -58,6 +58,10 @@ class CollectType(SortableTranslatableModel):
 
 
 class CollectActivity(Activity):
+    """
+    Campaign to collect goods
+    """
+    include_in_documentation = True
 
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
@@ -115,6 +119,11 @@ class CollectActivity(Activity):
         return '{}-collect-{}'.format(connection.tenant.client_name, self.pk)
 
     @property
+    def details(self):
+        collect_type = _('Collecting {type}').format(type=self.collect_type)
+        return f"{self.description.html},\n {collect_type}, {self.get_absolute_url()}"
+
+    @property
     def google_calendar_link(self):
 
         details = self.description.html
@@ -162,6 +171,11 @@ class CollectActivity(Activity):
 
 
 class CollectContributor(Contributor):
+    """
+    A contributor to a collect campaign.
+    """
+    include_in_documentation = True
+
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
 
     class Meta(object):
@@ -185,6 +199,11 @@ class CollectContributor(Contributor):
 
 
 class CollectContribution(Contribution):
+    """
+    A contribution to a collect campaign.
+    """
+    include_in_documentation = True
+
     value = models.DecimalField(null=True, blank=True, decimal_places=5, max_digits=12)
     type = models.ForeignKey(CollectType, null=True, on_delete=SET_NULL)
 

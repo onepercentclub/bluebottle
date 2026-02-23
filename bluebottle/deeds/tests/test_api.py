@@ -3,7 +3,6 @@ import json
 from datetime import timedelta, date
 from unittest import mock
 
-from bluebottle.scim.models import SCIMPlatformSettings
 from django.core import mail
 from django.urls import reverse
 from openpyxl import load_workbook
@@ -20,6 +19,7 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -815,6 +815,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertIncluded('activity')
         self.assertIncluded('user')
         self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(self.activity.participants.count(), 1)
 
     def test_create_by_email_staff_no_messages(self):
         mail.outbox = []
@@ -831,6 +832,22 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertIncluded('activity')
         self.assertIncluded('user')
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_create_by_email_owner(self):
+        """Deed owner can add a participant by email without having staff rights."""
+        mail.outbox = []
+        # activity.owner is not staff (from DeedFactory default)
+        data = self.data
+        data['data']['attributes'] = {
+            'email': self.user.email,
+            'send_messages': True
+        }
+        self.perform_create(user=self.activity.owner, data=data)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('activity')
+        self.assertIncluded('user')
+        self.assertEqual(self.activity.participants.count(), 1)
 
     def test_create_by_email_new_user(self):
         staff = BlueBottleUserFactory.create(is_staff=True)
@@ -854,6 +871,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
             'send_messages': False
         }
         self.perform_create(user=staff, data=data)
+        self.assertEqual(self.activity.participants.count(), 1)
 
         self.assertStatus(status.HTTP_201_CREATED)
 
@@ -882,6 +900,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
             'send_messages': False
         }
         self.perform_create(user=staff, data=data)
+        self.assertEqual(self.activity.participants.count(), 1)
 
         self.assertStatus(status.HTTP_201_CREATED)
 

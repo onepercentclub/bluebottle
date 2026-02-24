@@ -197,9 +197,9 @@ jobs:
 
           export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init -)"
-          pyenv shell 3.9.19
           pyenv install -s 3.9.19
           pyenv global 3.9.19
+          pyenv shell 3.9.19
           python --version
 
           # Fallback to HOME-based paths when configured paths are not writable on this runner user.

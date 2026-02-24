@@ -1,3 +1,5 @@
+import os  # noqa
+
 from bluebottle.settings.testing import *  # noqa
 
 DATABASES = {

@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
 
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.follow.models import unfollow
 from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.models import (
@@ -312,6 +313,7 @@ class CreateFirstSlotEffect(Effect):
 
     template = 'admin/time_based/periodic/create_first_slot.html'
 
+    @property
     def is_valid(self):
         return self.instance.slots.count() == 0
 
@@ -345,6 +347,12 @@ class CreateNextSlotEffect(Effect):
             )
 
             slot.states.start(save=True)
+
+    @property
+    def is_valid(self):
+        settings = SitePlatformSettings.load()
+
+        return not settings.terminated
 
 
 class CreatePeriodicParticipantsEffect(Effect):

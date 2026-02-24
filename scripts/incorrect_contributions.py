@@ -6,7 +6,7 @@ from bluebottle.collect.models import CollectContribution
 from bluebottle.time_based.models import (
     DeadlineActivity, DeadlineRegistration, TimeContribution, DeadlineParticipant,
     ScheduleActivity,
-    PeriodicActivity, DateRegistration, DateParticipant, PeriodicParticipant
+    PeriodicActivity, DateRegistration, DateParticipant
 )
 
 
@@ -16,22 +16,6 @@ def run(*args):
     total_errors = False
     for client in Client.objects.all():
         with (LocalTenant(client)):
-
-            pending_date_participant = DateParticipant.objects.filter(
-                status='new',
-                registration__isnull=False,
-                registration__status='accepted',
-                slot__status__in=['finished'],
-                user__isnull=False,
-            )
-
-            pending_periodic_participant = PeriodicParticipant.objects.filter(
-                status='new',
-                registration__isnull=False,
-                registration__status='accepted',
-                slot__status__in=['finished'],
-                user__isnull=False,
-            )
 
             date_participants_without_registration = DateParticipant.objects.filter(
                 registration__isnull=True,
@@ -364,9 +348,7 @@ def run(*args):
                 registrations_without_participant.count() or
                 date_participants_without_registration.count() or
                 new_should_be_failed.count() or
-                new_succeeded_collect_contributions.count() or
-                pending_date_participant.count() or
-                pending_periodic_participant.count()
+                new_succeeded_collect_contributions.count()
             )
             if errors:
                 total_errors = True
@@ -406,17 +388,6 @@ def run(*args):
                     print(f'new collect but should be succeeded: {new_succeeded_collect_contributions.count()}')
                     if verbose:
                         print(f'IDs: {" ".join([str(p.id) for p in new_succeeded_collect_contributions])}')
-                if pending_date_participant.count():
-                    print(f'pending date participant with accepted registrations: : {pending_date_participant.count()}')
-                    if verbose:
-                        print(f'IDs: {" ".join([str(p.id) for p in pending_date_participant])}')
-                if pending_periodic_participant.count():
-                    print(
-                        f'pending periodic participant with accepted registrations:'
-                        f' {pending_periodic_participant.count()}'
-                    )
-                    if verbose:
-                        print(f'IDs: {" ".join([str(p.id) for p in pending_periodic_participant])}')
 
                 print('\n')
                 if fix:

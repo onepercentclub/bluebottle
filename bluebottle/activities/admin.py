@@ -356,7 +356,10 @@ class EffortContributionAdmin(ContributionChildAdmin):
 class ActivityFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs and connection.tenant.schema_name != 'public':
-            for segment_type in SegmentType.objects.all():
+            segment_types = SegmentType.objects.all()
+
+            for segment_type in segment_types:
+
                 attrs[segment_type.field_name] = forms.ModelMultipleChoiceField(
                     required=False,
                     label=segment_type.name,
@@ -373,11 +376,10 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
 
-        if connection.tenant.schema_name != 'public':
+        if connection.tenant.schema_name != 'public' and self.instance.pk:
             for segment_type in SegmentType.objects.all():
-                if self.instance.pk:
-                    self.initial[segment_type.field_name] = self.instance.segments.filter(
-                        segment_type=segment_type).all()
+                selected = self.instance.segments.filter(segment_type=segment_type).all()
+                self.initial[segment_type.field_name] = selected
 
 
 class TeamInline(admin.TabularInline):

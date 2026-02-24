@@ -2,17 +2,19 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
-from django.db import models
+from django.core.cache import cache
+from django.db import models, connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, get_language
 from django_better_admin_arrayfield.models.fields import ArrayField
 from django_quill.fields import QuillField
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import Language
 from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
@@ -96,7 +98,7 @@ class SegmentType(TranslatableModel, models.Model):
         super(SegmentType, self).save(**kwargs)
 
     def __str__(self):
-        return self.safe_translation_getter('name', f'Segment #{self.id}')
+        return self.name
 
     class JSONAPIMeta(object):
         resource_name = 'segment-types'
@@ -197,11 +199,15 @@ class Segment(TranslatableModel, models.Model):
         )
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._name_cache = {}
+
     def save(self, *args, **kwargs):
         if self.pk:
-            name_value = self.safe_translation_getter('name', default=None, any_language=True)
+            name_value = self.name
         else:
-            name_value = self.safe_translation_getter('name', default=None)
+            name_value = self.name
 
         if name_value and name_value not in self.alternate_names:
             self.alternate_names.append(name_value)
@@ -210,6 +216,10 @@ class Segment(TranslatableModel, models.Model):
             self.slug = slugify(name_value)
 
         super().save(*args, **kwargs)
+
+        for lang in Language.objects.all():
+            cache_key = f'segment_name_{self.pk}_{connection.tenant.schema_name}_{lang.code}'
+            cache.delete(cache_key)
 
     def merge(self, other):
         self.alternate_names += other.alternate_names
@@ -239,8 +249,19 @@ class Segment(TranslatableModel, models.Model):
         else:
             return "text"
 
+    @property
+    def cached_name(self):
+        cache_key = f'segment_name_{self.pk}_{connection.tenant.schema_name}_{get_language()}'
+        cached_name = cache.get(cache_key)
+
+        if cached_name is None:
+            cached_name = str(self.name)
+            cache.set(cache_key, cached_name)
+
+        return cached_name
+
     def __str__(self):
-        return self.safe_translation_getter('name', f'Segment #{self.id}')
+        return self.cached_name
 
     def get_absolute_url(self):
         domain = get_current_host()

@@ -34,6 +34,12 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 @python_2_unicode_compatible
 class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
+    """
+    An initiative has a collection of activities that are related to a common goal.
+    """
+
+    include_in_documentation = True
+
     status = models.CharField(max_length=40)
     title = models.CharField(_("title"), blank=True, max_length=255)
 
@@ -270,31 +276,33 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         super(Initiative, self).save(**kwargs)
 
 
-ACTIVITY_SEARCH_FILTERS = (
-    ("country", _("Country")),
-    ("date", _("Date")),
-    ("distance", _("Distance")),
-    ("is_online", _("Online / In-person")),
-    ("skill", _("Skill")),
-    ("team_activity", _("Individual / Team")),
-    ("theme", _("Theme")),
-    ("category", _("Category")),
-    ("office", _("Work location")),
-    ("office_subregion", _("Work location group")),
-    ("office_region", _("Work location region")),
-)
+SEARCH_FILTERS = {
+    "country": (_("Country"), _("Select country")),
+    "date": (_("Date"), _('Select a date')),
+    "distance": (_("Distance"), _("Select distance")),
+    "is_online": (_("Online / In-person"), _("Make a choice")),
+    "skill": (_("Skill"), _("Select a skill")),
+    "team_activity": (_("Individual / Team"), _("Make a choice")),
+    "theme": (_("Theme"), _("Select a theme")),
+    "category": (_("Category"), _("Select a category")),
+    "office": (_("Work location"), _("Select work location")),
+    "office_subregion": (_("Work location group"), _("Select a group")),
+    "office_region": (_("Work location region"), _("Select a region")),
+    'open': (_('Open initiatives'), _("Make a choice")),
+}
 
+ACTIVITY_SEARCH_FILTERS = [
+    (k, v[0]) for k, v in SEARCH_FILTERS.items() if k in [
+        "country", "date", "distance", "is_online", "skill",
+        "team_activity", "theme", "category", "office", "office_subregion", "office_region"
+    ]
+]
 
-INITIATIVE_SEARCH_FILTERS = (
-    ('office', _('Work location')),
-    ('country', _('Country')),
-    ('theme', _('Theme')),
-    ('category', _('Category')),
-    ('open', _('Open initiatives')),
-    ('office', _('Work location')),
-    ('office_subregion', _('Work location group')),
-    ('office_region', _('Work location region')),
-)
+INITIATIVE_SEARCH_FILTERS = [
+    (k, v[0]) for k, v in SEARCH_FILTERS.items() if k in [
+        "office", "country", "theme", "category", "open", "office_subregion", "office_region"
+    ]
+]
 
 
 def get_search_filters(filters):
@@ -302,10 +310,10 @@ def get_search_filters(filters):
         if connection.tenant.schema_name != "public":
             for segment in SegmentType.objects.all():
                 try:
-                    segment_name = segment.safe_translation_getter('name', segment.slug)
+                    segment_name = segment.name
                 except (ValueError, AttributeError):
                     segment_name = segment.slug
-                filters = filters + ((f"segment.{segment.slug}", segment_name),)
+                filters = filters + [(f"segment.{segment.slug}", segment_name), ]
         return filters
     except ProgrammingError:
         return []
@@ -516,11 +524,9 @@ class SearchFilter(SortableMixin, models.Model):
 
     @property
     def placeholder(self):
-        if self.type == "office":
-            return _("Select work location")
-        if self.type in ["is_online", "team_activity", "open"]:
-            return _("Make a choice")
-        return _("Select {filter_name}").format(filter_name=self.name.lower())
+        if self.type in SEARCH_FILTERS.keys():
+            return SEARCH_FILTERS[self.type][1]
+        return _("Select {filter_name}").format(filter_name=self.name)
 
     class Meta:
         abstract = True

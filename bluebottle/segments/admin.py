@@ -4,7 +4,7 @@ from django.db import connection
 from django.forms.models import ModelFormMetaclass
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _, get_language
+from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
@@ -13,13 +13,14 @@ from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.fsm.forms import StateMachineModelFormMetaClass
 from bluebottle.segments.models import SegmentType, Segment
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
+from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
 
 class SegmentStateMachineModelFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
-                field_name = field.safe_translation_getter('name', field.slug)
+                field_name = field.name
                 attrs[field.field_name] = forms.CharField(
                     required=False,
                     label=field_name
@@ -32,7 +33,7 @@ class SegmentAdminFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
-                field_name = field.safe_translation_getter('name', field.slug)
+                field_name = field.name
                 attrs[field.field_name] = forms.CharField(
                     required=False,
                     label=field_name
@@ -71,8 +72,10 @@ class SegmentMergeForm(forms.Form):
 
 @admin.register(Segment)
 class SegmentAdmin(
-    TranslatableLabelAdminMixin, TranslatableAdmin,
-    AdminMergeMixin, admin.ModelAdmin,
+    TranslatableLabelAdminMixin,
+    AdminMergeMixin,
+    TranslatableAdminOrderingMixin,
+    TranslatableAdmin,
     DynamicArrayMixin
 ):
     model = Segment
@@ -107,10 +110,6 @@ class SegmentAdmin(
 
     merge_form = SegmentMergeForm
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.translated(get_language()).order_by('translations__name')
-
     def has_add_permission(self, *args, **kwargs):
         return False
 
@@ -128,7 +127,7 @@ class SegmentAdmin(
 
     def type_link(self, obj):
         url = "{}".format(reverse('admin:segments_segmenttype_change', args=(obj.segment_type.pk, )))
-        segment_type_name = obj.segment_type.safe_translation_getter('name', obj.segment_type.slug)
+        segment_type_name = obj.segment_type.name
         return format_html("<a href='{}'>{}</a>", url, segment_type_name)
 
     type_link.short_description = _('Segment type')
@@ -140,7 +139,12 @@ class SegmentAdmin(
 
 
 @admin.register(SegmentType)
-class SegmentTypeAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, admin.ModelAdmin, DynamicArrayMixin):
+class SegmentTypeAdmin(
+    TranslatableLabelAdminMixin,
+    TranslatableAdminOrderingMixin,
+    TranslatableAdmin,
+    DynamicArrayMixin
+):
     model = SegmentType
     inlines = [SegmentInline]
 
@@ -158,6 +162,4 @@ class SegmentTypeAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, admin.Mod
     fields = ['name', 'slug', 'inherit', 'visibility', 'required', 'needs_verification', 'is_active', 'user_editable',
               'enable_search', 'admin_user_filter', 'admin_activity_filter']
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.translated(get_language()).order_by('translations__name')
+    translatable_ordering = 'translations__name'

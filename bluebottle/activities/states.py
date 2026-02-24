@@ -76,6 +76,7 @@ class ActivityStateMachine(ModelStateMachine):
         return not list(self.instance.required)
 
     def is_not_api_request(self):
+        """the request is not an api request"""
         return not is_api_request()
 
     def is_valid(self):

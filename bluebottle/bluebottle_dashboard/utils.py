@@ -110,12 +110,12 @@ def get_menu_items(context):
     return groups
 
 
-def recent_log_entries(polymorpic=True):
+def recent_log_entries(polymorphic=True):
     log_entries = LogEntry.objects.filter(
         action_flag=9,
         object_id=functions.Cast(OuterRef('id'), output_field=CharField()),
     )
-    if polymorpic:
+    if polymorphic:
         log_entries = log_entries.filter(
             content_type=OuterRef('polymorphic_ctype')
         )

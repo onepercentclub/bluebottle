@@ -533,6 +533,10 @@ class Payout(TriggerMixin, models.Model):
 
 @python_2_unicode_compatible
 class Donor(Contributor):
+    """
+    A donation to a crowdfunding campaign.
+    """
+    include_in_documentation = True
     amount = MoneyField()
     payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
@@ -584,6 +588,10 @@ class Donor(Contributor):
 
 @python_2_unicode_compatible
 class MoneyContribution(Contribution):
+    """
+    A donation contribution, for reporting purposes.
+    """
+    include_in_documentation = True
 
     value = MoneyField()
 
@@ -594,6 +602,11 @@ class MoneyContribution(Contribution):
 
 @python_2_unicode_compatible
 class Payment(TriggerMixin, PolymorphicModel):
+    """
+    A payment related to a donation to a crowdfunding campaign.
+    """
+    include_in_documentation = True
+
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)

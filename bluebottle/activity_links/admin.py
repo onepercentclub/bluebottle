@@ -16,10 +16,12 @@ class LinkedDeedAdmin(LinkedBaseAdmin):
     readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end']
     fields = readonly_fields + ['archived']
 
+
 @admin.register(LinkedCollectCampaign)
 class LinkedCollectCampaignAdmin(LinkedBaseAdmin):
     readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'collect_type']
     fields = readonly_fields + ['archived']
+
 
 @admin.register(LinkedFunding)
 class LinkedFundingAdmin(LinkedBaseAdmin):

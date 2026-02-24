@@ -291,7 +291,6 @@ class ActivityPubTestCase:
             self.assertEqual(Event.objects.count(), 0)
 
     def approve(self, activity):
-        activity.theme = ThemeFactory.create()
         activity.states.approve(save=True)
 
     @property
@@ -303,6 +302,11 @@ class ActivityPubTestCase:
 
         return mock_response
 
+    def complete(self):
+        self.adopted.theme = ThemeFactory.create()
+
+
+class AdoptTestCase(ActivityPubTestCase):
     def test_adopt(self):
         self.test_publish()
 
@@ -318,8 +322,10 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
-                    self.adopted.theme = ThemeFactory.create()
+
+                    self.complete()
                     self.adopted.states.submit(save=True)
+
                     self.approve(self.adopted)
                     accept = Accept.objects.last()
                     self.assertTrue(accept)
@@ -439,7 +445,7 @@ class LinkTestCase(ActivityPubTestCase):
                 LinkedActivity.objects.get()
 
 
-class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
+class AdoptDeedTestCase(AdoptTestCase, BluebottleTestCase):
     factory = DeedFactory
 
     def create(self, **kwargs):
@@ -609,7 +615,7 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
             )
 
 
-class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
+class FundingTestCase(AdoptTestCase, BluebottleTestCase):
     factory = FundingFactory
 
     def create(self, **kwargs):
@@ -631,10 +637,10 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.submit()
 
-    def approve(self, activity):
-        BudgetLineFactory.create_batch(2, activity=activity)
+    def complete(self):
+        BudgetLineFactory.create_batch(2, activity=self.adopted)
 
-        activity.bank_account = ExternalAccountFactory.create(
+        self.adopted.bank_account = ExternalAccountFactory.create(
             account_id="some-external-account-id",
             status="verified",
             connect_account=StripePayoutAccountFactory.create(
@@ -642,8 +648,9 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
                 status="verified",
             )
         )
-        activity.theme = ThemeFactory.create()
-        activity.states.submit()
+        super().complete()
+
+    def approve(self, activity):
         activity.states.approve(save=True)
 
     def test_publish(self):
@@ -688,6 +695,14 @@ class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
         )
         self.submit()
 
+    def test_finish(self):
+        self.test_link()
+        self.model.states.succeed(save=True)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'succeeded')
+
     def test_target_maps_to_linked_grant_application(self):
         self.test_link()
 
@@ -716,7 +731,7 @@ class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
             )
 
 
-class GrantApplicationTestCase(ActivityPubTestCase, BluebottleTestCase):
+class GrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
     factory = GrantApplicationFactory
 
     def create(self, **kwargs):
@@ -756,14 +771,6 @@ class GrantApplicationTestCase(ActivityPubTestCase, BluebottleTestCase):
             self.model.impact_location.country.alpha2_code
         )
 
-    def test_finish(self):
-        self.test_link()
-        self.model.states.approve(save=True)
-
-        with LocalTenant(self.other_tenant):
-            link = LinkedActivity.objects.get()
-            self.assertEqual(link.status, 'succeeded')
-
 
 @override_settings(
     MAPBOX_API_KEY=None
@@ -781,7 +788,7 @@ class LinkDeadlineActivityTestCase(LinkTestCase, BluebottleTestCase):
         self.submit()
 
 
-class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+class AdoptDeadlineActivityTestCase(AdoptTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
 
     def create(self, **kwargs):
@@ -829,7 +836,7 @@ class LinkScheduleActivityTestCase(LinkTestCase, BluebottleTestCase):
         super().test_link()
 
 
-class AdoptScheduleActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+class AdoptScheduleActivityTestCase(AdoptTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
 
     def create(self):
@@ -874,7 +881,7 @@ class LinkPeriodicActivityTestCase(LinkTestCase, BluebottleTestCase):
         self.submit()
 
 
-class AdoptPeriodicActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+class AdoptPeriodicActivityTestCase(AdoptTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory
 
     def create(self):
@@ -928,7 +935,7 @@ class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
         pass
 
 
-class AdoptRegisteredDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+class AdoptRegisteredDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
     factory = RegisteredDateActivityFactory
 
     def create(self):
@@ -948,6 +955,10 @@ class AdoptRegisteredDateActivityTestCase(ActivityPubTestCase, BluebottleTestCas
             if self.model.end:
                 self.assertEqual(self.event.end_time.date(), self.model.end.date())
             self.assertEqual(self.event.duration, self.model.duration)
+
+    def complete(self):
+        RegisteredDateParticipantFactory.create(activity=self.adopted)
+        super().complete()
 
     def test_adopt(self):
         super().test_adopt()
@@ -982,7 +993,7 @@ class LinkedDateActivityTestCase(LinkTestCase, BluebottleTestCase):
         self.submit()
 
 
-class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+class AdoptDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
     def create(self, **kwargs):
@@ -1027,7 +1038,7 @@ class LinkedSingleSlotDateActivityTestCase(LinkTestCase, BluebottleTestCase):
         self.submit()
 
 
-class AdoptSingleSlotDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+class AdoptSingleSlotDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
     def create(self, **kwargs):
@@ -1082,7 +1093,7 @@ class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
             self.assertIsNotNone(link)
 
 
-class AdoptCollectActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+class AdoptCollectActivityTestCase(AdoptTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
 
     def create(self):

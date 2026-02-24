@@ -4,6 +4,7 @@ from django_quill.fields import QuillField
 from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
+from bluebottle.activity_pub.models import Follow, Create
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization

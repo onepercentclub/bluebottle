@@ -185,7 +185,8 @@ class MemberSignUp(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = []
 
     def perform_create(self, serializer):
-        return serializer.save(is_active=True)
+        serializer.validated_data['is_active'] = True
+        super().perform_create(serializer)
 
 
 class PasswordStrengthDetail(JsonApiViewMixin, generics.CreateAPIView):
@@ -400,7 +401,7 @@ class PasswordProtectedMemberCreateApiView(JsonApiViewMixin, CreateAPIView):
         serializer.instance = user
         user.last_logout = now()
 
-        serializer.save()
+        super().perform_create(serializer)
 
 
 class EmailSetView(PasswordProtectedMemberCreateApiView):

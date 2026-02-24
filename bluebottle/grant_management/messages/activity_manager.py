@@ -11,7 +11,7 @@ class GrantApplicationManagerMessage(TransitionMessage):
         'title': 'title',
     }
 
-    action_title = pgettext('email', 'View application')
+    action_title = pgettext('platform-email', 'View application')
 
     def get_context(self, recipient):
         if isinstance(self.obj, StripePayoutAccount):
@@ -34,32 +34,32 @@ class GrantApplicationManagerMessage(TransitionMessage):
 
 
 class GrantApplicationRejectedMessage(GrantApplicationManagerMessage):
-    subject = pgettext('email', "Your grant application on {site_name} has been rejected")
+    subject = pgettext('platform-email', "Your grant application on {site_name} has been rejected")
     template = 'messages/grant_application/activity_manager/application_rejected'
 
 
 class GrantApplicationSubmittedMessage(GrantApplicationManagerMessage):
-    subject = pgettext('email', "You have submitted a grant application on {site_name}")
+    subject = pgettext('platform-email', "You have submitted a grant application on {site_name}")
     template = 'messages/grant_application/activity_manager/application_submitted'
 
 
 class GrantApplicationNeedsWorkMessage(GrantApplicationManagerMessage):
-    subject = pgettext('email', u"The grant application you submitted on {site_name} needs work")
+    subject = pgettext('platform-email', u"The grant application you submitted on {site_name} needs work")
     template = 'messages/grant_application/activity_manager/application_needs_work'
 
 
 class GrantApplicationApprovedMessage(GrantApplicationManagerMessage):
-    subject = pgettext('email', 'Your grant application on {site_name} has been approved!')
+    subject = pgettext('platform-email', 'Your grant application on {site_name} has been approved!')
     template = 'messages/grant_application/activity_manager/application_approved'
 
 
 class GrantApplicationCancelledMessage(GrantApplicationManagerMessage):
-    subject = pgettext('email', u'Your grant application on {site_name} has been cancelled')
+    subject = pgettext('platform-email', u'Your grant application on {site_name} has been cancelled')
     template = 'messages/grant_application/activity_manager/application_cancelled'
 
 
 class GrantApplicationPayoutAccountRejected(GrantApplicationManagerMessage):
-    subject = pgettext('email', u'Action required for your grant application')
+    subject = pgettext('platform-email', u'Action required for your grant application')
     template = 'messages/grant_application/activity_manager/payout_account_rejected'
 
     @property
@@ -68,7 +68,7 @@ class GrantApplicationPayoutAccountRejected(GrantApplicationManagerMessage):
 
 
 class GrantApplicationPayoutAccountMarkedIncomplete(GrantApplicationManagerMessage):
-    subject = pgettext('email', "Action required for your grant application")
+    subject = pgettext('platform-email', "Action required for your grant application")
     template = "messages/grant_application/activity_manager/payout_account_marked_incomplete"
 
     @property
@@ -77,7 +77,7 @@ class GrantApplicationPayoutAccountMarkedIncomplete(GrantApplicationManagerMessa
 
 
 class GrantApplicationPayoutAccountVerified(GrantApplicationManagerMessage):
-    subject = pgettext('email', u'Your identity has been verified')
+    subject = pgettext('platform-email', u'Your identity has been verified')
     template = 'messages/grant_application/activity_manager/payout_account_verified'
 
     @property

@@ -17,7 +17,6 @@ from bluebottle.time_based.views.mixins import (
     CreatePermissionMixin,
     FilterRelatedUserMixin,
 )
-from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
@@ -159,7 +158,7 @@ class TeamMemberExportView(ExportView):
 
 
 class TeamMemberList(
-    JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, CreatePermissionMixin
+    JsonApiViewMixin, CreateAPIView, CreatePermissionMixin
 ):
     permission_classes = (InviteCodePermission, )
     queryset = TeamMember.objects.prefetch_related("team", "user", "participants")

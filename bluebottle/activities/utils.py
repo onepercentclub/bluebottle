@@ -1,6 +1,9 @@
 from builtins import object
 from itertools import groupby
 
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+
 from bluebottle.scim.models import SCIMPlatformSettings
 from django.conf import settings
 from django.db.models import Count, Sum, Q
@@ -276,6 +279,11 @@ class BaseActivitySerializer(ModelSerializer):
             field = self.fields["answers"]
             data["answers"] = field.to_representation(list(visible_answers))
         return data
+
+    def create(self, validated_data):
+        validated_data['owner'] = self.context['request'].user
+
+        return super().create(validated_data)
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -600,6 +608,43 @@ class BaseContributorSerializer(ModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
+
+    def validate(self, data):
+        email = data.pop('email', None)
+        send_messages = data.pop('send_messages', True)
+
+        if email:
+            data['user'] = Member.objects.filter(email__iexact=email).first()
+            if not data['user']:
+                try:
+                    validate_email(email)
+                except Exception:
+                    raise ValidationError(_('Not a valid email address'), code="invalid")
+                member_settings = MemberPlatformSettings.load()
+                scim_settings = SCIMPlatformSettings.objects.get()
+
+                if (
+                    (member_settings.closed or member_settings.confirm_signup) and
+                    not scim_settings.enabled
+                ):
+                    try:
+                        data['user'] = Member.create_by_email(email.strip())
+                    except Exception:
+                        raise ValidationError(_('Not a valid email address'), code="invalid")
+                else:
+                    raise ValidationError(_('User with email address not found'), code="not_found")
+        elif self.context['request'].user.is_authenticated:
+            data['user'] = self.context['request'].user
+
+            if data['user'].required:
+                raise ValidationError('Required fields', code="required")
+
+        if data.get('user') and self.Meta.model.objects.filter(**data).exists():
+            raise ValidationError(_('Already participating'), code="exists")
+
+        data['send_messages'] = send_messages
+
+        return data
 
     class Meta(object):
         model = Contributor

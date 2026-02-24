@@ -1,16 +1,12 @@
 import io
 import qrcode
 from PIL import Image, UnidentifiedImageError
-from bluebottle.scim.models import SCIMPlatformSettings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.core.validators import validate_email
 from django.db.models import Q, F
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
 from rest_framework import response, filters
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -38,7 +34,7 @@ from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
-from bluebottle.members.models import MemberPlatformSettings, Member
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
@@ -276,54 +272,6 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
 
     pagination_class = ContributionPagination
     permission_classes = (IsAuthenticated,)
-
-
-class ParticipantCreateMixin:
-
-    def perform_create(self, serializer):
-        email = serializer.validated_data.pop('email', None)
-        send_messages = serializer.validated_data.pop('send_messages', True)
-
-        if email:
-            user = Member.objects.filter(email__iexact=email).first()
-            if not user:
-                try:
-                    validate_email(email)
-                except Exception:
-                    raise ValidationError(_('Not a valid email address'), code="invalid")
-                member_settings = MemberPlatformSettings.load()
-                scim_settings = SCIMPlatformSettings.load()
-
-                if (
-                    (member_settings.closed or member_settings.confirm_signup) and
-                    not scim_settings.enabled
-                ):
-                    try:
-                        user = Member.create_by_email(email.strip())
-                    except Exception:
-                        raise ValidationError(_('Not a valid email address'), code="invalid")
-                else:
-                    raise ValidationError(_('User with email address not found'), code="not_found")
-        else:
-            user = self.request.user
-
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        if not email:
-            if self.request.user.required:
-                raise ValidationError('Required fields', code="required")
-
-        if self.queryset.filter(user=user, **serializer.validated_data).exists():
-            raise ValidationError(_('Already participating'), code="exists")
-
-        serializer.save(user=user, send_messages=send_messages)
 
 
 class ActivityImage(ImageContentView):

@@ -7,7 +7,7 @@
         {{ body_html }}
     {% else %}
         <p>
-            {% blocktrans context 'email' %}Hi {{ recipient_name }},{% endblocktrans %}
+            {% blocktrans context 'platform-email' %}Hi {{ recipient_name }},{% endblocktrans %}
         </p>
         {% if custom_message %}
             <p>{{ custom_message|linebreaks }}</p>

@@ -552,8 +552,14 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
         verbose_name_plural = _("Form questions")
 
 
+def POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
+    return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
+
+
 class ActivityAnswer(PolymorphicModel):
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='answers')
+    activity = models.ForeignKey(
+        Activity, on_delete=POLYMORPHIC_CASCADE, related_name='answers'
+    )
     question = models.ForeignKey(ActivityQuestion, on_delete=models.CASCADE)
 
     class Meta:

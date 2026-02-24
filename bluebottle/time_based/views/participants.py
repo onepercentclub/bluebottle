@@ -1,7 +1,6 @@
 from django.db.models import Q
 
 from bluebottle.activities.permissions import ContributorPermission, ActivityManagerPermission
-from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
@@ -48,7 +47,7 @@ from bluebottle.utils.views import (
 )
 
 
-class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, CreatePermissionMixin):
+class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 
     permission_classes = (
         OneOf(

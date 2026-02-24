@@ -338,7 +338,15 @@ class FollowingAddForm(forms.ModelForm):
         super().clean()
         if 'platform_url' in self.cleaned_data:
             try:
-                client.get(self.cleaned_data['platform_url'])
+                url = client.get(self.cleaned_data['platform_url'])
+                if self.Meta.model.objects.filter(
+                    object__iri=url, actor=get_platform_actor()
+                ).exists():
+                    raise ValidationError({
+                        'platform_url': _(
+                            "Supplier already exists for {}"
+                        ).format(self.cleaned_data['platform_url'])
+                    })
             except requests.exceptions.HTTPError:
                 raise ValidationError({
                     'platform_url': _(

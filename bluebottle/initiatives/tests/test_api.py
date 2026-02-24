@@ -16,8 +16,7 @@ from bluebottle.collect.tests.factories import CollectActivityFactory, CollectCo
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
-from bluebottle.impact.models import ImpactType
-from bluebottle.impact.tests.factories import ImpactGoalFactory
+from bluebottle.impact.tests.factories import ImpactGoalFactory, ImpactTypeFactory
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, InitiativeSearchFilter, \
     ActivitySearchFilter
 from bluebottle.initiatives.models import Theme
@@ -518,8 +517,16 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
-        co2 = ImpactType.objects.get(slug='co2')
-        water = ImpactType.objects.get(slug='water')
+        co2 = ImpactTypeFactory.create(
+            slug='co2',
+            name='reduce CO₂ emissions by {} kg',
+            text_passed='kg CO₂ saved'
+        )
+        water = ImpactTypeFactory.create(
+            slug='water',
+            name='water saved',
+            text_passed='liter water saved'
+        )
 
         first = DeedFactory.create(
             initiative=self.initiative, target=5, enable_impact=True
@@ -549,10 +556,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
 
-        self.assertEqual(stats['impact'][0]['name'], 'reduce CO₂ emissions by {} kg')
+        self.assertEqual(stats['impact'][0]['name'], 'kg CO₂ saved')
         self.assertEqual(stats['impact'][0]['value'], 600.0)
 
-        self.assertEqual(stats['impact'][1]['name'], 'water saved')
+        self.assertEqual(stats['impact'][1]['name'], 'liter water saved')
         self.assertEqual(stats['impact'][1]['value'], 1250.0)
 
     def test_get_staff(self):

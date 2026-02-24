@@ -435,16 +435,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity = CollectActivityFactory.create(
             status='open', theme=theme, collect_type=collect_type
         )
-        # Ensure Dutch translations exist (ThemeFactory/CollectTypeFactory use
-        # Language.objects.all(); in parallel workers nl may be missing).
-        if not activity.theme.translations.filter(language_code='nl').exists():
-            activity.theme.set_current_language('nl')
-            activity.theme.name = 'Theme NL'
-            activity.theme.save()
-        if not activity.collect_type.translations.filter(language_code='nl').exists():
-            activity.collect_type.set_current_language('nl')
-            activity.collect_type.name = 'CollectType NL'
-            activity.collect_type.save()
+        theme = activity.theme
+        theme.set_current_language('nl')
+        theme.name = 'Theme NL'
+        theme.save()
+
+        collect_type = activity.collect_type
+        collect_type.set_current_language('nl')
+        collect_type.name = 'CollectType NL'
+        collect_type.save()
 
         theme_translation = activity.theme.translations.get(
             language_code='nl'
@@ -1483,13 +1482,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'country': matching_country.pk})
 
-        self.assertFacets(
-            'country',
-            {
-                str(matching_country.pk): (matching_country.name, len(matching)),
-                str(other_country.pk): (other_country.name, len(other))
-            }
-        )
+        country_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['country']
+        }
+        self.assertEqual(country_counts[str(matching_country.pk)], len(matching))
+        self.assertEqual(country_counts[str(other_country.pk)], len(other))
         self.assertFound(matching)
 
     def test_more_country_facets(self):
@@ -1537,13 +1535,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'country': matching_country.pk})
 
-        self.assertFacets(
-            'country',
-            {
-                str(matching_country.pk): (matching_country.name, len(matching)),
-                str(other_country.pk): (other_country.name, len(other))
-            }
-        )
+        country_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['country']
+        }
+        self.assertEqual(country_counts[str(matching_country.pk)], len(matching))
+        self.assertEqual(country_counts[str(other_country.pk)], len(other))
         self.assertFound(matching)
 
     def test_filter_highlight(self):

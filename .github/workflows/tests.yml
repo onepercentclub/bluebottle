@@ -280,4 +280,4 @@ jobs:
             fi
             sleep 2
           done
-          python manage.py test --parallel 16 --keepdb --settings bluebottle.settings.runner -v3
+          python manage.py test --parallel 10 --keepdb --settings bluebottle.settings.runner -v3

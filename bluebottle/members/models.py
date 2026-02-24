@@ -147,6 +147,13 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         default=list,
     )
 
+    support_groups = ArrayField(
+        models.CharField(),
+        verbose_name=_('Support login groups'),
+        default=lambda: list('Engineering Team', 'Support'),
+        help_text=_('Groups that can login in using support accounts'),
+    )
+
     session_only = models.BooleanField(
         _('session only'),
         default=False,

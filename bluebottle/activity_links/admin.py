@@ -6,24 +6,31 @@ from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedDa
     LinkedGrantApplication
 
 
-@admin.register(LinkedDeed)
-class LinkedDeedAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization']
+class LinkedBaseAdmin(admin.ModelAdmin):
+    readonly_fields = ["title", "link", "status", "host_organization"]
+    fields = readonly_fields + ['archived']
 
+
+@admin.register(LinkedDeed)
+class LinkedDeedAdmin(LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end']
+    fields = readonly_fields + ['archived']
 
 @admin.register(LinkedCollectCampaign)
-class LinkedCollectCampaignAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization', 'location']
-
+class LinkedCollectCampaignAdmin(LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'collect_type']
+    fields = readonly_fields + ['archived']
 
 @admin.register(LinkedFunding)
-class LinkedFundingAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization', 'location']
+class LinkedFundingAdmin(LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'target', 'donated']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedGrantApplication)
-class LinkedGrantApplicationAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization', 'location']
+class LinkedGrantApplicationAdmin(LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'target']
+    fields = readonly_fields
 
 
 class LinkedDateSlotInline(admin.TabularInline):
@@ -41,29 +48,34 @@ class LinkedDateSlotInline(admin.TabularInline):
 
 
 @admin.register(LinkedDateActivity)
-class LinkedDateActivityAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization']
+class LinkedDateActivityAdmin(LinkedBaseAdmin):
     inlines = [LinkedDateSlotInline]
+    readonly_fields = LinkedBaseAdmin.readonly_fields
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedDeadlineActivity)
-class LinkedDeadlineActivityAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization', 'location']
+class LinkedDeadlineActivityAdmin(LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedPeriodicActivity)
-class LinkedPeriodicActivityAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization', 'location']
+class LinkedPeriodicActivityAdmin(LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration', 'period']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedScheduleActivity)
-class LinkedScheduleActivityAdmin(admin.ModelAdmin):
-    raw_id_fields = ['event', 'host_organization', 'location']
+class LinkedScheduleActivityAdmin(LinkedBaseAdmin):
+    readonly_fields = LinkedBaseAdmin.readonly_fields + ['start', 'end', 'duration']
+    fields = readonly_fields + ['archived']
 
 
 @admin.register(LinkedActivity)
 class LinkedActivityAdmin(PolymorphicParentModelAdmin):
     base_model = LinkedActivity
+    search_fields = ['title']
     child_models = (
         LinkedDeed,
         LinkedFunding,
@@ -76,5 +88,8 @@ class LinkedActivityAdmin(PolymorphicParentModelAdmin):
     )
 
     list_display = [
-        'title', 'status'
+        'title', 'activity_type', 'status'
     ]
+
+    def activity_type(self, obj):
+        return obj.get_real_instance_class().activity_type

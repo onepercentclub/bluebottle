@@ -42,6 +42,7 @@ class ActivityDocument(Document):
     manager = fields.KeywordField()
     link = fields.KeywordField()
     is_local = fields.BooleanField()
+    archived = fields.BooleanField()
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
@@ -69,6 +70,9 @@ class ActivityDocument(Document):
 
     def prepare_is_local(self, instance):
         return True
+
+    def prepare_archived(self, instance):
+        return False
 
     current_status = fields.NestedField(properties={
         'name': fields.KeywordField(),

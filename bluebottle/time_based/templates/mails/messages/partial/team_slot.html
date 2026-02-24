@@ -1,9 +1,9 @@
 {% load i18n tz %}
 <p>
-    {% trans 'Date' %}: {{ start|date:"SHORT_DATE_FORMAT" }}
+    {% trans 'Date' context "platform-email" %}: {{ start|date:"SHORT_DATE_FORMAT" }}
 </p>
 <p>
-    {% trans 'Time' %}: {{ start|date:'TIME_FORMAT' }} - {{ end|date:'TIME_FORMAT' }} {{ timezone }}
+    {% trans 'Time' context "platform-email" %}: {{ start|date:'TIME_FORMAT' }} - {{ end|date:'TIME_FORMAT' }} {{ timezone }}
 </p>
 {% if is_online %}
     {% blocktrans context 'platform-email' %}
@@ -11,6 +11,6 @@
     {% endblocktrans %}
 {% else %}
     {% if location %}
-        {% trans 'Location' %}: {{ location }} {{ location_hint }}
+        {% trans 'Location' context "platform-email" %}: {{ location }} {{ location_hint }}
     {% endif %}
 {% endif %}

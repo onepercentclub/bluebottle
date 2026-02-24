@@ -498,9 +498,12 @@ class FollowerAdminForm(forms.ModelForm):
 
 @admin.register(Follower)
 class FollowerAdmin(FollowAdmin):
-    list_display = ("platform", "shared_activities", "adopted_activities", "accepted")
+    list_display = ("platform", "shared_activities", "adopted_activities", "accepted", "short_adoption_type")
     actions = ['accept_follow_requests']
-    readonly_fields = ('platform', 'accepted', "shared_activities", "adopted_activities", "publish_activities_button")
+    readonly_fields = (
+        'platform', 'accepted', "shared_activities", "adopted_activities",
+        "publish_activities_button", "short_adoption_type"
+    )
     fields = ('platform', 'accepted')
     form = FollowerAdminForm
     inlines = []
@@ -534,7 +537,10 @@ class FollowerAdmin(FollowAdmin):
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         if obj and self.accepted(obj):
-            fields += ('publish_mode', "shared_activities", "adopted_activities", "publish_activities_button")
+            fields += (
+                'publish_mode', "shared_activities", "adopted_activities",
+                "short_adoption_type", "publish_activities_button"
+            )
         return fields
 
     def get_urls(self):

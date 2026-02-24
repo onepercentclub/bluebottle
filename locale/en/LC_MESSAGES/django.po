@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-20 11:24+0100\n"
+"POT-Creation-Date: 2026-02-24 10:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -335,12 +335,14 @@ msgstr ""
 
 #: bluebottle/activities/messages/activity_manager.py:37
 #: bluebottle/funding/messages/funding/activity_manager.py:12
+#: bluebottle/funding/messages/funding/reviewer.py:16
 msgctxt "platform-email"
 msgid "View campaign"
 msgstr ""
 
 #: bluebottle/activities/messages/activity_manager.py:39
 #: bluebottle/grant_management/messages/activity_manager.py:14
+#: bluebottle/grant_management/messages/reviewer.py:13
 msgctxt "platform-email"
 msgid "View application"
 msgstr ""
@@ -352,13 +354,13 @@ msgstr ""
 #: bluebottle/time_based/messages.py:167 bluebottle/time_based/messages.py:206
 #: bluebottle/time_based/messages.py:229 bluebottle/time_based/messages.py:268
 #: bluebottle/time_based/messages.py:302 bluebottle/time_based/messages.py:325
-#: bluebottle/time_based/messages.py:348 bluebottle/time_based/messages.py:398
-#: bluebottle/time_based/messages.py:470 bluebottle/time_based/messages.py:504
-#: bluebottle/time_based/messages.py:527 bluebottle/time_based/messages.py:550
-#: bluebottle/time_based/messages.py:572 bluebottle/time_based/messages.py:594
-#: bluebottle/time_based/messages.py:617 bluebottle/time_based/messages.py:638
-#: bluebottle/time_based/messages.py:709 bluebottle/time_based/messages.py:730
-#: bluebottle/time_based/messages.py:839
+#: bluebottle/time_based/messages.py:348 bluebottle/time_based/messages.py:373
+#: bluebottle/time_based/messages.py:398 bluebottle/time_based/messages.py:470
+#: bluebottle/time_based/messages.py:504 bluebottle/time_based/messages.py:527
+#: bluebottle/time_based/messages.py:550 bluebottle/time_based/messages.py:572
+#: bluebottle/time_based/messages.py:594 bluebottle/time_based/messages.py:617
+#: bluebottle/time_based/messages.py:638 bluebottle/time_based/messages.py:709
+#: bluebottle/time_based/messages.py:730 bluebottle/time_based/messages.py:839
 #: bluebottle/time_based/messages/messages.py:88
 #: bluebottle/time_based/messages/messages.py:131
 #: bluebottle/time_based/messages/messages.py:170
@@ -368,6 +370,7 @@ msgstr ""
 #: bluebottle/time_based/messages/messages.py:305
 #: bluebottle/time_based/messages/messages.py:328
 #: bluebottle/time_based/messages/messages.py:351
+#: bluebottle/time_based/messages/messages.py:376
 #: bluebottle/time_based/messages/messages.py:401
 #: bluebottle/time_based/messages/messages.py:473
 #: bluebottle/time_based/messages/messages.py:510
@@ -495,6 +498,8 @@ msgstr ""
 
 #: bluebottle/activities/messages/matching.py:82
 #: bluebottle/activities/messages/matching.py:98
+#: bluebottle/time_based/messages.py:108
+#: bluebottle/time_based/messages/messages.py:111
 msgctxt "platform-email"
 msgid "runs indefinitely"
 msgstr ""
@@ -551,13 +556,14 @@ msgstr ""
 #: bluebottle/collect/messages.py:56 bluebottle/deeds/messages.py:57
 #: bluebottle/time_based/messages.py:424 bluebottle/time_based/messages.py:448
 #: bluebottle/time_based/messages.py:752 bluebottle/time_based/messages.py:779
-#: bluebottle/time_based/messages.py:862 bluebottle/time_based/messages.py:910
-#: bluebottle/time_based/messages.py:947
+#: bluebottle/time_based/messages.py:862 bluebottle/time_based/messages.py:885
+#: bluebottle/time_based/messages.py:910 bluebottle/time_based/messages.py:947
 #: bluebottle/time_based/messages/messages.py:427
 #: bluebottle/time_based/messages/messages.py:451
 #: bluebottle/time_based/messages/messages.py:759
 #: bluebottle/time_based/messages/messages.py:786
 #: bluebottle/time_based/messages/messages.py:881
+#: bluebottle/time_based/messages/messages.py:904
 #: bluebottle/time_based/messages/messages.py:929
 #: bluebottle/time_based/messages/messages.py:966
 #: bluebottle/time_based/messages/participants.py:18
@@ -1593,7 +1599,7 @@ msgctxt "platform-email"
 msgid ""
 "\n"
 "            There are tons of cool activities on %(site_name)s that are "
-"making a positive impact. \n"
+"making a positive impact.\n"
 "\n"
 "            We have selected %(count)s activities that match with your "
 "profile. Join us!\n"
@@ -1601,31 +1607,38 @@ msgid ""
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:17
+msgctxt "platform-email"
 msgid "Complete your profile"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:19
+msgctxt "platform-email"
 msgid ", so that we can select even more relevant activities for you."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:44
+msgctxt "platform-email"
 msgid "Online / Remote"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:73
+msgctxt "platform-email"
 msgid "No specific skill needed"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:96
+msgctxt "platform-email"
 msgid "Don't want to receive this monthly update anymore? Unsubscribe"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:97
+msgctxt "platform-email"
 msgid "via your profile page."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-base.html:18
 #, python-format
+msgctxt "platform-email"
 msgid ""
 "\n"
 "      Go to <a href=\"%(profile_url)s\">your profile</a> to opt-out.\n"
@@ -1917,7 +1930,6 @@ msgstr ""
 
 #: bluebottle/activity_pub/admin.py:645 bluebottle/activity_pub/admin.py:881
 #: bluebottle/geo/admin.py:37
-#: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:14
 msgid "Location"
 msgstr ""
 
@@ -2265,25 +2277,30 @@ msgstr ""
 
 #: bluebottle/auth/templates/registration/password_reset_email.html:2
 #, python-format
+msgctxt "platform-email"
 msgid ""
 "You're receiving this email because you requested a password reset for your "
 "user account at %(site_name)s."
 msgstr ""
 
 #: bluebottle/auth/templates/registration/password_reset_email.html:4
+msgctxt "platform-email"
 msgid "Please go to the following page and choose a new password:"
 msgstr ""
 
 #: bluebottle/auth/templates/registration/password_reset_email.html:8
+msgctxt "platform-email"
 msgid "Your username, in case you've forgotten:"
 msgstr ""
 
 #: bluebottle/auth/templates/registration/password_reset_email.html:10
+msgctxt "platform-email"
 msgid "Thanks for using our site!"
 msgstr ""
 
 #: bluebottle/auth/templates/registration/password_reset_email.html:12
 #, python-format
+msgctxt "email"
 msgid "The %(site_name)s team"
 msgstr ""
 
@@ -4436,7 +4453,6 @@ msgstr ""
 #: bluebottle/funding/templates/dashboard/payouts_ready_for_approval.html:14
 #: bluebottle/grant_management/forms.py:29
 #: bluebottle/grant_management/templates/dashboard/grant_payouts_ready_for_approval.html:14
-#: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:31
 msgid "Amount"
 msgstr ""
 
@@ -6020,6 +6036,7 @@ msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:17
 #, python-format
+msgctxt "platform-email"
 msgid ""
 "\n"
 "    <strong>Please transfer the amount of %(amount)s to \"%(title)s\".</"
@@ -6042,17 +6059,18 @@ msgid ""
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:25
+msgctxt "platform-email"
 msgid "Reward:"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:35
-#: bluebottle/initiatives/models.py:281 bluebottle/terms/models.py:43
-#: bluebottle/time_based/admin.py:1165
 #: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:3
+msgctxt "platform-email"
 msgid "Date"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:43
+msgctxt "platform-email"
 msgid "Order"
 msgstr ""
 
@@ -6642,7 +6660,6 @@ msgstr ""
 #: bluebottle/grant_management/models.py:295
 #: bluebottle/grant_management/models.py:409
 #: bluebottle/grant_management/models.py:446
-#: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:15
 msgid "Grant application"
 msgstr ""
 
@@ -6911,8 +6928,6 @@ msgid "credit"
 msgstr ""
 
 #: bluebottle/grant_management/models.py:505
-#: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:23
-#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:17
 msgid "Grant fund"
 msgstr ""
 
@@ -7300,6 +7315,22 @@ msgid ""
 "Here's a summary of the payment request:\n"
 msgstr ""
 
+#: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:15
+msgctxt "platform-email"
+msgid "Grant application"
+msgstr ""
+
+#: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:23
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:17
+msgctxt "platform-email"
+msgid "Grant fund"
+msgstr ""
+
+#: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:31
+msgctxt "platform-email"
+msgid "Amount"
+msgstr ""
+
 #: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/application_submitted.html:5
 #, python-format
 msgctxt "platform-email"
@@ -7330,10 +7361,12 @@ msgid ""
 msgstr ""
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:18
+msgctxt "platform-email"
 msgid "Grant requester"
 msgstr ""
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:19
+msgctxt "platform-email"
 msgid "Granted amount"
 msgstr ""
 
@@ -7350,7 +7383,6 @@ msgid "People"
 msgstr ""
 
 #: bluebottle/impact/models.py:14
-#: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:6
 msgid "Time"
 msgstr ""
 
@@ -7700,6 +7732,11 @@ msgstr ""
 
 #: bluebottle/initiatives/models.py:280
 msgid "Select country"
+msgstr ""
+
+#: bluebottle/initiatives/models.py:281 bluebottle/terms/models.py:43
+#: bluebottle/time_based/admin.py:1165
+msgid "Date"
 msgstr ""
 
 #: bluebottle/initiatives/models.py:281
@@ -10718,27 +10755,20 @@ msgstr ""
 #: bluebottle/time_based/messages.py:98
 #: bluebottle/time_based/messages/messages.py:101
 #, python-brace-format
-msgctxt "emai"
+msgctxt "platform-email"
 msgid "on {start}"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:101
-#: bluebottle/time_based/messages/messages.py:104
-msgctxt "emai"
+msgctxt "platform-email"
 msgid "immediately"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:105
 #: bluebottle/time_based/messages/messages.py:108
 #, python-brace-format
-msgctxt "emai"
+msgctxt "platform-email"
 msgid "ends on {end}"
-msgstr ""
-
-#: bluebottle/time_based/messages.py:108
-#: bluebottle/time_based/messages/messages.py:111
-msgctxt "emai"
-msgid "runs indefinitely"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:117
@@ -10968,6 +10998,11 @@ msgstr ""
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your activity on {site_name} has been registered!"
+msgstr ""
+
+#: bluebottle/time_based/messages/messages.py:104
+msgctxt "lemai"
+msgid "immediately"
 msgstr ""
 
 #: bluebottle/time_based/messages/participants.py:109
@@ -13087,17 +13122,25 @@ msgid ""
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/partial/slot.html:13
+msgctxt "platform-email"
 msgid "Meeting link"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/partial/slot.html:16
+msgctxt "platform-email"
 msgid "Anywhere/Online"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/partial/slots.html:7
+msgctxt "platform-email"
 msgid ""
 "Go to the activity page to see the times in your own timezone and add them "
 "to your calendar."
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:6
+msgctxt "platform-email"
+msgid "Time"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:9
@@ -13106,6 +13149,11 @@ msgid ""
 "\n"
 "        Anywhere/Online\n"
 "    "
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:14
+msgctxt "platform-email"
+msgid "Location"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_accepted.html:5

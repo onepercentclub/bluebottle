@@ -262,4 +262,22 @@ jobs:
           set -euxo pipefail
           source "$VENV_DIR/bin/activate"
           python -c "import pkg_resources"
-          python manage.py test --parallel 12 --keepdb --settings bluebottle.settings.runner -v3
+          echo "Waiting for Elasticsearch to be fully initialized..."
+          for i in {1..90}; do
+            HEALTH="$(curl -fsS "http://$ESHOST:$ESPORT/_cluster/health?wait_for_status=yellow&wait_for_no_relocating_shards=true&wait_for_no_initializing_shards=true&timeout=5s" || true)"
+            if echo "$HEALTH" | grep -q '"timed_out":false'; then
+              PROBE_INDEX="ci-es-ready-$RANDOM-$RANDOM"
+              if curl -fsS -XPUT "http://$ESHOST:$ESPORT/$PROBE_INDEX" -H "Content-Type: application/json" -d '{}' >/dev/null && \
+                 curl -fsS -XDELETE "http://$ESHOST:$ESPORT/$PROBE_INDEX" >/dev/null; then
+                echo "Elasticsearch is ready."
+                break
+              fi
+            fi
+            if [ "$i" -eq 90 ]; then
+              echo "Elasticsearch did not become fully ready in time."
+              curl -fsS "http://$ESHOST:$ESPORT/_cluster/health?pretty" || true
+              exit 1
+            fi
+            sleep 2
+          done
+          python manage.py test --parallel 16 --keepdb --settings bluebottle.settings.runner -v3

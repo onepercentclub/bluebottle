@@ -716,7 +716,11 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         'organizations.Organization',
         verbose_name=_('GoodUp Connect name'),
         null=True, blank=True, on_delete=models.SET_NULL,
-        help_text=_('The organization this platform belongs to.')
+        help_text=_(
+            "This is the name other partners will see when you send connection "
+            "requests or share activities. Use your organisation's official name "
+            "to ensure partners recognise you."
+        )
     )
 
     action_color = ColorField(

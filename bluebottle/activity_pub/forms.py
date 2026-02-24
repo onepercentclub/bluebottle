@@ -62,10 +62,10 @@ class AcceptFollowPublishModeForm(forms.Form):
     title = _('Accept follow request')
 
     publish_mode = forms.ChoiceField(
-        label=_('Publish mode'),
+        label=_('Sharing options'),
         choices=PublishModeChoices.choices,
         required=True,
-        help_text=_('Select how activities from this partner should be shared.'),
+        help_text=_('Select how you would like to share activities with this consumer'),
         widget=forms.RadioSelect()
     )
 

@@ -264,15 +264,18 @@ class Event(ActivityPubModel):
 
     @property
     def adopted(self):
-        return self.adopted_activity is not None
+        return (
+            self.adopted_activity is not None or
+            self.linked_activity is not None
+        )
 
     @property
     def linked_activity(self):
         return self.linked_activities.first()
 
     @property
-    def linked(self):
-        return self.linked_activity is not None
+    def adoption_type(self):
+        return self.create_set.get().actor.follow.short_adoption_type
 
     def __str__(self):
         return self.name
@@ -415,14 +418,29 @@ class AdoptionTypeChoices(DjangoChoices):
     )
 
 
+class ShortAdoptionTypeChoices(DjangoChoices):
+    template = ChoiceItem(
+        'template',
+        _('Template')
+    )
+    link = ChoiceItem(
+        'link',
+        _('Link')
+    )
+    hosted = ChoiceItem(
+        'hosted',
+        _('Fully synced')
+    )
+
+
 class PublishModeChoices(DjangoChoices):
     manual = ChoiceItem(
         'manual',
-        _('Activities will be shared manually.')
+        _('Choose which activities you want to share')
     )
     automatic = ChoiceItem(
         'automatic',
-        _('Activities are automatically shared once they go live.')
+        _('Activities will be shared when they go live.')
     )
 
 
@@ -528,7 +546,11 @@ class Follow(Activity):
         null=True,
         blank=True,
         verbose_name=_("Default activity owner"),
-        help_text=_("This person will be the activity manager of the activities that are adopted."),
+        help_text=_(
+            "This user will be assigned as the activity manager for any activity "
+            "adopted as a template. It can be left empty and no activity manager "
+            "will be assigned by default."
+        ),
         on_delete=models.SET_NULL,
     )
 
@@ -569,6 +591,10 @@ class Follow(Activity):
             activity__create__isnull=False,
             send=True
         )
+
+    @property
+    def short_adoption_type(self):
+        return ShortAdoptionTypeChoices.labels[self.adoption_type]
 
     @property
     def adopted_activities(self):

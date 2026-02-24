@@ -416,10 +416,6 @@ class AdoptionTypeChoices(DjangoChoices):
         'link',
         _('Show adopted activities as links to the partner platform.')
     )
-    hosted = ChoiceItem(
-        'hosted',
-        _('Activities are managed by the partner platform, sign ups are synced.')
-    )
 
 
 class ShortAdoptionTypeChoices(DjangoChoices):
@@ -560,7 +556,10 @@ class Follow(Activity):
 
     automatic_adoption_activity_types = MultiSelectField(
         verbose_name=_("Automatically adopted these activity types"),
-        max_length=300, choices=InitiativePlatformSettings.ACTIVITY_TYPES,
+        max_length=300,
+        choices=InitiativePlatformSettings.ACTIVITY_TYPES,
+        null=True,
+        blank=True,
         help_text=_("Selected activity types are automatically adopted when they are published."),
     )
 

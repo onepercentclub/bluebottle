@@ -4,13 +4,10 @@ from django_quill.fields import QuillField
 from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
+from bluebottle.files.fields import ImageField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.organizations.models import Organization
-
 from bluebottle.utils.fields import MoneyField
-from bluebottle.files.fields import ImageField
-
-from bluebottle.activity_pub.models import Create, Follow
 
 
 class LinkedActivityManager(PolymorphicManager):
@@ -55,6 +52,12 @@ class LinkedActivity(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
     description = QuillField(_("Description"), blank=True)
 
+    archived = models.BooleanField(
+        _('Archive'),
+        help_text=_('Archive this link. It will no longer appear in search results.'),
+        default=False
+    )
+
     image = ImageField(blank=True, null=True)
 
     event = models.ForeignKey(
@@ -72,6 +75,10 @@ class LinkedActivity(TriggerMixin, PolymorphicModel):
 
     objects = LinkedActivityManager()
 
+    class Meta:
+        verbose_name_plural = _('Linked activities')
+        verbose_name = _('linked activity')
+
     def __str__(self):
         return self.title
 
@@ -79,6 +86,7 @@ class LinkedActivity(TriggerMixin, PolymorphicModel):
 class LinkedDeed(LinkedActivity):
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
+    activity_type = _('Deed')
 
     @property
     def succeeded_contributor_count(self):
@@ -98,6 +106,7 @@ class LinkedCollectCampaign(LinkedActivity):
     collect_type = models.CharField(max_length=1000, null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.CharField(max_length=1000, null=True, blank=True)
+    activity_type = _('Collect campaign')
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collects'
@@ -109,6 +118,7 @@ class LinkedFunding(LinkedActivity):
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+    activity_type = _('Crowd-funding')
 
 
 class LinkedGrantApplication(LinkedActivity):
@@ -116,6 +126,7 @@ class LinkedGrantApplication(LinkedActivity):
     start = models.DateTimeField(null=True, blank=True)
     end = models.DateTimeField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+    activity_type = _('Grant application')
 
 
 class LinkedDeadlineActivity(LinkedActivity):
@@ -123,10 +134,11 @@ class LinkedDeadlineActivity(LinkedActivity):
     end = models.DateTimeField(null=True, blank=True)
     duration = models.DurationField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+    activity_type = _('Flexible activity')
 
 
 class LinkedDateActivity(LinkedActivity):
-    pass
+    activity_type = _('Date activity')
 
 
 class LinkedDateSlot(models.Model):
@@ -154,6 +166,7 @@ class LinkedPeriodicActivity(LinkedActivity):
     duration = models.DurationField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
     period = models.CharField(null=True, blank=True, max_length=255)
+    activity_type = _('Recurring activity')
 
 
 class LinkedScheduleActivity(LinkedActivity):
@@ -161,6 +174,7 @@ class LinkedScheduleActivity(LinkedActivity):
     end = models.DateTimeField(null=True, blank=True)
     duration = models.DurationField(null=True, blank=True)
     location = models.ForeignKey('geo.Geolocation', null=True, blank=True, on_delete=models.SET_NULL)
+    activity_type = _('Past date activity')
 
 
 from bluebottle.activity_links.signals import *  # noqa

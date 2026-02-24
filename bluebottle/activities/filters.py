@@ -561,7 +561,7 @@ class ActivitySearch(Search):
 
     def query(self, search, query):
         search = super().query(search, query)
-
+        search = search.filter(Term(archived=False))
         if not self.user.is_staff:
             search = search.filter(
                 ~Nested(path="segments", query=(Term(segments__closed=True)))

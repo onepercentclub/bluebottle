@@ -30,6 +30,9 @@ class LinkedActivityDocument(ActivityDocument):
     def get_id(self, instance):
         return f"linked_{instance.pk}"
 
+    def prepare_archived(self, instance):
+        return instance.archived
+
     def prepare_current_status(self, instance):
         return {
             'value': 'open',

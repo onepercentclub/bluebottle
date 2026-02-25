@@ -198,7 +198,13 @@ class SkillApiTestCase(BluebottleTestCase):
         MemberPlatformSettings.objects.update(closed=True)
         self.url = reverse('skill-list')
         Skill.objects.all().delete()
-        SkillFactory.create_batch(10)
+        skills = SkillFactory.create_batch(10)
+        for skill in skills:
+            if not skill.translations.filter(language_code='en').exists():
+                skill.set_current_language('en')
+                skill.name = f'Name en {skill.id}'
+                skill.description = f'Description en {skill.id}'
+                skill.save()
         self.client = JSONAPITestClient()
 
     def test_get_skills_authenticated(self):

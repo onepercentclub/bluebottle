@@ -1436,7 +1436,7 @@ class DeadlineParticipant(Participant, Contributor):
     """
     include_in_documentation = True
 
-    class Meta:
+    class Meta(Participant.Meta):
         verbose_name = _("Participant to flexible activities")
         verbose_name_plural = _("Participants to flexible activities")
 

@@ -19,7 +19,7 @@ from bluebottle.activities.states import (
 )
 from bluebottle.activity_pub.effects import (
     PublishAdoptionEffect, CreateEffect, UpdateEventEffect,
-    CancelEffect, DeletedEffect, FinishEffect
+    CancelEffect, DeletedEffect, StartEffect
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -128,7 +128,8 @@ class ActivityTriggers(TriggerManager):
                 NotificationEffect(
                     TermsOfServiceNotification,
                     conditions=[should_mail_tos]
-                )
+                ),
+                StartEffect
             ]
         ),
 
@@ -178,7 +179,8 @@ class ActivityTriggers(TriggerManager):
                     conditions=[has_organizer]
                 ),
                 NotificationEffect(ActivityPublishedReviewerNotification),
-                NotificationEffect(ActivityPublishedNotification)
+                NotificationEffect(ActivityPublishedNotification),
+                StartEffect
             ]
         ),
 
@@ -306,7 +308,6 @@ class OrganizerTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     'contributions', EffortContributionStateMachine.succeed, display=True
                 ),
-                FinishEffect
             ]
         ),
     ]

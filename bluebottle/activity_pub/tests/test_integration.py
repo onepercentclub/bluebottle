@@ -355,6 +355,8 @@ class AdoptTestCase(ActivityPubTestCase):
 
 
 class LinkTestCase(ActivityPubTestCase):
+    expected_link_status = 'open'
+
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
 
@@ -397,6 +399,7 @@ class LinkTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, self.expected_link_status)
             self.assertEqual(link.title, self.model.title)
             self.assertTrue(link.image)
             accept = Accept.objects.get(object=link.event)
@@ -918,6 +921,7 @@ class AdoptPeriodicActivityTestCase(AdoptTestCase, BluebottleTestCase):
 )
 class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = RegisteredDateActivityFactory
+    expected_link_status = 'succeeded'
 
     def create(self):
         super().create(

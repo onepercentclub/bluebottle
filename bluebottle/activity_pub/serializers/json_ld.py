@@ -16,6 +16,7 @@ from bluebottle.activity_pub.models import (
     Create,
     Update,
     Delete,
+    Start,
     Cancel,
     Finish,
     Organization,
@@ -430,6 +431,15 @@ class CancelSerializer(BaseActivitySerializer):
         model = Cancel
 
 
+class StartSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:start')
+    type = TypeField('Start')
+    object = EventSerializer()
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Start
+
+
 class FinishSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:finish')
     type = TypeField('Finish')
@@ -445,6 +455,7 @@ class ActivitySerializer(PolymorphicActivityPubSerializer):
         AcceptSerializer,
         CreateSerializer,
         UpdateSerializer,
+        StartSerializer,
         CancelSerializer,
         DeleteSerializer,
         FinishSerializer

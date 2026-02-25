@@ -6,7 +6,7 @@ from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Create, Organization,
     GoodDeed, Image, CrowdFunding, CollectCampaign, Place, Address, DoGoodEvent, SubEvent, Update,
-    Delete, Cancel, Finish, GrantApplication
+    Delete, Start, Cancel, Finish, GrantApplication
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import InboxPermission, ActivityPubPermission
@@ -18,7 +18,7 @@ from bluebottle.activity_pub.serializers.json_ld import (
     CrowdFundingSerializer, CollectCampaignSerializer, PlaceSerializer, AddressSerializer,
     GrantApplicationSerializer,
     DoGoodEventSerializer, SubEventSerializer, UpdateSerializer,
-    DeleteSerializer, CancelSerializer, FinishSerializer
+    DeleteSerializer, StartSerializer, CancelSerializer, FinishSerializer
 )
 from bluebottle.clients.utils import LocalTenant
 
@@ -152,6 +152,11 @@ class CreateView(ActivityPubView):
 class UpdateView(ActivityPubView):
     serializer_class = UpdateSerializer
     queryset = Update.objects.all()
+
+
+class StartView(ActivityPubView):
+    serializer_class = StartSerializer
+    queryset = Start.objects.all()
 
 
 class CancelView(ActivityPubView):

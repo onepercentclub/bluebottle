@@ -5,7 +5,7 @@ from django.dispatch import receiver
 
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.models import (
-    AdoptionTypeChoices, Create, Update, Follow, Cancel,
+    AdoptionTypeChoices, Create, Update, Follow, Start, Cancel,
     Finish, Delete
 )
 
@@ -32,6 +32,16 @@ def update(sender, instance, created, **kwargs):
     try:
         if not instance.is_local and created and hasattr(instance.object, 'linked_activity'):
             LinkedActivity.objects.sync(instance.object)
+    except Exception as e:
+        logger.error(f"Failed to find link event: {str(e)}")
+
+
+@receiver(post_save, sender=Start)
+def start(sender, instance, created, **kwargs):
+    try:
+        if not instance.is_local and created:
+            link = LinkedActivity.objects.filter(event=instance.object).get()
+            link.states.start(save=True)
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")
 

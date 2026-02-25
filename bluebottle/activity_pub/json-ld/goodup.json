@@ -3,6 +3,7 @@
     "@vocab": "_:",
     "goodup": "https://goodup.com/json-ld#",
     "schema": "https://schema.org/",
+    "Start": "goodup:Start",
     "Cancel": "goodup:Cancel",
     "Finish": "goodup:Finish",
     "GoodDeed": "goodup:GoodDeed",

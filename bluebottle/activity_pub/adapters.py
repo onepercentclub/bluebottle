@@ -11,7 +11,7 @@ from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import (
-    Organization, Recipient, Follow, Create, Event, Finish, Cancel
+    Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
@@ -137,12 +137,6 @@ class JSONLDAdapter():
         if not event.create_set.exists():
             Create.objects.create(actor=get_platform_actor(), object=event)
 
-            if activity.status not in ('open', 'granted'):
-                if activity.status == 'succeeded':
-                    Finish.objects.create(object=event)
-                else:
-                    Cancel.objects.create(object=event)
-
         return event
 
 
@@ -190,6 +184,15 @@ def publish_to_recipient(recipient, tenant):
             adapter.post(inbox.iri, data=data, auth=auth)
             recipient.send = True
             recipient.save()
+
+            if isinstance(activity, Create):
+                if activity.object.activity.status in ('open', 'granted', ):
+                    Start.objects.create(object=activity.object)
+                elif activity.object.activity.status == 'succeeded':
+                    Finish.objects.create(object=activity.object)
+                else:
+                    Cancel.objects.create(object=activity.object)
+
         except Exception as e:
             logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
             raise

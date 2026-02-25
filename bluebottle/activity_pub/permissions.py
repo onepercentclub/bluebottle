@@ -27,7 +27,7 @@ class InboxPermission(permissions.BasePermission):
                 if request.data['type'] == 'Follow':
                     return True
                 if request.data['type'] in (
-                    'Create', 'Update', 'Cancel', 'Finish', 'Delete'
+                    'Create', 'Update', 'Start', 'Cancel', 'Finish', 'Delete'
                 ):
                     # Only actors we follow can post publish activities
                     return (

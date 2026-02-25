@@ -3,7 +3,7 @@
 
 {% block message %}
 <p class="donation-intro">
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
     To be able to collect funds for your organisation on {{site_name}}, we need
     some extra information from you. Please provide this information as soon as possible.
     {% endblocktrans %}
@@ -11,6 +11,6 @@
 
 {% endblock message %} {% block action %}
 <a href="{{ site }}/admin/funding_stripe/stripepayoutaccount/{obj.pk}/change }}">
-    {% trans 'Provide additional details' context 'email' %}
+    {% trans 'Provide additional details' context 'platform-email' %}
 </a>
 {% endblock %}`

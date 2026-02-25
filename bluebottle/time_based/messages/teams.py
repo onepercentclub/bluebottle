@@ -1,5 +1,6 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.activities.ical import ActivityIcal
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
 
@@ -93,8 +94,8 @@ class UserTeamScheduledNotification(UserTeamNotification):
     def get_slot(self):
         return self.obj.slots.first()
 
-    def get_event_data(self, recipient=None):
-        return self.get_slot().event_data
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.get_slot()).to_attachment()]
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
@@ -242,8 +243,8 @@ class UserTeamDetailsChangedNotification(TransitionMessage):
         "title": "activity.title",
     }
 
-    def get_event_data(self, recipient):
-        return self.obj.event_data
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.obj).to_attachment()]
 
     @property
     def action_link(self):

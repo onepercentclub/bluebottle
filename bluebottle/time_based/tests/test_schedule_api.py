@@ -265,7 +265,7 @@ class ScheduleSlotDetailAPITestCase(APITestCase):
             )
 
             self.assertEqual(str(ical_event["summary"]), self.activity.title)
-            self.assertEqual(ical_event["url"], self.activity.get_absolute_url())
+            self.assertEqual(ical_event["url"], self.model.get_absolute_url())
             self.assertEqual(
                 ical_event["organizer"], "MAILTO:{}".format(self.activity.owner.email)
             )

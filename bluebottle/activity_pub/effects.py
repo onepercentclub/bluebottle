@@ -101,6 +101,7 @@ class CancelEffect(Effect):
 
 class FinishEffect(Effect):
     template = 'admin/activity_pub/finish_effect.html'
+
     def post_save(self, **kwargs):
         Finish.objects.create(
             object=self.instance.event
@@ -116,6 +117,7 @@ class FinishEffect(Effect):
 
 class DeletedEffect(Effect):
     template = 'admin/activity_pub/delete_effect.html'
+
     def post_save(self, **kwargs):
         Delete.objects.create(
             object=self.instance.event

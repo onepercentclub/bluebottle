@@ -617,6 +617,16 @@ class Follow(Activity):
             event__create__recipients__actor=self.actor,
         )
 
+    def save(self, *args, **kwargs):
+        created = bool(self.pk)
+
+        super().save(*args, **kwargs)
+
+        if created and self.is_local:
+            Update.objects.create(
+                object=self
+            )
+
     def __str__(self):
         return str(self.object)
 

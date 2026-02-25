@@ -15,6 +15,12 @@ class LinkedActivityStateMachine(ModelStateMachine):
 
     model = LinkedActivity
 
+    new = State(
+        _("New"),
+        "new",
+        _("New linked activities are not yet shown in the activities overview."),
+    )
+
     open = State(
         _("Open"),
         "open",
@@ -35,13 +41,20 @@ class LinkedActivityStateMachine(ModelStateMachine):
 
     initiate = Transition(
         EmptyState(),
-        open,
+        new,
         name=_("Initiative"),
         description=_("The link will be created."),
     )
 
+    start = Transition(
+        new,
+        open,
+        name=_("Start"),
+        description=_("The link will be shown."),
+    )
+
     succeed = Transition(
-        [open],
+        [new, open],
         succeeded,
         name=_("Succeeded"),
         description=_("The initiative will be isucceeded."),
@@ -49,7 +62,7 @@ class LinkedActivityStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        [open, succeeded],
+        [new, open, succeeded],
         cancelled,
         name=_("Cancel"),
         description=_("The initiative will be cancelled."),

@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Accept, Follow, Update, Cancel, Delete, Finish
+    Accept, Follow, Start, Update, Cancel, Delete, Finish
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -97,6 +97,22 @@ class CancelEffect(Effect):
 
     def __str__(self):
         return str(_('Notify subscribers of the cancelation'))
+
+
+class StartEffect(Effect):
+    template = 'admin/activity_pub/start_effect.html'
+
+    def post_save(self, **kwargs):
+        Start.objects.create(
+            object=self.instance.event
+        )
+
+    @property
+    def is_valid(self):
+        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+
+    def __str__(self):
+        return str(_('Notify subscribers of the start of an activity'))
 
 
 class FinishEffect(Effect):

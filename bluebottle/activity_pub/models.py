@@ -515,7 +515,7 @@ class Activity(ActivityPubModel):
 
         super().save(*args, **kwargs)
 
-        if created:
+        if created and self.is_local:
             for recipient in self.default_recipients:
                 Recipient.objects.create(
                     actor=recipient,
@@ -713,6 +713,10 @@ class Transition(Activity):
 
 
 class Delete(Transition):
+    pass
+
+
+class Start(Transition):
     pass
 
 

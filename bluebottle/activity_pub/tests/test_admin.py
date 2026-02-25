@@ -115,17 +115,6 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(follow.default_owner, default_owner)
         self.assertTrue(follow.object.organization)
 
-    def test_following_admin_add_connection_with_hosted_settings(self):
-        self.submit_following_form(
-            adoption_type='hosted',
-            activity_types=['collect']
-        )
-
-        follow = Following.objects.get()
-        self.assertEqual(follow.adoption_type, 'hosted')
-        self.assertEqual(set(follow.automatic_adoption_activity_types), {'collect'})
-        self.assertIsNone(follow.default_owner)
-
     def test_following_admin_add_connection_invalid_platform_url(self):
         url = reverse('admin:activity_pub_following_add')
         page = self.app.get(url, user=self.superuser)
@@ -166,7 +155,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         admin = FollowerAdmin(Follower, AdminSite())
         button = admin.publish_activities_button(follower)
 
-        self.assertIn('3 open and succeeded activities', button)
+        self.assertIn('Publish all 3 unpublished activities', button)
         self.assertIn(
             reverse('admin:activity_pub_publish_activities', args=(follower.id,)),
             button

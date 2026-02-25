@@ -35,7 +35,8 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         settings = InitiativePlatformSettings.load()
         if settings.vet_organizations and self.instance.organization:
             self.fields['vet_organizations'] = BooleanField(
-                label=_("Partner organization is vetted"),
+                label=_("Due diligence"),
+                help_text=_("All the required checks have been completed."),
                 required=False
             )
 
@@ -55,7 +56,9 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
             self.instance.organization and
             not self.cleaned_data.get('vet_organizations')
         ):
-            raise ValidationError({'vet_organizations': _('Please vet the organization before continueing')})
+            raise ValidationError({
+                'vet_organizations': _('Please verify that all required checks have been completed')}
+            )
 
     def save(self, user=None):
         """

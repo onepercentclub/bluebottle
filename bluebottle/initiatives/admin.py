@@ -342,6 +342,7 @@ class InitiativePlatformSettingsAdmin(
                 "fields": (
                     "contact_method",
                     "require_organization",
+                    "vet_organizations",
                     "enable_impact",
                     "enable_open_initiatives",
                     "enable_participant_exports",

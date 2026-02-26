@@ -34,12 +34,6 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 @python_2_unicode_compatible
 class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
-    """
-    An initiative has a collection of activities that are related to a common goal.
-    """
-
-    include_in_documentation = True
-
     status = models.CharField(max_length=40)
     title = models.CharField(_("title"), blank=True, max_length=255)
 
@@ -355,6 +349,15 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_(
             "Require initiators to specify a partner organisation when creating an initiative."
         ),
+    )
+
+    vet_organizations = models.BooleanField(
+        _('Enable due diligence'),
+        default=False,
+        help_text=_((
+            "Allow admins to indicate if due diligence has been completed "
+            "when approving a grant application."
+        )),
     )
 
     terms_of_service = models.TextField(

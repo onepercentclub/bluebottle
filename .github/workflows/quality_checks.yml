@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
- 
+
       - name: Restore cached virtualenv
         uses: actions/cache/restore@v4
         with:
@@ -25,6 +25,11 @@ jobs:
 
       - name: Create virtualenv
         run: virtualenv env
+
+      - name: Install pip version 24.0
+        run: |
+          source env/bin/activate
+          pip install --upgrade pip==24.0
 
       - name: Install pip dependencies
         run: |
@@ -48,12 +53,12 @@ jobs:
           pip install polib
           python ./locale/check_translations.py --locales=nl  > translation-message.txt
 
-      - name: Echo 
+      - name: Echo
         run: cat translation-message.txt
 
       - name: Post comment
         uses: mshick/add-pr-comment@v2
-        if: always() 
+        if: always()
         with:
           message-path: translation-message.txt
           refresh-message-position: true

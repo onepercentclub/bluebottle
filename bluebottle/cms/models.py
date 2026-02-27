@@ -861,7 +861,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             tenant = connection.tenant
             self.organization = Organization.objects.create(
                 name=tenant.name,
-                logo=self.favicon,
+                logo=self.logo,
             )
 
         if self.organization_id and not hasattr(self.organization, 'activity_pub_organization'):

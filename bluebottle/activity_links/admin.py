@@ -49,6 +49,32 @@ class LinkedDateSlotInline(admin.TabularInline):
         return False
 
 
+class UsedHostOrganizationListFilter(admin.SimpleListFilter):
+    title = 'host organization'
+    parameter_name = 'host_organization'
+
+    def lookups(self, request, model_admin):
+        queryset = model_admin.get_queryset(request)
+        organization_ids = queryset.exclude(
+            host_organization__isnull=True
+        ).values_list('host_organization_id', flat=True).distinct()
+
+        organization_model = model_admin.model._meta.get_field(
+            'host_organization'
+        ).remote_field.model
+
+        organizations = organization_model.objects.filter(
+            pk__in=organization_ids
+        ).order_by('name')
+
+        return [(str(organization.pk), str(organization)) for organization in organizations]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(host_organization_id=self.value())
+        return queryset
+
+
 @admin.register(LinkedDateActivity)
 class LinkedDateActivityAdmin(LinkedBaseAdmin):
     inlines = [LinkedDateSlotInline]
@@ -78,6 +104,7 @@ class LinkedScheduleActivityAdmin(LinkedBaseAdmin):
 class LinkedActivityAdmin(PolymorphicParentModelAdmin):
     base_model = LinkedActivity
     search_fields = ['title']
+    list_filter = [UsedHostOrganizationListFilter, 'archived']
     child_models = (
         LinkedDeed,
         LinkedFunding,

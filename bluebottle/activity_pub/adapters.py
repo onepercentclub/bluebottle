@@ -6,11 +6,13 @@ from celery import shared_task
 from django.db import connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django_tools.middlewares.ThreadLocal import get_current_user
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import Follow, Activity, Publish, Recipient, Event
-from bluebottle.activity_pub.models import Organization
+from bluebottle.activity_pub.models import (
+    Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start
+)
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
@@ -62,7 +64,7 @@ class JSONLDAdapter():
         auth = self.get_auth(get_platform_actor())
         return self.get(url, auth=auth)
 
-    def follow(self, url):
+    def follow(self, url, model=None):
         from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 
         discovered_url = client.get(url)
@@ -70,26 +72,12 @@ class JSONLDAdapter():
 
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
+
         actor = serializer.save()
-        return Follow.objects.create(object=actor)
-
-    def publish(self, activity):
-        if not activity.is_local:
-            raise TypeError('Only local activities can be published')
-
-        # Ensure the activity is saved so recipient relations can be accessed
-        if not activity.pk:
-            activity.save()
-
-        for recipient in activity.recipients.all():
-            if recipient.send:
-                pass
-            actor = recipient.actor
-            inbox = getattr(actor, "inbox", None)
-            if inbox is None or inbox.is_local:
-                logger.warning(f"Actor {actor} has no inbox, skipping publish")
-                continue
-            publish_to_recipient.delay(activity, recipient, connection.tenant)
+        if model:
+            model.object = actor
+        else:
+            return Follow.objects.create(object=actor)
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -100,25 +88,55 @@ class JSONLDAdapter():
         serializer.is_valid(raise_exception=True)
 
         follow = Follow.objects.get(object=event.source)
-        organization = Publish.objects.filter(object=event).first().actor.organization
+        organization = Create.objects.filter(object=event).first().actor.organization
+        owner = follow.default_owner or get_current_user()
+        return serializer.save(owner=owner, host_organization=organization)
 
-        return serializer.save(owner=follow.default_owner, host_organization=organization)
+    def link(self, event, request=None):
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+        from bluebottle.activity_links.serializers import LinkedActivitySerializer
 
-    def create_event(self, activity):
+        data = EventSerializer(instance=event).data
+        linked_activity = event.linked_activity
+        serializer = LinkedActivitySerializer(
+            data=data,
+            instance=linked_activity,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        organization = Create.objects.filter(object=event).first().actor.organization
+
+        save_kwargs = {
+            'host_organization': organization,
+            'event': event
+        }
+
+        return serializer.save(**save_kwargs)
+
+    def create_or_update_event(self, activity):
         from bluebottle.activities.models import Activity as BluebottleActivity
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+
         if not isinstance(activity, BluebottleActivity):
             raise TypeError('Activity must be a BluebottleActivity')
+
         try:
-            event = activity.event
+            instance = activity.event
         except Event.DoesNotExist:
-            federated_serializer = FederatedActivitySerializer(activity)
-            serializer = EventSerializer(data=federated_serializer.data)
-            serializer.is_valid(raise_exception=True)
-            event = serializer.save(activity=activity)
-        if not event.publish_set.exists():
-            Publish.objects.create(actor=get_platform_actor(), object=event)
+            instance = None
+
+        federated_serializer = FederatedActivitySerializer(activity)
+
+        serializer = EventSerializer(
+            data=federated_serializer.data, instance=instance
+        )
+        serializer.is_valid(raise_exception=True)
+        event = serializer.save(activity=activity)
+
+        if not event.create_set.exists():
+            Create.objects.create(actor=get_platform_actor(), object=event)
+
         return event
 
 
@@ -127,48 +145,73 @@ adapter = JSONLDAdapter()
 
 @shared_task(
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
+    name="bluebottle.activity_pub.adapters.publish_activities"
+)
+def publish_activities(recipient, activities, tenant):
+    with LocalTenant(tenant, clear_tenant=True):
+        for activity in activities:
+            if not hasattr(activity, 'event'):
+                adapter.create_or_update_event(activity)
+
+            publish = activity.event.create_set.first()
+            Recipient.objects.get_or_create(actor=recipient, activity=publish)
+
+
+@shared_task(
+    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
     name="bluebottle.activity_pub.adapters.publish_to_recipient"
 )
-def publish_to_recipient(activity, recipient, tenant):
+def publish_to_recipient(recipient, tenant):
     from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
-
     with LocalTenant(tenant, clear_tenant=True):
+        activity = recipient.activity
         actor = recipient.actor
         inbox = getattr(actor, "inbox", None)
+
+        if not activity.is_local:
+            raise TypeError('Only local activities can be published')
+
         if recipient.send:
-            pass
-        actor = recipient.actor
+            raise TypeError('Already published activity to actor')
+
         if inbox is None or inbox.is_local:
             logger.warning(f"Actor {actor} has no inbox, skipping publish")
             pass
+
         try:
             data = ActivitySerializer().to_representation(activity)
             auth = adapter.get_auth(activity.actor)
             adapter.post(inbox.iri, data=data, auth=auth)
             recipient.send = True
             recipient.save()
+
+            if isinstance(activity, Create):
+                if activity.object.activity.status in ('open', 'granted', ):
+                    Start.objects.create(object=activity.object)
+                elif activity.object.activity.status == 'succeeded':
+                    Finish.objects.create(object=activity.object)
+                else:
+                    Cancel.objects.create(object=activity.object)
+
         except Exception as e:
             logger.error(f"Error in publish_to_recipient: {type(e).__name__}: {str(e)}", exc_info=True)
             raise
 
 
-@receiver([post_save])
-def publish_activity(sender, instance, **kwargs):
-    try:
-        if (
-            isinstance(instance, Activity)
-            and not isinstance(instance, Publish)
-            and kwargs['created']
-            and instance.is_local
-        ):
-            for recipient in instance.default_recipients:
-                Recipient.objects.get_or_create(
-                    actor=recipient,
-                    activity=instance,
-                )
-            adapter.publish(instance)
-    except Exception as e:
-        logger.error(f"Failed to publish activity: {str(e)}", exc_info=True)
+@receiver(post_save, sender=Recipient)
+def publish_recipient(instance, created, **kwargs):
+    if created:
+        publish_to_recipient.delay(instance, connection.tenant)
+
+        # Sometimes we need to send follow up activities to the recipient,
+        # for example when the activity transitioned before the recipient was created
+        for transition_cls in [Finish, Cancel]:
+            if isinstance(instance.activity, Create):
+                for transition in transition_cls.objects.filter(object=instance.activity.object):
+                    Recipient.objects.get_or_create(
+                        actor=instance.actor,
+                        activity=transition
+                    )
 
 
 @receiver([post_save])

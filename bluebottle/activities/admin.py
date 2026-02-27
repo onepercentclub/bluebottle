@@ -770,14 +770,14 @@ class ActivityChildAdmin(
         try:
             event = obj.event
             if event:
-                publishes = event.publish_set.all().prefetch_related("recipients__actor")
+                publishes = event.create_set.all().prefetch_related("recipients__actor")
                 for publish in publishes:
                     for recipient in publish.recipients.all():
                         actor = recipient.actor
                         recipients.append(
                             {
                                 "actor": actor,
-                                "adopted": event.announce_set.filter(actor=actor).exists(),
+                                "adopted": event.accept_set.filter(actor=actor).exists(),
                             }
                         )
         except ObjectDoesNotExist:
@@ -806,21 +806,13 @@ class ActivityChildAdmin(
         if not request.user.has_perm("activity.add_activity"):
             raise PermissionDenied
 
-        publish = None
-        if getattr(activity, 'event', None):
-            publish = activity.event.publish_set.first()
+        if not hasattr(activity, 'event'):
+            adapter.create_or_update_event(activity)
 
-        if publish:
-            new_recipients = form.cleaned_data.get('recipients') or []
-            for actor in new_recipients:
-                Recipient.objects.create(actor=actor, activity=publish)
-            adapter.publish(publish)
-        else:
-            event = adapter.create_event(activity)
-            publish = event.publish_set.first()
-            for actor in form.cleaned_data.get('recipients'):
-                Recipient.objects.create(actor=actor, activity=publish)
-            adapter.publish(publish)
+        publish = activity.event.create_set.first()
+        new_recipients = form.cleaned_data.get('recipients') or []
+        for actor in new_recipients:
+            Recipient.objects.get_or_create(actor=actor, activity=publish)
 
         self.message_user(
             request,

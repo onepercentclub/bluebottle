@@ -4,6 +4,7 @@ from django_elasticsearch_dsl import Document, fields
 from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
+from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.documents import deduplicate, get_translated_list, get_translated_segments
@@ -39,6 +40,9 @@ class ActivityDocument(Document):
     type = fields.KeywordField()
     resource_name = fields.KeywordField()
     manager = fields.KeywordField()
+    link = fields.KeywordField()
+    is_local = fields.BooleanField()
+    archived = fields.BooleanField()
 
     def get_queryset(self):
         return super(ActivityDocument, self).get_queryset().select_related(
@@ -60,6 +64,15 @@ class ActivityDocument(Document):
 
     def get_indexing_queryset(self):
         return self.get_queryset()
+
+    def prepare_link(self, instance):
+        return None
+
+    def prepare_is_local(self, instance):
+        return True
+
+    def prepare_archived(self, instance):
+        return False
 
     current_status = fields.NestedField(properties={
         'name': fields.KeywordField(),
@@ -147,6 +160,15 @@ class ActivityDocument(Document):
             'city': TextField(),
             'country': TextField(attr='country.name'),
             'country_code': TextField(attr='country.alpha2_code'),
+        }
+    )
+
+    host_organization = fields.NestedField(
+        attr='host_organization',
+        properties={
+            'id': fields.LongField(),
+            'name': fields.TextField(),
+            'logo': fields.TextField(),
         }
     )
 
@@ -406,3 +428,21 @@ class ActivityDocument(Document):
 
     def prepare_created(self, instance):
         return instance.created
+
+    def prepare_host_organization(self, instance):
+        if not instance.host_organization:
+            return None
+
+        org = instance.host_organization
+        logo_url = None
+        if org.logo and org.logo.file:
+            try:
+                logo_url = tenant_url(org.logo.url)
+            except (ValueError, AttributeError):
+                logo_url = None
+
+        return {
+            'id': org.pk,
+            'name': org.name,
+            'logo': logo_url,
+        }

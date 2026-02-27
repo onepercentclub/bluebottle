@@ -2,31 +2,50 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from urllib.parse import urlparse
 
+import httmock
 import mock
 from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
+from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone
+from djmoney.money import Money
+from pytz import UTC
 from requests import Request, Response
 
+from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, LinkedGrantApplication
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Announce, Follow, Accept, Event, Recipient
+from bluebottle.activity_pub.models import (
+    AdoptionTypeChoices, Follow, Accept, Event,
+    Recipient, RepetitionModeChoices
+)
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectTypeFactory
 from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.geo.models import Geolocation
+from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
+from bluebottle.time_based.models import RegisteredDateActivity
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DeadlineActivityFactory,
+    RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
+    PeriodicActivityFactory,
+    ScheduleActivityFactory,
+)
 
 
 class ActivityPubClient(TestClient):
@@ -99,7 +118,7 @@ class ActivityPubTestCase:
         self.other_tenant = Client.objects.get(schema_name='test2')
         site_settings = SitePlatformSettings.load()
         with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
-            site_settings.favicon = File(BytesIO(image.read()), name='favion.png')
+            site_settings.logo = File(BytesIO(image.read()), name='favion.png')
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
@@ -113,7 +132,7 @@ class ActivityPubTestCase:
 
             site_settings = SitePlatformSettings.load()
             with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
-                site_settings.favicon = File(BytesIO(image.read()), name='favion.png')
+                site_settings.logo = File(BytesIO(image.read()), name='favion.png')
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
@@ -175,18 +194,71 @@ class ActivityPubTestCase:
     def submit(self):
         self.model.states.submit()
         self.model.states.approve(save=True)
-        adapter.create_event(self.model)
+        adapter.create_or_update_event(self.model)
 
     def test_publish(self):
         self.test_accept()
         self.create()
-        publish = self.model.event.publish_set.first()
+        publish = self.model.event.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
-        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             self.event = Event.objects.get()
             self.assertEqual(self.event.name, self.model.title)
+
+    def test_automatic_publish_on_approve(self):
+        self.test_accept()
+
+        self.follow.publish_mode = 'automatic'
+        self.follow.save(update_fields=['publish_mode'])
+
+        with LocalTenant(self.other_tenant):
+            Event.objects.all().delete()
+
+        activity = DeedFactory.create(status='submitted')
+        activity.states.approve(save=True)
+
+        publish = activity.event.create_set.first()
+        self.assertIsNotNone(publish)
+        self.assertTrue(
+            Recipient.objects.filter(activity=publish, actor=self.follow.actor).exists()
+        )
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+            self.assertEqual(event.name, activity.title)
+
+    def test_manual_follow_not_auto_published(self):
+        self.test_accept()
+
+        with LocalTenant(self.other_tenant):
+            Event.objects.all().delete()
+
+        activity = DeedFactory.create(status='submitted')
+        activity.states.approve(save=True)
+
+        event = getattr(activity, 'event', None)
+        self.assertIsNone(event)
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(Event.objects.count(), 0)
+
+    def test_manual_publish_after_approve(self):
+        self.test_accept()
+
+        with LocalTenant(self.other_tenant):
+            Event.objects.all().delete()
+
+        activity = DeedFactory.create(status='submitted')
+        activity.states.approve(save=True)
+
+        adapter.create_or_update_event(activity)
+        publish = activity.event.create_set.first()
+        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+            self.assertEqual(event.name, activity.title)
 
     def test_publish_to_closed_platform(self):
         with LocalTenant(self.other_tenant):
@@ -195,9 +267,8 @@ class ActivityPubTestCase:
         self.test_accept()
         self.create()
 
-        publish = self.model.event.publish_set.first()
+        publish = self.model.event.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
-        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()
@@ -210,8 +281,16 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             self.assertEqual(Event.objects.count(), 0)
 
+    def test_publish_closed_segment(self):
+        self.test_follow()
+        self.create()
+        segment = SegmentFactory.create(closed=True)
+        self.model.segments.add(segment)
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(Event.objects.count(), 0)
+
     def approve(self, activity):
-        activity.theme = ThemeFactory.create()
         activity.states.approve(save=True)
 
     @property
@@ -223,6 +302,11 @@ class ActivityPubTestCase:
 
         return mock_response
 
+    def complete(self):
+        self.adopted.theme = ThemeFactory.create()
+
+
+class AdoptTestCase(ActivityPubTestCase):
     def test_adopt(self):
         self.test_publish()
 
@@ -239,12 +323,15 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
 
-                    self.approve(self.adopted)
-                    announce = Announce.objects.get()
-                    self.assertTrue(announce)
+                    self.complete()
+                    self.adopted.states.submit(save=True)
 
-        announce = Announce.objects.get()
-        self.assertTrue(announce)
+                    self.approve(self.adopted)
+                    accept = Accept.objects.last()
+                    self.assertTrue(accept)
+
+        accept = Accept.objects.first()
+        self.assertTrue(accept)
 
     def test_adopt_default_owner(self):
         self.test_publish()
@@ -267,14 +354,109 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
 
-class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
+class LinkTestCase(ActivityPubTestCase):
+    expected_link_status = 'open'
+
+    def test_follow(self):
+        platform_url = self.build_absolute_url('/')
+
+        with LocalTenant(self.other_tenant):
+            with mock.patch('requests.get', return_value=self.mock_response):
+                follow = Follow(
+                    automatic_adoption_activity_types=[
+                        self.factory._meta.model._meta.model_name
+                    ],
+                    adoption_type=AdoptionTypeChoices.link
+                )
+                adapter.follow(platform_url, follow)
+                follow.save()
+
+        self.follow = Follow.objects.get(object=get_platform_actor())
+
+        self.assertTrue(self.follow)
+        self.assertTrue(self.follow.actor.organization)
+        self.assertTrue(self.follow.actor.organization.logo)
+        self.assertEqual(self.follow.adoption_type, AdoptionTypeChoices.link)
+
+    def test_update_follow(self):
+        self.test_follow()
+
+        with LocalTenant(self.other_tenant):
+            follow = Follow.objects.get()
+            follow.adoption_type = AdoptionTypeChoices.template
+            follow.save()
+
+        follow = Follow.objects.get(object=get_platform_actor())
+        self.assertEqual(follow.adoption_type, AdoptionTypeChoices.template)
+
+    def test_link(self):
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
+        with httmock.HTTMock(image_mock):
+            self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, self.expected_link_status)
+            self.assertEqual(link.title, self.model.title)
+            self.assertTrue(link.image)
+            accept = Accept.objects.get(object=link.event)
+            self.assertEqual(accept.actor, Follow.objects.get().actor)
+
+    def test_link_notifies_source_platform(self):
+        self.test_link()
+
+        accept = Accept.objects.get(object=self.model.event)
+        self.assertEqual(accept.actor, self.follow.actor)
+
+    def test_update(self):
+        title = 'Some new title'
+        self.test_link()
+        self.model.title = title
+
+        with mock.patch('requests.get', return_value=self.mock_response):
+            self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.title, title)
+
+    def test_cancel(self):
+        self.test_link()
+        self.model.states.cancel(save=True)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'cancelled')
+
+    def test_finish(self):
+        self.test_link()
+        self.model.states.succeed(save=True)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'succeeded')
+
+    def test_delete(self):
+        self.test_link()
+        self.model.delete()
+
+        with LocalTenant(self.other_tenant):
+            with self.assertRaises(LinkedActivity.DoesNotExist):
+                LinkedActivity.objects.get()
+
+
+class AdoptDeedTestCase(AdoptTestCase, BluebottleTestCase):
     factory = DeedFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(
             start=(datetime.now() + timedelta(days=10)).date(),
             end=(datetime.now() + timedelta(days=20)).date(),
-            organization=None
+            organization=None,
+            **kwargs
         )
         self.submit()
 
@@ -291,10 +473,79 @@ class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
         self.assertEqual(self.adopted.end, self.model.end)
 
 
-class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
+class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
+    factory = DeedFactory
+
+    def create(self, **kwargs):
+        super().create(
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date(),
+            organization=None,
+            **kwargs
+        )
+        if 'status' not in kwargs:
+            self.submit()
+
+    def test_link_succeeded(self):
+        self.test_accept()
+        self.follow.publish_mode = 'automatic'
+        self.follow.save(update_fields=['publish_mode'])
+
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
+        with httmock.HTTMock(image_mock):
+            self.create(status='succeeded')
+            adapter.create_or_update_event(self.model)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'succeeded')
+
+    def test_link_cancelled(self):
+        self.test_accept()
+        self.follow.publish_mode = 'automatic'
+        self.follow.save(update_fields=['publish_mode'])
+
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
+        with httmock.HTTMock(image_mock):
+            self.create(status='cancelled')
+            adapter.create_or_update_event(self.model)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'cancelled')
+
+    def test_link_manual_succeeded(self):
+        self.test_accept()
+
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
+        with httmock.HTTMock(image_mock):
+            self.create(status='succeeded')
+
+            adapter.create_or_update_event(self.model)
+            publish = self.model.event.create_set.first()
+            Recipient.objects.create(actor=self.follow.actor, activity=publish)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'succeeded')
+
+
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
     factory = FundingFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(
             impact_location=GeolocationFactory.create(country=self.country),
             deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
@@ -305,11 +556,11 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
                     account_id="test-account-id",
                     status="verified",
                 ),
-            )
+            ),
+            **kwargs
         )
 
         BudgetLineFactory.create_batch(2, activity=self.model)
-
         self.submit()
 
     def approve(self, activity):
@@ -327,6 +578,84 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
         activity.states.submit()
         activity.states.approve(save=True)
 
+    def test_update_donated_amount(self):
+        self.test_link()
+
+        with mock.patch('requests.get', return_value=self.mock_response):
+            self.model.amount_donated = Money(12, 'EUR')
+            self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.donated, Money(12, 'EUR'))
+
+    def test_deadline_maps_to_end(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedFunding.objects.get()
+            self.assertEqual(link.end, self.model.deadline)
+
+    def test_image_maps_to_linked_funding_image(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedFunding.objects.get()
+            self.assertIsNotNone(self.model.image, "Original Funding should have an image")
+            self.assertIsNotNone(link.image, "LinkedFunding should have an image mapped from Funding")
+
+    def test_impact_location_maps_to_linked_funding_location(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedFunding.objects.get()
+            self.assertIsNotNone(self.model.impact_location)
+            self.assertIsNotNone(link.location)
+            self.assertEqual(link.location.locality, self.model.impact_location.locality)
+            self.assertEqual(
+                link.location.country.alpha2_code,
+                self.model.impact_location.country.alpha2_code
+            )
+
+
+class FundingTestCase(AdoptTestCase, BluebottleTestCase):
+    factory = FundingFactory
+
+    def create(self, **kwargs):
+        super().create(
+            impact_location=GeolocationFactory.create(country=self.country),
+            deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
+            bank_account=ExternalAccountFactory.create(
+                account_id="some-external-account-id",
+                status="verified",
+                connect_account=StripePayoutAccountFactory.create(
+                    account_id="test-account-id",
+                    status="verified",
+                ),
+            ),
+            **kwargs
+        )
+
+        BudgetLineFactory.create_batch(2, activity=self.model)
+
+        self.submit()
+
+    def complete(self):
+        BudgetLineFactory.create_batch(2, activity=self.adopted)
+
+        self.adopted.bank_account = ExternalAccountFactory.create(
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id",
+                status="verified",
+            )
+        )
+        super().complete()
+
+    def approve(self, activity):
+        activity.states.approve(save=True)
+
     def test_publish(self):
         super().test_publish()
 
@@ -338,10 +667,10 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
             self.assertEqual(self.event.location.longitude, self.model.impact_location.position.y)
             self.assertEqual(self.event.location.name, self.model.impact_location.formatted_address)
             self.assertEqual(
-                self.event.location.address.address_country, self.model.impact_location.country.code
+                self.event.location.address.country, self.model.impact_location.country.code
             )
             self.assertEqual(
-                self.event.location.address.address_locality, self.model.impact_location.locality
+                self.event.location.address.locality, self.model.impact_location.locality
             )
 
     def test_adopt(self):
@@ -355,14 +684,122 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
         )
 
 
-class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
+    factory = GrantApplicationFactory
+
+    def create(self, **kwargs):
+        super().create(
+            impact_location=GeolocationFactory.create(country=self.country),
+            started=datetime.now(get_current_timezone()),
+            **kwargs
+        )
+        self.submit()
+
+    def test_finish(self):
+        self.test_link()
+        self.model.states.succeed(save=True)
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertEqual(link.status, 'succeeded')
+
+    def test_target_maps_to_linked_grant_application(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedGrantApplication.objects.get()
+            self.assertEqual(link.target, self.model.target)
+
+    def test_start_maps_to_linked_grant_application(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedGrantApplication.objects.get()
+            self.assertEqual(link.start, self.model.started)
+
+    def test_impact_location_maps_to_linked_grant_application_location(self):
+        self.test_link()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedGrantApplication.objects.get()
+            self.assertIsNotNone(self.model.impact_location)
+            self.assertIsNotNone(link.location)
+            self.assertEqual(link.location.locality, self.model.impact_location.locality)
+            self.assertEqual(
+                link.location.country.alpha2_code,
+                self.model.impact_location.country.alpha2_code
+            )
+
+
+class GrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
+    factory = GrantApplicationFactory
+
+    def create(self, **kwargs):
+        super().create(
+            impact_location=GeolocationFactory.create(country=self.country),
+            started=datetime.now(get_current_timezone()),
+            **kwargs
+        )
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        adapter.create_or_update_event(self.model)
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.target, self.model.target.amount)
+            self.assertEqual(self.event.target_currency, str(self.model.target.currency))
+            self.assertEqual(self.event.start_time, self.model.started)
+            self.assertEqual(self.event.location.latitude, self.model.impact_location.position.x)
+            self.assertEqual(self.event.location.longitude, self.model.impact_location.position.y)
+            self.assertEqual(self.event.location.name, self.model.impact_location.formatted_address)
+            self.assertEqual(
+                self.event.location.address.country, self.model.impact_location.country.code
+            )
+            self.assertEqual(
+                self.event.location.address.locality, self.model.impact_location.locality
+            )
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.target, self.model.target)
+        self.assertEqual(self.adopted.impact_location.position, self.model.impact_location.position)
+        self.assertEqual(
+            self.adopted.impact_location.country.alpha2_code,
+            self.model.impact_location.country.alpha2_code
+        )
+
+
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkDeadlineActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
 
-    def create(self):
+    def create(self, **kwargs):
         super().create(
             location=GeolocationFactory.create(country=self.country),
             start=(datetime.now() + timedelta(days=10)).date(),
-            deadline=(datetime.now() + timedelta(days=20)).date()
+            deadline=(datetime.now() + timedelta(days=20)).date(),
+            **kwargs
+        )
+        self.submit()
+
+
+class AdoptDeadlineActivityTestCase(AdoptTestCase, BluebottleTestCase):
+    factory = DeadlineActivityFactory
+
+    def create(self, **kwargs):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            deadline=(datetime.now() + timedelta(days=20)).date(),
+            **kwargs
         )
         self.submit()
 
@@ -372,12 +809,199 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
         self.assertEqual(self.event.start_time.date(), self.model.start)
         self.assertEqual(self.event.end_time.date(), self.model.deadline)
 
+    def test_adopt(self):
+        super().test_adopt()
 
-class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
-    factory = DateActivityFactory
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.deadline, self.model.deadline)
+        self.assertEqual(self.adopted.duration, self.model.duration)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )
+
+
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkScheduleActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = ScheduleActivityFactory
 
     def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
+        )
+        self.submit()
+
+    def test_link(self):
+        super().test_link()
+
+
+class AdoptScheduleActivityTestCase(AdoptTestCase, BluebottleTestCase):
+    factory = ScheduleActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
+        )
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.start_time.date(), self.model.start)
+            self.assertEqual(self.event.end_time.date(), self.model.deadline)
+            self.assertEqual(self.event.duration, self.model.duration)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.deadline, self.model.deadline)
+        self.assertEqual(self.adopted.duration, self.model.duration)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )
+
+
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkPeriodicActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = PeriodicActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
+        )
+        self.submit()
+
+
+class AdoptPeriodicActivityTestCase(AdoptTestCase, BluebottleTestCase):
+    factory = PeriodicActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
+        )
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.start_time.date(), self.model.start)
+            self.assertEqual(self.event.duration, self.model.duration)
+            self.assertEqual(self.event.repetition_mode, RepetitionModeChoices.weekly)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.duration, self.model.duration)
+        self.assertEqual(self.adopted.period, self.model.period)
+
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )
+
+
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = RegisteredDateActivityFactory
+    expected_link_status = 'succeeded'
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=datetime.now(tz=UTC) - timedelta(days=10),
+            organization=None
+        )
+        RegisteredDateParticipantFactory.create(activity=self.model)
+        self.submit()
+
+    def test_finish(self):
+        pass
+
+    def test_cancel(self):
+        pass
+
+
+class AdoptRegisteredDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
+    factory = RegisteredDateActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=datetime.now(tz=UTC) - timedelta(days=10),
+            organization=None
+        )
+        RegisteredDateParticipantFactory.create(activity=self.model)
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.start_time.date(), self.model.start.date())
+            if self.model.end:
+                self.assertEqual(self.event.end_time.date(), self.model.end.date())
+            self.assertEqual(self.event.duration, self.model.duration)
+
+    def complete(self):
+        RegisteredDateParticipantFactory.create(activity=self.adopted)
+        super().complete()
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertIsInstance(self.adopted, RegisteredDateActivity)
+        self.assertEqual(self.adopted.start.date(), self.model.start.date())
+        self.assertEqual(self.adopted.duration, self.model.duration)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )
+
+
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkedDateActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self, **kwargs):
         super().create(slots=[], organization=None)
+
+        DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.model,
+            location=None,
+            is_online=True,
+            **kwargs
+        )
+
+        self.submit()
+
+
+class AdoptDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self, **kwargs):
+        super().create(slots=[], organization=None, **kwargs)
 
         DateActivitySlotFactory.create_batch(
             3,
@@ -400,11 +1024,29 @@ class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
             self.assertEqual(self.adopted.slots.count(), 3)
 
 
-class AdoptSingleSlotDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkedSingleSlotDateActivityTestCase(LinkTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
-    def create(self):
-        super().create(slots=[])
+    def create(self, **kwargs):
+        super().create(slots=[], **kwargs)
+
+        DateActivitySlotFactory.create_batch(
+            1,
+            activity=self.model,
+            location=GeolocationFactory.create(country=self.country),
+        )
+
+        self.submit()
+
+
+class AdoptSingleSlotDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self, **kwargs):
+        super().create(slots=[], **kwargs)
 
         DateActivitySlotFactory.create_batch(
             1,
@@ -424,3 +1066,65 @@ class AdoptSingleSlotDateActivityTestCase(ActivityPubTestCase, BluebottleTestCas
 
         with LocalTenant(self.other_tenant):
             self.assertEqual(self.adopted.slots.count(), 1)
+
+
+@override_settings(
+    MAPBOX_API_KEY=None
+)
+class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
+    factory = CollectActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            location_hint='ring rtop bell',
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date(),
+            collect_type=CollectTypeFactory.create(),
+            organization=None
+        )
+        self.submit()
+
+    def test_update_collect_type(self):
+        self.test_link()
+
+        new_collect_type = CollectTypeFactory.create()
+        self.model.collect_type = new_collect_type
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedActivity.objects.get()
+            self.assertIsNotNone(link)
+
+
+class AdoptCollectActivityTestCase(AdoptTestCase, BluebottleTestCase):
+    factory = CollectActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date(),
+            collect_type=CollectTypeFactory.create(),
+            organization=None
+        )
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.start_time.date(), self.model.start)
+            self.assertEqual(self.event.end_time.date(), self.model.end)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        self.assertEqual(self.adopted.start, self.model.start)
+        self.assertEqual(self.adopted.end, self.model.end)
+        self.assertEqual(self.adopted.collect_type.name, self.model.collect_type.name)
+        if self.model.location:
+            self.assertEqual(
+                self.adopted.location.position,
+                self.model.location.position
+            )

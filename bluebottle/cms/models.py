@@ -14,6 +14,7 @@ from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
+from bluebottle.activity_pub.models import Following
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
 from bluebottle.organizations.models import Organization
@@ -707,11 +708,19 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     def is_receiving_activities(self):
         return 'consumer' in (self.share_activities or [])
 
+    @property
+    def is_linking_activities(self):
+        return Following.objects.filter(adoption_type='link').exists()
+
     organization = models.ForeignKey(
         'organizations.Organization',
         verbose_name=_('GoodUp Connect name'),
         null=True, blank=True, on_delete=models.SET_NULL,
-        help_text=_('The organization this platform belongs to.')
+        help_text=_(
+            "This is the name other partners will see when you send connection "
+            "requests or share activities. Use your organisation's official name "
+            "to ensure partners recognise you."
+        )
     )
 
     action_color = ColorField(
@@ -852,7 +861,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             tenant = connection.tenant
             self.organization = Organization.objects.create(
                 name=tenant.name,
-                logo=self.favicon,
+                logo=self.logo,
             )
 
         if self.organization_id and not hasattr(self.organization, 'activity_pub_organization'):

@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activity_pub.models import Actor, Follow
+from bluebottle.activity_pub.models import Actor, Follow, PublishModeChoices
 from bluebottle.activity_pub.utils import get_platform_actor
 
 
@@ -29,7 +29,7 @@ class SharePublishForm(forms.Form):
         old_recipient_ids = []
         old_recipients = []
         try:
-            publish = obj.event.publish_set.first()
+            publish = obj.event.create_set.first()
             if publish:
                 # Recipients are Recipient objects, extract the actors
                 old_recipients = [r.actor for r in publish.recipients.all()]
@@ -56,3 +56,24 @@ class SharePublishForm(forms.Form):
             self.fields['recipients'].help_text = _(
                 'No additional partners available to share with.'
             )
+
+
+class AcceptFollowPublishModeForm(forms.Form):
+    title = _('Accept follow request')
+
+    publish_mode = forms.ChoiceField(
+        label=_('Sharing options'),
+        choices=PublishModeChoices.choices,
+        required=True,
+        help_text=_('Select how you would like to share activities with this consumer'),
+        widget=forms.RadioSelect()
+    )
+
+    def __init__(self, *args, obj=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if obj:
+            self.fields['publish_mode'].initial = obj.publish_mode
+
+
+class PublishActivitiesForm(forms.Form):
+    title = _('Publish all activities')

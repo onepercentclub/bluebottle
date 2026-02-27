@@ -130,6 +130,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
+            granted,
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted,

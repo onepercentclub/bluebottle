@@ -5,6 +5,7 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
+from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from django.contrib.auth.models import Permission
 from django.contrib.gis.geos import Point
 from django.test import tag
@@ -862,6 +863,38 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertFound(matching)
+
+    def test_filter_local(self):
+        remote = (
+            LinkedDeedFactory.create(),
+            LinkedDeedFactory.create(),
+            LinkedFundingFactory.create(),
+        )
+        local = (
+            DeadlineActivityFactory.create(status='open'),
+            DeedFactory.create(status='open')
+        )
+
+        self.search({
+            'is_local': '1'
+
+        })
+
+        self.assertFacets(
+            'is_local',
+            {
+                0: ('Remote activities', 3),
+                1: ('Local activities', 2),
+            }
+        )
+
+        self.assertFound(local)
+
+        self.search({
+            'is_local': '0'
+
+        })
+        self.assertFound(remote)
 
     def test_filter_type_missing(self):
         matching = (

@@ -15,7 +15,9 @@ from bluebottle.activities.states import (
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
-from bluebottle.activity_pub.effects import AnnounceAdoptionEffect
+from bluebottle.activity_pub.effects import (
+    PublishAdoptionEffect, CancelEffect, StartEffect, UpdateEventEffect, FinishEffect
+)
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
@@ -106,6 +108,10 @@ def has_no_end_date(effect):
 class DeedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
         ModelChangedTrigger(
+            ['start', 'end', 'description', 'title', 'image'],
+            effects=[UpdateEventEffect]
+        ),
+        ModelChangedTrigger(
             'end',
             effects=[
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
@@ -155,12 +161,14 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+                StartEffect
             ]
         ),
         TransitionTrigger(
             ActivityStateMachine.approve,
             effects=[
-                AnnounceAdoptionEffect
+                PublishAdoptionEffect,
+                StartEffect
             ]
         ),
 
@@ -175,7 +183,9 @@ class DeedTriggers(ActivityTriggers):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
-                AnnounceAdoptionEffect
+                PublishAdoptionEffect,
+                StartEffect
+
             ]
         ),
 
@@ -200,6 +210,7 @@ class DeedTriggers(ActivityTriggers):
                 ),
                 NotificationEffect(ActivitySucceededNotification),
                 SetEndDateEffect,
+                FinishEffect
             ]
         ),
 
@@ -208,6 +219,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityExpiredNotification),
+                CancelEffect
             ]
         ),
 
@@ -216,6 +228,7 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityRejectedNotification),
+                CancelEffect
             ]
         ),
 
@@ -224,7 +237,8 @@ class DeedTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
-            ]
+                CancelEffect
+            ],
         ),
 
         TransitionTrigger(

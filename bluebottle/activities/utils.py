@@ -842,8 +842,8 @@ def bulk_add_participants(activity, emails, send_messages):
     if isinstance(activity, ScheduleTeam):
         Participant = TeamScheduleParticipant
 
-    settings = MemberPlatformSettings.objects.get()
-    scim_settings = SCIMPlatformSettings.objects.get()
+    settings = MemberPlatformSettings.load()
+    scim_settings = SCIMPlatformSettings.load()
 
     if not Participant:
         raise AttributeError(f'Could not find participant type for {activity}')

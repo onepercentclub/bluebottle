@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-24 10:55+0100\n"
-"PO-Revision-Date: 2026-02-24 10:01\n"
+"POT-Creation-Date: 2026-02-25 10:47+0100\n"
+"PO-Revision-Date: 2026-02-25 12:14\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -465,7 +465,7 @@ msgstr "Términos de servicio"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "{first_name}, there are {count} activities on {site_name} matching your profile"
-msgstr ""
+msgstr "{first_name}, hay {count} actividades en {site_name} correspondientes a tu perfil"
 
 #: bluebottle/activities/messages/matching.py:33
 msgctxt "platform-email"
@@ -566,22 +566,22 @@ msgstr "Editar su actividad"
 #: bluebottle/activities/messages/reviewer.py:22
 msgctxt "platform-email"
 msgid "View this activity"
-msgstr ""
+msgstr "Ver esta actividad"
 
 #: bluebottle/activities/messages/reviewer.py:66
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new activity is ready to be reviewed on {site_name}"
-msgstr ""
+msgstr "Una nueva actividad está lista para ser revisada en {site_name}"
 
 #: bluebottle/activities/messages/reviewer.py:72
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new activity has been published on {site_name}"
-msgstr ""
+msgstr "Se ha publicado una nueva actividad en {site_name}"
 
 #: bluebottle/activities/models.py:37 bluebottle/notifications/models.py:59
-#: bluebottle/time_based/models.py:1617
+#: bluebottle/time_based/models.py:1618
 msgid "Teams"
 msgstr "Equipos"
 
@@ -713,7 +713,7 @@ msgstr "¿El usuario ha aceptado los términos de servicio para esta actividad?"
 
 #: bluebottle/activities/models.py:280
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:87
-#: bluebottle/cms/models.py:375 bluebottle/segments/admin.py:120
+#: bluebottle/cms/models.py:375 bluebottle/segments/admin.py:144
 msgid "Activities"
 msgstr "Actividades"
 
@@ -783,11 +783,11 @@ msgstr "Contribuciones"
 msgid "Effort"
 msgstr "Éffort"
 
-#: bluebottle/activities/models.py:482 bluebottle/time_based/models.py:1616
+#: bluebottle/activities/models.py:482 bluebottle/time_based/models.py:1617
 msgid "Team"
 msgstr "Equipo"
 
-#: bluebottle/activities/models.py:492 bluebottle/time_based/models.py:1641
+#: bluebottle/activities/models.py:492 bluebottle/time_based/models.py:1642
 #, python-brace-format
 msgid "Team {name}"
 msgstr "Equipo {name}"
@@ -1542,37 +1542,40 @@ msgid "\n"
 "            There are tons of cool activities on %(site_name)s that are making a positive impact.\n\n"
 "            We have selected %(count)s activities that match with your profile. Join us!\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hay un montón de actividades geniales en %(site_name)s que están teniendo un impacto positivo.\n\n"
+"            Hemos seleccionado %(count)s actividades que coinciden con tu perfil. ¡Únete a nosotros!\n"
+"        "
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:17
 msgctxt "platform-email"
 msgid "Complete your profile"
-msgstr ""
+msgstr "Completa tu perfil"
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:19
 msgctxt "platform-email"
 msgid ", so that we can select even more relevant activities for you."
-msgstr ""
+msgstr ", para que podamos seleccionar actividades aún más relevantes para usted."
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:44
 msgctxt "platform-email"
 msgid "Online / Remote"
-msgstr ""
+msgstr "En línea / Remoto"
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:73
 msgctxt "platform-email"
 msgid "No specific skill needed"
-msgstr ""
+msgstr "No se necesita habilidad específica"
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:96
 msgctxt "platform-email"
 msgid "Don't want to receive this monthly update anymore? Unsubscribe"
-msgstr ""
+msgstr "¿No quieres recibir esta actualización mensual? Desuscribirte"
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:97
 msgctxt "platform-email"
 msgid "via your profile page."
-msgstr ""
+msgstr "a través de tu página de perfil."
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-base.html:18
 #, python-format
@@ -1580,7 +1583,9 @@ msgctxt "platform-email"
 msgid "\n"
 "      Go to <a href=\"%(profile_url)s\">your profile</a> to opt-out.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"      Ve a <a href=\"%(profile_url)s\">tu perfil</a> para salir.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/reminder-q1.html:6
 #, python-format
@@ -1750,19 +1755,19 @@ msgstr "\n"
 "Por favor, tómate un momento para revisar esta actividad y decidir si es adecuada para tu plataforma.<br>\n"
 "%(initiator_name)s estará esperando tu revisión, así que por favor responde con prontitud.<br>\n"
 
-#: bluebottle/activities/utils.py:528 bluebottle/activities/utils.py:529
+#: bluebottle/activities/utils.py:536 bluebottle/activities/utils.py:537
 msgid "Description is required"
 msgstr "Descripción requerida"
 
-#: bluebottle/activities/views.py:293 bluebottle/activities/views.py:304
+#: bluebottle/activities/utils.py:622 bluebottle/activities/utils.py:633
 msgid "Not a valid email address"
 msgstr "No es una dirección de correo válida"
 
-#: bluebottle/activities/views.py:306
+#: bluebottle/activities/utils.py:635
 msgid "User with email address not found"
 msgstr "Usuario con dirección de correo electrónico no encontrado"
 
-#: bluebottle/activities/views.py:324
+#: bluebottle/activities/utils.py:643
 msgid "Already participating"
 msgstr "Ya participando"
 
@@ -2199,28 +2204,28 @@ msgstr "Iniciar sesión"
 #, python-format
 msgctxt "platform-email"
 msgid "You're receiving this email because you requested a password reset for your user account at %(site_name)s."
-msgstr ""
+msgstr "Estás recibiendo este correo electrónico porque has solicitado restablecer tu contraseña para tu cuenta de usuario en %(site_name)s."
 
 #: bluebottle/auth/templates/registration/password_reset_email.html:4
 msgctxt "platform-email"
 msgid "Please go to the following page and choose a new password:"
-msgstr ""
+msgstr "Por favor, vaya a la siguiente página y elija una nueva contraseña:"
 
 #: bluebottle/auth/templates/registration/password_reset_email.html:8
 msgctxt "platform-email"
 msgid "Your username, in case you've forgotten:"
-msgstr ""
+msgstr "Tu nombre de usuario, en caso de que lo hayas olvidado:"
 
 #: bluebottle/auth/templates/registration/password_reset_email.html:10
 msgctxt "platform-email"
 msgid "Thanks for using our site!"
-msgstr ""
+msgstr "¡Gracias por usar nuestro sitio!"
 
 #: bluebottle/auth/templates/registration/password_reset_email.html:12
 #, python-format
 msgctxt "email"
 msgid "The %(site_name)s team"
-msgstr ""
+msgstr "El equipo %(site_name)s"
 
 #: bluebottle/auth/views.py:37
 msgid "Authentication was cancelled"
@@ -2485,7 +2490,15 @@ msgid "\n\n"
 "            this email.\n"
 "        </small>\n"
 "    "
-msgstr ""
+msgstr "\n\n"
+"        Hola,\n"
+"        <br><br>\n"
+"        Parece que has solicitado un restablecimiento de contraseña para %(site_name)s.\n"
+"        <br><br>\n"
+"        <small>Si no has solicitado un restablecimiento de tu contraseña, puedes ignorar\n"
+"            este correo electrónico.\n"
+"        </small>\n"
+"    "
 
 #: bluebottle/bb_accounts/templates/bb_accounts/password_reset_email.html:19
 msgctxt "platform-email"
@@ -2497,15 +2510,15 @@ msgstr "Restablecer contraseña"
 msgid "Password reset for %(site_name)s"
 msgstr "Restablecimiento de contraseña para %(site_name)s"
 
-#: bluebottle/bb_accounts/views.py:275
+#: bluebottle/bb_accounts/views.py:276
 msgid "The link to activate your account has already been used."
 msgstr "El enlace para activar tu cuenta ya ha sido utilizado."
 
-#: bluebottle/bb_accounts/views.py:278
+#: bluebottle/bb_accounts/views.py:279
 msgid "The link to activate your account has expired. Please sign up again."
 msgstr "El enlace para activar tu cuenta ha caducado. Por favor, regístrate de nuevo."
 
-#: bluebottle/bb_accounts/views.py:280
+#: bluebottle/bb_accounts/views.py:281
 msgid "Something went wrong on our side. Please sign up again."
 msgstr "Algo salió mal por nuestro lado. Por favor, regístrate de nuevo."
 
@@ -3631,7 +3644,7 @@ msgid "item"
 msgstr "objeto"
 
 #: bluebottle/collect/models.py:74 bluebottle/time_based/models.py:318
-#: bluebottle/time_based/models.py:557 bluebottle/time_based/models.py:2011
+#: bluebottle/time_based/models.py:557 bluebottle/time_based/models.py:2012
 msgid "location hint"
 msgstr "pista de ubicación"
 
@@ -3650,7 +3663,7 @@ msgstr "Recopilar la campaña"
 #: bluebottle/collect/models.py:123
 #, python-brace-format
 msgid "Collecting {type}"
-msgstr ""
+msgstr "Recolectando {type}"
 
 #: bluebottle/collect/models.py:130
 #, python-brace-format
@@ -4063,7 +4076,7 @@ msgstr "Videos más grandes que 10MB ralentizará la página demasiado."
 msgid "Follow {activity} by {user}"
 msgstr "Seguir a {activity} por {user}"
 
-#: bluebottle/follow/effects.py:42 bluebottle/time_based/effects/effects.py:449
+#: bluebottle/follow/effects.py:42 bluebottle/time_based/effects/effects.py:457
 #, python-brace-format
 msgid "Unfollow {activity} by {user}"
 msgstr "Dejar de seguir a {activity} por {user}"
@@ -4616,7 +4629,7 @@ msgstr "Cuenta de pago incompleta para ejecutar la campaña"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new crowdfunding campaign is ready to be reviewed on {site_name}"
-msgstr ""
+msgstr "Una nueva campaña de crowdfunding está lista para ser revisada en {site_name}"
 
 #: bluebottle/funding/models.py:54
 msgid "Payment currency"
@@ -4635,7 +4648,7 @@ msgid "If you enter a deadline, leave the duration field empty. This will overri
 msgstr "Si introduce un plazo, deje el campo de duración vacío. Esto anulará la duración."
 
 #: bluebottle/funding/models.py:148 bluebottle/time_based/models.py:451
-#: bluebottle/time_based/models.py:1969 bluebottle/time_based/models.py:1993
+#: bluebottle/time_based/models.py:1970 bluebottle/time_based/models.py:1994
 msgid "duration"
 msgstr "duración"
 
@@ -4864,7 +4877,7 @@ msgstr "El objetivo no se puede cambiar una vez que la financiación ha sido pub
 msgid "Deadline cannot be changed after the funding has been published."
 msgstr "La fecha límite no se puede cambiar una vez que la financiación ha sido publicada."
 
-#: bluebottle/funding/serializers.py:458 bluebottle/funding/serializers.py:626
+#: bluebottle/funding/serializers.py:458 bluebottle/funding/serializers.py:625
 msgid "Pledge"
 msgstr "Compromiso"
 
@@ -4880,17 +4893,17 @@ msgstr "El monto debe ser mayor o igual al monto de la recompensa."
 msgid "User can only be set, not changed."
 msgstr "El usuario sólo se puede establecer, no modificar."
 
-#: bluebottle/funding/serializers.py:670
+#: bluebottle/funding/serializers.py:669
 #, python-brace-format
 msgid "Amount must be at least {amount} {currency}"
 msgstr "La cantidad debe ser al menos {amount} {currency}"
 
-#: bluebottle/funding/serializers.py:687
+#: bluebottle/funding/serializers.py:686
 #, python-brace-format
 msgid "Amount cannot exceed {amount} {currency}"
 msgstr "La cantidad no puede exceder {amount} {currency}"
 
-#: bluebottle/funding/serializers.py:714
+#: bluebottle/funding/serializers.py:713
 msgid "Donations cannot exceed the target amount"
 msgstr "Las donaciones no pueden exceder la cantidad objetivo."
 
@@ -5891,7 +5904,9 @@ msgctxt "platform-email"
 msgid "\n"
 "    <strong>Please transfer the amount of %(amount)s to \"%(title)s\".</strong><br />\n"
 "    "
-msgstr ""
+msgstr "\n"
+"    <strong>Por favor transfiere %(amount)s a \"%(title)s\".</strong><br />\n"
+"    "
 
 #: bluebottle/funding/templates/mails/messages/funding/reviewer/campaign_submitted.html:5
 #, python-format
@@ -5910,7 +5925,7 @@ msgstr "\n"
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:25
 msgctxt "platform-email"
 msgid "Reward:"
-msgstr ""
+msgstr "Recompensa:"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:35
 #: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:3
@@ -5921,7 +5936,7 @@ msgstr "Fecha"
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:43
 msgctxt "platform-email"
 msgid "Order"
-msgstr ""
+msgstr "Pedido"
 
 #: bluebottle/funding/templates/mails/messages/partials/withdraw_notification.html:3
 msgctxt "platform-email"
@@ -6230,15 +6245,15 @@ msgstr "Cuenta de pago de stripe"
 msgid "stripe payout accounts"
 msgstr "cuentas de pago de stripe"
 
-#: bluebottle/funding_stripe/models.py:662
+#: bluebottle/funding_stripe/models.py:663
 msgid "Starts with 'ba_...'"
 msgstr "Comienza con 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:710
+#: bluebottle/funding_stripe/models.py:711
 msgid "Bank account"
 msgstr "Cuenta bancaria"
 
-#: bluebottle/funding_stripe/models.py:711
+#: bluebottle/funding_stripe/models.py:712
 msgid "Bank accounts"
 msgstr "Cuentas bancarias"
 
@@ -6366,7 +6381,7 @@ msgstr "Grupo de ubicación de trabajo"
 msgid "Work location region"
 msgstr "Región de ubicación de trabajo"
 
-#: bluebottle/geo/admin.py:148 bluebottle/segments/admin.py:106
+#: bluebottle/geo/admin.py:148 bluebottle/segments/admin.py:130
 msgid "SSO"
 msgstr "SO"
 
@@ -6691,7 +6706,7 @@ msgstr "Tu identidad ha sido verificada"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A grant payment request is ready on {site_name}"
-msgstr ""
+msgstr "Una solicitud de pago de subvención está lista en {site_name}"
 
 #: bluebottle/grant_management/messages/grant_provider.py:33
 msgctxt "platform-email"
@@ -6702,18 +6717,18 @@ msgstr "Pagar ahora"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new grant application is ready to be reviewed on {site_name}"
-msgstr ""
+msgstr "Una nueva solicitud de subvención está lista para ser revisada en {site_name}"
 
 #: bluebottle/grant_management/messages/reviewer.py:22
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have grant payout to approve on {site_name}"
-msgstr ""
+msgstr "Tienes un pago de subvención por aprobar en {site_name}"
 
 #: bluebottle/grant_management/messages/reviewer.py:26
 msgctxt "platform-email"
 msgid "Complete payout"
-msgstr ""
+msgstr "Completar pago"
 
 #: bluebottle/grant_management/models.py:39
 msgid "Every week"
@@ -7224,12 +7239,12 @@ msgstr "\n"
 #: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:18
 msgctxt "platform-email"
 msgid "Grant requester"
-msgstr ""
+msgstr "Solicitante de la subvención"
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:19
 msgctxt "platform-email"
 msgid "Granted amount"
-msgstr ""
+msgstr "Monto otorgado"
 
 #: bluebottle/impact/admin.py:20
 msgid "Unit"
@@ -8778,7 +8793,7 @@ msgstr "El registro requiere un token de confirmación"
 msgid "Password does not match"
 msgstr "Las contraseñas no coinciden"
 
-#: bluebottle/members/serializers.py:892
+#: bluebottle/members/serializers.py:900
 msgid "The two password fields didn't match."
 msgstr "Los dos campos de contraseña no coinciden."
 
@@ -8898,14 +8913,16 @@ msgstr "Hola %(first_name)s,"
 msgctxt "platform-email"
 msgid "\n"
 "<p >You’re now officially part of the %(site_name)s community. Connect, share and work with others on initiatives that you care about.</p>\n"
-msgstr ""
+msgstr "\n"
+"<p >Ahora eres oficialmente parte de la comunidad %(site_name)s. Conecta, comparte y trabaja con otros en iniciativas que te interesan.</p>\n"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:16
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
 "<p>If you have any questions please don’t hesitate to contact %(contact_email)s</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Si tienes alguna pregunta, no dudes en contactar con %(contact_email)s</p>\n"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:27
 msgctxt "platform-email"
@@ -9626,23 +9643,31 @@ msgstr "¿Está seguro de que desea restablecer el token scim?"
 msgid "Reset token"
 msgstr "Tóken de reinicio"
 
-#: bluebottle/segments/admin.py:98 bluebottle/settings/admin_dashboard.py:239
+#: bluebottle/segments/admin.py:77
+msgid "Enter one domain per line or separate by commas."
+msgstr "Ingresa un dominio por línea o sepáralo por comas."
+
+#: bluebottle/segments/admin.py:78 bluebottle/segments/models.py:140
+msgid "Email domains"
+msgstr "Dominios de correo electrónico"
+
+#: bluebottle/segments/admin.py:122 bluebottle/settings/admin_dashboard.py:239
 msgid "Content"
 msgstr "Contenido"
 
-#: bluebottle/segments/admin.py:126 bluebottle/time_based/admin.py:514
+#: bluebottle/segments/admin.py:150 bluebottle/time_based/admin.py:514
 msgid "Members"
 msgstr "Miembros"
 
-#: bluebottle/segments/admin.py:133
+#: bluebottle/segments/admin.py:157
 msgid "Segment type"
 msgstr "Tipo de segmento"
 
-#: bluebottle/segments/admin.py:138
+#: bluebottle/segments/admin.py:162
 msgid "Text colour"
 msgstr "Color del texto"
 
-#: bluebottle/segments/admin.py:157
+#: bluebottle/segments/admin.py:181
 msgid "Number of segments"
 msgstr "Número de segmentos"
 
@@ -9713,10 +9738,6 @@ msgstr "Historia"
 #: bluebottle/segments/models.py:119
 msgid "A more detailed story for your segment. This story can be accessed via a link on the page."
 msgstr "Una historia más detallada para tu segmento. Se puede acceder a esta historia a través de un enlace en la página."
-
-#: bluebottle/segments/models.py:140
-msgid "Email domains"
-msgstr "Dominios de correo electrónico"
 
 #: bluebottle/segments/models.py:143
 msgid "Users with email addresses for this domain are automatically added to this segment."
@@ -9830,7 +9851,8 @@ msgstr "Ajustes"
 msgid "Manage Reporting"
 msgstr "Administrar Reporte"
 
-#: bluebottle/settings/testing.py:427 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:437
+#: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9843,26 +9865,28 @@ msgstr "Administrar Reporte"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/impact-booster/settings.py:28
+#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
-#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
-#: tenants/maximising-potential/settings.py:27
-#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
+#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
+#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
+#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
+#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
-#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
+#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
+#: tenants/purpose-in-action/settings.py:27
+#: tenants/rhi-magnesita/settings.py:25
+#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
 #: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Inglés"
 
-#: bluebottle/settings/testing.py:428 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
+#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:438
+#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
+#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
@@ -9873,12 +9897,13 @@ msgstr "Inglés"
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
-#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
+#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
+#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
+#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
-#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
-#: tenants/purpose-in-action/settings.py:26
+#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
+#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
+#: tenants/rabobank-cooperatief/settings.py:23
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -9893,28 +9918,31 @@ msgstr "Inglés"
 msgid "Dutch"
 msgstr "Neerlandés"
 
-#: bluebottle/settings/testing.py:429 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
+#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:439
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Francés"
 
-#: bluebottle/settings/testing.py:430
+#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:440
+#: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Español"
 
-#: bluebottle/settings/testing.py:431
+#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:441
+#: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Alemán"
 
-#: bluebottle/settings/testing.py:432
+#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:442
 msgid "Portuguese"
 msgstr "Portugués"
 
-#: bluebottle/settings/testing.py:433
+#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:443
+#: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Húngaro"
 
-#: bluebottle/settings/testing.py:434
+#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:444
 msgid "Bulgarian"
 msgstr "Búlgaro"
 
@@ -10144,7 +10172,7 @@ msgstr "Hora, fecha y ubicación"
 
 #: bluebottle/time_based/admin.py:412
 msgid "Email participants that they have been added to this team."
-msgstr ""
+msgstr "Enviar correo electrónico a los participantes de que han sido añadidos a este equipo."
 
 #: bluebottle/time_based/admin.py:476 bluebottle/time_based/admin.py:1520
 #: bluebottle/time_based/admin.py:1583 bluebottle/time_based/admin.py:1652
@@ -10330,8 +10358,8 @@ msgstr "usuarios"
 msgid "Users with this skill"
 msgstr "Usuarios con esta habilidad"
 
-#: bluebottle/time_based/effects/effects.py:20
-#: bluebottle/time_based/effects/effects.py:113
+#: bluebottle/time_based/effects/effects.py:21
+#: bluebottle/time_based/effects/effects.py:114
 #: bluebottle/time_based/effects/participants.py:20
 #: bluebottle/time_based/effects/participants.py:52
 #: bluebottle/time_based/effects/participants.py:56
@@ -10341,41 +10369,41 @@ msgstr "Usuarios con esta habilidad"
 msgid "Create contribution"
 msgstr "Crear contribución"
 
-#: bluebottle/time_based/effects/effects.py:38
-#: bluebottle/time_based/effects/effects.py:55
-#: bluebottle/time_based/effects/effects.py:72
+#: bluebottle/time_based/effects/effects.py:39
+#: bluebottle/time_based/effects/effects.py:56
+#: bluebottle/time_based/effects/effects.py:73
 #: bluebottle/time_based/effects/participants.py:168
 msgid "Create preparation time contribution"
 msgstr "Crear contribución de tiempo de preparación"
 
-#: bluebottle/time_based/effects/effects.py:101
+#: bluebottle/time_based/effects/effects.py:102
 msgid "Update related contributions"
 msgstr "Actualizar contribuciones relacionadas"
 
-#: bluebottle/time_based/effects/effects.py:142
+#: bluebottle/time_based/effects/effects.py:143
 msgid "Create overall contribution"
 msgstr "Crear contribución total"
 
-#: bluebottle/time_based/effects/effects.py:150
+#: bluebottle/time_based/effects/effects.py:151
 #: bluebottle/time_based/templates/admin/set_end_date.html:2
 msgid "End the activity"
 msgstr "Finalizar la actividad"
 
-#: bluebottle/time_based/effects/effects.py:158
+#: bluebottle/time_based/effects/effects.py:159
 msgid "Clear the deadline of the activity"
 msgstr "Borrar la fecha límite de la actividad"
 
-#: bluebottle/time_based/effects/effects.py:278
+#: bluebottle/time_based/effects/effects.py:279
 #, python-brace-format
 msgid "Unlock unfilled slots for {activity}"
 msgstr "Desbloquear ranuras sin llenar para {activity}"
 
-#: bluebottle/time_based/effects/effects.py:308
+#: bluebottle/time_based/effects/effects.py:309
 #, python-brace-format
 msgid "Lock filled slots for {activity}"
 msgstr "Bloquear espacios llenados para {activity}"
 
-#: bluebottle/time_based/effects/effects.py:428
+#: bluebottle/time_based/effects/effects.py:436
 #, python-brace-format
 msgid "Check preparation time contribution for {participant}"
 msgstr "Comprobar la contribución del tiempo de preparación para {participant}"
@@ -10485,19 +10513,19 @@ msgstr "Se ha cambiado la fecha límite para su actividad \"{title}\""
 #, python-brace-format
 msgctxt "platform-email"
 msgid "on {start}"
-msgstr ""
+msgstr "en {start}"
 
 #: bluebottle/time_based/messages.py:101
 msgctxt "platform-email"
 msgid "immediately"
-msgstr ""
+msgstr "inmediatamente"
 
 #: bluebottle/time_based/messages.py:105
 #: bluebottle/time_based/messages/messages.py:108
 #, python-brace-format
 msgctxt "platform-email"
 msgid "ends on {end}"
-msgstr ""
+msgstr "termina el {end}"
 
 #: bluebottle/time_based/messages.py:117
 #: bluebottle/time_based/messages/messages.py:120
@@ -10554,14 +10582,14 @@ msgstr "Has sido añadido a la actividad \"{title}\" 🎉"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your team was added to the activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Tu equipo fue añadido a la actividad \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:387
 #: bluebottle/time_based/messages/messages.py:390
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have been added to a team on \"{site_name}\" 🎉"
-msgstr ""
+msgstr "Has sido añadido a un equipo en \"{site_name}\" 🎉"
 
 #: bluebottle/time_based/messages.py:412
 #: bluebottle/time_based/messages/messages.py:415
@@ -10703,7 +10731,7 @@ msgstr "Un participante ha sido añadido a tu actividad \"{title}\" 🎉"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A team has been added to your activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Un equipo ha sido añadido a tu actividad \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:899
 #: bluebottle/time_based/messages/messages.py:918
@@ -10729,7 +10757,7 @@ msgstr "¡Tu actividad en {site_name} ha sido registrada!"
 #: bluebottle/time_based/messages/messages.py:104
 msgctxt "lemai"
 msgid "immediately"
-msgstr ""
+msgstr "inmediatamente"
 
 #: bluebottle/time_based/messages/participants.py:109
 #, python-brace-format
@@ -10753,13 +10781,13 @@ msgstr "Tienes una nueva aplicación para tu actividad \"{title}\" 🎉"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant for your activity \"{title}\" has stopped"
-msgstr ""
+msgstr "Un participante para su actividad \"{title}\" se ha detenido"
 
 #: bluebottle/time_based/messages/registrations.py:52
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant for your activity \"{title}\" has restarted"
-msgstr ""
+msgstr "Un participante para su actividad \"{title}\" se ha reiniciado"
 
 #: bluebottle/time_based/messages/registrations.py:75
 msgid "month"
@@ -10775,7 +10803,7 @@ msgstr "Ha sido seleccionado para la actividad \"{title}\""
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your team has been selected for the activity \"{title}\""
-msgstr ""
+msgstr "Su equipo ha sido seleccionado para la actividad \"{title}\""
 
 #: bluebottle/time_based/messages/registrations.py:122
 #, python-brace-format
@@ -10787,19 +10815,19 @@ msgstr "Has sido eliminado de la actividad \"{title}\""
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your team has not been selected for the activity \"{title}\""
-msgstr ""
+msgstr "Su equipo no ha sido seleccionado para la actividad \"{title}\""
 
 #: bluebottle/time_based/messages/registrations.py:135
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your contribution to the activity \"{title}\" has been stopped"
-msgstr ""
+msgstr "Tu contribución a la actividad \"{title}\" ha sido detenida"
 
 #: bluebottle/time_based/messages/registrations.py:142
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your contribution to the activity \"{title}\" has been restarted"
-msgstr ""
+msgstr "Tu contribución a la actividad \"{title}\" ha sido reiniciada"
 
 #: bluebottle/time_based/messages/registrations.py:150
 msgctxt "platform-email"
@@ -10820,112 +10848,112 @@ msgstr "meses"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new team has applied to your activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Un nuevo equipo ha aplicado a tu actividad \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages/registrations.py:230
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have a new team for your activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Tienes un nuevo equipo para tu actividad \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages/registrations.py:235
 #: bluebottle/time_based/messages/registrations.py:240
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have registered your team on \"{site_name}\""
-msgstr ""
+msgstr "Has registrado tu equipo en \"{site_name}\""
 
 #: bluebottle/time_based/messages/reviewer.py:8
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new activity has been registered on {site_name}"
-msgstr ""
+msgstr "Se ha registrado una nueva actividad en {site_name}"
 
 #: bluebottle/time_based/messages/teams.py:18
 #: bluebottle/time_based/messages/teams.py:116
 msgctxt "platform-email"
 msgid "Open your team"
-msgstr ""
+msgstr "Abre tu equipo"
 
 #: bluebottle/time_based/messages/teams.py:33
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A team has been removed from your activity \"{title}\""
-msgstr ""
+msgstr "Un equipo ha sido eliminado de su actividad \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:42
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A team has withdrawn from your activity \"{title}\""
-msgstr ""
+msgstr "Un equipo se ha retirado de tu actividad \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:56
 #: bluebottle/time_based/messages/teams.py:168
 #: bluebottle/time_based/messages/teams.py:255
 msgctxt "platform-email"
 msgid "View team"
-msgstr ""
+msgstr "Ver equipo"
 
 #: bluebottle/time_based/messages/teams.py:71
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your team was removed from the activity \"{title}\""
-msgstr ""
+msgstr "Tu equipo fue eliminado de la actividad \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:80
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You withdrew your team from the activity \"{title}\""
-msgstr ""
+msgstr "Has retirado a tu equipo de la actividad \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:90
 #: bluebottle/time_based/messages/teams.py:215
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your team has been scheduled for the activity \"{title}\""
-msgstr ""
+msgstr "Su equipo ha sido programado para la actividad \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:131
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Someone has joined your team on {site_name}"
-msgstr ""
+msgstr "Alguien se ha unido a tu equipo en {site_name}"
 
 #: bluebottle/time_based/messages/teams.py:142
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant has been removed from your team for the activity \"{title}\""
-msgstr ""
+msgstr "Un participante ha sido eliminado de tu equipo para la actividad \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:153
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant has withdrawn from your team for the activity \"{title}\""
-msgstr ""
+msgstr "Un participante se ha retirado de tu equipo para la actividad \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:183
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You are now part of {name}'s team on {site_name}"
-msgstr ""
+msgstr "Ahora eres parte del equipo de {name} en {site_name}"
 
 #: bluebottle/time_based/messages/teams.py:193
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have been removed from {name}'s team for the activity \"{title}\""
-msgstr ""
+msgstr "Has sido eliminado del equipo de {name} por la actividad \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:204
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have withdrawn from {name}'s team for the activity \"{title}\""
-msgstr ""
+msgstr "Te has retirado del equipo de {name} para la actividad \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:231
 #, python-brace-format
 msgctxt "platform-email"
 msgid "The date or location for your team has been changed for the activity \"{title}\""
-msgstr ""
+msgstr "La fecha o ubicación de tu equipo ha sido cambiada para la actividad \"{title}\""
 
 #: bluebottle/time_based/models.py:43 bluebottle/time_based/models.py:298
 msgid "attendee limit"
@@ -11016,7 +11044,7 @@ msgid "Free"
 msgstr "Gratis"
 
 #: bluebottle/time_based/models.py:214 bluebottle/time_based/models.py:307
-#: bluebottle/time_based/models.py:2000
+#: bluebottle/time_based/models.py:2001
 msgid "online meeting link"
 msgstr "enlace de reunión online"
 
@@ -11025,26 +11053,26 @@ msgid "Activities on a date"
 msgstr "Actividades en una fecha"
 
 #: bluebottle/time_based/models.py:301 bluebottle/time_based/models.py:550
-#: bluebottle/time_based/models.py:1996
+#: bluebottle/time_based/models.py:1997
 msgid "is online"
 msgstr "está conectado"
 
 #: bluebottle/time_based/models.py:313 bluebottle/time_based/models.py:553
 #: bluebottle/time_based/models.py:721 bluebottle/time_based/models.py:868
-#: bluebottle/time_based/models.py:2005
+#: bluebottle/time_based/models.py:2006
 msgid "location"
 msgstr "ubicación"
 
 #: bluebottle/time_based/models.py:349 bluebottle/time_based/models.py:383
-#: bluebottle/time_based/models.py:1919 bluebottle/time_based/models.py:1951
+#: bluebottle/time_based/models.py:1920 bluebottle/time_based/models.py:1952
 #, python-brace-format
 msgid "\n"
 "Join: {url}"
 msgstr "\n"
 "Únete: {url}"
 
-#: bluebottle/time_based/models.py:450 bluebottle/time_based/models.py:1899
-#: bluebottle/time_based/models.py:1991
+#: bluebottle/time_based/models.py:450 bluebottle/time_based/models.py:1900
+#: bluebottle/time_based/models.py:1992
 msgid "start date and time"
 msgstr "fecha y hora de inicio"
 
@@ -11218,143 +11246,143 @@ msgstr "Candidar {name} para {activity}"
 msgid "Candidate {name}"
 msgstr "Candidar {name}"
 
-#: bluebottle/time_based/models.py:1199
+#: bluebottle/time_based/models.py:1200
 msgid "Candidate"
 msgstr "Candidar"
 
-#: bluebottle/time_based/models.py:1200
+#: bluebottle/time_based/models.py:1201
 msgid "Candidates"
 msgstr "Candidatos"
 
-#: bluebottle/time_based/models.py:1223
+#: bluebottle/time_based/models.py:1224
 msgid "Candidate for date activities"
 msgstr "Candidato para actividades de fecha"
 
-#: bluebottle/time_based/models.py:1224
+#: bluebottle/time_based/models.py:1225
 msgid "Candidates for date activities"
 msgstr "Candidatos para actividades de fecha"
 
-#: bluebottle/time_based/models.py:1273
+#: bluebottle/time_based/models.py:1274
 msgid "Candidate for flexible activities"
 msgstr "Candidar para actividades flexibles"
 
-#: bluebottle/time_based/models.py:1274
+#: bluebottle/time_based/models.py:1275
 msgid "Candidates for flexible activities"
 msgstr "Cándidos para actividades flexibles"
 
-#: bluebottle/time_based/models.py:1320
+#: bluebottle/time_based/models.py:1321
 msgid "Candidate for schedule activities"
 msgstr "Candidar para programar actividades"
 
-#: bluebottle/time_based/models.py:1321
+#: bluebottle/time_based/models.py:1322
 msgid "Candidates for schedule activities"
 msgstr "Candidatos para programar actividades"
 
-#: bluebottle/time_based/models.py:1370
+#: bluebottle/time_based/models.py:1371
 msgid "Candidate for recurring activities"
 msgstr "Candidar para actividades recurrentes"
 
-#: bluebottle/time_based/models.py:1371
+#: bluebottle/time_based/models.py:1372
 msgid "Candidates for recurring activities"
 msgstr "Candidatos para actividades recurrentes"
 
-#: bluebottle/time_based/models.py:1439
+#: bluebottle/time_based/models.py:1440
 msgid "Participant to flexible activities"
 msgstr "Participante en actividades flexibles"
 
-#: bluebottle/time_based/models.py:1440
+#: bluebottle/time_based/models.py:1441
 msgid "Participants to flexible activities"
 msgstr "Participantes en actividades flexibles"
 
-#: bluebottle/time_based/models.py:1482
+#: bluebottle/time_based/models.py:1483
 msgid "Participant to past date activity"
 msgstr "Participante a actividad de fecha pasada"
 
-#: bluebottle/time_based/models.py:1483
+#: bluebottle/time_based/models.py:1484
 msgid "Participants to past date activity"
 msgstr "Participantes a actividad de fecha pasada"
 
-#: bluebottle/time_based/models.py:1529
+#: bluebottle/time_based/models.py:1530
 #, python-brace-format
 msgid "Regsitration Team {name} for {activity}"
 msgstr "Equipo de regsitración {name} para {activity}"
 
-#: bluebottle/time_based/models.py:1530
+#: bluebottle/time_based/models.py:1531
 #, python-brace-format
 msgid "Regsitration Team {name}"
 msgstr "Equipo de regsitración {name}"
 
-#: bluebottle/time_based/models.py:1533
+#: bluebottle/time_based/models.py:1534
 msgid "Team for schedule activities"
 msgstr "Equipo para programar actividades"
 
-#: bluebottle/time_based/models.py:1534
+#: bluebottle/time_based/models.py:1535
 msgid "Teams for schedule activities"
 msgstr "Equipos para programar actividades"
 
-#: bluebottle/time_based/models.py:1592
+#: bluebottle/time_based/models.py:1593
 msgid "Team captain"
 msgstr "Capitán del equipo"
 
-#: bluebottle/time_based/models.py:1679
+#: bluebottle/time_based/models.py:1680
 msgid "Team member"
 msgstr "Miembro del equipo"
 
-#: bluebottle/time_based/models.py:1680
+#: bluebottle/time_based/models.py:1681
 msgid "Team members"
 msgstr "Miembros del equipo"
 
-#: bluebottle/time_based/models.py:1705
+#: bluebottle/time_based/models.py:1706
 #, python-brace-format
 msgid "Team member {name}"
 msgstr "Miembro del equipo {name}"
 
-#: bluebottle/time_based/models.py:1731
+#: bluebottle/time_based/models.py:1732
 msgid "Participant to schedule activities"
 msgstr "Participante para programar actividades"
 
-#: bluebottle/time_based/models.py:1732
+#: bluebottle/time_based/models.py:1733
 msgid "Participants to schedule activities"
 msgstr "Participantes para programar actividades"
 
-#: bluebottle/time_based/models.py:1798
+#: bluebottle/time_based/models.py:1799
 msgid "Team member participation"
 msgstr "Participación del miembro del equipo"
 
-#: bluebottle/time_based/models.py:1799
+#: bluebottle/time_based/models.py:1800
 msgid "Team member participations"
 msgstr "Participaciones de miembros del equipo"
 
-#: bluebottle/time_based/models.py:1877
+#: bluebottle/time_based/models.py:1878
 msgid "Slot participant"
 msgstr "Participante de slot"
 
-#: bluebottle/time_based/models.py:1878
+#: bluebottle/time_based/models.py:1879
 msgid "Slot participants"
 msgstr "Participantes del Slot"
 
-#: bluebottle/time_based/models.py:1970
+#: bluebottle/time_based/models.py:1971
 msgid "end date and time"
 msgstr "fecha y hora de fin"
 
-#: bluebottle/time_based/models.py:2024
+#: bluebottle/time_based/models.py:2025
 #, python-brace-format
 msgid "Slot {start}"
 msgstr "Ranura {start}"
 
-#: bluebottle/time_based/models.py:2069
+#: bluebottle/time_based/models.py:2070
 msgid "Team duration"
 msgstr "Duración del equipo"
 
-#: bluebottle/time_based/models.py:2070
+#: bluebottle/time_based/models.py:2071
 msgid "How much time the team is expected to contribute."
 msgstr "Cuánto tiempo se espera que contribuya el equipo."
 
-#: bluebottle/time_based/models.py:2102
+#: bluebottle/time_based/models.py:2103
 msgid "Participant to recurring activities"
 msgstr "Participante en actividades recurrentes"
 
-#: bluebottle/time_based/models.py:2103
+#: bluebottle/time_based/models.py:2104
 msgid "Participants to recurring activities"
 msgstr "Participantes a actividades recurrentes"
 
@@ -12791,17 +12819,17 @@ msgstr "\n"
 #: bluebottle/time_based/templates/mails/messages/partial/slot.html:13
 msgctxt "platform-email"
 msgid "Meeting link"
-msgstr ""
+msgstr "Enlace de reunión"
 
 #: bluebottle/time_based/templates/mails/messages/partial/slot.html:16
 msgctxt "platform-email"
 msgid "Anywhere/Online"
-msgstr ""
+msgstr "Cualquier lugar/conectado"
 
 #: bluebottle/time_based/templates/mails/messages/partial/slots.html:7
 msgctxt "platform-email"
 msgid "Go to the activity page to see the times in your own timezone and add them to your calendar."
-msgstr ""
+msgstr "Vaya a la página de actividad para ver los horarios en su propia zona horaria y añádelos a su calendario."
 
 #: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:6
 msgctxt "platform-email"
@@ -12891,7 +12919,9 @@ msgctxt "platform-email"
 msgid "\n"
 "                <a href=\"%(review_link)s\">Revisit the external link</a> that was shown when you signed up for this activity.\n"
 "            "
-msgstr ""
+msgstr "\n"
+"                <a href=\"%(review_link)s\">Revisita el enlace externo</a> que se mostró cuando te inscribiste en esta actividad.\n"
+"            "
 
 #: bluebottle/time_based/templates/mails/messages/participant_changed.html:6
 #, python-format
@@ -13068,7 +13098,7 @@ msgstr "\n"
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_joined.html:16
 msgctxt "platform-email"
 msgid "What's next:"
-msgstr ""
+msgstr "¿Qué sigue:"
 
 #: bluebottle/time_based/templates/mails/messages/registrations/date/user_applied.html:19
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:19
@@ -13077,7 +13107,7 @@ msgstr ""
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_applied.html:18
 msgctxt "platform-email"
 msgid "Review"
-msgstr ""
+msgstr "Revisión"
 
 #: bluebottle/time_based/templates/mails/messages/registrations/date/user_applied.html:20
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:20
@@ -13086,7 +13116,7 @@ msgstr ""
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_applied.html:19
 msgctxt "platform-email"
 msgid "The activity manager will review your application."
-msgstr ""
+msgstr "El gestor de actividades revisará tu solicitud."
 
 #: bluebottle/time_based/templates/mails/messages/registrations/date/user_applied.html:23
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:23
@@ -13095,14 +13125,16 @@ msgstr ""
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:19
 msgctxt "platform-email"
 msgid "Contribute"
-msgstr ""
+msgstr "Contribuir"
 
 #: bluebottle/time_based/templates/mails/messages/registrations/date/user_applied.html:24
 msgctxt "platform-email"
 msgid "\n"
 "                    When you are accepted you can participate at the place and time indicated below.\n"
 "                "
-msgstr ""
+msgstr "\n"
+"                    Cuando seas aceptado, podrás participar en el lugar y hora indicados a continuación.\n"
+"                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/date/user_joined.html:6
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:6
@@ -13307,7 +13339,9 @@ msgctxt "platform-email"
 msgid "\n"
 "                    Once accepted, you are expected to spend around %(duration)s hour(s) every %(period)s, although the actual time may vary.\n"
 "                "
-msgstr ""
+msgstr "\n"
+"                    Una vez aceptado, se espera que dediques alrededor de %(duration)s hora(s) cada %(period)s, aunque el tiempo real puede variar.\n"
+"                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:29
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:25
@@ -13319,7 +13353,7 @@ msgstr "Actualizar"
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:26
 msgctxt "platform-email"
 msgid "If you would like to stop contributing to the activity, make sure you stop your participation from the activity detail page."
-msgstr ""
+msgstr "Si deseas dejar de contribuir a la actividad, asegúrate de detener tu participación desde la página de detalles de la actividad."
 
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:20
 #, python-format
@@ -13327,7 +13361,9 @@ msgctxt "platform-email"
 msgid "\n"
 "                    Expect to spend around %(duration)s hour(s) every %(period)s, although the actual time may vary.\n"
 "                "
-msgstr ""
+msgstr "\n"
+"                    Se espera que dediques alrededor de %(duration)s hora(s) cada %(period)s, aunque el tiempo real puede variar.\n"
+"                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:6
 #, python-format
@@ -13351,19 +13387,19 @@ msgstr "Programar"
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_applied.html:23
 msgctxt "platform-email"
 msgid "When you are accepted the activity manager will contact you to discuss a specific date, time and location."
-msgstr ""
+msgstr "Cuando seas aceptado, el gestor de actividades se pondrá en contacto contigo para discutir una fecha, hora y ubicación específica."
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:24
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_joined.html:19
 msgctxt "platform-email"
 msgid "Invite"
-msgstr ""
+msgstr "Invitar"
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:25
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_joined.html:20
 msgctxt "platform-email"
 msgid "You can invite people to your team while you wait to be scheduled or do it when the date, time and location is confirmed."
-msgstr ""
+msgstr "Puedes invitar personas a tu equipo mientras esperas ser programado o hacerlo cuando se confirme la fecha, hora y ubicación."
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_joined.html:6
 #, python-format
@@ -13379,7 +13415,7 @@ msgstr "\n"
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_joined.html:20
 msgctxt "platform-email"
 msgid "The activity manager will contact you to discuss a specific date, time and location."
-msgstr ""
+msgstr "El gestor de actividades se pondrá en contacto contigo para discutir una fecha, hora y ubicación específica."
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_joined.html:6
 #, python-format
@@ -13536,7 +13572,9 @@ msgctxt "platform-email"
 msgid "\n"
 "<p>You have been added to team \"%(team_name)s\" for the activity \"%(title)s\".</p>\n\n"
 "<p>Head over to the activity page for more information.</p>\n\n"
-msgstr ""
+msgstr "\n"
+"<p>Has sido agregado al equipo \"%(team_name)s\" para la actividad \"%(title)s\".</p>\n\n"
+"<p>Dirígete a la página de la actividad para más información.</p>\n\n"
 
 #: bluebottle/time_based/templates/mails/messages/team_participant_applied.html:6
 #: bluebottle/time_based/templates/mails/messages/team_participant_joined.html:6
@@ -14059,4 +14097,8 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Segundo"
 msgstr[1] "Segundos"
+
+#: tenants/goodup-nl/settings.py:27
+msgid "Nederlands"
+msgstr "Neerlandés"
 

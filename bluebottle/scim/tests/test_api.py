@@ -5,6 +5,7 @@ import factory
 
 from urllib.parse import urlencode
 from builtins import object
+from uuid import uuid4
 
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -801,7 +802,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             segment_type=country
         )
         country_name = 'NL'
-        department_name = 'Engineering'
+        department_name = f'Engineering {uuid4().hex[:8]}'
 
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],

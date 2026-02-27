@@ -14,7 +14,7 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.segments.models import Segment, SegmentType
+from bluebottle.segments.models import SegmentType
 from bluebottle.segments.serializers import SegmentDetailSerializer, SegmentPublicDetailSerializer
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -108,29 +108,47 @@ class SegmentListAPITestCase(BluebottleTestCase):
         self.url = reverse('segment-list')
         self.user = BlueBottleUserFactory()
         self.segment_type = SegmentTypeFactory.create()
-        self.segments = SegmentFactory.create_batch(
-            20,
-            segment_type=self.segment_type
+        # One segment with a fixed name for assertions; rest from batch
+        self.named_segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            name='Segment list test segment'
+        )
+        self.named_segment.set_current_language('en')
+        self.named_segment.name = 'Segment list test segment'
+        self.named_segment.save()
+        self.named_segment.set_current_language('nl')
+        self.named_segment.name = 'Segment lijst test segment'
+        self.named_segment.save()
+        self.segments = [self.named_segment] + list(
+            SegmentFactory.create_batch(
+                19,
+                segment_type=self.segment_type
+            )
         )
 
     def test_list(self):
-        response = self.client.get(self.url, user=self.user)
+        response = self.client.get(
+            self.url, user=self.user,
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(
             len(response.json()['data']), 20
         )
-        result = response.json()['data'][0]
-
-        segment = Segment.objects.get(pk=result['id'])
+        expected = self.named_segment
+        result = next(
+            item for item in response.json()['data']
+            if item['id'] == str(expected.pk)
+        )
 
         self.assertEqual(
-            segment.safe_translation_getter('name', language_code='en', any_language=True),
+            expected.safe_translation_getter('name', language_code='en', any_language=True),
             result['attributes']['name']
         )
         self.assertEqual(
-            str(segment.segment_type_id),
+            str(expected.segment_type_id),
             result['relationships']['segment-type']['data']['id']
         )
 

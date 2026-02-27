@@ -24,7 +24,10 @@ jobs:
           path: env
 
       - name: Create virtualenv
-        run: virtualenv -p python3.9 env
+        run: |
+          PYTHON_BIN="$(command -v python3.9 || command -v python3 || command -v python)"
+          "$PYTHON_BIN" -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
+          virtualenv -p "$PYTHON_BIN" env
 
       - name: Show Python version
         run: |
@@ -72,7 +75,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Create virtualenv
-        run: virtualenv -p python3.9 env
+        run: |
+          PYTHON_BIN="$(command -v python3.9 || command -v python3 || command -v python)"
+          "$PYTHON_BIN" -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
+          virtualenv -p "$PYTHON_BIN" env
 
       - name: Show Python version
         run: |

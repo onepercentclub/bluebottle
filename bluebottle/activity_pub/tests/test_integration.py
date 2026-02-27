@@ -384,7 +384,8 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
         adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
-            event = Event.objects.get()
+            event = Event.objects.filter(name=self.model.title).first()
+            self.assertTrue(event)
             self.assertTrue(event.organization)
             self.assertEqual(event.organization.name, organization.name)
 

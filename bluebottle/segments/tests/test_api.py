@@ -47,7 +47,11 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
             )
 
     def test_list(self):
-        response = self.client.get(self.url, user=self.user)
+        response = self.client.get(
+            self.url,
+            user=self.user,
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -121,7 +125,10 @@ class SegmentListAPITestCase(BluebottleTestCase):
 
         segment = Segment.objects.get(pk=result['id'])
 
-        self.assertEqual(segment.name, result['attributes']['name'])
+        self.assertEqual(
+            segment.safe_translation_getter('name', language_code='en', any_language=True),
+            result['attributes']['name']
+        )
         self.assertEqual(
             str(segment.segment_type_id),
             result['relationships']['segment-type']['data']['id']

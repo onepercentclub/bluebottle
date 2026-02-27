@@ -24,6 +24,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
@@ -365,6 +366,27 @@ class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
             deadline=(datetime.now() + timedelta(days=20)).date()
         )
         self.submit()
+
+    def test_publish_with_organization(self):
+        self.test_accept()
+        organization = OrganizationFactory.create()
+        ActivityPubTestCase.create(
+            self,
+            location=GeolocationFactory.create(country=self.country),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            deadline=(datetime.now() + timedelta(days=20)).date(),
+            organization=organization
+        )
+        self.submit()
+
+        publish = self.model.event.publish_set.first()
+        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+        adapter.publish(publish)
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+            self.assertTrue(event.organization)
+            self.assertEqual(event.organization.name, organization.name)
 
     def test_publish(self):
         super().test_publish()

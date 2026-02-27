@@ -25,7 +25,13 @@ jobs:
 
       - name: Create virtualenv
         run: |
-          PYTHON_BIN="$(command -v python3.9 || command -v python3 || command -v python)"
+          if [ -x "/home/github_actions/.pyenv/versions/3.9.19/bin/python" ]; then
+            PYTHON_BIN="/home/github_actions/.pyenv/versions/3.9.19/bin/python"
+          elif command -v python3.9 >/dev/null 2>&1; then
+            PYTHON_BIN="$(command -v python3.9)"
+          else
+            PYTHON_BIN="$(command -v python3 || command -v python)"
+          fi
           "$PYTHON_BIN" -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
           virtualenv -p "$PYTHON_BIN" env
 
@@ -76,7 +82,13 @@ jobs:
 
       - name: Create virtualenv
         run: |
-          PYTHON_BIN="$(command -v python3.9 || command -v python3 || command -v python)"
+          if [ -x "/home/github_actions/.pyenv/versions/3.9.19/bin/python" ]; then
+            PYTHON_BIN="/home/github_actions/.pyenv/versions/3.9.19/bin/python"
+          elif command -v python3.9 >/dev/null 2>&1; then
+            PYTHON_BIN="$(command -v python3.9)"
+          else
+            PYTHON_BIN="$(command -v python3 || command -v python)"
+          fi
           "$PYTHON_BIN" -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
           virtualenv -p "$PYTHON_BIN" env
 

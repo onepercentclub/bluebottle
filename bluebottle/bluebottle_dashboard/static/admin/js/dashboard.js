@@ -90,6 +90,7 @@ window.onload = function () {
   if (!django.jQuery && jQuery) {
     django.jQuery = jQuery;
   }
+
   hideRecurringField()
   fixMapboxWidget()
   replaceInlineActivityAddButton();

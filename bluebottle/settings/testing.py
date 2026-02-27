@@ -9,6 +9,8 @@ RECAPTCHA_PUBLIC_KEY = 'test-public-key'
 import logging
 import warnings
 
+from elasticsearch import ElasticsearchWarning
+
 from .base import *
 
 # Raise exception on naive datetime...
@@ -16,6 +18,12 @@ warnings.filterwarnings(
     'error',
     r"DateTimeField .* received a naive datetime",
     RuntimeWarning, r'django\.db\.models\.fields')
+
+warnings.filterwarnings(
+    'ignore',
+    r'Elasticsearch built-in security features are not enabled\.',
+    ElasticsearchWarning,
+)
 
 CSRF_COOKIE_SECURE = False
 ALLOWED_HOSTS = ['*']
@@ -172,6 +180,8 @@ except ImportError:
 
 ELASTICSEARCH_DSL_AUTOSYNC = False
 ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'django_elasticsearch_dsl.signals.RealTimeSignalProcessor'
+# Per-worker index prefix for parallel tests so workers don't share ES indices
+ELASTICSEARCH_TEST_INDEX_PREFIX = 'test'
 
 STRIPE = {
     'secret_key': 'test-key',

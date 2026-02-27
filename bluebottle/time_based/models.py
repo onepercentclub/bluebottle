@@ -1032,7 +1032,7 @@ class DateParticipant(Participant):
     def answer(self):
         return self.registration.answer
 
-    class Meta:
+    class Meta(Participant.Meta):
         verbose_name = _("Participant to date activity slot")
         verbose_name_plural = _("Participants to date activity slot")
         permissions = (
@@ -1148,7 +1148,7 @@ class Skill(TranslatableModel):
     )
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', default=f'Skill #{self.id}', any_language=True)
 
     class Meta():
         permissions = (
@@ -1196,6 +1196,7 @@ class Registration(TriggerMixin, PolymorphicModel):
         return _('Candidate {name}').format(name=self.user)
 
     class Meta:
+        ordering = ('-created',)
         verbose_name = _("Candidate")
         verbose_name_plural = _("Candidates")
 
@@ -1435,7 +1436,7 @@ class DeadlineParticipant(Participant, Contributor):
     """
     include_in_documentation = True
 
-    class Meta:
+    class Meta(Participant.Meta):
         verbose_name = _("Participant to flexible activities")
         verbose_name_plural = _("Participants to flexible activities")
 
@@ -1727,7 +1728,7 @@ class ScheduleParticipant(Participant, Contributor):
         blank=True,
     )
 
-    class Meta:
+    class Meta(Contributor.Meta):
         verbose_name = _("Participant to schedule activities")
         verbose_name_plural = _("Participants to schedule activities")
 

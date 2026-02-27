@@ -1,0 +1,265 @@
+name: Testing
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    name: Run automated tests
+    runs-on: Testing
+
+    services:
+      postgres:
+        image: postgis/postgis:14-3.3
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.22
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+        ports:
+          - 9200/tcp
+        options: >-
+          --health-cmd="curl -s http://localhost:9200 >/dev/null || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
+      LANG: en_GB.UTF-8
+      LC_ALL: en_GB.UTF-8
+      VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py39
+      PIP_CACHE_DIR: /home/github_actions_runner/.cache/pip
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Export service ports
+        run: |
+          echo "PGHOST=127.0.0.1" >> "$GITHUB_ENV"
+          echo "PGPORT=${{ job.services.postgres.ports[5432] }}" >> "$GITHUB_ENV"
+          echo "ESHOST=127.0.0.1" >> "$GITHUB_ENV"
+          echo "ESPORT=${{ job.services.elasticsearch.ports[9200] }}" >> "$GITHUB_ENV"
+
+      - name: Install system dependencies (host)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            locales \
+            libxmlsec1-dev \
+            libgdal-dev swig \
+            postgresql-client \
+            curl \
+            git \
+            build-essential \
+            libssl-dev \
+            zlib1g-dev \
+            libbz2-dev \
+            libreadline-dev \
+            libsqlite3-dev \
+            libffi-dev \
+            liblzma-dev \
+            xz-utils \
+            tk-dev
+          sudo sed -i 's/^# *\(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+          sudo locale-gen
+          sudo update-locale LANG=en_GB.UTF-8
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for Postgres on $PGHOST:$PGPORT and Elasticsearch on $ESHOST:$ESPORT"
+          for i in {1..60}; do
+            if pg_isready -h "$PGHOST" -p "$PGPORT" -U postgres >/dev/null 2>&1 && \
+               curl -fsS "http://$ESHOST:$ESPORT/_cluster/health?wait_for_status=yellow&timeout=5s" | grep -q '"timed_out":false'; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Services did not become ready"
+          exit 1
+
+      - name: Bootstrap database
+        run: |
+          set -e
+
+          # Create user if it does not exist
+          PGPASSWORD=postgres psql -h "$PGHOST" -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT FROM pg_catalog.pg_roles WHERE rolname = 'testuser'
+            ) THEN
+              CREATE ROLE testuser LOGIN PASSWORD 'password';
+            END IF;
+          END
+          $$;
+          ALTER ROLE testuser WITH SUPERUSER CREATEDB CREATEROLE;
+          SQL
+
+          # Drop test database if it exists
+          PGPASSWORD=postgres psql -h "$PGHOST" -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          SELECT pg_terminate_backend(pid)
+          FROM pg_stat_activity
+          WHERE datname = 'test_bluebottle_test'
+            AND pid <> pg_backend_pid();
+          DROP DATABASE IF EXISTS test_bluebottle_test;
+          SQL
+
+          # Drop stale parallel clone DBs (test_bluebottle_test_1..N) so keepdb starts clean.
+          PGPASSWORD=postgres psql -h "$PGHOST" -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          DO $$
+          DECLARE
+            db record;
+          BEGIN
+            FOR db IN
+              SELECT datname
+              FROM pg_database
+              WHERE datname LIKE 'test_bluebottle_test\_%' ESCAPE '\'
+            LOOP
+              EXECUTE format(
+                'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = %L AND pid <> pg_backend_pid()',
+                db.datname
+              );
+              EXECUTE format('DROP DATABASE IF EXISTS %I', db.datname);
+            END LOOP;
+          END
+          $$;
+          SQL
+
+          # Recreate database
+          PGPASSWORD=password createdb -h "$PGHOST" -p "$PGPORT" -U testuser test_bluebottle_test
+
+          # Ensure extensions exist in template1 so new DBs inherit them
+          PGPASSWORD=postgres psql -h "$PGHOST" -p "$PGPORT" -U postgres -d template1 <<'SQL'
+          CREATE EXTENSION IF NOT EXISTS postgis;
+          CREATE EXTENSION IF NOT EXISTS postgis_topology;
+          CREATE EXTENSION IF NOT EXISTS unaccent;
+          SQL
+
+          # Load test data
+          PGPASSWORD=password psql -h "$PGHOST" -p "$PGPORT" -U testuser -d test_bluebottle_test -f testdata.sql
+
+          # Sync all serial/identity sequences with current max(id) values after loading fixtures.
+          PGPASSWORD=password psql -h "$PGHOST" -p "$PGPORT" -U testuser -d test_bluebottle_test <<'SQL'
+          DO $$
+          DECLARE
+            r record;
+            max_id bigint;
+          BEGIN
+            FOR r IN
+              SELECT
+                n.nspname AS schema_name,
+                c.relname AS table_name,
+                a.attname AS column_name,
+                pg_get_serial_sequence(format('%I.%I', n.nspname, c.relname), a.attname) AS seq_name
+              FROM pg_class c
+              JOIN pg_namespace n ON n.oid = c.relnamespace
+              JOIN pg_attribute a ON a.attrelid = c.oid
+              WHERE c.relkind = 'r'
+                AND n.nspname = 'public'
+                AND a.attnum > 0
+                AND NOT a.attisdropped
+                AND a.attname = 'id'
+            LOOP
+              IF r.seq_name IS NOT NULL THEN
+                EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I', r.column_name, r.schema_name, r.table_name) INTO max_id;
+                EXECUTE format('SELECT setval(%L, %s, true)', r.seq_name, GREATEST(max_id, 1));
+              END IF;
+            END LOOP;
+          END
+          $$;
+          SQL
+
+      - name: Ensure persistent pyenv + venv + deps
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PATH"
+
+          if ! command -v pyenv >/dev/null 2>&1; then
+            curl -fsSL https://pyenv.run | bash
+          fi
+
+          export PATH="$PYENV_ROOT/bin:$PATH"
+          eval "$(pyenv init -)"
+          pyenv install -s 3.9.19
+          pyenv global 3.9.19
+          pyenv shell 3.9.19
+          python --version
+
+          # Fallback to HOME-based paths when configured paths are not writable on this runner user.
+          if [ ! -w "$(dirname "$VENV_DIR")" ]; then
+            VENV_DIR="$HOME/venvs/bluebottle-py39"
+          fi
+          if [ ! -w "$(dirname "$PIP_CACHE_DIR")" ]; then
+            PIP_CACHE_DIR="$HOME/.cache/pip"
+          fi
+
+          echo "VENV_DIR=$VENV_DIR" >> "$GITHUB_ENV"
+          echo "PIP_CACHE_DIR=$PIP_CACHE_DIR" >> "$GITHUB_ENV"
+          echo "PYENV_ROOT=$PYENV_ROOT" >> "$GITHUB_ENV"
+          
+          mkdir -p "$(dirname "$VENV_DIR")" "$PIP_CACHE_DIR"
+          
+          # If venv exists but isn't Python 3.9, delete it
+          if [ -x "$VENV_DIR/bin/python" ]; then
+            VPY="$("$VENV_DIR/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+            if [ "$VPY" != "3.9" ]; then
+              echo "Existing venv is Python $VPY; recreating for 3.9"
+              rm -rf "$VENV_DIR"
+            fi
+          fi
+          
+          # Create venv with Python 3.9
+          if [ ! -x "$VENV_DIR/bin/python" ]; then
+            python -m venv "$VENV_DIR"
+          fi
+          
+          source "$VENV_DIR/bin/activate"
+          python --version
+          
+          # Use sane tooling for Python 3.9
+          python -m pip install --upgrade "pip==24.0" "setuptools==69.5.1" wheel
+          python -m pip --version
+          python -c "import pkg_resources"
+
+          NEW_SHA="$(python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          p = Path("setup.py")
+          print(hashlib.sha256(p.read_bytes()).hexdigest())
+          PY
+          )"
+          STAMP="$VENV_DIR/.deps-setup_py.sha"
+          OLD_SHA="$(cat "$STAMP" 2>/dev/null || true)"
+
+          if [ "$NEW_SHA" != "$OLD_SHA" ]; then
+            echo "Dependency definition changed; installing..."
+            python -m pip install --no-build-isolation --no-use-pep517 -e ".[test]" --trusted-host github.com
+            echo "$NEW_SHA" > "$STAMP"
+          else
+            echo "setup.py unchanged; skipping dependency install."
+          fi
+
+      - name: Run tests (coverage)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          source "$VENV_DIR/bin/activate"
+          python -c "import pkg_resources"
+          python manage.py test --parallel 8 --keepdb --settings bluebottle.settings.runner -v3

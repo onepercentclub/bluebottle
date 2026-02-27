@@ -188,7 +188,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
     def save(self, *args, **kwargs):
         result = super().save(*args, **kwargs)
 
-        segment_settings = SCIMPlatformSettings.objects.get().segments
+        segment_settings = SCIMPlatformSettings.load().segments
 
         for path, segment_type in segment_settings:
             segment_name = path.get(self.initial_data)
@@ -209,7 +209,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
     def to_representation(self, obj):
         data = super().to_representation(obj)
 
-        segment_settings = SCIMPlatformSettings.objects.get().segments
+        segment_settings = SCIMPlatformSettings.load().segments
 
         for path, segment_type in segment_settings:
             try:

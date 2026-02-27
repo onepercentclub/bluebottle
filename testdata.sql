@@ -44,7 +44,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA test2;
 
 
 --
--- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
@@ -58,7 +58,7 @@ CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
@@ -72,7 +72,7 @@ CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA test2;
 
 
 --
--- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
@@ -16782,12 +16782,12 @@ COPY public.exchange_exchangebackend (name, last_update, base_currency) FROM std
 --
 
 COPY public.exchange_rate (id, currency, value, backend_id) FROM stdin;
-1	USD	1.000000	
-2	EUR	1.500000	
-3	XOF	1000.000000	
-4	NGN	500.000000	
-5	UGX	5000.000000	
-6	KES	100.000000	
+1	USD	1.000000
+2	EUR	1.500000
+3	XOF	1000.000000
+4	NGN	500.000000
+5	UGX	5000.000000
+6	KES	100.000000
 \.
 
 
@@ -20216,7 +20216,7 @@ COPY test.cms_quote (id, block_id, name, quote, image, role) FROM stdin;
 --
 
 COPY test.cms_resultpage (id, start_date, end_date, image) FROM stdin;
-1	2016-01-01	2017-12-31	
+1	2016-01-01	2017-12-31
 \.
 
 
@@ -20260,11 +20260,11 @@ COPY test.cms_siteplatformsettings_translation (id, language_code, metadata_titl
 --
 
 COPY test.cms_stat (id, type, value, sequence, block_id, title) FROM stdin;
-1	people_involved	\N	0	\N	
-2	activities_succeeded	\N	0	\N	
-3	donated_total	\N	0	\N	
-4	assignments_succeeded	\N	0	\N	
-5	votes_cast	\N	0	\N	
+1	people_involved	\N	0	\N
+2	activities_succeeded	\N	0	\N
+3	donated_total	\N	0	\N
+4	assignments_succeeded	\N	0	\N
+5	votes_cast	\N	0	\N
 \.
 
 
@@ -23234,7 +23234,7 @@ COPY test.impact_impactgoal (id, target, realized, type_id, activity_id, realize
 COPY test.impact_impacttype (id, slug, active, icon) FROM stdin;
 1	co2	f	co2
 2	people	f	people
-3	food	f	
+3	food	f
 4	water	f	water
 5	plastic	f	plastic
 6	trees	f	trees
@@ -23508,7 +23508,7 @@ COPY test.members_member_user_permissions (id, member_id, permission_id) FROM st
 --
 
 COPY test.members_memberplatformsettings (id, update, consent_link, closed, confirm_signup, email_domain, login_methods, background, create_segments, session_only, enable_birthdate, enable_gender, enable_address, require_office, verify_office, display_member_names, require_address, require_birthdate, require_phone_number, required_questions_location, create_initiatives, do_good_hours, reminder_q1, reminder_q2, reminder_q3, reminder_q4, fiscal_month_offset, retention_anonymize, retention_delete, create_locations, disable_cookie_consent, gtm_code) FROM stdin;
-1	2025-10-13 13:49:04.562467+00	https://goodup.com/cookie-policy	f	f	\N	password		f	f	f	f	f	f	f	full_name	f	f	f	contribution	t	\N	f	f	f	f	0	\N	\N	f	f	
+1	2025-10-13 13:49:04.562467+00	https://goodup.com/cookie-policy	f	f	\N	password		f	f	f	f	f	f	f	full_name	f	f	f	contribution	t	\N	f	f	f	f	0	\N	\N	f	f
 \.
 
 
@@ -24350,8 +24350,8 @@ COPY test.updates_updateimage (id, image_id, update_id) FROM stdin;
 --
 
 COPY test.utils_language (id, code, language_name, native_name, "default", sub_code) FROM stdin;
-4	en	English	English	t	
-5	nl	Dutch	Nederlands	f	
+4	en	English	English	t
+5	nl	Dutch	Nederlands	f
 \.
 
 
@@ -27796,7 +27796,7 @@ COPY test2.cms_quote (id, block_id, name, quote, image, role) FROM stdin;
 --
 
 COPY test2.cms_resultpage (id, start_date, end_date, image) FROM stdin;
-1	2016-01-01	2017-12-31	
+1	2016-01-01	2017-12-31
 \.
 
 
@@ -27840,11 +27840,11 @@ COPY test2.cms_siteplatformsettings_translation (id, language_code, metadata_tit
 --
 
 COPY test2.cms_stat (id, type, value, sequence, block_id, title) FROM stdin;
-1	people_involved	\N	0	\N	
-2	activities_succeeded	\N	0	\N	
-3	donated_total	\N	0	\N	
-4	assignments_succeeded	\N	0	\N	
-5	votes_cast	\N	0	\N	
+1	people_involved	\N	0	\N
+2	activities_succeeded	\N	0	\N
+3	donated_total	\N	0	\N
+4	assignments_succeeded	\N	0	\N
+5	votes_cast	\N	0	\N
 \.
 
 
@@ -30814,7 +30814,7 @@ COPY test2.impact_impactgoal (id, target, realized, type_id, activity_id, realiz
 COPY test2.impact_impacttype (id, slug, active, icon) FROM stdin;
 1	co2	f	co2
 2	people	f	people
-3	food	f	
+3	food	f
 4	water	f	water
 5	plastic	f	plastic
 6	trees	f	trees
@@ -31088,7 +31088,7 @@ COPY test2.members_member_user_permissions (id, member_id, permission_id) FROM s
 --
 
 COPY test2.members_memberplatformsettings (id, update, consent_link, closed, confirm_signup, email_domain, login_methods, background, create_segments, session_only, enable_birthdate, enable_gender, enable_address, require_office, verify_office, display_member_names, require_address, require_birthdate, require_phone_number, required_questions_location, create_initiatives, do_good_hours, reminder_q1, reminder_q2, reminder_q3, reminder_q4, fiscal_month_offset, retention_anonymize, retention_delete, create_locations, disable_cookie_consent, gtm_code) FROM stdin;
-1	2025-10-13 13:41:13.982855+00	https://goodup.com/cookie-policy	f	f	\N	password		f	f	f	f	f	f	f	full_name	f	f	f	contribution	t	\N	f	f	f	f	0	\N	\N	f	f	
+1	2025-10-13 13:41:13.982855+00	https://goodup.com/cookie-policy	f	f	\N	password		f	f	f	f	f	f	f	full_name	f	f	f	contribution	t	\N	f	f	f	f	0	\N	\N	f	f
 \.
 
 
@@ -31930,8 +31930,8 @@ COPY test2.updates_updateimage (id, image_id, update_id) FROM stdin;
 --
 
 COPY test2.utils_language (id, code, language_name, native_name, "default", sub_code) FROM stdin;
-4	en	English	English	t	
-5	nl	Dutch	Nederlands	f	
+4	en	English	English	t
+5	nl	Dutch	Nederlands	f
 \.
 
 
@@ -53379,4 +53379,3 @@ ALTER TABLE ONLY test2.utils_translationplatformsettings_translation
 --
 
 \unrestrict vyncYtUosKH8bS3VCoRDrUs9kwC3yEa9pdHk6XovrFH53AII4m233hKnZwheOyd
-

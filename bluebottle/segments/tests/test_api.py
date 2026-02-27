@@ -121,7 +121,6 @@ class SegmentListAPITestCase(BluebottleTestCase):
                 segment_type=self.segment_type
             )
         )
-
     def test_list(self):
         response = self.client.get(
             self.url, user=self.user,
@@ -133,7 +132,6 @@ class SegmentListAPITestCase(BluebottleTestCase):
         self.assertEqual(
             len(response.json()['data']), 20
         )
-        # Assert using the segment with explicit name (avoids global factory sequence)
         expected = self.named_segment
         result = next(
             item for item in response.json()['data']

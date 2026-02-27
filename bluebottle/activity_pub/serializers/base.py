@@ -136,11 +136,15 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
 
     def update(self, instance, validated_data):
         id = validated_data.pop('id', None)
+        request = self.context.get('request')
+        request_auth = getattr(request, 'auth', None)
+        auth_iri = getattr(request_auth, 'iri', None)
 
         if (
             is_local(id) and
-            self.context['request'].auth and
-            is_local(self.context['request'].auth.iri)
+            request_auth and
+            auth_iri and
+            is_local(auth_iri)
         ):
 
             for name, field in self.fields.items():

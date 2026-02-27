@@ -66,6 +66,11 @@ class Organization(ValidatedModelMixin, models.Model):
 
         super(Organization, self).save(*args, **kwargs)
 
+    @property
+    def activity_pub_url(self):
+        from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
+        return ActivityPubOrganization.objects.from_model(self).pub_url
+
     class Meta(object):
         ordering = ['name']
         verbose_name = _("organisation")

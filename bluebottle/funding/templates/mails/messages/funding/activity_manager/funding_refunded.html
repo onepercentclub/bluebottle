@@ -3,7 +3,7 @@
 
 {% block message %}
     <p class="donation-intro">
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             All donations received for your campaign "{{ title }}" will be refunded to the donors.
             <br><br>
             If you have any questions, you can contact the platform manager by replying to this email.
@@ -12,6 +12,6 @@
 {% endblock message %}
 {% block action %}
     <a href="{{ obj.get_absolute_url }}" class="action-email">
-       {% trans 'Go to campaign' context 'email' %}
+       {% trans 'Go to campaign' context 'platform-email' %}
     </a>
 {% endblock %}`

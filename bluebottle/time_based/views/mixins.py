@@ -46,17 +46,8 @@ class AnonymizeMembersMixin:
 
 class CreatePermissionMixin:
     def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        serializer.save(user=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
 
 class FilterRelatedUserMixin:
@@ -87,20 +78,11 @@ class FilterRelatedUserMixin:
 
 class RequiredQuestionsMixin:
     def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
         if self.request.user.required:
             raise ValidationError('Required fields', code="required")
 
-        serializer.save(user=self.request.user)
+        serializer.validated_data['user'] = self.request.user
+        super().perform_create(serializer)
 
 
 class BaseSlotIcalView(PrivateFileView):

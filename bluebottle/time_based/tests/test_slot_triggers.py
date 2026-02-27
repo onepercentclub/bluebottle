@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 from django.core import mail
 from django.utils.timezone import now
 
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
     InitiativePlatformSettingsFactory,
@@ -97,6 +98,19 @@ class PeriodicSlotTriggerTestCase(BluebottleTestCase):
             second_slot.end,
             self.first_slot.end + relativedelta(**{self.activity.period: 1}),
         )
+
+    def test_finish_terminated_platform(self):
+        self.test_start()
+        settings = SitePlatformSettings.load()
+        settings.terminated = True
+        settings.save()
+
+        self.first_slot.states.finish(save=True)
+
+        self.assertEqual(self.first_slot.status, "finished")
+        self.assertEqual(self.first_slot.participants.get().status, "succeeded")
+
+        self.assertTrue(self.activity.slots.count(), 1)
 
 
 class ScheduleSlotTriggerTestCase(BluebottleTestCase):

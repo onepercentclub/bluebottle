@@ -125,6 +125,7 @@ class SegmentListAPITestCase(BluebottleTestCase):
                 segment_type=self.segment_type
             )
         )
+
     def test_list(self):
         response = self.client.get(
             self.url, user=self.user,

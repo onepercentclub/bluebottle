@@ -10,9 +10,10 @@ from bluebottle.activity_pub.tests.factories import (
     DoGoodEventFactory
 )
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
 
 
 class DoGoodEventSerializer(BluebottleTestCase):
@@ -56,6 +57,39 @@ class DoGoodEventSerializer(BluebottleTestCase):
         self.assertEqual(do_good_event.name, model.title)
         self.assertEqual(do_good_event.summary, model.description.html)
         self.assertEqual(do_good_event.sub_event.count(), model.slots.count())
+
+    def test_to_json_ld_slots_keep_individual_locations(self):
+        model = self.factory.create(slots=[])
+        first_location = GeolocationFactory.create()
+        second_location = GeolocationFactory.create()
+        DateActivitySlotFactory.create(activity=model, location=first_location)
+        DateActivitySlotFactory.create(activity=model, location=second_location)
+
+        federated_serializer = self.federated_serializer(
+            instance=model,
+            context=self.context
+        )
+
+        activity_pub_serializer = self.activity_pub_serializer(
+            data=federated_serializer.data,
+            context=self.context
+        )
+
+        self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
+        do_good_event = activity_pub_serializer.save()
+
+        serialized_locations = {
+            (
+                slot.location.latitude,
+                slot.location.longitude
+            )
+            for slot in do_good_event.sub_event.all()
+        }
+        expected_locations = {
+            (first_location.position.x, first_location.position.y),
+            (second_location.position.x, second_location.position.y),
+        }
+        self.assertSetEqual(serialized_locations, expected_locations)
 
     def test_to_json_ld_already_exists(self):
         model = self.factory.create()

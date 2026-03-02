@@ -24,6 +24,11 @@ jobs:
           key: env-${{ hashFiles('setup.py') }}
           path: env
 
+      - name: Install venv support (Debian slim)
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3-venv
+
       - name: Create virtualenv
         run: virtualenv env
 
@@ -72,6 +77,11 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+
+      - name: Install venv support (Debian slim)
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3-venv
 
       - name: Create virtualenv
         run: virtualenv env

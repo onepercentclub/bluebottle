@@ -88,16 +88,16 @@ jobs:
 
       - name: Show Python version
         run: |
-          source env/bin/activate
+          . env/bin/activate
           python --version
 
       - name: Install pip dependencies
         run: |
-          source env/bin/activate
+          . env/bin/activate
           python -m pip install "pip<24.1"
           pip install -e .[dev]
 
       - name: Lint
         run: |
-          source env/bin/activate
+          . env/bin/activate
           flake8 .

@@ -471,11 +471,6 @@ class SlotsSerializer(FederatedObjectSerializer):
 
     duration = serializers.DurationField(required=False, allow_null=True)
 
-    def __init__(self, *args, **kwargs):
-        kwargs['source'] = 'slots'
-
-        super().__init__(*args, **kwargs)
-
     def create(self, validated_data):
 
         iri = validated_data.get('id')

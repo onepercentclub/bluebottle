@@ -23,6 +23,11 @@ jobs:
           key: env-${{ hashFiles('setup.py') }}
           path: env
 
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
       - name: Create virtualenv
         run: virtualenv env
 
@@ -71,11 +76,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
       - name: Create virtualenv
-        run: |
-          PYTHON_BIN="$(command -v python3.9 || command -v python3 || command -v python)"
-          "$PYTHON_BIN" -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
-          virtualenv -p "$PYTHON_BIN" env
+        run: virtualenv env
 
       - name: Show Python version
         run: |

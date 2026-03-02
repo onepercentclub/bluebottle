@@ -13,6 +13,7 @@ jobs:
   translations:
     name: Translations
     runs-on: self-hosted
+    container: python:3.9-slim
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -72,6 +73,7 @@ jobs:
   lint:
     name: Linting
     runs-on: self-hosted
+    container: python:3.9-slim
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3

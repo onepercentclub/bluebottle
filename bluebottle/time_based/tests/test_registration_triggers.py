@@ -462,10 +462,10 @@ class TeamScheduleRegistrationTriggerTestCase(
     def test_initial(self):
         self.create()
         self.assertEqual(self.registration.status, "accepted")
-        self.assertEqual(self.registration.team.status, "accepted")
-        self.assertEqual(self.registration.team.team_members.get().status, "active")
+        self.assertEqual(self.registration.teams.first().status, "accepted")
+        self.assertEqual(self.registration.teams.first().team_members.get().status, "active")
         self.assertEqual(
-            self.registration.team.team_members.get().participants.get().status,
+            self.registration.teams.first().team_members.get().participants.get().status,
             "accepted",
         )
 
@@ -497,10 +497,10 @@ class TeamScheduleRegistrationTriggerTestCase(
             mail.outbox[1].subject,
             'You have registered your team on "Test"'
         )
-        self.assertEqual(self.registration.team.status, "new")
-        self.assertEqual(self.registration.team.team_members.get().status, "active")
+        self.assertEqual(self.registration.teams.first().status, "new")
+        self.assertEqual(self.registration.teams.first().team_members.get().status, "active")
         self.assertEqual(
-            self.registration.team.team_members.get().participants.get().status, "new"
+            self.registration.teams.first().team_members.get().participants.get().status, "new"
         )
 
     def test_reject(self):
@@ -517,11 +517,11 @@ class TeamScheduleRegistrationTriggerTestCase(
             ),
         )
 
-        self.assertEqual(self.registration.team.status, "rejected")
-        self.assertEqual(self.registration.team.team_members.get().status, "rejected")
+        self.assertEqual(self.registration.teams.first().status, "rejected")
+        self.assertEqual(self.registration.teams.first().team_members.get().status, "rejected")
 
         self.assertEqual(
-            self.registration.team.team_members.get().participants.get().status,
+            self.registration.teams.first().team_members.get().participants.get().status,
             "rejected",
         )
 
@@ -536,10 +536,10 @@ class TeamScheduleRegistrationTriggerTestCase(
             ),
         )
 
-        self.assertEqual(self.registration.team.status, "accepted")
-        self.assertEqual(self.registration.team.team_members.get().status, "active")
+        self.assertEqual(self.registration.teams.first().status, "accepted")
+        self.assertEqual(self.registration.teams.first().team_members.get().status, "active")
 
         self.assertEqual(
-            self.registration.team.team_members.get().participants.get().status,
+            self.registration.teams.first().team_members.get().participants.get().status,
             "accepted",
         )

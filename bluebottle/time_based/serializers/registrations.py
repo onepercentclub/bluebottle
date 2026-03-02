@@ -177,12 +177,12 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
 class TeamScheduleRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('team-schedule-registration-detail', view_args=('pk',))
     participants = ResourceRelatedField(many=True, read_only=True)
-    teams = ResourceRelatedField(read_only=True)
+    teams = ResourceRelatedField(read_only=True, many=True)
 
     class Meta(RegistrationSerializer.Meta):
         model = TeamScheduleRegistration
         fields = RegistrationSerializer.Meta.fields + [
-            "team",
+            "teams",
         ]
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):

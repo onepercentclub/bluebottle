@@ -1,5 +1,7 @@
 from builtins import object
 
+from djchoices import DjangoChoices
+from djchoices.choices import ChoiceItem
 import geocoder
 import requests
 from django.conf import settings
@@ -18,6 +20,8 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
 from ..utils.models import SortableTranslatableModel
+
+from parler.utils.context import switch_language
 
 tf = TimezoneFinder()
 
@@ -249,6 +253,44 @@ class Place(models.Model):
         return self.locality or self.formatted_address or '-unknown-'
 
 
+class LevelChoices(DjangoChoices):
+    country = ChoiceItem('country', label=_("Country"))
+    region = ChoiceItem('region', label=_("Region"))
+    postcode = ChoiceItem('postcode', label=_("Postcode"))
+    district = ChoiceItem('district', label=_("District"))
+    place = ChoiceItem('place', label=_("Place"))
+    locality = ChoiceItem('locality', label=_("Locality"))
+    neighborhood = ChoiceItem('neighborhou', label=_("Neighborhood"))
+    street = ChoiceItem('street', label=_("Street"))
+    block = ChoiceItem('block', label=_("Block"))
+    address = ChoiceItem('country', label=_("Address"))
+    secondary_address = ChoiceItem('country', label=_("Secondary address"))
+
+PLACE_TYPE_ORDER = [
+    'country',
+    'region',
+    'district',
+    'place',
+    'locality',
+    'neighborhood',
+    'street',
+    'block',
+    'postcode',
+    'address',
+    'secondary_address',
+]
+
+
+class GeoFeature(SortableTranslatableModel):
+    translations = TranslatedFields(
+        name=models.CharField(_("name"), max_length=512)
+    )
+    place_type = models.CharField(_('Level'), choices=LevelChoices)
+    code = models.CharField(_('Level'), max_length=10, null=True)
+    mapbox_id = models.CharField(max_length=100, null=True)
+
+
+
 @python_2_unicode_compatible
 class Geolocation(models.Model):
     street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
@@ -257,9 +299,11 @@ class Geolocation(models.Model):
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
     country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
-    mapbox_id = models.CharField(max_length=50, null=True, blank=True)
+    mapbox_id = models.CharField(max_length=100, null=True, blank=True)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
+
+    features = models.ManyToManyField(GeoFeature)
 
     position = PointField(null=True)
 
@@ -339,10 +383,50 @@ class Geolocation(models.Model):
                         if not self.postal_code or replace:
                             self.postal_code = context_item['text']
                     elif 'region' in context_item['id']:
-                        if not self.province or replace:
+                        if not self.province or replce:
                             self.province = context_item['text']
 
+    def migrate(self):
+        url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{self.position.coords[0]},{self.position.coords[1]}.json"
+        languages = ['nl', 'de', 'fr', 'en']
+
+        data = requests.get(
+            url,
+            params={
+                'access_token': settings.MAPBOX_API_KEY,
+                'permanent': 'true',
+                'language': ','.join(languages)
+            }
+        ).json()
+
+        current_place_type = self.mapbox_id.split('.')[0]
+        relevant_place_types = PLACE_TYPE_ORDER[
+            :PLACE_TYPE_ORDER.index(current_place_type) + 1
+        ]
+
+        for feature in data['features']:
+            mapbox_id = feature['properties'].get('mapbox_id')
+            place_type = feature['place_type'][0]
+            if place_type in relevant_place_types:
+                try:
+                    geo_feature = GeoFeature.objects.get(mapbox_id=mapbox_id)
+                except GeoFeature.DoesNotExist:
+                    geo_feature = GeoFeature(
+                        mapbox_id=mapbox_id,
+                        code=feature['properties'].get('short_code'),
+                        place_type=place_type
+                    )
+
+                    for language in languages:
+                        with switch_language(geo_feature, language):
+                            geo_feature.name = feature[f'text_{language}']
+
+                    geo_feature.save()
+
+                self.features.add(geo_feature)
+
     def save(self, *args, **kwargs):
+        self.migrate()
         if self.pk:
             old_instance = Geolocation.objects.filter(pk=self.pk).first()
             if old_instance and old_instance.position != self.position:

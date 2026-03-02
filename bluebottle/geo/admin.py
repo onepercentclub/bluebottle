@@ -11,7 +11,7 @@ from parler.admin import TranslatableAdmin
 from bluebottle.activities.models import Activity
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.geo.models import (
-    Location, Country, Place,
+    GeoFeature, Location, Country, Place,
     Geolocation)
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
@@ -171,6 +171,12 @@ class PlaceInline(admin.ModelAdmin):
 admin.site.register(Location, LocationAdmin)
 
 
+class GeoFeatureInline(admin.TabularInline):
+    model = Geolocation.features.through
+    extra = 0
+    can_delete = False
+
+
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
     formfield_overrides = {
@@ -180,6 +186,8 @@ class GeolocationAdmin(admin.ModelAdmin):
 
     list_filter = ('country', )
     search_fields = ('locality', 'street', 'formatted_address', 'mapbox_id')
+
+    inlines = [GeoFeatureInline]
 
     fieldsets = (
         (_('Map'), {'fields': ('position', )}),

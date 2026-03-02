@@ -16,11 +16,11 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
- 
+
       - name: Restore cached virtualenv
         uses: actions/cache/restore@v4
         with:
-          key: env-${{ runner.os }}-py392-${{ hashFiles('setup.py') }}
+          key: env-${{ hashFiles('setup.py') }}
           path: env
 
       - name: Create virtualenv
@@ -49,7 +49,7 @@ jobs:
       - name: Saved cached virtualenv
         uses: actions/cache/save@v4
         with:
-          key: env-${{ runner.os }}-py392-${{ hashFiles('setup.py') }}
+          key: env-${{ hashFiles('setup.py') }}
           path: env
 
       - name: Extract messages
@@ -63,12 +63,12 @@ jobs:
           pip install polib
           python ./locale/check_translations.py --locales=nl  > translation-message.txt
 
-      - name: Echo 
+      - name: Echo
         run: cat translation-message.txt
 
       - name: Post comment
         uses: mshick/add-pr-comment@v2
-        if: always() 
+        if: always()
         with:
           message-path: translation-message.txt
           refresh-message-position: true

@@ -24,10 +24,8 @@ class LinkedActivityDocument(ActivityDocument):
     def prepare_is_local(self, instance):
         return False
 
-    def get_doc_id(self, instance):
-        return f"linked_{instance.pk}"
-
-    def get_id(self, instance):
+    @classmethod
+    def generate_id(cls, instance):
         return f"linked_{instance.pk}"
 
     def prepare_archived(self, instance):

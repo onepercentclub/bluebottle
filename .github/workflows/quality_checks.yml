@@ -20,7 +20,7 @@ jobs:
       - name: Restore cached virtualenv
         uses: actions/cache/restore@v4
         with:
-          key: env-${{ runner.os }}-py392-${{ hashFiles('setup.py') }}
+          key: env-${{ hashFiles('setup.py') }}
           path: env
 
       - name: Create virtualenv
@@ -43,7 +43,7 @@ jobs:
       - name: Saved cached virtualenv
         uses: actions/cache/save@v4
         with:
-          key: env-${{ runner.os }}-py392-${{ hashFiles('setup.py') }}
+          key: env-${{ hashFiles('setup.py') }}
           path: env
 
       - name: Extract messages

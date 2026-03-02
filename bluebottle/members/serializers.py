@@ -866,9 +866,17 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
     new_password = PasswordField(
         write_only=True, required=True, max_length=128)
 
-    def save(self):
-        self.instance.set_password(self.validated_data['new_password'])
-        self.instance.save()
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        attrs['password'] = attrs.pop('new_password')
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['password'])
+        instance.save()
+
+        return instance
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
         fields = ('new_password',) + PasswordProtectedMemberSerializer.Meta.fields

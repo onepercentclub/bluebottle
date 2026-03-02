@@ -15,7 +15,7 @@ class ManagerTeamNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url() + f"?teamId={self.obj.pk}"
 
-    action_title = pgettext("email", "Open your team")
+    action_title = pgettext("platform-email", "Open your team")
 
     def get_recipients(self):
         """manager"""
@@ -30,7 +30,7 @@ class ManagerTeamRemovedNotification(ManagerTeamNotification):
     A participant removed notify owner
     """
 
-    subject = pgettext("email", 'A team has been removed from your activity "{title}"')
+    subject = pgettext("platform-email", 'A team has been removed from your activity "{title}"')
     template = "messages/teams/manager_team_removed"
 
 
@@ -39,7 +39,7 @@ class ManagerTeamWithdrewNotification(ManagerTeamNotification):
     A participant withdrew from your activity
     """
 
-    subject = pgettext("email", 'A team has withdrawn from your activity "{title}"')
+    subject = pgettext("platform-email", 'A team has withdrawn from your activity "{title}"')
     template = "messages/teams/manager_team_withdrew"
 
 
@@ -53,7 +53,7 @@ class UserTeamNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url() + f"?teamId={self.obj.pk}"
 
-    action_title = pgettext("email", "View team")
+    action_title = pgettext("platform-email", "View team")
 
     def get_recipients(self):
         """participant"""
@@ -68,7 +68,7 @@ class UserTeamRemovedNotification(UserTeamNotification):
     The participant was removed from the activity
     """
 
-    subject = pgettext("email", 'Your team was removed from the activity "{title}"')
+    subject = pgettext("platform-email", 'Your team was removed from the activity "{title}"')
     template = "messages/teams/user_team_removed"
 
 
@@ -77,7 +77,7 @@ class UserTeamWithdrewNotification(UserTeamNotification):
     Team withdrew from activity
     """
 
-    subject = pgettext("email", 'You withdrew your team from the activity "{title}"')
+    subject = pgettext("platform-email", 'You withdrew your team from the activity "{title}"')
     template = "messages/teams/user_team_withdrew"
 
 
@@ -87,7 +87,7 @@ class UserTeamScheduledNotification(UserTeamNotification):
     """
 
     subject = pgettext(
-        "email", 'Your team has been scheduled for the activity "{title}"'
+        "platform-email", 'Your team has been scheduled for the activity "{title}"'
     )
     template = "messages/teams/user_team_scheduled"
 
@@ -113,7 +113,7 @@ class CaptainTeamMemberNotification(TransitionMessage):
     def action_link(self):
         return self.obj.team.activity.get_absolute_url() + f"?teamId={self.obj.team.pk}"
 
-    action_title = pgettext("email", "Open your team")
+    action_title = pgettext("platform-email", "Open your team")
 
     def get_recipients(self):
         """manager"""
@@ -128,7 +128,7 @@ class CaptainTeamMemberJoinedNotification(CaptainTeamMemberNotification):
     A team member joined notify owner
     """
 
-    subject = pgettext("email", "Someone has joined your team on {site_name}")
+    subject = pgettext("platform-email", "Someone has joined your team on {site_name}")
     template = "messages/teams/captain_teammember_joined"
 
 
@@ -138,7 +138,7 @@ class CaptainTeamMemberRemovedNotification(CaptainTeamMemberNotification):
     """
 
     subject = pgettext(
-        "email",
+        "platform-email",
         'A participant has been removed from your team for the activity "{title}"',
     )
     template = "messages/teams/captain_teammember_removed"
@@ -150,7 +150,7 @@ class CaptainTeamMemberWithdrewNotification(CaptainTeamMemberNotification):
     """
 
     subject = pgettext(
-        "email", 'A participant has withdrawn from your team for the activity "{title}"'
+        "platform-email", 'A participant has withdrawn from your team for the activity "{title}"'
     )
     template = "messages/teams/captain_teammember_withdrew"
 
@@ -165,7 +165,7 @@ class UserTeamMemberNotification(TransitionMessage):
     def action_link(self):
         return self.obj.team.activity.get_absolute_url() + f"?teamId={self.obj.team.pk}"
 
-    action_title = pgettext("email", "View team")
+    action_title = pgettext("platform-email", "View team")
 
     def get_recipients(self):
         """participant"""
@@ -180,7 +180,7 @@ class UserTeamMemberJoinedNotification(UserTeamMemberNotification):
     The participant joined your team
     """
 
-    subject = pgettext("email", "You are now part of {name}'s team on {site_name}")
+    subject = pgettext("platform-email", "You are now part of {name}'s team on {site_name}")
     template = "messages/teams/user_teammember_joined"
 
 
@@ -190,7 +190,7 @@ class UserTeamMemberRemovedNotification(UserTeamMemberNotification):
     """
 
     subject = pgettext(
-        "email", 'You have been removed from {name}\'s team for the activity "{title}"'
+        "platform-email", 'You have been removed from {name}\'s team for the activity "{title}"'
     )
     template = "messages/teams/user_teammember_removed"
 
@@ -201,7 +201,7 @@ class UserTeamMemberWithdrewNotification(UserTeamMemberNotification):
     """
 
     subject = pgettext(
-        "email", 'You have withdrawn from {name}\'s team for the activity "{title}"'
+        "platform-email", 'You have withdrawn from {name}\'s team for the activity "{title}"'
     )
     template = "messages/teams/user_teammember_withdrew"
 
@@ -212,7 +212,7 @@ class UserTeamMemberScheduledNotification(UserTeamNotification):
     """
 
     subject = pgettext(
-        "email", 'Your team has been scheduled for the activity "{title}"'
+        "platform-email", 'Your team has been scheduled for the activity "{title}"'
     )
     template = "messages/teams/user_teammember_scheduled"
 
@@ -228,7 +228,7 @@ class UserTeamDetailsChangedNotification(TransitionMessage):
     """
 
     subject = pgettext(
-        "email", 'The date or location for your team has been changed for the activity "{title}"'
+        "platform-email", 'The date or location for your team has been changed for the activity "{title}"'
     )
 
     template = "messages/teams/user_teamslot_changed"
@@ -252,7 +252,7 @@ class UserTeamDetailsChangedNotification(TransitionMessage):
         activity = team.activity
         return activity.get_absolute_url() + f"?teamId={team.pk}"
 
-    action_title = pgettext("email", "View team")
+    action_title = pgettext("platform-email", "View team")
 
     def get_recipients(self):
         """participants"""

@@ -61,7 +61,8 @@ class DateParticipantSerializer(ParticipantSerializer):
         email = data.get('email', None)
         if data['slot'].status != 'open' and not email:
             raise ValidationError('Participants cannot sign up for full slots')
-        return data
+
+        return super().validate(data)
 
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant

@@ -17,7 +17,7 @@ class MatchingActivitiesNotification(TransitionMessage):
     Send a list of matching activities to user
     """
     subject = pgettext(
-        'email',
+        'platform-email',
         '{first_name}, there are {count} activities on {site_name} matching your profile'
     )
     template = 'messages/matching/matching_activities'

@@ -43,13 +43,13 @@ class ManagerRegistrationCreatedNotification(ManagerRegistrationNotification):
 
 
 class ManagerRegistrationStoppedNotification(ManagerRegistrationNotification):
-    subject = pgettext("email", 'A participant for your activity "{title}" has stopped')
+    subject = pgettext("platform-email", 'A participant for your activity "{title}" has stopped')
     template = "messages/registrations/manager_registration_stopped"
 
 
 class ManagerRegistrationRestartedNotification(ManagerRegistrationNotification):
     subject = pgettext(
-        "email", 'A participant for your activity "{title}" has restarted'
+        "platform-email", 'A participant for your activity "{title}" has restarted'
     )
     template = "messages/registrations/manager_registration_restarted"
 
@@ -108,7 +108,7 @@ class UserRegistrationAcceptedNotification(UserRegistrationNotification):
 
 class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
     subject = pgettext(
-        "email", 'Your team has been selected for the activity "{title}"'
+        "platform-email", 'Your team has been selected for the activity "{title}"'
     )
     template = "messages/registrations/team_accepted"
 
@@ -125,21 +125,21 @@ class UserRegistrationRemovedNotification(UserRegistrationNotification):
 
 class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext(
-        "email", 'Your team has not been selected for the activity "{title}"'
+        "platform-email", 'Your team has not been selected for the activity "{title}"'
     )
     template = "messages/registrations/team_rejected"
 
 
 class UserRegistrationStoppedNotification(UserRegistrationNotification):
     subject = pgettext(
-        "email", 'Your contribution to the activity "{title}" has been stopped'
+        "platform-email", 'Your contribution to the activity "{title}" has been stopped'
     )
     template = "messages/registrations/user_stopped"
 
 
 class UserRegistrationRestartedNotification(UserRegistrationNotification):
     subject = pgettext(
-        "email", 'Your contribution to the activity "{title}" has been restarted'
+        "platform-email", 'Your contribution to the activity "{title}" has been restarted'
     )
     template = "messages/registrations/user_restarted"
 
@@ -222,20 +222,20 @@ class PeriodicUserJoinedNotification(UserRegistrationNotification):
 
 
 class ManagerTeamRegistrationCreatedReviewNotification(ManagerRegistrationNotification):
-    subject = pgettext("email", 'A new team has applied to your activity "{title}" 🎉')
+    subject = pgettext("platform-email", 'A new team has applied to your activity "{title}" 🎉')
     template = "messages/registrations/manager_team_registration_created_review"
 
 
 class ManagerTeamRegistrationCreatedNotification(ManagerRegistrationNotification):
-    subject = pgettext("email", 'You have a new team for your activity "{title}" 🎉')
+    subject = pgettext("platform-email", 'You have a new team for your activity "{title}" 🎉')
     template = "messages/registrations/manager_team_registration_created"
 
 
 class TeamAppliedNotification(UserRegistrationNotification):
-    subject = pgettext("email", 'You have registered your team on "{site_name}"')
+    subject = pgettext("platform-email", 'You have registered your team on "{site_name}"')
     template = "messages/registrations/schedule/team_applied"
 
 
 class TeamJoinedNotification(UserRegistrationNotification):
-    subject = pgettext("email", 'You have registered your team on "{site_name}"')
+    subject = pgettext("platform-email", 'You have registered your team on "{site_name}"')
     template = "messages/registrations/schedule/team_joined"

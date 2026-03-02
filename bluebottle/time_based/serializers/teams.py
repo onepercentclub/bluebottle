@@ -12,6 +12,7 @@ from bluebottle.fsm.serializers import (
     TransitionSerializer,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.members.models import Member
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -166,6 +167,28 @@ class TeamMemberSerializer(ModelSerializer):
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
         "participants": "bluebottle.time_based.serializers.TeamScheduleParticipantSerializer",
     }
+
+    def create(self, validated_data):
+        email = validated_data.pop("email", None)
+        invite_code = validated_data.pop("invite_code", None)
+
+        request = self.context.get("request")
+        request_user = request.user if request else None
+
+        if email:
+            # Reuse an existing member when the email is already registered.
+            existing_member = Member.objects.filter(email__iexact=email).first()
+            if existing_member:
+                validated_data["user"] = existing_member
+            else:
+                validated_data["invite_code"] = invite_code
+        else:
+            if invite_code:
+                validated_data["invite_code"] = invite_code
+            if request_user and request_user.is_authenticated:
+                validated_data["user"] = request_user
+
+        return super().create(validated_data)
 
 
 class TeamTransitionSerializer(TransitionSerializer):

@@ -29,8 +29,8 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends python3-venv
 
-      - name: Create virtualenv
-        run: virtualenv env
+      - name: Create venv
+        run: python -m venv env
 
       - name: Show Python version
         run: |
@@ -83,8 +83,8 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends python3-venv
 
-      - name: Create virtualenv
-        run: virtualenv env
+      - name: Create venv
+        run: python -m venv env
 
       - name: Show Python version
         run: |

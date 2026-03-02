@@ -132,10 +132,9 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
         intent = stripe.PaymentIntent.create(
             **init_args
         )
-        serializer.save(
-            intent_id=intent.id,
-            client_secret=intent.client_secret,
-        )
+        serializer.validated_data['intent_id'] = intent.id
+        serializer.validated_data['client_secret'] = intent.client_secret
+        super().perform_create(serializer)
 
 
 class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
@@ -244,15 +243,18 @@ class StripeBankTransferList(PaymentList):
         intent = stripe.PaymentIntent.create(
             **init_args
         )
-        intent = serializer.save(
-            intent_id=intent.id,
-            client_secret=intent.client_secret,
-            instructions=intent.next_action
-        )
-        donation.payment_intent = intent
+
+        serializer.validated_data['intent_id'] = intent.id
+        serializer.validated_data['client_secret'] = intent.client_secret
+        serializer.validated_data['instructions'] = intent.next_action
+
+        super().perform_create(serializer)
+
+        donation.payment_intent = serializer.instance
         donation.save()
+
         StripePayment.objects.create(
-            payment_intent=intent,
+            payment_intent=serializer.instance,
             donation=donation,
         )
 
@@ -272,7 +274,8 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         return self.queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -404,7 +407,8 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
             self.check_object_permissions(
                 self.request, serializer.Meta.model(**validated_data)
             )
-        serializer.save()
+
+        super().perform_create(serializer)
 
 
 class ExternalAccountDetails(
@@ -424,7 +428,7 @@ class ExternalAccountDetails(
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
         serializer.instance.update(token)
-        serializer.save()
+        super().perform_update(serializer)
 
 
 class IntentWebHookView(View):

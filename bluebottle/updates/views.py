@@ -45,7 +45,8 @@ class UpdateList(JsonApiViewMixin, CreateAPIView):
                 serializer.Meta.model(author=self.request.user, **serializer.validated_data)
             )
 
-        serializer.save(author=self.request.user)
+        serializer.validated_data['author'] = self.request.user
+        super().perform_create(serializer)
 
 
 class UpdateImageList(JsonApiViewMixin, CreateAPIView):

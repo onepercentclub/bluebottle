@@ -14,8 +14,8 @@
         <p>
             <b>{{ title }}</b>
         </p>
-        {% trans "Grant fund" %}: {{ grant_fund }} <br/>
-        {% trans "Grant requester" %}: {{ requester }} <br/>
-        {% trans "Granted amount" %}: {{ amount }} <br/>
+        {% trans "Grant fund" context "platform-email" %}: {{ grant_fund }} <br/>
+        {% trans "Grant requester" context "platform-email" %}: {{ requester }} <br/>
+        {% trans "Granted amount" context "platform-email" %}: {{ amount }} <br/>
     </div>
 {% endblock %}

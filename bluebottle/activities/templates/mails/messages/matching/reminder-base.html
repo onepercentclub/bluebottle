@@ -15,7 +15,7 @@
 
 {% block end_message %}
     {% message_url opt_out_link as profile_url %}
-    {% blocktrans %}
+    {% blocktrans context "platform-email" %}
       Go to <a href="{{profile_url}}">your profile</a> to opt-out.
     {% endblocktrans %}
 {% endblock %}

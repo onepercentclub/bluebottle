@@ -54,11 +54,9 @@ class LinkedActivityDocument(ActivityDocument):
         return 'individuals'
 
     def prepare_dates(self, instance):
-        from datetime import datetime
-        now = datetime.now()
         return [{
-            'start': now,
-            'end': now,
+            'start': instance.start,
+            'end': instance.end,
         }]
 
     # Override methods that don't apply to LinkedDeed

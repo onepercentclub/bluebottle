@@ -11,20 +11,42 @@ concurrency:
 
 jobs:
   translations:
-    name: Translations
+    name: Translations (Debian ${{ matrix.debian }})
     runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - debian: "11"
+            container_image: python:3.9-slim-bullseye
+          - debian: "13"
+            container_image: debian:trixie-slim
+    container: ${{ matrix.container_image }}
     steps:
+      - name: Install Python 3.9 (Debian 13 only)
+        if: matrix.debian == '13'
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3.9 python3.9-venv python3.9-dev
+          update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+          update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+          python3.9 -m ensurepip --upgrade
+
       - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Restore cached virtualenv
         uses: actions/cache/restore@v4
         with:
-          key: env-${{ hashFiles('setup.py') }}
+          key: env-${{ hashFiles('setup.py') }}-debian-${{ matrix.debian }}
           path: env
 
       - name: Create virtualenv
-        run: virtualenv -p "$PYTHON_BIN" env
+        run: |
+          PYTHON_BIN="$(command -v python3.9 || command -v python3 || command -v python)"
+          "$PYTHON_BIN" -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
+          "$PYTHON_BIN" -m pip install --break-system-packages virtualenv 2>/dev/null || "$PYTHON_BIN" -m pip install virtualenv
+          "$PYTHON_BIN" -m virtualenv -p "$PYTHON_BIN" env
 
       - name: Show Python version
         run: |
@@ -40,7 +62,7 @@ jobs:
       - name: Saved cached virtualenv
         uses: actions/cache/save@v4
         with:
-          key: env-${{ hashFiles('setup.py') }}
+          key: env-${{ hashFiles('setup.py') }}-debian-${{ matrix.debian }}
           path: env
 
       - name: Extract messages
@@ -64,14 +86,36 @@ jobs:
           refresh-message-position: true
 
   lint:
-    name: Linting
+    name: Lint (Debian ${{ matrix.debian }})
     runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - debian: "11"
+            container_image: python:3.9-slim-bullseye
+          - debian: "13"
+            container_image: debian:trixie-slim
+    container: ${{ matrix.container_image }}
     steps:
+      - name: Install Python 3.9 (Debian 13 only)
+        if: matrix.debian == '13'
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3.9 python3.9-venv python3.9-dev
+          update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+          update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
+          python3.9 -m ensurepip --upgrade
+
       - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Create virtualenv
-        run: virtualenv env
+        run: |
+          PYTHON_BIN="$(command -v python3.9 || command -v python3 || command -v python)"
+          "$PYTHON_BIN" -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
+          "$PYTHON_BIN" -m pip install --break-system-packages virtualenv 2>/dev/null || "$PYTHON_BIN" -m pip install virtualenv
+          "$PYTHON_BIN" -m virtualenv -p "$PYTHON_BIN" env
 
       - name: Show Python version
         run: |

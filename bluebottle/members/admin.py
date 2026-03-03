@@ -165,6 +165,7 @@ class MemberPlatformSettingsAdmin(
                     'explicit_terms',
                     'account_creation_rules',
                     'email_domains',
+                    'support_groups',
                     'request_access_info',
                     'request_access_instructions',
                     'request_access_email',

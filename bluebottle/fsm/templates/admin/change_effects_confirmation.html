@@ -41,16 +41,26 @@ delete-selected-confirmation{% endblock %}
         {% if field.name == 'send_messages' %}
             {% include "admin/send_mail_check_box.html" %}
         {% else %}
-            {{ field.errors }}
-            {{ field.label_tag }}
-            {% if field.is_readonly %}
-                <p>{{ field.contents|linebreaksbr }}</p>
-            {% else %}
-                {{ field }}
-            {% endif %}
-            {% if field.help_text %}
-                <p class="help">{{ field.help_text|safe }}</p>
-            {% endif %}
+
+        <fieldset class="module aligned">
+            <div class="form-row{% if field.errors %} errors{% endif %}">
+                <div {% if field.is_checkbox %} class="checkbox-row" {% endif %}>
+                    <div class="field-box">
+                        {{field.errors}}
+                        {{field.label_tag}}
+                        {{field}}
+                        {% if field.field.widget.input_type == 'checkbox' %}
+                            <label for="{{field.id}}" class="checkbox-label"></label>
+                        {% endif %}
+
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </fieldset>
         {% endif %}
     {% empty %}
         {% if has_notifications %}

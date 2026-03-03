@@ -4,7 +4,7 @@
 ################
 # DEPENDENCIES #
 ################
-FROM python:3.8 as deps
+FROM python:3.9 as deps
 
 # Install missing dependencies
 RUN apt-get update
@@ -35,7 +35,7 @@ RUN pip install -e .[env]
 #  BLUEBOTTLE  #
 ################
 
-FROM python:3.8
+FROM python:3.9
 
 # Install missing dependencies
 RUN apt-get update

@@ -164,7 +164,8 @@ tests_requires = [
 
 dev_requires = [
     'ipdb',
-    'flake8==5.0.4'
+    'flake8==5.0.4',
+    'polib==1.2.0',
 ]
 
 setup(

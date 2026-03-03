@@ -128,8 +128,8 @@ class SocialLoginSettingsInline(admin.TabularInline):
 
 
 class MemberPlatformSettingsAdmin(
-    TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin,
-    NonSortableParentAdmin, DynamicArrayMixin
+    DynamicArrayMixin, TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin,
+    NonSortableParentAdmin,
 ):
     inlines = [SocialLoginSettingsInline]
 

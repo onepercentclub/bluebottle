@@ -26,7 +26,8 @@ from rest_framework_jwt.views import ObtainJSONWebTokenView
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_accounts.permissions import (
-    CurrentUserPermission, IsAuthenticatedOrOpenPermission
+    CurrentUserPermission, IsAuthenticatedOrOpenPermission,
+    SignUpTokenPermission
 )
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.clients import properties
@@ -235,7 +236,7 @@ class SignUpToken(JsonApiViewMixin, CreateAPIView):
     Request a signup token
 
     """
-    permission_classes = []
+    permission_classes = [SignUpTokenPermission]
 
     queryset = USER_MODEL.objects.all()
     serializer_class = SignUpTokenSerializer

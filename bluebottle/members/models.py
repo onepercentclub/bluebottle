@@ -150,7 +150,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     support_groups = ArrayField(
         models.CharField(),
         verbose_name=_('Support login groups'),
-        default=lambda: list('Engineering Team', 'Support'),
+        default=lambda: ['Engineering Team', 'Support'],
         help_text=_('Groups that can login in using support accounts'),
     )
 

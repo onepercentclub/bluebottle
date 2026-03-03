@@ -539,7 +539,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
@@ -560,7 +560,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
@@ -574,7 +574,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.add,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
@@ -588,7 +588,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.reject,
                 ),
                 RelatedTransitionEffect(

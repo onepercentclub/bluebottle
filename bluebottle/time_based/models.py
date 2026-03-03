@@ -1571,9 +1571,9 @@ class Team(TriggerMixin, models.Model):
 
     invite_code = models.UUIDField(default=uuid.uuid4)
 
-    registration = models.OneToOneField(
+    registration = models.ForeignKey(
         Registration,
-        related_name='team',
+        related_name='teams',
         on_delete=models.CASCADE,
         blank=True,
         null=True

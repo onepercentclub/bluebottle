@@ -19,6 +19,8 @@ from bluebottle.activity_pub.models import (
     Start,
     Cancel,
     Finish,
+    Join,
+    Leave,
     Organization,
     Actor,
     Activity,
@@ -165,10 +167,15 @@ class GoodDeedSerializer(BaseEventSerializer):
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
+    synced_participant_count = serializers.IntegerField(
+        required=False, allow_null=True, default=0
+    )
 
     class Meta(BaseEventSerializer.Meta):
         model = GoodDeed
-        fields = BaseEventSerializer.Meta.fields + ('start_time', 'end_time')
+        fields = BaseEventSerializer.Meta.fields + (
+            'start_time', 'end_time', 'synced_participant_count'
+        )
 
 
 class CrowdFundingSerializer(BaseEventSerializer):
@@ -346,7 +353,7 @@ class FollowSerializer(BaseActivitySerializer):
     type = TypeField('Follow')
     object = ActorSerializer()
     adoption_type = serializers.ChoiceField(
-        choices=['link', 'template'],
+        choices=['link', 'template', 'sync'],
         required=False,
         allow_null=True
     )
@@ -449,6 +456,34 @@ class FinishSerializer(BaseActivitySerializer):
         model = Finish
 
 
+class JoinSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:join')
+    type = TypeField('Join')
+    object = EventSerializer()
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Join
+
+    def save(self, *args, **kwargs):
+        if 'object' in self.validated_data and isinstance(self.validated_data['object'], dict):
+            self.validated_data['object'] = adapter.fetch(self.validated_data['object']['id'])
+        return super().save(*args, **kwargs)
+
+
+class LeaveSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:leave')
+    type = TypeField('Leave')
+    object = EventSerializer()
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Leave
+
+    def save(self, *args, **kwargs):
+        if 'object' in self.validated_data and isinstance(self.validated_data['object'], dict):
+            self.validated_data['object'] = adapter.fetch(self.validated_data['object']['id'])
+        return super().save(*args, **kwargs)
+
+
 class ActivitySerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
         FollowSerializer,
@@ -458,7 +493,9 @@ class ActivitySerializer(PolymorphicActivityPubSerializer):
         StartSerializer,
         CancelSerializer,
         DeleteSerializer,
-        FinishSerializer
+        FinishSerializer,
+        JoinSerializer,
+        LeaveSerializer,
     ]
 
     class Meta:

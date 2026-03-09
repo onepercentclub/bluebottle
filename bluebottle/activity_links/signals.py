@@ -4,10 +4,13 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from bluebottle.activity_links.models import LinkedActivity
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    AdoptionTypeChoices, Create, Update, Follow, Start, Cancel,
-    Finish, Delete
+    Accept, AdoptionTypeChoices, Create, Delete, Finish, Follow,
+    Cancel, Start, Update
 )
+from bluebottle.activity_pub.models import GoodDeed
+from bluebottle.activity_pub.utils import get_platform_actor
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +24,19 @@ def link(sender, instance, created, **kwargs):
                 if follow.adoption_type == AdoptionTypeChoices.link:
                     instance.object.refresh_from_db()
                     LinkedActivity.objects.sync(instance.object)
+                elif follow.adoption_type == AdoptionTypeChoices.sync:
+                    instance.object.refresh_from_db()
+                    if isinstance(instance.object, GoodDeed):
+                        activity_type_in_auto = (
+                            follow.automatic_adoption_activity_types and
+                            'deed' in follow.automatic_adoption_activity_types
+                        )
+                        if activity_type_in_auto and not instance.object.adopted_activities.exists():
+                            deed = adapter.sync_deed(instance.object)
+                            Accept.objects.create(
+                                actor=get_platform_actor(),
+                                object=instance.object
+                            )
             except Follow.DoesNotExist:
                 logger.debug(f"No follow found for actor: {instance.actor}")
     except Exception as e:

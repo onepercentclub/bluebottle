@@ -11,7 +11,8 @@ from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import (
-    Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start
+    Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start,
+    Join, Leave, Update, GoodDeed
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
@@ -113,6 +114,33 @@ class JSONLDAdapter():
 
         return serializer.save(**save_kwargs)
 
+    def sync_deed(self, event, request=None):
+        """
+        Create a fully synced local Deed from a remote GoodDeed (sync adoption).
+        The Deed has origin=event so Join/Leave can target the source platform.
+        """
+        from bluebottle.activity_pub.models import GoodDeed
+        from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+
+        if not isinstance(event, GoodDeed):
+            raise TypeError('sync_deed expects a GoodDeed event')
+
+        create = Create.objects.filter(object=event).first()
+        if not create:
+            raise ValueError('No Create found for this event')
+        follow = Follow.objects.get(object=create.actor)
+        organization = create.actor.organization
+        owner = follow.default_owner or get_current_user()
+
+        data = EventSerializer(instance=event, full=True).data
+        serializer = FederatedActivitySerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        deed = serializer.save(owner=owner, host_organization=organization, origin=event)
+        self.create_or_update_event(deed)
+        return deed
+
     def create_or_update_event(self, activity):
         from bluebottle.activities.models import Activity as BluebottleActivity
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -212,6 +240,36 @@ def publish_recipient(instance, created, **kwargs):
                         actor=instance.actor,
                         activity=transition
                     )
+
+
+@receiver(post_save, sender=Join)
+def handle_join_received(sender, instance, created, **kwargs):
+    """On receiving a Join from a follower: update synced count and broadcast Update(GoodDeed)."""
+    if not created or instance.is_local:
+        return
+    try:
+        event = instance.object
+        if isinstance(event, GoodDeed):
+            event.synced_participant_count = (event.synced_participant_count or 0) + 1
+            event.save(update_fields=['synced_participant_count'])
+            Update.objects.create(object=event)
+    except Exception as e:
+        logger.error(f"Failed to handle Join: {str(e)}", exc_info=True)
+
+
+@receiver(post_save, sender=Leave)
+def handle_leave_received(sender, instance, created, **kwargs):
+    """On receiving a Leave from a follower: update synced count and broadcast Update(GoodDeed)."""
+    if not created or instance.is_local:
+        return
+    try:
+        event = instance.object
+        if isinstance(event, GoodDeed):
+            event.synced_participant_count = max(0, (event.synced_participant_count or 0) - 1)
+            event.save(update_fields=['synced_participant_count'])
+            Update.objects.create(object=event)
+    except Exception as e:
+        logger.error(f"Failed to handle Leave: {str(e)}", exc_info=True)
 
 
 @receiver([post_save])

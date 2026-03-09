@@ -48,6 +48,16 @@
                     {% endif %}
                 {% endif %}
             {% endif %}
+            {% if adoption_type == 'sync' %}
+                {% if original.adopted_activity %}
+                    <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
+                        <input type="button" value="{% trans 'View synced activity' %}" class="default"
+                               name="_adopt">
+                    </a>
+                {% else %}
+                    {% trans "Synced deeds are created automatically when the activity is received." %}
+                {% endif %}
+            {% endif %}
         </div>
     {% endif %}
 {% endblock %}

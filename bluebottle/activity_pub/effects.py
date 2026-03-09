@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Accept, Follow, Start, Update, Cancel, Delete, Finish
+    Accept, Follow, Start, Update, Cancel, Delete, Finish, Join, Leave
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -145,3 +145,51 @@ class DeletedEffect(Effect):
 
     def __str__(self):
         return str(_('Notify subscribers of the deletion'))
+
+
+class SendJoinEffect(Effect):
+    """
+    Send a Join activity to the source platform when a user joins a synced deed.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+
+    def post_save(self, **kwargs):
+        deed = self.instance.activity
+        if getattr(deed, 'origin', None):
+            Join.objects.create(actor=get_platform_actor(), object=deed.origin)
+
+    @property
+    def is_valid(self):
+        deed = getattr(self.instance, 'activity', None)
+        return (
+            deed is not None and
+            getattr(deed, 'origin', None) is not None and
+            get_platform_actor() is not None
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of join'))
+
+
+class SendLeaveEffect(Effect):
+    """
+    Send a Leave activity to the source platform when a user leaves a synced deed.
+    """
+    template = 'admin/activity_pub/send_leave_effect.html'
+
+    def post_save(self, **kwargs):
+        deed = self.instance.activity
+        if getattr(deed, 'origin', None):
+            Leave.objects.create(actor=get_platform_actor(), object=deed.origin)
+
+    @property
+    def is_valid(self):
+        deed = getattr(self.instance, 'activity', None)
+        return (
+            deed is not None and
+            getattr(deed, 'origin', None) is not None and
+            get_platform_actor() is not None
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of leave'))

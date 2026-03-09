@@ -316,6 +316,10 @@ class ReceivedActivity(Event):
 class GoodDeed(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
+    synced_participant_count = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Aggregate participant count from Join/Leave across synced platforms.')
+    )
 
     class Meta:
         verbose_name = _("Deed")
@@ -416,6 +420,10 @@ class AdoptionTypeChoices(DjangoChoices):
         'link',
         _('Show adopted activities as links to the partner platform.')
     )
+    sync = ChoiceItem(
+        'sync',
+        _('Fully synced copy; participant count syncs with source.')
+    )
 
 
 class ShortAdoptionTypeChoices(DjangoChoices):
@@ -426,6 +434,10 @@ class ShortAdoptionTypeChoices(DjangoChoices):
     link = ChoiceItem(
         'link',
         _('Link')
+    )
+    sync = ChoiceItem(
+        'sync',
+        _('Sync')
     )
     hosted = ChoiceItem(
         'hosted',
@@ -697,6 +709,28 @@ class Update(Activity):
                     yield recipient.actor
         else:
             raise TypeError(f'Cannot create Update for {self.object}')
+
+
+class Join(Activity):
+    """Sent by a follower when a user joins a synced deed; object is the source GoodDeed."""
+    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+    @property
+    def default_recipients(self):
+        create = self.object.create_set.first()
+        if create:
+            yield create.actor
+
+
+class Leave(Activity):
+    """Sent by a follower when a user leaves a synced deed; object is the source GoodDeed."""
+    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+    @property
+    def default_recipients(self):
+        create = self.object.create_set.first()
+        if create:
+            yield create.actor
 
 
 class Transition(Activity):

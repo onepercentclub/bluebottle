@@ -25,6 +25,7 @@
     "donatedCurrency": "goodup:donatedCurrency",
     "collectType": "goodup:collectType",
     "syncedParticipantCount": "goodup:syncedParticipantCount",
+    "contributorCount": "goodup:contributorCount",
     "participantSyncId": "goodup:participantSyncId",
     "participantName": "goodup:participantName",
     "participantEmail": "goodup:participantEmail",

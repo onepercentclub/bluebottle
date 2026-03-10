@@ -168,14 +168,14 @@ class GoodDeedSerializer(BaseEventSerializer):
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
-    synced_participant_count = serializers.IntegerField(
+    contributor_count = serializers.IntegerField(
         required=False, allow_null=True, default=0
     )
 
     class Meta(BaseEventSerializer.Meta):
         model = GoodDeed
         fields = BaseEventSerializer.Meta.fields + (
-            'start_time', 'end_time', 'synced_participant_count'
+            'start_time', 'end_time', 'contributor_count'
         )
 
 
@@ -424,6 +424,8 @@ class UpdateSerializer(BaseActivitySerializer):
                     self.validated_data['object'] = ActivityPubModel.objects.from_iri(object_id)
                 else:
                     self.validated_data['object'] = adapter.fetch(object_id)
+                    # Allow nested EventSerializer to apply the update when we have fetched data
+                    self.context['internal_update'] = True
         return super().save(*args, **kwargs)
 
 

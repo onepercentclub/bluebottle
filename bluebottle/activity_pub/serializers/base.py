@@ -174,14 +174,17 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         request = self.context.get('request')
         request_auth = getattr(request, 'auth', None)
         auth_iri = getattr(request_auth, 'iri', None)
+        internal_update = self.context.get('internal_update', False)
 
         if (
-            is_local(id) and
-            request_auth and
-            auth_iri and
-            is_local(auth_iri)
+            internal_update or
+            (
+                is_local(id) and
+                request_auth and
+                auth_iri and
+                is_local(auth_iri)
+            )
         ):
-
             for name, field in self.fields.items():
                 if isinstance(
                     field,

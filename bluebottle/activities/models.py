@@ -211,7 +211,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     @property
     def event(self):
         from bluebottle.activity_pub.models import Event
-        return Event.objects.get(object=self)
+        return Event.objects.get(activity=self)
 
     @property
     def activity_pub_url(self):

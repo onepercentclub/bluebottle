@@ -316,9 +316,13 @@ class ReceivedActivity(Event):
 class GoodDeed(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
-    synced_participant_count = models.PositiveIntegerField(
+    contributor_count = models.PositiveIntegerField(
         default=0,
-        help_text=_('Aggregate participant count from Join/Leave across synced platforms.')
+        help_text=_('Total participants (local + from other platforms).')
+    )
+    synced_contributor_count = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Participants from other platforms (Join - Leave). Total = linked Deed.contributor_count + this.')
     )
 
     class Meta:

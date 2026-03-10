@@ -344,7 +344,6 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_user]
                 ),
                 FollowActivityEffect,
-                # Notify source platform of join for synced deeds (same pattern for other contributor types later)
                 SendJoinEffect,
             ]
         ),

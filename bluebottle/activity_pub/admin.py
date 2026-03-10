@@ -1064,9 +1064,12 @@ class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
 class GoodDeedAdmin(EventChildAdmin):
     base_model = Event
     model = GoodDeed
+    list_display = EventAdminMixin.list_display + ('contributor_count', 'synced_contributor_count')
     readonly_fields = EventChildAdmin.readonly_fields + (
         'start_time',
         'end_time',
+        'contributor_count',
+        'synced_contributor_count',
     )
     fields = readonly_fields
 

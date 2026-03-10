@@ -22,8 +22,8 @@ from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
-from bluebottle.grant_management.models import GrantApplication
 from bluebottle.geo.models import Country, Geolocation
+from bluebottle.grant_management.models import GrantApplication
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
     PeriodicActivity, ScheduleActivity
@@ -219,11 +219,12 @@ class FederatedDeedSerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:good-deed')
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='end', allow_null=True)
+    contributor_count = serializers.IntegerField(allow_null=True, read_only=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Deed
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'start_time', 'end_time'
+            'start_time', 'end_time', 'contributor_count'
         )
 
 

@@ -77,6 +77,14 @@ class DeedSerializer(BaseActivitySerializer):
         read_only=True
     )
 
+    def get_contributor_count(self, instance):
+        """Total participants: from origin when adopted (synced deed), else local count."""
+        if getattr(instance, 'origin_id', None) and instance.origin_id:
+            origin = getattr(instance, 'origin', None)
+            if origin is not None:
+                return getattr(origin, 'contributor_count', None)
+        return super().get_contributor_count(instance)
+
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -93,6 +101,7 @@ class DeedSerializer(BaseActivitySerializer):
 
     class Meta(BaseActivitySerializer.Meta):
         model = Deed
+        meta_fields = BaseActivitySerializer.Meta.meta_fields  # contributor_count from get_contributor_count
         fields = BaseActivitySerializer.Meta.fields + (
             'my_contributor',
             'contributors',

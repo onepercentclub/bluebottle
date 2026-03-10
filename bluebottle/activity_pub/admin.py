@@ -69,6 +69,8 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Place,
         Cancel,
         Finish,
+        Join,
+        Leave,
     )
 
     def type(self, obj):
@@ -268,15 +270,18 @@ class FinishAdmin(ActivityAdmin):
 
 @admin.register(Join)
 class JoinAdmin(ActivityAdmin):
-    list_display = ("id", "actor", "object")
-    readonly_fields = ('iri', 'actor', 'object', 'pub_url')
+    list_display = ("id", "actor", "object", "participant_sync_id", "participant_name", "participant_email")
+    readonly_fields = (
+        'iri', 'actor', 'object', 'pub_url',
+        'participant_sync_id', 'participant_name', 'participant_email',
+    )
     inlines = [RecipientInline]
 
 
 @admin.register(Leave)
 class LeaveAdmin(ActivityAdmin):
-    list_display = ("id", "actor", "object")
-    readonly_fields = ('iri', 'actor', 'object', 'pub_url')
+    list_display = ("id", "actor", "object", "participant_sync_id")
+    readonly_fields = ('iri', 'actor', 'object', 'pub_url', 'participant_sync_id')
     inlines = [RecipientInline]
 
 
@@ -326,7 +331,7 @@ class FollowingAddForm(forms.ModelForm):
         label=_("Adoption type"),
         widget=forms.RadioSelect(),
         choices=AdoptionTypeChoices.choices,
-        initial=AdoptionTypeChoices.template,
+        initial=AdoptionTypeChoices.clone,
         required=True,
         help_text=_('Select how a received activity should be adopted.')
     )
@@ -375,7 +380,7 @@ class FollowingAdminForm(forms.ModelForm):
         label=_("Adoption type"),
         widget=forms.RadioSelect(),
         choices=AdoptionTypeChoices.choices,
-        initial=AdoptionTypeChoices.template,
+        initial=AdoptionTypeChoices.clone,
         required=True,
         help_text=_('Select how a received activity should be adopted.')
     )
@@ -790,6 +795,7 @@ class EventAdminMixin:
             follow.automatic_adoption_activity_types if follow else None
         )
         extra_context["adoption_type"] = follow.adoption_type if follow else None
+        extra_context["adoption_mode"] = follow.publish_mode if follow else None
         return super().change_view(request, object_id, form_url, extra_context)
 
     def display_description(self, obj):
@@ -810,6 +816,11 @@ class EventAdminMixin:
         urls = super().get_urls()
         custom_urls = [
             path(
+                "<path:object_id>/clone/",
+                self.admin_site.admin_view(self.clone_event),
+                name="activity_pub_event_clone",
+            ),
+            path(
                 "<path:object_id>/adopt/",
                 self.admin_site.admin_view(self.adopt_event),
                 name="activity_pub_event_adopt",
@@ -822,7 +833,8 @@ class EventAdminMixin:
         ]
         return custom_urls + urls
 
-    def adopt_event(self, request, object_id):
+    def clone_event(self, request, object_id):
+        """Create a new activity from the event as a template (clone)."""
         if not request.user.has_perm("deeds.add_activity"):
             raise PermissionDenied
 
@@ -831,7 +843,7 @@ class EventAdminMixin:
         if event.activity:
             self.message_user(
                 request,
-                "This activity has already been adopted.",
+                "This activity has already been cloned.",
                 level="warning",
             )
             return HttpResponseRedirect(
@@ -839,7 +851,7 @@ class EventAdminMixin:
             )
 
         try:
-            activity = adapter.adopt(event, request)
+            activity = adapter.clone(event, request)
 
             self.message_user(
                 request,
@@ -852,6 +864,58 @@ class EventAdminMixin:
 
         except Exception as e:
             self.message_user(request, f"Error creating activity: {str(e)}", level="error")
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+    def adopt_event(self, request, object_id):
+        """Create a synced local Deed from a remote GoodDeed (adopt). Supports only GoodDeed for now."""
+        if not request.user.has_perm("deeds.add_activity"):
+            raise PermissionDenied
+
+        event = get_object_or_404(Event, pk=unquote(object_id))
+        from bluebottle.activity_pub.models import GoodDeed
+
+        if not isinstance(event.get_real_instance(), GoodDeed):
+            self.message_user(
+                request,
+                "Manual adopt is only supported for Deed events.",
+                level="warning",
+            )
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+        if event.adopted_activity:
+            self.message_user(
+                request,
+                "This event has already been adopted.",
+                level="warning",
+            )
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+        try:
+            deed = adapter.adopt(event, request)
+            from bluebottle.activity_pub.models import Accept
+            from bluebottle.activity_pub.utils import get_platform_actor
+
+            Accept.objects.create(
+                actor=get_platform_actor(),
+                object=event
+            )
+            self.message_user(
+                request,
+                f'Successfully adopted Deed "{deed.title}".',
+                level="success",
+            )
+            return HttpResponseRedirect(
+                reverse("admin:activities_activity_change", args=[deed.pk])
+            )
+
+        except Exception as e:
+            self.message_user(request, f"Error adopting event: {str(e)}", level="error")
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])
             )
@@ -945,10 +1009,15 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
 @admin.action(description="Adopt selected activities")
 def adopt_events(modeladmin, request, events):
     for event in events:
-        if event.source.follow.adoption_type == 'link':
+        follow = event.source.follow
+        if follow.adoption_type == 'link':
             adapter.link(event)
-        if event.source.follow.adoption_type == 'template':
-            adapter.adopt(event)
+        elif follow.adoption_type == 'clone':
+            adapter.clone(event, request)
+        elif follow.adoption_type == 'sync':
+            from bluebottle.activity_pub.models import GoodDeed
+            if isinstance(event.get_real_instance(), GoodDeed) and not event.adopted_activity:
+                adapter.adopt(event, request)
     modeladmin.message_user(
         request,
         _('{amount} activities have been adopted.').format(amount=len(events)),

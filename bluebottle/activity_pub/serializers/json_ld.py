@@ -35,6 +35,7 @@ from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, PolymorphicActivityPubSerializer
 )
 from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
+from bluebottle.activity_pub.utils import is_local
 
 
 class InboxSerializer(ActivityPubSerializer):
@@ -353,7 +354,7 @@ class FollowSerializer(BaseActivitySerializer):
     type = TypeField('Follow')
     object = ActorSerializer()
     adoption_type = serializers.ChoiceField(
-        choices=['link', 'template', 'sync'],
+        choices=['link', 'clone', 'sync'],
         required=False,
         allow_null=True
     )
@@ -416,7 +417,13 @@ class UpdateSerializer(BaseActivitySerializer):
         model = Update
 
     def save(self, *args, **kwargs):
-        self.validated_data['object'] = adapter.fetch(self.validated_data['object']['id'])
+        if 'object' in self.validated_data and isinstance(self.validated_data['object'], dict):
+            object_id = self.validated_data['object'].get('id')
+            if object_id:
+                if is_local(object_id):
+                    self.validated_data['object'] = ActivityPubModel.objects.from_iri(object_id)
+                else:
+                    self.validated_data['object'] = adapter.fetch(object_id)
         return super().save(*args, **kwargs)
 
 
@@ -460,13 +467,24 @@ class JoinSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:join')
     type = TypeField('Join')
     object = EventSerializer()
+    participant_sync_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    participant_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    participant_email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Join
+        fields = BaseActivitySerializer.Meta.fields + (
+            'participant_sync_id', 'participant_name', 'participant_email'
+        )
 
     def save(self, *args, **kwargs):
         if 'object' in self.validated_data and isinstance(self.validated_data['object'], dict):
-            self.validated_data['object'] = adapter.fetch(self.validated_data['object']['id'])
+            object_id = self.validated_data['object'].get('id')
+            if object_id:
+                if is_local(object_id):
+                    self.validated_data['object'] = Event.objects.from_iri(object_id)
+                else:
+                    self.validated_data['object'] = adapter.fetch(object_id)
         return super().save(*args, **kwargs)
 
 
@@ -474,13 +492,20 @@ class LeaveSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:leave')
     type = TypeField('Leave')
     object = EventSerializer()
+    participant_sync_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Leave
+        fields = BaseActivitySerializer.Meta.fields + ('participant_sync_id',)
 
     def save(self, *args, **kwargs):
         if 'object' in self.validated_data and isinstance(self.validated_data['object'], dict):
-            self.validated_data['object'] = adapter.fetch(self.validated_data['object']['id'])
+            object_id = self.validated_data['object'].get('id')
+            if object_id:
+                if is_local(object_id):
+                    self.validated_data['object'] = Event.objects.from_iri(object_id)
+                else:
+                    self.validated_data['object'] = adapter.fetch(object_id)
         return super().save(*args, **kwargs)
 
 

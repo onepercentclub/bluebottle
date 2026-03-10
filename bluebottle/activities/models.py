@@ -366,6 +366,48 @@ class Contributor(TriggerMixin, PolymorphicModel):
         on_delete=models.SET_NULL,
     )
 
+    # For participants without a user (e.g. synced from another platform)
+    display_name = models.CharField(
+        _("Display name"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Name when no user is linked (e.g. synced participants)."),
+    )
+    email = models.EmailField(
+        _("Email"),
+        blank=True,
+        null=True,
+        help_text=_("Email when no user is linked (e.g. synced participants)."),
+    )
+    sync_id = models.CharField(
+        _("Sync identifier"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Remote participant id for matching Join/Leave in synced activities."),
+    )
+    # Which ActivityPub Actor sent the Join (the platform this participant came from)
+    sync_actor = models.ForeignKey(
+        "activity_pub.Actor",
+        verbose_name=_("Sync source (Actor)"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="synced_contributors",
+        help_text=_("The ActivityPub Actor (platform) that sent the Join this participant came from."),
+    )
+    # Which Follow (connection) the Join came through (our Follow where object=sync_actor)
+    sync_follow = models.ForeignKey(
+        "activity_pub.Follow",
+        verbose_name=_("Sync source (Follow)"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="synced_contributors",
+        help_text=_("The Follow (connection) through which this participant joined."),
+    )
+
     @property
     def contributor(self):
         return self
@@ -378,6 +420,20 @@ class Contributor(TriggerMixin, PolymorphicModel):
     @property
     def owner(self):
         return self.user
+
+    @property
+    def display_name_or_user(self):
+        """Name to display: from user.full_name when set, else display_name."""
+        if self.user_id:
+            return self.user.full_name
+        return self.display_name or ''
+
+    @property
+    def email_or_user(self):
+        """Email: from user when set, else email field."""
+        if self.user_id:
+            return self.user.email
+        return self.email
 
     @property
     def is_team_captain(self):
@@ -399,6 +455,8 @@ class Contributor(TriggerMixin, PolymorphicModel):
     def __str__(self):
         if self.user:
             return str(self.user)
+        if self.display_name:
+            return self.display_name
         return str(_("Anonymous"))
 
 

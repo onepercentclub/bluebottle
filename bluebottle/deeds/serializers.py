@@ -150,10 +150,23 @@ class DeedParticipantSerializer(BaseContributorSerializer):
         queryset=Deed.objects.all()
     )
     permissions = ResourcePermissionField('deed-participant-detail', view_args=('pk',))
+    display_name = serializers.SerializerMethodField(read_only=True)
+    platform = serializers.SerializerMethodField(read_only=True)
+
+    def get_display_name(self, obj):
+        """Display name: user's full name when set, else display_name (e.g. synced participants)."""
+        return obj.display_name_or_user or None
+
+    def get_platform(self, obj):
+        """Name of the sync source platform when this participant came from another platform."""
+        if obj.sync_actor_id:
+            return getattr(obj.sync_actor, 'name', None)
+        return None
 
     class Meta(BaseContributorSerializer.Meta):
         model = DeedParticipant
         meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
+        fields = BaseContributorSerializer.Meta.fields + ('display_name', 'platform')
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/deeds/participants'

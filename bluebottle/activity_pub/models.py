@@ -412,8 +412,8 @@ class AdoptionModeChoices(DjangoChoices):
 
 
 class AdoptionTypeChoices(DjangoChoices):
-    template = ChoiceItem(
-        'template',
+    clone = ChoiceItem(
+        'clone',
         _('Use received activities as template to create your own activities.')
     )
     link = ChoiceItem(
@@ -427,8 +427,8 @@ class AdoptionTypeChoices(DjangoChoices):
 
 
 class ShortAdoptionTypeChoices(DjangoChoices):
-    template = ChoiceItem(
-        'template',
+    clone = ChoiceItem(
+        'clone',
         _('Template')
     )
     link = ChoiceItem(
@@ -560,7 +560,7 @@ class Follow(Activity):
         verbose_name=_("Default activity owner"),
         help_text=_(
             "This user will be assigned as the activity manager for any activity "
-            "adopted as a template. It can be left empty and no activity manager "
+            "cloned from a template. It can be left empty and no activity manager "
             "will be assigned by default."
         ),
         on_delete=models.SET_NULL,
@@ -577,7 +577,7 @@ class Follow(Activity):
 
     adoption_type = models.CharField(
         choices=AdoptionTypeChoices.choices,
-        default=AdoptionTypeChoices.template,
+        default=AdoptionTypeChoices.clone,
         verbose_name=_("Adoption type"),
         help_text=_("Select how a received activity should be adopted."),
     )
@@ -715,6 +715,26 @@ class Join(Activity):
     """Sent by a follower when a user joins a synced deed; object is the source GoodDeed."""
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
+    # Participant info sent to source for full participant list
+    participant_sync_id = models.CharField(
+        _("Participant sync id"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Stable id to match this participant on Leave."),
+    )
+    participant_name = models.CharField(
+        _("Participant name"),
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    participant_email = models.EmailField(
+        _("Participant email"),
+        blank=True,
+        null=True,
+    )
+
     @property
     def default_recipients(self):
         create = self.object.create_set.first()
@@ -725,6 +745,14 @@ class Join(Activity):
 class Leave(Activity):
     """Sent by a follower when a user leaves a synced deed; object is the source GoodDeed."""
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+    participant_sync_id = models.CharField(
+        _("Participant sync id"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Stable id to match the participant to remove."),
+    )
 
     @property
     def default_recipients(self):

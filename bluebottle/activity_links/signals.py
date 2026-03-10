@@ -32,7 +32,7 @@ def link(sender, instance, created, **kwargs):
                             'deed' in follow.automatic_adoption_activity_types
                         )
                         if activity_type_in_auto and not instance.object.adopted_activities.exists():
-                            deed = adapter.sync_deed(instance.object)
+                            deed = adapter.adopt(instance.object)
                             Accept.objects.create(
                                 actor=get_platform_actor(),
                                 object=instance.object
@@ -56,8 +56,13 @@ def update(sender, instance, created, **kwargs):
 def start(sender, instance, created, **kwargs):
     try:
         if not instance.is_local and created:
-            link = LinkedActivity.objects.filter(event=instance.object).get()
-            link.states.start(save=True)
+            try:
+                link = LinkedActivity.objects.filter(event=instance.object).get()
+                link.states.start(save=True)
+            except LinkedActivity.DoesNotExist:
+                adopted = instance.object.adopted_activities.first()
+                if adopted is not None and hasattr(adopted, 'states'):
+                    adopted.states.start(save=True)
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")
 
@@ -66,8 +71,13 @@ def start(sender, instance, created, **kwargs):
 def cancel(sender, instance, created, **kwargs):
     try:
         if not instance.is_local and created:
-            link = LinkedActivity.objects.filter(event=instance.object).get()
-            link.states.cancel(save=True)
+            try:
+                link = LinkedActivity.objects.filter(event=instance.object).get()
+                link.states.cancel(save=True)
+            except LinkedActivity.DoesNotExist:
+                adopted = instance.object.adopted_activities.first()
+                if adopted is not None and hasattr(adopted, 'states'):
+                    adopted.states.cancel(save=True)
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")
 
@@ -76,8 +86,13 @@ def cancel(sender, instance, created, **kwargs):
 def delete(sender, instance, created, **kwargs):
     try:
         if not instance.is_local and created:
-            link = LinkedActivity.objects.filter(event=instance.object).get()
-            link.delete()
+            try:
+                link = LinkedActivity.objects.filter(event=instance.object).get()
+                link.delete()
+            except LinkedActivity.DoesNotExist:
+                adopted = instance.object.adopted_activities.first()
+                if adopted is not None and hasattr(adopted, 'states'):
+                    adopted.states.cancel(save=True)
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")
 
@@ -86,7 +101,12 @@ def delete(sender, instance, created, **kwargs):
 def finish(sender, instance, created, **kwargs):
     try:
         if not instance.is_local and created:
-            link = LinkedActivity.objects.filter(event=instance.object).get()
-            link.states.succeed(save=True)
+            try:
+                link = LinkedActivity.objects.filter(event=instance.object).get()
+                link.states.succeed(save=True)
+            except LinkedActivity.DoesNotExist:
+                adopted = instance.object.adopted_activities.first()
+                if adopted is not None and hasattr(adopted, 'states'):
+                    adopted.states.succeed(save=True)
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")

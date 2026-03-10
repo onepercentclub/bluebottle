@@ -344,6 +344,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_user]
                 ),
                 FollowActivityEffect,
+                # Notify source platform of join for synced deeds (same pattern for other contributor types later)
                 SendJoinEffect,
             ]
         ),
@@ -365,6 +366,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_not_owner]
                 ),
                 UnFollowActivityEffect,
+                # Notify source platform of leave for synced deeds
                 SendLeaveEffect,
             ]
         ),
@@ -413,6 +415,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
                 UnFollowActivityEffect,
+                # Notify source platform of leave for synced deeds
                 SendLeaveEffect,
             ]
         ),

@@ -19,8 +19,13 @@ class EffortContributionInlineAdmin(admin.TabularInline):
 @admin.register(DeedParticipant)
 class DeedParticipantAdmin(ContributorChildAdmin):
     readonly_fields = ['created']
-    raw_id_fields = ['user', 'activity']
-    fields = ['activity', 'user', 'status', 'states'] + readonly_fields
+    raw_id_fields = ['user', 'activity', 'sync_actor', 'sync_follow']
+    fields = [
+        'activity', 'user',
+        'display_name', 'email', 'sync_id',
+        'sync_actor', 'sync_follow',
+        'status', 'states'
+    ] + readonly_fields
     list_display = ['__str__', 'activity_link', 'status']
     inlines = ContributorChildAdmin.inlines + (EffortContributionInlineAdmin, )
 

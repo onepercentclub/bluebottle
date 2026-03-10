@@ -251,6 +251,10 @@ class Event(ActivityPubModel):
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL
     )
+    contributor_count = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Total contributors from all platforms')
+    )
 
     @property
     def source(self):
@@ -316,10 +320,6 @@ class ReceivedActivity(Event):
 class GoodDeed(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
-    contributor_count = models.PositiveIntegerField(
-        default=0,
-        help_text=_('Total participants (local + from other platforms).')
-    )
 
     class Meta:
         verbose_name = _("Deed")
@@ -788,3 +788,6 @@ class Cancel(Transition):
 
 class Finish(Transition):
     pass
+
+
+from bluebottle.activity_pub.signals import *  # noqa

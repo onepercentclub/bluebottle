@@ -11,7 +11,6 @@ import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.models import Cancel, Delete, Finish, Start
 
 logger = logging.getLogger(__name__)
@@ -19,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _apply_to_adopted_if_no_link(event, transition_name):
     """If there is no LinkedActivity for this event, apply transition to adopted activity."""
+    from bluebottle.activity_links.models import LinkedActivity
     if LinkedActivity.objects.filter(event=event).exists():
         return
     adopted = event.adopted_activities.first()

@@ -339,6 +339,62 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 
 
 @python_2_unicode_compatible
+class RemoteContributor(models.Model):
+    """
+    Remote identity for a contributor without a local user (e.g. synced from another platform).
+    Stores display name, email, sync id, and which Actor/Follow the Join came from.
+    """
+    display_name = models.CharField(
+        _("Display name"),
+        max_length=255,
+        blank=True,
+        default="",
+        help_text=_("Name when no user is linked (e.g. synced participants)."),
+    )
+    email = models.EmailField(
+        _("Email"),
+        blank=True,
+        null=True,
+        help_text=_("Email when no user is linked (e.g. synced participants)."),
+    )
+    sync_id = models.CharField(
+        _("Sync identifier"),
+        max_length=255,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text=_("Remote participant id for matching Join/Leave in synced activities."),
+    )
+    # Which ActivityPub Actor sent the Join (the platform this participant came from)
+    sync_actor = models.ForeignKey(
+        "activity_pub.Actor",
+        verbose_name=_("Sync source (Actor)"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="synced_remote_contributors",
+        help_text=_("The ActivityPub Actor (platform) that sent the Join this participant came from."),
+    )
+    # Which Follow (connection) the Join came through (our Follow where object=sync_actor)
+    sync_follow = models.ForeignKey(
+        "activity_pub.Follow",
+        verbose_name=_("Sync source (Follow)"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="synced_remote_contributors",
+        help_text=_("The Follow (connection) through which this participant joined."),
+    )
+
+    class Meta(object):
+        verbose_name = _("Remote contributor")
+        verbose_name_plural = _("Remote contributors")
+
+    def __str__(self):
+        return self.display_name or self.email or (str(self.sync_id) if self.sync_id else '') or str(_("Anonymous"))
+
+
+@python_2_unicode_compatible
 class Contributor(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
@@ -367,46 +423,35 @@ class Contributor(TriggerMixin, PolymorphicModel):
     )
 
     # For participants without a user (e.g. synced from another platform)
-    display_name = models.CharField(
-        _("Display name"),
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text=_("Name when no user is linked (e.g. synced participants)."),
-    )
-    email = models.EmailField(
-        _("Email"),
-        blank=True,
-        null=True,
-        help_text=_("Email when no user is linked (e.g. synced participants)."),
-    )
-    sync_id = models.CharField(
-        _("Sync identifier"),
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text=_("Remote participant id for matching Join/Leave in synced activities."),
-    )
-    # Which ActivityPub Actor sent the Join (the platform this participant came from)
-    sync_actor = models.ForeignKey(
-        "activity_pub.Actor",
-        verbose_name=_("Sync source (Actor)"),
+    remote_contributor = models.ForeignKey(
+        "RemoteContributor",
+        verbose_name=_("Remote contributor"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="synced_contributors",
-        help_text=_("The ActivityPub Actor (platform) that sent the Join this participant came from."),
+        related_name="contributors",
+        help_text=_("When set, this contributor is a synced participant without a local user."),
     )
-    # Which Follow (connection) the Join came through (our Follow where object=sync_actor)
-    sync_follow = models.ForeignKey(
-        "activity_pub.Follow",
-        verbose_name=_("Sync source (Follow)"),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="synced_contributors",
-        help_text=_("The Follow (connection) through which this participant joined."),
-    )
+
+    @property
+    def remote_user(self):
+        """Backward compatibility: alias for remote_contributor."""
+        return self.remote_contributor
+
+    @property
+    def sync_actor(self):
+        """Sync source Actor from remote_contributor when present (backward compatibility)."""
+        return self.remote_contributor.sync_actor if self.remote_contributor_id else None
+
+    @property
+    def sync_follow(self):
+        """Sync source Follow from remote_contributor when present (backward compatibility)."""
+        return self.remote_contributor.sync_follow if self.remote_contributor_id else None
+
+    @property
+    def sync_actor_id(self):
+        """ID of sync_actor for backward compatibility (e.g. serializers)."""
+        return self.remote_contributor.sync_actor_id if self.remote_contributor_id else None
 
     @property
     def contributor(self):
@@ -422,18 +467,27 @@ class Contributor(TriggerMixin, PolymorphicModel):
         return self.user
 
     @property
+    def sync_id(self):
+        """Sync identifier from remote_contributor when present (for backward compatibility)."""
+        return self.remote_contributor.sync_id if self.remote_contributor_id else None
+
+    @property
     def display_name_or_user(self):
-        """Name to display: from user.full_name when set, else display_name."""
+        """Name to display: from user.full_name when set, else remote_contributor.display_name."""
         if self.user_id:
             return self.user.full_name
-        return self.display_name or ''
+        if self.remote_contributor_id:
+            return self.remote_contributor.display_name or ''
+        return ''
 
     @property
     def email_or_user(self):
-        """Email: from user when set, else email field."""
+        """Email: from user when set, else remote_contributor.email."""
         if self.user_id:
             return self.user.email
-        return self.email
+        if self.remote_contributor_id:
+            return self.remote_contributor.email
+        return None
 
     @property
     def is_team_captain(self):
@@ -455,8 +509,8 @@ class Contributor(TriggerMixin, PolymorphicModel):
     def __str__(self):
         if self.user:
             return str(self.user)
-        if self.display_name:
-            return self.display_name
+        if self.remote_contributor and self.remote_contributor.display_name:
+            return self.remote_contributor.display_name
         return str(_("Anonymous"))
 
 

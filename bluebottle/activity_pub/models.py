@@ -320,10 +320,6 @@ class GoodDeed(Event):
         default=0,
         help_text=_('Total participants (local + from other platforms).')
     )
-    synced_contributor_count = models.PositiveIntegerField(
-        default=0,
-        help_text=_('Participants from other platforms (Join - Leave). Total = linked Deed.contributor_count + this.')
-    )
 
     class Meta:
         verbose_name = _("Deed")

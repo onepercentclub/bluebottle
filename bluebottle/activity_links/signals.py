@@ -1,3 +1,10 @@
+"""
+Signal handlers for activity_pub events (Create, Update, Start, Cancel, Delete, Finish).
+
+Link-only: sync LinkedActivity and drive link state. When there is no LinkedActivity for
+an event, adopted-activity state transitions (e.g. Deed.states.start) are handled in
+activities/signals.py so that logic stays with the Activity/Deed models.
+"""
 import logging
 
 from django.db.models.signals import post_save
@@ -60,9 +67,7 @@ def start(sender, instance, created, **kwargs):
                 link = LinkedActivity.objects.filter(event=instance.object).get()
                 link.states.start(save=True)
             except LinkedActivity.DoesNotExist:
-                adopted = instance.object.adopted_activities.first()
-                if adopted is not None and hasattr(adopted, 'states'):
-                    adopted.states.start(save=True)
+                pass  # Adopted-activity fallback is in activities/signals.py
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")
 
@@ -75,9 +80,7 @@ def cancel(sender, instance, created, **kwargs):
                 link = LinkedActivity.objects.filter(event=instance.object).get()
                 link.states.cancel(save=True)
             except LinkedActivity.DoesNotExist:
-                adopted = instance.object.adopted_activities.first()
-                if adopted is not None and hasattr(adopted, 'states'):
-                    adopted.states.cancel(save=True)
+                pass  # Adopted-activity fallback is in activities/signals.py
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")
 
@@ -90,9 +93,7 @@ def delete(sender, instance, created, **kwargs):
                 link = LinkedActivity.objects.filter(event=instance.object).get()
                 link.delete()
             except LinkedActivity.DoesNotExist:
-                adopted = instance.object.adopted_activities.first()
-                if adopted is not None and hasattr(adopted, 'states'):
-                    adopted.states.cancel(save=True)
+                pass  # Adopted-activity fallback is in activities/signals.py
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")
 
@@ -105,8 +106,6 @@ def finish(sender, instance, created, **kwargs):
                 link = LinkedActivity.objects.filter(event=instance.object).get()
                 link.states.succeed(save=True)
             except LinkedActivity.DoesNotExist:
-                adopted = instance.object.adopted_activities.first()
-                if adopted is not None and hasattr(adopted, 'states'):
-                    adopted.states.succeed(save=True)
+                pass  # Adopted-activity fallback is in activities/signals.py
     except Exception as e:
         logger.error(f"Failed to find link event: {str(e)}")

@@ -177,10 +177,17 @@ class SendJoinEffect(Effect):
 
         # Ensure we have a stable sync_id for this participant (for Leave matching)
         if not contributor.sync_id:
-            contributor.sync_id = str(uuid.uuid4())
-            contributor.save(update_fields=['sync_id'])
+            from bluebottle.activities.models import RemoteContributor
 
-        # Name and email: from user when present, else from Contributor display_name/email
+            remote_contributor = RemoteContributor.objects.create(
+                sync_id=str(uuid.uuid4()),
+                display_name=contributor.display_name_or_user or '',
+                email=contributor.email_or_user,
+            )
+            contributor.remote_contributor = remote_contributor
+            contributor.save(update_fields=['remote_contributor'])
+
+        # Name and email: from user when present, else from remote_contributor
         participant_name = contributor.display_name_or_user or None
         participant_email = contributor.email_or_user or None
 

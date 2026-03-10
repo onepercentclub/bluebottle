@@ -274,15 +274,13 @@ def publish_recipient(instance, created, **kwargs):
 
 def sync_good_deed_contributor_count(event):
     """
-    Set GoodDeed.contributor_count from linked Deed's contributor_count + synced_contributor_count.
-    Call when the Deed's participants change or when synced_contributor_count changes (Join/Leave).
+    Set GoodDeed.contributor_count from linked Deed's contributor_count.
+    Call when the Deed's participants change (Join/Leave or local add/remove).
     """
     if not isinstance(event, GoodDeed):
         return
     deed = getattr(event, 'activity', None)
-    local = deed.contributor_count if deed else 0
-    synced = getattr(event, 'synced_contributor_count', 0) or 0
-    new_total = local + synced
+    new_total = deed.contributor_count if deed else 0
     if event.contributor_count != new_total:
         event.contributor_count = new_total
         event.save(update_fields=['contributor_count'])
@@ -290,40 +288,44 @@ def sync_good_deed_contributor_count(event):
 
 @receiver(post_save, sender=Join)
 def handle_join_received(sender, instance, created, **kwargs):
-    """On receiving a Join: update synced count, add participant to source deed, sync total, broadcast Update(GoodDeed)."""
+    """On receiving a Join: add participant to source deed, sync total, broadcast Update(GoodDeed)."""
     if not created or instance.is_local:
         return
     try:
         event = instance.object
         if not isinstance(event, GoodDeed):
             return
-        event.synced_contributor_count = (getattr(event, 'synced_contributor_count', 0) or 0) + 1
-        event.save(update_fields=['synced_contributor_count'])
-        sync_good_deed_contributor_count(event)
 
         # Add participant to source platform's deed (full list with name/email, and which Actor/Follow it came from)
         deed = getattr(event, 'activity', None)
         if deed and instance.participant_sync_id:
+            from bluebottle.activities.models import RemoteContributor
             from bluebottle.deeds.models import DeedParticipant
             from bluebottle.activity_pub.models import Follow
 
             if not DeedParticipant.objects.filter(
-                activity=deed, sync_id=instance.participant_sync_id
+                activity=deed, remote_contributor__sync_id=instance.participant_sync_id
             ).exists():
                 sync_actor = instance.actor
                 sync_follow = Follow.objects.filter(object=sync_actor).first()
+                remote_contributor, _ = RemoteContributor.objects.get_or_create(
+                    sync_id=instance.participant_sync_id,
+                    defaults={
+                        'display_name': instance.participant_name or '',
+                        'email': instance.participant_email,
+                        'sync_actor': sync_actor,
+                        'sync_follow': sync_follow,
+                    },
+                )
 
                 DeedParticipant.objects.create(
                     activity=deed,
                     user=None,
-                    display_name=instance.participant_name or '',
-                    email=instance.participant_email,
-                    sync_id=instance.participant_sync_id,
-                    sync_actor=sync_actor,
-                    sync_follow=sync_follow,
+                    remote_contributor=remote_contributor,
                     status='accepted',
                 )
 
+        sync_good_deed_contributor_count(event)
         Update.objects.create(object=event)
     except Exception as e:
         logger.error(f"Failed to handle Join: {str(e)}", exc_info=True)
@@ -346,14 +348,12 @@ def handle_leave_received(sender, instance, created, **kwargs):
 
             contributor = Contributor.objects.filter(
                 activity=deed,
-                sync_id=instance.participant_sync_id,
+                remote_contributor__sync_id=instance.participant_sync_id,
             ).first()
             if contributor:
                 contributor.status = 'rejected'
                 contributor.save(update_fields=['status'])
 
-        event.synced_contributor_count = max(0, (getattr(event, 'synced_contributor_count', 0) or 0) - 1)
-        event.save(update_fields=['synced_contributor_count'])
         sync_good_deed_contributor_count(event)
         Update.objects.create(object=event)
     except Exception as e:

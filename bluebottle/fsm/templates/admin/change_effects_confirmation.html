@@ -50,10 +50,12 @@ delete-selected-confirmation{% endblock %}
                         {{field.label_tag}}
                         {{field}}
                         {% if field.field.widget.input_type == 'checkbox' %}
-                            <label for="{{field.id}}" class="checkbox-label"></label>
-                        {% endif %}
+                            <label for="id_{{field.name}}" class="checkbox-label" style="width: auto">
 
-                        {% if field.help_text %}
+                                {{ field.help_text|safe }}
+                            </label>
+
+                        {% else %}
                             <p class="help">{{ field.help_text|safe }}</p>
                         {% endif %}
                     </div>

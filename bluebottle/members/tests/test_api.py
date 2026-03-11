@@ -237,10 +237,8 @@ class SignUpTokenTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
-
+        self.settings = MemberPlatformSettings.load()
         super(SignUpTokenTestCase, self).setUp()
-
         self.client = JSONAPITestClient()
 
     def test_create(self):

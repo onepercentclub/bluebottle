@@ -4,7 +4,6 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
-from django.db.models import Q
 from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
@@ -422,7 +421,7 @@ class AdoptionTypeChoices(DjangoChoices):
     )
     sync = ChoiceItem(
         'sync',
-        _('Fully synced copy; participant count syncs with source.')
+        _('Fully synced copy; Participants sync with source.')
     )
 
 
@@ -437,10 +436,6 @@ class ShortAdoptionTypeChoices(DjangoChoices):
     )
     sync = ChoiceItem(
         'sync',
-        _('Sync')
-    )
-    hosted = ChoiceItem(
-        'hosted',
         _('Fully synced')
     )
 
@@ -614,7 +609,19 @@ class Follow(Activity):
             return Event.objects.filter(
                 create__actor=self.object,
             ).filter(
-                Q(linked_activities__isnull=False) | Q(adopted_activities__isnull=False)
+                adopted_activities__isnull=False
+            )
+        return Accept.objects.filter(
+            actor=self.actor,
+        )
+
+    @property
+    def linked_activities(self):
+        if self.is_local:
+            return Event.objects.filter(
+                create__actor=self.object,
+            ).filter(
+                linked_activities__isnull=False
             )
         return Accept.objects.filter(
             actor=self.actor,

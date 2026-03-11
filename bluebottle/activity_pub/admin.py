@@ -399,7 +399,7 @@ class FollowingAdminForm(forms.ModelForm):
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
     model = Following
-    list_display = ("object", "shared_activities", "adopted_activities", "accepted", "short_adoption_type")
+    list_display = ("object", "accepted", "shared_activities", "adopted_activities", "show_adoption_type")
     raw_id_fields = ('default_owner',)
 
     readonly_fields = ('object', 'accepted', "shared_activities", "adopted_activities")
@@ -408,7 +408,14 @@ class FollowingAdmin(FollowAdmin):
         return obj.shared_activities.count()
 
     def adopted_activities(self, obj):
-        return obj.adopted_activities.count()
+        return obj.adopted_activities.count() + obj.linked_activities.count()
+
+    def show_adoption_type(self, obj):
+        return obj.short_adoption_type
+
+    show_adoption_type.short_description = _("Adoption type")
+
+    adopted_activities.short_description = _("Adopted activities")
 
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
@@ -517,21 +524,28 @@ class FollowerAdminForm(forms.ModelForm):
 
 @admin.register(Follower)
 class FollowerAdmin(FollowAdmin):
-    list_display = ("platform", "shared_activities", "adopted_activities", "accepted", "short_adoption_type")
+    list_display = ("platform", "accepted", "shared_activities", "adopted_activities", "show_adoption_type")
     actions = ['accept_follow_requests']
     readonly_fields = (
         'platform', 'accepted', "shared_activities", "adopted_activities",
-        "publish_activities_button", "short_adoption_type"
+        "publish_activities_button", "show_adoption_type"
     )
     fields = ('platform', 'accepted')
     form = FollowerAdminForm
     inlines = []
 
+    def show_adoption_type(self, obj):
+        return obj.short_adoption_type
+
+    show_adoption_type.short_description = _("Adoption type")
+
     def shared_activities(self, obj):
         return obj.shared_activities.count()
 
     def adopted_activities(self, obj):
-        return obj.adopted_activities.count()
+        return obj.adopted_activities.count() + obj.linked_activities.count()
+
+    adopted_activities.short_description = _("Adopted activities")
 
     def platform(self, obj):
         return obj.actor

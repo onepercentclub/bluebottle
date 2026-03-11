@@ -303,9 +303,23 @@ def handle_join_received(sender, instance, created, **kwargs):
             from bluebottle.deeds.models import DeedParticipant
             from bluebottle.activity_pub.models import Follow
 
-            if not DeedParticipant.objects.filter(
+            existing = DeedParticipant.objects.filter(
                 activity=deed, remote_contributor__sync_id=instance.participant_sync_id
-            ).exists():
+            ).first()
+            if existing:
+                # Re-join after withdraw: set status back to accepted and refresh name/email
+                if existing.status != 'accepted':
+                    existing.status = 'accepted'
+                    existing.save(update_fields=['status'])
+                rc = existing.remote_contributor
+                if rc and (instance.participant_name is not None or instance.participant_email is not None):
+                    if instance.participant_name is not None:
+                        rc.display_name = instance.participant_name or ''
+                        rc.save(update_fields=['display_name'])
+                    if instance.participant_email is not None:
+                        rc.email = instance.participant_email
+                        rc.save(update_fields=['email'])
+            else:
                 sync_actor = instance.actor
                 sync_follow = Follow.objects.filter(object=sync_actor).first()
                 remote_contributor, _ = RemoteContributor.objects.get_or_create(

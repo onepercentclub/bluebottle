@@ -23,7 +23,7 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 class SCIMEndpointTestCaseMixin(object):
     def setUp(self):
         settings = SCIMPlatformSettings.load()
-        settings.enabled = 'test'
+        settings.enabled = True
         settings.save()
 
         self.token = 'Bearer {}'.format(
@@ -35,7 +35,7 @@ class SCIMEndpointTestCaseMixin(object):
 class AuthenticatedSCIMEndpointTestCaseMixin(object):
     def setUp(self):
         settings = SCIMPlatformSettings.load()
-        settings.enabled = 'test'
+        settings.enabled = True
         settings.save()
 
         self.token = 'Bearer {}'.format(

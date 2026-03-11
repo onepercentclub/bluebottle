@@ -6,23 +6,23 @@
 
     {% if original and not original.is_local %}
         <div class="submit-row">
-            {% if adoption_type == 'template' %}
+            {% if adoption_type == 'clone' %}
                 {% if original.adopted_activity %}
                     <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
-                        <input type="button" value="{% trans 'View adopted activity' %}" class="default"
-                               name="_adopt">
+                        <input type="button" value="{% trans 'View cloned activity' %}" class="default"
+                               name="_clone">
                     </a>
                 {% else %}
                     {% if adoption_mode == 'automatic' %}
-                        {% trans "Activities are adopted automatically for this connection" %}
+                        {% trans "Activities are cloned automatically for this connection" %}
                         <br/>
                         Here's a link if it didn't work:
-                        <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
-                            {% trans 'Adopt activity' %}
+                        <a href="{% url 'admin:activity_pub_event_clone' original.pk %}">
+                            {% trans 'Clone activity' %}
                         </a>
                     {% else %}
-                        <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
-                            <input type="button" value="{% trans 'Adopt activity' %}" class="default" name="_adopt">
+                        <a href="{% url 'admin:activity_pub_event_clone' original.pk %}">
+                            <input type="button" value="{% trans 'Clone activity' %}" class="default" name="_clone">
                         </a>
                     {% endif %}
                 {% endif %}
@@ -31,11 +31,11 @@
                 {% if original.linked_activity %}
                     <a href="{% url 'admin:activity_links_linkedactivity_change' original.linked_activity.pk %}">
                         <input type="button" value="{% trans 'View linked activity' %}" class="default"
-                               name="_adopt">
+                               name="_link">
                     </a>
                 {% else %}
                     {% if adoption_mode == 'automatic' %}
-                        {% trans "Activities are adopted automatically for this connection" %}
+                        {% trans "Activities are linked automatically for this connection" %}
                         <br/>
                         Here's a link if it didn't work:
                         <a href="{% url 'admin:activity_pub_event_link' original.pk %}">
@@ -43,9 +43,23 @@
                         </a>
                     {% else %}
                         <a href="{% url 'admin:activity_pub_event_link' original.pk %}">
-                            <input type="button" value="{% trans 'Link activity' %}" class="default" name="_adopt">
+                            <input type="button" value="{% trans 'Link activity' %}" class="default" name="_link">
                         </a>
                     {% endif %}
+                {% endif %}
+            {% endif %}
+            {% if adoption_type == 'sync' %}
+                {% if original.adopted_activity %}
+                    <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
+                        <input type="button" value="{% trans 'View adopted activity' %}" class="default"
+                               name="_adopt">
+                    </a>
+                {% else %}
+                    {% trans "Synced deeds can be created automatically when the activity is received, or you can adopt this event manually:" %}
+                    <br/>
+                    <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
+                        <input type="button" value="{% trans 'Adopt event' %}" class="default" name="_adopt">
+                    </a>
                 {% endif %}
             {% endif %}
         </div>

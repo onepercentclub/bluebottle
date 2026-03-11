@@ -4,14 +4,15 @@ from io import BytesIO
 import requests
 from celery import shared_task
 from django.db import connection
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django_tools.middlewares.ThreadLocal import get_current_user
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import (
-    Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start
+    Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start,
+    Join, Leave, Update, GoodDeed
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
@@ -79,7 +80,7 @@ class JSONLDAdapter():
         else:
             return Follow.objects.create(object=actor)
 
-    def adopt(self, event, request):
+    def clone(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 
@@ -113,6 +114,41 @@ class JSONLDAdapter():
 
         return serializer.save(**save_kwargs)
 
+    def adopt(self, event, request=None):
+        """
+        Create a fully synced local Deed from a remote GoodDeed (sync adoption).
+        The Deed has origin=event so Join/Leave can target the source platform.
+        """
+        from bluebottle.activity_pub.models import GoodDeed
+        from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+        from bluebottle.members.models import Member
+
+        if not isinstance(event, GoodDeed):
+            raise TypeError('adopt expects a GoodDeed event')
+
+        create = Create.objects.filter(object=event).first()
+        if not create:
+            raise ValueError('No Create found for this event')
+        follow = Follow.objects.get(object=create.actor)
+        organization = create.actor.organization
+        owner = follow.default_owner or get_current_user()
+        if owner is None:
+            owner = Member.objects.filter(is_active=True).first()
+        if owner is None:
+            raise ValueError(
+                'Cannot adopt deed: no owner available. Set default_owner on the Follow or ensure a Member exists.'
+            )
+
+        context = {'request': request} if request is not None else {}
+        data = EventSerializer(instance=event, full=True).data
+        serializer = FederatedActivitySerializer(data=data, context=context)
+        serializer.is_valid(raise_exception=True)
+
+        deed = serializer.save(owner=owner, host_organization=organization, origin=event)
+        self.create_or_update_event(deed)
+        return deed
+
     def create_or_update_event(self, activity):
         from bluebottle.activities.models import Activity as BluebottleActivity
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -129,13 +165,18 @@ class JSONLDAdapter():
         federated_serializer = FederatedActivitySerializer(activity)
 
         serializer = EventSerializer(
-            data=federated_serializer.data, instance=instance
+            data=federated_serializer.data,
+            instance=instance,
+            context={'internal_update': True},
         )
         serializer.is_valid(raise_exception=True)
         event = serializer.save(activity=activity)
 
         if not event.create_set.exists():
             Create.objects.create(actor=get_platform_actor(), object=event)
+
+        if isinstance(event, GoodDeed):
+            sync_good_deed_contributor_count(event)
 
         return event
 
@@ -174,14 +215,31 @@ def publish_to_recipient(recipient, tenant):
         if recipient.send:
             raise TypeError('Already published activity to actor')
 
-        if inbox is None or inbox.is_local:
-            logger.warning(f"Actor {actor} has no inbox, skipping publish")
-            pass
+        # For remote actors, fetch profile to get inbox URL if we don't have it stored
+        inbox_url = None
+        if inbox and getattr(inbox, 'iri', None) and not getattr(inbox, 'is_local', True):
+            inbox_url = inbox.iri
+        elif getattr(actor, 'iri', None) and is_local(actor.iri) is False:
+            try:
+                fetched = adapter.fetch(actor.iri)
+                if fetched and isinstance(fetched, dict):
+                    raw = fetched.get('inbox')
+                    if isinstance(raw, str):
+                        inbox_url = raw
+                    elif isinstance(raw, dict):
+                        inbox_url = raw.get('id') or raw.get('iri')
+            except Exception as e:
+                logger.warning(f"Could not fetch actor inbox for {actor.iri}: {e}")
+
+        if not inbox_url:
+            if inbox is None or getattr(inbox, 'is_local', True):
+                logger.warning(f"Actor {actor} has no inbox (or local), skipping publish")
+            return
 
         try:
             data = ActivitySerializer().to_representation(activity)
             auth = adapter.get_auth(activity.actor)
-            adapter.post(inbox.iri, data=data, auth=auth)
+            adapter.post(inbox_url, data=data, auth=auth)
             recipient.send = True
             recipient.save()
 
@@ -212,6 +270,184 @@ def publish_recipient(instance, created, **kwargs):
                         actor=instance.actor,
                         activity=transition
                     )
+
+
+def sync_good_deed_contributor_count(event):
+    """
+    Set GoodDeed.contributor_count from linked Deed's contributor_count.
+    Call when the Deed's participants change (Join/Leave or local add/remove).
+    """
+    if not isinstance(event, GoodDeed):
+        return
+    deed = getattr(event, 'activity', None)
+    new_total = deed.contributor_count if deed else 0
+    if event.contributor_count != new_total:
+        event.contributor_count = new_total
+        event.save(update_fields=['contributor_count'])
+
+
+@receiver(post_save, sender=Join)
+def handle_join_received(sender, instance, created, **kwargs):
+    """On receiving a Join: add participant to source deed, sync total, broadcast Update(GoodDeed)."""
+    if not created or instance.is_local:
+        return
+    try:
+        event = instance.object
+        if not isinstance(event, GoodDeed):
+            return
+
+        # Add participant to source platform's deed (full list with name/email, and which Actor/Follow it came from)
+        deed = getattr(event, 'activity', None)
+        if deed and instance.participant_sync_id:
+            from bluebottle.activities.models import RemoteContributor
+            from bluebottle.deeds.models import DeedParticipant
+            from bluebottle.activity_pub.models import Follow
+
+            existing = DeedParticipant.objects.filter(
+                activity=deed, remote_contributor__sync_id=instance.participant_sync_id
+            ).first()
+            if existing:
+                # Re-join after withdraw: set status back to accepted and refresh name/email
+                if existing.status != 'accepted':
+                    existing.status = 'accepted'
+                    existing.save(update_fields=['status'])
+                rc = existing.remote_contributor
+                if rc and (instance.participant_name is not None or instance.participant_email is not None):
+                    if instance.participant_name is not None:
+                        rc.display_name = instance.participant_name or ''
+                        rc.save(update_fields=['display_name'])
+                    if instance.participant_email is not None:
+                        rc.email = instance.participant_email
+                        rc.save(update_fields=['email'])
+            else:
+                sync_actor = instance.actor
+                sync_follow = Follow.objects.filter(object=sync_actor).first()
+                remote_contributor, _ = RemoteContributor.objects.get_or_create(
+                    sync_id=instance.participant_sync_id,
+                    defaults={
+                        'display_name': instance.participant_name or '',
+                        'email': instance.participant_email,
+                        'sync_actor': sync_actor,
+                        'sync_follow': sync_follow,
+                    },
+                )
+
+                DeedParticipant.objects.create(
+                    activity=deed,
+                    user=None,
+                    remote_contributor=remote_contributor,
+                    status='accepted',
+                )
+
+        sync_good_deed_contributor_count(event)
+        Update.objects.create(object=event)
+    except Exception as e:
+        logger.error(f"Failed to handle Join: {str(e)}", exc_info=True)
+
+
+@receiver(post_save, sender=Leave)
+def handle_leave_received(sender, instance, created, **kwargs):
+    """On receiving a Leave: remove matching participant, update count, broadcast Update(GoodDeed)."""
+    if not created or instance.is_local:
+        return
+    try:
+        event = instance.object
+        if not isinstance(event, GoodDeed):
+            return
+
+        # Remove synced participant from source deed if we have a match
+        deed = getattr(event, 'activity', None)
+        if deed and instance.participant_sync_id:
+            from bluebottle.activities.models import Contributor
+
+            contributor = Contributor.objects.filter(
+                activity=deed,
+                remote_contributor__sync_id=instance.participant_sync_id,
+            ).first()
+            if contributor:
+                contributor.status = 'rejected'
+                contributor.save(update_fields=['status'])
+
+        sync_good_deed_contributor_count(event)
+        Update.objects.create(object=event)
+    except Exception as e:
+        logger.error(f"Failed to handle Leave: {str(e)}", exc_info=True)
+
+
+@receiver(post_save, sender=Update)
+def handle_update_received(sender, instance, created, **kwargs):
+    """When an Update is received for a GoodDeed, update the canonical event and sync adopted deeds' local GoodDeed."""
+    if not created or not isinstance(instance.object, GoodDeed):
+        return
+    try:
+        event = instance.object
+        from bluebottle.deeds.models import Deed
+
+        for activity in event.adopted_activities.all():
+            if not isinstance(activity, Deed):
+                continue
+            deed = activity
+            # Copy updated fields from the event to the deed so create_or_update_event has current data
+            update_fields = []
+            if event.name != deed.title:
+                deed.title = event.name
+                update_fields.append('title')
+            if getattr(event, 'start_time', None) is not None and deed.start != event.start_time.date():
+                deed.start = event.start_time.date()
+                update_fields.append('start')
+            if getattr(event, 'end_time', None) is not None and deed.end != event.end_time.date():
+                deed.end = event.end_time.date()
+                update_fields.append('end')
+            if event.summary is not None:
+                try:
+                    if getattr(deed.description, 'html', None) != event.summary:
+                        if hasattr(deed.description, 'html'):
+                            deed.description.html = event.summary
+                            update_fields.append('description')
+                except (AttributeError, TypeError):
+                    pass
+            if update_fields:
+                deed.save(update_fields=update_fields)
+            # Sync the deed's local GoodDeed (deed.event) from the deed's current data
+            adapter.create_or_update_event(deed)
+    except Exception as e:
+        logger.error(f"Failed to handle Update for GoodDeed: {str(e)}", exc_info=True)
+
+
+@receiver(post_save)
+def handle_deed_participant_change(sender, instance, **kwargs):
+    """When Deed gains/loses a participant, sync GoodDeed.contributor_count from Deed.contributor_count."""
+    from bluebottle.deeds.models import DeedParticipant
+    if not isinstance(instance, DeedParticipant):
+        return
+    try:
+        deed = getattr(instance, 'activity', None)
+        if not deed or not getattr(deed, 'origin_id', None) or not deed.origin_id:
+            return
+        origin = getattr(deed, 'origin', None)
+        if not origin or not isinstance(origin, GoodDeed):
+            return
+        sync_good_deed_contributor_count(origin)
+    except Exception as e:
+        logger.error(f"Failed to sync contributor_count for DeedParticipant: {str(e)}", exc_info=True)
+
+
+@receiver(post_delete)
+def handle_deed_participant_delete(sender, instance, **kwargs):
+    """When a DeedParticipant is deleted, sync GoodDeed.contributor_count from Deed.contributor_count."""
+    from bluebottle.deeds.models import DeedParticipant
+    if not isinstance(instance, DeedParticipant):
+        return
+    try:
+        deed = getattr(instance, 'activity', None)
+        if not deed or not getattr(deed, 'origin_id', None) or not deed.origin_id:
+            return
+        origin = getattr(deed, 'origin', None)
+        if not origin or not isinstance(origin, GoodDeed):
+            return
+        sync_good_deed_contributor_count(origin)
+    except Exception as e:
+        logger.error(f"Failed to sync contributor_count on DeedParticipant delete: {str(e)}", exc_info=True)
 
 
 @receiver([post_save])

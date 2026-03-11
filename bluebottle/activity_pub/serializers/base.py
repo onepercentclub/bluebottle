@@ -158,9 +158,13 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
                 not getattr(field, 'many', False)
             ):
                 if validated_data.get(name, None):
-                    field.initial_data = validated_data.get(name, None)
-                    field.is_valid(raise_exception=True)
-                    validated_data[field.source] = field.save()
+                    value = validated_data.get(name)
+                    if isinstance(value, ActivityPubModel):
+                        validated_data[field.source] = value
+                    else:
+                        field.initial_data = value
+                        field.is_valid(raise_exception=True)
+                        validated_data[field.source] = field.save()
 
         validated_data.pop('type', None)
         return self.Meta.model.objects.create(**validated_data)
@@ -170,14 +174,17 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         request = self.context.get('request')
         request_auth = getattr(request, 'auth', None)
         auth_iri = getattr(request_auth, 'iri', None)
+        internal_update = self.context.get('internal_update', False)
 
         if (
-            is_local(id) and
-            request_auth and
-            auth_iri and
-            is_local(auth_iri)
+            internal_update or
+            (
+                is_local(id) and
+                request_auth and
+                auth_iri and
+                is_local(auth_iri)
+            )
         ):
-
             for name, field in self.fields.items():
                 if isinstance(
                     field,
@@ -232,6 +239,12 @@ class PolymorphicActivityPubSerializer(
         raise TypeError(f'Missing serializer for model: {model}')
 
     def get_serializer_from_data(self, data):
+        if not isinstance(data, dict):
+            # data may already be a resolved model instance (e.g. Join/Leave object)
+            if isinstance(data, ActivityPubModel):
+                return self.get_serializer_from_model(type(data))
+            raise exceptions.ValidationError('Expected dict or ActivityPubModel instance')
+
         if 'id' in data and 'type' not in data:
             iri = data['id']
 

@@ -6,7 +6,7 @@ from bluebottle.activity_pub.views import (
     GoodDeedView, ImageView, CrowdFundingView, CollectCampaignView, PlaceView, AddressView,
     GrantApplicationView,
     DoGoodEventView, SubEventView, UpdateView,
-    DeleteView, StartView, CancelView, FinishView
+    DeleteView, StartView, CancelView, FinishView, JoinView, LeaveView
 )
 
 app_name = 'activity_pub'
@@ -33,5 +33,7 @@ urlpatterns = [
     re_path(r'^cancel/(?P<pk>\d+)$', CancelView.as_view(), name='cancel'),
     re_path(r'^start/(?P<pk>\d+)$', StartView.as_view(), name='start'),
     re_path(r'^finish/(?P<pk>\d+)$', FinishView.as_view(), name='finish'),
+    re_path(r'^join/(?P<pk>\d+)$', JoinView.as_view(), name='join'),
+    re_path(r'^leave/(?P<pk>\d+)$', LeaveView.as_view(), name='leave'),
     re_path(r'^organization/(?P<pk>\d+)$', OrganizationView.as_view(), name='organization'),
 ]

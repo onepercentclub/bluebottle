@@ -96,6 +96,18 @@ class Deed(Activity):
             return []
 
     @property
+    def contributor_count(self):
+        """Total number of participants (for syncing to Event.contributor_count when deed has origin)."""
+        if not self.pk:
+            return 0
+        return (
+            self.contributors.instance_of(DeedParticipant).filter(
+                status__in=('accepted', 'succeeded')
+            ).count()
+            + (self.deleted_successful_contributors or 0)
+        )
+
+    @property
     def succeeded_contributor_count(self):
         if self.pk:
             return self.participants.count() + self.deleted_successful_contributors

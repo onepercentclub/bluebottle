@@ -1,9 +1,12 @@
 # coding=utf-8
 import datetime
 import json
+import os
 from builtins import range
 from builtins import str
 
+from django.core.cache import cache
+from django.db import connection
 from django.urls import reverse
 from django.utils.timezone import now
 from moneyed import Money
@@ -19,6 +22,7 @@ from bluebottle.segments.serializers import SegmentDetailSerializer, SegmentPubl
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from bluebottle.utils.models import Language
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -108,17 +112,28 @@ class SegmentListAPITestCase(BluebottleTestCase):
         self.url = reverse('segment-list')
         self.user = BlueBottleUserFactory()
         self.segment_type = SegmentTypeFactory.create()
-        # One segment with a fixed name for assertions; rest from batch
+        # Use a process-unique name so parallel workers don't overwrite or share cache
+        self.expected_segment_name = 'Segment list test segment {}'.format(os.getpid())
         self.named_segment = SegmentFactory.create(
             segment_type=self.segment_type,
-            name='Segment list test segment'
+            name=self.expected_segment_name
         )
         self.named_segment.set_current_language('en')
-        self.named_segment.name = 'Segment list test segment'
+        self.named_segment.name = self.expected_segment_name
         self.named_segment.save()
         self.named_segment.set_current_language('nl')
         self.named_segment.name = 'Segment lijst test segment'
         self.named_segment.save()
+        # Clear segment name cache so parallel test workers don't see a stale
+        # value from another worker (cache key is segment_name_{pk}_{schema}_{lang})
+        schema = getattr(getattr(connection, 'tenant', None), 'schema_name', None) or 'public'
+        for lang in Language.objects.all():
+            cache_key = 'segment_name_{}_{}_{}'.format(
+                self.named_segment.pk,
+                schema,
+                lang.code,
+            )
+            cache.delete(cache_key)
         self.segments = [self.named_segment] + list(
             SegmentFactory.create_batch(
                 19,
@@ -144,8 +159,9 @@ class SegmentListAPITestCase(BluebottleTestCase):
         )
 
         self.assertEqual(
-            expected.safe_translation_getter('name', language_code='en', any_language=True),
-            result['attributes']['name']
+            result['attributes']['name'],
+            self.expected_segment_name,
+            'Segment list API should return the segment name we set (parallel-safe)',
         )
         self.assertEqual(
             str(expected.segment_type_id),

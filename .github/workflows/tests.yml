@@ -47,6 +47,7 @@ jobs:
       LC_ALL: en_GB.UTF-8
       VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py39
       PIP_CACHE_DIR: /home/github_actions_runner/.cache/pip
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
 
     steps:
       - name: Checkout

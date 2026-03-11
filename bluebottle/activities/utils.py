@@ -1,11 +1,10 @@
+import logging
 from builtins import object
 from itertools import groupby
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-
-from bluebottle.scim.models import SCIMPlatformSettings
-from django.conf import settings
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -36,6 +35,7 @@ from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
+from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import (
     TeamMember, TeamScheduleParticipant, TimeContribution, DeadlineActivity, DeadlineParticipant,
@@ -46,8 +46,6 @@ from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -621,7 +619,7 @@ class BaseContributorSerializer(ModelSerializer):
                 except Exception:
                     raise ValidationError(_('Not a valid email address'), code="invalid")
                 member_settings = MemberPlatformSettings.load()
-                scim_settings = SCIMPlatformSettings.objects.get()
+                scim_settings = SCIMPlatformSettings.load()
 
                 if (
                     (member_settings.closed or member_settings.confirm_signup) and

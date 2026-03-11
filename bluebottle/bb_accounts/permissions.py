@@ -24,9 +24,9 @@ class SignUpTokenPermission(BasePermission):
     message = ("Platform is closed")
 
     def has_object_action_permission(self, action, user, obj):
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         return not settings.closed or 'password' in settings.login_methods
 
     def has_permission(self, request, view):
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         return not settings.closed or 'password' in settings.login_methods

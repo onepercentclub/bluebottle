@@ -70,7 +70,7 @@ jobs:
       - name: Check missing translations
         run: |
           source env/bin/activate
-          python ./locale/check_translations.py --locales=nl --no-fail > translation-message.txt
+          python ./locale/check_translations.py --locales=nl > translation-message.txt
 
       - name: Echo
         run: cat translation-message.txt

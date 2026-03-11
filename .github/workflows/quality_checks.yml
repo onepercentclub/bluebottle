@@ -25,22 +25,21 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
       - name: Restore cached virtualenv
         uses: actions/cache/restore@v4
         with:
           key: env-${{ hashFiles('setup.py') }}-py39
           path: env
 
-      - name: Create virtualenv (pyenv Python 3.9)
+      - name: Create virtualenv (Python 3.9)
         run: |
-          export PYENV_ROOT="${PYENV_ROOT:-$HOME/.pyenv}"
-          export PATH="$PYENV_ROOT/bin:$PATH"
-          PYTHON_BIN="$PYENV_ROOT/versions/3.9.21/bin/python"
-          if [[ ! -x "$PYTHON_BIN" ]]; then
-            echo "Python 3.9 not found at $PYTHON_BIN (expected pyenv with 3.9.21 on runner)" && exit 1
-          fi
-          "$PYTHON_BIN" -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
-          "$PYTHON_BIN" -m venv env
+          python -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
+          python -m venv env
 
       - name: Show Python version
         run: |
@@ -98,16 +97,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Create virtualenv (pyenv Python 3.9)
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Create virtualenv (Python 3.9)
         run: |
-          export PYENV_ROOT="${PYENV_ROOT:-$HOME/.pyenv}"
-          export PATH="$PYENV_ROOT/bin:$PATH"
-          PYTHON_BIN="$PYENV_ROOT/versions/3.9.21/bin/python"
-          if [[ ! -x "$PYTHON_BIN" ]]; then
-            echo "Python 3.9 not found at $PYTHON_BIN (expected pyenv with 3.9.21 on runner)" && exit 1
-          fi
-          "$PYTHON_BIN" -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
-          "$PYTHON_BIN" -m venv env
+          python -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
+          python -m venv env
 
       - name: Show Python version
         run: |

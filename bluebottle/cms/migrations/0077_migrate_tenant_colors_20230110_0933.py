@@ -13,7 +13,9 @@ from bluebottle.clients.models import Client
 
 def migrate_tenant_colors(apps, schema_editor):
     SitePlatformSettings = apps.get_model('cms', 'SitePlatformSettings')
-    settings = SitePlatformSettings.load()
+    settings = SitePlatformSettings.object.first()
+    if not settings:
+        settings = SitePlatformSettings.object.create()
     tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
 
     basepath = path.dirname(__file__)

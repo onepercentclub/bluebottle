@@ -458,7 +458,7 @@ class ActivitySerializer(PolymorphicActivityPubSerializer):
         StartSerializer,
         CancelSerializer,
         DeleteSerializer,
-        FinishSerializer
+        FinishSerializer,
     ]
 
     class Meta:

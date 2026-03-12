@@ -28,14 +28,14 @@ from bluebottle.activity_pub.models import (
     Inbox,
     Outbox,
     Person,
-    Place,  # Add Place import
+    Place,
     PublicKey,
     Create,
     Organization,
     Following,
     Follower, GoodDeed, CrowdFunding, CollectCampaign, DoGoodEvent, GrantApplication,
     Recipient, SubEvent, PublishedActivity, ReceivedActivity, Accept, PublishModeChoices, AdoptionTypeChoices, Cancel,
-    Finish,
+    Finish, Update, Start,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -69,6 +69,9 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Place,
         Cancel,
         Finish,
+        Update,
+        Start,
+
     )
 
     def type(self, obj):
@@ -264,6 +267,20 @@ class CancelAdmin(ActivityAdmin):
 class FinishAdmin(ActivityAdmin):
     list_display = ("id", "actor", "object")
     readonly_fields = ('iri', 'actor', 'object', 'pub_url')
+
+
+@admin.register(Update)
+class UpdateAdmin(ActivityAdmin):
+    list_display = ("id", "actor", "object")
+    readonly_fields = ('iri', 'actor', 'object', 'pub_url')
+    inlines = [RecipientInline]
+
+
+@admin.register(Start)
+class StartAdmin(ActivityAdmin):
+    list_display = ("id", "actor", "object")
+    readonly_fields = ('iri', 'actor', 'object', 'pub_url')
+    inlines = [RecipientInline]
 
 
 class AdoptedFilter(admin.SimpleListFilter):

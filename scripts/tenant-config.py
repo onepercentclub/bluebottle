@@ -16,7 +16,7 @@ def run(*args):
     for tenant in Client.objects.all().all():
         with LocalTenant(tenant):
             try:
-                mail_settings = MailPlatformSettings.objects.get()
+                mail_settings = MailPlatformSettings.load()
 
                 mail_settings.address = properties.TENANT_MAIL_PROPERTIES.get('address')
                 mail_settings.footer = properties.TENANT_MAIL_PROPERTIES.get('footer')
@@ -27,7 +27,7 @@ def run(*args):
             except AttributeError as e:
                 print(f'Failed to set mail settings for {tenant.client_name}', e)
 
-            settings = SitePlatformSettings.objects.get()
+            settings = SitePlatformSettings.load()
 
             domain_url = f'https://{tenant.domain_url}'
             if 'localhost' in domain_url:

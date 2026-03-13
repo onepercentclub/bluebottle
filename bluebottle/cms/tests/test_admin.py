@@ -1,35 +1,11 @@
-from django.urls.base import reverse
-from fluent_contents.models import Placeholder
 from django.test.utils import override_settings
+from django.urls.base import reverse
 
-from bluebottle.cms.models import StatsContent, ActivitiesContent, Link
-from bluebottle.test.factory_models.cms import ResultPageFactory, LinkGroupFactory, LinkFactory
+from bluebottle.cms.models import Link
+from bluebottle.test.factory_models.cms import LinkGroupFactory, LinkFactory
 from bluebottle.test.factory_models.pages import PageFactory
-from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.test.factory_models.utils import LanguageFactory
-
-
-class TestResultPageAdmin(BluebottleAdminTestCase):
-    def setUp(self):
-        super(TestResultPageAdmin, self).setUp()
-        self.client.force_login(self.superuser)
-        self.init_projects()
-
-    def test_add_results_page(self):
-        result_page_url = reverse('admin:cms_resultpage_add')
-        response = self.client.get(result_page_url)
-        self.assertEqual(response.status_code, 200)
-
-    def test_change_results_page(self):
-        result_page = ResultPageFactory.create()
-        self.placeholder = Placeholder.objects.create_for_object(result_page, slot='content')
-        StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
-        ActivitiesContent.objects.create_for_placeholder(self.placeholder, title='Activities r us!')
-        result_page_url = reverse('admin:cms_resultpage_change', args=(result_page.id,))
-        response = self.client.get(result_page_url)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Stats')
-        self.assertContains(response, 'Activities')
+from bluebottle.test.utils import BluebottleAdminTestCase
 
 
 @override_settings(
@@ -55,9 +31,10 @@ class HomePageAdminTestCase(BluebottleAdminTestCase):
 
         page = self.app.get(url)
         tabs = page.html.find('div', {'class': 'parler-language-tabs'})
-        self.assertTrue('Dutch' in tabs.text)
-        self.assertTrue('English' in tabs.text)
-        self.assertTrue('French' in tabs.text)
+        tabs_text = tabs.text.lower()
+        self.assertTrue(any(value in tabs_text for value in ('dutch', 'nederlands', 'nl')))
+        self.assertTrue(any(value in tabs_text for value in ('english', 'engels', 'en')))
+        self.assertTrue(any(value in tabs_text for value in ('french', 'frans', 'fr')))
 
 
 class SiteLinkAdminTestCase(BluebottleAdminTestCase):

@@ -802,7 +802,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_office(self):
-        settings, _ = InitiativePlatformSettings.load()
+        settings = InitiativePlatformSettings.load()
         settings.search_filters_initiatives.add(
             InitiativeSearchFilter.objects.create(
                 settings=settings,

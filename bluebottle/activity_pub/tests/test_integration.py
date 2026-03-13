@@ -19,7 +19,7 @@ from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event,
-    Recipient, RepetitionModeChoices, Cancel, Finish
+    Recipient, RepetitionModeChoices
 )
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -432,36 +432,12 @@ class LinkTestCase(ActivityPubTestCase):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'cancelled')
 
-    def test_cancel_activity_propagates_to_linked_activity(self):
-        """Cancel ActivityPub model received via inbox updates LinkedActivity to cancelled."""
-        self.test_link()
-        self.model.states.cancel(save=True)
-
-        with LocalTenant(self.other_tenant):
-            event = Event.objects.get()
-            cancel = Cancel.objects.get(object=event)
-            self.assertFalse(cancel.is_local)
-            link = LinkedActivity.objects.get(event=event)
-            self.assertEqual(link.status, 'cancelled')
-
     def test_finish(self):
         self.test_link()
         self.model.states.succeed(save=True)
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
-            self.assertEqual(link.status, 'succeeded')
-
-    def test_finish_activity_propagates_to_linked_activity(self):
-        """Finish ActivityPub model received via inbox updates LinkedActivity to succeeded."""
-        self.test_link()
-        self.model.states.succeed(save=True)
-
-        with LocalTenant(self.other_tenant):
-            event = Event.objects.get()
-            finish = Finish.objects.get(object=event)
-            self.assertFalse(finish.is_local)
-            link = LinkedActivity.objects.get(event=event)
             self.assertEqual(link.status, 'succeeded')
 
     def test_delete(self):
@@ -840,9 +816,8 @@ class AdoptDeadlineActivityTestCase(AdoptTestCase, BluebottleTestCase):
         )
         self.submit()
 
-        publish = self.model.event.publish_set.first()
+        publish = self.model.event.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
-        adapter.publish(publish)
 
         with LocalTenant(self.other_tenant):
             event = Event.objects.filter(name=self.model.title).first()

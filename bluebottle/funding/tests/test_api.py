@@ -984,7 +984,6 @@ class DonationTestCase(BluebottleTestCase):
     def test_create_twice(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
-        __import__('ipdb').set_trace()
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 

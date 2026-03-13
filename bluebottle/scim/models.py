@@ -36,5 +36,5 @@ class SCIMSegmentSetting(models.Model):
     segment_type = models.ForeignKey(SegmentType, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
-        self.settings = SCIMPlatformSettings.objects.get()
+        self.settings = SCIMPlatformSettings.load()
         return super().save(*args, **kwargs)

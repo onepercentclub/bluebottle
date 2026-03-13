@@ -106,7 +106,7 @@ class InitiativeSearch(Search):
     }
 
     def __new__(cls, *args, **kwargs):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         result = super().__new__(cls, settings.search_filters_initiatives.all())
 
         for segment_type in SegmentType.objects.all():

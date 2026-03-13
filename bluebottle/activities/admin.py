@@ -682,7 +682,7 @@ class ActivityChildAdmin(
 
     def get_inline_instances(self, request, obj=None):
         inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
-        if InitiativePlatformSettings.objects.get().enable_impact:
+        if InitiativePlatformSettings.load().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
             inlines.append(impact_goal_inline)
 
@@ -698,7 +698,7 @@ class ActivityChildAdmin(
 
     def get_list_filter(self, request):
         filters = list(self.list_filter)
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
@@ -730,7 +730,7 @@ class ActivityChildAdmin(
         return fields
 
     def get_detail_fields(self, request, obj):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         detail_fields = self.detail_fields
         if isinstance(detail_fields, list):
             detail_fields = tuple(detail_fields)
@@ -845,7 +845,7 @@ class ActivityChildAdmin(
         return []
 
     def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
@@ -1040,7 +1040,7 @@ class ActivityAdmin(
         return super(ActivityAdmin, self).lookup_allowed(key, value)
 
     def get_list_filter(self, request):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         filters = list(self.list_filter)
         from bluebottle.geo.models import Location
         if Location.objects.count():

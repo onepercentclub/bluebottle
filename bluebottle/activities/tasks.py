@@ -29,7 +29,7 @@ logger = logging.getLogger('bluebottle')
 
 
 def get_matching_activities(user):
-    settings = InitiativePlatformSettings.objects.get()
+    settings = InitiativePlatformSettings.load()
 
     query = ConstantScore(
         filter=Nested(
@@ -142,7 +142,7 @@ def get_matching_activities(user):
 def recommend():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            settings = InitiativePlatformSettings.objects.get()
+            settings = InitiativePlatformSettings.load()
             if settings.enable_matching_emails:
                 for user in Member.objects.filter(subscribed=True):
                     try:

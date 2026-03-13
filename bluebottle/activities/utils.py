@@ -609,6 +609,8 @@ class BaseContributorSerializer(ModelSerializer):
         'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
 
+    allow_multiple = False
+
     def validate(self, data):
         email = data.pop('email', None)
         send_messages = data.pop('send_messages', True)
@@ -639,7 +641,11 @@ class BaseContributorSerializer(ModelSerializer):
             if data['user'].required:
                 raise ValidationError('Required fields', code="required")
 
-        if data.get('user') and self.Meta.model.objects.filter(**data).exists():
+        if (
+            not self.allow_multiple and
+            data.get('user') and
+            self.Meta.model.objects.filter(**data).exists()
+        ):
             raise ValidationError(_('Already participating'), code="exists")
 
         data['send_messages'] = send_messages

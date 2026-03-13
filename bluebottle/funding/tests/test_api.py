@@ -981,6 +981,21 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
         self.assertIsNone(data['data']['attributes']['client-secret'])
 
+    def test_create_twice(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        __import__('ipdb').set_trace()
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['status'], 'new')
+        self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
+        self.assertIsNone(data['data']['attributes']['client-secret'])
+
     def test_donate_limits(self):
         provider = StripePaymentProvider.objects.first()
         PaymentCurrency.objects.create(

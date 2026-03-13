@@ -25,20 +25,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.9.19
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.9.19'
 
       - name: Restore cached virtualenv
         uses: actions/cache/restore@v4
         with:
-          key: env-${{ hashFiles('setup.py') }}-py39
+          key: env-${{ hashFiles('setup.py') }}-py310
           path: env
 
-      - name: Create virtualenv (Python 3.9)
+      - name: Create virtualenv (Python 3.9.19)
         run: |
-          python -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
+          python -c "import sys; assert sys.version_info[:2] == (3, 10), f'Expected Python 3.9.19.x, got {sys.version}'"
           python -m venv env
 
       - name: Show Python version
@@ -60,7 +60,7 @@ jobs:
       - name: Saved cached virtualenv
         uses: actions/cache/save@v4
         with:
-          key: env-${{ hashFiles('setup.py') }}-py39
+          key: env-${{ hashFiles('setup.py') }}-py310
           path: env
 
       - name: Extract messages
@@ -97,14 +97,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.9.19
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.9.19'
 
-      - name: Create virtualenv (Python 3.9)
+      - name: Create virtualenv (Python 3.9.19)
         run: |
-          python -c "import sys; assert sys.version_info[:2] == (3, 9), f'Expected Python 3.9.x, got {sys.version}'"
+          python -c "import sys; assert sys.version_info[:2] == (3, 10), f'Expected Python 3.9.19.x, got {sys.version}'"
           python -m venv env
 
       - name: Show Python version

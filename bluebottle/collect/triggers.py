@@ -11,6 +11,10 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
+
+from bluebottle.activity_pub.effects import (
+    PublishAdoptionEffect, CancelEffect, UpdateEventEffect, FinishEffect
+)
 from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
     CollectActivityDateChangedNotification, ParticipantJoinedNotification
@@ -113,6 +117,11 @@ class CollectActivityTriggers(ActivityTriggers):
             ]
         ),
 
+        ModelChangedTrigger(
+            ['start', 'end', 'title', 'description', 'location', 'image', 'collect_type'],
+            effects=[UpdateEventEffect]
+        ),
+
         TransitionTrigger(
             CollectActivityStateMachine.auto_approve,
             effects=[
@@ -129,6 +138,7 @@ class CollectActivityTriggers(ActivityTriggers):
         TransitionTrigger(
             CollectActivityStateMachine.publish,
             effects=[
+                PublishAdoptionEffect,
                 TransitionEffect(CollectActivityStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(
                     CollectActivityStateMachine.succeed, conditions=[is_finished, has_contributors]
@@ -143,7 +153,8 @@ class CollectActivityTriggers(ActivityTriggers):
             CollectActivityStateMachine.expire,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                NotificationEffect(ActivityExpiredNotification)
+                NotificationEffect(ActivityExpiredNotification),
+                CancelEffect
             ]
         ),
 
@@ -152,6 +163,7 @@ class CollectActivityTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityRejectedNotification),
+                CancelEffect
             ]
         ),
 
@@ -159,6 +171,7 @@ class CollectActivityTriggers(ActivityTriggers):
             CollectActivityStateMachine.succeed,
             effects=[
                 NotificationEffect(ActivitySucceededNotification),
+                FinishEffect
             ]
         ),
 
@@ -167,6 +180,7 @@ class CollectActivityTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
+                CancelEffect
             ]
         ),
 

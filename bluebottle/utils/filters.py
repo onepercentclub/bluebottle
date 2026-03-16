@@ -200,6 +200,7 @@ class ElasticSearchFilter(filters.SearchFilter):
 
         search = request.GET.get('filter[search]')
 
+        # return self.search_class(search, filter, request.GET.get('sort'), user=request.user)
         return self.search_class(search, filter, request.GET.get('sort'), user=request.user)
 
 

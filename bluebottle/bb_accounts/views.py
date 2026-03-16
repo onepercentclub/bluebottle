@@ -1,16 +1,14 @@
 import json
-from datetime import timedelta
 import uuid
-import requests
 from collections import namedtuple
+from datetime import timedelta
 
-
+import requests
 from axes.utils import reset
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
-from bluebottle.files.views import ImageContentView
 from django.http import Http404
 from django.template import loader
 from django.utils import timezone
@@ -32,6 +30,7 @@ from bluebottle.bb_accounts.permissions import (
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.files.views import ImageContentView
 from bluebottle.initiatives.serializers import (
     MemberSerializer, CurrentMemberSerializer, AvatarImageSerializer
 )
@@ -50,12 +49,11 @@ from bluebottle.members.serializers import (
 )
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.permissions import IsCurrentUser
+from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     RetrieveAPIView, JsonApiViewMixin, CreateAPIView, RetrieveUpdateDestroyAPIView
 )
-
 
 USER_MODEL = get_user_model()
 

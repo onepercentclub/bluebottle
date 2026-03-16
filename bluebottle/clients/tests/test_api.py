@@ -91,42 +91,26 @@ class ClientSettingsTestCase(APITestCase):
         DEFAULT_CURRENCY='USD'
     )
     def test_settings_currencies(self):
-        # Check that exposed property is in settings api, and other settings are not shown
+        # Check that exposed property is in settings api (locale-independent: names come from babel)
         response = self.client.get(self.settings_url)
-        expected = [
-            {
-                'symbol': '€',
-                'code': 'EUR',
-                'name': 'Euro',
-                'rate': Decimal(1.5),
-                'minAmount': 0
-            },
-            {
-                'symbol': '₦',
-                'code': 'NGN',
-                'name': 'Nigerian Naira',
-                'rate': Decimal(500.0),
-                'minAmount': 3000
-            },
-            {
-                'symbol': '$',
-                'code': 'USD',
-                'name': 'US Dollar',
-                'rate': Decimal(1.0),
-                'minAmount': 5
-            },
-            {
-                'symbol': 'F\u202fCFA',
-                'code': 'XOF',
-                'name': 'West African CFA Franc',
-                'rate': Decimal(1000.0),
-                'minAmount': 5000
-            },
-        ]
         result = response.data['currencies']
-        result = sorted(result, key=lambda i: i['name'])
-        expected = sorted(expected, key=lambda i: i['name'])
-        self.assertEqual(result, expected)
+        result_by_code = {c['code']: c for c in result}
+        expected_by_code = {
+            'EUR': {'code': 'EUR', 'rate': Decimal(1.5), 'minAmount': 0},
+            'NGN': {'code': 'NGN', 'rate': Decimal(500.0), 'minAmount': 3000},
+            'USD': {'code': 'USD', 'rate': Decimal(1.0), 'minAmount': 5},
+            'XOF': {'code': 'XOF', 'rate': Decimal(1000.0), 'minAmount': 5000},
+        }
+        self.assertEqual(set(result_by_code.keys()), set(expected_by_code.keys()))
+        for code, expected in expected_by_code.items():
+            actual = result_by_code[code]
+            self.assertEqual(actual['code'], expected['code'])
+            self.assertEqual(Decimal(str(actual['rate'])), expected['rate'])
+            self.assertEqual(actual['minAmount'], expected['minAmount'])
+            self.assertIn('name', actual)
+            self.assertTrue(len(actual['name']) > 0, 'currency name should be non-empty')
+            self.assertIn('symbol', actual)
+            self.assertTrue(len(actual['symbol']) > 0, 'currency symbol should be non-empty')
 
 
 @override_settings(

@@ -1261,6 +1261,7 @@ class ThemeAPITestCase(BluebottleTestCase):
         self.assertEqual(result['attributes']['name'], 'World domination')
 
     def test_detail_translation_missing(self):
+        """When requested language (nl) has no translation, response falls back to another language (en)."""
         theme = Theme.objects.create(slug='world')
         theme.set_current_language('en')
         theme.name = 'World domination'

@@ -1,7 +1,7 @@
 import re
 
-from django.utils.http import int_to_base36
 from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import int_to_base36
 
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url, tenant_name

@@ -2,8 +2,8 @@ from django.db.models import Q
 from django.http import HttpResponse
 from rest_framework.exceptions import ValidationError
 
-from bluebottle.activities.models import Activity
 from bluebottle.activities.ical import ActivityIcal
+from bluebottle.activities.models import Activity
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.views import PrivateFileView
 

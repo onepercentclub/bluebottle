@@ -5,6 +5,7 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
+from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from django.contrib.auth.models import Permission
 from django.contrib.gis.geos import Point
 from django.test import tag
@@ -461,12 +462,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
     def test_collect_preview_dutch(self):
-        # Use explicitly created theme and collect_type so they have all language
-        # translations (including Dutch), avoiding fixture/parallel ordering issues.
-        theme = ThemeFactory.create()
-        collect_type = CollectTypeFactory.create()
-        activity = CollectActivityFactory.create(
-            status='open', theme=theme, collect_type=collect_type
+        activity = CollectActivityFactory.create(status='open')
+        theme = activity.theme
+        # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups)
+        theme_translation, _ = theme.translations.get_or_create(
+            language_code='nl',
+            defaults={'name': f'Theme NL {theme.pk}'}
         )
         theme = activity.theme
         theme.set_current_language('nl')
@@ -478,17 +479,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         collect_type.name = 'CollectType NL'
         collect_type.save()
 
-        expected_theme = activity.theme.safe_translation_getter(
-            'name', language_code='nl', any_language=True
-        )
-        expected_collect_type = activity.collect_type.safe_translation_getter(
-            'name', language_code='nl', any_language=True
+        collect_type = activity.collect_type
+        # Ensure collect_type has Dutch translation (CollectTypeFactory may not create it in all test setups)
+        collect_type_translation, _ = collect_type.translations.get_or_create(
+            language_code='nl',
+            defaults={
+                'name': f'CollectType NL {collect_type.pk}',
+                'unit': 'unit',
+                'unit_plural': 'units',
+            }
         )
         response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
         attributes = response.json()['data'][0]['attributes']
 
-        self.assertEqual(attributes['theme'], expected_theme)
-        self.assertEqual(attributes['collect-type'], expected_collect_type)
+        self.assertEqual(attributes['theme'], theme_translation.name)
+        self.assertEqual(attributes['collect-type'], collect_type_translation.name)
 
     def test_search(self):
         text = 'consectetur adipiscing elit,'
@@ -915,6 +920,42 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         self.assertFound(matching)
+
+    def test_filter_local(self):
+        remote = (
+            LinkedDeedFactory.create(),
+            LinkedDeedFactory.create(),
+            LinkedFundingFactory.create(),
+        )
+        local = (
+            DeadlineActivityFactory.create(status='open'),
+            DeedFactory.create(status='open')
+        )
+
+        self.search({
+            'is_local': '1'
+
+        })
+
+        self.assertFacets(
+            'is_local',
+            {
+                0: ('Remote activities', 3),
+                1: ('Local activities', 2),
+            }
+        )
+
+        self.assertFound(local)
+
+        self.search({
+            'is_local': '0'
+
+        })
+        # Linked activities use ES document id "linked_{pk}" in the API response
+        self.assertEqual(self.data['meta']['pagination']['count'], len(remote))
+        expected_remote_ids = {f'linked_{a.pk}' for a in remote}
+        returned_ids = {item['id'] for item in self.data['data']}
+        self.assertEqual(returned_ids, expected_remote_ids)
 
     def test_filter_type_missing(self):
         matching = (

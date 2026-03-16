@@ -1,4 +1,5 @@
 import io
+
 import qrcode
 from PIL import Image, UnidentifiedImageError
 from django.contrib.contenttypes.models import ContentType

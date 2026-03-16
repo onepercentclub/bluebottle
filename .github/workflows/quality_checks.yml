@@ -50,15 +50,10 @@ jobs:
           source env/bin/activate
           python --version
 
-      - name: Install pip version 24.0
-        run: |
-          source env/bin/activate
-          pip install --upgrade pip==24.0
-
       - name: Install pip dependencies
         run: |
           source env/bin/activate
-          python -m pip install "pip<24.1"
+          pip install --upgrade pip==24.0 -q
           pip install -e .[dev]
 
       - name: Saved cached virtualenv
@@ -123,7 +118,7 @@ jobs:
       - name: Install pip dependencies
         run: |
           source env/bin/activate
-          python -m pip install "pip<24.1"
+          pip install --upgrade pip==24.0 -q
           pip install -e .[dev]
 
       - name: Lint

@@ -1,5 +1,7 @@
+from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from elasticsearch_dsl import Facet
+from elasticsearch_dsl.aggs import A
 from elasticsearch_dsl.faceted_search import TermsFacet
 from elasticsearch_dsl.query import Term, MatchNone, Terms, MatchAll
 from rest_framework.exceptions import NotAuthenticated
@@ -14,9 +16,6 @@ from bluebottle.segments.models import SegmentType
 from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, SegmentFacet, ModelFacet
 )
-
-from elasticsearch_dsl.aggs import A
-from django.utils.translation import gettext_lazy as _
 
 
 class OwnerFacet(TermsFacet):

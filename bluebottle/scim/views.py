@@ -1,24 +1,21 @@
-from builtins import str
+import logging
 from builtins import object
-from django.http import Http404
+from builtins import str
 
 from django.contrib.auth.models import Group
-
+from django.http import Http404
 from rest_framework import (
     generics, response, permissions, authentication, exceptions,
     renderers, parsers
 )
-
-from bluebottle.members.models import Member
-
-from bluebottle.scim.models import SCIMPlatformSettings
-from bluebottle.scim.serializers import SCIMMemberSerializer, SCIMGroupSerializer, SCIMPatchSerializer
-from bluebottle.scim import scim_data
-from bluebottle.scim.filters import SCIMFilter
-
 from rest_framework import pagination
 
-import logging
+from bluebottle.members.models import Member
+from bluebottle.scim import scim_data
+from bluebottle.scim.filters import SCIMFilter
+from bluebottle.scim.models import SCIMPlatformSettings
+from bluebottle.scim.serializers import SCIMMemberSerializer, SCIMGroupSerializer, SCIMPatchSerializer
+
 logger = logging.getLogger(__name__)
 
 

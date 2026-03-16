@@ -159,6 +159,12 @@ class BooleanFacet(Facet):
         return str(key[-1]) in filter_values
 
 
+class LocalFacet(BooleanFacet):
+    def __init__(self, *args, **kwargs):
+        labels = {'1': _("Local activities"), '0': _("Remote activities")}
+        super().__init__(*args, labels=labels, **kwargs)
+
+
 class TeamActivityFacet(BooleanFacet):
     def __init__(self, *args, **kwargs):
         labels = {"teams": _("With your team"), "individuals": _("As an individual")}
@@ -402,6 +408,7 @@ class ActivitySearch(Search):
         "is_online": BooleanFacet(
             field="is_online", labels={"0": _("In-person"), "1": _("Online/remote")}
         ),
+        "is_local": LocalFacet(field='is_local'),
         "team_activity": TeamActivityFacet(field="team_activity"),
         "date": ActivityDateRangeFacet(),
         "office": UntranslatedModelFacet("office", Location),
@@ -554,7 +561,7 @@ class ActivitySearch(Search):
 
     def query(self, search, query):
         search = super().query(search, query)
-
+        search = search.filter(Term(archived=False))
         if not self.user.is_staff:
             search = search.filter(
                 ~Nested(path="segments", query=(Term(segments__closed=True)))

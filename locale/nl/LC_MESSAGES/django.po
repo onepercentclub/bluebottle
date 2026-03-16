@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-16 08:40+0100\n"
-"PO-Revision-Date: 2026-03-16 07:59\n"
+"PO-Revision-Date: 2026-03-16 11:06\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -12884,7 +12884,7 @@ msgstr "\n"
 "Goed gedaan! Je activiteit <i>%(activity name)s</i> is geregistreerd en de bijdragen van deelnemers zijn vastgelegd.\n"
 "<br>\n"
 "<br>\n"
-"Deel je activiteit om mensen te inspireren bij te dragen!"
+"Deel je activiteit om mensen te inspireren bij te dragen!\n"
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_submitted.html:5
 #, python-format
@@ -14385,4 +14385,3 @@ msgstr[1] "Seconden"
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr "Nederlands"
-

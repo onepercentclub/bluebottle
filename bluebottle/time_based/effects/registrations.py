@@ -109,7 +109,7 @@ class CreateTeamEffect(Effect):
     template = 'admin/create_team.html'
 
     def post_save(self, **kwargs):
-        self.instance.team = Team.objects.create(
+        Team.objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
             registration=self.instance,

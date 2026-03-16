@@ -35,7 +35,9 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     ScheduleParticipantFactory,
     ScheduleRegistrationFactory,
-    TeamFactory, ScheduleSlotFactory,
+    TeamFactory,
+    TeamMemberFactory,
+    ScheduleSlotFactory,
 )
 
 
@@ -78,6 +80,88 @@ class ScheduleActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
             'deadline': date.today() + timedelta(days=20),
         }
     )
+
+
+class TeamScheduleActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APITestCase):
+    url_name = 'schedule-detail'
+    serializer = ScheduleActivitySerializer
+    factory = ScheduleActivityFactory
+
+    fields = TimeBasedActivityDetailAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
+    attributes = TimeBasedActivityDetailAPITestCase.attributes + [
+        'capacity', 'deadline', 'duration', 'is-online'
+    ]
+
+    defaults = dict(
+        TimeBasedActivityDetailAPITestCase.defaults,
+        **{
+            'start': date.today() + timedelta(days=10),
+            'deadline': date.today() + timedelta(days=20),
+            "team_activity": "teams",
+        }
+    )
+
+    def test_get_team_member(self):
+        user = BlueBottleUserFactory.create()
+        team = TeamFactory.create(activity=self.model)
+        team_member = TeamMemberFactory.create(
+            user=user,
+            team=team
+        )
+        TeamFactory.create(activity=self.model)
+        TeamMemberFactory.create(team=team)
+
+        self.perform_get(user=user)
+
+        contributors_link = self.response.json()['data']['relationships']['contributors']['links']['my']
+        self.assertEqual(
+            contributors_link['meta']['count'],
+            1
+        )
+
+        teams_link = self.response.json()['data']['relationships']['teams']['links']['my']
+        self.assertEqual(
+            teams_link['meta']['count'],
+            0
+        )
+
+        response = self.client.get(contributors_link['href'], user=user)
+        self.assertEqual(
+            response.json()['meta']['pagination']['count'], 1
+        )
+        self.assertEqual(
+            response.json()['data'][0]['id'],
+            str(team_member.participants.get().pk)
+        )
+
+    def test_get_team_captain(self):
+        user = BlueBottleUserFactory.create()
+        team = TeamFactory.create(activity=self.model, user=user)
+
+        TeamFactory.create(activity=self.model)
+
+        self.perform_get(user=user)
+
+        contributors_link = self.response.json()['data']['relationships']['contributors']['links']['my']
+        self.assertEqual(
+            contributors_link['meta']['count'],
+            0
+        )
+
+        teams_link = self.response.json()['data']['relationships']['teams']['links']['my']
+        self.assertEqual(
+            teams_link['meta']['count'],
+            1
+        )
+
+        response = self.client.get(teams_link['href'], user=user)
+        self.assertEqual(
+            response.json()['meta']['pagination']['count'], 1
+        )
+        self.assertEqual(
+            response.json()['data'][0]['id'],
+            str(team.pk)
+        )
 
 
 class ScheduleActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):

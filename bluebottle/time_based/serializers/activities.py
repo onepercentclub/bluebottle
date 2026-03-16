@@ -136,6 +136,11 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
         self.include_my = include_my
         super().__init__(*args, **kwargs)
 
+    def filter_my(self, queryset):
+        return queryset.filter(
+            user=self.context['request'].user
+        )
+
     def get_links(self, obj=None, lookup_field="pk"):
         return_data = super().get_links(obj, lookup_field)
         queryset = getattr(
@@ -162,7 +167,7 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
                 return_data['my'] = {
                     'href': url + '?filter[my]=true',
                     'meta': {
-                        'count': queryset.filter(user=self.context['request'].user).count()
+                        'count': self.filter_my(queryset).count()
                     }
                 }
             else:
@@ -264,6 +269,32 @@ class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
     )
 
 
+class ScheduleRelatedLinkParticipantsByStatus(RelatedLinkFieldByStatus):
+    def filter_my(self, queryset):
+        queryset = super().filter_my(queryset)
+        # Filter out participants of teams we own ourself. We do not show those.
+        return queryset.exclude(
+            teamscheduleparticipant__team_member__team__user=self.context['request'].user
+        )
+
+    def __init__(self):
+        super().__init__(
+            read_only=True,
+            include_my=True,
+            source="participants",
+            related_link_view_name="schedule-participants",
+            related_link_team_view_name="team-schedule-participants",
+            related_link_url_kwarg="activity_id",
+            statuses={
+                "unscheduled": ["accepted"],
+                "active": ["scheduled", "succeeded"],
+                "scheduled": ["scheduled"],
+                "succeeded": ["succeeded"],
+                "failed": ["rejected", "withdrawn", "removed", "cancelled"],
+            },
+        )
+
+
 class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'schedule-detail'
 
@@ -271,23 +302,11 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
 
-    contributors = RelatedLinkFieldByStatus(
-        read_only=True,
-        source="participants",
-        related_link_view_name="schedule-participants",
-        related_link_team_view_name="team-schedule-participants",
-        related_link_url_kwarg="activity_id",
-        statuses={
-            "unscheduled": ["accepted"],
-            "active": ["scheduled", "succeeded"],
-            "scheduled": ["scheduled"],
-            "succeeded": ["succeeded"],
-            "failed": ["rejected", "withdrawn", "removed", "cancelled"],
-        },
-    )
+    contributors = ScheduleRelatedLinkParticipantsByStatus()
 
     teams = RelatedLinkFieldByStatus(
         read_only=True,
+        include_my=True,
         related_link_view_name="related-teams",
         related_link_url_kwarg="activity_id",
         statuses={

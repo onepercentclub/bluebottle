@@ -244,7 +244,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
                 self.slug = "new"
 
         try:
-            if InitiativePlatformSettings.objects.get().require_organization:
+            if InitiativePlatformSettings.load().require_organization:
                 self.has_organization = True
         except InitiativePlatformSettings.DoesNotExist:
             pass
@@ -283,11 +283,13 @@ SEARCH_FILTERS = {
     "office_subregion": (_("Work location group"), _("Select a group")),
     "office_region": (_("Work location region"), _("Select a region")),
     'open': (_('Open initiatives'), _("Make a choice")),
+    "is_local": (_("Local / From partner"), _("Make a choice")),
+
 }
 
 ACTIVITY_SEARCH_FILTERS = [
     (k, v[0]) for k, v in SEARCH_FILTERS.items() if k in [
-        "country", "date", "distance", "is_online", "skill",
+        "country", "date", "distance", "is_online", "is_local", "skill",
         "team_activity", "theme", "category", "office", "office_subregion", "office_region"
     ]
 ]

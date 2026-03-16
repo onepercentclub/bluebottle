@@ -399,6 +399,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
     'bluebottle.scim',
     'bluebottle.updates',
+    'bluebottle.activity_links',
     'bluebottle.translations',
 
     # Custom dashboard

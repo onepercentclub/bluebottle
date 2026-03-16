@@ -2,8 +2,8 @@ from django.db.models import Q
 from django.http import HttpResponse
 from rest_framework.exceptions import ValidationError
 
-from bluebottle.activities.models import Activity
 from bluebottle.activities.ical import ActivityIcal
+from bluebottle.activities.models import Activity
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.views import PrivateFileView
 
@@ -25,7 +25,7 @@ class AnonymizeMembersMixin:
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
         context['owners'] = self.owners
-        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+        context['display_member_names'] = MemberPlatformSettings.load().display_member_names
 
         if self.request.user and self.request.user.is_authenticated and (
             self.request.user.is_staff or

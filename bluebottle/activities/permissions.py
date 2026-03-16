@@ -29,7 +29,7 @@ class RelatedActivityOwnerPermission(ResourceOwnerPermission):
 
 class ActivityTypePermission(ResourcePermission):
     def has_permission(self, request, view):
-        (settings, _) = InitiativePlatformSettings.objects.get_or_create()
+        settings = InitiativePlatformSettings.load()
 
         if request.method == 'POST':
             activity_type = view.model.__name__.lower()

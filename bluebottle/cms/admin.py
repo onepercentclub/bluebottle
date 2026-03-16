@@ -175,7 +175,13 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
                 _('Powered by'),
                 {
                     'fields': (
-                        'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo', 'footer_banner'
+                    'copyright',
+                    'powered_by_text',
+                    'powered_by_link',
+                    'powered_by_logo',
+                    'footer_banner_full',
+                    'footer_banner_color',
+                    'footer_banner_logo',
                     )
                 }
             ),

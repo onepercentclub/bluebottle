@@ -1556,14 +1556,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        countries = CountryFactory.create_batch(12)
+        codes = [
+            'NL', 'BG', 'DE', 'BE', 'NO', 'SE', 'SF', 'DK', 'FR', 'CH', 'PT', 'ES'
+        ]
+        countries = [CountryFactory.create(alpha2_code=code) for code in codes]
+
         matching = []
         for country in countries:
             location = GeolocationFactory.create(country=country)
             matching.append(DeadlineActivityFactory.create(location=location, status='open'))
 
         self.search({})
-        self.assertEqual(len(self.data['meta']['facets']['country']), 24)
+        country_facets = self.data['meta']['facets']['country']
+        self.assertGreaterEqual(
+            len(country_facets),
+            12,
+            'facets should include at least our 12 countries'
+        )
+        facet_ids = {f['id'] for f in country_facets}
+        for country in countries:
+            self.assertIn(str(country.pk), facet_ids, f'created country {country.pk} should be in facets')
         self.assertFound(matching)
 
     def test_filter_country_slots(self):

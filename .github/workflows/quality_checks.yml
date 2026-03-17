@@ -53,8 +53,8 @@ jobs:
       - name: Install pip dependencies
         run: |
           source env/bin/activate
-          pip install --upgrade pip==24.0 -q
-          pip install -e .[dev]
+          python -m pip install --upgrade pip==24.0 -q
+          python -m pip install -e .[dev]
 
       - name: Saved cached virtualenv
         uses: actions/cache/save@v4
@@ -125,8 +125,8 @@ jobs:
       - name: Install pip dependencies
         run: |
           source env/bin/activate
-          pip install --upgrade pip==24.0 -q
-          pip install -e .[dev]
+          python -m pip install --upgrade pip==24.0 -q
+          python -m pip install -e .[dev]
 
       - name: Lint
         run: |

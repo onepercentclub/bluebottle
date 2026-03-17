@@ -597,7 +597,7 @@ class Theme(SortableTranslatableModel):
     )
 
     def __str__(self):
-        return self.safe_translation_getter('name', default=f'Theme #{self.id}', any_language=True)
+        return self.name
 
     def save(self, **kwargs):
         if not self.slug:

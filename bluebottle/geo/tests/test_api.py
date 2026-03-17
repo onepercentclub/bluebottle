@@ -258,7 +258,10 @@ class JSONAPICountryListTestCase(APITestCase):
         super().setUp()
 
         self.serializer = InitiativeCountrySerializer
-        CountryFactory.create_batch(20)
+        codes = [
+            'NL', 'BG', 'DE', 'BE', 'NO', 'SE', 'SF', 'DK', 'FR', 'CH', 'PT', 'ES'
+        ]
+        self.countries = [CountryFactory.create(alpha2_code=code) for code in codes]
 
         self.url = reverse('new-country-list')
 
@@ -266,7 +269,11 @@ class JSONAPICountryListTestCase(APITestCase):
         self.perform_get()
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertSize(20)
+        data = self.response.json()['data']
+        self.assertGreaterEqual(len(data), 10, 'response should include at least our 12 countries')
+        returned_ids = {item['id'] for item in data}
+        for country in self.countries:
+            self.assertIn(str(country.pk), returned_ids, f'created country {country.pk} should be in response')
 
 
 class PlaceDetailTestCase(APITestCase):

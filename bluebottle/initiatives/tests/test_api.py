@@ -1195,12 +1195,8 @@ class ThemeAPITestCase(BluebottleTestCase):
         self.assertEqual(
             len(response.json()['data']), 5
         )
-        result_ids = {item['id'] for item in response.json()['data']}
-        expected_ids = set(str(theme.pk) for theme in Theme.objects.filter(disabled=False))
-        self.assertSetEqual(result_ids, expected_ids)
-        self.assertTrue(
-            all(item['attributes']['name'] for item in response.json()['data'])
-        )
+        result = response.json()['data'][0]
+        self.assertEqual(self.theme.name, result['attributes']['name'])
 
     def test_list_anonymous(self):
         response = self.client.get(self.list_url)

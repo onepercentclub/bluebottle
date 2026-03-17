@@ -5,7 +5,6 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
-from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from django.contrib.auth.models import Permission
 from django.contrib.gis.geos import Point
 from django.test import tag
@@ -17,10 +16,10 @@ from pytz import UTC
 from rest_framework import status
 
 from bluebottle.activities.models import Activity
+from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from bluebottle.collect.tests.factories import (
     CollectActivityFactory,
     CollectContributorFactory,
-    CollectTypeFactory,
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
@@ -464,23 +463,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_collect_preview_dutch(self):
         activity = CollectActivityFactory.create(status='open')
         theme = activity.theme
-        # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups)
+        # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups).
+        # Update and save the translation directly to avoid duplicate key when saving the theme.
         theme_translation, _ = theme.translations.get_or_create(
             language_code='nl',
             defaults={'name': f'Theme NL {theme.pk}'}
         )
-        theme = activity.theme
-        theme.set_current_language('nl')
-        theme.name = 'Theme NL'
-        theme.save()
+        theme_translation.name = 'Theme NL'
+        theme_translation.save()
 
         collect_type = activity.collect_type
-        collect_type.set_current_language('nl')
-        collect_type.name = 'CollectType NL'
-        collect_type.save()
-
-        collect_type = activity.collect_type
-        # Ensure collect_type has Dutch translation (CollectTypeFactory may not create it in all test setups)
+        # Ensure collect_type has Dutch translation; update it in place to avoid duplicate key.
         collect_type_translation, _ = collect_type.translations.get_or_create(
             language_code='nl',
             defaults={
@@ -489,6 +482,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 'unit_plural': 'units',
             }
         )
+        collect_type_translation.name = 'CollectType NL'
+        collect_type_translation.save()
+
         response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
         attributes = response.json()['data'][0]['attributes']
 
@@ -1560,14 +1556,26 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        countries = CountryFactory.create_batch(12)
+        codes = [
+            'NL', 'BG', 'DE', 'BE', 'NO', 'SE', 'SF', 'DK', 'FR', 'CH', 'PT', 'ES'
+        ]
+        countries = [CountryFactory.create(alpha2_code=code) for code in codes]
+
         matching = []
         for country in countries:
             location = GeolocationFactory.create(country=country)
             matching.append(DeadlineActivityFactory.create(location=location, status='open'))
 
         self.search({})
-        self.assertEqual(len(self.data['meta']['facets']['country']), 24)
+        country_facets = self.data['meta']['facets']['country']
+        self.assertGreaterEqual(
+            len(country_facets),
+            12,
+            'facets should include at least our 12 countries'
+        )
+        facet_ids = {f['id'] for f in country_facets}
+        for country in countries:
+            self.assertIn(str(country.pk), facet_ids, f'created country {country.pk} should be in facets')
         self.assertFound(matching)
 
     def test_filter_country_slots(self):

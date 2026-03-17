@@ -53,8 +53,8 @@ jobs:
       - name: Install pip dependencies
         run: |
           source env/bin/activate
-          pip install --upgrade pip==24.0 -q
-          pip install -e .[dev]
+          python -m pip install --upgrade pip==24.0 -q
+          python -m pip install -e .[dev]
 
       - name: Saved cached virtualenv
         uses: actions/cache/save@v4
@@ -70,7 +70,7 @@ jobs:
       - name: Check missing translations
         run: |
           source env/bin/activate
-          python ./locale/check_translations.py --locales=nl > translation-message.txt
+          python ./locale/check_translations.py --locales=nl --no-fail > translation-message.txt
 
       - name: Echo
         run: cat translation-message.txt
@@ -80,6 +80,13 @@ jobs:
         with:
           message-path: translation-message.txt
           refresh-message-position: true
+
+      - name: Fail job if translations missing
+        run: |
+          if grep -q 'Missing translations' translation-message.txt; then
+            echo 'Missing translations detected, see PR comment for details.'
+            exit 1
+          fi
 
   lint:
     name: Linting
@@ -118,8 +125,8 @@ jobs:
       - name: Install pip dependencies
         run: |
           source env/bin/activate
-          pip install --upgrade pip==24.0 -q
-          pip install -e .[dev]
+          python -m pip install --upgrade pip==24.0 -q
+          python -m pip install -e .[dev]
 
       - name: Lint
         run: |

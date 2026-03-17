@@ -46,6 +46,9 @@ MERCHANT_ACCOUNTS = [
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 COMPRESS_ENABLED = False
 
+# Disable parler translation cache so tests see fresh DB state (avoids duplicate key etc.)
+PARLER_ENABLE_CACHING = False
+
 # Yes, activate the South migrations. Otherwise, we'll never notice if our
 # code screwed up the database synchronization
 SOUTH_TESTS_MIGRATE = False

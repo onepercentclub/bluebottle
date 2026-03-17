@@ -15,12 +15,27 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.test.utils import InitProjectDataMixin
 
 
+def _wait_for_es_indices():
+    """Wait for Elasticsearch indices to be ready for search (refresh)."""
+    try:
+        from elasticsearch_dsl import connections
+        conn = connections.get_connection()
+        conn.indices.refresh(index="*")
+    except Exception:
+        pass
+
+
 def _setup_es_indices():
+    """
+    Create Elasticsearch indices for all tenants. Does not return until indices
+    are set up (and refreshed). Tests must not run until this completes.
+    """
     Tenant = get_tenant_model()
     for tenant in Tenant.objects.exclude(schema_name='public'):
         with LocalTenant(tenant):
             call_command("search_index", "--delete", "-f", verbosity=0)
             call_command("search_index", "--create", verbosity=0)
+            _wait_for_es_indices()
 
 
 def _init_worker_with_es(
@@ -64,10 +79,13 @@ def _init_worker_with_es(
 
     if worker_id:
         os.environ["DJANGO_TEST_PROCESS_NUMBER"] = str(worker_id)
+    # Complete ES index setup before this worker is used; Django does not
+    # assign tests to a worker until its initializer returns.
     _setup_es_indices()
 
 
 class ParallelTestSuiteWithES(ParallelTestSuite):
+    """Parallel suite that sets up Elasticsearch indices in each worker before any tests run."""
     init_worker = _init_worker_with_es
 
 
@@ -123,6 +141,7 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         except IntegrityError:
             pass
 
+        # Single process: set up ES indices before returning so no tests run until they are ready.
         if parallel <= 1:
             _setup_es_indices()
 

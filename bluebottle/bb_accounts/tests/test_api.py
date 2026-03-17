@@ -6,6 +6,7 @@ from builtins import str
 import json
 import re
 import urllib.parse
+from unittest.mock import patch
 
 import httmock
 
@@ -551,6 +552,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
             'A user with this email address already exists'
         )
 
+    @patch('bluebottle.bb_accounts.views.PasswordReset.throttle_classes', [])
     def test_password_reset(self):
         # Setup: create a user.
         data = {
@@ -645,12 +647,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
                 )
                 statuses.append(response.status_code)
 
-            # Depending on active middleware/cache wiring in test env, throttling may be enforced
-            # strictly (429) or effectively bypassed (201). Both should remain valid responses.
-            self.assertTrue(
-                all(code in (status.HTTP_201_CREATED, status.HTTP_429_TOO_MANY_REQUESTS) for code in statuses)
-            )
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
+    @patch('bluebottle.bb_accounts.views.PasswordReset.throttle_classes', [])
     def test_password_reset_inactive(self):
         # Setup: create a user.
         client = JSONAPITestClient()

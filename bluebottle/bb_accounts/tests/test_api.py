@@ -6,6 +6,7 @@ from builtins import str
 import json
 import re
 import urllib.parse
+from unittest.mock import patch
 
 import httmock
 
@@ -551,6 +552,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
             'A user with this email address already exists'
         )
 
+    @patch('bluebottle.bb_accounts.views.PasswordReset.throttle_classes', [])
     def test_password_reset(self):
         # Setup: create a user.
         data = {
@@ -647,6 +649,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
             self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
+    @patch('bluebottle.bb_accounts.views.PasswordReset.throttle_classes', [])
     def test_password_reset_inactive(self):
         # Setup: create a user.
         client = JSONAPITestClient()

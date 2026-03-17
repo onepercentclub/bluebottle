@@ -5,7 +5,6 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
-from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from django.contrib.auth.models import Permission
 from django.contrib.gis.geos import Point
 from django.test import tag
@@ -17,10 +16,10 @@ from pytz import UTC
 from rest_framework import status
 
 from bluebottle.activities.models import Activity
+from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from bluebottle.collect.tests.factories import (
     CollectActivityFactory,
     CollectContributorFactory,
-    CollectTypeFactory,
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory

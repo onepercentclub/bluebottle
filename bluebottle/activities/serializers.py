@@ -315,13 +315,14 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.end[0]
 
     def get_expertise(self, obj):
-        for expertise in obj.expertise or []:
-            language = getattr(expertise, "language", None)
-            if language and language != get_current_language():
-                continue
-            if hasattr(expertise, "safe_translation_getter"):
-                return expertise.safe_translation_getter("name", any_language=True)
-            return getattr(expertise, "name", None)
+        try:
+            return [
+                expertise.name
+                for expertise in obj.expertise or []
+                if expertise.language == get_current_language()
+            ][0]
+        except IndexError:
+            pass
 
     def get_contribution_duration(self, obj):
         if hasattr(obj, "contribution_duration"):
@@ -339,13 +340,14 @@ class ActivityPreviewSerializer(ModelSerializer):
                 }
 
     def get_collect_type(self, obj):
-        for collect_type in getattr(obj, "collect_type", []):
-            language = getattr(collect_type, "language", None)
-            if language and language != get_current_language():
-                continue
-            if hasattr(collect_type, "safe_translation_getter"):
-                return collect_type.safe_translation_getter("name", any_language=True)
-            return getattr(collect_type, "name", None)
+        try:
+            return [
+                collect_type.name
+                for collect_type in getattr(obj, "collect_type", [])
+                if collect_type.language == get_current_language()
+            ][0]
+        except IndexError:
+            pass
 
     def get_collect_target(self, obj):
         target = getattr(obj, "target", None)
@@ -356,13 +358,14 @@ class ActivityPreviewSerializer(ModelSerializer):
         return getattr(obj, "realized", None)
 
     def get_theme(self, obj):
-        for theme in obj.theme or []:
-            language = getattr(theme, "language", None)
-            if language and language != get_current_language():
-                continue
-            if hasattr(theme, "safe_translation_getter"):
-                return theme.safe_translation_getter("name", any_language=True)
-            return getattr(theme, "name", None)
+        try:
+            return [
+                theme.name
+                for theme in obj.theme or []
+                if theme.language == get_current_language()
+            ][0]
+        except IndexError:
+            pass
 
     def get_activity_type(self, obj):
         if obj.type == 'registereddateactivity':

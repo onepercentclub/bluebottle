@@ -47,6 +47,7 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         list_url = reverse('admin:segments_segmenttype_changelist')
         response = self.client.get(list_url)
         self.assertContains(response, 'Number of segments')
+        self.assertContains(response, 'Job title')
         self.assertContains(
             response,
             reverse('admin:segments_segmenttype_change', args=(segment_type.id,))

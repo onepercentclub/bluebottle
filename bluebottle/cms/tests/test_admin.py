@@ -31,10 +31,9 @@ class HomePageAdminTestCase(BluebottleAdminTestCase):
 
         page = self.app.get(url)
         tabs = page.html.find('div', {'class': 'parler-language-tabs'})
-        tabs_text = tabs.text.lower()
-        self.assertTrue(any(value in tabs_text for value in ('dutch', 'nederlands', 'nl')))
-        self.assertTrue(any(value in tabs_text for value in ('english', 'engels', 'en')))
-        self.assertTrue(any(value in tabs_text for value in ('french', 'frans', 'fr')))
+        self.assertTrue('Dutch' in tabs.text)
+        self.assertTrue('English' in tabs.text)
+        self.assertTrue('French' in tabs.text)
 
 
 class SiteLinkAdminTestCase(BluebottleAdminTestCase):

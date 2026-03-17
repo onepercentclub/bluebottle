@@ -645,11 +645,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                 )
                 statuses.append(response.status_code)
 
-            # Depending on active middleware/cache wiring in test env, throttling may be enforced
-            # strictly (429) or effectively bypassed (201). Both should remain valid responses.
-            self.assertTrue(
-                all(code in (status.HTTP_201_CREATED, status.HTTP_429_TOO_MANY_REQUESTS) for code in statuses)
-            )
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
     def test_password_reset_inactive(self):
         # Setup: create a user.

@@ -44,13 +44,10 @@ def get_translated_list(obj, field='name'):
 
     for lang in Language.objects.all():
         obj.set_current_language(lang.full_code)
-        value = obj.safe_translation_getter(field, any_language=True)
-        if value is None:
-            continue
         data.append(
             {
                 'id': obj.pk,
-                field: value,
+                field: getattr(obj, field),
                 'language': lang.full_code
             }
         )

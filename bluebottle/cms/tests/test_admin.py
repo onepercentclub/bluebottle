@@ -25,15 +25,20 @@ class HomePageAdminTestCase(BluebottleAdminTestCase):
         self.app.set_user(self.staff_member)
 
     def test_admin_language_tabs(self):
-        # Test that language tabs show
-        LanguageFactory.create(code='fr', language_name='French')
+        # Test that language tabs show (create all we assert on so test is parallel-proof)
+        LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)
+        LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
+        LanguageFactory.create(code='fr', language_name='French', native_name='Français')
         url = reverse('admin:cms_homepage_changelist')
 
-        page = self.app.get(url)
+        # Force request language so tabs render consistently
+        page = self.app.get(url, extra_environ={'HTTP_ACCEPT_LANGUAGE': 'en'})
         tabs = page.html.find('div', {'class': 'parler-language-tabs'})
-        self.assertTrue('Dutch' in tabs.text)
-        self.assertTrue('English' in tabs.text)
-        self.assertTrue('French' in tabs.text)
+        self.assertIsNotNone(tabs, 'parler-language-tabs div should be present')
+        tabs_text = tabs.text
+        self.assertTrue('Dutch' in tabs_text, f'Dutch tab missing; tabs: {tabs_text!r}')
+        self.assertTrue('English' in tabs_text, f'English tab missing; tabs: {tabs_text!r}')
+        self.assertTrue('French' in tabs_text, f'French tab missing; tabs: {tabs_text!r}')
 
 
 class SiteLinkAdminTestCase(BluebottleAdminTestCase):

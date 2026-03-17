@@ -464,23 +464,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_collect_preview_dutch(self):
         activity = CollectActivityFactory.create(status='open')
         theme = activity.theme
-        # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups)
+        # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups).
+        # Update and save the translation directly to avoid duplicate key when saving the theme.
         theme_translation, _ = theme.translations.get_or_create(
             language_code='nl',
             defaults={'name': f'Theme NL {theme.pk}'}
         )
-        theme = activity.theme
-        theme.set_current_language('nl')
-        theme.name = 'Theme NL'
-        theme.save()
+        theme_translation.name = 'Theme NL'
+        theme_translation.save()
 
         collect_type = activity.collect_type
-        collect_type.set_current_language('nl')
-        collect_type.name = 'CollectType NL'
-        collect_type.save()
-
-        collect_type = activity.collect_type
-        # Ensure collect_type has Dutch translation (CollectTypeFactory may not create it in all test setups)
+        # Ensure collect_type has Dutch translation; update it in place to avoid duplicate key.
         collect_type_translation, _ = collect_type.translations.get_or_create(
             language_code='nl',
             defaults={
@@ -489,6 +483,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 'unit_plural': 'units',
             }
         )
+        collect_type_translation.name = 'CollectType NL'
+        collect_type_translation.save()
+
         response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
         attributes = response.json()['data'][0]['attributes']
 

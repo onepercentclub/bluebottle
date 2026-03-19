@@ -49,7 +49,8 @@ class Command(BaseCommand):
             if result != 0:
                 print(f'Tenant failed to index: {tenant}')
         else:
-            pool = Pool(processes=options['processes'])
+            processes = int(options.get('processes', 8))
+            pool = Pool(processes=processes)
             tasks = [
                 pool.apply_async(reindex, args=[str(tenant.schema_name)], kwds={'rebuild': rebuild})
                 for tenant in Client.objects.all()

@@ -68,6 +68,18 @@ class FundingDocument(ActivityDocument):
                 })
         return locations
 
+    def prepare_position(self, instance):
+        positions = []
+        if hasattr(instance, 'impact_location') and instance.impact_location and instance.impact_location.position:
+            positions.append(
+                {'lat': instance.impact_location.position.y, 'lon': instance.impact_location.position.x}
+            )
+        if instance.initiative and instance.initiative.place:
+            positions.append(
+                {'lat': instance.initiative.place.position.y, 'lon': instance.initiative.place.position.x}
+            )
+        return positions
+
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
         if instance.impact_location and instance.impact_location.country:

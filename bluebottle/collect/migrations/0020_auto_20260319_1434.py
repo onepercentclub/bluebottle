@@ -30,8 +30,6 @@ def rename_permissions(apps, schema_editor):
                 group.permissions.remove(incorrect_permission)
                 group.save()
 
-    raise Exception
-
 
 class Migration(migrations.Migration):
 

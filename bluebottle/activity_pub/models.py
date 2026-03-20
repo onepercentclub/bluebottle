@@ -617,6 +617,24 @@ class Follow(Activity):
             event__create__recipients__actor=self.actor,
         )
 
+    @property
+    def unpublished_open_activities(self):
+        from bluebottle.activities.models import Activity as DoGoodActivity
+        return DoGoodActivity.objects.filter(
+            status__in=['open', 'full', 'running'],
+        ).exclude(
+            event__create__recipients__actor=self.actor,
+        )
+
+    @property
+    def unpublished_succeeded_activities(self):
+        from bluebottle.activities.models import Activity as DoGoodActivity
+        return DoGoodActivity.objects.filter(
+            status__in=['succeeded', 'partially_funded'],
+        ).exclude(
+            event__create__recipients__actor=self.actor,
+        )
+
     def save(self, *args, **kwargs):
         created = bool(self.pk)
 

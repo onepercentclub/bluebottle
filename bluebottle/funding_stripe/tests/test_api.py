@@ -24,7 +24,8 @@ from bluebottle.funding_stripe.tests.factories import (
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
+from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
+from bluebottle.test.utils import JSONAPITestClient
 
 
 def _start_stripe_patch(target, **kwargs):
@@ -33,7 +34,7 @@ def _start_stripe_patch(target, **kwargs):
     return patcher
 
 
-class StripePaymentIntentListTestCase(BluebottleTestCase):
+class StripePaymentIntentListTestCase(FundingStripeTestCase):
 
     def setUp(self):
         super().setUp()
@@ -288,7 +289,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class StripeBankTransferTestCase(BluebottleTestCase):
+class StripeBankTransferTestCase(FundingStripeTestCase):
 
     def setUp(self):
         super(StripeBankTransferTestCase, self).setUp()
@@ -400,7 +401,7 @@ class StripeBankTransferTestCase(BluebottleTestCase):
         self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
 
 
-class StripePaymentIntentDetailTestCase(BluebottleTestCase):
+class StripePaymentIntentDetailTestCase(FundingStripeTestCase):
 
     def setUp(self):
         super().setUp()
@@ -502,7 +503,7 @@ class StripePaymentIntentDetailTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class ConnectAccountDetailsTestCase(BluebottleTestCase):
+class ConnectAccountDetailsTestCase(FundingStripeTestCase):
     def setUp(self):
         super(ConnectAccountDetailsTestCase, self).setUp()
         self.client = JSONAPITestClient()
@@ -836,7 +837,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(len(response.json()["data"]), 0)
 
 
-class ExternalAccountsTestCase(BluebottleTestCase):
+class ExternalAccountsTestCase(FundingStripeTestCase):
     def setUp(self):
         super(ExternalAccountsTestCase, self).setUp()
         self.client = JSONAPITestClient()

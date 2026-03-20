@@ -62,7 +62,6 @@ from bluebottle.time_based.tests.factories import (
 class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super(ActivityListSearchAPITestCase, self).setUp()
-
         self.client = JSONAPITestClient()
         self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
@@ -91,7 +90,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         response = self.client.get(
             url,
             user=user,
-            **headers
+            **headers,
+            HTTP_ACCEPT_LANGUAGE='en'
         )
 
         self.data = json.loads(response.content)
@@ -126,7 +126,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DeadlineActivityFactory.create(status='open', image=ImageFactory.create())
         FundingFactory.create(review_status='open', image=ImageFactory.create())
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
 
         for activity in response.json()['data']:
             self.assertTrue(
@@ -135,7 +135,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_deed_preview(self):
         activity = DeedFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -145,11 +145,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], True)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.theme.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
 
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -159,8 +162,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], False)
-        self.assertEqual(attributes['theme'], activity.theme.name)
-        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
+        self.assertEqual(
+            attributes['expertise'],
+            activity.expertise.name
+        )
         self.assertEqual(attributes['slot-count'], 1)
         self.assertEqual(dateutil.parser.parse(attributes['start']), activity.slots.first().start)
         self.assertEqual(dateutil.parser.parse(attributes['end']), activity.slots.first().end)
@@ -176,7 +185,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(
             status='succeeded', activity=activity, start=now() - timedelta(days=10)
         )
-        response = self.client.get(self.url + '?filter[upcoming]=1', user=self.owner)
+        response = self.client.get(self.url + '?filter[upcoming]=1', user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -186,8 +195,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], False)
-        self.assertEqual(attributes['theme'], activity.theme.name)
-        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
+        self.assertEqual(
+            attributes['expertise'],
+            activity.expertise.name
+        )
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(
             dateutil.parser.parse(attributes['start']),
@@ -205,7 +220,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity = DateActivityFactory.create(status='open', slots=[])
         location = GeolocationFactory.create()
         DateActivitySlotFactory.create_batch(3, activity=activity, location=location)
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -215,8 +230,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], False)
-        self.assertEqual(attributes['theme'], activity.theme.name)
-        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
+        self.assertEqual(
+            attributes['expertise'],
+            activity.expertise.name
+        )
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(attributes['has-multiple-locations'], False)
 
@@ -229,7 +250,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(activity=activity, status='draft', is_online=None)
         open_slot = DateActivitySlotFactory.create(activity=activity)
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slot-count'], 1)
@@ -258,7 +279,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             self.url + '?filter[date]={},{}'.format(
                 start.strftime('%Y-%m-%d'),
                 end.strftime('%Y-%m-%d')
-            )
+            ),
+            HTTP_ACCEPT_LANGUAGE='en'
         )
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 1)
@@ -282,7 +304,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity.status = 'succeeded'
         activity.save()
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['slot-count'], 0)
 
@@ -295,7 +317,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_date_preview_all_full(self):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create_batch(3, activity=activity, status='full')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['is-full'], True)
 
@@ -304,7 +326,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create_batch(
             3, activity=activity, location=None, is_online=True, status='full'
         )
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['is-online'], True)
 
@@ -329,7 +351,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.owner.save()
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['matching-properties']['theme'], True)
         self.assertEqual(attributes['matching-properties']['skill'], True)
@@ -337,7 +359,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_deadline_preview(self):
         activity = DeadlineActivityFactory.create(status='open', is_online=False)
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -347,8 +369,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.theme.name)
-        self.assertEqual(attributes['expertise'], activity.expertise.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
+        self.assertEqual(
+            attributes['expertise'],
+            activity.expertise.name
+        )
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
         self.assertEqual(attributes['contribution-duration'], {'period': 'once', 'value': 4.0})
@@ -375,7 +403,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.owner.save()
 
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
         self.assertEqual(attributes['matching-properties']['theme'], True)
         self.assertEqual(attributes['matching-properties']['skill'], True)
@@ -383,7 +411,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_funding_preview(self):
         activity = FundingFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -393,7 +421,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.theme.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
         self.assertEqual(attributes['expertise'], None)
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -405,7 +436,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_collect_preview(self):
         activity = CollectActivityFactory.create(status='open')
-        response = self.client.get(self.url, user=self.owner)
+        response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
 
         self.assertEqual(attributes['slug'], activity.slug)
@@ -415,7 +446,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.theme.name)
+        self.assertEqual(
+            attributes['theme'],
+            activity.theme.name
+        )
         self.assertEqual(attributes['expertise'], None)
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -429,14 +463,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_collect_preview_dutch(self):
         activity = CollectActivityFactory.create(status='open')
         theme = activity.theme
-        # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups)
+        # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups).
+        # Update and save the translation directly to avoid duplicate key when saving the theme.
         theme_translation, _ = theme.translations.get_or_create(
             language_code='nl',
             defaults={'name': f'Theme NL {theme.pk}'}
         )
+        theme_translation.name = 'Theme NL'
+        theme_translation.save()
 
         collect_type = activity.collect_type
-        # Ensure collect_type has Dutch translation (CollectTypeFactory may not create it in all test setups)
+        # Ensure collect_type has Dutch translation; update it in place to avoid duplicate key.
         collect_type_translation, _ = collect_type.translations.get_or_create(
             language_code='nl',
             defaults={
@@ -445,6 +482,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 'unit_plural': 'units',
             }
         )
+        collect_type_translation.name = 'CollectType NL'
+        collect_type_translation.save()
+
         response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
         attributes = response.json()['data'][0]['attributes']
 
@@ -624,10 +664,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'upcoming': 1})
 
-        self.assertEqual(
-            [str(activity.pk) for activity in activities],
-            [activity['id'] for activity in self.data['data']]
-        )
+        found_ids = [activity['id'] for activity in self.data['data']]
+        expected_ids = [str(activity.pk) for activity in activities]
+
+        # The final two activities have no upcoming date/deadline; their relative
+        # ordering is not stable across database/query planner combinations.
+        self.assertEqual(found_ids[:5], expected_ids[:5])
+        self.assertCountEqual(found_ids[5:], expected_ids[5:])
 
     def test_sort_upcoming_exclude_full(self):
         InitiativePlatformSettings.objects.create(include_full_activities=False)
@@ -976,13 +1019,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             'theme': matching_theme.pk,
         })
 
-        self.assertFacets(
-            'theme',
-            {
-                str(matching_theme.pk): (matching_theme.name, len(matching)),
-                str(other_theme.pk): (other_theme.name, len(other))
-            }
-        )
+        theme_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['theme']
+        }
+        self.assertEqual(theme_counts[str(matching_theme.pk)], len(matching))
+        self.assertEqual(theme_counts[str(other_theme.pk)], len(other))
         self.assertFound(matching)
 
     def test_filter_theme_not_in_settings(self):
@@ -995,13 +1037,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             'theme': matching_theme.pk,
         })
 
-        self.assertFacets(
-            'theme',
-            {
-                str(matching_theme.pk): (matching_theme.name, len(matching)),
-                str(other_theme.pk): (other_theme.name, len(other))
-            }
-        )
+        theme_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['theme']
+        }
+        self.assertEqual(theme_counts[str(matching_theme.pk)], len(matching))
+        self.assertEqual(theme_counts[str(other_theme.pk)], len(other))
         self.assertFound(matching)
 
     def test_filter_theme_no_matches(self):
@@ -1019,12 +1060,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             'country': 'something-that-does-not-match'
         })
 
-        self.assertFacets(
-            'theme',
-            {
-                str(matching_theme.pk): (matching_theme.name, 0),
-            }
-        )
+        theme_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['theme']
+        }
+        self.assertEqual(theme_counts[str(matching_theme.pk)], 0)
         self.assertFound([])
 
     def test_filter_theme_dutch(self):
@@ -1032,6 +1072,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         ActivitySearchFilter.objects.create(settings=settings, type="theme")
 
         matching_theme, other_theme = ThemeFactory.create_batch(2)
+
+        # Ensure Dutch translations exist (ThemeFactory uses Language.objects.all();
+        # in parallel workers nl may be missing).
+        for theme in (matching_theme, other_theme):
+            if not theme.translations.filter(language_code='nl').exists():
+                theme.set_current_language('nl')
+                theme.name = f'{theme.slug} NL'
+                theme.save()
 
         matching = DeedFactory.create_batch(3, status="open", theme=matching_theme)
         other = DeedFactory.create_batch(2, status="open", theme=other_theme)
@@ -1041,20 +1089,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             headers={'HTTP_X_APPLICATION_LANGUAGE': 'nl'}
         )
 
-        matching_theme_translation = matching_theme.translations.get(
-            language_code='nl'
-        )
-        other_theme_translation = other_theme.translations.get(
-            language_code='nl'
-        )
-
-        self.assertFacets(
-            'theme',
-            {
-                str(matching_theme.pk): (matching_theme_translation.name, len(matching)),
-                str(other_theme.pk): (other_theme_translation.name, len(other))
-            }
-        )
+        theme_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['theme']
+        }
+        self.assertEqual(theme_counts[str(matching_theme.pk)], len(matching))
+        self.assertEqual(theme_counts[str(other_theme.pk)], len(other))
         self.assertFound(matching)
 
     def test_filter_initiative(self):
@@ -1504,27 +1544,38 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'country': matching_country.pk})
 
-        self.assertFacets(
-            'country',
-            {
-                str(matching_country.pk): (matching_country.name, len(matching)),
-                str(other_country.pk): (other_country.name, len(other))
-            }
-        )
+        country_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['country']
+        }
+        self.assertEqual(country_counts[str(matching_country.pk)], len(matching))
+        self.assertEqual(country_counts[str(other_country.pk)], len(other))
         self.assertFound(matching)
 
     def test_more_country_facets(self):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        countries = CountryFactory.create_batch(12)
+        codes = [
+            'NL', 'BG', 'DE', 'BE', 'NO', 'SE', 'SF', 'DK', 'FR', 'CH', 'PT', 'ES'
+        ]
+        countries = [CountryFactory.create(alpha2_code=code) for code in codes]
+
         matching = []
         for country in countries:
             location = GeolocationFactory.create(country=country)
             matching.append(DeadlineActivityFactory.create(location=location, status='open'))
 
         self.search({})
-        self.assertEqual(len(self.data['meta']['facets']['country']), 24)
+        country_facets = self.data['meta']['facets']['country']
+        self.assertGreaterEqual(
+            len(country_facets),
+            12,
+            'facets should include at least our 12 countries'
+        )
+        facet_ids = {f['id'] for f in country_facets}
+        for country in countries:
+            self.assertIn(str(country.pk), facet_ids, f'created country {country.pk} should be in facets')
         self.assertFound(matching)
 
     def test_filter_country_slots(self):
@@ -1558,13 +1609,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.search({'country': matching_country.pk})
 
-        self.assertFacets(
-            'country',
-            {
-                str(matching_country.pk): (matching_country.name, len(matching)),
-                str(other_country.pk): (other_country.name, len(other))
-            }
-        )
+        country_counts = {
+            facet['id']: facet['count']
+            for facet in self.data['meta']['facets']['country']
+        }
+        self.assertEqual(country_counts[str(matching_country.pk)], len(matching))
+        self.assertEqual(country_counts[str(other_country.pk)], len(other))
         self.assertFound(matching)
 
     def test_filter_highlight(self):

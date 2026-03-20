@@ -46,6 +46,7 @@ from bluebottle.funding_pledge.tests.factories import (
     PledgePaymentProviderFactory,
 )
 from bluebottle.funding_stripe.models import StripePaymentProvider
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import (
     ExternalAccountFactory,
     StripePaymentProviderFactory,
@@ -936,7 +937,7 @@ class FundingTestCase(BluebottleTestCase):
         )
 
 
-class DonationTestCase(BluebottleTestCase):
+class DonationTestCase(FundingStripeMixin, BluebottleTestCase):
     def setUp(self):
         super(DonationTestCase, self).setUp()
         StripePaymentProviderFactory.create()
@@ -1969,7 +1970,7 @@ class FundingAnonymousDonationsTestCase(APITestCase):
         'iban_check_url': '',
     }
 )
-class IbanCheckTestCase(APITestCase):
+class IbanCheckTestCase(FundingStripeMixin, APITestCase):
     url_name = 'funding-iban-check'
     serializer = IbanCheckSerializer
     fields = ['iban', 'name', 'matched']

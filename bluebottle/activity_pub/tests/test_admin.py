@@ -33,7 +33,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         self.other_tenant = Client.objects.get(schema_name='test2')
         site_settings = SitePlatformSettings.load()
         with open('./bluebottle/utils/tests/test_images/upload.svg', 'rb') as image:
-            site_settings.logo = File(BytesIO(image.read()), name='favion.png')
+            site_settings.logo = File(BytesIO(image.read()), name='upload.svg')
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
@@ -47,7 +47,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
 
             site_settings = SitePlatformSettings.load()
             with open('./bluebottle/utils/tests/test_images/upload.svg', 'rb') as image:
-                site_settings.logo = File(BytesIO(image.read()), name='favion.png')
+                site_settings.logo = File(BytesIO(image.read()), name='upload.svg')
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
@@ -155,18 +155,25 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         admin = FollowerAdmin(Follower, AdminSite())
         button = admin.publish_activities_button(follower)
 
-        self.assertIn('Publish all 3 unpublished activities', button)
+        self.assertIn('Publish open activities', button)
+        self.assertIn('There are 2 unpublished open activities', button)
+        self.assertIn('Publish succeeded activities', button)
+        self.assertIn('There is 1 unpublished succeeded activity', button)
         self.assertIn(
-            reverse('admin:activity_pub_publish_activities', args=(follower.id,)),
+            reverse('admin:activity_pub_publish_open_activities', args=(follower.id,)),
+            button
+        )
+        self.assertIn(
+            reverse('admin:activity_pub_publish_succeeded_activities', args=(follower.id,)),
             button
         )
 
     def test_follower_admin_publish_activities_triggers_task(self):
         follower = self.create_follower()
         open_activity = DeedFactory.create(status='open')
-        succeeded_activity = DeedFactory.create(status='succeeded')
+        DeedFactory.create(status='succeeded')
 
-        url = reverse('admin:activity_pub_publish_activities', args=(follower.id,))
+        url = reverse('admin:activity_pub_publish_open_activities', args=(follower.id,))
         page = self.app.get(url, user=self.superuser)
         form = page.forms[1]
 
@@ -180,7 +187,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(called_tenant, self.tenant)
         self.assertEqual(
             set(called_queryset.values_list('id', flat=True)),
-            {open_activity.id, succeeded_activity.id}
+            {open_activity.id}
         )
 
     def test_follower_admin_accept_follow_request_sets_publish_mode(self):

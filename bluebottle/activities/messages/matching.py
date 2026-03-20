@@ -49,7 +49,11 @@ class MatchingActivitiesNotification(TransitionMessage):
                     "initiative-image", args=(activity.initiative.pk, "200x200")
                 )
             ),
-            'expertise': activity.expertise.name if activity.expertise else None,
+            'expertise': (
+                activity.expertise.name
+                if activity.expertise
+                else None
+            ),
             'theme': activity.initiative.theme.name,
         }
         if isinstance(activity, DateActivity):

@@ -4,6 +4,7 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
     ExternalAccountFactory, StripePaymentProviderFactory,
@@ -17,7 +18,7 @@ from bluebottle.time_based.states import DateStateMachine
 from bluebottle.time_based.tests.factories import DateActivityFactory
 
 
-class InitiativeReviewStateMachineTests(BluebottleTestCase):
+class InitiativeReviewStateMachineTests(FundingStripeMixin, BluebottleTestCase):
 
     def setUp(self):
         super(InitiativeReviewStateMachineTests, self).setUp()

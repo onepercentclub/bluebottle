@@ -6,9 +6,9 @@ from django.test.utils import override_settings
 from bluebottle.funding_stripe.models import (
     StripePayoutAccount, ExternalAccount, StripePaymentProvider
 )
+from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
 from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
 
 
 @override_settings(
@@ -18,8 +18,9 @@ from bluebottle.test.utils import BluebottleTestCase
         }
     }
 )
-class ConnectAccountTestCase(BluebottleTestCase):
+class ConnectAccountTestCase(FundingStripeTestCase):
     def setUp(self):
+        super(ConnectAccountTestCase, self).setUp()
         account_id = 'some-connect-id'
         if not StripePaymentProvider.objects.exists():
             StripePaymentProviderFactory.create()
@@ -77,7 +78,6 @@ class ConnectAccountTestCase(BluebottleTestCase):
                 })
             })
         })
-        super(ConnectAccountTestCase, self).setUp()
 
     def test_update(self):
         self.check.update(self.connect_account)
@@ -96,8 +96,9 @@ class ConnectAccountTestCase(BluebottleTestCase):
             retrieve.assert_called_once_with(self.check.account_id)
 
 
-class StripeExternalAccountTestCase(BluebottleTestCase):
+class StripeExternalAccountTestCase(FundingStripeTestCase):
     def setUp(self):
+        super(StripeExternalAccountTestCase, self).setUp()
         account_id = 'some-connect-id'
         external_account_id = 'some-bank-token'
         country = 'NL'
@@ -148,8 +149,6 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
             'status': 'new',
             'account': 'acct_1032D82eZvKYlo2C'
         })
-
-        super(StripeExternalAccountTestCase, self).setUp()
 
     def test_retrieve(self):
         with mock.patch(

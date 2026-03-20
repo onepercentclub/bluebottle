@@ -50,11 +50,11 @@ class MatchingActivitiesNotification(TransitionMessage):
                 )
             ),
             'expertise': (
-                activity.expertise.safe_translation_getter('name', any_language=True)
+                activity.expertise.name
                 if activity.expertise
                 else None
             ),
-            'theme': activity.initiative.theme.safe_translation_getter('name', any_language=True),
+            'theme': activity.initiative.theme.name,
         }
         if isinstance(activity, DateActivity):
             slots = activity.slots.filter(status='open')

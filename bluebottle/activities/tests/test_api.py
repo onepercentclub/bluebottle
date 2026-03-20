@@ -419,7 +419,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['initiative'], activity.initiative.title)
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
-        self.assertEqual(attributes['is-online'], True)
+        self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(
             attributes['theme'],
@@ -1778,7 +1778,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 status="open", is_online=True,
             ),
             DeedFactory.create(status="open"),
-            FundingFactory.create(status="open"),
+            FundingFactory.create(
+                status="open", impact_location=GeolocationFactory.create(position=leiden)
+            ),
             CollectActivityFactory.create(status="open", location=None)
 
         ]

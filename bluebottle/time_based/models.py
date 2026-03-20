@@ -1703,7 +1703,10 @@ class TeamMember(TriggerMixin, models.Model):
         resource_name = 'teams/team-members'
 
     def __str__(self):
-        return _('Team member {name}').format(name=self.user.full_name)
+        if self.user:
+            return _('Team member {name}').format(name=self.user.full_name)
+        else:
+            return None
 
 
 class ScheduleParticipant(Participant, Contributor):

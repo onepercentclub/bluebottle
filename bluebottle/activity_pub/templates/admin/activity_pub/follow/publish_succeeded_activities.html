@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    <p>{% trans 'Publish all open and succeeded activities.' %}</p>
+    <p>{% trans 'Publish all succeeded activities.' %}</p>
     <p><strong>{% trans 'Partner:' %}</strong> {{ obj.actor }}</p>
 
     <form method="post">
@@ -21,8 +21,8 @@
             <div class="form-row">
                 <div>
                     <p>
-                        {% blocktrans with count=obj.unpublished_activities.count actor=obj.actor %}
-                            Are you sure you want to publish {{ count }} activities to {{ actor }}?
+                        {% blocktrans with count=obj.unpublished_suecceeded_activities.count actor=obj.actor %}
+                            Are you sure you want to publish {{ count }} succeeded activities to {{ actor }}?
                         {% endblocktrans %}
                     </p>
                 </div>

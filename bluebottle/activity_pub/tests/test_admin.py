@@ -33,7 +33,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         self.other_tenant = Client.objects.get(schema_name='test2')
         site_settings = SitePlatformSettings.load()
         with open('./bluebottle/utils/tests/test_images/upload.svg', 'rb') as image:
-            site_settings.logo = File(BytesIO(image.read()), name='favion.png')
+            site_settings.logo = File(BytesIO(image.read()), name='upload.svg')
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 
@@ -47,7 +47,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
 
             site_settings = SitePlatformSettings.load()
             with open('./bluebottle/utils/tests/test_images/upload.svg', 'rb') as image:
-                site_settings.logo = File(BytesIO(image.read()), name='favion.png')
+                site_settings.logo = File(BytesIO(image.read()), name='upload.svg')
             site_settings.share_activities = ['supplier', 'consumer']
             site_settings.save()
 

@@ -48,6 +48,7 @@ jobs:
       VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py39
       PIP_CACHE_DIR: /home/github_actions_runner/.cache/pip
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+      PG_CLI_IMAGE: postgis/postgis:14-3.3
 
     steps:
       - name: Checkout
@@ -67,7 +68,6 @@ jobs:
             locales \
             libxmlsec1-dev \
             libgdal-dev swig \
-            postgresql-client \
             curl \
             git \
             build-essential \
@@ -86,9 +86,15 @@ jobs:
 
       - name: Wait for services
         run: |
+          pg_run() {
+            docker run --rm -i --network host \
+              -e "PGPASSWORD=${PGPASSWORD:-}" \
+              "$PG_CLI_IMAGE" \
+              "$@"
+          }
           echo "Waiting for Postgres on $PGHOST:$PGPORT and Elasticsearch on $ESHOST:$ESPORT"
           for i in {1..60}; do
-            if pg_isready -h "$PGHOST" -p "$PGPORT" -U postgres >/dev/null 2>&1 && \
+            if PGPASSWORD=postgres pg_run pg_isready -h 127.0.0.1 -p "$PGPORT" -U postgres >/dev/null 2>&1 && \
                curl -fsS "http://$ESHOST:$ESPORT/_cluster/health?wait_for_status=yellow&timeout=5s" | grep -q '"timed_out":false'; then
               exit 0
             fi
@@ -101,8 +107,16 @@ jobs:
         run: |
           set -e
 
+          pg_run() {
+            docker run --rm -i --network host \
+              -e "PGPASSWORD=${PGPASSWORD:-}" \
+              -v "$GITHUB_WORKSPACE:/workspace:ro" \
+              "$PG_CLI_IMAGE" \
+              "$@"
+          }
+
           # Create user if it does not exist
-          PGPASSWORD=postgres psql -h "$PGHOST" -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
           DO $$
           BEGIN
             IF NOT EXISTS (
@@ -116,7 +130,7 @@ jobs:
           SQL
 
           # Drop test database if it exists
-          PGPASSWORD=postgres psql -h "$PGHOST" -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
           SELECT pg_terminate_backend(pid)
           FROM pg_stat_activity
           WHERE datname = 'test_bluebottle_test'
@@ -125,7 +139,7 @@ jobs:
           SQL
 
           # Drop stale parallel clone DBs (test_bluebottle_test_1..N) so keepdb starts clean.
-          PGPASSWORD=postgres psql -h "$PGHOST" -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
           DO $$
           DECLARE
             db record;
@@ -146,20 +160,20 @@ jobs:
           SQL
 
           # Recreate database
-          PGPASSWORD=password createdb -h "$PGHOST" -p "$PGPORT" -U testuser test_bluebottle_test
+          PGPASSWORD=password pg_run createdb -h 127.0.0.1 -p "$PGPORT" -U testuser test_bluebottle_test
 
           # Ensure extensions exist in template1 so new DBs inherit them
-          PGPASSWORD=postgres psql -h "$PGHOST" -p "$PGPORT" -U postgres -d template1 <<'SQL'
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d template1 <<'SQL'
           CREATE EXTENSION IF NOT EXISTS postgis;
           CREATE EXTENSION IF NOT EXISTS postgis_topology;
           CREATE EXTENSION IF NOT EXISTS unaccent;
           SQL
 
           # Load test data
-          PGPASSWORD=password psql -h "$PGHOST" -p "$PGPORT" -U testuser -d test_bluebottle_test -f testdata.sql
+          PGPASSWORD=password pg_run psql -h 127.0.0.1 -p "$PGPORT" -U testuser -d test_bluebottle_test -f /workspace/testdata.sql
 
           # Sync all serial/identity sequences with current max(id) values after loading fixtures.
-          PGPASSWORD=password psql -h "$PGHOST" -p "$PGPORT" -U testuser -d test_bluebottle_test <<'SQL'
+          PGPASSWORD=password pg_run psql -h 127.0.0.1 -p "$PGPORT" -U testuser -d test_bluebottle_test <<'SQL'
           DO $$
           DECLARE
             r record;

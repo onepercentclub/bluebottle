@@ -1,0 +1,19 @@
+{% load i18n %}
+
+<div>
+    <a href="{{ publish_open_url }}" class="button">{% trans "Publish open activities" %}</a>
+    <br/>
+    {% blocktrans count counter=open_count %}
+        There is {{ counter }} unpublished open activity
+        {% plural %}
+        There are {{ counter }} unpublished open activities
+    {% endblocktrans %}
+    <br/><br/>
+    <a href="{{ publish_succeeded_url }}" class="button">{% trans "Publish succeeded activities" %}</a>
+    <br/>
+    {% blocktrans count counter=succeeded_count %}
+        There is {{ counter }} unpublished succeeded activity
+        {% plural %}
+        There are {{ counter }} unpublished succeeded activities
+    {% endblocktrans %}
+</div>

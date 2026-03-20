@@ -24,6 +24,7 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
 
 class RelatedActivityOwnerPermission(ResourceOwnerPermission):
     def has_object_action_permission(self, action, user, obj):
+        __import__('ipdb').set_trace()
         return user in obj.activity.owners
 
 

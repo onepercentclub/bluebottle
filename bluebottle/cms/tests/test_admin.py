@@ -1,5 +1,6 @@
 from django.test.utils import override_settings
 from django.urls.base import reverse
+from django.utils import translation
 
 from bluebottle.cms.models import Link
 from bluebottle.test.factory_models.cms import LinkGroupFactory, LinkFactory
@@ -29,10 +30,9 @@ class HomePageAdminTestCase(BluebottleAdminTestCase):
         LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)
         LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
         LanguageFactory.create(code='fr', language_name='French', native_name='Français')
-        url = reverse('admin:cms_homepage_changelist')
-
-        # Force request language so tabs render consistently
-        page = self.app.get(url, extra_environ={'HTTP_ACCEPT_LANGUAGE': 'en'})
+        with translation.override('en'):
+            url = reverse('admin:cms_homepage_changelist')
+        page = self.app.get(url)
         tabs = page.html.find('div', {'class': 'parler-language-tabs'})
         self.assertIsNotNone(tabs, 'parler-language-tabs div should be present')
         tabs_text = tabs.text

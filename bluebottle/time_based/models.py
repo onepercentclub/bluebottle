@@ -1148,7 +1148,7 @@ class Skill(TranslatableModel):
     )
 
     def __str__(self):
-        return self.safe_translation_getter('name', default=f'Skill #{self.id}', any_language=True)
+        return self.name
 
     class Meta():
         permissions = (

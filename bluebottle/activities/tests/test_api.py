@@ -147,7 +147,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(
             attributes['theme'],
-            activity.theme.safe_translation_getter('name', any_language=True)
+            activity.theme.name
         )
 
     def test_date_preview(self):
@@ -164,11 +164,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], False)
         self.assertEqual(
             attributes['theme'],
-            activity.theme.safe_translation_getter('name', any_language=True)
+            activity.theme.name
         )
         self.assertEqual(
             attributes['expertise'],
-            activity.expertise.safe_translation_getter('name', any_language=True)
+            activity.expertise.name
         )
         self.assertEqual(attributes['slot-count'], 1)
         self.assertEqual(dateutil.parser.parse(attributes['start']), activity.slots.first().start)
@@ -197,11 +197,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], False)
         self.assertEqual(
             attributes['theme'],
-            activity.theme.safe_translation_getter('name', any_language=True)
+            activity.theme.name
         )
         self.assertEqual(
             attributes['expertise'],
-            activity.expertise.safe_translation_getter('name', any_language=True)
+            activity.expertise.name
         )
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(
@@ -232,11 +232,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], False)
         self.assertEqual(
             attributes['theme'],
-            activity.theme.safe_translation_getter('name', any_language=True)
+            activity.theme.name
         )
         self.assertEqual(
             attributes['expertise'],
-            activity.expertise.safe_translation_getter('name', any_language=True)
+            activity.expertise.name
         )
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -371,11 +371,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(
             attributes['theme'],
-            activity.theme.safe_translation_getter('name', any_language=True)
+            activity.theme.name
         )
         self.assertEqual(
             attributes['expertise'],
-            activity.expertise.safe_translation_getter('name', any_language=True)
+            activity.expertise.name
         )
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -423,7 +423,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(
             attributes['theme'],
-            activity.theme.safe_translation_getter('name', any_language=True)
+            activity.theme.name
         )
         self.assertEqual(attributes['expertise'], None)
         self.assertEqual(attributes['slot-count'], None)
@@ -448,7 +448,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(
             attributes['theme'],
-            activity.theme.safe_translation_getter('name', any_language=True)
+            activity.theme.name
         )
         self.assertEqual(attributes['expertise'], None)
         self.assertEqual(attributes['slot-count'], None)

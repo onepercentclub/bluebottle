@@ -5,7 +5,6 @@ from builtins import str
 from datetime import timedelta
 
 import dateutil
-from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from django.contrib.auth.models import Permission
 from django.contrib.gis.geos import Point
 from django.test import tag
@@ -17,6 +16,7 @@ from pytz import UTC
 from rest_framework import status
 
 from bluebottle.activities.models import Activity
+from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from bluebottle.collect.tests.factories import (
     CollectActivityFactory,
     CollectContributorFactory,
@@ -391,7 +391,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['initiative'], activity.initiative.title)
         self.assertEqual(attributes['status'], activity.status)
         self.assertEqual(attributes['team-activity'], activity.team_activity)
-        self.assertEqual(attributes['is-online'], True)
+        self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
         self.assertEqual(attributes['theme'], activity.theme.name)
         self.assertEqual(attributes['expertise'], None)
@@ -1728,7 +1728,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 status="open", is_online=True,
             ),
             DeedFactory.create(status="open"),
-            FundingFactory.create(status="open"),
+            FundingFactory.create(
+                status="open", impact_location=GeolocationFactory.create(position=leiden)
+            ),
             CollectActivityFactory.create(status="open", location=None)
 
         ]

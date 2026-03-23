@@ -1633,12 +1633,20 @@ class Team(TriggerMixin, models.Model):
         return str(self.name)
 
     def delete(self, using=None, keep_parents=False):
-        self.registration.delete()
+        if self.registration.teams.count() == 1:
+            self.registration.delete()
+
         return super().delete(using, keep_parents)
 
     def save(self, *args, **kwargs):
         if not self.name:
             self.name = _("Team {name}").format(name=self.user.full_name)
+
+        if not self.registration:
+            self.registration = TeamScheduleRegistration.objects.get(
+                user=self.user,
+                activity=self.activity
+            )
 
         super().save(*args, **kwargs)
 

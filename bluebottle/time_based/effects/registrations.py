@@ -3,7 +3,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import PeriodicSlot, Team, DateRegistration
+from bluebottle.time_based.models import PeriodicSlot, DateRegistration
 
 
 class CreateParticipantEffect(Effect):
@@ -102,21 +102,6 @@ class AdjustInitialPeriodicParticipantEffect(Effect):
 
     def is_valid(self):
         return not self.instance.participants.filter(slot__isnull=False).exists()
-
-
-class CreateTeamEffect(Effect):
-    title = _('Create team for this registration')
-    template = 'admin/create_team.html'
-
-    def post_save(self, **kwargs):
-        Team.objects.create(
-            activity=self.instance.activity,
-            user=self.instance.user,
-            registration=self.instance,
-        )
-
-    def is_valid(self):
-        return not self.instance.team
 
 
 class DeleteRegistrationEffect(Effect):

@@ -13,7 +13,7 @@ from bluebottle.fsm.serializers import (
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
-from bluebottle.time_based.models import Team, TeamMember
+from bluebottle.time_based.models import Team, TeamMember, ScheduleActivity
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -49,8 +49,9 @@ class CanExportTeamMembersPermission(IsOwner):
 class TeamSerializer(ModelSerializer):
     permissions = ResourcePermissionField("team-detail", view_args=("pk",))
     registration = ResourceRelatedField(read_only=True)
-    activity = ResourceRelatedField(read_only=True)
+    activity = ResourceRelatedField(queryset=ScheduleActivity.objects.all())
     user = ResourceRelatedField(read_only=True)
+    slots = ResourceRelatedField(read_only=True, many=True)
 
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
@@ -83,6 +84,10 @@ class TeamSerializer(ModelSerializer):
         read_only=True,
     )
 
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
     def to_representation(self, instance):
         result = super().to_representation(instance)
 
@@ -101,7 +106,6 @@ class TeamSerializer(ModelSerializer):
         model = Team
         fields = (
             "id",
-            "status",
             "registration",
             "invite_code",
             "activity",

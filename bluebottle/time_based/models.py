@@ -1642,12 +1642,6 @@ class Team(TriggerMixin, models.Model):
         if not self.name:
             self.name = _("Team {name}").format(name=self.user.full_name)
 
-        if not self.registration:
-            self.registration = TeamScheduleRegistration.objects.get(
-                user=self.user,
-                activity=self.activity
-            )
-
         super().save(*args, **kwargs)
 
 

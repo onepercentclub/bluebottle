@@ -389,7 +389,8 @@ class ESPaginator(Paginator):
         self.result = self.object_list[1][bottom:top].execute()
 
         page = self._get_page(self.result, number, self)
-        page.facets = self.result.facets
+        # Some ES queries don't include aggregations/facets (e.g. plain sorted lists).
+        page.facets = getattr(self.result, 'facets', {})
 
         return page
 
@@ -414,7 +415,15 @@ class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
         result = super().get_paginated_response(data)
 
         facets = {}
-        for filter, facet in self.page.facets.to_dict().items():
+        page_facets = getattr(self.page, 'facets', {})
+        if hasattr(page_facets, 'to_dict'):
+            raw_facets = page_facets.to_dict()
+        elif isinstance(page_facets, dict):
+            raw_facets = page_facets
+        else:
+            raw_facets = {}
+
+        for filter, facet in raw_facets.items():
             facets[filter] = []
 
             for key, count, active in facet:

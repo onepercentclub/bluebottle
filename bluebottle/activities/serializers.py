@@ -184,6 +184,9 @@ class ActivityPreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
     initiative = serializers.CharField(source="initiative.title", required=False)
+    host_name = serializers.CharField(source="host_organization.name", required=False)
+    host_logo = serializers.SerializerMethodField()
+
     owner = serializers.SerializerMethodField()
 
     image = serializers.SerializerMethodField()
@@ -218,6 +221,11 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_target = serializers.SerializerMethodField()
     realized = serializers.SerializerMethodField()
 
+    def get_host_logo(self, obj):
+        if obj.host_organization and obj.host_organization.logo:
+            return obj.host_organization.logo
+        return None
+
     def get_activity(self, obj):
         return {"id": obj.meta["id"], "type": obj.resource_name}
 
@@ -232,7 +240,11 @@ class ActivityPreviewSerializer(ModelSerializer):
                 pass
 
         if model:
-            state = getattr(model._state_machines["states"], obj.current_status.value)
+            try:
+                state = getattr(model._state_machines["states"], obj.current_status.value)
+            except AttributeError:
+                # FIXME
+                return obj.current_status
         else:
             state = obj.current_status
 
@@ -248,7 +260,6 @@ class ActivityPreviewSerializer(ModelSerializer):
             slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[0].start
-
         elif obj.start and len(obj.start) == 1:
             return obj.start[0]
 
@@ -316,12 +327,12 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_contribution_duration(self, obj):
         if hasattr(obj, "contribution_duration"):
             if not obj.contribution_duration:
-                return {}
+                return {"no": "1"}
             if (
                 len(obj.contribution_duration) == 0
                 or obj.contribution_duration[0].period == 0
             ):
-                return {}
+                return {"no": "too"}
             elif len(obj.contribution_duration) == 1:
                 return {
                     "period": obj.contribution_duration[0].period,
@@ -390,7 +401,8 @@ class ActivityPreviewSerializer(ModelSerializer):
                 "initiative_office",
                 "impact_location",
             ]
-            location = sorted(obj.location, key=lambda loc: order.index(loc.type))[0]
+
+            location = sorted(obj.location, key=lambda loc: order.index(getattr(loc, 'type', 'location')))[0]
 
         if location:
             if location.locality:
@@ -412,6 +424,14 @@ class ActivityPreviewSerializer(ModelSerializer):
             if obj.image.type == "initiative":
                 url = reverse(
                     "initiative-image",
+                    args=(
+                        obj.image.id,
+                        IMAGE_SIZES["large"],
+                    ),
+                )
+            if obj.image.type == "link":
+                url = reverse(
+                    "activity_links:image",
                     args=(
                         obj.image.id,
                         IMAGE_SIZES["large"],
@@ -525,7 +545,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.status != "open"
 
     def get_owner(self, obj):
-        return obj.owner.full_name
+        return obj.owner.full_name if obj.owner else None
 
     def get_contributor_count(self, obj):
         return obj.contributor_count
@@ -547,6 +567,9 @@ class ActivityPreviewSerializer(ModelSerializer):
             "expertise",
             "initiative",
             "image",
+            "link",
+            "host_name",
+            "host_logo",
             "matching_properties",
             "amount_raised",
             "realized",

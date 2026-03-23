@@ -26,6 +26,7 @@ class SubRegionFactory(factory.DjangoModelFactory):
 class CountryFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Country
+        django_get_or_create = ("alpha2_code",)
 
     name = factory.Faker('country')
     alpha2_code = factory.Faker('country_code')

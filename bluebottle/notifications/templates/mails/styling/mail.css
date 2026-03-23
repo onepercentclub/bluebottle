@@ -1188,6 +1188,10 @@ div.info-box {
     padding: 12px 12px 12px 44px;
 }
 
+a.link {
+    text-decoration: underline;
+}
+
 div.info-box::before {
     content: "i";
     font-size: 14px;

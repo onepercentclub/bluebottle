@@ -25,11 +25,35 @@ def _wait_for_es_indices():
         pass
 
 
+def _wipe_stale_pid_test_elasticsearch_indices():
+    """
+    Delete indices matching {ELASTICSEARCH_TEST_INDEX_PREFIX}-pid* (orphaned
+    single-process test runs). Prevents hitting cluster.max_shards_per_node
+    after many local/IDE test runs. Does not delete test-w* (parallel workers).
+    """
+    if not getattr(settings, 'ELASTICSEARCH_TEST_WIPE_STALE_PID_INDICES', False):
+        return
+    prefix = getattr(settings, 'ELASTICSEARCH_TEST_INDEX_PREFIX', None)
+    if not prefix:
+        return
+    try:
+        from elasticsearch_dsl import connections
+        es = connections.get_connection()
+        pattern = f'{prefix}-pid*'
+        es.indices.delete(
+            index=pattern,
+            params={'ignore_unavailable': 'true'},
+        )
+    except Exception:
+        pass
+
+
 def _setup_es_indices():
     """
     Create Elasticsearch indices for all tenants. Does not return until indices
     are set up (and refreshed). Tests must not run until this completes.
     """
+    _wipe_stale_pid_test_elasticsearch_indices()
     Tenant = get_tenant_model()
     for tenant in Tenant.objects.exclude(schema_name='public'):
         with LocalTenant(tenant):

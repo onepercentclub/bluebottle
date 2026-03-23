@@ -1,11 +1,11 @@
-import uuid
 import logging
+import uuid
 
+from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
-from django.core.exceptions import PermissionDenied
 from django.views.generic import View
 from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import status
@@ -20,8 +20,8 @@ from bluebottle.funding.authentication import (
     DonorAuthentication,
     ClientSecretAuthentication,
 )
-from bluebottle.funding.permissions import PaymentPermission, IntentPermission
 from bluebottle.funding.models import Donor, FundingPlatformSettings
+from bluebottle.funding.permissions import PaymentPermission, IntentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
@@ -42,6 +42,7 @@ from bluebottle.funding_stripe.serializers import (
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.grant_management.models import GrantPayment
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.views import (
     ListAPIView,
     RetrieveUpdateAPIView,
@@ -50,7 +51,6 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
-from bluebottle.utils.utils import get_current_host
 
 logger = logging.getLogger(__name__)
 
@@ -386,7 +386,7 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
     related_permission_classes = {"connect_account": [IsOwner]}
 
     def get_queryset(self):
-        settings = FundingPlatformSettings.objects.get()
+        settings = FundingPlatformSettings.load()
         if settings.public_accounts:
             return self.queryset.order_by("-created").filter(
                 connect_account__public=True,

@@ -69,7 +69,10 @@ class Organization(ValidatedModelMixin, models.Model):
     @property
     def activity_pub_url(self):
         from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
-        return ActivityPubOrganization.objects.from_model(self).pub_url
+        try:
+            return self.activity_pub_organization.iri
+        except ActivityPubOrganization.DoesNotExist:
+            return None
 
     class Meta(object):
         ordering = ['name']

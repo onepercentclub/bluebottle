@@ -643,6 +643,7 @@ class StripePayoutAccount(PayoutAccount):
     class Meta(object):
         verbose_name = _('stripe payout account')
         verbose_name_plural = _('stripe payout accounts')
+        ordering = ('-created',)
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripes'

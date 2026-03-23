@@ -1,11 +1,10 @@
+import logging
 from builtins import object
 from itertools import groupby
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-
-from bluebottle.scim.models import SCIMPlatformSettings
-from django.conf import settings
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -36,6 +35,7 @@ from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
+from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import (
     TeamMember, TeamScheduleParticipant, TimeContribution, DeadlineActivity, DeadlineParticipant,
@@ -46,8 +46,6 @@ from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -609,6 +607,8 @@ class BaseContributorSerializer(ModelSerializer):
         'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
 
+    allow_multiple = False
+
     def validate(self, data):
         email = data.pop('email', None)
         send_messages = data.pop('send_messages', True)
@@ -621,7 +621,7 @@ class BaseContributorSerializer(ModelSerializer):
                 except Exception:
                     raise ValidationError(_('Not a valid email address'), code="invalid")
                 member_settings = MemberPlatformSettings.load()
-                scim_settings = SCIMPlatformSettings.objects.get()
+                scim_settings = SCIMPlatformSettings.load()
 
                 if (
                     (member_settings.closed or member_settings.confirm_signup) and
@@ -639,7 +639,11 @@ class BaseContributorSerializer(ModelSerializer):
             if data['user'].required:
                 raise ValidationError('Required fields', code="required")
 
-        if data.get('user') and self.Meta.model.objects.filter(**data).exists():
+        if (
+            not self.allow_multiple and
+            data.get('user') and
+            self.Meta.model.objects.filter(**data).exists()
+        ):
             raise ValidationError(_('Already participating'), code="exists")
 
         data['send_messages'] = send_messages
@@ -842,8 +846,8 @@ def bulk_add_participants(activity, emails, send_messages):
     if isinstance(activity, ScheduleTeam):
         Participant = TeamScheduleParticipant
 
-    settings = MemberPlatformSettings.objects.get()
-    scim_settings = SCIMPlatformSettings.objects.get()
+    settings = MemberPlatformSettings.load()
+    scim_settings = SCIMPlatformSettings.load()
 
     if not Participant:
         raise AttributeError(f'Could not find participant type for {activity}')

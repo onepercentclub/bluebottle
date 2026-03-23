@@ -106,36 +106,36 @@ class InboxPermissionTestCase(PermissionTestCase):
         FollowFactory.create(object=self.actor)
 
         self.assertTrue(
-            self.permission.has_permission(self.request(data={'type': 'Accept'}, actor=self.actor))
+            self.permission.has_permission(self.request(data={'type': 'Create'}, actor=self.actor))
         )
 
     def test_post_accept_no_follow(self):
         self.assertFalse(
-            self.permission.has_permission(self.request(data={'type': 'Accept'}, actor=self.actor))
+            self.permission.has_permission(self.request(data={'type': 'Create'}, actor=self.actor))
         )
 
     def test_post_accept_no_auth(self):
         FollowFactory.create(object=self.actor)
 
         self.assertFalse(
-            self.permission.has_permission(self.request(data={'type': 'Accept'}))
+            self.permission.has_permission(self.request(data={'type': 'Create'}))
         )
 
     def test_post_publish(self):
         FollowFactory.create(object=self.actor)
 
         self.assertTrue(
-            self.permission.has_permission(self.request(data={'type': 'Publish'}, actor=self.actor))
+            self.permission.has_permission(self.request(data={'type': 'Create'}, actor=self.actor))
         )
 
     def test_post_publish_no_follow(self):
         self.assertFalse(
-            self.permission.has_permission(self.request(data={'type': 'Publish'}, actor=self.actor))
+            self.permission.has_permission(self.request(data={'type': 'Create'}, actor=self.actor))
         )
 
     def test_post_publish_no_auth(self):
         FollowFactory.create(object=self.actor)
 
         self.assertFalse(
-            self.permission.has_permission(self.request(data={'type': 'Publish'}))
+            self.permission.has_permission(self.request(data={'type': 'Create'}))
         )

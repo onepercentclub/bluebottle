@@ -1,0 +1,31 @@
+{% load i18n %}
+
+<div>
+    {% if open_count > 0 %}
+        <a href="{{ publish_open_url }}" class="button">{% trans "Publish open activities" %}</a>
+        <br/>
+        {% blocktrans count counter=open_count %}
+            There is {{ counter }} unpublished open activity
+            {% plural %}
+            There are {{ counter }} unpublished open activities
+        {% endblocktrans %}
+    {% else %}
+        <span class="empty-comment">
+            {% trans "No unpublished open activities" %}
+        </span>
+    {% endif %}
+    <br/><br/>
+    {% if succeeded_count > 0 %}
+        <a href="{{ publish_succeeded_url }}" class="button">{% trans "Publish succeeded activities" %}</a>
+        <br/>
+        {% blocktrans count counter=succeeded_count %}
+            There is {{ counter }} unpublished succeeded activity
+            {% plural %}
+            There are {{ counter }} unpublished succeeded activities
+        {% endblocktrans %}
+        {% else %}
+            <span class="empty-comment">
+                {% trans "No unpublished succeeded activities" %}
+            </span>
+    {% endif %}
+</div>

@@ -122,7 +122,7 @@ class TeamScheduleActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, 
         teams_link = self.response.json()['data']['relationships']['teams']['links']['my']
         self.assertEqual(
             teams_link['meta']['count'],
-            0
+            1
         )
 
         response = self.client.get(contributors_link['href'], user=user)
@@ -145,10 +145,10 @@ class TeamScheduleActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, 
         contributors_link = self.response.json()['data']['relationships']['contributors']['links']['my']
         self.assertEqual(
             contributors_link['meta']['count'],
-            0
+            1
         )
 
-        teams_link = self.response.json()['data']['relationships']['teams']['links']['my']
+        teams_link = self.response.json()['data']['relationships']['teams']['links']['owned']
         self.assertEqual(
             teams_link['meta']['count'],
             1

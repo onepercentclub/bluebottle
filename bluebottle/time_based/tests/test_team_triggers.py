@@ -119,7 +119,9 @@ class TeamTriggerTestCase(BluebottleTestCase):
 
     def test_reject(self):
         registration = TeamScheduleRegistrationFactory.create()
-        team = registration.teams.first()
+        team = TeamFactory.create(
+            activity=registration.activity, user=registration.user
+        )
         registration.states.reject(save=True)
 
         team.refresh_from_db()
@@ -130,7 +132,9 @@ class TeamTriggerTestCase(BluebottleTestCase):
 
     def test_reaccept(self):
         registration = TeamScheduleRegistrationFactory.create()
-        team = registration.teams.first()
+        team = TeamFactory.create(
+            activity=registration.activity, user=registration.user
+        )
         registration.states.reject(save=True)
         registration.states.accept(save=True)
 

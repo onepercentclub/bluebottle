@@ -938,7 +938,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
 
     def team_is_accepted(effect):
         """Team is accepted"""
-        return effect.instance.team and effect.instance.team_member.team.status != "new"
+        return effect.instance.team_member and effect.instance.team_member.team.status != "new"
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(

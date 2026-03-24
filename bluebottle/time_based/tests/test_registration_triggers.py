@@ -523,6 +523,8 @@ class TeamScheduleRegistrationTriggerTestCase(
             ),
         )
 
+        self.team.refresh_from_db()
+
         self.assertEqual(self.team.status, "rejected")
         self.assertEqual(self.team.team_members.get().status, "rejected")
 
@@ -542,6 +544,7 @@ class TeamScheduleRegistrationTriggerTestCase(
             ),
         )
 
+        self.team.refresh_from_db()
         self.assertEqual(self.team.status, "accepted")
         self.assertEqual(self.team.team_members.get().status, "active")
 

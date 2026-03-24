@@ -16,7 +16,8 @@ from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
 from bluebottle.activity_pub.effects import (
-    PublishAdoptionEffect, CancelEffect, StartEffect, UpdateEventEffect, FinishEffect
+    PublishAdoptionEffect, CancelEffect, StartEffect, UpdateEventEffect, FinishEffect,
+    SendJoinEffect, SendLeaveEffect
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
@@ -306,6 +307,11 @@ def participant_is_inactive(effect):
     return not participant_is_active(effect)
 
 
+def deed_is_synced(effect):
+    """Deed is a synced copy (has origin pointing to source GoodDeed)."""
+    return getattr(effect.instance.activity, 'origin', None) is not None
+
+
 @register(DeedParticipant)
 class DeedParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -338,6 +344,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_user]
                 ),
                 FollowActivityEffect,
+                SendJoinEffect,
             ]
         ),
         TransitionTrigger(
@@ -357,7 +364,9 @@ class DeedParticipantTriggers(ContributorTriggers):
                     ParticipantRemovedNotification,
                     conditions=[is_not_owner]
                 ),
-                UnFollowActivityEffect
+                UnFollowActivityEffect,
+                # Notify source platform of leave for synced deeds
+                SendLeaveEffect,
             ]
         ),
 
@@ -404,7 +413,9 @@ class DeedParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
-                UnFollowActivityEffect
+                UnFollowActivityEffect,
+                # Notify source platform of leave for synced deeds
+                SendLeaveEffect,
             ]
         ),
 

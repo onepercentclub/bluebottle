@@ -634,3 +634,12 @@ label.translatable-field:before {
 .field-activity_pub label {
     display: none;
 }
+
+a.button, a.button:hover {
+    text-decoration: none;
+}
+
+.empty-comment {
+    font-style: italic;
+    color: #aaa;
+}

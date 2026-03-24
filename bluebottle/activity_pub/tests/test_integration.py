@@ -28,6 +28,7 @@ from bluebottle.collect.tests.factories import CollectActivityFactory, CollectTy
 from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.geo.models import Geolocation
 from bluebottle.grant_management.tests.factories import GrantApplicationFactory
@@ -384,11 +385,11 @@ class LinkTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             follow = Follow.objects.get()
-            follow.adoption_type = AdoptionTypeChoices.template
+            follow.adoption_type = AdoptionTypeChoices.clone
             follow.save()
 
         follow = Follow.objects.get(object=get_platform_actor())
-        self.assertEqual(follow.adoption_type, AdoptionTypeChoices.template)
+        self.assertEqual(follow.adoption_type, AdoptionTypeChoices.clone)
 
     def test_link(self):
         @httmock.urlmatch(netloc='test.localhost')
@@ -543,7 +544,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
 @override_settings(
     MAPBOX_API_KEY=None
 )
-class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
+class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
     factory = FundingFactory
 
     def create(self, **kwargs):
@@ -619,7 +620,7 @@ class LinkFundingTestCase(LinkTestCase, BluebottleTestCase):
             )
 
 
-class FundingTestCase(AdoptTestCase, BluebottleTestCase):
+class FundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
     factory = FundingFactory
 
     def create(self, **kwargs):

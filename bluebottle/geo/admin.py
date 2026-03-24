@@ -176,7 +176,11 @@ class GeolocationAdmin(admin.ModelAdmin):
     formfield_overrides = {
         PointField: {"widget": CustomMapboxPointFieldWidget},
     }
-    list_display = ('__str__', 'street', 'locality', 'country')
+    list_display = ('geolocation_label', 'street', 'locality', 'country')
+
+    @admin.display(description=_('Geolocation'))
+    def geolocation_label(self, obj):
+        return str(obj)
 
     list_filter = ('country', )
     search_fields = ('locality', 'street', 'formatted_address', 'mapbox_id')

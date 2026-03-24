@@ -20,7 +20,8 @@ from bluebottle.time_based.effects.slots import (
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification, ChangedSingleDateNotification, SlotCancelledNotification
 )
-from bluebottle.time_based.messages.teams import UserTeamDetailsChangedNotification
+from bluebottle.time_based.messages.teams import UserTeamDetailsChangedNotification, \
+    CaptainTeamDetailsChangedNotification
 from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.states import (
     DateStateMachine,
@@ -93,6 +94,14 @@ def slot_is_scheduled(effect):
     Slot is scheduled. It has a start date/time and a duration.
     """
     return effect.instance.end
+
+
+def slot_was_already_scheduled(effect):
+    """
+    Slot already had a date and duration before this save (not the first time scheduling).
+    """
+    initial = effect.instance._initial_values
+    return bool(initial.get('start'))
 
 
 def slot_has_no_end(effect):
@@ -255,8 +264,15 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
                 TransitionEffect(
                     TeamScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
                 ),
+
                 NotificationEffect(
-                    UserTeamDetailsChangedNotification, conditions=[slot_is_scheduled]
+                    UserTeamDetailsChangedNotification,
+                    conditions=[slot_is_not_finished],
+
+                ),
+                NotificationEffect(
+                    CaptainTeamDetailsChangedNotification,
+                    conditions=[slot_was_already_scheduled],
                 ),
             ],
         ),

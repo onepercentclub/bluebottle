@@ -256,4 +256,43 @@ class UserTeamDetailsChangedNotification(TransitionMessage):
 
     def get_recipients(self):
         """participants"""
-        return [p.user for p in self.obj.accepted_participants.all()]
+        captain = self.obj.team.user
+        participants = self.obj.accepted_participants.exclude(user=captain).all()
+        return [p.user for p in participants]
+
+
+class CaptainTeamDetailsChangedNotification(TransitionMessage):
+    """
+    The date/time for your team has been changed
+    """
+
+    subject = pgettext(
+        "platform-email", 'The date or location for your team has been changed for the activity "{title}"'
+    )
+
+    template = "messages/teams/user_teamslot_changed"
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context["slot"] = get_slot_info(self.obj.team.slots.first())
+        context["name"] = recipient.first_name
+        return context
+
+    context = {
+        "title": "activity.title",
+    }
+
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.obj).to_attachment()]
+
+    @property
+    def action_link(self):
+        team = self.obj.team
+        activity = team.activity
+        return activity.get_absolute_url() + f"?teamId={team.pk}"
+
+    action_title = pgettext("platform-email", "View team")
+
+    def get_recipients(self):
+        """team captain"""
+        return [self.obj.team.user]

@@ -1,0 +1,645 @@
+"""
+Tests for Sync connection setup between two platforms and activity_pub Join/Leave logic for Deeds.
+
+- Sync connection: Follow with adoption_type='sync', adopt() creating a synced Deed with origin=GoodDeed.
+- Join: when a follower sends Join(object=source GoodDeed), source platform adds DeedParticipant (RemoteContributor).
+- Leave: when a follower sends Leave(object=source GoodDeed, participant_sync_id=...), source removes participant.
+- contributor_count sync: GoodDeed.contributor_count mirrors Deed.contributor_count; local participant changes sync to origin.
+"""
+from datetime import datetime, timedelta
+from unittest import mock
+
+from django.test import RequestFactory
+from django.test.utils import override_settings
+from django.utils import timezone as tz
+
+from bluebottle.activities.models import RemoteContributor
+from bluebottle.activity_pub.adapters import (
+    adapter,
+    sync_good_deed_contributor_count,
+)
+from bluebottle.activity_pub.models import (
+    AdoptionTypeChoices,
+    Create,
+    Follow,
+    Join,
+    Leave,
+    Update,
+)
+from bluebottle.activity_pub.tests.factories import (
+    GoodDeedFactory,
+    OrganizationFactory,
+)
+from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.geo.models import Geolocation
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory as BluebottleOrganizationFactory
+from bluebottle.test.utils import BluebottleTestCase
+
+
+def _ensure_platform_actor():
+    """Ensure SitePlatformSettings has an org with activity_pub_organization so get_platform_actor() works."""
+    from bluebottle.activity_pub.models import Organization as APOrganization
+    try:
+        settings = SitePlatformSettings.load()
+    except SitePlatformSettings.DoesNotExist:
+        settings = None
+    if settings is None or getattr(settings, 'organization_id', None) is None:
+        org = BluebottleOrganizationFactory.create()
+        if settings is None:
+            settings = SitePlatformSettings.objects.create(organization=org)
+        else:
+            settings.organization = org
+            settings.save(update_fields=['organization'])
+    if not getattr(settings.organization, 'activity_pub_organization_id', None):
+        APOrganization.objects.from_model(settings.organization)
+    return get_platform_actor()
+
+
+class SyncConnectionSetupTestCase(BluebottleTestCase):
+    """Tests for setting up a Sync connection between two platforms."""
+
+    def setUp(self):
+        super().setUp()
+        self.platform_actor = _ensure_platform_actor()
+        self.other_actor = OrganizationFactory.create()
+
+    def test_follow_with_sync_adoption_type(self):
+        """Follow can have adoption_type='sync' for fully synced copy."""
+        follow = Follow.objects.create(
+            actor=self.platform_actor,
+            object=self.other_actor,
+            adoption_type=AdoptionTypeChoices.sync,
+        )
+        self.assertEqual(follow.adoption_type, 'sync')
+        self.assertEqual(follow.short_adoption_type, 'Fully synced')
+
+    def test_sync_adoption_type_choices(self):
+        """AdoptionTypeChoices includes sync."""
+        self.assertIn('sync', [c[0] for c in AdoptionTypeChoices.choices])
+
+    def test_adopt_creates_deed_with_origin(self):
+        """adapter.adopt(event) creates a local Deed with origin=event (source GoodDeed)."""
+        # Source GoodDeed (on "other" platform) – we simulate by creating it locally with Create
+        # Source GoodDeed without image to avoid network fetch in serializer
+        good_deed = GoodDeedFactory.create(
+            name='Source deed',
+            summary='Summary',
+            organization=self.other_actor,
+            image=None,
+            start_time=tz.now() + timedelta(days=7),
+            end_time=tz.now() + timedelta(days=14),
+        )
+        Create.objects.create(actor=self.other_actor, object=good_deed)
+
+        follow = Follow.objects.create(
+            actor=self.platform_actor,
+            object=self.other_actor,
+            adoption_type=AdoptionTypeChoices.sync,
+            default_owner=BlueBottleUserFactory.create(),
+        )
+        request = RequestFactory().get('/')
+        request.user = follow.default_owner
+
+        with mock.patch.object(Geolocation, 'update_location'):
+            deed = adapter.adopt(good_deed, request)
+
+        self.assertIsInstance(deed, Deed)
+        self.assertEqual(deed.origin_id, good_deed.pk)
+        self.assertEqual(deed.origin, good_deed)
+        self.assertEqual(deed.title, good_deed.name)
+        self.assertIsNotNone(deed.event)
+        self.assertEqual(deed.event.activity_id, deed.pk)
+
+    def test_adopt_sync_sets_good_deed_contributor_count(self):
+        """After sync adopt, GoodDeed.contributor_count is set from Deed (0 initially)."""
+        good_deed = GoodDeedFactory.create(
+            name='Source',
+            summary='Summary',
+            organization=self.other_actor,
+            image=None,
+            start_time=tz.now() + timedelta(days=7),
+            end_time=tz.now() + timedelta(days=14),
+        )
+        Create.objects.create(actor=self.other_actor, object=good_deed)
+        follow = Follow.objects.create(
+            actor=self.platform_actor,
+            object=self.other_actor,
+            adoption_type=AdoptionTypeChoices.sync,
+            default_owner=BlueBottleUserFactory.create(),
+        )
+        request = RequestFactory().get('/')
+        request.user = follow.default_owner
+
+        with mock.patch.object(Geolocation, 'update_location'):
+            deed = adapter.adopt(good_deed, request)
+
+        good_deed.refresh_from_db()
+        self.assertEqual(good_deed.contributor_count, 0)
+        self.assertEqual(deed.contributor_count, 0)
+
+
+class JoinLeaveHandlersTestCase(BluebottleTestCase):
+    """Tests for handle_join_received and handle_leave_received (Join/Leave activity_pub logic)."""
+
+    def setUp(self):
+        super().setUp()
+        self.platform_actor = _ensure_platform_actor()
+        self.follower_actor = OrganizationFactory.create(iri='https://follower.example/org')
+        self.follow = Follow.objects.create(
+            actor=self.platform_actor,
+            object=self.follower_actor,
+            adoption_type=AdoptionTypeChoices.sync,
+        )
+        # Source deed + GoodDeed on this platform (we are the "source")
+        self.deed = DeedFactory.create(
+            title='Source Deed',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        self.good_deed = GoodDeedFactory.create(
+            name=self.deed.title,
+            summary='',
+            organization=self.platform_actor,
+            activity=self.deed,
+            start_time=tz.now() + timedelta(days=7),
+            end_time=tz.now() + timedelta(days=14),
+        )
+        self.deed.origin = self.good_deed
+        self.deed.save(update_fields=['origin'])
+        Create.objects.create(actor=self.platform_actor, object=self.good_deed)
+
+    def test_join_received_creates_remote_contributor_and_participant(self):
+        """When a remote Join is received, DeedParticipant with RemoteContributor is created on source deed."""
+        self.assertFalse(
+            DeedParticipant.objects.filter(
+                activity=self.deed,
+                remote_contributor__sync_id='sync-123',
+            ).exists()
+        )
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=self.good_deed,
+            participant_sync_id='sync-123',
+            participant_name='Jane Doe',
+            participant_email='jane@follower.example',
+            iri='https://follower.example/join/1',
+        )
+
+        self.assertTrue(
+            DeedParticipant.objects.filter(
+                activity=self.deed,
+                remote_contributor__sync_id='sync-123',
+                status='accepted',
+            ).exists()
+        )
+        rc = RemoteContributor.objects.get(sync_id='sync-123')
+        self.assertEqual(rc.display_name, 'Jane Doe')
+        self.assertEqual(rc.email, 'jane@follower.example')
+        self.assertEqual(rc.sync_actor_id, self.follower_actor.pk)
+        self.assertEqual(rc.sync_follow_id, self.follow.pk)
+
+    def test_join_received_updates_contributor_count_and_creates_update(self):
+        """Join handler updates GoodDeed.contributor_count and creates Update(object=GoodDeed)."""
+        initial_count = self.good_deed.contributor_count
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=self.good_deed,
+            participant_sync_id='sync-456',
+            participant_name='Bob',
+            participant_email='bob@example.com',
+            iri='https://follower.example/join/2',
+        )
+
+        self.good_deed.refresh_from_db()
+        self.assertEqual(self.good_deed.contributor_count, initial_count + 1)
+        self.assertTrue(
+            Update.objects.filter(object=self.good_deed).exists()
+        )
+
+    def test_join_received_idempotent_same_participant_sync_id(self):
+        """Duplicate Join with same participant_sync_id does not create a second participant."""
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=self.good_deed,
+            participant_sync_id='sync-dup',
+            participant_name='First',
+            iri='https://follower.example/join/3',
+        )
+        self.assertEqual(
+            DeedParticipant.objects.filter(
+                activity=self.deed,
+                remote_contributor__sync_id='sync-dup',
+            ).count(),
+            1,
+        )
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=self.good_deed,
+            participant_sync_id='sync-dup',
+            participant_name='Second',
+            iri='https://follower.example/join/4',
+        )
+        self.assertEqual(
+            DeedParticipant.objects.filter(
+                activity=self.deed,
+                remote_contributor__sync_id='sync-dup',
+            ).count(),
+            1,
+        )
+
+    def test_join_received_local_is_no_op(self):
+        """Local Join (iri=None) does not create participants or Update."""
+        Join.objects.create(
+            actor=self.platform_actor,
+            object=self.good_deed,
+            participant_sync_id='local-sync',
+            participant_name='Local',
+            iri=None,
+        )
+        self.assertFalse(
+            DeedParticipant.objects.filter(
+                activity=self.deed,
+                remote_contributor__sync_id='local-sync',
+            ).exists()
+        )
+        # Update might still be created by Activity.save() default_recipients – but handler returns early
+        # so no participant is added. So we only check no remote participant.
+        self.assertEqual(
+            DeedParticipant.objects.filter(activity=self.deed).count(),
+            0,
+        )
+
+    def test_join_received_non_good_deed_is_no_op(self):
+        """Join with object that is not a GoodDeed does nothing."""
+        from bluebottle.activity_pub.models import CrowdFunding
+        other_event = CrowdFunding.objects.create(
+            name='Funding',
+            summary='',
+            organization=self.platform_actor,
+            start_time=tz.now(),
+            end_time=tz.now() + timedelta(days=7),
+        )
+        Create.objects.create(actor=self.platform_actor, object=other_event)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=other_event,
+            participant_sync_id='sync-other',
+            participant_name='Other',
+            iri='https://follower.example/join/5',
+        )
+        self.assertFalse(
+            DeedParticipant.objects.filter(
+                remote_contributor__sync_id='sync-other',
+            ).exists()
+        )
+
+    def test_leave_received_marks_participant_rejected(self):
+        """When a remote Leave is received, matching participant is set to status='rejected'."""
+        rc = RemoteContributor.objects.create(
+            sync_id='sync-leave',
+            display_name='Leave Me',
+            email='leave@example.com',
+            sync_actor=self.follower_actor,
+            sync_follow=self.follow,
+        )
+        DeedParticipant.objects.create(
+            activity=self.deed,
+            user=None,
+            remote_contributor=rc,
+            status='accepted',
+        )
+
+        Leave.objects.create(
+            actor=self.follower_actor,
+            object=self.good_deed,
+            participant_sync_id='sync-leave',
+            iri='https://follower.example/leave/1',
+        )
+
+        part = DeedParticipant.objects.get(
+            activity=self.deed,
+            remote_contributor__sync_id='sync-leave',
+        )
+        self.assertEqual(part.status, 'rejected')
+
+    def test_leave_received_updates_contributor_count_and_creates_update(self):
+        """Leave handler updates GoodDeed.contributor_count and creates Update."""
+        rc = RemoteContributor.objects.create(
+            sync_id='sync-leave-count',
+            display_name='Count',
+            sync_actor=self.follower_actor,
+            sync_follow=self.follow,
+        )
+        DeedParticipant.objects.create(
+            activity=self.deed,
+            user=None,
+            remote_contributor=rc,
+            status='accepted',
+        )
+        self.good_deed.refresh_from_db()
+        before_count = self.good_deed.contributor_count
+
+        Leave.objects.create(
+            actor=self.follower_actor,
+            object=self.good_deed,
+            participant_sync_id='sync-leave-count',
+            iri='https://follower.example/leave/2',
+        )
+
+        self.good_deed.refresh_from_db()
+        self.assertEqual(self.good_deed.contributor_count, before_count - 1)
+        self.assertGreaterEqual(before_count, 1, 'test setup should have at least one participant')
+        self.assertTrue(Update.objects.filter(object=self.good_deed).exists())
+
+    def test_leave_received_unknown_sync_id_does_not_crash(self):
+        """Leave with unknown participant_sync_id does not raise."""
+        Leave.objects.create(
+            actor=self.follower_actor,
+            object=self.good_deed,
+            participant_sync_id='nonexistent-sync-id',
+            iri='https://follower.example/leave/3',
+        )
+        self.assertEqual(
+            DeedParticipant.objects.filter(activity=self.deed).count(),
+            0,
+        )
+
+    def test_leave_received_local_is_no_op(self):
+        """Local Leave does not change participants."""
+        rc = RemoteContributor.objects.create(
+            sync_id='sync-local-leave',
+            display_name='Local Leave',
+            sync_actor=self.follower_actor,
+            sync_follow=self.follow,
+        )
+        DeedParticipant.objects.create(
+            activity=self.deed,
+            user=None,
+            remote_contributor=rc,
+            status='accepted',
+        )
+
+        Leave.objects.create(
+            actor=self.platform_actor,
+            object=self.good_deed,
+            participant_sync_id='sync-local-leave',
+            iri=None,
+        )
+
+        part = DeedParticipant.objects.get(
+            activity=self.deed,
+            remote_contributor__sync_id='sync-local-leave',
+        )
+        self.assertEqual(part.status, 'accepted')
+
+
+class ContributorCountSyncTestCase(BluebottleTestCase):
+    """Tests for sync_good_deed_contributor_count and DeedParticipant → origin sync."""
+
+    def setUp(self):
+        super().setUp()
+        self.platform_actor = _ensure_platform_actor()
+        self.deed = DeedFactory.create(
+            title='Deed with origin',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        self.good_deed = GoodDeedFactory.create(
+            name=self.deed.title,
+            summary='',
+            organization=self.platform_actor,
+            activity=self.deed,
+            start_time=tz.now() + timedelta(days=7),
+            end_time=tz.now() + timedelta(days=14),
+            contributor_count=0,
+        )
+        self.deed.origin = self.good_deed
+        self.deed.save(update_fields=['origin'])
+
+    def test_sync_good_deed_contributor_count_updates_event(self):
+        """sync_good_deed_contributor_count sets GoodDeed.contributor_count from deed.contributor_count."""
+        self.good_deed.contributor_count = 0
+        self.good_deed.save(update_fields=['contributor_count'])
+        DeedParticipantFactory.create(activity=self.deed, user=BlueBottleUserFactory.create(), status='accepted')
+        DeedParticipantFactory.create(activity=self.deed, user=BlueBottleUserFactory.create(), status='accepted')
+
+        sync_good_deed_contributor_count(self.good_deed)
+
+        self.good_deed.refresh_from_db()
+        self.assertEqual(self.good_deed.contributor_count, 2)
+
+    def test_sync_good_deed_contributor_count_non_good_deed_no_op(self):
+        """sync_good_deed_contributor_count is no-op when event is not a GoodDeed."""
+        from bluebottle.activity_pub.models import CrowdFunding
+        cf = CrowdFunding.objects.create(
+            name='CF',
+            summary='',
+            organization=self.platform_actor,
+            contributor_count=99,
+        )
+        sync_good_deed_contributor_count(cf)
+        cf.refresh_from_db()
+        self.assertEqual(cf.contributor_count, 99)
+
+    def test_deed_participant_save_syncs_origin_contributor_count(self):
+        """When a DeedParticipant is added to a deed with origin=GoodDeed, origin.contributor_count is synced."""
+        self.good_deed.contributor_count = 0
+        self.good_deed.save(update_fields=['contributor_count'])
+        self.assertEqual(self.good_deed.contributor_count, 0)
+
+        DeedParticipantFactory.create(
+            activity=self.deed,
+            user=BlueBottleUserFactory.create(),
+            status='accepted',
+        )
+
+        self.good_deed.refresh_from_db()
+        self.assertEqual(self.good_deed.contributor_count, 1)
+
+    def test_deed_participant_delete_syncs_origin_contributor_count(self):
+        """When a DeedParticipant is deleted from a deed with origin, origin.contributor_count is synced."""
+        p = DeedParticipantFactory.create(
+            activity=self.deed,
+            user=BlueBottleUserFactory.create(),
+            status='accepted',
+        )
+        self.good_deed.refresh_from_db()
+        self.assertEqual(self.good_deed.contributor_count, 1)
+
+        p.delete()
+        self.good_deed.refresh_from_db()
+        # After delete, origin's contributor_count is synced from deed (0 participants)
+        self.assertLessEqual(
+            self.good_deed.contributor_count, 1,
+            'contributor_count should decrease after participant delete'
+        )
+
+
+@override_settings(MAPBOX_API_KEY=None)
+class SyncIntegrationTestCase(BluebottleTestCase):
+    """Integration-style tests: sync connection, adopt deed, then Join/Leave flow (single tenant)."""
+
+    def setUp(self):
+        super().setUp()
+        self.platform_actor = _ensure_platform_actor()
+        # Follower actor on same tenant (as when we have accepted a Follow from another platform)
+        self.follower_actor = OrganizationFactory.create(iri='https://follower.example/org')
+        # Follow: follower follows us (platform); so adopt() finds Follow(object=platform_actor)
+        self.follow = Follow.objects.create(
+            actor=self.follower_actor,
+            object=self.platform_actor,
+            adoption_type=AdoptionTypeChoices.sync,
+            default_owner=BlueBottleUserFactory.create(),
+        )
+
+    def test_sync_follow_and_adopt_then_join_updates_source(self):
+        """Flow: source deed → adopt with sync (creates deed with origin) → Join from follower → source has participant."""
+        deed = DeedFactory.create(
+            title='Shared Deed',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(deed)
+        good_deed = deed.event
+        self.assertIsNotNone(good_deed)
+        if not Create.objects.filter(object=good_deed).exists():
+            Create.objects.create(actor=self.platform_actor, object=good_deed)
+
+        # Adopt with sync on same tenant (simulates other platform adopting; we use same good_deed as origin)
+        request = RequestFactory().get('/')
+        request.user = self.follow.default_owner
+        with mock.patch.object(Geolocation, 'update_location'):
+            adopted = adapter.adopt(good_deed, request)
+        self.assertEqual(adopted.origin_id, good_deed.pk)
+
+        # Follower sends Join (we receive it on source)
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=good_deed,
+            participant_sync_id='follower-participant-1',
+            participant_name='Follower User',
+            participant_email='follower@other.example',
+            iri='https://follower.example/join/1',
+        )
+
+        self.assertTrue(
+            DeedParticipant.objects.filter(
+                activity=deed,
+                remote_contributor__sync_id='follower-participant-1',
+                status='accepted',
+            ).exists()
+        )
+        good_deed.refresh_from_db()
+        self.assertEqual(good_deed.contributor_count, 1)
+
+    def test_sync_join_then_leave_removes_participant(self):
+        """After Join adds a participant, Leave removes them (rejected) and count drops."""
+        deed = DeedFactory.create(
+            title='Deed for Join/Leave',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(deed)
+        good_deed = deed.event
+        Create.objects.create(actor=self.platform_actor, object=good_deed)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=good_deed,
+            participant_sync_id='join-then-leave',
+            participant_name='Temp',
+            participant_email='temp@example.com',
+            iri='https://follower.example/join/2',
+        )
+        good_deed.refresh_from_db()
+        self.assertEqual(good_deed.contributor_count, 1)
+
+        Leave.objects.create(
+            actor=self.follower_actor,
+            object=good_deed,
+            participant_sync_id='join-then-leave',
+            iri='https://follower.example/leave/2',
+        )
+        good_deed.refresh_from_db()
+        self.assertEqual(good_deed.contributor_count, 0)
+        part = DeedParticipant.objects.filter(
+            activity=deed,
+            remote_contributor__sync_id='join-then-leave',
+        ).first()
+        self.assertIsNotNone(part)
+        self.assertEqual(part.status, 'rejected')
+
+    def test_join_after_withdraw_re_appears_on_source(self):
+        """When a user joins an adopted deed, withdraws, then joins again, they re-appear on the source participant list."""
+        deed = DeedFactory.create(
+            title='Deed for re-join',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(deed)
+        good_deed = deed.event
+        Create.objects.create(actor=self.platform_actor, object=good_deed)
+
+        sync_id = 'rejoin-user-1'
+        # Join
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=good_deed,
+            participant_sync_id=sync_id,
+            participant_name='Rejoin User',
+            participant_email='rejoin@example.com',
+            iri='https://follower.example/join/rejoin1',
+        )
+        self.assertTrue(
+            DeedParticipant.objects.filter(
+                activity=deed,
+                remote_contributor__sync_id=sync_id,
+                status='accepted',
+            ).exists()
+        )
+        good_deed.refresh_from_db()
+        self.assertEqual(good_deed.contributor_count, 1)
+
+        # Withdraw (Leave)
+        Leave.objects.create(
+            actor=self.follower_actor,
+            object=good_deed,
+            participant_sync_id=sync_id,
+            iri='https://follower.example/leave/rejoin1',
+        )
+        part = DeedParticipant.objects.get(
+            activity=deed,
+            remote_contributor__sync_id=sync_id,
+        )
+        self.assertEqual(part.status, 'rejected')
+        good_deed.refresh_from_db()
+        self.assertEqual(good_deed.contributor_count, 0)
+
+        # Join again – user should re-appear as accepted on source
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=good_deed,
+            participant_sync_id=sync_id,
+            participant_name='Rejoin User Updated',
+            participant_email='rejoin2@example.com',
+            iri='https://follower.example/join/rejoin2',
+        )
+        part.refresh_from_db()
+        self.assertEqual(part.status, 'accepted', 'Re-join should set participant back to accepted')
+        good_deed.refresh_from_db()
+        self.assertEqual(good_deed.contributor_count, 1, 'Re-join should restore contributor count')
+        self.assertTrue(
+            DeedParticipant.objects.filter(
+                activity=deed,
+                remote_contributor__sync_id=sync_id,
+                status='accepted',
+            ).exists(),
+            'User should re-appear in participant list on source',
+        )

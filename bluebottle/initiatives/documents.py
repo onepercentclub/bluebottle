@@ -61,11 +61,14 @@ def get_translated_segments(segment):
 
     for lang in Language.objects.all():
         segment.set_current_language(lang.full_code)
+        name = segment.name
+        if name is None:
+            continue
         data.append(
             {
                 'id': segment.pk,
                 'type': segment.segment_type.slug,
-                'name': segment.name,
+                'name': name,
                 'language': lang.full_code,
                 'closed': segment.closed
             }

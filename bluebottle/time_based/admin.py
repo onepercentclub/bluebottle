@@ -25,6 +25,7 @@ from polymorphic.admin import (
 from pytz import timezone
 
 from bluebottle.activities.admin import (
+    ActivityBulkAddForm,
     ActivityChildAdmin,
     BaseContributorInline,
     BulkAddMixin,
@@ -405,8 +406,24 @@ class TeamScheduleSlotAdminInline(BaseSlotAdminInline):
     model = TeamScheduleSlot
 
 
+class TeamBulkAddForm(ActivityBulkAddForm):
+    send_messages = forms.BooleanField(
+        label=_('Send messages'),
+        help_text=_('Email participants that they have been added to this team.'),
+        initial=True,
+        required=False
+    )
+
+    title = _('Bulk add participants')
+
+
 @admin.register(Team)
-class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMachineAdmin):
+class TeamAdmin(
+    PolymorphicInlineSupportMixin,
+    RegionManagerAdminMixin,
+    BulkAddMixin,
+    StateMachineAdmin,
+):
     model = Team
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
@@ -421,6 +438,8 @@ class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMac
 
     list_filter = [StateMachineFilter]
     office_subregion_path = 'activity__office_location__subregion'
+
+    bulk_add_form = TeamBulkAddForm
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)

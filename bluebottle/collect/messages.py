@@ -6,7 +6,7 @@ from bluebottle.notifications.messages import TransitionMessage
 
 class CollectActivityDateChangedNotification(TransitionMessage):
 
-    subject = pgettext('email', 'The date for the activity "{title}" has changed')
+    subject = pgettext('platform-email', 'The date for the activity "{title}" has changed')
     template = 'messages/collect_activity_date_changed'
 
     context = {
@@ -18,19 +18,19 @@ class CollectActivityDateChangedNotification(TransitionMessage):
         if self.obj.start:
             context['start'] = self.obj.start.strftime('%x')
         else:
-            context['start'] = pgettext('email', 'Today')
+            context['start'] = pgettext('platform-email', 'Today')
 
         if self.obj.end:
             context['end'] = self.obj.end.strftime('%x')
         else:
-            context['end'] = pgettext('email', 'Runs indefinitely')
+            context['end'] = pgettext('platform-email', 'Runs indefinitely')
         return context
 
     @property
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """contributors that signed up"""
@@ -41,7 +41,7 @@ class CollectActivityDateChangedNotification(TransitionMessage):
 
 class CollectActivityReminderNotification(TransitionMessage):
 
-    subject = pgettext('email', 'Your activity "{title}" will start tomorrow!')
+    subject = pgettext('platform-email', 'Your activity "{title}" will start tomorrow!')
     template = 'messages/collect_activity_reminder'
     send_once = True
 
@@ -53,7 +53,7 @@ class CollectActivityReminderNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'Open your activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -64,7 +64,7 @@ class ParticipantJoinedNotification(TransitionMessage):
     """
     The participant joined
     """
-    subject = pgettext('email', 'You have joined the activity "{title}"')
+    subject = pgettext('platform-email', 'You have joined the activity "{title}"')
     template = 'messages/collect_participant_joined'
     context = {
         'title': 'activity.title',
@@ -74,7 +74,7 @@ class ParticipantJoinedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_context(self, recipient):
         context = super().get_context(recipient)

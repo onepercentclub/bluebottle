@@ -22,7 +22,7 @@
         {% endif %}
         {% if obj.reward %}
         <div class="receipt-reward">
-            {% trans "Reward:" %} {{obj.reward.title}}
+            {% trans "Reward:" context "platform-email" %} {{obj.reward.title}}
         </div>
         {% endif %}
         <div class="receipt-divider">
@@ -32,7 +32,7 @@
         </div>
         <div class="receipt-info">
             <div class="receipt-info-label">
-                {% trans "Date" %} -
+                {% trans "Date" context "platform-email" %} -
             </div>
             <div class="receipt-info-value">
                 {{obj.created}}
@@ -40,7 +40,7 @@
         </div>
         <div class="receipt-info">
             <div class="receipt-info-label">
-                {% trans "Order" %} -
+                {% trans "Order" context "platform-email" %} -
             </div>
             <div class="receipt-info-value">
                 {{obj.id}}

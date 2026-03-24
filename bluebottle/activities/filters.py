@@ -102,7 +102,7 @@ class UpcomingFacet(Facet):
 
     def add_filter(self, filter_values):
         if filter_values == ["1"]:
-            settings = InitiativePlatformSettings.objects.get()
+            settings = InitiativePlatformSettings.load()
             statuses = ["open", "running"]
             if settings.include_full_activities:
                 statuses.append("full")
@@ -159,6 +159,12 @@ class BooleanFacet(Facet):
         return str(key[-1]) in filter_values
 
 
+class LocalFacet(BooleanFacet):
+    def __init__(self, *args, **kwargs):
+        labels = {'1': _("Local activities"), '0': _("Remote activities")}
+        super().__init__(*args, labels=labels, **kwargs)
+
+
 class TeamActivityFacet(BooleanFacet):
     def __init__(self, *args, **kwargs):
         labels = {"teams": _("With your team"), "individuals": _("As an individual")}
@@ -172,7 +178,7 @@ class MatchingFacet(BooleanFacet):
     def add_filter(self, filter_values):
         user = get_current_user()
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         statuses = ["open", "running"]
         if settings.include_full_activities:
             statuses.append("full")
@@ -202,7 +208,12 @@ class MatchingFacet(BooleanFacet):
                     )
             filters = filters & Nested(path="office_restriction", query=office_filter)
 
-        if user.search_distance and user.place and not user.any_search_distance:
+        if (
+            user.search_distance and
+            user.place and
+            user.place.position and
+            not user.any_search_distance
+        ):
             place = user.place
             if user.exclude_online:
                 distance_filter = GeoDistance(
@@ -246,6 +257,52 @@ class ManagingFacet(Facet):
             return Term(manager=user.id)
 
 
+class ReviewingFacet(Facet):
+    agg_type = "terms"
+
+    def get_aggregation(self):
+        return A("filter", filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return A("filter", filter=MatchNone())
+
+    def add_filter(self, filter_values):
+        if filter_values == ["1"]:
+            user = get_current_user()
+
+            if not user.is_authenticated:
+                return MatchNone()
+
+            if user.has_perm('activities.api_review_activity'):
+
+                must_filters = [~Term(activity_type='grantapplication')]
+
+                subregions = getattr(user, "subregion_manager", None)
+                if subregions:
+                    subregion_ids = list(subregions.values_list("id", flat=True))
+                    if subregion_ids:
+                        must_filters.append(
+                            Nested(
+                                path="office_subregion",
+                                query=Terms(**{"office_subregion__id": subregion_ids})
+                            )
+                        )
+
+                segments = getattr(user, "segment_manager", None)
+                if segments and segments.exists():
+                    segment_ids = list(segments.values_list("id", flat=True))
+                    if segment_ids:
+                        must_filters.append(
+                            Nested(
+                                path="segments",
+                                query=Terms(**{"segments__id": segment_ids})
+                            )
+                        )
+                return Bool(must=must_filters)
+
+            return MatchNone()
+
+
 class StatusFacet(Facet):
     agg_type = "terms"
 
@@ -258,6 +315,10 @@ class StatusFacet(Facet):
     def add_filter(self, filter_values):
         if filter_values == ["draft"]:
             return Terms(status=["draft", "needs_work", "submitted"])
+        if filter_values == ["submitted"]:
+            return Terms(status=["submitted"])
+        if filter_values == ["needs_work"]:
+            return Terms(status=["needs_work"])
         if filter_values == ["open"]:
             return Terms(status=["open", "running", "full", "on_hold", "granted"])
         if filter_values == ["succeeded"]:
@@ -347,6 +408,7 @@ class ActivitySearch(Search):
         "is_online": BooleanFacet(
             field="is_online", labels={"0": _("In-person"), "1": _("Online/remote")}
         ),
+        "is_local": LocalFacet(field='is_local'),
         "team_activity": TeamActivityFacet(field="team_activity"),
         "date": ActivityDateRangeFacet(),
         "office": UntranslatedModelFacet("office", Location),
@@ -357,6 +419,7 @@ class ActivitySearch(Search):
     possible_facets = {
         "status": StatusFacet(),
         "managing": ManagingFacet(),
+        "reviewing": ReviewingFacet(),
         "category": ModelFacet("categories", Category, "title"),
         "skill": ModelFacet("expertise", Skill),
         "country": ModelFacet("country", Country),
@@ -475,7 +538,7 @@ class ActivitySearch(Search):
         return search
 
     def __new__(cls, *args, **kwargs):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
 
         # Create new instance with existing search filters from settings
         result = super().__new__(
@@ -498,7 +561,7 @@ class ActivitySearch(Search):
 
     def query(self, search, query):
         search = super().query(search, query)
-
+        search = search.filter(Term(archived=False))
         if not self.user.is_staff:
             search = search.filter(
                 ~Nested(path="segments", query=(Term(segments__closed=True)))

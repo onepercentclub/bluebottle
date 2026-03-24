@@ -1,6 +1,7 @@
 from bluebottle.activities.messages.activity_manager import TermsOfServiceNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, should_mail_tos
+from bluebottle.activity_pub.effects import FinishEffect, CancelEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     ModelChangedTrigger, TransitionTrigger, register, TriggerManager
@@ -131,6 +132,12 @@ class GrantDonorTriggers(TriggerManager):
 @register(GrantApplication)
 class GrantApplicationTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
+        TransitionTrigger(
+            GrantApplicationStateMachine.succeed,
+            effects=[
+                FinishEffect
+            ]
+        ),
 
         TransitionTrigger(
             GrantApplicationStateMachine.approve,
@@ -142,7 +149,7 @@ class GrantApplicationTriggers(ActivityTriggers):
                 NotificationEffect(
                     TermsOfServiceNotification,
                     conditions=[should_mail_tos]
-                )
+                ),
             ]
         ),
         TransitionTrigger(
@@ -179,8 +186,9 @@ class GrantApplicationTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(
-                    GrantApplicationCancelledMessage
-                )
+                    GrantApplicationCancelledMessage,
+                ),
+                CancelEffect
             ]
         ),
         ModelChangedTrigger(

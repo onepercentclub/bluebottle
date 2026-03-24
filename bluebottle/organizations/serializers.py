@@ -28,6 +28,10 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
+    def create(self, validated_data):
+        validated_data['owner'] = self.context['request'].user
+        return super().create(validated_data)
+
     class Meta(object):
         model = Organization
         fields = (
@@ -53,6 +57,10 @@ class OrganizationContactSerializer(NoCommitMixin, ModelSerializer):
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
+
+    def create(self, validated_data):
+        validated_data['owner'] = self.context['request'].user
+        return super().create(validated_data)
 
     class Meta(object):
         model = OrganizationContact

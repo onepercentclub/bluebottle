@@ -16,8 +16,7 @@ from bluebottle.collect.tests.factories import CollectActivityFactory, CollectCo
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
-from bluebottle.impact.models import ImpactType
-from bluebottle.impact.tests.factories import ImpactGoalFactory
+from bluebottle.impact.tests.factories import ImpactGoalFactory, ImpactTypeFactory
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, InitiativeSearchFilter, \
     ActivitySearchFilter
 from bluebottle.initiatives.models import Theme
@@ -35,8 +34,7 @@ from bluebottle.time_based.tests.factories import (
     DeadlineParticipantFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    DateRegistrationFactory,
-)
+    DateRegistrationFactory, )
 
 
 def get_include(response, name):
@@ -519,8 +517,16 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
-        co2 = ImpactType.objects.get(slug='co2')
-        water = ImpactType.objects.get(slug='water')
+        co2 = ImpactTypeFactory.create(
+            slug='co2',
+            name='reduce CO₂ emissions by {} kg',
+            text_passed='kg CO₂ saved'
+        )
+        water = ImpactTypeFactory.create(
+            slug='water',
+            name='water saved',
+            text_passed='liter water saved'
+        )
 
         first = DeedFactory.create(
             initiative=self.initiative, target=5, enable_impact=True
@@ -550,10 +556,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
 
-        self.assertEqual(stats['impact'][0]['name'], 'reduce CO₂ emissions by {} kg')
+        self.assertEqual(stats['impact'][0]['name'], 'kg CO₂ saved')
         self.assertEqual(stats['impact'][0]['value'], 600.0)
 
-        self.assertEqual(stats['impact'][1]['name'], 'water saved')
+        self.assertEqual(stats['impact'][1]['name'], 'liter water saved')
         self.assertEqual(stats['impact'][1]['value'], 1250.0)
 
     def test_get_staff(self):
@@ -796,7 +802,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_office(self):
-        settings, _ = InitiativePlatformSettings.objects.get_or_create()
+        settings = InitiativePlatformSettings.load()
         settings.search_filters_initiatives.add(
             InitiativeSearchFilter.objects.create(
                 settings=settings,
@@ -1251,6 +1257,7 @@ class ThemeAPITestCase(BluebottleTestCase):
         self.assertEqual(result['attributes']['name'], 'World domination')
 
     def test_detail_translation_missing(self):
+        """When requested language (nl) has no translation, response falls back to another language (en)."""
         theme = Theme.objects.create(slug='world')
         theme.set_current_language('en')
         theme.name = 'World domination'
@@ -1291,12 +1298,12 @@ class ThemeApiTestCase(BluebottleTestCase):
         self.url = reverse('initiative-theme-list')
         self.client = JSONAPITestClient()
 
-    def test_get_skills_authenticated(self):
+    def test_get_themes_authenticated(self):
         user = BlueBottleUserFactory.create()
-        response = self.client.get(self.url, user=user)
+        response = self.client.get(self.url, user=user, HTTP_X_APPLICATION_LANGUAGE='en')
         self.assertEqual(response.status_code, 200)
 
-    def test_get_skills_unauthenticated(self):
+    def test_get_themes_unauthenticated(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 401)
 
@@ -1392,7 +1399,7 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(
             data['platform']['initiatives']['search_filters_activities'],
             [
-                {'type': 'date', 'name': 'Date', 'highlight': False, 'placeholder': 'Select date'},
+                {'type': 'date', 'name': 'Date', 'highlight': False, 'placeholder': 'Select a date'},
                 {'type': 'distance', 'name': 'Distance', 'highlight': False, 'placeholder': 'Select distance'},
                 {'type': 'is_online', 'name': 'Online / In-person', 'highlight': False, 'placeholder': 'Make a choice'}
             ]
@@ -1401,7 +1408,7 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(
             data['platform']['initiatives']['search_filters_initiatives'],
             [
-                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select theme'},
+                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
                 {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'}
             ]
 
@@ -1420,7 +1427,7 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(
             data['platform']['initiatives']['search_filters_initiatives'],
             [
-                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select theme'},
+                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
                 {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'},
                 {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select --------'}
             ]

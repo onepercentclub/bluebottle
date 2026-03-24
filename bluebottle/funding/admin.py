@@ -184,7 +184,16 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
 
-    detail_fields = ("title", "description", "image", "video_url", "theme", 'categories')
+    detail_fields = (
+        "title",
+        "description",
+        "image",
+        "video_url",
+        "theme",
+        "impact_location",
+        "categories",
+        "organization",
+    )
 
     status_fields = (
         "initiative",
@@ -203,7 +212,6 @@ class FundingAdmin(ActivityChildAdmin):
         'duration',
         'deadline',
         'target',
-        'impact_location',
         'amount_matching',
         'amount_donated',
         'amount_raised',
@@ -212,11 +220,12 @@ class FundingAdmin(ActivityChildAdmin):
     )
 
     def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
             (_("Date & amount"), {"fields": self.campaign_fields}),
+            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
         ]
         if Location.objects.count():
             if settings.enable_office_restrictions:
@@ -632,7 +641,7 @@ class PayoutAccountChildAdmin(PayoutAccountActivityLinkMixin, PolymorphicChildMo
 
     def get_basic_fields(self, request, obj):
         fields = ['owner', 'public', 'partner_organization']
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         if 'funding' in settings.activity_types:
             fields.append('funding_links')
         if 'grantapplication' in settings.activity_types:
@@ -684,7 +693,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
 
     def get_fields(self, request, obj):
         fields = list(super().get_fields(request, obj))
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         if 'funding' in settings.activity_types:
             fields.append('funding_links')
         if 'grantapplication' in settings.activity_types:

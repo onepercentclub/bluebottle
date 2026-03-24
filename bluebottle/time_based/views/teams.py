@@ -89,7 +89,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
         context["display_member_names"] = (
-            MemberPlatformSettings.objects.get().display_member_names
+            MemberPlatformSettings.load().display_member_names
         )
 
         activity = Activity.objects.get(pk=self.kwargs["activity_id"])
@@ -157,19 +157,12 @@ class TeamMemberExportView(ExportView):
         return fields
 
 
-class TeamMemberList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
-
-    permission_classes = (InviteCodePermission,)
-    queryset = Team.objects.prefetch_related("team", "user", "participants")
+class TeamMemberList(
+    JsonApiViewMixin, CreateAPIView, CreatePermissionMixin
+):
+    permission_classes = (InviteCodePermission, )
+    queryset = TeamMember.objects.prefetch_related("team", "user", "participants")
     serializer_class = TeamMemberSerializer
-
-    def perform_create(self, serializer):
-        if hasattr(serializer.Meta, 'model'):
-            self.check_object_permissions(
-                self.request,
-                serializer.Meta.model(**serializer.validated_data)
-            )
-        serializer.save(user=self.request.user)
 
 
 class TeamMemberDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

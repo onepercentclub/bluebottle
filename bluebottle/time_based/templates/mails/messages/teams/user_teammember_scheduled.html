@@ -2,11 +2,11 @@
 {% load i18n %}
 
 {% block message %}
-  {% blocktrans context 'email' %}
+  {% blocktrans context 'platform-email' %}
     <p>Your team has been scheduled for the activity "{{ title }}".</p>
   {% endblocktrans %}
   <br />
-  {% blocktrans context 'email' %}
+  {% blocktrans context 'platform-email' %}
     <b>Scheduled details:</b>
   {% endblocktrans %}
   {% include 'mails/messages/partial/slot.html' %}

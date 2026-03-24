@@ -384,7 +384,7 @@ class FundingSerializer(BaseActivitySerializer):
                 raise ValidationError(
                     {'target': _('Target cannot be changed after the funding has been published.')}
                 )
-            if 'deadline' in data and data['deadline'] != self.instance.deadline:
+            if 'deadline' in data and data['deadline'].date() != self.instance.deadline.date():
                 raise ValidationError(
                     {'target': _('Deadline cannot be changed after the funding has been published.')}
                 )
@@ -570,7 +570,6 @@ class DonorSerializer(BaseContributorSerializer):
 
     user = ResourceRelatedField(
         queryset=Member.objects.all(),
-        default=serializers.CurrentUserDefault(),
         allow_null=True,
         required=False
     )
@@ -725,6 +724,7 @@ class DonorCreateSerializer(DonorSerializer):
             TargetReachedValidator()
         ]
     )
+    allow_multiple = True
 
     class Meta(DonorSerializer.Meta):
         model = Donor

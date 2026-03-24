@@ -1,15 +1,14 @@
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
+    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
 )
-from bluebottle.activities.views import RelatedContributorListView, ParticipantCreateMixin
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer, DeedParticipantSerializer,
     DeedParticipantTransitionSerializer
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
-from bluebottle.time_based.permissions import CreateByEmailPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
@@ -29,18 +28,6 @@ class DeedListView(JsonApiViewMixin, ListCreateAPIView):
         ActivityTypePermission,
         OneOf(ResourcePermission, ActivityOwnerPermission, IsStaffMember),
     )
-
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        serializer.save(owner=self.request.user)
 
 
 class DeedDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
@@ -69,10 +56,9 @@ class DeedRelatedParticipantList(RelatedContributorListView):
     serializer_class = DeedParticipantSerializer
 
 
-class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, ListCreateAPIView):
+class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-        CreateByEmailPermission
+        OneOf(ResourcePermission, ResourceOwnerPermission, ActivityManagerPermission),
     )
     queryset = DeedParticipant.objects.all()
     serializer_class = DeedParticipantSerializer

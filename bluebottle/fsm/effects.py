@@ -21,7 +21,7 @@ class Effect(object):
     def render(cls, effects):
         context = {
             'opts': effects[0].instance.__class__._meta,
-            'effects': effects
+            'effects': effects,
         }
         return render_to_string(cls.template, context)
 

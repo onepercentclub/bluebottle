@@ -1189,6 +1189,10 @@ div.info-box {
     position: relative;
 }
 
+a.link {
+    text-decoration: underline;
+}
+
 div.info-box::before {
     content: "i";
     font-size: 14px;

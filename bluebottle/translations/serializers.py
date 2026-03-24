@@ -53,26 +53,18 @@ class TranslationsSerializer(serializers.Field):
 
             original_value = self._get_nested_attribute(instance, field_name)
 
-            if original_value:
-                if hasattr(original_value, 'html'):
-                    original_value = original_value.html
-                text_value = str(original_value)
-                translated_value = self._translate_field(
-                    text_value,
-                    target_language,
-                )
+            if hasattr(original_value, 'html'):
+                original_value = original_value.html
 
+            text_value = str(original_value)
+            translated_value = self._translate_field(
+                text_value,
+                target_language,
+            )
+            if translated_value:
                 translated_data[name] = translated_value
-            else:
-                translated_data[name] = original_value
 
         return translated_data
 
     def _translate_field(self, text, target):
-        if not text:
-            return ""
-
-        try:
-            return translate_text_cached(text=text, target_language=target)
-        except Exception:
-            return text
+        return translate_text_cached(text=text, target_language=target)

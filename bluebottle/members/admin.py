@@ -128,8 +128,8 @@ class SocialLoginSettingsInline(admin.TabularInline):
 
 
 class MemberPlatformSettingsAdmin(
-    TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin,
-    NonSortableParentAdmin, DynamicArrayMixin
+    DynamicArrayMixin, TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin,
+    NonSortableParentAdmin,
 ):
     inlines = [SocialLoginSettingsInline]
 
@@ -165,6 +165,7 @@ class MemberPlatformSettingsAdmin(
                     'explicit_terms',
                     'account_creation_rules',
                     'email_domains',
+                    'support_groups',
                     'request_access_info',
                     'request_access_instructions',
                     'request_access_email',
@@ -242,6 +243,7 @@ class MemberPlatformSettingsAdmin(
     radio_fields = {
         'account_creation_rules': admin.HORIZONTAL,
         'request_access_method': admin.HORIZONTAL,
+        'display_member_names': admin.HORIZONTAL,
     }
 
     def get_fieldsets(self, request, obj=None):
@@ -535,7 +537,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         'can_pledge',
         'can_do_bank_transfer',
         'verified',
-        'kyc'
+        'kyc',
     ]
 
     def get_permission_fields(self, request, obj=None):
@@ -593,6 +595,8 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                                 'avatar',
                                 'about_me',
                                 'campaign_notifications',
+                                'subscribed',
+                                'submitted_initiative_notifications',
                             ]
 
                     }
@@ -636,11 +640,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
             if not PaymentProvider.objects.filter(Q(instance_of=PledgePaymentProvider)).count():
                 fieldsets[2][1]['fields'].remove('can_pledge')
-
-            if obj and (obj.is_staff or obj.is_superuser):
-                fieldsets[1][1]['fields'].append('submitted_initiative_notifications')
-
-            fieldsets[1][1]['fields'].append('subscribed')
 
             if SegmentType.objects.count():
                 extra = (

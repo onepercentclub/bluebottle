@@ -1,5 +1,6 @@
 import hashlib
 import re
+
 from django.http.response import HttpResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -109,19 +110,6 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'initiative': ['initiative'],
         'owner': ['owner'],
     }
-
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        serializer.save(owner=self.request.user)
 
 
 class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -276,9 +264,6 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'fundraiser': ['fundraiser'],
     }
 
-    def perform_create(self, serializer):
-        serializer.save(user=(self.request.user if self.request.user.is_authenticated else None))
-
 
 class ActivityDonationList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     queryset = Donor.objects.all()
@@ -359,9 +344,9 @@ class SupportersExportView(PrivateFileView):
             for segment_type in self.get_segment_types():
                 if donor.user:
                     segments = ", ".join(
-                        donor.user.segments.filter(
-                            segment_type=segment_type
-                        ).values_list('name', flat=True)
+                        [
+                            s.name for s in donor.user.segments.filter(segment_type=segment_type)
+                        ]
                     )
                     row.append(segments)
             sheet.append(row)

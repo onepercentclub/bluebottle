@@ -59,10 +59,6 @@ class FundingStateMachine(ActivityStateMachine):
         """hasn't got approved payouts"""
         return self.instance.pk and not self.instance.payouts.exclude(status__in=['new', 'failed']).count()
 
-    def can_approve(self, user):
-        """user has the permission to approve (staff member)"""
-        return user.is_staff or user.is_superuser
-
     def psp_allows_refunding(self):
         """PSP allows refunding through their API"""
         return self.instance.pk and \
@@ -105,7 +101,7 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Approve'),
         description=_('The campaign will be visible in the frontend and people can donate.'),
         automatic=False,
-        permission=can_approve,
+        permission=ActivityStateMachine.can_approve,
         conditions=[
             ActivityStateMachine.initiative_is_approved,
             ActivityStateMachine.is_valid,
@@ -142,7 +138,7 @@ class FundingStateMachine(ActivityStateMachine):
             "manager of the necessary adjustments."
         ),
         automatic=False,
-        permission=can_approve
+        permission=ActivityStateMachine.can_approve
     )
 
     put_on_hold = Transition(
@@ -154,7 +150,7 @@ class FundingStateMachine(ActivityStateMachine):
         description=_(
             'The campaign will not be able to receive donations'),
         automatic=True,
-        permission=can_approve,
+        permission=ActivityStateMachine.can_approve,
     )
 
     reject = Transition(

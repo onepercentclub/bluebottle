@@ -3,7 +3,7 @@
 
 {% block message %}
 <p class="donation-intro">
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
     Identity verification failed for an organization you manage.
     <br />
     <br />
@@ -19,6 +19,6 @@
 
 {% block action %}
 <a href="{{ site }}/admin/funding_stripe/stripepayoutaccount/{obj.pk}/change }}">
-    {% trans 'Check details' context 'email' %}
+    {% trans 'Check details' context 'platform-email' %}
 </a>
 {% endblock %}`

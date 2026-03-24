@@ -1,21 +1,21 @@
 {% load i18n %}
 <p>
     {% if start %}
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             Start: {{ start }}.
         {% endblocktrans %}
     {% else %}
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             You can start right away.
         {% endblocktrans %}
     {% endif %}
     <br />
     {% if end %}
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             End: {{ end }}.
         {% endblocktrans %}
     {% else %}
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             This activity runs indefinitely.
         {% endblocktrans %}
     {% endif %}

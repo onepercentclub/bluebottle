@@ -94,7 +94,10 @@ class SegmentFacet(ModelFacet):
 
     @property
     def filter(self):
-        return Term(**{'segments.type': self.segment_type.slug})
+        return Bool(filter=[
+            Term(**{'segments.type': self.segment_type.slug}),
+            super().filter
+        ])
 
 
 class DateRangeFacet(Facet):
@@ -197,6 +200,7 @@ class ElasticSearchFilter(filters.SearchFilter):
 
         search = request.GET.get('filter[search]')
 
+        # return self.search_class(search, filter, request.GET.get('sort'), user=request.user)
         return self.search_class(search, filter, request.GET.get('sort'), user=request.user)
 
 

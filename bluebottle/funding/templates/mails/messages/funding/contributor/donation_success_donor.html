@@ -5,7 +5,7 @@
 
 {% block content %}
 <p class="donation-intro">
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
         Hi {{ recipient_name }},<br />
         Thanks for your donation!
     {% endblocktrans %}
@@ -14,7 +14,7 @@
 {% include 'mails/messages/partials/donation_receipt.html' %}
 {% if pledged %}
 <p class="twelve columns">
-    {% blocktrans with amount=obj.amount %}
+    {% blocktrans with amount=obj.amount context "platform-email" %}
     <strong>Please transfer the amount of {{ amount }} to "{{ title }}".</strong><br />
     {% endblocktrans %}
 </p>
@@ -23,6 +23,6 @@
 
 {% block action %}
     <a href="{% message_url obj.activity.get_absolute_url %}" class="action-email">
-       {% trans 'Go to campaign' context 'email' %}
+       {% trans 'Go to campaign' context 'platform-email' %}
     </a>
 {% endblock %}`

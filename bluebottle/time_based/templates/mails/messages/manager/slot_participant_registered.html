@@ -1,7 +1,7 @@
 {% extends "mails/messages/participant_base.html" %}
 {% load i18n %}
 
-{% block message %}{% blocktrans context 'email' %}
+{% block message %}{% blocktrans context 'platform-email' %}
 <p>{{ participant_name }} has registered for a time slot for your activity "{{ title }}"!</p>
 {% endblocktrans %}
   {% include 'mails/messages/partial/registration_question.html' %}

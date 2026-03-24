@@ -1,8 +1,10 @@
+import logging
 from builtins import object
 from itertools import groupby
 
-from bluebottle.scim.models import SCIMPlatformSettings
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -33,15 +35,19 @@ from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
+from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import (
-    TimeContribution, DeadlineActivity, DeadlineParticipant,
-    DateActivitySlot, DateParticipant, RegisteredDateParticipant, RegisteredDateActivity
+    TeamMember, TeamScheduleParticipant, TimeContribution, DeadlineActivity, DeadlineParticipant,
+    DateActivitySlot, DateParticipant, RegisteredDateParticipant, RegisteredDateActivity,
+    Team as ScheduleTeam
 )
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
+
+logger = logging.getLogger(__name__)
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):
@@ -232,6 +238,9 @@ class BaseActivitySerializer(ModelSerializer):
         required=False,
         allow_null=True,
     )
+    host_organization = ResourceRelatedField(
+        read_only=True
+    )
 
     updates = HyperlinkedRelatedField(
         many=True,
@@ -268,6 +277,11 @@ class BaseActivitySerializer(ModelSerializer):
             field = self.fields["answers"]
             data["answers"] = field.to_representation(list(visible_answers))
         return data
+
+    def create(self, validated_data):
+        validated_data['owner'] = self.context['request'].user
+
+        return super().create(validated_data)
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -319,6 +333,7 @@ class BaseActivitySerializer(ModelSerializer):
         'office_location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
         'office_location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
         'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+        'host_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'answers': 'bluebottle.activities.serializers.ActivityAnswerSerializer',
         'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
         'answers.file': 'bluebottle.files.serializers.DocumentSerializer',
@@ -368,6 +383,7 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_button_label',
             'admin_url',
             'partner_organization',
+            'host_organization',
             'theme',
             'answers',
             'tos_accepted',
@@ -412,6 +428,7 @@ class BaseActivitySerializer(ModelSerializer):
             'office_location.subregion',
             'office_location.subregion.region',
             'partner_organization',
+            'host_organization',
             'answers',
             'answers.segment',
             'answers.file',
@@ -590,6 +607,49 @@ class BaseContributorSerializer(ModelSerializer):
         'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
 
+    allow_multiple = False
+
+    def validate(self, data):
+        email = data.pop('email', None)
+        send_messages = data.pop('send_messages', True)
+
+        if email:
+            data['user'] = Member.objects.filter(email__iexact=email).first()
+            if not data['user']:
+                try:
+                    validate_email(email)
+                except Exception:
+                    raise ValidationError(_('Not a valid email address'), code="invalid")
+                member_settings = MemberPlatformSettings.load()
+                scim_settings = SCIMPlatformSettings.load()
+
+                if (
+                    (member_settings.closed or member_settings.confirm_signup) and
+                    not scim_settings.enabled
+                ):
+                    try:
+                        data['user'] = Member.create_by_email(email.strip())
+                    except Exception:
+                        raise ValidationError(_('Not a valid email address'), code="invalid")
+                else:
+                    raise ValidationError(_('User with email address not found'), code="not_found")
+        elif self.context['request'].user.is_authenticated:
+            data['user'] = self.context['request'].user
+
+            if data['user'].required:
+                raise ValidationError('Required fields', code="required")
+
+        if (
+            not self.allow_multiple and
+            data.get('user') and
+            self.Meta.model.objects.filter(**data).exists()
+        ):
+            raise ValidationError(_('Already participating'), code="exists")
+
+        data['send_messages'] = send_messages
+
+        return data
+
     class Meta(object):
         model = Contributor
         fields = (
@@ -697,7 +757,7 @@ def get_stats_for_activities(activities):
 
     collected = [
         {
-            'name': type_dict[int(col['collect_type_id'])].safe_translation_getter('name'),
+            'name': type_dict[int(col['collect_type_id'])].name,
             'value': col['amount']
         }
         for col in collect
@@ -783,9 +843,11 @@ def bulk_add_participants(activity, emails, send_messages):
         Participant = DateParticipant
     if isinstance(activity, RegisteredDateActivity):
         Participant = RegisteredDateParticipant
+    if isinstance(activity, ScheduleTeam):
+        Participant = TeamScheduleParticipant
 
-    settings = MemberPlatformSettings.objects.get()
-    scim_settings = SCIMPlatformSettings.objects.get()
+    settings = MemberPlatformSettings.load()
+    scim_settings = SCIMPlatformSettings.load()
 
     if not Participant:
         raise AttributeError(f'Could not find participant type for {activity}')
@@ -818,6 +880,17 @@ def bulk_add_participants(activity, emails, send_messages):
                         added += 1
                 else:
                     existing += 1
+            if isinstance(activity, ScheduleTeam):
+                team = activity
+                member, cr = TeamMember.objects.get_or_create(
+                    user=user,
+                    team=team
+                )
+                if cr:
+                    if not new:
+                        added += 1
+                else:
+                    existing += 1
             else:
                 if Participant.objects.filter(user=user, activity=activity).exists():
                     existing += 1
@@ -829,8 +902,10 @@ def bulk_add_participants(activity, emails, send_messages):
                         activity=activity,
                         send_messages=send_messages
                     )
-        except Exception:
+        except Exception as e:
+            logger.error(e)
             failed += 1
+
     return {
         'added': added,
         'existing': existing,

@@ -5,21 +5,19 @@ from builtins import str
 from functools import partial
 from operator import attrgetter
 
-import icalendar
 from celery import shared_task
 from django.contrib.admin.options import get_content_type_for_model
 from django.core.cache import cache
 from django.db import connection
 from django.template import loader
+from django.utils import translation as django_translation
 from django.utils.html import format_html
-from django.utils.timezone import now
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language, to_text, get_tenant_name
-from django.utils import translation as django_translation
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +44,10 @@ class TransitionMessage(object):
     @property
     def task_id(self):
         return f'{self.__class__.__name__}-{self.obj.id}'
+
+    @property
+    def action_link(self):
+        return ''
 
     def get_generic_context(self):
         language = get_current_language()
@@ -101,45 +103,8 @@ class TransitionMessage(object):
     def get_content_text(self, recipient):
         return to_text.handle(self.get_content_html(recipient))
 
-    def get_event_data(self, recipient):
-        return None
-
-    def get_event_item(self, event):
-        event_item = icalendar.Event()
-        event_item.add('prodid', 'goodup')
-        event_item.add('version', '2.0')
-        event_item.add('method', 'request')
-
-        event_item.add('uid', event['uid'])
-        event_item.add('sequence', now().timestamp())
-        event_item.add('summary', event['summary'])
-        event_item.add('organizer', event['organizer'])
-        event_item.add('description', event['description'])
-        event_item.add('url', event['url'])
-        event_item.add('location', event['location'])
-        event_item.add('dtstamp', now())
-        event_item.add('dtstart', event['start_time'])
-        event_item.add('dtend', event['end_time'])
-        return event_item
-
-    def get_calendar_attachments(self, recipient):
-        events = []
-        event_data = self.get_event_data(recipient)
-        if type(event_data) is list:
-            for event in event_data:
-                if not event:
-                    continue
-                cal = icalendar.Calendar()
-                cal.add_component(self.get_event_item(event))
-                ical_data = cal.to_ical()
-                events.append((f"event-{event['uid']}.ics", ical_data, 'text/calendar'))
-        else:
-            event = event_data
-            cal = icalendar.Calendar()
-            cal.add_component(self.get_event_item(event))
-            ical_data = cal.to_ical()
-            events.append((f"event-{event['uid']}.ics", ical_data, 'text/calendar'))
-        return events
+    def attachments(self, recipients):
+        pass
 
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
@@ -150,7 +115,7 @@ class TransitionMessage(object):
             "contact_email": properties.CONTACT_EMAIL,
             "recipient_name": recipient.first_name,
             "first_name": recipient.first_name,
-            "action_link": getattr(self, "action_link", None),
+            "action_link": self.get_action_link(recipient),
             "action_title": getattr(self, "action_title", None),
             "utm_campaign": self.__class__.__name__,
         }
@@ -163,9 +128,13 @@ class TransitionMessage(object):
         if 'context' in self.options:
             context.update(self.options['context'])
 
-        if self.get_event_data(recipient):
-            context['attachments'] = self.get_calendar_attachments(recipient)
+        attachments = self.attachments(recipient)
+        if attachments:
+            context['attachments'] = attachments
         return context
+
+    def get_action_link(self, recipient):
+        return getattr(self, "action_link", None)
 
     def __init__(self, obj, **options):
         self.obj = obj

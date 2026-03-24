@@ -208,7 +208,7 @@ JWT_EXPIRATION_DELTA = datetime.timedelta(days=7)
 # List of paths to ignore for locale redirects
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
                           '/media', '/downloads', '/login-with',
-                          '/surveys', '/token', '/jet')
+                          '/surveys', '/token', '/jet', '/.well-known')
 
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
 
@@ -399,6 +399,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
     'bluebottle.scim',
     'bluebottle.updates',
+    'bluebottle.activity_links',
     'bluebottle.translations',
 
     # Custom dashboard
@@ -438,6 +439,9 @@ TENANT_APPS = (
     'django_recaptcha',
     'colorfield',
     'django_quill',
+
+    'bluebottle.activity_pub',
+    'bluebottle.webfinger',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -531,6 +535,10 @@ LOGGING = {
             'handlers': ['console', 'syslog'],
             'propagate': True,
             'level': 'INFO',
+        },
+        "django.security.DisallowedHost": {
+            "handlers": ["null"],
+            "propagate": False,
         },
     }
 }
@@ -762,7 +770,10 @@ JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True
 
 # Don't show url warnings
-SILENCED_SYSTEM_CHECKS = ['urls.W002', 'django_recaptcha.recaptcha_test_key_error']
+SILENCED_SYSTEM_CHECKS = [
+    'urls.W002', 'django_recaptcha.recaptcha_test_key_error', 'models.E006', 'fields.E304',
+    'fields.E305'
+]
 
 AXES_LOCKOUT_URL = '/admin/locked/'
 AXES_FAILURE_LIMIT = 10

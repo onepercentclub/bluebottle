@@ -256,12 +256,20 @@ class Geolocation(models.Model):
     postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
-    country = models.ForeignKey('geo.Country', on_delete=models.CASCADE)
+    country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
     mapbox_id = models.CharField(max_length=50, null=True, blank=True)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
     position = PointField(null=True)
+
+    origin = models.ForeignKey(
+        'activity_pub.Place', null=True, related_name="locations", on_delete=models.SET_NULL
+    )
+
+    @property
+    def activity_pub_url(self):
+        return None
 
     anonymized = False
 
@@ -269,10 +277,13 @@ class Geolocation(models.Model):
         resource_name = 'geolocations'
 
     def __str__(self):
-        if self.locality:
+        if self.locality and self.country:
             return u"{}, {}".format(self.locality, self.country.name)
-        else:
+        if self.locality:
+            return self.locality
+        if self.country:
             return self.country.name
+        return self.formatted_address or '-unknown-'
 
     @property
     def timezone(self):

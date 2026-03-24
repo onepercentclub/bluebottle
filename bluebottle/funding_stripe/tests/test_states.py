@@ -5,16 +5,17 @@ from djmoney.money import Money
 from mock import patch
 
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
-from bluebottle.funding_stripe.models import StripePayoutAccount
+from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
-    StripePaymentFactory, ExternalAccountFactory
+    StripePaymentFactory, ExternalAccountFactory, StripePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
 
 
-class BaseStripePaymentStateMachineTests(BluebottleTestCase):
+class BaseStripePaymentStateMachineTests(FundingStripeTestCase):
     def setUp(self):
+        super(BaseStripePaymentStateMachineTests, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
@@ -116,9 +117,10 @@ class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
             self.assertEqual(payment.status, "refund_requested")
 
 
-class StripePayoutAccountStateMachineTests(BluebottleTestCase):
+class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
 
     def setUp(self):
+        super(StripePayoutAccountStateMachineTests, self).setUp()
         account_id = 'some-connect-id'
         self.user = BlueBottleUserFactory.create()
         self.account = StripePayoutAccountFactory.create(
@@ -168,8 +170,14 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
                 "external_accounts": munch.munchify({"total_count": 0, "data": []}),
             }
         )
+        self.stripe_account.email = "jhon@example.com"
+        self.stripe_account.business_profile = munch.munchify({
+            "mcc": "8398",
+            "product_description": "Not applicable - test state machine.",
+            "url": "https://goodup.com",
+        })
 
-        self.account.update(self.stripe_account)
+        self._save_local_payout_from_stripe_state()
         self.bank_account = ExternalAccountFactory.create(
             connect_account=self.account,
             status='verified',
@@ -179,6 +187,11 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
             bank_account=self.bank_account,
             target=Money(1000, "EUR")
         )
+
+    def _save_local_payout_from_stripe_state(self):
+        with patch("stripe.Account.retrieve", return_value=self.stripe_account), \
+                patch("stripe.Account.modify", return_value=self.stripe_account):
+            self.account.update(self.stripe_account)
 
     def simulate_webhook(
         self,
@@ -203,7 +216,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         if verification_status:
             self.stripe_account.individual.verification.status = verification_status
 
-        self.account.update(self.stripe_account)
+        self._save_local_payout_from_stripe_state()
 
     def test_initial(self):
         self.assertEqual(self.account.status, 'incomplete')
@@ -267,10 +280,13 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         )
 
 
-class StripeBankAccountStateMachineTests(BluebottleTestCase):
+class StripeBankAccountStateMachineTests(FundingStripeTestCase):
 
     def setUp(self):
+        super(StripeBankAccountStateMachineTests, self).setUp()
         account_id = 'some-connect-id'
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
         self.user = BlueBottleUserFactory.create()
         self.account = StripePayoutAccount(
             owner=self.user,

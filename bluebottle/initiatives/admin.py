@@ -208,7 +208,7 @@ class InitiativeAdmin(
         ]
         detail_fields.append("place")
 
-        if InitiativePlatformSettings.objects.get().enable_open_initiatives:
+        if InitiativePlatformSettings.load().enable_open_initiatives:
             detail_fields.append("is_open")
 
         fieldsets = (
@@ -342,6 +342,7 @@ class InitiativePlatformSettingsAdmin(
                 "fields": (
                     "contact_method",
                     "require_organization",
+                    "vet_organizations",
                     "enable_impact",
                     "enable_open_initiatives",
                     "enable_participant_exports",

@@ -23,6 +23,7 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
     BankAccountFactory, PlainPayoutAccountFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentFactory,
 )
@@ -119,8 +120,9 @@ class PlainFundingTriggerTests(BluebottleTestCase):
         self.assertEqual(self.funding.status, FundingStateMachine.open.value)
 
 
-class DonorTriggerTests(BluebottleTestCase):
+class DonorTriggerTests(FundingStripeMixin, BluebottleTestCase):
     def setUp(self):
+        super(DonorTriggerTests, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)

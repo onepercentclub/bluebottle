@@ -35,7 +35,7 @@ class TimeBasedActivityListAPITestCase:
                 'description': json.dumps({'html': 'test description', 'delta': ''}),
             }
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append(self.model_name)
         settings.save()
 
@@ -95,7 +95,7 @@ class TimeBasedActivityListAPITestCase:
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_create_disabled_activity_type(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
 
         settings.activity_types = [
             activity_type for activity_type in settings.activity_types
@@ -1003,6 +1003,7 @@ class TimeBasedParticipantTransitionListAPITestCase:
 
 class TimeBasedActivityAPIExportTestCase:
     def setUp(self):
+        super().setUp()
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()
@@ -1013,7 +1014,10 @@ class TimeBasedActivityAPIExportTestCase:
             initiative=InitiativeFactory.create(status='approved'),
             status='open',
         )
-        self.participant_factory.create_batch(4, activity=self.activity)
+        self.participants = self.participant_factory.create_batch(
+            4,
+            activity=self.activity,
+        )
 
         response = self.client.get(
             reverse(self.url_name, args=(self.activity.pk, )),

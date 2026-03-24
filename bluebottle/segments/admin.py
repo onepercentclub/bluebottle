@@ -7,19 +7,23 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
-from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
+from parler.admin import TranslatableAdmin, TranslatableModelForm, TranslatableTabularInline
 
+from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.fsm.forms import StateMachineModelFormMetaClass
 from bluebottle.segments.models import SegmentType, Segment
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
+from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
 
 class SegmentStateMachineModelFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
+                field_name = field.name
                 attrs[field.field_name] = forms.CharField(
                     required=False,
-                    label=field.name
+                    label=field_name
                 )
 
         return super(SegmentStateMachineModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
@@ -29,15 +33,16 @@ class SegmentAdminFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in SegmentType.objects.all():
+                field_name = field.name
                 attrs[field.field_name] = forms.CharField(
                     required=False,
-                    label=field.name
+                    label=field_name
                 )
 
         return super(SegmentAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
-class SegmentInline(TabularInlinePaginated):
+class SegmentInline(TranslatableTabularInline, TabularInlinePaginated):
     model = Segment
     fields = ('name', 'slug')
     show_change_link = True
@@ -65,19 +70,50 @@ class SegmentMergeForm(forms.Form):
         )
 
 
-@admin.register(Segment)
-class SegmentAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
-    model = Segment
+class SegmentAdminForm(TranslatableModelForm):
+    email_domains = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3}),
+        help_text=_("Enter one domain per line or separate by commas."),
+        label=_("Email domains"),
+    )
 
-    readonly_fields = ('text_color', 'activities_link', 'members_link', 'type_link')
+    class Meta:
+        model = Segment
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.initial["email_domains"] = "\n".join(self.instance.email_domains or [])
+
+    def clean_email_domains(self):
+        raw_value = self.cleaned_data.get("email_domains", "") or ""
+        # Accept both comma-separated and newline-separated input.
+        values = raw_value.replace(",", "\n").splitlines()
+        return [value.strip() for value in values if value.strip()]
+
+
+@admin.register(Segment)
+class SegmentAdmin(
+    TranslatableLabelAdminMixin,
+    AdminMergeMixin,
+    TranslatableAdminOrderingMixin,
+    TranslatableAdmin
+):
+    model = Segment
+    form = SegmentAdminForm
+
+    readonly_fields = ('translatable_info', 'text_color', 'activities_link', 'members_link', 'type_link')
 
     list_display = ['name', 'segment_type', 'activities_link', ]
 
     list_filter = ['segment_type']
-    search_fields = ['name']
+    search_fields = ['translations__name']
     fieldsets = (
         (None, {
             'fields': [
+                'translatable_info',
                 'type_link', 'name', 'slug', 'email_domains', 'closed',
                 'activities_link', 'members_link'
             ]
@@ -85,7 +121,7 @@ class SegmentAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
 
         (_('Content'), {
             'fields': [
-                'tag_line', 'story', 'logo', 'cover_image',
+                'slogan', 'story', 'logo', 'cover_image',
                 'background_color', 'text_color',
                 'button_color', 'button_text_color'
             ],
@@ -115,7 +151,8 @@ class SegmentAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
 
     def type_link(self, obj):
         url = "{}".format(reverse('admin:segments_segmenttype_change', args=(obj.segment_type.pk, )))
-        return format_html("<a href='{}'>{}</a>", url, obj.segment_type.name)
+        segment_type_name = obj.segment_type.name
+        return format_html("<a href='{}'>{}</a>", url, segment_type_name)
 
     type_link.short_description = _('Segment type')
 
@@ -126,7 +163,12 @@ class SegmentAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
 
 
 @admin.register(SegmentType)
-class SegmentTypeAdmin(admin.ModelAdmin, DynamicArrayMixin):
+class SegmentTypeAdmin(
+    TranslatableLabelAdminMixin,
+    TranslatableAdminOrderingMixin,
+    TranslatableAdmin,
+    DynamicArrayMixin
+):
     model = SegmentType
     inlines = [SegmentInline]
 
@@ -140,3 +182,8 @@ class SegmentTypeAdmin(admin.ModelAdmin, DynamicArrayMixin):
 
     list_display = ['name', 'slug', 'segments', 'is_active', 'required', 'visibility']
     list_editable = ['is_active', 'required', 'visibility']
+
+    fields = ['name', 'slug', 'inherit', 'visibility', 'required', 'needs_verification', 'is_active', 'user_editable',
+              'enable_search', 'admin_user_filter', 'admin_activity_filter']
+
+    translatable_ordering = 'translations__name'

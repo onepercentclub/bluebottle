@@ -1,5 +1,5 @@
-from django.urls.base import reverse
 from django.db.models import Subquery
+from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from jet.dashboard import modules
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
@@ -24,7 +24,7 @@ class RecentlySubmittedInitiatives(DashboardModule):
         initiatives = Initiative.objects.filter(
             status='submitted'
         ).annotate(
-            transition_date=Subquery(recent_log_entries(polymorpic=False))
+            transition_date=Subquery(recent_log_entries(polymorphic=False))
         ).order_by('transition_date')
         user = context.request.user
         initiatives = region_manager_filter(initiatives, user)
@@ -43,7 +43,7 @@ class RecentlyPublishedInitiatives(DashboardModule):
         initiatives = Initiative.objects.filter(
             status='approved'
         ).annotate(
-            transition_date=Subquery(recent_log_entries(polymorpic=False))
+            transition_date=Subquery(recent_log_entries(polymorphic=False))
         ).order_by('transition_date')
         user = context.request.user
         initiatives = region_manager_filter(initiatives, user)

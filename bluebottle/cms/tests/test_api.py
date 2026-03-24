@@ -77,6 +77,7 @@ class HomeTestCase(APITestCase):
         super().setUp()
         HomePage.objects.all().delete()
         self.page = HomePageFactory(pk=1)
+        # Create placeholder for this page/slot so serializer's page.content uses the same one
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('home-detail')
 
@@ -276,13 +277,19 @@ class HomeTestCase(APITestCase):
 
     def test_categories(self):
         categories = CategoryFactory.create_batch(3)
-        block = CategoriesContent.objects.create_for_placeholder(self.placeholder)
+        block = CategoriesContent.objects.create_for_placeholder(
+            self.placeholder, language_code='en'
+        )
         block.categories.set(categories)
         block.save()
-        response = self.client.get(self.url)
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['blocks'][0]['type'], 'pages/blocks/categories')
+        block_types = [
+            item['type']
+            for item in response.json()['data']['relationships']['blocks']['data']
+        ]
+        self.assertIn('pages/blocks/categories', block_types)
 
         categories_block = get_include(response, 'pages/blocks/categories')
         self.assertEqual(categories_block['relationships']['categories']['meta']['count'], 3)

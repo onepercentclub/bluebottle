@@ -724,6 +724,7 @@ class DonorCreateSerializer(DonorSerializer):
             TargetReachedValidator()
         ]
     )
+    allow_multiple = True
 
     class Meta(DonorSerializer.Meta):
         model = Donor

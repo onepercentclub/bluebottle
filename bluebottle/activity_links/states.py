@@ -47,7 +47,7 @@ class LinkedActivityStateMachine(ModelStateMachine):
     )
 
     start = Transition(
-        new,
+        [new, cancelled],
         open,
         name=_("Start"),
         description=_("The link will be shown."),

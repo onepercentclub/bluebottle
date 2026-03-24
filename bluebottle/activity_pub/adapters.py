@@ -263,7 +263,7 @@ def publish_recipient(instance, created, **kwargs):
 
         # Sometimes we need to send follow up activities to the recipient,
         # for example when the activity transitioned before the recipient was created
-        for transition_cls in [Finish, Cancel]:
+        for transition_cls in [Start, Finish, Cancel]:
             if isinstance(instance.activity, Create):
                 for transition in transition_cls.objects.filter(object=instance.activity.object):
                     Recipient.objects.get_or_create(

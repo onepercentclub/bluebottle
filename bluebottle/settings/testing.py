@@ -185,6 +185,9 @@ ELASTICSEARCH_DSL_AUTOSYNC = False
 ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'django_elasticsearch_dsl.signals.RealTimeSignalProcessor'
 # Per-worker index prefix for parallel tests so workers don't share ES indices
 ELASTICSEARCH_TEST_INDEX_PREFIX = 'test'
+# Wipe orphaned test-pid* indices before create (avoids 1000-shard cluster limit
+# after many IDE runs). Set False if multiple single-process test runs share one ES.
+ELASTICSEARCH_TEST_WIPE_STALE_PID_INDICES = True
 
 STRIPE = {
     'secret_key': 'test-key',

@@ -202,7 +202,6 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
         self.assertEqual(rc.display_name, 'Jane Doe')
         self.assertEqual(rc.email, 'jane@follower.example')
         self.assertEqual(rc.sync_actor_id, self.follower_actor.pk)
-        self.assertEqual(rc.sync_follow_id, self.follow.pk)
 
     def test_join_received_updates_contributor_count_and_creates_update(self):
         """Join handler updates GoodDeed.contributor_count and creates Update(object=GoodDeed)."""
@@ -308,7 +307,6 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
             display_name='Leave Me',
             email='leave@example.com',
             sync_actor=self.follower_actor,
-            sync_follow=self.follow,
         )
         DeedParticipant.objects.create(
             activity=self.deed,
@@ -336,7 +334,6 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
             sync_id='sync-leave-withdraw',
             display_name='Leave Withdraw',
             sync_actor=self.follower_actor,
-            sync_follow=self.follow,
         )
         DeedParticipant.objects.create(
             activity=self.deed,
@@ -364,7 +361,6 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
             sync_id='sync-leave-count',
             display_name='Count',
             sync_actor=self.follower_actor,
-            sync_follow=self.follow,
         )
         DeedParticipant.objects.create(
             activity=self.deed,
@@ -406,7 +402,6 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
             sync_id='sync-local-leave',
             display_name='Local Leave',
             sync_actor=self.follower_actor,
-            sync_follow=self.follow,
         )
         DeedParticipant.objects.create(
             activity=self.deed,
@@ -780,7 +775,6 @@ class SyncIntegrationTestCase(BluebottleTestCase):
             sync_id='follower-side-sync-1',
             display_name='Follower Local User',
             sync_actor=self.platform_actor,
-            sync_follow=self.follow,
         )
         follower_participant = DeedParticipant.objects.create(
             activity=adopted_deed,
@@ -832,7 +826,11 @@ class SyncIntegrationTestCase(BluebottleTestCase):
 
         sync_id = 'propagate-remove-1'
         # Follower side participant (local on adopted deed) uses remote_contributor.sync_id for matching
-        follower_rc = RemoteContributor.objects.create(sync_id=sync_id, display_name='Local follower user')
+        follower_rc = RemoteContributor.objects.create(
+            sync_id=sync_id,
+            display_name='Local follower user',
+            sync_actor=self.platform_actor,
+        )
         follower_participant = DeedParticipant.objects.create(
             activity=adopted_deed,
             user=None,

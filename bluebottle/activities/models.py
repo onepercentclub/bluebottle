@@ -342,7 +342,7 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 class RemoteContributor(models.Model):
     """
     Remote identity for a contributor without a local user (e.g. synced from another platform).
-    Stores display name, email, sync id, and which Actor/Follow the Join came from.
+    Stores display name, email, sync id, and which Actor the Join came from.
     """
     display_name = models.CharField(
         _("Display name"),
@@ -374,24 +374,13 @@ class RemoteContributor(models.Model):
         related_name="synced_remote_contributors",
         help_text=_("The ActivityPub Actor (platform) that sent the Join this participant came from."),
     )
-    # Which Follow (connection) the Join came through (our Follow where object=sync_actor)
-    sync_follow = models.ForeignKey(
-        "activity_pub.Follow",
-        verbose_name=_("Sync source (Follow)"),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="synced_remote_contributors",
-        help_text=_("The Follow (connection) through which this participant joined."),
-    )
-
     class Meta(object):
         verbose_name = _("Remote contributor")
         verbose_name_plural = _("Remote contributors")
         constraints = [
             models.UniqueConstraint(
-                fields=['sync_follow', 'sync_id'],
-                name='activities_remotecontributor_unique_follow_sync_id',
+                fields=['sync_actor', 'sync_id'],
+                name='activities_remotecontributor_unique_actor_sync_id',
             ),
         ]
 
@@ -447,11 +436,6 @@ class Contributor(TriggerMixin, PolymorphicModel):
     def sync_actor(self):
         """Sync source Actor from remote_contributor when present (backward compatibility)."""
         return self.remote_contributor.sync_actor if self.remote_contributor_id else None
-
-    @property
-    def sync_follow(self):
-        """Sync source Follow from remote_contributor when present (backward compatibility)."""
-        return self.remote_contributor.sync_follow if self.remote_contributor_id else None
 
     @property
     def sync_actor_id(self):

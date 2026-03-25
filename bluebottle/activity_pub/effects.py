@@ -191,10 +191,14 @@ class SendJoinEffect(Effect):
         if not contributor.sync_id:
             from bluebottle.activities.models import RemoteContributor
 
+            create = Create.objects.filter(object=deed.origin).first()
+            source_actor = create.actor if create else None
+
             remote_contributor = RemoteContributor.objects.create(
                 sync_id=str(uuid.uuid4()),
                 display_name=contributor.display_name_or_user or '',
                 email=contributor.email_or_user,
+                sync_actor=source_actor,
             )
             contributor.remote_contributor = remote_contributor
             contributor.save(update_fields=['remote_contributor'])

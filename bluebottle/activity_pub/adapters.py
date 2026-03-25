@@ -306,7 +306,6 @@ def handle_join_received(sender, instance, created, **kwargs):
         if deed and instance.participant_sync_id:
             from bluebottle.activities.models import RemoteContributor
             from bluebottle.deeds.models import DeedParticipant
-            from bluebottle.activity_pub.models import Follow
 
             existing = DeedParticipant.objects.filter(
                 activity=deed,
@@ -328,14 +327,12 @@ def handle_join_received(sender, instance, created, **kwargs):
                         rc.save(update_fields=['email'])
             else:
                 sync_actor = instance.actor
-                sync_follow = Follow.objects.filter(object=sync_actor).first()
                 remote_contributor, _ = RemoteContributor.objects.get_or_create(
-                    sync_follow=sync_follow,
+                    sync_actor=sync_actor,
                     sync_id=instance.participant_sync_id,
                     defaults={
                         'display_name': instance.participant_name or '',
                         'email': instance.participant_email,
-                        'sync_actor': sync_actor,
                     },
                 )
 

@@ -22,8 +22,8 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='remotecontributor',
             constraint=models.UniqueConstraint(
-                fields=('sync_follow', 'sync_id'),
-                name='activities_remotecontributor_unique_follow_sync_id',
+                fields=('sync_actor', 'sync_id'),
+                name='activities_remotecontributor_unique_actor_sync_id',
             ),
         ),
     ]

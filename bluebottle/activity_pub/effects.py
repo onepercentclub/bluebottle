@@ -181,6 +181,10 @@ class SendJoinEffect(Effect):
         from bluebottle.deeds.models import DeedParticipant
         from bluebottle.time_based.models import DeadlineParticipant
 
+        actor = get_platform_actor()
+        if actor is None:
+            return
+
         contributor = self.instance
         if not isinstance(contributor, (DeedParticipant, DeadlineParticipant)):
             return
@@ -209,7 +213,7 @@ class SendJoinEffect(Effect):
         participant_email = contributor.email_or_user or None
 
         join_activity = Join.objects.create(
-            actor=get_platform_actor(),
+            actor=actor,
             object=deed.origin,
             participant_sync_id=contributor.sync_id,
             participant_name=participant_name,
@@ -222,10 +226,7 @@ class SendJoinEffect(Effect):
 
     @property
     def is_valid(self):
-        return (
-            super().is_valid and
-            get_platform_actor() is not None
-        )
+        return super().is_valid
 
     def __str__(self):
         return str(_('Notify source platform of join'))
@@ -245,6 +246,10 @@ class SendLeaveEffect(Effect):
         from bluebottle.deeds.models import DeedParticipant
         from bluebottle.time_based.models import DeadlineParticipant
 
+        actor = get_platform_actor()
+        if actor is None:
+            return
+
         contributor = self.instance
         if not isinstance(contributor, (DeedParticipant, DeadlineParticipant)):
             return
@@ -254,7 +259,7 @@ class SendLeaveEffect(Effect):
             return
 
         leave_activity = Leave.objects.create(
-            actor=get_platform_actor(),
+            actor=actor,
             object=target_event,
             participant_sync_id=contributor.sync_id or None,
         )
@@ -270,10 +275,7 @@ class SendLeaveEffect(Effect):
 
     @property
     def is_valid(self):
-        return (
-            super().is_valid and
-            get_platform_actor() is not None
-        )
+        return super().is_valid
 
     def __str__(self):
         return str(_('Notify source platform of leave'))

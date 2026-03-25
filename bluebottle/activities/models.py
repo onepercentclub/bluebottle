@@ -374,6 +374,7 @@ class RemoteContributor(models.Model):
         related_name="synced_remote_contributors",
         help_text=_("The ActivityPub Actor (platform) that sent the Join this participant came from."),
     )
+
     class Meta(object):
         verbose_name = _("Remote contributor")
         verbose_name_plural = _("Remote contributors")

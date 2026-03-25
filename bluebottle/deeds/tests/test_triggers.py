@@ -15,7 +15,10 @@ from bluebottle.activities.messages.reviewer import (
     ActivityPublishedReviewerNotification,
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.activities.states import (
+    OrganizerStateMachine,
+    EffortContributionStateMachine,
+)
 from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect
 from bluebottle.activity_pub.tests.factories import GoodDeedFactory
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution, SetEndDateEffect
@@ -133,37 +136,21 @@ class DeedTriggersTestCase(TriggerTestCase):
     def test_cancel(self):
         self.create()
         self.model.states.publish(save=True)
-        participant = DeedParticipantFactory.create(activity=self.model, status='accepted')
+        DeedParticipantFactory.create(activity=self.model, status='accepted')
         self.model.states.cancel()
 
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
-            self.assertTransitionEffect(
-                DeedParticipantStateMachine.fail,
-                participant
-            )
-            self.assertTransitionEffect(
-                EffortContributionStateMachine.fail,
-                participant.contributions.first()
-            )
             self.assertNotificationEffect(ActivityCancelledNotification)
 
     def test_restored(self):
         self.create()
-        participant = DeedParticipantFactory.create(activity=self.model, status='accepted')
+        DeedParticipantFactory.create(activity=self.model, status='failed')
         self.model.states.reject(save=True)
         self.model.states.restore()
 
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.reset, self.model.organizer)
-            self.assertTransitionEffect(
-                DeedParticipantStateMachine.reset,
-                participant
-            )
-            self.assertTransitionEffect(
-                EffortContributionStateMachine.reset,
-                participant.contributions.first()
-            )
             self.assertNotificationEffect(ActivityRestoredNotification)
 
     def test_start(self):

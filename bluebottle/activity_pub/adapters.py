@@ -322,7 +322,7 @@ def handle_join_received(sender, instance, created, **kwargs):
             else:
                 sync_actor = instance.actor
                 sync_follow = Follow.objects.filter(object=sync_actor).first()
-                remote_contributor, _ = RemoteContributor.objects.get_or_create(
+                remote_contributor, created_rc = RemoteContributor.objects.get_or_create(
                     sync_id=instance.participant_sync_id,
                     defaults={
                         'display_name': instance.participant_name or '',
@@ -331,6 +331,22 @@ def handle_join_received(sender, instance, created, **kwargs):
                         'sync_follow': sync_follow,
                     },
                 )
+                if not created_rc:
+                    update_fields = []
+                    if remote_contributor.sync_actor_id is None:
+                        remote_contributor.sync_actor = sync_actor
+                        update_fields.append('sync_actor')
+                    if remote_contributor.sync_follow_id is None:
+                        remote_contributor.sync_follow = sync_follow
+                        update_fields.append('sync_follow')
+                    if instance.participant_name is not None and remote_contributor.display_name != (instance.participant_name or ''):
+                        remote_contributor.display_name = instance.participant_name or ''
+                        update_fields.append('display_name')
+                    if instance.participant_email is not None and remote_contributor.email != instance.participant_email:
+                        remote_contributor.email = instance.participant_email
+                        update_fields.append('email')
+                    if update_fields:
+                        remote_contributor.save(update_fields=update_fields)
 
                 DeedParticipant.objects.create(
                     activity=deed,
@@ -355,11 +371,16 @@ def handle_leave_received(sender, instance, created, **kwargs):
         if not isinstance(event, GoodDeed):
             return
 
-        # Resolve target deed:
-        # - source platform: event.activity
-        # - follower platform for adopted deed: event.adopted_activities.first()
-        deed = getattr(event, 'activity', None)
-        if not deed and hasattr(event, 'adopted_activities'):
+        # Resolve target deed based on direction:
+        # - If Leave is sent by a follower, we're the source -> update event.activity.
+        # - If Leave is sent by the source actor, we're a follower -> update adopted deed.
+        source_actor = getattr(event, 'source', None)
+        deed = None
+        if source_actor is not None and instance.actor_id == source_actor.pk:
+            deed = event.adopted_activities.first()
+        if deed is None:
+            deed = getattr(event, 'activity', None)
+        if deed is None and hasattr(event, 'adopted_activities'):
             deed = event.adopted_activities.first()
         if deed and instance.participant_sync_id:
             from bluebottle.activities.models import Contributor

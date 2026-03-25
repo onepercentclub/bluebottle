@@ -407,6 +407,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedStateMachine.succeed,
                     conditions=[activity_is_finished, activity_expired]
                 ),
+                SendJoinEffect,
             ]
         ),
         TransitionTrigger(
@@ -437,6 +438,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[activity_did_start, ]
                 ),
                 FollowActivityEffect,
+                SendJoinEffect,
             ]
         ),
 

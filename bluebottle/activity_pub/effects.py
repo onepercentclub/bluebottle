@@ -262,13 +262,15 @@ class SendLeaveEffect(Effect):
             participant_sync_id=contributor.sync_id or None,
             participant_transition_type=self._transition_type(contributor),
         )
-        if leave_activity.recipients.count() == 0:
-            if getattr(deed, 'origin', None):
-                create = Create.objects.filter(object=deed.origin).first()
-                if create:
-                    Recipient.objects.get_or_create(actor=create.actor, activity=leave_activity)
-            elif contributor.sync_actor:
-                Recipient.objects.get_or_create(actor=contributor.sync_actor, activity=leave_activity)
+        # Always ensure we route to the right counterparty:
+        # - When leaving a synced deed (follower -> source): send to source actor (Create.actor for origin).
+        # - When removing/rejecting a remote participant (source -> follower): send to contributor.sync_actor.
+        if getattr(deed, 'origin', None):
+            create = Create.objects.filter(object=deed.origin).first()
+            if create:
+                Recipient.objects.get_or_create(actor=create.actor, activity=leave_activity)
+        if contributor.sync_actor:
+            Recipient.objects.get_or_create(actor=contributor.sync_actor, activity=leave_activity)
 
     @property
     def is_valid(self):

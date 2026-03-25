@@ -495,10 +495,18 @@ class LeaveSerializer(BaseActivitySerializer):
     type = TypeField('Leave')
     object = EventSerializer()
     participant_sync_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    participant_transition_type = serializers.ChoiceField(
+        choices=['withdraw', 'remove', 'reject'],
+        required=False,
+        allow_null=True
+    )
 
     class Meta(BaseActivitySerializer.Meta):
         model = Leave
-        fields = BaseActivitySerializer.Meta.fields + ('participant_sync_id',)
+        fields = BaseActivitySerializer.Meta.fields + (
+            'participant_sync_id',
+            'participant_transition_type'
+        )
 
     def save(self, *args, **kwargs):
         if 'object' in self.validated_data and isinstance(self.validated_data['object'], dict):

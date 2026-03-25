@@ -16,6 +16,8 @@ from bluebottle.activities.messages.reviewer import (
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.activity_pub.effects import SendLeaveEffect
+from bluebottle.activity_pub.tests.factories import GoodDeedFactory
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
@@ -485,6 +487,15 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantWithdrewNotification)
             self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
+    def test_withdraw_synced_emits_leave_effect(self):
+        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].save(update_fields=['origin'])
+        self.create()
+
+        self.model.states.withdraw()
+        with self.execute():
+            self.assertEffect(SendLeaveEffect)
+
     def test_reapply_no_start_no_end(self):
         self.defaults['activity'].start = None
         self.defaults['activity'].end = None
@@ -546,6 +557,15 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
             self.assertNotificationEffect(ParticipantRemovedNotification)
+
+    def test_remove_synced_emits_leave_effect(self):
+        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].save(update_fields=['origin'])
+        self.create()
+
+        self.model.states.remove()
+        with self.execute():
+            self.assertEffect(SendLeaveEffect)
 
     def test_expire_remove(self):
         self.create()

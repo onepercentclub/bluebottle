@@ -4,13 +4,14 @@ import mock
 from django.test import RequestFactory
 from requests import Response
 
-from bluebottle.activity_pub.models import GoodDeed, CrowdFunding, GrantApplication
+from bluebottle.activity_pub.models import GoodDeed, CrowdFunding, GrantApplication, Leave
 from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import (
-    DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer, GrantApplicationSerializer
+    DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer, GrantApplicationSerializer,
+    LeaveSerializer
 )
 from bluebottle.activity_pub.tests.factories import (
-    DoGoodEventFactory
+    DoGoodEventFactory, OrganizationFactory
 )
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -323,3 +324,31 @@ class GrantApplicationSerializerTest(BluebottleTestCase):
 
         self.assertIn('url', data)
         self.assertIsNone(data['url'])
+
+
+class LeaveSerializerTest(BluebottleTestCase):
+    @property
+    def context(self):
+        request = RequestFactory().get('/')
+        request.user = BlueBottleUserFactory.create()
+        return {'request': request}
+
+    def test_leave_serializer_includes_transition_type(self):
+        actor = OrganizationFactory.create()
+        good_deed = GoodDeed.objects.create(
+            name='Source deed',
+            summary='Summary',
+            organization=actor
+        )
+        leave = Leave.objects.create(
+            actor=actor,
+            object=good_deed,
+            participant_sync_id='sync-serializer-1',
+            participant_transition_type='withdraw',
+        )
+
+        serializer = LeaveSerializer(instance=leave, context=self.context)
+        data = serializer.data
+
+        self.assertEqual(data['participant_sync_id'], 'sync-serializer-1')
+        self.assertEqual(data['participant_transition_type'], 'withdraw')

@@ -776,12 +776,25 @@ class Leave(Activity):
     """Sent by a follower when a user leaves a synced deed; object is the source GoodDeed."""
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
+    class ParticipantTransitionTypeChoices(DjangoChoices):
+        withdraw = ChoiceItem('withdraw')
+        remove = ChoiceItem('remove')
+        reject = ChoiceItem('reject')
+
     participant_sync_id = models.CharField(
         _("Participant sync id"),
         max_length=255,
         blank=True,
         null=True,
         help_text=_("Stable id to match the participant to remove."),
+    )
+    participant_transition_type = models.CharField(
+        _("Participant transition type"),
+        choices=ParticipantTransitionTypeChoices.choices,
+        max_length=40,
+        blank=True,
+        null=True,
+        help_text=_("Why the participant left (withdraw, remove, reject)."),
     )
 
     @property

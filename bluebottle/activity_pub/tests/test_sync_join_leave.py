@@ -24,6 +24,7 @@ from bluebottle.activity_pub.models import (
     Follow,
     Join,
     Leave,
+    Recipient,
     Update,
 )
 from bluebottle.activity_pub.tests.factories import (
@@ -326,6 +327,35 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
         part = DeedParticipant.objects.get(
             activity=self.deed,
             remote_contributor__sync_id='sync-leave',
+        )
+        self.assertEqual(part.status, 'rejected')
+
+    def test_leave_received_withdraw_reason_still_rejects(self):
+        """Leave with transition type withdraw still maps to rejected on receiver."""
+        rc = RemoteContributor.objects.create(
+            sync_id='sync-leave-withdraw',
+            display_name='Leave Withdraw',
+            sync_actor=self.follower_actor,
+            sync_follow=self.follow,
+        )
+        DeedParticipant.objects.create(
+            activity=self.deed,
+            user=None,
+            remote_contributor=rc,
+            status='accepted',
+        )
+
+        Leave.objects.create(
+            actor=self.follower_actor,
+            object=self.good_deed,
+            participant_sync_id='sync-leave-withdraw',
+            participant_transition_type='withdraw',
+            iri='https://follower.example/leave/withdraw',
+        )
+
+        part = DeedParticipant.objects.get(
+            activity=self.deed,
+            remote_contributor__sync_id='sync-leave-withdraw',
         )
         self.assertEqual(part.status, 'rejected')
 
@@ -695,3 +725,88 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         source_deed.states.approve(save=True)
         participant.refresh_from_db()
         self.assertEqual(participant.status, 'accepted')
+
+    def test_source_remove_sends_leave_to_follower_with_transition_type(self):
+        """Source removing a remote participant sends Leave to follower with transition metadata."""
+        source_deed = DeedFactory.create(
+            title='Source remove test',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(source_deed)
+        source_good_deed = source_deed.event
+        if not Create.objects.filter(object=source_good_deed).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_good_deed)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_good_deed,
+            participant_sync_id='source-remove-1',
+            participant_name='Remote User',
+            participant_email='remote@other.example',
+            iri='https://follower.example/join/source-remove-1',
+        )
+        participant = DeedParticipant.objects.get(
+            activity=source_deed,
+            remote_contributor__sync_id='source-remove-1',
+        )
+        participant.states.remove(save=True)
+
+        leave = Leave.objects.filter(
+            object=source_good_deed,
+            participant_sync_id='source-remove-1',
+            participant_transition_type='remove',
+        ).exclude(iri__isnull=False).last()
+        self.assertIsNotNone(leave)
+        self.assertTrue(
+            Recipient.objects.filter(activity=leave, actor=self.follower_actor).exists()
+        )
+
+    def test_leave_received_updates_adopted_deed_participant_and_local_event_count(self):
+        """Follower receiving Leave for source event rejects related adopted deed participant and updates local count."""
+        source_deed = DeedFactory.create(
+            title='Source for follower leave receive',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(source_deed)
+        source_good_deed = source_deed.event
+        if not Create.objects.filter(object=source_good_deed).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_good_deed)
+
+        request = RequestFactory().get('/')
+        request.user = self.follow.default_owner
+        with mock.patch.object(Geolocation, 'update_location'):
+            adopted_deed = adapter.adopt(source_good_deed, request)
+        adapter.create_or_update_event(adopted_deed)
+
+        follower_rc = RemoteContributor.objects.create(
+            sync_id='follower-side-sync-1',
+            display_name='Follower Local User',
+            sync_actor=self.platform_actor,
+            sync_follow=self.follow,
+        )
+        follower_participant = DeedParticipant.objects.create(
+            activity=adopted_deed,
+            user=None,
+            remote_contributor=follower_rc,
+            status='accepted',
+        )
+        adopted_deed.event.refresh_from_db()
+        self.assertEqual(adopted_deed.event.contributor_count, 1)
+
+        Leave.objects.create(
+            actor=self.platform_actor,
+            object=source_good_deed,
+            participant_sync_id='follower-side-sync-1',
+            participant_transition_type='remove',
+            iri='https://source.example/leave/follower-side-sync-1',
+        )
+
+        follower_participant.refresh_from_db()
+        self.assertEqual(follower_participant.status, 'rejected')
+        adopted_deed.event.refresh_from_db()
+        self.assertEqual(adopted_deed.event.contributor_count, 0)
+        self.assertTrue(
+            Update.objects.filter(object=adopted_deed.event).exists()
+        )

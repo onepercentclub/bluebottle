@@ -154,6 +154,18 @@ def activity_is_synced(effect):
     return getattr(activity, 'origin', None) is not None
 
 
+def contributor_has_sync_source(effect):
+    contributor = effect.instance
+    return (
+        getattr(contributor, 'sync_id', None) and
+        getattr(contributor, 'sync_actor', None) is not None
+    )
+
+
+def can_send_leave(effect):
+    return activity_is_synced(effect) or contributor_has_sync_source(effect)
+
+
 class SendJoinEffect(Effect):
     """
     Send a Join activity to the source platform when a user joins a synced deed.
@@ -222,7 +234,16 @@ class SendLeaveEffect(Effect):
     """
     template = 'admin/activity_pub/send_leave_effect.html'
     post_save = True
-    conditions = [activity_is_synced]
+    conditions = [can_send_leave]
+
+    def _transition_type(self, contributor):
+        if contributor.status == 'withdrawn':
+            return 'withdraw'
+        if contributor.status == 'rejected':
+            return 'remove'
+        if contributor.status == 'failed':
+            return 'reject'
+        return None
 
     def post_save(self, **kwargs):
         from bluebottle.deeds.models import DeedParticipant
@@ -231,18 +252,23 @@ class SendLeaveEffect(Effect):
         if not isinstance(contributor, DeedParticipant):
             return
         deed = contributor.activity
-        if not getattr(deed, 'origin', None):
+        target_event = getattr(deed, 'origin', None) or getattr(deed, 'event', None)
+        if not target_event:
             return
 
         leave_activity = Leave.objects.create(
             actor=get_platform_actor(),
-            object=deed.origin,
+            object=target_event,
             participant_sync_id=contributor.sync_id or None,
+            participant_transition_type=self._transition_type(contributor),
         )
         if leave_activity.recipients.count() == 0:
-            create = Create.objects.filter(object=deed.origin).first()
-            if create:
-                Recipient.objects.get_or_create(actor=create.actor, activity=leave_activity)
+            if getattr(deed, 'origin', None):
+                create = Create.objects.filter(object=deed.origin).first()
+                if create:
+                    Recipient.objects.get_or_create(actor=create.actor, activity=leave_activity)
+            elif contributor.sync_actor:
+                Recipient.objects.get_or_create(actor=contributor.sync_actor, activity=leave_activity)
 
     @property
     def is_valid(self):

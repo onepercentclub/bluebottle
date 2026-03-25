@@ -355,8 +355,12 @@ def handle_leave_received(sender, instance, created, **kwargs):
         if not isinstance(event, GoodDeed):
             return
 
-        # Remove synced participant from source deed if we have a match
+        # Resolve target deed:
+        # - source platform: event.activity
+        # - follower platform for adopted deed: event.adopted_activities.first()
         deed = getattr(event, 'activity', None)
+        if not deed and hasattr(event, 'adopted_activities'):
+            deed = event.adopted_activities.first()
         if deed and instance.participant_sync_id:
             from bluebottle.activities.models import Contributor
 
@@ -365,11 +369,17 @@ def handle_leave_received(sender, instance, created, **kwargs):
                 remote_contributor__sync_id=instance.participant_sync_id,
             ).first()
             if contributor:
+                # Contract: any remote leave-like transition maps to rejected.
                 contributor.status = 'rejected'
                 contributor.save(update_fields=['status'])
 
-        sync_good_deed_contributor_count(event)
-        Update.objects.create(object=event)
+        local_event = getattr(deed, 'event', None) if deed else None
+        if local_event and isinstance(local_event, GoodDeed):
+            sync_good_deed_contributor_count(local_event)
+            Update.objects.create(object=local_event)
+        else:
+            sync_good_deed_contributor_count(event)
+            Update.objects.create(object=event)
     except Exception as e:
         logger.error(f"Failed to handle Leave: {str(e)}", exc_info=True)
 

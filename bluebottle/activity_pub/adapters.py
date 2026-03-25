@@ -309,7 +309,9 @@ def handle_join_received(sender, instance, created, **kwargs):
             from bluebottle.activity_pub.models import Follow
 
             existing = DeedParticipant.objects.filter(
-                activity=deed, remote_contributor__sync_id=instance.participant_sync_id
+                activity=deed,
+                remote_contributor__sync_id=instance.participant_sync_id,
+                remote_contributor__sync_actor=instance.actor,
             ).first()
             if existing:
                 # Re-join after withdraw: set status back to accepted and refresh name/email
@@ -327,31 +329,15 @@ def handle_join_received(sender, instance, created, **kwargs):
             else:
                 sync_actor = instance.actor
                 sync_follow = Follow.objects.filter(object=sync_actor).first()
-                remote_contributor, created_rc = RemoteContributor.objects.get_or_create(
+                remote_contributor, _ = RemoteContributor.objects.get_or_create(
+                    sync_follow=sync_follow,
                     sync_id=instance.participant_sync_id,
                     defaults={
                         'display_name': instance.participant_name or '',
                         'email': instance.participant_email,
                         'sync_actor': sync_actor,
-                        'sync_follow': sync_follow,
                     },
                 )
-                if not created_rc:
-                    update_fields = []
-                    if remote_contributor.sync_actor_id is None:
-                        remote_contributor.sync_actor = sync_actor
-                        update_fields.append('sync_actor')
-                    if remote_contributor.sync_follow_id is None:
-                        remote_contributor.sync_follow = sync_follow
-                        update_fields.append('sync_follow')
-                    if instance.participant_name is not None and remote_contributor.display_name != (instance.participant_name or ''):
-                        remote_contributor.display_name = instance.participant_name or ''
-                        update_fields.append('display_name')
-                    if instance.participant_email is not None and remote_contributor.email != instance.participant_email:
-                        remote_contributor.email = instance.participant_email
-                        update_fields.append('email')
-                    if update_fields:
-                        remote_contributor.save(update_fields=update_fields)
 
                 DeedParticipant.objects.create(
                     activity=deed,
@@ -393,6 +379,7 @@ def handle_leave_received(sender, instance, created, **kwargs):
             contributor = Contributor.objects.filter(
                 activity=deed,
                 remote_contributor__sync_id=instance.participant_sync_id,
+                remote_contributor__sync_actor=instance.actor,
             ).first()
             if contributor:
                 # Contract: any remote leave-like transition maps to rejected.

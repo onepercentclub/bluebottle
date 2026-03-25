@@ -360,7 +360,6 @@ class RemoteContributor(models.Model):
     sync_id = models.CharField(
         _("Sync identifier"),
         max_length=255,
-        unique=True,
         blank=True,
         null=True,
         help_text=_("Remote participant id for matching Join/Leave in synced activities."),
@@ -389,6 +388,12 @@ class RemoteContributor(models.Model):
     class Meta(object):
         verbose_name = _("Remote contributor")
         verbose_name_plural = _("Remote contributors")
+        constraints = [
+            models.UniqueConstraint(
+                fields=['sync_follow', 'sync_id'],
+                name='activities_remotecontributor_unique_follow_sync_id',
+            ),
+        ]
 
     def __str__(self):
         return self.display_name or self.email or (str(self.sync_id) if self.sync_id else '') or str(_("Anonymous"))

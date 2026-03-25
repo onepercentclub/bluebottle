@@ -116,16 +116,14 @@ class JSONLDAdapter():
 
     def adopt(self, event, request=None):
         """
-        Create a fully synced local Deed from a remote GoodDeed (sync adoption).
-        The Deed has origin=event so Join/Leave can target the source platform.
+        Adopt a remote event into a local activity.
+        For GoodDeed, we create a synced Deed with origin=event so Join/Leave can target the source platform.
+        For other event types, keep backward-compatible adopt behavior (no origin kwarg).
         """
         from bluebottle.activity_pub.models import GoodDeed
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
         from bluebottle.members.models import Member
-
-        if not isinstance(event, GoodDeed):
-            raise TypeError('adopt expects a GoodDeed event')
 
         create = Create.objects.filter(object=event).first()
         if not create:
@@ -145,9 +143,16 @@ class JSONLDAdapter():
         serializer = FederatedActivitySerializer(data=data, context=context)
         serializer.is_valid(raise_exception=True)
 
-        deed = serializer.save(owner=owner, host_organization=organization, origin=event)
-        self.create_or_update_event(deed)
-        return deed
+        save_kwargs = {
+            'owner': owner,
+            'host_organization': organization,
+        }
+        if isinstance(event, GoodDeed):
+            save_kwargs['origin'] = event
+
+        activity = serializer.save(**save_kwargs)
+        self.create_or_update_event(activity)
+        return activity
 
     def create_or_update_event(self, activity):
         from bluebottle.activities.models import Activity as BluebottleActivity

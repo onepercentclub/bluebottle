@@ -4,7 +4,8 @@ Tests for Sync connection setup between two platforms and activity_pub Join/Leav
 - Sync connection: Follow with adoption_type='sync', adopt() creating a synced Deed with origin=GoodDeed.
 - Join: when a follower sends Join(object=source GoodDeed), source platform adds DeedParticipant (RemoteContributor).
 - Leave: when a follower sends Leave(object=source GoodDeed, participant_sync_id=...), source removes participant.
-- contributor_count sync: GoodDeed.contributor_count mirrors Deed.contributor_count; local participant changes sync to origin.
+- contributor_count sync: GoodDeed.contributor_count mirrors
+  Deed.contributor_count; local participant changes sync to origin.
 """
 from datetime import datetime, timedelta
 from unittest import mock
@@ -524,7 +525,10 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         )
 
     def test_sync_follow_and_adopt_then_join_updates_source(self):
-        """Flow: source deed → adopt with sync (creates deed with origin) → Join from follower → source has participant."""
+        """
+        Flow: source deed -> adopt with sync (creates deed with origin) ->
+        Join from follower -> source has participant.
+        """
         deed = DeedFactory.create(
             title='Shared Deed',
             start=(datetime.now() + timedelta(days=7)).date(),
@@ -607,7 +611,10 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         self.assertEqual(part.status, 'rejected')
 
     def test_join_after_withdraw_re_appears_on_source(self):
-        """When a user joins an adopted deed, withdraws, then joins again, they re-appear on the source participant list."""
+        """
+        When a user joins an adopted deed, withdraws, then joins again,
+        they re-appear on the source participant list.
+        """
         deed = DeedFactory.create(
             title='Deed for re-join',
             start=(datetime.now() + timedelta(days=7)).date(),
@@ -754,7 +761,10 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         )
 
     def test_leave_received_updates_adopted_deed_participant_and_local_event_count(self):
-        """Follower receiving Leave for source event rejects related adopted deed participant and updates local count."""
+        """
+        Follower receiving Leave for source event rejects related adopted
+        deed participant and updates local count.
+        """
         source_deed = DeedFactory.create(
             title='Source for follower leave receive',
             start=(datetime.now() + timedelta(days=7)).date(),

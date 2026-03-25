@@ -236,15 +236,6 @@ class SendLeaveEffect(Effect):
     post_save = True
     conditions = [can_send_leave]
 
-    def _transition_type(self, contributor):
-        if contributor.status == 'withdrawn':
-            return 'withdraw'
-        if contributor.status == 'rejected':
-            return 'remove'
-        if contributor.status == 'failed':
-            return 'reject'
-        return None
-
     def post_save(self, **kwargs):
         from bluebottle.deeds.models import DeedParticipant
 
@@ -260,7 +251,6 @@ class SendLeaveEffect(Effect):
             actor=get_platform_actor(),
             object=target_event,
             participant_sync_id=contributor.sync_id or None,
-            participant_transition_type=self._transition_type(contributor),
         )
         # Always ensure we route to the right counterparty:
         # - When leaving a synced deed (follower -> source): send to source actor (Create.actor for origin).

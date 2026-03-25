@@ -28,7 +28,6 @@
     "participantSyncId": "goodup:participantSyncId",
     "participantName": "goodup:participantName",
     "participantEmail": "goodup:participantEmail",
-    "participantTransitionType": "goodup:participantTransitionType",
     "activityLink": "goodup:activityLink",
     "eventAttendanceMode": "schema:eventAttendanceMode",
     "applicationDeadline": "schema:applicationDeadline",

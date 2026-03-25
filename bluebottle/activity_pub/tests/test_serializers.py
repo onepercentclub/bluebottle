@@ -333,7 +333,7 @@ class LeaveSerializerTest(BluebottleTestCase):
         request.user = BlueBottleUserFactory.create()
         return {'request': request}
 
-    def test_leave_serializer_includes_transition_type(self):
+    def test_leave_serializer_includes_sync_id(self):
         actor = OrganizationFactory.create()
         good_deed = GoodDeed.objects.create(
             name='Source deed',
@@ -344,11 +344,10 @@ class LeaveSerializerTest(BluebottleTestCase):
             actor=actor,
             object=good_deed,
             participant_sync_id='sync-serializer-1',
-            participant_transition_type='withdraw',
         )
 
         serializer = LeaveSerializer(instance=leave, context=self.context)
         data = serializer.data
 
         self.assertEqual(data['participant_sync_id'], 'sync-serializer-1')
-        self.assertEqual(data['participant_transition_type'], 'withdraw')
+        self.assertNotIn('participant_transition_type', data)

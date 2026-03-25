@@ -330,8 +330,8 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
         )
         self.assertEqual(part.status, 'rejected')
 
-    def test_leave_received_withdraw_reason_still_rejects(self):
-        """Leave with transition type withdraw still maps to rejected on receiver."""
+    def test_leave_received_still_rejects(self):
+        """Leave maps to rejected on receiver."""
         rc = RemoteContributor.objects.create(
             sync_id='sync-leave-withdraw',
             display_name='Leave Withdraw',
@@ -349,7 +349,6 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
             actor=self.follower_actor,
             object=self.good_deed,
             participant_sync_id='sync-leave-withdraw',
-            participant_transition_type='withdraw',
             iri='https://follower.example/leave/withdraw',
         )
 
@@ -724,8 +723,8 @@ class SyncIntegrationTestCase(BluebottleTestCase):
 
         # Approve flow is covered by deed trigger tests; here we assert cancel/restore propagation.
 
-    def test_source_remove_sends_leave_to_follower_with_transition_type(self):
-        """Source removing a remote participant sends Leave to follower with transition metadata."""
+    def test_source_remove_sends_leave_to_follower(self):
+        """Source removing a remote participant sends Leave to follower."""
         source_deed = DeedFactory.create(
             title='Source remove test',
             start=(datetime.now() + timedelta(days=7)).date(),
@@ -753,7 +752,6 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         leave = Leave.objects.filter(
             object=source_good_deed,
             participant_sync_id='source-remove-1',
-            participant_transition_type='remove',
         ).exclude(iri__isnull=False).last()
         self.assertIsNotNone(leave)
         self.assertTrue(
@@ -798,7 +796,6 @@ class SyncIntegrationTestCase(BluebottleTestCase):
             actor=self.platform_actor,
             object=source_good_deed,
             participant_sync_id='follower-side-sync-1',
-            participant_transition_type='remove',
             iri='https://source.example/leave/follower-side-sync-1',
         )
 
@@ -865,7 +862,6 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         leave = Leave.objects.filter(
             object=source_good_deed,
             participant_sync_id=sync_id,
-            participant_transition_type='remove',
         ).exclude(iri__isnull=False).last()
         self.assertIsNotNone(leave)
         self.assertTrue(Recipient.objects.filter(activity=leave, actor=self.follower_actor).exists())
@@ -875,7 +871,6 @@ class SyncIntegrationTestCase(BluebottleTestCase):
             actor=self.platform_actor,
             object=source_good_deed,
             participant_sync_id=sync_id,
-            participant_transition_type='remove',
             iri='https://source.example/leave/propagate-remove-1',
         )
 

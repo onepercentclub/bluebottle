@@ -538,6 +538,12 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         )
         good_deed.refresh_from_db()
         self.assertEqual(good_deed.contributor_count, 1)
+        participant = DeedParticipant.objects.get(
+            activity=deed,
+            remote_contributor__sync_id='follower-participant-1',
+        )
+        self.assertIsNotNone(participant.remote_contributor)
+        self.assertEqual(participant.remote_contributor.sync_actor_id, self.follower_actor.pk)
 
     def test_sync_join_then_leave_removes_participant(self):
         """After Join adds a participant, Leave removes them (rejected) and count drops."""
@@ -643,3 +649,49 @@ class SyncIntegrationTestCase(BluebottleTestCase):
             ).exists(),
             'User should re-appear in participant list on source',
         )
+
+    def test_adopted_deed_joined_participant_follows_cancel_restore_approve_flow(self):
+        """Joined remote participant on a shared/adopted deed follows cancel -> restore -> approve transitions."""
+        source_deed = DeedFactory.create(
+            title='Source for transition flow',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(source_deed)
+        source_good_deed = source_deed.event
+        if not Create.objects.filter(object=source_good_deed).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_good_deed)
+
+        request = RequestFactory().get('/')
+        request.user = self.follow.default_owner
+        with mock.patch.object(Geolocation, 'update_location'):
+            adopted_deed = adapter.adopt(source_good_deed, request)
+        self.assertEqual(adopted_deed.origin_id, source_good_deed.pk)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_good_deed,
+            participant_sync_id='transition-user-1',
+            participant_name='Transition User',
+            participant_email='transition@other.example',
+            iri='https://follower.example/join/transition-1',
+        )
+        participant = DeedParticipant.objects.get(
+            activity=source_deed,
+            remote_contributor__sync_id='transition-user-1',
+        )
+        self.assertEqual(participant.status, 'accepted')
+        self.assertIsNotNone(participant.remote_contributor)
+
+        source_deed.states.cancel(save=True)
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, 'failed')
+
+        source_deed.states.restore(save=True)
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, 'new')
+
+        source_deed.states.submit(save=True)
+        source_deed.states.approve(save=True)
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, 'accepted')

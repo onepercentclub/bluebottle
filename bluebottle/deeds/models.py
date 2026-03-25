@@ -90,7 +90,16 @@ class Deed(Activity):
     def participants(self):
         if self.pk:
             return self.contributors.instance_of(DeedParticipant).filter(
-                status__in=('accepted', 'succeeded', )
+                status__in=('accepted', 'succeeded', 'new')
+            )
+        else:
+            return []
+
+    @property
+    def failed_participants(self):
+        if self.pk:
+            return self.contributors.instance_of(DeedParticipant).filter(
+                status__in=('failed',)
             )
         else:
             return []

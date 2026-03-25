@@ -601,7 +601,12 @@ class Follow(Activity):
 
     @property
     def short_adoption_type(self):
-        return ShortAdoptionTypeChoices.labels[self.adoption_type]
+        # `adoption_type` is stored on Follow and may contain legacy/unknown values.
+        # The admin should never 500 because of an unexpected choice value.
+        return ShortAdoptionTypeChoices.labels.get(
+            self.adoption_type,
+            str(self.adoption_type) if self.adoption_type is not None else ''
+        )
 
     @property
     def adopted_activities(self):

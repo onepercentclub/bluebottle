@@ -169,7 +169,14 @@ class DeedTriggers(ActivityTriggers):
             ActivityStateMachine.approve,
             effects=[
                 PublishAdoptionEffect,
+                RelatedTransitionEffect('participants', DeedParticipantStateMachine.accept),
                 StartEffect
+            ]
+        ),
+        TransitionTrigger(
+            DeedStateMachine.start,
+            effects=[
+                RelatedTransitionEffect('failed_participants', DeedParticipantStateMachine.accept),
             ]
         ),
 
@@ -237,6 +244,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                RelatedTransitionEffect('participants', DeedParticipantStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
                 CancelEffect
             ],
@@ -246,6 +254,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.restore,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
+                RelatedTransitionEffect('failed_participants', DeedParticipantStateMachine.reset),
                 NotificationEffect(ActivityRestoredNotification),
             ]
         ),

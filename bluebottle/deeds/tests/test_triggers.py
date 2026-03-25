@@ -70,11 +70,16 @@ class DeedTriggersTestCase(TriggerTestCase):
     def test_approve(self):
         self.defaults['initiative'] = None
         self.create()
+        participant = DeedParticipantFactory.create(activity=self.model, status='failed')
         self.model.states.submit(save=True)
         self.model.states.approve()
 
         with self.execute():
             self.assertNotificationEffect(ActivityApprovedNotification)
+            self.assertTransitionEffect(
+                DeedParticipantStateMachine.accept,
+                participant
+            )
 
     def test_needs_work(self):
         self.defaults['initiative'] = None
@@ -126,19 +131,37 @@ class DeedTriggersTestCase(TriggerTestCase):
     def test_cancel(self):
         self.create()
         self.model.states.publish(save=True)
+        participant = DeedParticipantFactory.create(activity=self.model, status='accepted')
         self.model.states.cancel()
 
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
+            self.assertTransitionEffect(
+                DeedParticipantStateMachine.fail,
+                participant
+            )
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.fail,
+                participant.contributions.first()
+            )
             self.assertNotificationEffect(ActivityCancelledNotification)
 
     def test_restored(self):
         self.create()
+        participant = DeedParticipantFactory.create(activity=self.model, status='accepted')
         self.model.states.reject(save=True)
         self.model.states.restore()
 
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.reset, self.model.organizer)
+            self.assertTransitionEffect(
+                DeedParticipantStateMachine.reset,
+                participant
+            )
+            self.assertTransitionEffect(
+                EffortContributionStateMachine.reset,
+                participant.contributions.first()
+            )
             self.assertNotificationEffect(ActivityRestoredNotification)
 
     def test_start(self):

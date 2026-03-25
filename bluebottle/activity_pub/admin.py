@@ -591,7 +591,7 @@ class FollowerAdmin(FollowAdmin):
         if obj and self.accepted(obj):
             fields += (
                 'publish_mode', "shared_activities", "adopted_activities",
-                "short_adoption_type", "publish_activities_button"
+                "show_adoption_type", "publish_activities_button"
             )
         return fields
 

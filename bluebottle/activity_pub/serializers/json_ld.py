@@ -293,6 +293,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
     )
 
     duration = serializers.DurationField(required=False, allow_null=True)
+    contributor_count = serializers.IntegerField(required=False, allow_null=True, default=0)
 
     sub_event = SubEventSerializer(many=True, allow_null=True, required=False, include=True)
 
@@ -303,6 +304,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
             'event_attendance_mode', 'join_mode',
             'repetition_mode', 'slot_mode',
             'application_deadline',
+            'contributor_count',
             'sub_event',
         )
 

@@ -95,8 +95,7 @@ from bluebottle.utils.widgets import get_human_readable_duration
 class RemoteContributorAdmin(admin.ModelAdmin):
     list_display = ['id', 'display_name', 'email', 'sync_id', 'sync_actor']
     search_fields = ['display_name', 'email', 'sync_id']
-    raw_id_fields = ['sync_actor']
-    readonly_fields = ['sync_id']
+    readonly_fields = ['display_name', 'email', 'sync_id', 'sync_actor']
 
 
 @admin.register(Contributor)

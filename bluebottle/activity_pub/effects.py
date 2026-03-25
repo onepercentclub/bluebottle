@@ -179,9 +179,10 @@ class SendJoinEffect(Effect):
     def post_save(self, **kwargs):
         import uuid
         from bluebottle.deeds.models import DeedParticipant
+        from bluebottle.time_based.models import DeadlineParticipant
 
         contributor = self.instance
-        if not isinstance(contributor, DeedParticipant):
+        if not isinstance(contributor, (DeedParticipant, DeadlineParticipant)):
             return
         deed = contributor.activity
         if not getattr(deed, 'origin', None):
@@ -242,9 +243,10 @@ class SendLeaveEffect(Effect):
 
     def post_save(self, **kwargs):
         from bluebottle.deeds.models import DeedParticipant
+        from bluebottle.time_based.models import DeadlineParticipant
 
         contributor = self.instance
-        if not isinstance(contributor, DeedParticipant):
+        if not isinstance(contributor, (DeedParticipant, DeadlineParticipant)):
             return
         deed = contributor.activity
         target_event = getattr(deed, 'origin', None) or getattr(deed, 'event', None)

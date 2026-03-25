@@ -39,6 +39,8 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory as BluebottleOrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.models import DeadlineParticipant
+from bluebottle.time_based.tests.factories import DeadlineActivityFactory
 
 
 def _ensure_platform_actor():
@@ -876,3 +878,139 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         self.assertEqual(follower_participant.status, 'rejected')
         adopted_deed.event.refresh_from_db()
         self.assertEqual(adopted_deed.event.contributor_count, 0)
+
+    def test_sync_follow_and_adopt_deadline_then_join_updates_source(self):
+        deadline = DeadlineActivityFactory.create(
+            start=(datetime.now() + timedelta(days=7)).date(),
+            deadline=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(deadline)
+        source_event = deadline.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_deadline = DeadlineActivityFactory.create(
+            origin=source_event,
+            owner=self.follow.default_owner,
+            start=(datetime.now() + timedelta(days=8)).date(),
+            deadline=(datetime.now() + timedelta(days=15)).date(),
+        )
+        adapter.create_or_update_event(adopted_deadline)
+        self.assertEqual(adopted_deadline.origin_id, source_event.pk)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            participant_sync_id='deadline-participant-1',
+            participant_name='Deadline User',
+            participant_email='deadline@other.example',
+            iri='https://follower.example/join/deadline-1',
+        )
+
+        self.assertTrue(
+            DeadlineParticipant.objects.filter(
+                activity=deadline,
+                remote_contributor__sync_id='deadline-participant-1',
+                status='accepted',
+            ).exists()
+        )
+        source_event.refresh_from_db()
+        self.assertEqual(source_event.contributor_count, 1)
+        participant = DeadlineParticipant.objects.get(
+            activity=deadline,
+            remote_contributor__sync_id='deadline-participant-1',
+        )
+        self.assertEqual(participant.status, 'accepted')
+
+    def test_sync_join_started_deadline_sets_source_participant_succeeded(self):
+        deadline = DeadlineActivityFactory.create(
+            start=(datetime.now() - timedelta(days=2)).date(),
+            deadline=(datetime.now() + timedelta(days=7)).date(),
+        )
+        adapter.create_or_update_event(deadline)
+        source_event = deadline.event
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            participant_sync_id='deadline-started-1',
+            participant_name='Started Deadline User',
+            participant_email='started@other.example',
+            iri='https://follower.example/join/deadline-started-1',
+        )
+
+        participant = DeadlineParticipant.objects.get(
+            activity=deadline,
+            remote_contributor__sync_id='deadline-started-1',
+        )
+        self.assertEqual(participant.status, 'succeeded')
+
+    def test_source_remove_deadline_remote_participant_notifies_follower_and_updates_participant(self):
+        source_deadline = DeadlineActivityFactory.create(
+            start=(datetime.now() + timedelta(days=7)).date(),
+            deadline=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(source_deadline)
+        source_event = source_deadline.event
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_deadline = DeadlineActivityFactory.create(
+            origin=source_event,
+            owner=self.follow.default_owner,
+            start=(datetime.now() + timedelta(days=8)).date(),
+            deadline=(datetime.now() + timedelta(days=15)).date(),
+        )
+        adapter.create_or_update_event(adopted_deadline)
+
+        sync_id = 'deadline-remove-1'
+        follower_rc = RemoteContributor.objects.create(
+            sync_id=sync_id,
+            display_name='Follower deadline user',
+            sync_actor=self.platform_actor,
+        )
+        follower_participant = DeadlineParticipant.objects.create(
+            activity=adopted_deadline,
+            user=None,
+            remote_contributor=follower_rc,
+            status='accepted',
+        )
+        adapter.create_or_update_event(adopted_deadline)
+        adopted_deadline.event.refresh_from_db()
+        self.assertEqual(adopted_deadline.event.contributor_count, 1)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            participant_sync_id=sync_id,
+            participant_name='Remote deadline user',
+            participant_email='remote-deadline@other.example',
+            iri='https://follower.example/join/deadline-remove-1',
+        )
+        source_participant = DeadlineParticipant.objects.get(
+            activity=source_deadline,
+            remote_contributor__sync_id=sync_id,
+        )
+
+        source_participant.states.remove(save=True)
+        leave = Leave.objects.filter(
+            object=source_event,
+            participant_sync_id=sync_id,
+        ).exclude(iri__isnull=False).last()
+        self.assertIsNotNone(leave)
+        self.assertTrue(Recipient.objects.filter(activity=leave, actor=self.follower_actor).exists())
+
+        Leave.objects.create(
+            actor=self.platform_actor,
+            object=source_event,
+            participant_sync_id=sync_id,
+            iri='https://source.example/leave/deadline-remove-1',
+        )
+
+        follower_participant.refresh_from_db()
+        self.assertEqual(follower_participant.status, 'rejected')
+        adopted_deadline.event.refresh_from_db()
+        self.assertEqual(adopted_deadline.event.contributor_count, 0)

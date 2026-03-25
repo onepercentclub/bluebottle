@@ -935,17 +935,16 @@ class EventAdminMixin:
             raise PermissionDenied
 
         event = get_object_or_404(Event, pk=unquote(object_id))
-        from bluebottle.activity_pub.models import GoodDeed
 
-        if not isinstance(event.get_real_instance(), GoodDeed):
-            self.message_user(
-                request,
-                "Manual adopt is only supported for Deed events.",
-                level="warning",
-            )
-            return HttpResponseRedirect(
-                reverse("admin:activity_pub_event_change", args=[event.pk])
-            )
+        # if not isinstance(event.get_real_instance(), GoodDeed):
+        #     self.message_user(
+        #         request,
+        #         "Manual adopt is only supported for Deed events.",
+        #         level="warning",
+        #     )
+        #     return HttpResponseRedirect(
+        #         reverse("admin:activity_pub_event_change", args=[event.pk])
+        #     )
 
         if event.adopted_activity:
             self.message_user(

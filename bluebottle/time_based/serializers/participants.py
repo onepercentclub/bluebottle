@@ -85,10 +85,20 @@ class DateParticipantSerializer(ParticipantSerializer):
 class DeadlineParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('deadline-participant-detail', view_args=('pk',))
     registration = ResourceRelatedField(queryset=DeadlineRegistration.objects.all(), required=False)
+    display_name = serializers.SerializerMethodField(read_only=True)
+    platform = serializers.SerializerMethodField(read_only=True)
+
+    def get_display_name(self, obj):
+        return obj.display_name_or_user or None
+
+    def get_platform(self, obj):
+        if obj.sync_actor_id:
+            return getattr(obj.sync_actor, 'name', None)
+        return None
 
     class Meta(ParticipantSerializer.Meta):
         model = DeadlineParticipant
-        fields = ParticipantSerializer.Meta.fields + ("contributions",)
+        fields = ParticipantSerializer.Meta.fields + ("contributions", "display_name", "platform")
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = "contributors/time-based/deadline-participants"

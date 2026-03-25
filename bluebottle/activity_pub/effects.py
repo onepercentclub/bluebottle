@@ -4,7 +4,7 @@ from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Accept, Follow, Start, Update, Cancel, Delete, Finish, Join, Leave,
-    Create, Recipient
+    Create, Recipient, Event,
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -82,6 +82,41 @@ class UpdateEventEffect(Effect):
 
     def __str__(self):
         return str(_('Notify subscribers of the changes'))
+
+
+class UpdateDateActivitySlotPublishedEffect(Effect):
+    display = True
+    template = 'admin/activity_pub/update_event_effect.html'
+    post_save = True
+
+    def post_save(self, **kwargs):
+        slot = self.instance
+        activity = getattr(slot, 'activity', None)
+        if activity is None:
+            return
+        try:
+            event = activity.event
+        except Event.DoesNotExist:
+            return
+        adapter.create_or_update_event(activity)
+        Update.objects.create(object=event)
+
+    @property
+    def is_valid(self):
+        from bluebottle.time_based.models import DateActivity
+
+        slot = self.instance
+        activity = getattr(slot, 'activity', None)
+        if not isinstance(activity, DateActivity) or get_platform_actor() is None:
+            return False
+        try:
+            activity.event
+        except Event.DoesNotExist:
+            return False
+        return True
+
+    def __str__(self):
+        return str(_('Notify subscribers of slot changes'))
 
 
 class CancelEffect(Effect):
@@ -179,14 +214,14 @@ class SendJoinEffect(Effect):
     def post_save(self, **kwargs):
         import uuid
         from bluebottle.deeds.models import DeedParticipant
-        from bluebottle.time_based.models import DeadlineParticipant
+        from bluebottle.time_based.models import DateActivity, DateParticipant, DeadlineParticipant
 
         actor = get_platform_actor()
         if actor is None:
             return
 
         contributor = self.instance
-        if not isinstance(contributor, (DeedParticipant, DeadlineParticipant)):
+        if not isinstance(contributor, (DeedParticipant, DeadlineParticipant, DateParticipant)):
             return
         deed = contributor.activity
         if not getattr(deed, 'origin', None):
@@ -212,12 +247,24 @@ class SendJoinEffect(Effect):
         participant_name = contributor.display_name_or_user or None
         participant_email = contributor.email_or_user or None
 
+        sub_event = None
+        if isinstance(contributor, DateParticipant):
+            if not isinstance(deed, DateActivity):
+                return
+            slot = contributor.slot
+            if slot is not None and not getattr(slot, 'origin_id', None):
+                adapter.create_or_update_event(deed)
+                slot.refresh_from_db()
+            if slot is not None and getattr(slot, 'origin_id', None):
+                sub_event = slot.origin
+
         join_activity = Join.objects.create(
             actor=actor,
             object=deed.origin,
             participant_sync_id=contributor.sync_id,
             participant_name=participant_name,
             participant_email=participant_email,
+            sub_event=sub_event,
         )
         if join_activity.recipients.count() == 0:
             create = Create.objects.filter(object=deed.origin).first()
@@ -244,24 +291,34 @@ class SendLeaveEffect(Effect):
 
     def post_save(self, **kwargs):
         from bluebottle.deeds.models import DeedParticipant
-        from bluebottle.time_based.models import DeadlineParticipant
+        from bluebottle.time_based.models import DateActivity, DateParticipant, DeadlineParticipant
 
         actor = get_platform_actor()
         if actor is None:
             return
 
         contributor = self.instance
-        if not isinstance(contributor, (DeedParticipant, DeadlineParticipant)):
+        if not isinstance(contributor, (DeedParticipant, DeadlineParticipant, DateParticipant)):
             return
         deed = contributor.activity
         target_event = getattr(deed, 'origin', None) or getattr(deed, 'event', None)
         if not target_event:
             return
 
+        sub_event = None
+        if isinstance(contributor, DateParticipant) and isinstance(deed, DateActivity):
+            slot = contributor.slot
+            if slot is not None and not getattr(slot, 'origin_id', None):
+                adapter.create_or_update_event(deed)
+                slot.refresh_from_db()
+            if slot is not None and getattr(slot, 'origin_id', None):
+                sub_event = slot.origin
+
         leave_activity = Leave.objects.create(
             actor=actor,
             object=target_event,
             participant_sync_id=contributor.sync_id or None,
+            sub_event=sub_event,
         )
         # Always ensure we route to the right counterparty:
         # - When leaving a synced deed (follower -> source): send to source actor (Create.actor for origin).

@@ -44,6 +44,8 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
 
     def test_to_json_ld(self):
         model = self.factory.create()
+        model.capacity = 25
+        model.save(update_fields=['capacity'])
         federated_serializer = self.federated_serializer(
             instance=model,
             context=self.context
@@ -61,6 +63,20 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
         self.assertEqual(do_good_event.name, model.title)
         self.assertEqual(do_good_event.summary, model.description.html)
         self.assertEqual(do_good_event.sub_event.count(), model.slots.count())
+        self.assertEqual(do_good_event.capacity, 25)
+
+    def test_federated_payload_includes_slot_capacity(self):
+        model = self.factory.create()
+        slot = model.slots.get()
+        slot.capacity = 42
+        slot.save(update_fields=['capacity'])
+        federated_serializer = self.federated_serializer(
+            instance=model,
+            context=self.context,
+        )
+        payload = federated_serializer.data['sub_event']
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]['capacity'], 42)
 
     def test_to_json_ld_slots_keep_individual_locations(self):
         model = self.factory.create(slots=[])

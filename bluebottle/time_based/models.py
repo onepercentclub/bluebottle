@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 import pytz
 from django.core.validators import MaxValueValidator
 from django.db import connection
+from django.urls import reverse
 from django.db.models import Sum
 from django.utils import timezone
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -331,8 +332,22 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
 
     @property
     def activity_pub_url(self):
-        if self.event:
-            return self.event.iri
+        from bluebottle.activity_pub.models import SubEvent
+
+        sub = None
+        try:
+            sub = SubEvent.objects.get(slot=self)
+        except SubEvent.DoesNotExist:
+            pass
+        if sub is None and self.origin_id:
+            sub = self.origin
+        if sub is None:
+            return None
+        if sub.iri:
+            return sub.iri
+        return connection.tenant.build_absolute_url(
+            reverse('json-ld:sub-event', args=(sub.pk,))
+        )
 
     @property
     def uid(self):

@@ -472,6 +472,13 @@ class SlotsSerializer(FederatedObjectSerializer):
 
     duration = serializers.DurationField(required=False, allow_null=True)
 
+    capacity = serializers.IntegerField(required=False, allow_null=True)
+
+    contributor_count = serializers.SerializerMethodField()
+
+    def get_contributor_count(self, obj):
+        return obj.contributor_count
+
     def create(self, validated_data):
 
         iri = validated_data.get('id')
@@ -498,7 +505,7 @@ class SlotsSerializer(FederatedObjectSerializer):
         model = DateActivitySlot
         fields = FederatedObjectSerializer.Meta.fields + (
             'name', 'location', 'start_time', 'end_time',
-            'event_attendance_mode', 'duration',
+            'event_attendance_mode', 'duration', 'capacity', 'contributor_count',
         )
 
 
@@ -512,7 +519,7 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'sub_event', 'review', 'join_mode', 'application_deadline',
+            'capacity', 'sub_event', 'review', 'join_mode', 'application_deadline',
         )
 
     def create(self, validated_data):

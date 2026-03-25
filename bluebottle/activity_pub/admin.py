@@ -1191,6 +1191,7 @@ class SubEventInline(admin.TabularInline):
     readonly_fields = [
         'start_time',
         'end_time',
+        'capacity',
         'display_location'
     ]
 
@@ -1226,8 +1227,8 @@ class DoGoodEventAdmin(EventChildAdmin):
         'event_attendance_mode',
         'repetition_mode',
         'join_mode',
-        'slot_mode'
-
+        'slot_mode',
+        'capacity',
     )
     fields = readonly_fields
 
@@ -1236,5 +1237,5 @@ class DoGoodEventAdmin(EventChildAdmin):
 class SubEventAdmin(EventChildAdmin):
     base_model = Event
     model = SubEvent
-    readonly_fields = ('start_time', 'end_time')
+    readonly_fields = ('start_time', 'end_time', 'capacity', 'contributor_count')
     fields = readonly_fields

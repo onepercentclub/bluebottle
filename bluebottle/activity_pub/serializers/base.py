@@ -185,10 +185,16 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
             return instance
 
         for name, field in self.fields.items():
-            if isinstance(
-                field,
-                (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
-            ):
+            if isinstance(field, ActivityPubListSerializer):
+                if name not in validated_data:
+                    continue
+                value = validated_data[name]
+                if value is None:
+                    continue
+                field.initial_data = value
+                field.is_valid()
+                validated_data[field.source] = field.save()
+            elif isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data[name]
                     field.is_valid()

@@ -34,6 +34,176 @@ def _joined_participant_status(activity):
     return 'accepted'
 
 
+def _joined_date_participant_status(slot):
+    from django.utils import timezone as django_tz
+
+    if slot is None:
+        return 'accepted'
+    end = slot.end
+    if end is not None and end < django_tz.now():
+        return 'succeeded'
+    return 'accepted'
+
+
+def _resolve_date_activity_slot_for_sync(activity, sub_event_id):
+    from bluebottle.time_based.models import DateActivity, DateActivitySlot
+
+    if not isinstance(activity, DateActivity):
+        return None
+    if sub_event_id:
+        return DateActivitySlot.objects.filter(activity=activity, origin_id=sub_event_id).first()
+    if activity.slots.count() == 1:
+        return activity.slots.first()
+    return None
+
+
+def _source_date_slot_for_sub_event(sub_event, source_date):
+    from bluebottle.time_based.models import DateActivitySlot
+
+    if source_date is None:
+        return None
+    if sub_event.slot_id:
+        slot = sub_event.slot
+        if slot is not None and getattr(slot, 'activity_id', None) == source_date.pk:
+            return slot
+    return DateActivitySlot.objects.filter(activity=source_date, origin=sub_event).first()
+
+
+def _is_online_from_sub_event(sub):
+    if sub.event_attendance_mode == 'OnlineEventAttendanceMode':
+        return True
+    if sub.event_attendance_mode == 'OfflineEventAttendanceMode':
+        return False
+    return None
+
+
+def _adopted_slot_has_active_participants(slot):
+    return slot.participants.filter(
+        status__in=['new', 'accepted', 'succeeded', 'scheduled', 'participating'],
+    ).exists()
+
+
+def _sync_adopted_date_slots_from_source(event_do_good, source_date, adopted_date):
+    from bluebottle.time_based.models import DateActivitySlot
+
+    slot_field_names = (
+        'title',
+        'capacity',
+        'start',
+        'duration',
+        'is_online',
+        'online_meeting_url',
+        'location_id',
+        'location_hint',
+        'status',
+    )
+    sub_only_field_names = (
+        'title',
+        'capacity',
+        'start',
+        'duration',
+        'is_online',
+    )
+    subs = list(event_do_good.sub_event.order_by('start_time', 'id'))
+    if not subs and source_date is not None and source_date.slots.exists():
+        return
+
+    if subs:
+        known_sub_ids = {s.pk for s in subs}
+        for loose in adopted_date.slots.exclude(origin_id__in=known_sub_ids).exclude(
+            origin_id__isnull=True
+        ):
+            loose.origin = None
+            loose.save(update_fields=['origin'])
+
+    for sub in subs:
+        src_slot = _source_date_slot_for_sub_event(sub, source_date)
+        start_for_match = src_slot.start if src_slot is not None else sub.start_time
+        ad_slot = DateActivitySlot.objects.filter(activity=adopted_date, origin=sub).first()
+        if ad_slot is None and src_slot is not None:
+            ad_slot = DateActivitySlot.objects.filter(
+                activity=adopted_date,
+                origin__isnull=True,
+                start=src_slot.start,
+            ).first()
+        if ad_slot is None and start_for_match is not None:
+            ad_slot = DateActivitySlot.objects.filter(
+                activity=adopted_date,
+                origin__isnull=True,
+                start=start_for_match,
+            ).first()
+        if ad_slot is None and len(subs) == 1:
+            orphans = list(
+                adopted_date.slots.filter(origin__isnull=True)
+            )
+            if len(orphans) == 1:
+                ad_slot = orphans[0]
+        if ad_slot is not None and ad_slot.origin_id != sub.pk:
+            ad_slot.origin = sub
+            ad_slot.save(update_fields=['origin'])
+        if ad_slot is None:
+            if src_slot is not None:
+                DateActivitySlot.objects.create(
+                    activity=adopted_date,
+                    origin=sub,
+                    title=src_slot.title,
+                    capacity=src_slot.capacity,
+                    start=src_slot.start,
+                    duration=src_slot.duration,
+                    is_online=src_slot.is_online,
+                    online_meeting_url=src_slot.online_meeting_url,
+                    location_id=src_slot.location_id,
+                    location_hint=src_slot.location_hint,
+                    status=src_slot.status,
+                )
+            else:
+                DateActivitySlot.objects.create(
+                    activity=adopted_date,
+                    origin=sub,
+                    title=sub.name,
+                    capacity=sub.capacity,
+                    start=sub.start_time,
+                    duration=sub.duration,
+                    is_online=_is_online_from_sub_event(sub),
+                    online_meeting_url='',
+                    location_id=None,
+                    location_hint=None,
+                    status='open',
+                )
+            continue
+        update_fields = []
+        if src_slot is not None:
+            for field_name in slot_field_names:
+                src_val = getattr(src_slot, field_name)
+                if getattr(ad_slot, field_name) != src_val:
+                    setattr(ad_slot, field_name, src_val)
+                    update_fields.append(field_name)
+        else:
+            for field_name in sub_only_field_names:
+                if field_name == 'title':
+                    src_val = sub.name
+                elif field_name == 'capacity':
+                    src_val = sub.capacity
+                elif field_name == 'start':
+                    src_val = sub.start_time
+                elif field_name == 'duration':
+                    src_val = sub.duration
+                elif field_name == 'is_online':
+                    src_val = _is_online_from_sub_event(sub)
+                else:
+                    continue
+                if getattr(ad_slot, field_name) != src_val:
+                    setattr(ad_slot, field_name, src_val)
+                    update_fields.append(field_name)
+        if update_fields:
+            ad_slot.save(update_fields=update_fields)
+
+    for orphan in adopted_date.slots.filter(origin__isnull=True):
+        if _adopted_slot_has_active_participants(orphan):
+            continue
+        orphan.delete()
+
+
 class JSONLDAdapter():
     def __init__(self):
         self.parser = JSONLDParser()
@@ -128,10 +298,10 @@ class JSONLDAdapter():
     def adopt(self, event, request=None):
         """
         Adopt a remote event into a local activity.
-        For GoodDeed, we create a synced Deed with origin=event so Join/Leave can target the source platform.
+        For GoodDeed and DoGoodEvent, set origin=event so Updates sync to adopted activities and
+        Join/Leave can target the source event.
         For other event types, keep backward-compatible adopt behavior (no origin kwarg).
         """
-        from bluebottle.activity_pub.models import GoodDeed
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
         from bluebottle.activity_pub.serializers.json_ld import EventSerializer
         from bluebottle.members.models import Member
@@ -158,7 +328,7 @@ class JSONLDAdapter():
             'owner': owner,
             'host_organization': organization,
         }
-        if isinstance(event, GoodDeed):
+        if isinstance(event, (GoodDeed, DoGoodEvent)):
             save_kwargs['origin'] = event
 
         activity = serializer.save(**save_kwargs)
@@ -302,6 +472,28 @@ def _activity_contributor_count(activity):
     return 0
 
 
+def sync_sub_event_contributor_counts(event):
+    """
+    Copy per-slot participant totals onto SubEvent rows for DoGoodEvent (date activities).
+    Slots are resolved via DateActivitySlot.origin_id == SubEvent.pk (SubEvent.slot is often unset).
+    """
+    if not isinstance(event, DoGoodEvent):
+        return
+    activity = getattr(event, 'activity', None)
+    if not activity:
+        return
+    from bluebottle.time_based.models import DateActivity, DateActivitySlot
+
+    if not isinstance(activity, DateActivity):
+        return
+    for se in event.sub_event.all():
+        slot = DateActivitySlot.objects.filter(activity=activity, origin_id=se.pk).first()
+        new_val = slot.contributor_count if slot else 0
+        if se.contributor_count != new_val:
+            se.contributor_count = new_val
+            se.save(update_fields=['contributor_count'])
+
+
 def sync_event_contributor_count(event):
     """
     Set event.contributor_count from linked activity participants for sync-capable events.
@@ -314,6 +506,8 @@ def sync_event_contributor_count(event):
     if event.contributor_count != new_total:
         event.contributor_count = new_total
         event.save(update_fields=['contributor_count'])
+    if isinstance(event, DoGoodEvent):
+        sync_sub_event_contributor_counts(event)
 
 
 def sync_good_deed_contributor_count(event):
@@ -335,23 +529,44 @@ def handle_join_received(sender, instance, created, **kwargs):
         if activity and instance.participant_sync_id:
             from bluebottle.activities.models import RemoteContributor
             from bluebottle.deeds.models import Deed, DeedParticipant
-            from bluebottle.time_based.models import DeadlineActivity, DeadlineParticipant
+            from bluebottle.time_based.models import (
+                DateActivity,
+                DateParticipant,
+                DeadlineActivity,
+                DeadlineParticipant,
+            )
 
             participant_model = None
+            date_slot = None
             if isinstance(activity, Deed):
                 participant_model = DeedParticipant
             elif isinstance(activity, DeadlineActivity):
                 participant_model = DeadlineParticipant
-
-            if participant_model is None:
+            elif isinstance(activity, DateActivity):
+                participant_model = DateParticipant
+                date_slot = _resolve_date_activity_slot_for_sync(activity, instance.sub_event_id)
+                if date_slot is None:
+                    logger.warning(
+                        'Join for DateActivity could not resolve slot (sub_event=%s, activity=%s)',
+                        instance.sub_event_id,
+                        activity.pk,
+                    )
+                    return
+            else:
                 return
 
-            existing = participant_model.objects.filter(
+            existing_query = participant_model.objects.filter(
                 activity=activity,
                 remote_contributor__sync_id=instance.participant_sync_id,
                 remote_contributor__sync_actor=instance.actor,
-            ).first()
-            target_status = _joined_participant_status(activity)
+            )
+            if date_slot is not None:
+                existing_query = existing_query.filter(slot=date_slot)
+            existing = existing_query.first()
+            if isinstance(activity, DateActivity):
+                target_status = _joined_date_participant_status(date_slot)
+            else:
+                target_status = _joined_participant_status(activity)
             if existing:
                 # Re-join after withdraw: set status back to accepted and refresh name/email
                 if existing.status != target_status:
@@ -376,12 +591,15 @@ def handle_join_received(sender, instance, created, **kwargs):
                     },
                 )
 
-                participant_model.objects.create(
+                create_kwargs = dict(
                     activity=activity,
                     user=None,
                     remote_contributor=remote_contributor,
                     status=target_status,
                 )
+                if date_slot is not None:
+                    create_kwargs['slot'] = date_slot
+                participant_model.objects.create(**create_kwargs)
 
         sync_event_contributor_count(event)
         Update.objects.create(object=event)
@@ -412,12 +630,27 @@ def handle_leave_received(sender, instance, created, **kwargs):
             activity = event.adopted_activities.first()
         if activity and instance.participant_sync_id:
             from bluebottle.activities.models import Contributor
+            from bluebottle.time_based.models import DateActivity, DateParticipant
 
-            contributor = Contributor.objects.filter(
-                activity=activity,
-                remote_contributor__sync_id=instance.participant_sync_id,
-                remote_contributor__sync_actor=instance.actor,
-            ).first()
+            contributor = None
+            if isinstance(activity, DateActivity):
+                date_slot = _resolve_date_activity_slot_for_sync(activity, instance.sub_event_id)
+                qs = DateParticipant.objects.filter(
+                    activity=activity,
+                    remote_contributor__sync_id=instance.participant_sync_id,
+                    remote_contributor__sync_actor=instance.actor,
+                )
+                if date_slot is not None:
+                    qs = qs.filter(slot=date_slot)
+                elif activity.slots.count() > 1:
+                    qs = qs.none()
+                contributor = qs.first()
+            else:
+                contributor = Contributor.objects.filter(
+                    activity=activity,
+                    remote_contributor__sync_id=instance.participant_sync_id,
+                    remote_contributor__sync_actor=instance.actor,
+                ).first()
             if contributor:
                 # Contract: any remote leave-like transition maps to rejected.
                 contributor.status = 'rejected'
@@ -436,50 +669,101 @@ def handle_leave_received(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Update)
 def handle_update_received(sender, instance, created, **kwargs):
-    """When an Update is received for a GoodDeed, update the canonical event and sync adopted deeds' local GoodDeed."""
-    if not created or not isinstance(instance.object, GoodDeed):
+    """When an Update is created for a synced event, push field changes to adopted activities on this tenant."""
+    if not created:
         return
-    try:
-        event = instance.object
-        from bluebottle.deeds.models import Deed
+    object_id = instance.object_id
+    event_good_deed = GoodDeed.objects.filter(pk=object_id).first()
+    if event_good_deed is not None:
+        try:
+            from bluebottle.deeds.models import Deed
 
-        for activity in event.adopted_activities.all():
-            if not isinstance(activity, Deed):
-                continue
-            deed = activity
-            # Copy updated fields from the event to the deed so create_or_update_event has current data
-            update_fields = []
-            if event.name != deed.title:
-                deed.title = event.name
-                update_fields.append('title')
-            if getattr(event, 'start_time', None) is not None and deed.start != event.start_time.date():
-                deed.start = event.start_time.date()
-                update_fields.append('start')
-            if getattr(event, 'end_time', None) is not None and deed.end != event.end_time.date():
-                deed.end = event.end_time.date()
-                update_fields.append('end')
-            if event.summary is not None:
+            for activity in event_good_deed.adopted_activities.all():
+                activity = activity.get_real_instance()
+                if not isinstance(activity, Deed):
+                    continue
+                deed = activity
+                update_fields = []
+                if event_good_deed.name != deed.title:
+                    deed.title = event_good_deed.name
+                    update_fields.append('title')
+                if getattr(event_good_deed, 'start_time', None) is not None and deed.start != event_good_deed.start_time.date():
+                    deed.start = event_good_deed.start_time.date()
+                    update_fields.append('start')
+                if getattr(event_good_deed, 'end_time', None) is not None and deed.end != event_good_deed.end_time.date():
+                    deed.end = event_good_deed.end_time.date()
+                    update_fields.append('end')
+                if event_good_deed.summary is not None:
+                    try:
+                        if getattr(deed.description, 'html', None) != event_good_deed.summary:
+                            if hasattr(deed.description, 'html'):
+                                deed.description.html = event_good_deed.summary
+                                update_fields.append('description')
+                    except (AttributeError, TypeError):
+                        pass
+                if update_fields:
+                    deed.save(update_fields=update_fields)
+                adapter.create_or_update_event(deed)
+        except Exception as e:
+            logger.error(f"Failed to handle Update for GoodDeed: {str(e)}", exc_info=True)
+        return
+    event_do_good = DoGoodEvent.objects.filter(pk=object_id).first()
+    if event_do_good is not None:
+        try:
+            from bluebottle.time_based.models import DateActivity
+
+            source_date = None
+            source_bb_activity = event_do_good.activity
+            if source_bb_activity is not None:
+                real = source_bb_activity.get_real_instance()
+                if isinstance(real, DateActivity):
+                    source_date = real
+
+            for activity in event_do_good.adopted_activities.all():
+                activity = activity.get_real_instance()
+                if not isinstance(activity, DateActivity):
+                    continue
+                from bluebottle.activity_pub.models import Event as ActivityPubEvent
+
                 try:
-                    if getattr(deed.description, 'html', None) != event.summary:
-                        if hasattr(deed.description, 'html'):
-                            deed.description.html = event.summary
-                            update_fields.append('description')
-                except (AttributeError, TypeError):
-                    pass
-            if update_fields:
-                deed.save(update_fields=update_fields)
-            # Sync the deed's local GoodDeed (deed.event) from the deed's current data
-            adapter.create_or_update_event(deed)
-    except Exception as e:
-        logger.error(f"Failed to handle Update for GoodDeed: {str(e)}", exc_info=True)
+                    adopted_ev = activity.event
+                except ActivityPubEvent.DoesNotExist:
+                    adopted_ev = None
+                if adopted_ev is not None and event_do_good.capacity != adopted_ev.capacity:
+                    adopted_ev.capacity = event_do_good.capacity
+                    adopted_ev.save(update_fields=['capacity'])
+                cap = event_do_good.capacity
+                if cap is not None and cap != activity.capacity:
+                    activity.capacity = cap
+                    activity.save(update_fields=['capacity'])
+                elif source_date is not None and source_date.capacity != activity.capacity:
+                    activity.capacity = source_date.capacity
+                    activity.save(update_fields=['capacity'])
+                if event_do_good.name != activity.title:
+                    activity.title = event_do_good.name
+                    activity.save(update_fields=['title'])
+                if event_do_good.summary is not None:
+                    try:
+                        if getattr(activity.description, 'html', None) != event_do_good.summary:
+                            if hasattr(activity.description, 'html'):
+                                activity.description.html = event_do_good.summary
+                                activity.save(update_fields=['description'])
+                    except (AttributeError, TypeError):
+                        pass
+                _sync_adopted_date_slots_from_source(
+                    event_do_good, source_date, activity
+                )
+                adapter.create_or_update_event(activity)
+        except Exception as e:
+            logger.error(f"Failed to handle Update for DoGoodEvent: {str(e)}", exc_info=True)
 
 
 @receiver(post_save)
 def handle_deed_participant_change(sender, instance, **kwargs):
     """When synced deed/deadline participant changes, sync origin event contributor_count."""
     from bluebottle.deeds.models import DeedParticipant
-    from bluebottle.time_based.models import DeadlineParticipant
-    if not isinstance(instance, (DeedParticipant, DeadlineParticipant)):
+    from bluebottle.time_based.models import DeadlineParticipant, DateParticipant
+    if not isinstance(instance, (DeedParticipant, DeadlineParticipant, DateParticipant)):
         return
     try:
         deed = getattr(instance, 'activity', None)
@@ -497,8 +781,8 @@ def handle_deed_participant_change(sender, instance, **kwargs):
 def handle_deed_participant_delete(sender, instance, **kwargs):
     """When synced deed/deadline participant is deleted, sync origin event contributor_count."""
     from bluebottle.deeds.models import DeedParticipant
-    from bluebottle.time_based.models import DeadlineParticipant
-    if not isinstance(instance, (DeedParticipant, DeadlineParticipant)):
+    from bluebottle.time_based.models import DeadlineParticipant, DateParticipant
+    if not isinstance(instance, (DeedParticipant, DeadlineParticipant, DateParticipant)):
         return
     try:
         deed = getattr(instance, 'activity', None)

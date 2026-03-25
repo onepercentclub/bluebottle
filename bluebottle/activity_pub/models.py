@@ -470,6 +470,16 @@ class SubEvent(ActivityPubModel):
         related_name='sub_event'
     )
     slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.SET_NULL)
+    contributor_count = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Accepted participants for this slot (denormalized for ActivityPub sync).'),
+    )
+    capacity = models.PositiveIntegerField(
+        _('maximum attendee capacity'),
+        null=True,
+        blank=True,
+        help_text=_('Per-slot attendee limit (schema.org maximumAttendeeCapacity). Mirrors activity slot.'),
+    )
 
     class Meta:
         verbose_name = _("Sub event")
@@ -501,6 +511,12 @@ class DoGoodEvent(Event):
         choices=SlotModeChoices.choices,
         default=SlotModeChoices.set,
         null=True
+    )
+    capacity = models.PositiveIntegerField(
+        _('maximum attendee capacity'),
+        null=True,
+        blank=True,
+        help_text=_('Overall attendee limit (schema.org maximumAttendeeCapacity). Mirrors time-based activity.'),
     )
 
     class Meta(Event.Meta):
@@ -764,6 +780,13 @@ class Join(Activity):
         blank=True,
         null=True,
     )
+    sub_event = models.ForeignKey(
+        'activity_pub.SubEvent',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
 
     @property
     def default_recipients(self):
@@ -782,6 +805,13 @@ class Leave(Activity):
         blank=True,
         null=True,
         help_text=_("Stable id to match the participant to remove."),
+    )
+    sub_event = models.ForeignKey(
+        'activity_pub.SubEvent',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
     )
 
     @property

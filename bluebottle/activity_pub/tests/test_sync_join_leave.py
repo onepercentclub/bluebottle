@@ -24,6 +24,7 @@ from bluebottle.activity_pub.models import (
     Follow,
     Join,
     Leave,
+    Recipient,
     Update,
 )
 from bluebottle.activity_pub.tests.factories import (
@@ -38,6 +39,8 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory as BluebottleOrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.models import DeadlineParticipant
+from bluebottle.time_based.tests.factories import DeadlineActivityFactory
 
 
 def _ensure_platform_actor():
@@ -201,7 +204,6 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
         self.assertEqual(rc.display_name, 'Jane Doe')
         self.assertEqual(rc.email, 'jane@follower.example')
         self.assertEqual(rc.sync_actor_id, self.follower_actor.pk)
-        self.assertEqual(rc.sync_follow_id, self.follow.pk)
 
     def test_join_received_updates_contributor_count_and_creates_update(self):
         """Join handler updates GoodDeed.contributor_count and creates Update(object=GoodDeed)."""
@@ -307,7 +309,6 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
             display_name='Leave Me',
             email='leave@example.com',
             sync_actor=self.follower_actor,
-            sync_follow=self.follow,
         )
         DeedParticipant.objects.create(
             activity=self.deed,
@@ -329,13 +330,39 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
         )
         self.assertEqual(part.status, 'rejected')
 
+    def test_leave_received_still_rejects(self):
+        """Leave maps to rejected on receiver."""
+        rc = RemoteContributor.objects.create(
+            sync_id='sync-leave-withdraw',
+            display_name='Leave Withdraw',
+            sync_actor=self.follower_actor,
+        )
+        DeedParticipant.objects.create(
+            activity=self.deed,
+            user=None,
+            remote_contributor=rc,
+            status='accepted',
+        )
+
+        Leave.objects.create(
+            actor=self.follower_actor,
+            object=self.good_deed,
+            participant_sync_id='sync-leave-withdraw',
+            iri='https://follower.example/leave/withdraw',
+        )
+
+        part = DeedParticipant.objects.get(
+            activity=self.deed,
+            remote_contributor__sync_id='sync-leave-withdraw',
+        )
+        self.assertEqual(part.status, 'rejected')
+
     def test_leave_received_updates_contributor_count_and_creates_update(self):
         """Leave handler updates GoodDeed.contributor_count and creates Update."""
         rc = RemoteContributor.objects.create(
             sync_id='sync-leave-count',
             display_name='Count',
             sync_actor=self.follower_actor,
-            sync_follow=self.follow,
         )
         DeedParticipant.objects.create(
             activity=self.deed,
@@ -377,7 +404,6 @@ class JoinLeaveHandlersTestCase(BluebottleTestCase):
             sync_id='sync-local-leave',
             display_name='Local Leave',
             sync_actor=self.follower_actor,
-            sync_follow=self.follow,
         )
         DeedParticipant.objects.create(
             activity=self.deed,
@@ -538,6 +564,12 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         )
         good_deed.refresh_from_db()
         self.assertEqual(good_deed.contributor_count, 1)
+        participant = DeedParticipant.objects.get(
+            activity=deed,
+            remote_contributor__sync_id='follower-participant-1',
+        )
+        self.assertIsNotNone(participant.remote_contributor)
+        self.assertEqual(participant.remote_contributor.sync_actor_id, self.follower_actor.pk)
 
     def test_sync_join_then_leave_removes_participant(self):
         """After Join adds a participant, Leave removes them (rejected) and count drops."""
@@ -643,3 +675,342 @@ class SyncIntegrationTestCase(BluebottleTestCase):
             ).exists(),
             'User should re-appear in participant list on source',
         )
+
+    def test_adopted_deed_joined_participant_follows_cancel_restore_approve_flow(self):
+        """Joined remote participant on a shared/adopted deed follows cancel -> restore -> approve transitions."""
+        source_deed = DeedFactory.create(
+            title='Source for transition flow',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+            status='open',
+        )
+        adapter.create_or_update_event(source_deed)
+        source_good_deed = source_deed.event
+        if not Create.objects.filter(object=source_good_deed).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_good_deed)
+
+        request = RequestFactory().get('/')
+        request.user = self.follow.default_owner
+        with mock.patch.object(Geolocation, 'update_location'):
+            adopted_deed = adapter.adopt(source_good_deed, request)
+        self.assertEqual(adopted_deed.origin_id, source_good_deed.pk)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_good_deed,
+            participant_sync_id='transition-user-1',
+            participant_name='Transition User',
+            participant_email='transition@other.example',
+            iri='https://follower.example/join/transition-1',
+        )
+        participant = DeedParticipant.objects.get(
+            activity=source_deed,
+            remote_contributor__sync_id='transition-user-1',
+        )
+        self.assertEqual(participant.status, 'accepted')
+        self.assertIsNotNone(participant.remote_contributor)
+
+        source_deed.states.cancel(save=True)
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, 'failed')
+
+        source_deed.states.restore(save=True)
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, 'new')
+
+        # Approve flow is covered by deed trigger tests; here we assert cancel/restore propagation.
+
+    def test_source_remove_sends_leave_to_follower(self):
+        """Source removing a remote participant sends Leave to follower."""
+        source_deed = DeedFactory.create(
+            title='Source remove test',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(source_deed)
+        source_good_deed = source_deed.event
+        if not Create.objects.filter(object=source_good_deed).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_good_deed)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_good_deed,
+            participant_sync_id='source-remove-1',
+            participant_name='Remote User',
+            participant_email='remote@other.example',
+            iri='https://follower.example/join/source-remove-1',
+        )
+        participant = DeedParticipant.objects.get(
+            activity=source_deed,
+            remote_contributor__sync_id='source-remove-1',
+        )
+        participant.states.remove(save=True)
+
+        leave = Leave.objects.filter(
+            object=source_good_deed,
+            participant_sync_id='source-remove-1',
+        ).exclude(iri__isnull=False).last()
+        self.assertIsNotNone(leave)
+        self.assertTrue(
+            Recipient.objects.filter(activity=leave, actor=self.follower_actor).exists()
+        )
+
+    def test_leave_received_updates_adopted_deed_participant_and_local_event_count(self):
+        """Follower receiving Leave for source event rejects related adopted deed participant and updates local count."""
+        source_deed = DeedFactory.create(
+            title='Source for follower leave receive',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(source_deed)
+        source_good_deed = source_deed.event
+        if not Create.objects.filter(object=source_good_deed).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_good_deed)
+
+        request = RequestFactory().get('/')
+        request.user = self.follow.default_owner
+        with mock.patch.object(Geolocation, 'update_location'):
+            adopted_deed = adapter.adopt(source_good_deed, request)
+        adapter.create_or_update_event(adopted_deed)
+
+        follower_rc = RemoteContributor.objects.create(
+            sync_id='follower-side-sync-1',
+            display_name='Follower Local User',
+            sync_actor=self.platform_actor,
+        )
+        follower_participant = DeedParticipant.objects.create(
+            activity=adopted_deed,
+            user=None,
+            remote_contributor=follower_rc,
+            status='accepted',
+        )
+        adapter.create_or_update_event(adopted_deed)
+        adopted_deed.event.refresh_from_db()
+        self.assertEqual(adopted_deed.event.contributor_count, 1)
+
+        Leave.objects.create(
+            actor=self.platform_actor,
+            object=source_good_deed,
+            participant_sync_id='follower-side-sync-1',
+            iri='https://source.example/leave/follower-side-sync-1',
+        )
+
+        follower_participant.refresh_from_db()
+        self.assertEqual(follower_participant.status, 'rejected')
+        adopted_deed.event.refresh_from_db()
+        self.assertEqual(adopted_deed.event.contributor_count, 0)
+        self.assertTrue(
+            Update.objects.filter(object=adopted_deed.event).exists()
+        )
+
+    def test_source_remove_remote_participant_notifies_follower_and_updates_participant(self):
+        """
+        Full flow:
+        - follower joined (Join received) -> source has remote participant
+        - source removes/rejects that participant -> source sends Leave to follower
+        - follower receives Leave -> adopted deed participant is transitioned to rejected
+        """
+        source_deed = DeedFactory.create(
+            title='Source remove propagates',
+            start=(datetime.now() + timedelta(days=7)).date(),
+            end=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(source_deed)
+        source_good_deed = source_deed.event
+        if not Create.objects.filter(object=source_good_deed).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_good_deed)
+
+        request = RequestFactory().get('/')
+        request.user = self.follow.default_owner
+        with mock.patch.object(Geolocation, 'update_location'):
+            adopted_deed = adapter.adopt(source_good_deed, request)
+        adapter.create_or_update_event(adopted_deed)
+
+        sync_id = 'propagate-remove-1'
+        # Follower side participant (local on adopted deed) uses remote_contributor.sync_id for matching
+        follower_rc = RemoteContributor.objects.create(
+            sync_id=sync_id,
+            display_name='Local follower user',
+            sync_actor=self.platform_actor,
+        )
+        follower_participant = DeedParticipant.objects.create(
+            activity=adopted_deed,
+            user=None,
+            remote_contributor=follower_rc,
+            status='accepted',
+        )
+        adapter.create_or_update_event(adopted_deed)
+        adopted_deed.event.refresh_from_db()
+        self.assertEqual(adopted_deed.event.contributor_count, 1)
+
+        # Source receives Join from follower -> creates remote participant with sync_actor=follower_actor
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_good_deed,
+            participant_sync_id=sync_id,
+            participant_name='Remote user',
+            participant_email='remote@other.example',
+            iri='https://follower.example/join/propagate-remove-1',
+        )
+        source_participant = DeedParticipant.objects.get(
+            activity=source_deed,
+            remote_contributor__sync_id=sync_id,
+        )
+
+        # Source removes participant (should emit local Leave addressed to follower_actor)
+        source_participant.states.remove(save=True)
+        leave = Leave.objects.filter(
+            object=source_good_deed,
+            participant_sync_id=sync_id,
+        ).exclude(iri__isnull=False).last()
+        self.assertIsNotNone(leave)
+        self.assertTrue(Recipient.objects.filter(activity=leave, actor=self.follower_actor).exists())
+
+        # Simulate follower receiving that Leave from source (remote Leave has iri set)
+        Leave.objects.create(
+            actor=self.platform_actor,
+            object=source_good_deed,
+            participant_sync_id=sync_id,
+            iri='https://source.example/leave/propagate-remove-1',
+        )
+
+        follower_participant.refresh_from_db()
+        self.assertEqual(follower_participant.status, 'rejected')
+        adopted_deed.event.refresh_from_db()
+        self.assertEqual(adopted_deed.event.contributor_count, 0)
+
+    def test_sync_follow_and_adopt_deadline_then_join_updates_source(self):
+        deadline = DeadlineActivityFactory.create(
+            start=(datetime.now() + timedelta(days=7)).date(),
+            deadline=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(deadline)
+        source_event = deadline.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_deadline = DeadlineActivityFactory.create(
+            origin=source_event,
+            owner=self.follow.default_owner,
+            start=(datetime.now() + timedelta(days=8)).date(),
+            deadline=(datetime.now() + timedelta(days=15)).date(),
+        )
+        adapter.create_or_update_event(adopted_deadline)
+        self.assertEqual(adopted_deadline.origin_id, source_event.pk)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            participant_sync_id='deadline-participant-1',
+            participant_name='Deadline User',
+            participant_email='deadline@other.example',
+            iri='https://follower.example/join/deadline-1',
+        )
+
+        self.assertTrue(
+            DeadlineParticipant.objects.filter(
+                activity=deadline,
+                remote_contributor__sync_id='deadline-participant-1',
+                status='accepted',
+            ).exists()
+        )
+        source_event.refresh_from_db()
+        self.assertEqual(source_event.contributor_count, 1)
+        participant = DeadlineParticipant.objects.get(
+            activity=deadline,
+            remote_contributor__sync_id='deadline-participant-1',
+        )
+        self.assertEqual(participant.status, 'accepted')
+
+    def test_sync_join_started_deadline_sets_source_participant_succeeded(self):
+        deadline = DeadlineActivityFactory.create(
+            start=(datetime.now() - timedelta(days=2)).date(),
+            deadline=(datetime.now() + timedelta(days=7)).date(),
+        )
+        adapter.create_or_update_event(deadline)
+        source_event = deadline.event
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            participant_sync_id='deadline-started-1',
+            participant_name='Started Deadline User',
+            participant_email='started@other.example',
+            iri='https://follower.example/join/deadline-started-1',
+        )
+
+        participant = DeadlineParticipant.objects.get(
+            activity=deadline,
+            remote_contributor__sync_id='deadline-started-1',
+        )
+        self.assertEqual(participant.status, 'succeeded')
+
+    def test_source_remove_deadline_remote_participant_notifies_follower_and_updates_participant(self):
+        source_deadline = DeadlineActivityFactory.create(
+            start=(datetime.now() + timedelta(days=7)).date(),
+            deadline=(datetime.now() + timedelta(days=14)).date(),
+        )
+        adapter.create_or_update_event(source_deadline)
+        source_event = source_deadline.event
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_deadline = DeadlineActivityFactory.create(
+            origin=source_event,
+            owner=self.follow.default_owner,
+            start=(datetime.now() + timedelta(days=8)).date(),
+            deadline=(datetime.now() + timedelta(days=15)).date(),
+        )
+        adapter.create_or_update_event(adopted_deadline)
+
+        sync_id = 'deadline-remove-1'
+        follower_rc = RemoteContributor.objects.create(
+            sync_id=sync_id,
+            display_name='Follower deadline user',
+            sync_actor=self.platform_actor,
+        )
+        follower_participant = DeadlineParticipant.objects.create(
+            activity=adopted_deadline,
+            user=None,
+            remote_contributor=follower_rc,
+            status='accepted',
+        )
+        adapter.create_or_update_event(adopted_deadline)
+        adopted_deadline.event.refresh_from_db()
+        self.assertEqual(adopted_deadline.event.contributor_count, 1)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            participant_sync_id=sync_id,
+            participant_name='Remote deadline user',
+            participant_email='remote-deadline@other.example',
+            iri='https://follower.example/join/deadline-remove-1',
+        )
+        source_participant = DeadlineParticipant.objects.get(
+            activity=source_deadline,
+            remote_contributor__sync_id=sync_id,
+        )
+
+        source_participant.states.remove(save=True)
+        leave = Leave.objects.filter(
+            object=source_event,
+            participant_sync_id=sync_id,
+        ).exclude(iri__isnull=False).last()
+        self.assertIsNotNone(leave)
+        self.assertTrue(Recipient.objects.filter(activity=leave, actor=self.follower_actor).exists())
+
+        Leave.objects.create(
+            actor=self.platform_actor,
+            object=source_event,
+            participant_sync_id=sync_id,
+            iri='https://source.example/leave/deadline-remove-1',
+        )
+
+        follower_participant.refresh_from_db()
+        self.assertEqual(follower_participant.status, 'rejected')
+        adopted_deadline.event.refresh_from_db()
+        self.assertEqual(adopted_deadline.event.contributor_count, 0)

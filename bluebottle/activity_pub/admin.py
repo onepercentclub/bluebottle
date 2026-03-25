@@ -591,7 +591,7 @@ class FollowerAdmin(FollowAdmin):
         if obj and self.accepted(obj):
             fields += (
                 'publish_mode', "shared_activities", "adopted_activities",
-                "short_adoption_type", "publish_activities_button"
+                "show_adoption_type", "publish_activities_button"
             )
         return fields
 
@@ -935,17 +935,16 @@ class EventAdminMixin:
             raise PermissionDenied
 
         event = get_object_or_404(Event, pk=unquote(object_id))
-        from bluebottle.activity_pub.models import GoodDeed
 
-        if not isinstance(event.get_real_instance(), GoodDeed):
-            self.message_user(
-                request,
-                "Manual adopt is only supported for Deed events.",
-                level="warning",
-            )
-            return HttpResponseRedirect(
-                reverse("admin:activity_pub_event_change", args=[event.pk])
-            )
+        # if not isinstance(event.get_real_instance(), GoodDeed):
+        #     self.message_user(
+        #         request,
+        #         "Manual adopt is only supported for Deed events.",
+        #         level="warning",
+        #     )
+        #     return HttpResponseRedirect(
+        #         reverse("admin:activity_pub_event_change", args=[event.pk])
+        #     )
 
         if event.adopted_activity:
             self.message_user(

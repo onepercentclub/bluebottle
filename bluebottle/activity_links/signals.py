@@ -39,7 +39,7 @@ def link(sender, instance, created, **kwargs):
                             'deed' in follow.automatic_adoption_activity_types
                         )
                         if activity_type_in_auto and not instance.object.adopted_activities.exists():
-                            deed = adapter.adopt(instance.object)
+                            adapter.adopt(instance.object)
                             Accept.objects.create(
                                 actor=get_platform_actor(),
                                 object=instance.object

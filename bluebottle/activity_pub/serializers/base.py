@@ -174,7 +174,6 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         request = self.context.get('request')
         request_auth = getattr(request, 'auth', None)
         auth_iri = getattr(request_auth, 'iri', None)
-        internal_update = self.context.get('internal_update', False)
 
         # Do not allow remote request to update local instances
         if (

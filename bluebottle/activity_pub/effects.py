@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_links.models import LinkedActivity
-from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.adapters import adapter, resolve_sub_event_for_synced_date_join
 from bluebottle.activity_pub.models import (
     Accept, Follow, Start, Update, Cancel, Delete, Finish, Join, Leave,
     Create, Recipient, Event,
@@ -255,8 +255,7 @@ class SendJoinEffect(Effect):
             if slot is not None and not getattr(slot, 'origin_id', None):
                 adapter.create_or_update_event(deed)
                 slot.refresh_from_db()
-            if slot is not None and getattr(slot, 'origin_id', None):
-                sub_event = slot.origin
+            sub_event = resolve_sub_event_for_synced_date_join(contributor, deed)
 
         join_activity = Join.objects.create(
             actor=actor,
@@ -311,8 +310,7 @@ class SendLeaveEffect(Effect):
             if slot is not None and not getattr(slot, 'origin_id', None):
                 adapter.create_or_update_event(deed)
                 slot.refresh_from_db()
-            if slot is not None and getattr(slot, 'origin_id', None):
-                sub_event = slot.origin
+            sub_event = resolve_sub_event_for_synced_date_join(contributor, deed)
 
         leave_activity = Leave.objects.create(
             actor=actor,

@@ -326,19 +326,13 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     def event(self):
         from bluebottle.activity_pub.models import SubEvent
         try:
-            return SubEvent.objects.get(slot=self)
+            return self.subevent
         except SubEvent.DoesNotExist:
             pass
 
     @property
     def activity_pub_url(self):
-        from bluebottle.activity_pub.models import SubEvent
-
-        sub = None
-        try:
-            sub = SubEvent.objects.get(slot=self)
-        except SubEvent.DoesNotExist:
-            pass
+        sub = self.event
         if sub is None and self.origin_id:
             sub = self.origin
         if sub is None:

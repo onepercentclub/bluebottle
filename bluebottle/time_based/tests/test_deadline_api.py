@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.activities.models import RemoteContributor
-from bluebottle.activity_pub.tests.factories import OrganizationFactory
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory, OrganizationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -91,6 +91,15 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
         self.perform_get(user=self.model.owner)
 
         self.assertMeta("registration-status", {"accepted": 3, "new": 1, "rejected": 2})
+
+    def test_contributor_count_uses_remote_total_for_synced_activity(self):
+        self.model.origin = DoGoodEventFactory.create(contributor_count=6)
+        self.model.save(update_fields=['origin'])
+        DeadlineParticipantFactory.create(activity=self.model, status='accepted')
+
+        self.perform_get(user=self.model.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('contributor-count', 6)
 
 
 class DeadlineActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):

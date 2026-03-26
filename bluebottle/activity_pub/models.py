@@ -469,13 +469,18 @@ class SubEvent(ActivityPubModel):
         on_delete=models.CASCADE,
         related_name='sub_event'
     )
-    slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.SET_NULL)
+    slot = models.OneToOneField(
+        'time_based.DateActivitySlot',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
     contributor_count = models.PositiveIntegerField(
         default=0,
         help_text=_('Accepted participants for this slot (denormalized for ActivityPub sync).'),
     )
     capacity = models.PositiveIntegerField(
-        _('maximum attendee capacity'),
+        _('Capacity'),
         null=True,
         blank=True,
         help_text=_('Per-slot attendee limit (schema.org maximumAttendeeCapacity). Mirrors activity slot.'),

@@ -13,6 +13,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase, JSONAPITestClient
+from bluebottle.activity_pub.tests.factories import SubEventFactory
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,
@@ -288,6 +289,15 @@ class DateSlotDetailAPITestCase(APITestCase):
 
         for relationship in self.included:
             self.assertIncluded(relationship)
+
+    def test_get_contributor_count_uses_remote_total_for_synced_slot(self):
+        self.model.origin = SubEventFactory.create(contributor_count=5)
+        self.model.save(update_fields=['origin'])
+        DateParticipantFactory.create(activity=self.activity, slot=self.model, status='accepted')
+
+        self.perform_get(user=self.manager)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('contributor-count', 5)
 
     def test_get_anonymous(self):
         self.perform_get()

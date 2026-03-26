@@ -205,6 +205,14 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
     )
 
+    def get_contributor_count(self, instance):
+        local_count = super().get_contributor_count(instance)
+        origin = getattr(instance, 'origin', None)
+        remote_count = getattr(origin, 'contributor_count', None) if origin else None
+        if remote_count is None:
+            return local_count
+        return max(local_count, remote_count)
+
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DeadlineActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (

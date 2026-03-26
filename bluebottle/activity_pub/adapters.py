@@ -57,6 +57,48 @@ def _resolve_date_activity_slot_for_sync(activity, sub_event_id):
     return None
 
 
+def resolve_sub_event_for_synced_date_join(participant, date_activity):
+    """
+    SubEvent on date_activity.origin (source DoGoodEvent) to target with Join/Leave.
+
+    Adopted DateActivitySlots should set origin to that SubEvent; when origin is missing or
+    points at another event, match by start_time (or single-slot fallback) so the source
+    platform can resolve the correct DateActivitySlot.
+    """
+    from bluebottle.activity_pub.models import DoGoodEvent, SubEvent
+    from bluebottle.time_based.models import DateActivity, DateParticipant
+
+    if not isinstance(participant, DateParticipant) or not isinstance(date_activity, DateActivity):
+        return None
+    origin_event = getattr(date_activity, 'origin', None)
+    if not isinstance(origin_event, DoGoodEvent):
+        return None
+    slot = participant.slot
+    if slot is None:
+        return None
+    origin_id = getattr(slot, 'origin_id', None)
+    if origin_id:
+        try:
+            sub = SubEvent.objects.get(pk=origin_id)
+        except SubEvent.DoesNotExist:
+            sub = None
+        if sub is not None and sub.parent_id == origin_event.pk:
+            return sub
+    if slot.start is not None:
+        qs = origin_event.sub_event.filter(start_time=slot.start)
+        if slot.duration is not None:
+            with_duration = [s for s in qs if s.duration == slot.duration]
+            if len(with_duration) == 1:
+                return with_duration[0]
+        matched = list(qs)
+        if len(matched) == 1:
+            return matched[0]
+    subs = list(origin_event.sub_event.order_by('start_time', 'id'))
+    if len(subs) == 1:
+        return subs[0]
+    return None
+
+
 def _source_date_slot_for_sub_event(sub_event, source_date):
     from bluebottle.time_based.models import DateActivitySlot
 

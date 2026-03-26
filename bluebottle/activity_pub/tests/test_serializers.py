@@ -4,6 +4,7 @@ import mock
 from django.test import RequestFactory
 from requests import Response
 
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import GoodDeed, CrowdFunding, GrantApplication, Leave
 from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import (
@@ -134,6 +135,28 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
         self.assertEqual(do_good_event.name, model.title)
         self.assertEqual(do_good_event.summary, model.description.html)
         self.assertEqual(do_good_event.sub_event.count(), model.slots.count())
+
+    def test_update_does_not_mutate_related_date_activity_capacity(self):
+        model = self.factory.create()
+        model.capacity = 10
+        model.save(update_fields=['capacity'])
+        adapter.create_or_update_event(model)
+        event = model.event
+        if not event.iri:
+            event.iri = 'https://source.example/events/test-update-capacity'
+            event.save(update_fields=['iri'])
+
+        serializer = self.activity_pub_serializer(
+            instance=event,
+            data={'id': event.iri, 'type': 'DoGoodEvent', 'capacity': 99},
+            partial=True,
+            context=self.context,
+        )
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+        serializer.save()
+
+        model.refresh_from_db()
+        self.assertEqual(model.capacity, 10)
 
     def test_to_federated_activity(self):
         activity_pub_model = self.activity_pub_factory.create(iri='http://example.com')

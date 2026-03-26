@@ -77,7 +77,10 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registrations',
             'hour_registration_data'
         )
-        meta_fields = BaseActivitySerializer.Meta.meta_fields + ("registration_status",)
+        meta_fields = BaseActivitySerializer.Meta.meta_fields + (
+            "registration_status",
+            "remote_contributor_count",
+        )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
@@ -207,10 +210,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
 
     def get_contributor_count(self, instance):
         local_count = super().get_contributor_count(instance)
-        origin = getattr(instance, 'origin', None)
-        remote_count = getattr(origin, 'contributor_count', None) if origin else None
-        if remote_count is None:
-            return local_count
+        remote_count = getattr(instance, 'remote_contributor_count', 0) or 0
         return max(local_count, remote_count)
 
     class Meta(TimeBasedBaseSerializer.Meta):

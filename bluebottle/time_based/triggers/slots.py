@@ -775,6 +775,7 @@ class DateActivitySlotTriggers(TriggerManager):
                 'online_meeting_url',
                 'location_id',
                 'location_hint',
+                'status',
             ],
             effects=[
                 UpdateDateActivitySlotPublishedEffect,

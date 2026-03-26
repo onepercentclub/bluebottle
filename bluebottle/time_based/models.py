@@ -114,6 +114,7 @@ class TimeBasedActivity(Activity):
         blank=True, null=True,
         max_length=300,
     )
+    remote_contributor_count = models.PositiveIntegerField(default=0)
 
     activity_type = _('Time-based activity')
 
@@ -458,6 +459,7 @@ class DateActivitySlot(ActivitySlot):
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
+    remote_contributor_count = models.PositiveIntegerField(default=0)
 
     @property
     def owners(self):

@@ -1328,6 +1328,44 @@ class SyncIntegrationTestCase(BluebottleTestCase):
             )
         )
 
+    def test_do_good_event_save_syncs_adopted_slots_without_update_activity(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        source_slot = source_date.slots.get()
+        source_slot.capacity = 5
+        source_slot.save(update_fields=['capacity'])
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        adopted_slot = DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=source_slot.origin,
+            start=source_slot.start,
+            duration=source_slot.duration,
+            is_online=source_slot.is_online,
+            location=source_slot.location,
+            capacity=5,
+            status='open',
+        )
+        adapter.create_or_update_event(adopted_date)
+
+        source_slot.capacity = 77
+        source_slot.save(update_fields=['capacity'])
+        adapter.create_or_update_event(source_date)
+
+        adopted_slot.refresh_from_db()
+        self.assertEqual(adopted_slot.capacity, 77)
+
     def test_update_syncs_adopted_date_slot_duration(self):
         source_date = DateActivityFactory.create(status='open', review=False)
         source_slot = source_date.slots.get()
@@ -1367,6 +1405,88 @@ class SyncIntegrationTestCase(BluebottleTestCase):
 
         adopted_slot.refresh_from_db()
         self.assertEqual(adopted_slot.duration, timedelta(hours=5))
+
+    def test_update_syncs_adopted_date_slot_extra_fields(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        source_slot = source_date.slots.get()
+        source_slot.online_meeting_url = 'https://meet.example/source-a'
+        source_slot.location_hint = 'Use side entrance'
+        source_slot.status = 'full'
+        source_slot.save(update_fields=['online_meeting_url', 'location_hint', 'status'])
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        adopted_slot = DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=source_slot.origin,
+            start=source_slot.start,
+            duration=source_slot.duration,
+            is_online=source_slot.is_online,
+            location=source_slot.location,
+            capacity=source_slot.capacity,
+            online_meeting_url='https://stale.example/old',
+            location_hint='Old hint',
+            status='open',
+        )
+        adapter.create_or_update_event(adopted_date)
+
+        source_slot.online_meeting_url = 'https://meet.example/source-b'
+        source_slot.location_hint = 'Reception desk'
+        source_slot.status = 'running'
+        source_slot.save(update_fields=['online_meeting_url', 'location_hint', 'status'])
+        adapter.create_or_update_event(source_date)
+
+        Update.objects.create(object=source_event)
+
+        adopted_slot.refresh_from_db()
+        self.assertEqual(adopted_slot.online_meeting_url, 'https://meet.example/source-b')
+        self.assertEqual(adopted_slot.location_hint, 'Reception desk')
+        self.assertEqual(adopted_slot.status, 'running')
+
+    def test_slot_state_transition_syncs_adopted_slot_status(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        source_slot = source_date.slots.get()
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        adopted_slot = DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=source_slot.origin,
+            start=source_slot.start,
+            duration=source_slot.duration,
+            is_online=source_slot.is_online,
+            location=source_slot.location,
+            capacity=source_slot.capacity,
+            status='open',
+        )
+        adapter.create_or_update_event(adopted_date)
+
+        source_slot.states.cancel(save=True)
+
+        adopted_slot.refresh_from_db()
+        self.assertEqual(adopted_slot.status, 'cancelled')
 
     def test_update_syncs_adopted_from_sub_events_when_event_has_no_activity(self):
         source_date = DateActivityFactory.create(status='open', review=False)

@@ -39,8 +39,6 @@ from bluebottle.activity_pub.serializers.base import (
 from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
 from bluebottle.activity_pub.utils import is_local
 
-_SUBEVENT_CAPACITY_UNSET = object()
-
 
 class SubEventListSerializer(ActivityPubListSerializer):
     def save(self, **kwargs):
@@ -294,70 +292,6 @@ class SubEventSerializer(ActivityPubSerializer):
             'contributor_count', 'capacity',
         )
 
-    def create(self, validated_data):
-        capacity = validated_data.pop('capacity', _SUBEVENT_CAPACITY_UNSET)
-        instance = super().create(validated_data)
-        self._sync_linked_date_slot(instance, capacity)
-        return instance
-
-    def update(self, instance, validated_data):
-        capacity = validated_data.pop('capacity', _SUBEVENT_CAPACITY_UNSET)
-        instance = super().update(instance, validated_data)
-        self._sync_linked_date_slot(instance, capacity)
-        return instance
-
-    def _sync_linked_date_slot(self, instance, capacity):
-        from bluebottle.time_based.models import DateActivitySlot
-
-        parent = getattr(instance, 'parent', None)
-        activity = getattr(parent, 'activity', None) if parent is not None else None
-        slot = None
-        if activity is not None:
-            slot = DateActivitySlot.objects.filter(activity=activity, origin=instance).first()
-        if slot is None:
-            slot = instance.slot
-        if slot is None:
-            slot = instance.adopted_slots.order_by('id').first()
-        if slot is None and activity is not None and instance.start_time is not None:
-            slot = DateActivitySlot.objects.filter(
-                activity=activity,
-                start=instance.start_time,
-            ).first()
-        if slot is None:
-            if capacity is not _SUBEVENT_CAPACITY_UNSET:
-                SubEvent.objects.filter(pk=instance.pk).update(capacity=capacity)
-            return
-        update_fields = []
-        if slot.origin_id is None:
-            slot.origin = instance
-            update_fields.append('origin')
-        if capacity is not _SUBEVENT_CAPACITY_UNSET and slot.capacity != capacity:
-            slot.capacity = capacity
-            update_fields.append('capacity')
-        if instance.start_time is not None and slot.start != instance.start_time:
-            slot.start = instance.start_time
-            update_fields.append('start')
-        if instance.duration is not None and slot.duration != instance.duration:
-            slot.duration = instance.duration
-            update_fields.append('duration')
-        if instance.name is not None and slot.title != instance.name:
-            slot.title = instance.name
-            update_fields.append('title')
-        if instance.event_attendance_mode == 'OnlineEventAttendanceMode':
-            if slot.is_online is not True:
-                slot.is_online = True
-                update_fields.append('is_online')
-        elif instance.event_attendance_mode == 'OfflineEventAttendanceMode':
-            if slot.is_online is not False:
-                slot.is_online = False
-                update_fields.append('is_online')
-        if update_fields:
-            slot.save(update_fields=update_fields)
-        if slot is not None and instance.slot_id != slot.pk:
-            SubEvent.objects.filter(pk=instance.pk).update(slot_id=slot.pk)
-        slot.refresh_from_db()
-        SubEvent.objects.filter(pk=instance.pk).update(capacity=slot.capacity)
-
 
 class DoGoodEventSerializer(BaseEventSerializer):
     id = ActivityPubIdField(url_name='json-ld:do-good-event')
@@ -407,25 +341,10 @@ class DoGoodEventSerializer(BaseEventSerializer):
             'sub_event',
         )
 
-    @staticmethod
-    def _sync_date_activity_capacity_from_event(event):
-        from bluebottle.time_based.models import DateActivity
-
-        activity = getattr(event, 'activity', None)
-        if activity is None:
-            return
-        real = activity.get_real_instance()
-        if not isinstance(real, DateActivity):
-            return
-        if event.capacity != real.capacity:
-            real.capacity = event.capacity
-            real.save(update_fields=['capacity'])
-
     def create(self, validated_data):
         has_sub_events = 'sub_event' in validated_data
         sub_events = validated_data.pop('sub_event') if has_sub_events else None
         result = super().create(validated_data)
-        self._sync_date_activity_capacity_from_event(result)
         if has_sub_events:
             field = self.fields['sub_event']
             field.initial_data = sub_events if sub_events is not None else []
@@ -437,7 +356,6 @@ class DoGoodEventSerializer(BaseEventSerializer):
         has_sub_events = 'sub_event' in validated_data
         sub_events = validated_data.pop('sub_event') if has_sub_events else None
         result = super().update(instance, validated_data)
-        self._sync_date_activity_capacity_from_event(result)
         if has_sub_events:
             field = self.fields['sub_event']
             field.initial_data = sub_events if sub_events is not None else []

@@ -468,16 +468,13 @@ class SlotsSerializer(FederatedObjectSerializer):
     end_time = serializers.DateTimeField(source='end', read_only=True)
     location = LocationSerializer(allow_null=True, required=False)
 
-    event_attendance_mode = EventAttendanceModeField()
+    event_attendance_mode = EventAttendanceModeField(required=False, allow_null=True)
 
     duration = serializers.DurationField(required=False, allow_null=True)
 
     capacity = serializers.IntegerField(required=False, allow_null=True)
 
-    contributor_count = serializers.SerializerMethodField()
-
-    def get_contributor_count(self, obj):
-        return obj.contributor_count
+    contributor_count = serializers.IntegerField(source='remote_contributor_count', required=False, allow_null=True)
 
     def create(self, validated_data):
 

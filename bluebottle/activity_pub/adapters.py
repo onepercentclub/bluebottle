@@ -13,7 +13,7 @@ from requests_http_signature import HTTPSignatureAuth, algorithms
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import (
     Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start,
-    Join, Leave, Update, GoodDeed, DoGoodEvent
+    Join, Leave, Update, GoodDeed, DoGoodEvent, SubEvent
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
@@ -119,6 +119,57 @@ def _is_online_from_sub_event(sub):
     return None
 
 
+def _sync_slot_from_subevent(instance):
+    from bluebottle.activity_pub.serializers.federated_activities import SlotsSerializer
+    from bluebottle.time_based.models import DateActivity, DateActivitySlot
+
+    parent = getattr(instance, 'parent', None)
+    activity = getattr(parent, 'activity', None) if parent is not None else None
+    if activity is None:
+        return
+    activity = activity.get_real_instance()
+    if not isinstance(activity, DateActivity):
+        return
+
+    slot = instance.slot
+    if slot is None:
+        slot = DateActivitySlot.objects.filter(activity=activity, origin=instance).first()
+
+    payload = {
+        'id': instance.iri,
+        'name': instance.name,
+        'start_time': instance.start_time,
+        'duration': instance.duration,
+        'capacity': instance.capacity,
+    }
+    if instance.event_attendance_mode is not None:
+        payload['event_attendance_mode'] = instance.event_attendance_mode
+
+    serializer = SlotsSerializer(
+        instance=slot,
+        data=payload,
+        partial=True,
+    )
+    serializer.is_valid(raise_exception=True)
+    slot = serializer.save(activity=activity)
+
+    update_fields = []
+    if slot.origin_id != instance.pk:
+        slot.origin = instance
+        update_fields.append('origin')
+    remote_count = instance.contributor_count or 0
+    if slot.remote_contributor_count != remote_count:
+        slot.remote_contributor_count = remote_count
+        update_fields.append('remote_contributor_count')
+    if update_fields:
+        slot.save(update_fields=update_fields)
+
+    update_kwargs = {'capacity': slot.capacity}
+    if instance.slot_id != slot.pk:
+        update_kwargs['slot_id'] = slot.pk
+    SubEvent.objects.filter(pk=instance.pk).update(**update_kwargs)
+
+
 def _adopted_slot_has_active_participants(slot):
     return slot.participants.filter(
         status__in=['new', 'accepted', 'succeeded', 'scheduled', 'participating'],
@@ -127,25 +178,8 @@ def _adopted_slot_has_active_participants(slot):
 
 def _sync_adopted_date_slots_from_source(event_do_good, source_date, adopted_date):
     from bluebottle.time_based.models import DateActivitySlot
+    from bluebottle.activity_pub.serializers.federated_activities import SlotsSerializer
 
-    slot_field_names = (
-        'title',
-        'capacity',
-        'start',
-        'duration',
-        'is_online',
-        'online_meeting_url',
-        'location_id',
-        'location_hint',
-        'status',
-    )
-    sub_only_field_names = (
-        'title',
-        'capacity',
-        'start',
-        'duration',
-        'is_online',
-    )
     subs = list(event_do_good.sub_event.order_by('start_time', 'id'))
     if not subs and source_date is not None and source_date.slots.exists():
         return
@@ -184,66 +218,74 @@ def _sync_adopted_date_slots_from_source(event_do_good, source_date, adopted_dat
             ad_slot.origin = sub
             ad_slot.save(update_fields=['origin'])
         if ad_slot is None:
-            if src_slot is not None:
-                DateActivitySlot.objects.create(
-                    activity=adopted_date,
-                    origin=sub,
-                    title=src_slot.title,
-                    capacity=src_slot.capacity,
-                    start=src_slot.start,
-                    duration=src_slot.duration,
-                    is_online=src_slot.is_online,
-                    online_meeting_url=src_slot.online_meeting_url,
-                    location_id=src_slot.location_id,
-                    location_hint=src_slot.location_hint,
-                    status=src_slot.status,
-                )
-            else:
-                DateActivitySlot.objects.create(
-                    activity=adopted_date,
-                    origin=sub,
-                    title=sub.name,
-                    capacity=sub.capacity,
-                    start=sub.start_time,
-                    duration=sub.duration,
-                    is_online=_is_online_from_sub_event(sub),
-                    online_meeting_url='',
-                    location_id=None,
-                    location_hint=None,
-                    status='open',
-                )
-            continue
-        update_fields = []
+            ad_slot = None
+
+        payload = {
+            'id': sub.iri,
+            'name': src_slot.title if src_slot is not None else sub.name,
+            'start_time': src_slot.start if src_slot is not None else sub.start_time,
+            'duration': src_slot.duration if src_slot is not None else sub.duration,
+            'capacity': src_slot.capacity if src_slot is not None else sub.capacity,
+        }
         if src_slot is not None:
-            for field_name in slot_field_names:
-                src_val = getattr(src_slot, field_name)
-                if getattr(ad_slot, field_name) != src_val:
-                    setattr(ad_slot, field_name, src_val)
-                    update_fields.append(field_name)
+            payload['event_attendance_mode'] = (
+                'OnlineEventAttendanceMode' if src_slot.is_online else 'OfflineEventAttendanceMode'
+            )
+            if src_slot.location_id:
+                location_ap_id = getattr(src_slot.location, 'activity_pub_url', None)
+                if location_ap_id:
+                    payload['location'] = {'id': location_ap_id}
         else:
-            for field_name in sub_only_field_names:
-                if field_name == 'title':
-                    src_val = sub.name
-                elif field_name == 'capacity':
-                    src_val = sub.capacity
-                elif field_name == 'start':
-                    src_val = sub.start_time
-                elif field_name == 'duration':
-                    src_val = sub.duration
-                elif field_name == 'is_online':
-                    src_val = _is_online_from_sub_event(sub)
-                else:
-                    continue
-                if getattr(ad_slot, field_name) != src_val:
-                    setattr(ad_slot, field_name, src_val)
-                    update_fields.append(field_name)
-        if update_fields:
-            ad_slot.save(update_fields=update_fields)
+            is_online = _is_online_from_sub_event(sub)
+            if is_online is not None:
+                payload['event_attendance_mode'] = (
+                    'OnlineEventAttendanceMode' if is_online else 'OfflineEventAttendanceMode'
+                )
+
+        serializer = SlotsSerializer(instance=ad_slot, data=payload, partial=True)
+        serializer.is_valid(raise_exception=True)
+        ad_slot = serializer.save(activity=adopted_date)
+
+        extra_updates = []
+        if src_slot is not None:
+            if ad_slot.online_meeting_url != src_slot.online_meeting_url:
+                ad_slot.online_meeting_url = src_slot.online_meeting_url
+                extra_updates.append('online_meeting_url')
+            if ad_slot.location_hint != src_slot.location_hint:
+                ad_slot.location_hint = src_slot.location_hint
+                extra_updates.append('location_hint')
+            if ad_slot.status != src_slot.status:
+                ad_slot.status = src_slot.status
+                extra_updates.append('status')
+        if ad_slot.origin_id != sub.pk:
+            ad_slot.origin = sub
+            extra_updates.append('origin')
+        remote_count = sub.contributor_count or 0
+        if ad_slot.remote_contributor_count != remote_count:
+            ad_slot.remote_contributor_count = remote_count
+            extra_updates.append('remote_contributor_count')
+        if extra_updates:
+            ad_slot.save(update_fields=list(dict.fromkeys(extra_updates)))
 
     for orphan in adopted_date.slots.filter(origin__isnull=True):
         if _adopted_slot_has_active_participants(orphan):
             continue
         orphan.delete()
+
+
+def _sync_adopted_activities_for_ap_object(obj, update=None):
+    try:
+        from bluebottle.activity_pub.serializers.update_sync import PolymorphicUpdateSyncSerializer
+
+        serializer = PolymorphicUpdateSyncSerializer(
+            context={'object': obj, 'adapter': adapter, 'update': update}
+        )
+        serializer.sync()
+    except Exception as e:
+        logger.error(
+            f"Failed to sync adopted activities for {obj.__class__.__name__}: {str(e)}",
+            exc_info=True,
+        )
 
 
 class JSONLDAdapter():
@@ -711,93 +753,21 @@ def handle_leave_received(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Update)
 def handle_update_received(sender, instance, created, **kwargs):
-    """When an Update is created for a synced event, push field changes to adopted activities on this tenant."""
+    """When an Update is created for a synced object, sync adopted activities."""
     if not created:
         return
-    object_id = instance.object_id
-    event_good_deed = GoodDeed.objects.filter(pk=object_id).first()
-    if event_good_deed is not None:
-        try:
-            from bluebottle.deeds.models import Deed
-
-            for activity in event_good_deed.adopted_activities.all():
-                activity = activity.get_real_instance()
-                if not isinstance(activity, Deed):
-                    continue
-                deed = activity
-                update_fields = []
-                if event_good_deed.name != deed.title:
-                    deed.title = event_good_deed.name
-                    update_fields.append('title')
-                if getattr(event_good_deed, 'start_time', None) is not None and deed.start != event_good_deed.start_time.date():
-                    deed.start = event_good_deed.start_time.date()
-                    update_fields.append('start')
-                if getattr(event_good_deed, 'end_time', None) is not None and deed.end != event_good_deed.end_time.date():
-                    deed.end = event_good_deed.end_time.date()
-                    update_fields.append('end')
-                if event_good_deed.summary is not None:
-                    try:
-                        if getattr(deed.description, 'html', None) != event_good_deed.summary:
-                            if hasattr(deed.description, 'html'):
-                                deed.description.html = event_good_deed.summary
-                                update_fields.append('description')
-                    except (AttributeError, TypeError):
-                        pass
-                if update_fields:
-                    deed.save(update_fields=update_fields)
-                adapter.create_or_update_event(deed)
-        except Exception as e:
-            logger.error(f"Failed to handle Update for GoodDeed: {str(e)}", exc_info=True)
+    obj = instance.object
+    if obj is None:
         return
-    event_do_good = DoGoodEvent.objects.filter(pk=object_id).first()
-    if event_do_good is not None:
-        try:
-            from bluebottle.time_based.models import DateActivity
+    _sync_adopted_activities_for_ap_object(obj, update=instance)
 
-            source_date = None
-            source_bb_activity = event_do_good.activity
-            if source_bb_activity is not None:
-                real = source_bb_activity.get_real_instance()
-                if isinstance(real, DateActivity):
-                    source_date = real
 
-            for activity in event_do_good.adopted_activities.all():
-                activity = activity.get_real_instance()
-                if not isinstance(activity, DateActivity):
-                    continue
-                from bluebottle.activity_pub.models import Event as ActivityPubEvent
-
-                try:
-                    adopted_ev = activity.event
-                except ActivityPubEvent.DoesNotExist:
-                    adopted_ev = None
-                if adopted_ev is not None and event_do_good.capacity != adopted_ev.capacity:
-                    adopted_ev.capacity = event_do_good.capacity
-                    adopted_ev.save(update_fields=['capacity'])
-                cap = event_do_good.capacity
-                if cap is not None and cap != activity.capacity:
-                    activity.capacity = cap
-                    activity.save(update_fields=['capacity'])
-                elif source_date is not None and source_date.capacity != activity.capacity:
-                    activity.capacity = source_date.capacity
-                    activity.save(update_fields=['capacity'])
-                if event_do_good.name != activity.title:
-                    activity.title = event_do_good.name
-                    activity.save(update_fields=['title'])
-                if event_do_good.summary is not None:
-                    try:
-                        if getattr(activity.description, 'html', None) != event_do_good.summary:
-                            if hasattr(activity.description, 'html'):
-                                activity.description.html = event_do_good.summary
-                                activity.save(update_fields=['description'])
-                    except (AttributeError, TypeError):
-                        pass
-                _sync_adopted_date_slots_from_source(
-                    event_do_good, source_date, activity
-                )
-                adapter.create_or_update_event(activity)
-        except Exception as e:
-            logger.error(f"Failed to handle Update for DoGoodEvent: {str(e)}", exc_info=True)
+@receiver(post_save, sender=SubEvent)
+def handle_subevent_saved(sender, instance, **kwargs):
+    try:
+        _sync_slot_from_subevent(instance)
+    except Exception as e:
+        logger.error(f"Failed to sync DateActivitySlot for SubEvent: {str(e)}", exc_info=True)
 
 
 @receiver(post_save)

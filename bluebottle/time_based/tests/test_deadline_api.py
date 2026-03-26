@@ -94,12 +94,14 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
 
     def test_contributor_count_uses_remote_total_for_synced_activity(self):
         self.model.origin = DoGoodEventFactory.create(contributor_count=6)
-        self.model.save(update_fields=['origin'])
+        self.model.remote_contributor_count = 6
+        self.model.save(update_fields=['origin', 'remote_contributor_count'])
         DeadlineParticipantFactory.create(activity=self.model, status='accepted')
 
         self.perform_get(user=self.model.owner)
         self.assertStatus(status.HTTP_200_OK)
         self.assertMeta('contributor-count', 6)
+        self.assertMeta('remote-contributor-count', 6)
 
 
 class DeadlineActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):

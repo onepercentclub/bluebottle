@@ -99,29 +99,9 @@ def resolve_sub_event_for_synced_date_join(participant, date_activity):
     return None
 
 
-def _source_date_slot_for_sub_event(sub_event, source_date):
-    from bluebottle.time_based.models import DateActivitySlot
-
-    if source_date is None:
-        return None
-    if sub_event.slot_id:
-        slot = sub_event.slot
-        if slot is not None and getattr(slot, 'activity_id', None) == source_date.pk:
-            return slot
-    return DateActivitySlot.objects.filter(activity=source_date, origin=sub_event).first()
-
-
-def _is_online_from_sub_event(sub):
-    if sub.event_attendance_mode == 'OnlineEventAttendanceMode':
-        return True
-    if sub.event_attendance_mode == 'OfflineEventAttendanceMode':
-        return False
-    return None
-
-
 def _sync_slot_from_subevent(instance):
     from bluebottle.activity_pub.serializers.federated_activities import SlotsSerializer
-    from bluebottle.time_based.models import DateActivity, DateActivitySlot
+    from bluebottle.time_based.models import DateActivity
 
     parent = getattr(instance, 'parent', None)
     activity = getattr(parent, 'activity', None) if parent is not None else None
@@ -131,40 +111,12 @@ def _sync_slot_from_subevent(instance):
     if not isinstance(activity, DateActivity):
         return
 
-    slot = instance.slot
-    if slot is None and instance.slot_id:
-        slot = DateActivitySlot.objects.filter(
-            activity=activity,
-            pk=instance.slot_id,
-        ).first()
-    if slot is None:
-        slot = DateActivitySlot.objects.filter(activity=activity, origin=instance).first()
-    if slot is None and instance.start_time is not None:
-        slot = DateActivitySlot.objects.filter(
-            activity=activity,
-            origin__isnull=True,
-            start=instance.start_time,
-        ).first()
-        if slot is None and instance.duration is not None:
-            slot = DateActivitySlot.objects.filter(
-                activity=activity,
-                origin__isnull=True,
-                start=instance.start_time,
-                duration=instance.duration,
-            ).first()
-    if (
-        slot is None and
-        activity.slots.count() == 1 and
-        parent is not None and
-        parent.sub_event.count() == 1
-    ):
-        slot = activity.slots.first()
-
     payload = {
         'name': instance.name,
         'start_time': instance.start_time,
         'duration': instance.duration,
         'capacity': instance.capacity,
+        'contributor_count': instance.contributor_count or 0,
     }
     if instance.iri:
         payload['id'] = instance.iri
@@ -172,32 +124,11 @@ def _sync_slot_from_subevent(instance):
         payload['event_attendance_mode'] = instance.event_attendance_mode
 
     serializer = SlotsSerializer(
-        instance=slot,
         data=payload,
         partial=True,
     )
     serializer.is_valid(raise_exception=True)
-    validated = dict(serializer.validated_data)
-    validated.pop('id', None)
-
-    if slot is None:
-        slot = DateActivitySlot(activity=activity, **validated)
-        slot.save(run_triggers=False)
-    else:
-        for key, value in validated.items():
-            setattr(slot, key, value)
-        slot.save(run_triggers=False)
-
-    update_fields = []
-    if slot.origin_id != instance.pk:
-        slot.origin = instance
-        update_fields.append('origin')
-    remote_count = instance.contributor_count or 0
-    if slot.remote_contributor_count != remote_count:
-        slot.remote_contributor_count = remote_count
-        update_fields.append('remote_contributor_count')
-    if update_fields:
-        slot.save(run_triggers=False, update_fields=update_fields)
+    slot = serializer.save(activity=activity)
 
     update_kwargs = {'capacity': slot.capacity}
     if instance.slot_id != slot.pk:
@@ -205,115 +136,11 @@ def _sync_slot_from_subevent(instance):
     SubEvent.objects.filter(pk=instance.pk).update(**update_kwargs)
 
 
-def _adopted_slot_has_active_participants(slot):
-    return slot.participants.filter(
-        status__in=['new', 'accepted', 'succeeded', 'scheduled', 'participating'],
-    ).exists()
-
-
 def _sync_adopted_date_slots_from_source(event_do_good, source_date, adopted_date):
-    from bluebottle.time_based.models import DateActivitySlot
-    from bluebottle.activity_pub.serializers.federated_activities import SlotsSerializer
-
-    subs = list(event_do_good.sub_event.order_by('start_time', 'id'))
-    if not subs and source_date is not None and source_date.slots.exists():
-        return
-
-    if subs:
-        known_sub_ids = {s.pk for s in subs}
-        for loose in adopted_date.slots.exclude(origin_id__in=known_sub_ids).exclude(
-            origin_id__isnull=True
-        ):
-            loose.origin = None
-            loose.save(update_fields=['origin'])
-
-    for sub in subs:
-        src_slot = _source_date_slot_for_sub_event(sub, source_date)
-        start_for_match = src_slot.start if src_slot is not None else sub.start_time
-        ad_slot = DateActivitySlot.objects.filter(activity=adopted_date, origin=sub).first()
-        if ad_slot is None and src_slot is not None:
-            ad_slot = DateActivitySlot.objects.filter(
-                activity=adopted_date,
-                origin__isnull=True,
-                start=src_slot.start,
-            ).first()
-        if ad_slot is None and start_for_match is not None:
-            ad_slot = DateActivitySlot.objects.filter(
-                activity=adopted_date,
-                origin__isnull=True,
-                start=start_for_match,
-            ).first()
-        if ad_slot is None and len(subs) == 1:
-            orphans = list(
-                adopted_date.slots.filter(origin__isnull=True)
-            )
-            if len(orphans) == 1:
-                ad_slot = orphans[0]
-        if ad_slot is not None and ad_slot.origin_id != sub.pk:
-            ad_slot.origin = sub
-            ad_slot.save(run_triggers=False, update_fields=['origin'])
-        if ad_slot is None:
-            ad_slot = None
-
-        payload = {
-            'name': src_slot.title if src_slot is not None else sub.name,
-            'start_time': src_slot.start if src_slot is not None else sub.start_time,
-            'duration': src_slot.duration if src_slot is not None else sub.duration,
-            'capacity': src_slot.capacity if src_slot is not None else sub.capacity,
-        }
-        if sub.iri:
-            payload['id'] = sub.iri
-        if src_slot is not None:
-            payload['event_attendance_mode'] = (
-                'OnlineEventAttendanceMode' if src_slot.is_online else 'OfflineEventAttendanceMode'
-            )
-            src_location = getattr(src_slot, 'location', None)
-            location_ap_id = None
-            if isinstance(src_location, dict):
-                location_ap_id = src_location.get('id')
-            else:
-                location_ap_id = getattr(src_location, 'activity_pub_url', None)
-            if location_ap_id:
-                payload['location'] = {'id': location_ap_id}
-        else:
-            is_online = _is_online_from_sub_event(sub)
-            if is_online is not None:
-                payload['event_attendance_mode'] = (
-                    'OnlineEventAttendanceMode' if is_online else 'OfflineEventAttendanceMode'
-                )
-
-        serializer = SlotsSerializer(instance=ad_slot, data=payload, partial=True)
-        serializer.is_valid(raise_exception=True)
-        ad_slot = serializer.save(activity=adopted_date)
-
-        extra_updates = []
-        if src_slot is not None:
-            if ad_slot.online_meeting_url != src_slot.online_meeting_url:
-                ad_slot.online_meeting_url = src_slot.online_meeting_url
-                extra_updates.append('online_meeting_url')
-            if ad_slot.location_hint != src_slot.location_hint:
-                ad_slot.location_hint = src_slot.location_hint
-                extra_updates.append('location_hint')
-            if ad_slot.status != src_slot.status:
-                ad_slot.status = src_slot.status
-                extra_updates.append('status')
-        if ad_slot.origin_id != sub.pk:
-            ad_slot.origin = sub
-            extra_updates.append('origin')
-        remote_count = sub.contributor_count or 0
-        if ad_slot.remote_contributor_count != remote_count:
-            ad_slot.remote_contributor_count = remote_count
-            extra_updates.append('remote_contributor_count')
-        if extra_updates:
-            ad_slot.save(
-                run_triggers=False,
-                update_fields=list(dict.fromkeys(extra_updates))
-            )
-
-    for orphan in adopted_date.slots.filter(origin__isnull=True):
-        if _adopted_slot_has_active_participants(orphan):
-            continue
-        orphan.delete()
+    from bluebottle.activity_pub.serializers.federated_activities import (
+        sync_adopted_date_slots_from_source,
+    )
+    sync_adopted_date_slots_from_source(event_do_good, source_date, adopted_date)
 
 
 def _sync_adopted_activities_for_ap_object(obj, update=None):

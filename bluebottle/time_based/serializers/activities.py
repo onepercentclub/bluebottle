@@ -205,9 +205,6 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
     )
 
-    def get_contributor_count(self, instance):
-        return instance.total_contributor_count
-
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DeadlineActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
@@ -374,9 +371,6 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         },
     )
 
-    def get_contributor_count(self, instance):
-        return instance.total_contributor_count
-
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodicActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
@@ -443,9 +437,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             "total": ["open", "full", "running", "failed", "succeeded", "expired", "cancelled", "finished"],
         },
     )
-
-    def get_contributor_count(self, instance):
-        return instance.total_contributor_count
 
     def get_filtered_slots(self, obj, only_upcoming=False):
 

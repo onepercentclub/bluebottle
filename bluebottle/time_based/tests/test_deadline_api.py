@@ -101,7 +101,7 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
         self.perform_get(user=self.model.owner)
         self.assertStatus(status.HTTP_200_OK)
         self.assertMeta('contributor-count', 6)
-        self.assertMeta('contributor', {'total': 6, 'local': 1, 'remote': 5})
+        self.assertMeta('contributor_count', {'total': 6, 'local': 1, 'remote': 5})
 
 
 class DeadlineActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):

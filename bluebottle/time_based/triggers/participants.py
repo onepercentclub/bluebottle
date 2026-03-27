@@ -1257,6 +1257,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.remove,
             effects=[
+                SendLeaveEffect,
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
@@ -1275,6 +1276,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.accept,
             effects=[
+                SendJoinEffect,
                 TransitionEffect(
                     RegistrationParticipantStateMachine.succeed,
                     conditions=[participant_slot_is_finished]
@@ -1299,6 +1301,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.add,
             effects=[
+                SendJoinEffect,
                 TransitionEffect(
                     RegistrationParticipantStateMachine.succeed,
                     conditions=[participant_slot_is_finished]
@@ -1327,6 +1330,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.reject,
             effects=[
+                SendLeaveEffect,
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
@@ -1344,6 +1348,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.withdraw,
             effects=[
+                SendLeaveEffect,
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
@@ -1381,6 +1386,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.reapply,
             effects=[
+                SendJoinEffect,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,
@@ -1417,6 +1423,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.readd,
             effects=[
+                SendJoinEffect,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,
@@ -1447,6 +1454,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.restore,
             effects=[
+                SendJoinEffect,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,

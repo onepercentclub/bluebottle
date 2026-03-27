@@ -229,6 +229,37 @@ class DateActivitySlotInline(TabularInlinePaginated):
 
     extra = 0
 
+    def _is_activity_pub_synced_slot(self, slot):
+        return bool(getattr(slot, 'origin_id', None) or getattr(slot, 'event', None))
+
+    def _has_activity_pub_subevents(self, activity):
+        from bluebottle.activity_pub.models import Event
+
+        if activity is None:
+            return False
+        try:
+            event = activity.event
+        except AttributeError:
+            return False
+        except Event.DoesNotExist:
+            return False
+        return event.sub_event.exists()
+
+    def has_change_permission(self, request, obj=None):
+        if obj is not None and self._is_activity_pub_synced_slot(obj):
+            return False
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and self._is_activity_pub_synced_slot(obj):
+            return False
+        return True
+
+    def has_add_permission(self, request, obj=None):
+        if self._has_activity_pub_subevents(obj):
+            return False
+        return True
+
     def link(self, obj):
         url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj)
@@ -1124,7 +1155,7 @@ class SlotAdmin(StateMachineAdmin):
     readonly_fields = [
         'created',
         'updated',
-        'valid'
+        'valid',
     ]
     detail_fields = [
         'activity',
@@ -1137,7 +1168,7 @@ class SlotAdmin(StateMachineAdmin):
         'status',
         'states',
         'created',
-        'updated'
+        'updated',
     ]
 
     def get_status_fields(self, request, obj):

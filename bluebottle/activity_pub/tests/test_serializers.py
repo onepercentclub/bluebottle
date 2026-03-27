@@ -4,6 +4,7 @@ import mock
 from django.test import RequestFactory
 from requests import Response
 
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import GoodDeed, CrowdFunding, GrantApplication, Leave
 from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import (
@@ -17,7 +18,11 @@ from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DateParticipantFactory,
+)
 
 
 class DoGoodEventSerializerTestCase(BluebottleTestCase):
@@ -44,6 +49,8 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
 
     def test_to_json_ld(self):
         model = self.factory.create()
+        model.capacity = 25
+        model.save(update_fields=['capacity'])
         federated_serializer = self.federated_serializer(
             instance=model,
             context=self.context
@@ -61,6 +68,20 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
         self.assertEqual(do_good_event.name, model.title)
         self.assertEqual(do_good_event.summary, model.description.html)
         self.assertEqual(do_good_event.sub_event.count(), model.slots.count())
+        self.assertEqual(do_good_event.capacity, 25)
+
+    def test_federated_payload_includes_slot_capacity(self):
+        model = self.factory.create()
+        slot = model.slots.get()
+        slot.capacity = 42
+        slot.save(update_fields=['capacity'])
+        federated_serializer = self.federated_serializer(
+            instance=model,
+            context=self.context,
+        )
+        payload = federated_serializer.data['sub_event']
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]['capacity'], 42)
 
     def test_to_json_ld_slots_keep_individual_locations(self):
         model = self.factory.create(slots=[])
@@ -95,6 +116,29 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
         }
         self.assertSetEqual(serialized_locations, expected_locations)
 
+    def test_to_json_ld_uses_slot_participant_count_for_subevent(self):
+        model = self.factory.create(slots=[])
+        slot = DateActivitySlotFactory.create(activity=model)
+        DateParticipantFactory.create(activity=model, slot=slot, status='accepted')
+        DateParticipantFactory.create(activity=model, slot=slot, status='succeeded')
+        DateParticipantFactory.create(activity=model, slot=slot, status='new')
+
+        federated_serializer = self.federated_serializer(
+            instance=model,
+            context=self.context,
+        )
+        activity_pub_serializer = self.activity_pub_serializer(
+            data=federated_serializer.data,
+            context=self.context,
+        )
+
+        self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
+        do_good_event = activity_pub_serializer.save()
+        sub_event = do_good_event.sub_event.first()
+
+        self.assertIsNotNone(sub_event)
+        self.assertEqual(sub_event.contributor_count, 2)
+
     def test_to_json_ld_already_exists(self):
         model = self.factory.create()
         federated_serializer = self.federated_serializer(
@@ -118,6 +162,28 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
         self.assertEqual(do_good_event.name, model.title)
         self.assertEqual(do_good_event.summary, model.description.html)
         self.assertEqual(do_good_event.sub_event.count(), model.slots.count())
+
+    def test_update_does_not_mutate_related_date_activity_capacity(self):
+        model = self.factory.create()
+        model.capacity = 10
+        model.save(update_fields=['capacity'])
+        adapter.create_or_update_event(model)
+        event = model.event
+        if not event.iri:
+            event.iri = 'https://source.example/events/test-update-capacity'
+            event.save(update_fields=['iri'])
+
+        serializer = self.activity_pub_serializer(
+            instance=event,
+            data={'id': event.iri, 'type': 'DoGoodEvent', 'capacity': 99},
+            partial=True,
+            context=self.context,
+        )
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+        serializer.save()
+
+        model.refresh_from_db()
+        self.assertEqual(model.capacity, 10)
 
     def test_to_federated_activity(self):
         activity_pub_model = self.activity_pub_factory.create(iri='http://example.com')

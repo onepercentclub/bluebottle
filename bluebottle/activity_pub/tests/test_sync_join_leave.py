@@ -4,7 +4,8 @@ Tests for Sync connection setup between two platforms and activity_pub Join/Leav
 - Sync connection: Follow with adoption_type='sync', adopt() creating a synced Deed with origin=GoodDeed.
 - Join: when a follower sends Join(object=source GoodDeed), source platform adds DeedParticipant (RemoteContributor).
 - Leave: when a follower sends Leave(object=source GoodDeed, participant_sync_id=...), source removes participant.
-- contributor_count sync: GoodDeed.contributor_count mirrors Deed.contributor_count; local participant changes sync to origin.
+- contributor_count sync: GoodDeed.contributor_count mirrors
+  Deed.contributor_count; local participant changes sync to origin.
 """
 from datetime import datetime, timedelta
 from unittest import mock
@@ -16,8 +17,10 @@ from django.utils import timezone as tz
 from bluebottle.activities.models import RemoteContributor
 from bluebottle.activity_pub.adapters import (
     adapter,
+    resolve_sub_event_for_synced_date_join,
     sync_good_deed_contributor_count,
 )
+from bluebottle.activity_pub.effects import SendJoinEffect
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices,
     Create,
@@ -25,6 +28,7 @@ from bluebottle.activity_pub.models import (
     Join,
     Leave,
     Recipient,
+    SubEvent,
     Update,
 )
 from bluebottle.activity_pub.tests.factories import (
@@ -39,8 +43,12 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory as BluebottleOrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.models import DeadlineParticipant
-from bluebottle.time_based.tests.factories import DeadlineActivityFactory
+from bluebottle.time_based.models import DateActivity, DateParticipant, DeadlineParticipant
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DeadlineActivityFactory,
+)
 
 
 def _ensure_platform_actor():
@@ -526,7 +534,10 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         )
 
     def test_sync_follow_and_adopt_then_join_updates_source(self):
-        """Flow: source deed → adopt with sync (creates deed with origin) → Join from follower → source has participant."""
+        """
+        Flow: source deed -> adopt with sync (creates deed with origin) ->
+        Join from follower -> source has participant.
+        """
         deed = DeedFactory.create(
             title='Shared Deed',
             start=(datetime.now() + timedelta(days=7)).date(),
@@ -609,7 +620,10 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         self.assertEqual(part.status, 'rejected')
 
     def test_join_after_withdraw_re_appears_on_source(self):
-        """When a user joins an adopted deed, withdraws, then joins again, they re-appear on the source participant list."""
+        """
+        When a user joins an adopted deed, withdraws, then joins again,
+        they re-appear on the source participant list.
+        """
         deed = DeedFactory.create(
             title='Deed for re-join',
             start=(datetime.now() + timedelta(days=7)).date(),
@@ -756,7 +770,10 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         )
 
     def test_leave_received_updates_adopted_deed_participant_and_local_event_count(self):
-        """Follower receiving Leave for source event rejects related adopted deed participant and updates local count."""
+        """
+        Follower receiving Leave for source event rejects related adopted
+        deed participant and updates local count.
+        """
         source_deed = DeedFactory.create(
             title='Source for follower leave receive',
             start=(datetime.now() + timedelta(days=7)).date(),
@@ -1014,3 +1031,631 @@ class SyncIntegrationTestCase(BluebottleTestCase):
         self.assertEqual(follower_participant.status, 'rejected')
         adopted_deadline.event.refresh_from_db()
         self.assertEqual(adopted_deadline.event.contributor_count, 0)
+
+    def test_sync_date_activity_join_second_slot_and_leave_updates_count(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        slot_first = source_date.slots.get()
+        slot_second = DateActivitySlotFactory.create(
+            activity=source_date,
+            start=slot_first.start + timedelta(days=3),
+            duration=slot_first.duration,
+            is_online=True,
+            location=None,
+            capacity=10,
+            status='open',
+        )
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        slots = list(source_date.slots.order_by('start'))
+        origin_second = slots[1].origin
+        self.assertIsNotNone(origin_second)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        for slot in slots:
+            DateActivitySlotFactory.create(
+                activity=adopted_date,
+                origin=slot.origin,
+                start=slot.start,
+                duration=slot.duration,
+                is_online=True,
+                location=None,
+                capacity=10,
+                status='open',
+            )
+        adapter.create_or_update_event(adopted_date)
+
+        sync_id = 'date-slot-b-user'
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            sub_event=origin_second,
+            participant_sync_id=sync_id,
+            participant_name='Slot B User',
+            participant_email='slotb@example.com',
+            iri='https://follower.example/join/date-slot-b',
+        )
+
+        participant = DateParticipant.objects.get(
+            activity=source_date,
+            remote_contributor__sync_id=sync_id,
+        )
+        self.assertEqual(participant.slot_id, slots[1].id)
+
+        source_event.refresh_from_db()
+        self.assertEqual(source_event.contributor_count, 1)
+        origin_second.refresh_from_db()
+        self.assertEqual(origin_second.contributor_count, 1)
+
+        Leave.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            sub_event=origin_second,
+            participant_sync_id=sync_id,
+            iri='https://follower.example/leave/date-slot-b',
+        )
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, 'rejected')
+        source_event.refresh_from_db()
+        self.assertEqual(source_event.contributor_count, 0)
+        origin_second.refresh_from_db()
+        self.assertEqual(origin_second.contributor_count, 0)
+
+    def test_join_multi_slot_adopted_participant_without_slot_origin_syncs_to_source_slot(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        slot_first = source_date.slots.get()
+        slot_second = DateActivitySlotFactory.create(
+            activity=source_date,
+            start=slot_first.start + timedelta(days=3),
+            duration=slot_first.duration,
+            is_online=True,
+            location=None,
+            capacity=10,
+            status='open',
+        )
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        slots = list(source_date.slots.order_by('start'))
+        origin_second = slots[1].origin
+        self.assertIsNotNone(origin_second)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=None,
+            start=slots[0].start,
+            duration=slots[0].duration,
+            is_online=True,
+            location=None,
+            capacity=10,
+            status='open',
+        )
+        adopted_second = DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=None,
+            start=slots[1].start,
+            duration=slots[1].duration,
+            is_online=True,
+            location=None,
+            capacity=10,
+            status='open',
+        )
+
+        sync_id = 'no-origin-slot-b'
+        follower_rc = RemoteContributor.objects.create(
+            sync_id=sync_id,
+            display_name='Remote B',
+            sync_actor=self.follower_actor,
+        )
+        participant_local = DateParticipant.objects.create(
+            activity=adopted_date,
+            user=None,
+            slot=adopted_second,
+            remote_contributor=follower_rc,
+            status='accepted',
+        )
+
+        resolved_sub = resolve_sub_event_for_synced_date_join(
+            participant_local, adopted_date
+        )
+        self.assertIsNotNone(resolved_sub)
+        self.assertEqual(resolved_sub.pk, origin_second.pk)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            sub_event=resolved_sub,
+            participant_sync_id=sync_id,
+            participant_name='Remote B',
+            participant_email='b@example.com',
+            iri='https://follower.example/join/date-no-origin-b',
+        )
+
+        source_participant = DateParticipant.objects.get(
+            activity=source_date,
+            remote_contributor__sync_id=sync_id,
+            slot=slots[1],
+        )
+        self.assertEqual(source_participant.status, 'accepted')
+
+        source_event.refresh_from_db()
+        self.assertEqual(source_event.contributor_count, 1)
+        origin_second.refresh_from_db()
+        self.assertEqual(origin_second.contributor_count, 1)
+
+    def test_send_join_effect_sets_sub_event_when_adopted_slot_has_no_origin(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        slot_first = source_date.slots.get()
+        slot_second = DateActivitySlotFactory.create(
+            activity=source_date,
+            start=slot_first.start + timedelta(days=3),
+            duration=slot_first.duration,
+            is_online=True,
+            location=None,
+            capacity=10,
+            status='open',
+        )
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        slots = list(source_date.slots.order_by('start'))
+        origin_second = slots[1].origin
+        self.assertIsNotNone(origin_second)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=None,
+            start=slots[0].start,
+            duration=slots[0].duration,
+            is_online=True,
+            location=None,
+            capacity=10,
+            status='open',
+        )
+        adopted_second = DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=None,
+            start=slots[1].start,
+            duration=slots[1].duration,
+            is_online=True,
+            location=None,
+            capacity=10,
+            status='open',
+        )
+
+        follower_rc = RemoteContributor.objects.create(
+            sync_id='effect-slot-b',
+            display_name='Effect B',
+            sync_actor=self.follower_actor,
+        )
+        participant_local = DateParticipant.objects.create(
+            activity=adopted_date,
+            user=None,
+            slot=adopted_second,
+            remote_contributor=follower_rc,
+            status='accepted',
+        )
+
+        SendJoinEffect(participant_local).post_save()
+
+        join = (
+            Join.objects.filter(
+                object=source_event,
+                participant_sync_id=follower_rc.sync_id,
+            )
+            .order_by('-id')
+            .first()
+        )
+        self.assertIsNotNone(join)
+        self.assertEqual(join.sub_event_id, origin_second.pk)
+
+    def test_update_syncs_adopted_date_slot_capacity(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        source_slot = source_date.slots.get()
+        source_slot.capacity = 5
+        source_slot.save(update_fields=['capacity'])
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=source_slot.origin,
+            start=source_slot.start,
+            duration=source_slot.duration,
+            is_online=source_slot.is_online,
+            location=source_slot.location,
+            capacity=5,
+            status='open',
+        )
+        adapter.create_or_update_event(adopted_date)
+        adopted_slot = adopted_date.slots.get()
+        self.assertEqual(adopted_slot.capacity, 5)
+
+        source_slot.capacity = 99
+        source_slot.save(update_fields=['capacity'])
+        adapter.create_or_update_event(source_date)
+
+        Update.objects.create(object=source_event)
+
+        adopted_slot.refresh_from_db()
+        self.assertEqual(adopted_slot.capacity, 99)
+        self.assertTrue(
+            any(
+                isinstance(a, DateActivity) and a.pk == adopted_date.pk
+                for a in source_event.adopted_activities.all()
+            )
+        )
+
+    def test_do_good_event_save_syncs_adopted_slots_without_update_activity(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        source_slot = source_date.slots.get()
+        source_slot.capacity = 5
+        source_slot.save(update_fields=['capacity'])
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        adopted_slot = DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=source_slot.origin,
+            start=source_slot.start,
+            duration=source_slot.duration,
+            is_online=source_slot.is_online,
+            location=source_slot.location,
+            capacity=5,
+            status='open',
+        )
+        adapter.create_or_update_event(adopted_date)
+
+        source_slot.capacity = 77
+        source_slot.save(update_fields=['capacity'])
+        adapter.create_or_update_event(source_date)
+
+        adopted_slot.refresh_from_db()
+        self.assertEqual(adopted_slot.capacity, 77)
+
+    def test_update_syncs_adopted_date_slot_duration(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        source_slot = source_date.slots.get()
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=source_slot.origin,
+            start=source_slot.start,
+            duration=source_slot.duration,
+            is_online=source_slot.is_online,
+            location=source_slot.location,
+            capacity=source_slot.capacity,
+            status='open',
+        )
+        adapter.create_or_update_event(adopted_date)
+        adopted_slot = adopted_date.slots.get()
+        self.assertEqual(adopted_slot.duration, source_slot.duration)
+
+        source_slot.duration = timedelta(hours=5)
+        source_slot.save(update_fields=['duration'])
+        adapter.create_or_update_event(source_date)
+
+        Update.objects.create(object=source_event)
+
+        adopted_slot.refresh_from_db()
+        self.assertEqual(adopted_slot.duration, timedelta(hours=5))
+
+    def test_update_syncs_adopted_date_slot_extra_fields(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        source_slot = source_date.slots.get()
+        source_slot.online_meeting_url = 'https://meet.example/source-a'
+        source_slot.location_hint = 'Use side entrance'
+        source_slot.status = 'full'
+        source_slot.save(update_fields=['online_meeting_url', 'location_hint', 'status'])
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        adopted_slot = DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=source_slot.origin,
+            start=source_slot.start,
+            duration=source_slot.duration,
+            is_online=source_slot.is_online,
+            location=source_slot.location,
+            capacity=source_slot.capacity,
+            online_meeting_url='https://stale.example/old',
+            location_hint='Old hint',
+            status='open',
+        )
+        adapter.create_or_update_event(adopted_date)
+
+        source_slot.online_meeting_url = 'https://meet.example/source-b'
+        source_slot.location_hint = 'Reception desk'
+        source_slot.status = 'running'
+        source_slot.save(update_fields=['online_meeting_url', 'location_hint', 'status'])
+        adapter.create_or_update_event(source_date)
+
+        Update.objects.create(object=source_event)
+
+        adopted_slot.refresh_from_db()
+        self.assertEqual(adopted_slot.online_meeting_url, 'https://meet.example/source-b')
+        self.assertEqual(adopted_slot.location_hint, 'Reception desk')
+        self.assertEqual(adopted_slot.status, 'running')
+
+    def test_slot_state_transition_syncs_adopted_slot_status(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        source_slot = source_date.slots.get()
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        adopted_slot = DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=source_slot.origin,
+            start=source_slot.start,
+            duration=source_slot.duration,
+            is_online=source_slot.is_online,
+            location=source_slot.location,
+            capacity=source_slot.capacity,
+            status='open',
+        )
+        adapter.create_or_update_event(adopted_date)
+
+        source_slot.states.cancel(save=True)
+
+        adopted_slot.refresh_from_db()
+        self.assertEqual(adopted_slot.status, 'cancelled')
+
+    def test_update_syncs_adopted_from_sub_events_when_event_has_no_activity(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        source_slot = source_date.slots.get()
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        self.assertIsNotNone(source_event)
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        sub = source_slot.origin
+        self.assertIsNotNone(sub)
+        DateActivitySlotFactory.create(
+            activity=adopted_date,
+            origin=sub,
+            start=source_slot.start,
+            duration=source_slot.duration,
+            is_online=source_slot.is_online,
+            location=source_slot.location,
+            capacity=5,
+            status='open',
+        )
+        adapter.create_or_update_event(adopted_date)
+        adopted_slot = adopted_date.slots.get()
+        self.assertEqual(adopted_slot.capacity, 5)
+
+        SubEvent.objects.filter(pk=sub.pk).update(capacity=77)
+        source_event.activity = None
+        source_event.save(update_fields=['activity'])
+
+        Update.objects.create(object=source_event)
+
+        adopted_slot.refresh_from_db()
+        self.assertEqual(adopted_slot.capacity, 77)
+
+    def test_sync_date_single_slot_join_without_sub_event(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_slot = adopted_date.slots.get()
+        source_slot = source_date.slots.get()
+        adopted_slot.origin = source_slot.origin
+        adopted_slot.save(update_fields=['origin'])
+        adapter.create_or_update_event(adopted_date)
+
+        sync_id = 'date-single-fallback'
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            participant_sync_id=sync_id,
+            participant_name='Single',
+            participant_email='single@example.com',
+            iri='https://follower.example/join/date-single',
+        )
+        participant = DateParticipant.objects.get(
+            activity=source_date,
+            remote_contributor__sync_id=sync_id,
+        )
+        self.assertEqual(participant.slot_id, source_slot.id)
+
+    def test_source_remove_date_remote_participant_notifies_follower(self):
+        source_date = DateActivityFactory.create(status='open', review=False)
+        slot_first = source_date.slots.get()
+        DateActivitySlotFactory.create(
+            activity=source_date,
+            start=slot_first.start + timedelta(days=3),
+            duration=slot_first.duration,
+            is_online=True,
+            location=None,
+            capacity=10,
+            status='open',
+        )
+        adapter.create_or_update_event(source_date)
+        source_event = source_date.event
+        if not Create.objects.filter(object=source_event).exists():
+            Create.objects.create(actor=self.platform_actor, object=source_event)
+
+        slots = list(source_date.slots.order_by('start'))
+        origin_second = slots[1].origin
+
+        adopted_date = DateActivityFactory.create(
+            status='open',
+            review=False,
+            origin=source_event,
+            owner=self.follow.default_owner,
+            initiative=source_date.initiative,
+        )
+        adopted_date.slots.all().delete()
+        for slot in slots:
+            DateActivitySlotFactory.create(
+                activity=adopted_date,
+                origin=slot.origin,
+                start=slot.start,
+                duration=slot.duration,
+                is_online=True,
+                location=None,
+                capacity=10,
+                status='open',
+            )
+        adapter.create_or_update_event(adopted_date)
+
+        sync_id = 'date-source-remove-1'
+        follower_rc = RemoteContributor.objects.create(
+            sync_id=sync_id,
+            display_name='Follower date user',
+            sync_actor=self.platform_actor,
+        )
+        follower_slot = adopted_date.slots.order_by('start')[1]
+        follower_participant = DateParticipant.objects.create(
+            activity=adopted_date,
+            user=None,
+            slot=follower_slot,
+            remote_contributor=follower_rc,
+            status='accepted',
+        )
+        self.assertIsNotNone(follower_participant)
+        adapter.create_or_update_event(adopted_date)
+        adopted_date.event.refresh_from_db()
+        self.assertEqual(adopted_date.event.contributor_count, 1)
+
+        Join.objects.create(
+            actor=self.follower_actor,
+            object=source_event,
+            sub_event=origin_second,
+            participant_sync_id=sync_id,
+            participant_name='Remote',
+            participant_email='r@example.com',
+            iri='https://follower.example/join/date-remove-1',
+        )
+        source_participant = DateParticipant.objects.get(
+            activity=source_date,
+            remote_contributor__sync_id=sync_id,
+        )
+
+        source_participant.states.remove(save=True)
+        leave = Leave.objects.filter(
+            object=source_event,
+            participant_sync_id=sync_id,
+            sub_event=origin_second,
+        ).exclude(iri__isnull=False).last()
+        self.assertIsNotNone(leave)
+        self.assertTrue(Recipient.objects.filter(activity=leave, actor=self.follower_actor).exists())
+
+        Leave.objects.create(
+            actor=self.platform_actor,
+            object=source_event,
+            sub_event=origin_second,
+            participant_sync_id=sync_id,
+            iri='https://source.example/leave/date-remove-1',
+        )
+        follower_participant.refresh_from_db()
+        self.assertEqual(follower_participant.status, 'rejected')
+        adopted_date.event.refresh_from_db()
+        self.assertEqual(adopted_date.event.contributor_count, 0)

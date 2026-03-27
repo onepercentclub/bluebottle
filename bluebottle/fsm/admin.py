@@ -22,7 +22,10 @@ def get_effects(effects):
     for effect in displayed_effects:
         grouped_effects[(effect.__class__, effect.instance.__class__)].append(effect)
 
-    return [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
+    rendered = [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
+    hidden = [effect for effect in effects if not effect.display]
+    rendered.extend(effect.to_html() for effect in hidden)
+    return rendered
 
 
 class StateMachineAdminMixin(object):

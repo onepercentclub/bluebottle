@@ -56,6 +56,16 @@ class DateParticipantSerializer(ParticipantSerializer):
     registration = ResourceRelatedField(queryset=DateRegistration.objects.all(), required=False)
 
     slot = ResourceRelatedField(queryset=DateActivitySlot.objects)
+    display_name = serializers.SerializerMethodField(read_only=True)
+    platform = serializers.SerializerMethodField(read_only=True)
+
+    def get_display_name(self, obj):
+        return obj.display_name_or_user or None
+
+    def get_platform(self, obj):
+        if obj.sync_actor_id:
+            return getattr(obj.sync_actor, 'name', None)
+        return None
 
     def validate(self, data):
         email = data.get('email', None)
@@ -66,7 +76,12 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
-        fields = ParticipantSerializer.Meta.fields + ("contributions", 'slot')
+        fields = ParticipantSerializer.Meta.fields + (
+            "contributions",
+            "slot",
+            "display_name",
+            "platform",
+        )
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = "contributors/time-based/date-participants"

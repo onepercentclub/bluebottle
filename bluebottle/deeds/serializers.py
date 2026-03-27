@@ -78,11 +78,18 @@ class DeedSerializer(BaseActivitySerializer):
     )
 
     def get_contributor_count(self, instance):
-        """Total participants: from origin when adopted (synced deed), else local count."""
+        """Contributor totals as object; use origin total when adopted."""
         if getattr(instance, 'origin_id', None) and instance.origin_id:
             origin = getattr(instance, 'origin', None)
             if origin is not None:
-                return getattr(origin, 'contributor_count', None)
+                synced_total = getattr(origin, 'contributor_count', None) or 0
+                local_total = instance.local_contributor_count
+                total = synced_total if synced_total else local_total
+                return {
+                    'total': total,
+                    'local': local_total,
+                    'remote': max(0, total - local_total),
+                }
         return super().get_contributor_count(instance)
 
     def get_my_contributor(self, instance):

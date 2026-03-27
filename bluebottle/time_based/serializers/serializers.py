@@ -36,6 +36,7 @@ class UnreviewedContributorsField(SerializerMethodHyperlinkedRelatedField):
 
 class ActivitySlotSerializer(ModelSerializer):
     is_online = serializers.BooleanField(required=False, allow_null=True)
+    contributor_count = serializers.SerializerMethodField(read_only=True)
     permissions = ResourcePermissionField('date-slot-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     status = FSMField(read_only=True)
@@ -55,6 +56,16 @@ class ActivitySlotSerializer(ModelSerializer):
         is_online = getattr(instance, 'is_online', False)
         has_location = getattr(instance, 'location', False)
         return instance.location.timezone if not is_online and has_location else None
+
+    def get_contributor_count(self, instance):
+        local_count = instance.contributor_count
+        remote_count = getattr(instance, 'remote_contributor_count', 0) or 0
+        total_count = max(local_count, remote_count)
+        return {
+            'total': total_count,
+            'local': local_count,
+            'remote': max(0, total_count - local_count),
+        }
 
     class Meta:
         fields = (

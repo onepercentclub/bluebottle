@@ -193,7 +193,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         related_link_view_name="deadline-participants",
         related_link_url_kwarg="activity_id",
         statuses={
-            "active": ["succeeded"],
+            "active": ["succeeded", "accepted"],
             "failed": ["rejected", "withdrawn", "removed"],
         },
     )
@@ -371,14 +371,6 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         },
     )
 
-    def get_contributor_count(self, instance):
-        return (
-            instance.deleted_successful_contributors
-            + instance.contributors.not_instance_of(Organizer)
-            .filter(status__in=["accepted", "participating"])
-            .count()
-        )
-
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodicActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
@@ -445,14 +437,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             "total": ["open", "full", "running", "failed", "succeeded", "expired", "cancelled", "finished"],
         },
     )
-
-    def get_contributor_count(self, instance):
-        return (
-            instance.deleted_successful_contributors
-            + instance.contributors.not_instance_of(Organizer)
-            .filter(status__in=["accepted", "participating"])
-            .count()
-        )
 
     def get_filtered_slots(self, obj, only_upcoming=False):
 

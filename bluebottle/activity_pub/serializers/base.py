@@ -174,7 +174,6 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         request = self.context.get('request')
         request_auth = getattr(request, 'auth', None)
         auth_iri = getattr(request_auth, 'iri', None)
-        internal_update = self.context.get('internal_update', False)
 
         # Do not allow remote request to update local instances
         if (
@@ -186,10 +185,16 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
             return instance
 
         for name, field in self.fields.items():
-            if isinstance(
-                field,
-                (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
-            ):
+            if isinstance(field, ActivityPubListSerializer):
+                if name not in validated_data:
+                    continue
+                value = validated_data[name]
+                if value is None:
+                    continue
+                field.initial_data = value
+                field.is_valid()
+                validated_data[field.source] = field.save()
+            elif isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data[name]
                     field.is_valid()

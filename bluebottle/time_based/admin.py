@@ -1155,7 +1155,7 @@ class SlotAdmin(StateMachineAdmin):
     readonly_fields = [
         'created',
         'updated',
-        'valid'
+        'valid',
     ]
     detail_fields = [
         'activity',
@@ -1168,7 +1168,7 @@ class SlotAdmin(StateMachineAdmin):
         'status',
         'states',
         'created',
-        'updated'
+        'updated',
     ]
 
     def get_status_fields(self, request, obj):

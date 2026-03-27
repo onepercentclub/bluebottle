@@ -477,7 +477,7 @@ class SubEvent(ActivityPubModel):
     )
     contributor_count = models.PositiveIntegerField(
         default=0,
-        help_text=_('Accepted participants for this slot (denormalized for ActivityPub sync).'),
+        help_text=_('Accepted participants for this slot.'),
     )
     capacity = models.PositiveIntegerField(
         _('Capacity'),
@@ -758,6 +758,12 @@ class Update(Activity):
             for create in self.object.create_set.all():
                 for recipient in create.recipients.all():
                     yield recipient.actor
+        elif isinstance(self.object, SubEvent):
+            parent = self.object.parent
+            if parent:
+                for create in parent.create_set.all():
+                    for recipient in create.recipients.all():
+                        yield recipient.actor
         else:
             raise TypeError(f'Cannot create Update for {self.object}')
 

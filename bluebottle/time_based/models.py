@@ -114,8 +114,6 @@ class TimeBasedActivity(Activity):
         blank=True, null=True,
         max_length=300,
     )
-    remote_contributor_count = models.PositiveIntegerField(default=0)
-
     activity_type = _('Time-based activity')
 
     @property

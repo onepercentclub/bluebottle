@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from bluebottle.activity_pub.models import DoGoodEvent, GoodDeed
+from bluebottle.activity_pub.models import DoGoodEvent, GoodDeed, SubEvent
 
 
 class BaseUpdateSyncSerializer(serializers.Serializer):
@@ -55,7 +55,7 @@ class DoGoodEventUpdateSyncSerializer(BaseUpdateSyncSerializer):
     def sync(self):
         from bluebottle.activity_pub.models import Event as ActivityPubEvent
         from bluebottle.activity_pub.adapters import _sync_adopted_date_slots_from_source
-        from bluebottle.time_based.models import DateActivity
+        from bluebottle.time_based.models import DateActivity, DeadlineActivity
 
         event_do_good = self.context['object']
         adapter = self.context['adapter']
@@ -64,12 +64,12 @@ class DoGoodEventUpdateSyncSerializer(BaseUpdateSyncSerializer):
         source_bb_activity = event_do_good.activity
         if source_bb_activity is not None:
             real = source_bb_activity.get_real_instance()
-            if isinstance(real, DateActivity):
+            if isinstance(real, (DateActivity, DeadlineActivity)):
                 source_date = real
 
         for activity in event_do_good.adopted_activities.all():
             activity = activity.get_real_instance()
-            if not isinstance(activity, DateActivity):
+            if not isinstance(activity, (DateActivity, DeadlineActivity)):
                 continue
 
             try:
@@ -87,9 +87,9 @@ class DoGoodEventUpdateSyncSerializer(BaseUpdateSyncSerializer):
                 activity.capacity = source_date.capacity
                 activity.save(update_fields=['capacity'])
             remote_count = event_do_good.contributor_count or 0
-            if activity.remote_contributor_count != remote_count:
-                activity.remote_contributor_count = remote_count
-                activity.save(update_fields=['remote_contributor_count'])
+            if activity.synced_contributor_count != remote_count:
+                activity.synced_contributor_count = remote_count
+                activity.save(update_fields=['synced_contributor_count'])
             if event_do_good.name != activity.title:
                 activity.title = event_do_good.name
                 activity.save(update_fields=['title'])
@@ -101,9 +101,19 @@ class DoGoodEventUpdateSyncSerializer(BaseUpdateSyncSerializer):
                             activity.save(update_fields=['description'])
                 except (AttributeError, TypeError):
                     pass
-            _sync_adopted_date_slots_from_source(event_do_good, source_date, activity)
+            if isinstance(activity, DateActivity):
+                _sync_adopted_date_slots_from_source(event_do_good, source_date, activity)
             adapter.create_or_update_event(activity)
 
+        return True
+
+
+class SubEventUpdateSyncSerializer(BaseUpdateSyncSerializer):
+    def sync(self):
+        from bluebottle.activity_pub.adapters import _sync_slot_from_subevent
+
+        sub_event = self.context['object']
+        _sync_slot_from_subevent(sub_event)
         return True
 
 
@@ -111,6 +121,7 @@ class PolymorphicUpdateSyncSerializer(BaseUpdateSyncSerializer):
     serializer_map = {
         GoodDeed: GoodDeedUpdateSyncSerializer,
         DoGoodEvent: DoGoodEventUpdateSyncSerializer,
+        SubEvent: SubEventUpdateSyncSerializer,
     }
 
     def sync(self):

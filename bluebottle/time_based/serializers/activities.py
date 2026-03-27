@@ -77,10 +77,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registrations',
             'hour_registration_data'
         )
-        meta_fields = BaseActivitySerializer.Meta.meta_fields + (
-            "registration_status",
-            "remote_contributor_count",
-        )
+        meta_fields = BaseActivitySerializer.Meta.meta_fields + ("registration_status",)
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
@@ -196,7 +193,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         related_link_view_name="deadline-participants",
         related_link_url_kwarg="activity_id",
         statuses={
-            "active": ["succeeded"],
+            "active": ["succeeded", "accepted"],
             "failed": ["rejected", "withdrawn", "removed"],
         },
     )
@@ -209,9 +206,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     )
 
     def get_contributor_count(self, instance):
-        local_count = super().get_contributor_count(instance)
-        remote_count = getattr(instance, 'remote_contributor_count', 0) or 0
-        return max(local_count, remote_count)
+        return instance.total_contributor_count
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DeadlineActivity
@@ -380,12 +375,7 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     )
 
     def get_contributor_count(self, instance):
-        return (
-            instance.deleted_successful_contributors
-            + instance.contributors.not_instance_of(Organizer)
-            .filter(status__in=["accepted", "participating"])
-            .count()
-        )
+        return instance.total_contributor_count
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodicActivity
@@ -455,12 +445,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     )
 
     def get_contributor_count(self, instance):
-        return (
-            instance.deleted_successful_contributors
-            + instance.contributors.not_instance_of(Organizer)
-            .filter(status__in=["accepted", "participating"])
-            .count()
-        )
+        return instance.total_contributor_count
 
     def get_filtered_slots(self, obj, only_upcoming=False):
 

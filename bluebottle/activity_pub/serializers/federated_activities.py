@@ -474,7 +474,16 @@ class SlotsSerializer(FederatedObjectSerializer):
 
     capacity = serializers.IntegerField(required=False, allow_null=True)
 
-    contributor_count = serializers.IntegerField(source='remote_contributor_count', required=False, allow_null=True)
+    contributor_count = serializers.IntegerField(
+        source='remote_contributor_count',
+        required=False,
+        allow_null=True,
+    )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['contributor_count'] = instance.contributor_count
+        return data
 
     def create(self, validated_data):
 

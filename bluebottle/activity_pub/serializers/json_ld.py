@@ -292,6 +292,27 @@ class SubEventSerializer(ActivityPubSerializer):
             'contributor_count', 'capacity',
         )
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        slot = getattr(instance, 'slot', None)
+        if slot is None:
+            parent = getattr(instance, 'parent', None)
+            activity = getattr(parent, 'activity', None) if parent is not None else None
+            if activity is not None:
+                slot = activity.slots.filter(origin=instance).first()
+                if slot is None and instance.start_time is not None:
+                    slot = activity.slots.filter(start=instance.start_time).first()
+                if (
+                    slot is None and
+                    parent is not None and
+                    parent.sub_event.count() == 1 and
+                    activity.slots.count() == 1
+                ):
+                    slot = activity.slots.first()
+        if slot is not None:
+            data['contributor_count'] = slot.contributor_count
+        return data
+
 
 class DoGoodEventSerializer(BaseEventSerializer):
     id = ActivityPubIdField(url_name='json-ld:do-good-event')
@@ -401,6 +422,7 @@ class FollowSerializer(BaseActivitySerializer):
 
 class EventOrFollowSerializer(EventSerializer):
     polymorphic_serializers = EventSerializer.polymorphic_serializers + [
+        SubEventSerializer,
         FollowSerializer,
     ]
 

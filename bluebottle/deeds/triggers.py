@@ -178,6 +178,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.start,
             effects=[
                 RelatedTransitionEffect('failed_participants', DeedParticipantStateMachine.accept),
+                StartEffect
             ]
         ),
 
@@ -206,7 +207,8 @@ class DeedTriggers(ActivityTriggers):
                     DeedParticipantStateMachine.re_accept,
                     conditions=[is_not_finished]
                 ),
-            ]
+                StartEffect
+            ],
         ),
 
         TransitionTrigger(

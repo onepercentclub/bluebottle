@@ -18,7 +18,11 @@ from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DateParticipantFactory,
+)
 
 
 class DoGoodEventSerializerTestCase(BluebottleTestCase):
@@ -111,6 +115,29 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
             (second_location.position.x, second_location.position.y),
         }
         self.assertSetEqual(serialized_locations, expected_locations)
+
+    def test_to_json_ld_uses_slot_participant_count_for_subevent(self):
+        model = self.factory.create(slots=[])
+        slot = DateActivitySlotFactory.create(activity=model)
+        DateParticipantFactory.create(activity=model, slot=slot, status='accepted')
+        DateParticipantFactory.create(activity=model, slot=slot, status='succeeded')
+        DateParticipantFactory.create(activity=model, slot=slot, status='new')
+
+        federated_serializer = self.federated_serializer(
+            instance=model,
+            context=self.context,
+        )
+        activity_pub_serializer = self.activity_pub_serializer(
+            data=federated_serializer.data,
+            context=self.context,
+        )
+
+        self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
+        do_good_event = activity_pub_serializer.save()
+        sub_event = do_good_event.sub_event.first()
+
+        self.assertIsNotNone(sub_event)
+        self.assertEqual(sub_event.contributor_count, 2)
 
     def test_to_json_ld_already_exists(self):
         model = self.factory.create()

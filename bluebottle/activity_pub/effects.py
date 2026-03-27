@@ -4,7 +4,7 @@ from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter, resolve_sub_event_for_synced_date_join
 from bluebottle.activity_pub.models import (
     Accept, Follow, Start, Update, Cancel, Delete, Finish, Join, Leave,
-    Create, Recipient, Event,
+    Create, Recipient, Event, SubEvent,
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -90,7 +90,11 @@ class UpdateDateActivitySlotPublishedEffect(Effect):
     post_save = True
 
     def post_save(self, **kwargs):
+        from bluebottle.time_based.models import DateActivitySlot
+
         slot = self.instance
+        if not isinstance(slot, DateActivitySlot):
+            return
         activity = getattr(slot, 'activity', None)
         if activity is None:
             return
@@ -99,7 +103,27 @@ class UpdateDateActivitySlotPublishedEffect(Effect):
         except Event.DoesNotExist:
             return
         adapter.create_or_update_event(activity)
-        Update.objects.create(object=event)
+
+        sub_event = getattr(slot, 'origin', None)
+        if not isinstance(sub_event, SubEvent) or sub_event.parent_id != event.pk:
+            sub_event = event.sub_event.filter(start_time=slot.start).first()
+        if sub_event is None and event.sub_event.count() == 1:
+            sub_event = event.sub_event.first()
+        if sub_event is None:
+            Update.objects.create(object=event)
+            return
+
+        update_fields = []
+        if sub_event.slot_id != slot.pk:
+            sub_event.slot = slot
+            update_fields.append('slot')
+        if sub_event.contributor_count != slot.contributor_count:
+            sub_event.contributor_count = slot.contributor_count
+            update_fields.append('contributor_count')
+        if update_fields:
+            sub_event.save(update_fields=update_fields)
+
+        Update.objects.create(object=sub_event)
 
     @property
     def is_valid(self):

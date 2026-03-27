@@ -132,16 +132,42 @@ def _sync_slot_from_subevent(instance):
         return
 
     slot = instance.slot
+    if slot is None and instance.slot_id:
+        slot = DateActivitySlot.objects.filter(
+            activity=activity,
+            pk=instance.slot_id,
+        ).first()
     if slot is None:
         slot = DateActivitySlot.objects.filter(activity=activity, origin=instance).first()
+    if slot is None and instance.start_time is not None:
+        slot = DateActivitySlot.objects.filter(
+            activity=activity,
+            origin__isnull=True,
+            start=instance.start_time,
+        ).first()
+        if slot is None and instance.duration is not None:
+            slot = DateActivitySlot.objects.filter(
+                activity=activity,
+                origin__isnull=True,
+                start=instance.start_time,
+                duration=instance.duration,
+            ).first()
+    if (
+        slot is None and
+        activity.slots.count() == 1 and
+        parent is not None and
+        parent.sub_event.count() == 1
+    ):
+        slot = activity.slots.first()
 
     payload = {
-        'id': instance.iri,
         'name': instance.name,
         'start_time': instance.start_time,
         'duration': instance.duration,
         'capacity': instance.capacity,
     }
+    if instance.iri:
+        payload['id'] = instance.iri
     if instance.event_attendance_mode is not None:
         payload['event_attendance_mode'] = instance.event_attendance_mode
 
@@ -151,7 +177,16 @@ def _sync_slot_from_subevent(instance):
         partial=True,
     )
     serializer.is_valid(raise_exception=True)
-    slot = serializer.save(activity=activity)
+    validated = dict(serializer.validated_data)
+    validated.pop('id', None)
+
+    if slot is None:
+        slot = DateActivitySlot(activity=activity, **validated)
+        slot.save(run_triggers=False)
+    else:
+        for key, value in validated.items():
+            setattr(slot, key, value)
+        slot.save(run_triggers=False)
 
     update_fields = []
     if slot.origin_id != instance.pk:
@@ -162,7 +197,7 @@ def _sync_slot_from_subevent(instance):
         slot.remote_contributor_count = remote_count
         update_fields.append('remote_contributor_count')
     if update_fields:
-        slot.save(update_fields=update_fields)
+        slot.save(run_triggers=False, update_fields=update_fields)
 
     update_kwargs = {'capacity': slot.capacity}
     if instance.slot_id != slot.pk:
@@ -216,25 +251,30 @@ def _sync_adopted_date_slots_from_source(event_do_good, source_date, adopted_dat
                 ad_slot = orphans[0]
         if ad_slot is not None and ad_slot.origin_id != sub.pk:
             ad_slot.origin = sub
-            ad_slot.save(update_fields=['origin'])
+            ad_slot.save(run_triggers=False, update_fields=['origin'])
         if ad_slot is None:
             ad_slot = None
 
         payload = {
-            'id': sub.iri,
             'name': src_slot.title if src_slot is not None else sub.name,
             'start_time': src_slot.start if src_slot is not None else sub.start_time,
             'duration': src_slot.duration if src_slot is not None else sub.duration,
             'capacity': src_slot.capacity if src_slot is not None else sub.capacity,
         }
+        if sub.iri:
+            payload['id'] = sub.iri
         if src_slot is not None:
             payload['event_attendance_mode'] = (
                 'OnlineEventAttendanceMode' if src_slot.is_online else 'OfflineEventAttendanceMode'
             )
-            if src_slot.location_id:
-                location_ap_id = getattr(src_slot.location, 'activity_pub_url', None)
-                if location_ap_id:
-                    payload['location'] = {'id': location_ap_id}
+            src_location = getattr(src_slot, 'location', None)
+            location_ap_id = None
+            if isinstance(src_location, dict):
+                location_ap_id = src_location.get('id')
+            else:
+                location_ap_id = getattr(src_location, 'activity_pub_url', None)
+            if location_ap_id:
+                payload['location'] = {'id': location_ap_id}
         else:
             is_online = _is_online_from_sub_event(sub)
             if is_online is not None:
@@ -265,7 +305,10 @@ def _sync_adopted_date_slots_from_source(event_do_good, source_date, adopted_dat
             ad_slot.remote_contributor_count = remote_count
             extra_updates.append('remote_contributor_count')
         if extra_updates:
-            ad_slot.save(update_fields=list(dict.fromkeys(extra_updates)))
+            ad_slot.save(
+                run_triggers=False,
+                update_fields=list(dict.fromkeys(extra_updates))
+            )
 
     for orphan in adopted_date.slots.filter(origin__isnull=True):
         if _adopted_slot_has_active_participants(orphan):
@@ -570,12 +613,27 @@ def sync_sub_event_contributor_counts(event):
 
     if not isinstance(activity, DateActivity):
         return
+    event_sub_count = event.sub_event.count()
+    activity_slot_count = activity.slots.count()
+
     for se in event.sub_event.all():
         slot = DateActivitySlot.objects.filter(activity=activity, origin_id=se.pk).first()
+        if slot is None and se.slot_id:
+            slot = se.slot
+        if slot is None and se.start_time is not None:
+            slot = DateActivitySlot.objects.filter(activity=activity, start=se.start_time).first()
+        if slot is None and event_sub_count == 1 and activity_slot_count == 1:
+            slot = activity.slots.first()
+
         new_val = slot.contributor_count if slot else 0
+        update_kwargs = {}
         if se.contributor_count != new_val:
-            se.contributor_count = new_val
-            se.save(update_fields=['contributor_count'])
+            update_kwargs['contributor_count'] = new_val
+        if slot is not None and se.slot_id != slot.pk:
+            update_kwargs['slot_id'] = slot.pk
+
+        if update_kwargs:
+            SubEvent.objects.filter(pk=se.pk).update(**update_kwargs)
 
 
 def sync_event_contributor_count(event):

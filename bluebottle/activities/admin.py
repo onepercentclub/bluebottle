@@ -151,18 +151,32 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
 class BaseContributorInline(TabularInlinePaginated):
     model = Contributor
     raw_id_fields = ['user']
-    readonly_fields = ['edit', 'created', 'status_label']
+    readonly_fields = ['edit', 'created', 'status_label', 'remote_contributor', 'platform']
     fields = ['edit', 'created', 'user', 'status_label']
     extra = 0
     per_page = 10
     ordering = ['-created']
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('user')
+        return super().get_queryset(request).select_related('user', 'remote_contributor')
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        try:
+            obj.event
+            return list(fields) + ['remote_contributor', 'platform']
+        except Activity.event.RelatedObjectDoesNotExist:
+            pass
+        return fields
 
     template = 'admin/participant_list.html'
 
     can_delete = True
+
+    def platform(self, obj):
+        if obj.remote_contributor:
+            return obj.remote_contributor.sync_actor
+        return "-"
 
     def has_change_permission(self, request, obj=None):
         return False

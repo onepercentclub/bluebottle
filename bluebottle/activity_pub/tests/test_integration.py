@@ -385,11 +385,11 @@ class LinkTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             follow = Follow.objects.get()
-            follow.adoption_type = AdoptionTypeChoices.template
+            follow.adoption_type = AdoptionTypeChoices.clone
             follow.save()
 
         follow = Follow.objects.get(object=get_platform_actor())
-        self.assertEqual(follow.adoption_type, AdoptionTypeChoices.template)
+        self.assertEqual(follow.adoption_type, AdoptionTypeChoices.clone)
 
     def test_link(self):
         @httmock.urlmatch(netloc='test.localhost')

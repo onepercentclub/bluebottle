@@ -3,7 +3,8 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Accept, Follow, Start, Update, Cancel, Delete, Finish
+    Accept, Follow, Start, Update, Cancel, Delete, Finish, Join, Leave,
+    Create, Recipient
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -145,3 +146,110 @@ class DeletedEffect(Effect):
 
     def __str__(self):
         return str(_('Notify subscribers of the deletion'))
+
+
+def activity_is_synced(effect):
+    """Contributor's activity has an origin (synced from another platform)."""
+    activity = getattr(effect.instance, 'activity', None)
+    return getattr(activity, 'origin', None) is not None
+
+
+class SendJoinEffect(Effect):
+    """
+    Send a Join activity to the source platform when a user joins a synced deed.
+    Runs only when the activity is synced (via activity_is_synced condition).
+    Includes participant name and email so the source has a full participant list.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+    post_save = True
+    conditions = [activity_is_synced]
+
+    def post_save(self, **kwargs):
+        import uuid
+        from bluebottle.deeds.models import DeedParticipant
+
+        contributor = self.instance
+        if not isinstance(contributor, DeedParticipant):
+            return
+        deed = contributor.activity
+        if not getattr(deed, 'origin', None):
+            return
+
+        # Ensure we have a stable sync_id for this participant (for Leave matching)
+        if not contributor.sync_id:
+            from bluebottle.activities.models import RemoteContributor
+
+            remote_contributor = RemoteContributor.objects.create(
+                sync_id=str(uuid.uuid4()),
+                display_name=contributor.display_name_or_user or '',
+                email=contributor.email_or_user,
+            )
+            contributor.remote_contributor = remote_contributor
+            contributor.save(update_fields=['remote_contributor'])
+
+        # Name and email: from user when present, else from remote_contributor
+        participant_name = contributor.display_name_or_user or None
+        participant_email = contributor.email_or_user or None
+
+        join_activity = Join.objects.create(
+            actor=get_platform_actor(),
+            object=deed.origin,
+            participant_sync_id=contributor.sync_id,
+            participant_name=participant_name,
+            participant_email=participant_email,
+        )
+        if join_activity.recipients.count() == 0:
+            create = Create.objects.filter(object=deed.origin).first()
+            if create:
+                Recipient.objects.get_or_create(actor=create.actor, activity=join_activity)
+
+    @property
+    def is_valid(self):
+        return (
+            super().is_valid and
+            get_platform_actor() is not None
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of join'))
+
+
+class SendLeaveEffect(Effect):
+    """
+    Send a Leave activity to the source platform when a user leaves a synced deed.
+    Runs only when the activity is synced (via activity_is_synced condition).
+    Includes participant_sync_id so the source can remove the right participant.
+    """
+    template = 'admin/activity_pub/send_leave_effect.html'
+    post_save = True
+    conditions = [activity_is_synced]
+
+    def post_save(self, **kwargs):
+        from bluebottle.deeds.models import DeedParticipant
+
+        contributor = self.instance
+        if not isinstance(contributor, DeedParticipant):
+            return
+        deed = contributor.activity
+        if not getattr(deed, 'origin', None):
+            return
+
+        leave_activity = Leave.objects.create(
+            actor=get_platform_actor(),
+            object=deed.origin,
+            participant_sync_id=contributor.sync_id or None,
+        )
+        if leave_activity.recipients.count() == 0:
+            create = Create.objects.filter(object=deed.origin).first()
+            if create:
+                Recipient.objects.get_or_create(actor=create.actor, activity=leave_activity)
+
+    @property
+    def is_valid(self):
+        return (
+            super().is_valid and
+            get_platform_actor() is not None
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of leave'))

@@ -38,6 +38,7 @@ from bluebottle.activities.models import (
     FileUploadAnswer,
     FileUploadQuestion,
     Organizer,
+    RemoteContributor,
     SegmentAnswer,
     SegmentQuestion,
     Team,
@@ -88,6 +89,14 @@ from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
 from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import get_human_readable_duration
+
+
+@admin.register(RemoteContributor)
+class RemoteContributorAdmin(admin.ModelAdmin):
+    list_display = ['id', 'display_name', 'email', 'sync_id', 'sync_actor', 'sync_follow']
+    search_fields = ['display_name', 'email', 'sync_id']
+    raw_id_fields = ['sync_actor', 'sync_follow']
+    readonly_fields = ['sync_id']
 
 
 @admin.register(Contributor)

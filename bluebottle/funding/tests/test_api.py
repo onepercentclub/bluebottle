@@ -1914,7 +1914,6 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
     def test_anonymous_donations_setting(self):
         funding_settings = FundingPlatformSettings.load()
         funding_settings.anonymous_donations = True
-        funding_settings.allow_anonymous_rewards = True
         funding_settings.matching_name = "Dagobert Duck"
         funding_settings.save()
         response = self.client.get('/api/config', user=self.user)
@@ -1924,7 +1923,6 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
         self.assertEquals(
             data["platform"]["funding"],
             {
-                "allow_anonymous_rewards": True,
                 "anonymous_donations": True,
                 "business_types": ["individual"],
                 "enable_iban_check": False,

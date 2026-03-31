@@ -1,4 +1,5 @@
 from builtins import object
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Case, When, fields
@@ -70,17 +71,6 @@ class SortableTranslatableQuerySet(TranslatableQuerySet):
 
 class SortableTranslatableManager(TranslatableManager):
     queryset_class = SortableTranslatableQuerySet
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-
-        candidate_fields = ('title', 'name', 'order', )
-        model_field_names = {field.name for field in self.model._meta.fields}
-        for field_name in candidate_fields:
-            if field_name in model_field_names:
-                return qs.order_by(field_name, 'pk')
-
-        return qs.order_by('pk')
 
 
 class TranslatablePolymorphicQuerySet(TranslatableQuerySet, PolymorphicQuerySet):

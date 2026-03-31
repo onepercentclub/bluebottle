@@ -1166,7 +1166,6 @@ class Skill(TranslatableModel):
         )
         verbose_name = _(u'Skill')
         verbose_name_plural = _(u'Skills')
-        ordering = ('name',)
 
     class JSONAPIMeta(object):
         resource_name = 'skills'

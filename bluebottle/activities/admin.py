@@ -162,8 +162,6 @@ class BaseContributorInline(TabularInlinePaginated):
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
-        if not obj:
-            return fields
         try:
             obj.event
             return list(fields) + ['remote_contributor', 'platform']

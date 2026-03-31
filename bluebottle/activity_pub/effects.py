@@ -154,6 +154,18 @@ def activity_is_synced(effect):
     return getattr(activity, 'origin', None) is not None
 
 
+def contributor_has_sync_source(effect):
+    contributor = effect.instance
+    return (
+        getattr(contributor, 'sync_id', None) and
+        getattr(contributor, 'sync_actor', None) is not None
+    )
+
+
+def can_send_leave(effect):
+    return activity_is_synced(effect) or contributor_has_sync_source(effect)
+
+
 class SendJoinEffect(Effect):
     """
     Send a Join activity to the source platform when a user joins a synced deed.
@@ -167,9 +179,10 @@ class SendJoinEffect(Effect):
     def post_save(self, **kwargs):
         import uuid
         from bluebottle.deeds.models import DeedParticipant
+        from bluebottle.time_based.models import DeadlineParticipant
 
         contributor = self.instance
-        if not isinstance(contributor, DeedParticipant):
+        if not isinstance(contributor, (DeedParticipant, DeadlineParticipant)):
             return
         deed = contributor.activity
         if not getattr(deed, 'origin', None):
@@ -179,10 +192,14 @@ class SendJoinEffect(Effect):
         if not contributor.sync_id:
             from bluebottle.activities.models import RemoteContributor
 
+            create = Create.objects.filter(object=deed.origin).first()
+            source_actor = create.actor if create else None
+
             remote_contributor = RemoteContributor.objects.create(
                 sync_id=str(uuid.uuid4()),
                 display_name=contributor.display_name_or_user or '',
                 email=contributor.email_or_user,
+                sync_actor=source_actor,
             )
             contributor.remote_contributor = remote_contributor
             contributor.save(update_fields=['remote_contributor'])
@@ -222,27 +239,34 @@ class SendLeaveEffect(Effect):
     """
     template = 'admin/activity_pub/send_leave_effect.html'
     post_save = True
-    conditions = [activity_is_synced]
+    conditions = [can_send_leave]
 
     def post_save(self, **kwargs):
         from bluebottle.deeds.models import DeedParticipant
+        from bluebottle.time_based.models import DeadlineParticipant
 
         contributor = self.instance
-        if not isinstance(contributor, DeedParticipant):
+        if not isinstance(contributor, (DeedParticipant, DeadlineParticipant)):
             return
         deed = contributor.activity
-        if not getattr(deed, 'origin', None):
+        target_event = getattr(deed, 'origin', None) or getattr(deed, 'event', None)
+        if not target_event:
             return
 
         leave_activity = Leave.objects.create(
             actor=get_platform_actor(),
-            object=deed.origin,
+            object=target_event,
             participant_sync_id=contributor.sync_id or None,
         )
-        if leave_activity.recipients.count() == 0:
+        # Always ensure we route to the right counterparty:
+        # - When leaving a synced deed (follower -> source): send to source actor (Create.actor for origin).
+        # - When removing/rejecting a remote participant (source -> follower): send to contributor.sync_actor.
+        if getattr(deed, 'origin', None):
             create = Create.objects.filter(object=deed.origin).first()
             if create:
                 Recipient.objects.get_or_create(actor=create.actor, activity=leave_activity)
+        if contributor.sync_actor:
+            Recipient.objects.get_or_create(actor=contributor.sync_actor, activity=leave_activity)
 
     @property
     def is_valid(self):

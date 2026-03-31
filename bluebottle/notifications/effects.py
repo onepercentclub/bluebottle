@@ -71,6 +71,8 @@ class BaseNotificationEffect(Effect):
         recipients = [
             recipient.email for effect in effects
             for recipient in effect.message(effect.instance).get_recipients()
+            if recipient
+
         ]
 
         context = {

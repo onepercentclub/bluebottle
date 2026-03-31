@@ -1,6 +1,7 @@
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
+from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
@@ -273,6 +274,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.accept,
             effects=[
                 FollowActivityEffect,
+                SendJoinEffect,
                 TransitionEffect(DeadlineParticipantStateMachine.succeed),
                 RelatedTransitionEffect(
                     "contributions",
@@ -291,6 +293,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
+                SendJoinEffect,
                 NotificationEffect(
                     ParticipantAddedNotification,
                     conditions=[participant_is_active]
@@ -322,6 +325,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             RegistrationParticipantStateMachine.readd,
             effects=[
+                SendJoinEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -352,6 +356,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.withdraw,
             effects=[
+                SendLeaveEffect,
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,
@@ -364,6 +369,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.restore,
             effects=[
+                SendJoinEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -380,6 +386,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.reapply,
             effects=[
+                SendJoinEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -415,6 +422,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.remove,
             effects=[
+                SendLeaveEffect,
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,
@@ -444,6 +452,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.reject,
             effects=[
+                SendLeaveEffect,
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
                     'contributions',

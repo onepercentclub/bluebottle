@@ -1,8 +1,8 @@
 from urllib.parse import urlparse
 
+import inflection
 from django.db import connection
 from django.urls import resolve
-import inflection
 from rest_framework import serializers, exceptions
 
 from bluebottle.activity_pub.adapters import adapter
@@ -174,9 +174,7 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         request = self.context.get('request')
         request_auth = getattr(request, 'auth', None)
         auth_iri = getattr(request_auth, 'iri', None)
-        internal_update = self.context.get('internal_update', False)
 
-        # Do not allow remote request to update local instances
         if (
             is_local(id) and
             request_auth and

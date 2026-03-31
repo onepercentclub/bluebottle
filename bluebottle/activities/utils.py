@@ -262,7 +262,7 @@ class BaseActivitySerializer(ModelSerializer):
         many=True
     )
 
-    translations = TranslationsSerializer(fields=['description'])
+    translations = TranslationsSerializer(fields=['description', 'title'])
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

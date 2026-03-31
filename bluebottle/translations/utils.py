@@ -16,13 +16,15 @@ class TranslationError(Exception):
 def get_translation_response(text, target_language):
     url = settings.DEEPL_API_URL
     params = {
-        "auth_key": settings.DEEPL_API_KEY,
         "text": text,
         "target_lang": target_language.upper(),
     }
+    headers = {
+        "Authorization": f"DeepL-Auth-Key {settings.DEEPL_API_KEY}",
+    }
 
     for attempt in range(3):
-        resp = requests.post(url, data=params, timeout=20)
+        resp = requests.post(url, data=params, headers=headers, timeout=20)
         if resp.status_code == 200:
             data = resp.json()["translations"][0]
             detected_source = data["detected_source_language"]

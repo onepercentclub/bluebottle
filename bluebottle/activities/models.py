@@ -42,6 +42,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         "succeeded",
         "activity_refunded",
     )
+
     class TeamActivityChoices(DjangoChoices):
         teams = ChoiceItem("teams", label=_("Teams"))
         individuals = ChoiceItem("individuals", label=_("Individuals"))

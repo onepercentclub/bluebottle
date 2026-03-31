@@ -71,6 +71,17 @@ class SortableTranslatableQuerySet(TranslatableQuerySet):
 class SortableTranslatableManager(TranslatableManager):
     queryset_class = SortableTranslatableQuerySet
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+
+        candidate_fields = ('title', 'name', 'order', )
+        model_field_names = {field.name for field in self.model._meta.fields}
+        for field_name in candidate_fields:
+            if field_name in model_field_names:
+                return qs.order_by(field_name, 'pk')
+
+        return qs.order_by('pk')
+
 
 class TranslatablePolymorphicQuerySet(TranslatableQuerySet, PolymorphicQuerySet):
     pass

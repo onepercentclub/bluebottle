@@ -60,7 +60,10 @@ class StateMachineAdminMixin(object):
                     if isinstance(form.instance, TriggerMixin):
                         if form.is_valid():
                             form.save(commit=False)
-                            if form.instance and form.instance.pk:
+                            if form.instance:
+                                # Inline instances may be newly added and not saved yet.
+                                # We still want their triggers to be reflected on the
+                                # confirmation page.
                                 effects += form.instance.execute_triggers(
                                     user=request.user,
                                     send_messages=send_messages

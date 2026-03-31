@@ -500,6 +500,9 @@ class SlotsSerializer(FederatedObjectSerializer):
         iri = validated_data.get('id')
         activity = validated_data.get('activity')
         sub_event = None
+        location = validated_data.get('location')
+        if isinstance(location, dict):
+            validated_data['location'] = LocationSerializer(context=self.context).create(location)
 
         if iri:
             try:
@@ -508,22 +511,42 @@ class SlotsSerializer(FederatedObjectSerializer):
                 sub_event = None
 
         existing_slot = None
-        if activity and sub_event:
-            existing_slot = DateActivitySlot.objects.filter(
-                activity=activity,
-                origin=sub_event
-            ).first()
-            if existing_slot is None:
-                source_slot = getattr(sub_event, 'slot', None)
-                if source_slot is not None and source_slot.activity_id == activity.pk:
-                    existing_slot = source_slot
-            parent = getattr(sub_event, 'parent', None)
-            if (
-                existing_slot is None and
-                activity.slots.count() == 1 and
-                parent is not None and
-                parent.sub_event.count() == 1
-            ):
+        if activity:
+            start = validated_data.get('start')
+            duration = validated_data.get('duration')
+
+            if sub_event:
+                existing_slot = DateActivitySlot.objects.filter(
+                    activity=activity,
+                    origin=sub_event
+                ).first()
+
+                if existing_slot is None:
+                    source_slot = getattr(sub_event, 'slot', None)
+                    if source_slot is not None and source_slot.activity_id == activity.pk:
+                        existing_slot = source_slot
+
+            # Prefer matching an "orphan" slot by start/duration, so we link
+            # origin instead of creating duplicates.
+            if existing_slot is None and start is not None:
+                qs = DateActivitySlot.objects.filter(
+                    activity=activity,
+                    start=start,
+                )
+                if sub_event is not None:
+                    qs = qs.filter(origin__isnull=True) | DateActivitySlot.objects.filter(
+                        activity=activity,
+                        origin=sub_event,
+                    )
+                if duration is not None:
+                    match = qs.filter(duration=duration).first()
+                    if match is not None:
+                        existing_slot = match
+                if existing_slot is None:
+                    existing_slot = qs.first()
+
+            # Single-slot fallback (covers cases where SubEvent has no `iri` yet).
+            if existing_slot is None and activity.slots.count() == 1:
                 existing_slot = activity.slots.first()
 
         if existing_slot is not None:
@@ -540,6 +563,9 @@ class SlotsSerializer(FederatedObjectSerializer):
 
     def update(self, instance, validated_data):
         validated_data.pop('id', None)
+        location = validated_data.get('location')
+        if isinstance(location, dict):
+            validated_data['location'] = LocationSerializer(context=self.context).create(location)
         update_data = {}
         for key, value in validated_data.items():
             if key == 'location':

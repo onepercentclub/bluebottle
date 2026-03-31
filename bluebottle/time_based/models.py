@@ -4,8 +4,8 @@ from urllib.parse import urlencode
 import pytz
 from django.core.validators import MaxValueValidator
 from django.db import connection
-from django.urls import reverse
 from django.db.models import Sum
+from django.urls import reverse
 from django.utils import timezone
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
@@ -1008,6 +1008,7 @@ class Participant(Contributor):
 
     class Meta:
         abstract = True
+        ordering = ('-created',)
 
 
 class DateParticipant(Participant):
@@ -1165,6 +1166,7 @@ class Skill(TranslatableModel):
         )
         verbose_name = _(u'Skill')
         verbose_name_plural = _(u'Skills')
+        ordering = ('name',)
 
     class JSONAPIMeta(object):
         resource_name = 'skills'

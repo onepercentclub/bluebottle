@@ -1026,7 +1026,7 @@ class SyncIntegrationTestCase(BluebottleTestCase):
     def test_sync_date_activity_join_second_slot_and_leave_updates_count(self):
         source_date = DateActivityFactory.create(status='open', review=False)
         slot_first = source_date.slots.get()
-        slot_second = DateActivitySlotFactory.create(
+        DateActivitySlotFactory.create(
             activity=source_date,
             start=slot_first.start + timedelta(days=3),
             duration=slot_first.duration,
@@ -1105,7 +1105,7 @@ class SyncIntegrationTestCase(BluebottleTestCase):
     def test_join_multi_slot_adopted_participant_without_slot_origin_syncs_to_source_slot(self):
         source_date = DateActivityFactory.create(status='open', review=False)
         slot_first = source_date.slots.get()
-        slot_second = DateActivitySlotFactory.create(
+        DateActivitySlotFactory.create(
             activity=source_date,
             start=slot_first.start + timedelta(days=3),
             duration=slot_first.duration,
@@ -1198,7 +1198,7 @@ class SyncIntegrationTestCase(BluebottleTestCase):
     def test_send_join_effect_sets_sub_event_when_adopted_slot_has_no_origin(self):
         source_date = DateActivityFactory.create(status='open', review=False)
         slot_first = source_date.slots.get()
-        slot_second = DateActivitySlotFactory.create(
+        DateActivitySlotFactory.create(
             activity=source_date,
             start=slot_first.start + timedelta(days=3),
             duration=slot_first.duration,

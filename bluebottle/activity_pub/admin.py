@@ -936,16 +936,6 @@ class EventAdminMixin:
 
         event = get_object_or_404(Event, pk=unquote(object_id))
 
-        # if not isinstance(event.get_real_instance(), GoodDeed):
-        #     self.message_user(
-        #         request,
-        #         "Manual adopt is only supported for Deed events.",
-        #         level="warning",
-        #     )
-        #     return HttpResponseRedirect(
-        #         reverse("admin:activity_pub_event_change", args=[event.pk])
-        #     )
-
         if event.adopted_activity:
             self.message_user(
                 request,
@@ -1191,6 +1181,8 @@ class SubEventInline(admin.TabularInline):
     readonly_fields = [
         'start_time',
         'end_time',
+        'capacity',
+        'contributor_count',
         'display_location'
     ]
 
@@ -1226,8 +1218,8 @@ class DoGoodEventAdmin(EventChildAdmin):
         'event_attendance_mode',
         'repetition_mode',
         'join_mode',
-        'slot_mode'
-
+        'slot_mode',
+        'capacity',
     )
     fields = readonly_fields
 
@@ -1236,5 +1228,5 @@ class DoGoodEventAdmin(EventChildAdmin):
 class SubEventAdmin(EventChildAdmin):
     base_model = Event
     model = SubEvent
-    readonly_fields = ('start_time', 'end_time')
+    readonly_fields = ('start_time', 'end_time', 'capacity', 'contributor_count')
     fields = readonly_fields

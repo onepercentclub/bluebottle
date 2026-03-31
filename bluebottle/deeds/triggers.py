@@ -10,7 +10,8 @@ from bluebottle.activities.messages.participant import (
     ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import (
-    OrganizerStateMachine, EffortContributionStateMachine, ActivityStateMachine
+    OrganizerStateMachine, EffortContributionStateMachine, ActivityStateMachine,
+    ContributorStateMachine
 )
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
@@ -169,7 +170,7 @@ class DeedTriggers(ActivityTriggers):
             ActivityStateMachine.approve,
             effects=[
                 PublishAdoptionEffect,
-                RelatedTransitionEffect('participants', DeedParticipantStateMachine.accept),
+                RelatedTransitionEffect('failed_participants', DeedParticipantStateMachine.accept),
                 StartEffect
             ]
         ),
@@ -177,6 +178,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.start,
             effects=[
                 RelatedTransitionEffect('failed_participants', DeedParticipantStateMachine.accept),
+                StartEffect
             ]
         ),
 
@@ -205,7 +207,8 @@ class DeedTriggers(ActivityTriggers):
                     DeedParticipantStateMachine.re_accept,
                     conditions=[is_not_finished]
                 ),
-            ]
+                StartEffect
+            ],
         ),
 
         TransitionTrigger(
@@ -244,7 +247,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                RelatedTransitionEffect('participants', DeedParticipantStateMachine.fail),
+                RelatedTransitionEffect('participants', ContributorStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
                 CancelEffect
             ],
@@ -254,7 +257,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.restore,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
-                RelatedTransitionEffect('failed_participants', DeedParticipantStateMachine.reset),
+                RelatedTransitionEffect('failed_participants', ContributorStateMachine.reset),
                 NotificationEffect(ActivityRestoredNotification),
             ]
         ),

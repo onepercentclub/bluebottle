@@ -167,7 +167,7 @@ class BaseRelatedTransitionEffect(Effect):
                     instance, parent=self.instance, **self.options
                 )
 
-                if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
+                if effect not in effects and effect.is_valid:
                     self.executed = True
                     effect.pre_save(effects=effects)
                     effects.append(effect)

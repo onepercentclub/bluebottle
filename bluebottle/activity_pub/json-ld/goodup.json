@@ -25,6 +25,7 @@
     "donatedCurrency": "goodup:donatedCurrency",
     "collectType": "goodup:collectType",
     "contributorCount": "goodup:contributorCount",
+    "capacity": "schema:maximumAttendeeCapacity",
     "participantSyncId": "goodup:participantSyncId",
     "participantName": "goodup:participantName",
     "participantEmail": "goodup:participantEmail",

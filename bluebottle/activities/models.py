@@ -33,6 +33,15 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 @python_2_unicode_compatible
 class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
+    LOCAL_CONTRIBUTOR_STATUSES = (
+        "new",
+        "accepted",
+        "scheduled",
+        "participating",
+        "running",
+        "succeeded",
+        "activity_refunded",
+    )
     class TeamActivityChoices(DjangoChoices):
         teams = ChoiceItem("teams", label=_("Teams"))
         individuals = ChoiceItem("individuals", label=_("Individuals"))
@@ -115,6 +124,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     deleted_successful_contributors = models.PositiveIntegerField(
         _("Number of deleted successful contributors"), default=0, null=True, blank=True
     )
+    synced_contributor_count = models.PositiveIntegerField(default=0)
 
     title = models.CharField(_("Title"), max_length=255)
     slug = models.SlugField(_("Slug"), max_length=100, default="new")
@@ -237,6 +247,27 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     @property
     def succeeded_contributor_count(self):
         raise NotImplementedError
+
+    @property
+    def local_contributor_count(self):
+        contributors = getattr(self, "contributors", None)
+        if contributors is None:
+            return 0
+        return contributors.not_instance_of(Organizer).filter(
+            status__in=self.LOCAL_CONTRIBUTOR_STATUSES
+        ).count()
+
+    @property
+    def remote_contributor_count(self):
+        synced_total = self.synced_contributor_count or 0
+        return max(0, synced_total - self.local_contributor_count)
+
+    @property
+    def total_contributor_count(self):
+        synced_total = self.synced_contributor_count or 0
+        if synced_total:
+            return synced_total
+        return self.local_contributor_count
 
     @property
     def activity_date(self):
@@ -417,7 +448,6 @@ class Contributor(TriggerMixin, PolymorphicModel):
         on_delete=models.SET_NULL,
     )
 
-    # For participants without a user (e.g. synced from another platform)
     remote_contributor = models.ForeignKey(
         "RemoteContributor",
         verbose_name=_("Remote contributor"),

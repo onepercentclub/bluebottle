@@ -448,7 +448,14 @@ def sync_sub_event_contributor_counts(event):
         if slot is None and se.slot_id:
             slot = se.slot
         if slot is None and se.start_time is not None:
-            slot = DateActivitySlot.objects.filter(activity=activity, start=se.start_time).first()
+            # Prefer matching an orphan slot by start (+ duration when available).
+            qs = DateActivitySlot.objects.filter(activity=activity, start=se.start_time)
+            if se.duration is not None:
+                match = qs.filter(duration=se.duration).first()
+                if match is not None:
+                    slot = match
+            if slot is None:
+                slot = qs.first()
         if slot is None and event_sub_count == 1 and activity_slot_count == 1:
             slot = activity.slots.first()
 
@@ -458,9 +465,13 @@ def sync_sub_event_contributor_counts(event):
             update_kwargs['contributor_count'] = new_val
         if slot is not None and se.slot_id != slot.pk:
             update_kwargs['slot_id'] = slot.pk
-
         if update_kwargs:
             SubEvent.objects.filter(pk=se.pk).update(**update_kwargs)
+
+        # Backfill the slot -> SubEvent link too, so slot.origin is stable for joins/adoption.
+        if slot is not None and slot.origin_id != se.pk:
+            DateActivitySlot.objects.filter(pk=slot.pk).update(origin_id=se.pk)
+        continue
 
 
 def sync_event_contributor_count(event):

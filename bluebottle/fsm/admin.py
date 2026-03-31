@@ -54,27 +54,20 @@ class StateMachineAdminMixin(object):
             effects = new_obj.execute_triggers(user=request.user, send_messages=send_messages)
 
             formsets, inline_instances = self._create_formsets(request, new_obj, change=True)
-            has_inline_trigger_changes = False
 
             for formset in formsets:
                 for form in formset:
                     if isinstance(form.instance, TriggerMixin):
                         if form.is_valid():
                             form.save(commit=False)
-                            if getattr(form, 'has_changed', None) and form.has_changed():
-                                has_inline_trigger_changes = True
-                            elif getattr(form.instance, 'pk', None) is None:
-                                # New inline instances (e.g. registrations/participants) should
-                                # still trigger a confirmation step.
-                                has_inline_trigger_changes = True
-
-                            if form.instance:
+                            if form.instance and form.instance.pk:
                                 effects += form.instance.execute_triggers(
                                     user=request.user,
                                     send_messages=send_messages
                                 )
             rendered_effects = get_effects(effects)
-            if rendered_effects or has_inline_trigger_changes:
+            
+            if rendered_effects:
 
                 cancel_link = reverse(
                     'admin:{}_{}_change'.format(

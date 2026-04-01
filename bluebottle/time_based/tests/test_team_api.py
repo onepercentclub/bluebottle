@@ -56,7 +56,89 @@ class TeamMemberListAPIViewTestCase(APITestCase):
             user=self.captain,
             activity=self.activity
         )
+
+        self.other_team = TeamFactory.create(
+            user=self.captain,
+            activity=self.activity
+        )
         self.url = reverse('team-member-list')
+
+    def test_sign_up(self):
+        data = {
+            'data': {
+                'attributes': {
+                    'invite-code': self.team.invite_code,
+                },
+                'type': 'contributors/time-based/team-members',
+                'relationships': {
+                    'team': {
+                        'data': {
+                            'id': str(self.team.pk),
+                            'type': 'contributors/time-based/teams'
+                        }
+                    }
+                }
+            }
+        }
+
+        self.perform_create(user=self.existing_member, data=data)
+        self.assertStatus(201)
+
+        self.assertEqual(self.model.user, self.existing_member)
+        self.assertEqual(self.model.team, self.team)
+
+    def test_sign_up_same_team_twice(self):
+        self.test_sign_up()
+
+        data = {
+            'data': {
+                'attributes': {
+                    'invite-code': self.team.invite_code,
+                },
+                'type': 'contributors/time-based/team-members',
+                'relationships': {
+                    'team': {
+                        'data': {
+                            'id': str(self.team.pk),
+                            'type': 'contributors/time-based/teams'
+                        }
+                    }
+                }
+            }
+        }
+
+        self.perform_create(user=self.existing_member, data=data)
+        self.assertStatus(400)
+
+    def test_sign_up_other_team(self):
+        self.test_sign_up()
+        data = {
+            'data': {
+                'attributes': {
+                    'invite-code': self.other_team.invite_code,
+                },
+                'type': 'contributors/time-based/team-members',
+                'relationships': {
+                    'team': {
+                        'data': {
+                            'id': str(self.other_team.pk),
+                            'type': 'contributors/time-based/teams'
+                        }
+                    }
+                }
+            }
+        }
+
+        self.perform_create(user=self.existing_member, data=data)
+        self.assertStatus(201)
+        self.assertEqual(
+            len(self.activity.registrations.all()), 1
+        )
+        self.assertEqual(
+            len(self.activity.participants.all()), 4
+        )
+        self.assertEqual(self.model.user, self.existing_member)
+        self.assertEqual(self.model.team, self.other_team)
 
     def test_add_team_member_by_existing_email(self):
         data = {

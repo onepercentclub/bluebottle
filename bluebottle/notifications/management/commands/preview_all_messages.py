@@ -428,6 +428,14 @@ class MockFunding:
         return f"https://example.goodup.com/en/funding/{self.id}/{self.slug}"
 
 
+class MockOrganization:
+    """Mock Organization object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+
+
 class MockPayoutAccount:
     """Mock PayoutAccount object"""
 
@@ -436,6 +444,7 @@ class MockPayoutAccount:
         self.pk = 111
         self.funding = MockFunding(language)
         self.organization = None
+        self.grant_application = MockGrantApplication(language)
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/payout/{self.id}"
@@ -454,6 +463,23 @@ class MockGrantPayout:
         self.amount = Money(3500, 'EUR')
         self.total_amount = Money(3500, 'EUR')
         self.grant = MockGrantDonor(language)
+        self.fund = MockGrantFund(language)
+        self._grants_list = [self.grant]
+
+    @property
+    def grants(self):
+        """Mock queryset-like object that supports .first() and .all()"""
+        class MockGrantsQuerySet:
+            def __init__(self, grants_list):
+                self.grants_list = grants_list
+
+            def first(self):
+                return self.grants_list[0] if self.grants_list else None
+
+            def all(self):
+                return self.grants_list
+
+        return MockGrantsQuerySet(self._grants_list)
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/payout/{self.id}"
@@ -515,14 +541,33 @@ class MockGrantDonor:
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
 
 
+class MockGrantProvider:
+    """Mock Grant Application object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
+
+
 class MockGrantPayment:
     """Mock Grant Application object"""
 
     def __init__(self, language='en'):
         self.id = 111
         self.pk = 111
-        self.payouts = Payout.objects.none()
-        self.total = Money(1700, 'EUR')
+        self._payout = MockGrantPayout(language)
+        class MockPayoutsQuerySet:
+            def __init__(self, payout):
+                self._payout = payout
+
+            def all(self):
+                return [self._payout]
+        self.payouts = MockPayoutsQuerySet(self._payout)
+        self.total = Money(3500, 'EUR')
+        self.grant_provider = MockGrantProvider(language)
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"

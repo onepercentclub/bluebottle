@@ -520,6 +520,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         "updated",
         'started',
         "has_deleted_data",
+        "valid",
         "status",
         "states",
     )

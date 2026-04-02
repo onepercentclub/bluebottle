@@ -546,7 +546,18 @@ class SlotsSerializer(FederatedObjectSerializer):
                     existing_slot = qs.first()
 
             # Single-slot fallback (covers cases where SubEvent has no `iri` yet).
-            if existing_slot is None and activity.slots.count() == 1:
+            #
+            # Important: don't apply this when we have enough information to create
+            # a distinct slot (e.g. a specific start/duration), otherwise syncing a
+            # multi-slot event can incorrectly "reuse" the first created slot for
+            # subsequent sub events.
+            if (
+                existing_slot is None
+                and sub_event is None
+                and start is None
+                and duration is None
+                and activity.slots.count() == 1
+            ):
                 existing_slot = activity.slots.first()
 
         if existing_slot is not None:

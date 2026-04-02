@@ -1,3 +1,4 @@
+import datetime
 from io import BytesIO
 
 import mock
@@ -203,6 +204,39 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
         self.assertEqual(activity.title, activity_pub_model.name)
         self.assertEqual(activity.description.html, activity_pub_model.summary)
         self.assertEqual(activity.slots.count(), activity_pub_model.sub_event.count())
+
+    def test_to_federated_activity_adopts_all_subevents_as_slots(self):
+        activity_pub_model = DoGoodEventFactory.create(iri='http://example.com', with_subevents=True)
+        subs = list(activity_pub_model.sub_event.order_by('start_time', 'id'))
+        self.assertGreaterEqual(len(subs), 2)
+
+        # Ensure the subevents are distinguishable by start time so they should
+        # produce distinct DateActivitySlot records.
+        subs[0].start_time = subs[0].start_time
+        subs[0].save(update_fields=['start_time'])
+        subs[1].start_time = subs[0].start_time + datetime.timedelta(hours=4)
+        subs[1].save(update_fields=['start_time'])
+
+        federated_payload = self.activity_pub_serializer(
+            instance=activity_pub_model,
+            context=self.context,
+        ).data
+
+        serializer = self.federated_serializer(
+            data=federated_payload,
+            context=self.context,
+        )
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+
+        with mock.patch('requests.get', return_value=self.mock_image_response):
+            activity = serializer.save()
+
+        self.assertEqual(activity.slots.count(), activity_pub_model.sub_event.count())
+        slot_starts = set(activity.slots.values_list('start', flat=True))
+        expected_starts = set(
+            activity_pub_model.sub_event.values_list('start_time', flat=True)
+        )
+        self.assertSetEqual(slot_starts, expected_starts)
 
     def test_to_federated_activity_already_exists(self):
         activity_pub_model = self.activity_pub_factory.create(iri='http://example.com')

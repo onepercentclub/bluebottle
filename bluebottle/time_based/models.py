@@ -322,6 +322,14 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     )
 
     @property
+    def is_adopted(self):
+        return self.origin is not None
+
+    @property
+    def host_organization(self):
+        return self.activity.host_organization if self.activity else None
+
+    @property
     def event(self):
         from bluebottle.activity_pub.models import SubEvent
         try:

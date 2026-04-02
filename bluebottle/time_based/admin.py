@@ -1104,6 +1104,17 @@ class SlotAdmin(StateMachineAdmin):
 
     activity_link.short_description = _('Activity')
 
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        if obj and obj.is_adopted:
+            fields = list(fields) + [
+                'activity', 'is_online', 'location', 'location_hint',
+                'online_meeting_url', 'title', 'capacity', 'start', 'duration',
+                'origin', 'host_organization'
+            ]
+
+        return fields
+
     def get_form(self, request, obj=None, **kwargs):
         if obj and not obj.is_online and obj.location:
             local_start = obj.start.astimezone(timezone(obj.location.timezone))
@@ -1156,6 +1167,7 @@ class SlotAdmin(StateMachineAdmin):
         'created',
         'updated',
         'valid',
+
     ]
     detail_fields = [
         'activity',
@@ -1183,6 +1195,13 @@ class SlotAdmin(StateMachineAdmin):
             (_('Detail'), {'fields': self.detail_fields}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
+        if obj and obj.is_adopted:
+            fieldsets += (
+                (_('GoodUp Connect'), {'fields': (
+                    'origin',
+                    'host_organization',
+                )}),
+            )
         if request.user.is_superuser:
             fieldsets += (
                 (_('Super admin'), {'fields': (

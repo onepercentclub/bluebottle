@@ -8,7 +8,6 @@ from future.utils import python_2_unicode_compatible
 from bluebottle.fsm.effects import Effect
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.models import MoneyContribution
-from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.updates.models import Update
 
@@ -271,8 +270,7 @@ class RemoveAnonymousRewardEffect(Effect):
 
     @property
     def is_valid(self):
-        settings = FundingPlatformSettings.load()
-        return self.instance.user is None and not settings.allow_anonymous_rewards
+        return self.instance.user is None
 
     def pre_save(self, **kwargs):
         self.instance.reward = None

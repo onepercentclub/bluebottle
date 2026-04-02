@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-02 09:53+0200\n"
-"PO-Revision-Date: 2026-04-02 07:56\n"
+"POT-Creation-Date: 2026-04-02 13:20+0200\n"
+"PO-Revision-Date: 2026-04-02 11:46\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -4739,122 +4739,122 @@ msgstr "Zahlungslisten"
 msgid "Payments"
 msgstr "Zahlungen"
 
-#: bluebottle/funding/effects.py:19
+#: bluebottle/funding/effects.py:18
 #: bluebottle/funding/templates/admin/generate_payout_effect.html:2
 msgid "Generate payouts"
 msgstr "Auszahlungen generieren"
 
-#: bluebottle/funding/effects.py:30
+#: bluebottle/funding/effects.py:29
 msgid "Generate payouts, so that payouts can be approved"
 msgstr "Generiere Auszahlungen, damit Auszahlungen genehmigt werden können"
 
-#: bluebottle/funding/effects.py:36
+#: bluebottle/funding/effects.py:35
 #: bluebottle/funding/templates/admin/delete_payout_effect.html:2
 msgid "Delete payouts"
 msgstr "Auszahlungen löschen"
 
-#: bluebottle/funding/effects.py:43
+#: bluebottle/funding/effects.py:42
 msgid "Delete all related payouts"
 msgstr "Alle zugehörigen Auszahlungen löschen"
 
-#: bluebottle/funding/effects.py:49
+#: bluebottle/funding/effects.py:48
 msgid "Update amounts"
 msgstr "Beträge aktualisieren"
 
-#: bluebottle/funding/effects.py:57
+#: bluebottle/funding/effects.py:56
 #: bluebottle/funding/templates/admin/update_amount_effect.html:2
 msgid "Update total amounts"
 msgstr "Gesamtsumme aktualisieren"
 
-#: bluebottle/funding/effects.py:63 bluebottle/funding/effects.py:74
+#: bluebottle/funding/effects.py:62 bluebottle/funding/effects.py:73
 msgid "Update contribution value"
 msgstr "Beitragswert aktualisieren"
 
-#: bluebottle/funding/effects.py:80 bluebottle/funding/effects.py:88
+#: bluebottle/funding/effects.py:79 bluebottle/funding/effects.py:87
 msgid "Remove donation from payout"
 msgstr "Spende von der Auszahlung entfernen"
 
-#: bluebottle/funding/effects.py:94
+#: bluebottle/funding/effects.py:93
 #: bluebottle/funding/templates/admin/set_deadline_effect.html:2
 msgid "Set deadline"
 msgstr "Setze Frist"
 
-#: bluebottle/funding/effects.py:113
+#: bluebottle/funding/effects.py:112
 msgid "Set deadline according to the duration"
 msgstr "Setze die Frist nach der Dauer"
 
-#: bluebottle/funding/effects.py:119 bluebottle/funding/forms.py:8
+#: bluebottle/funding/effects.py:118 bluebottle/funding/forms.py:8
 msgid "Refund payment"
 msgstr "Rückerstattung"
 
-#: bluebottle/funding/effects.py:127
+#: bluebottle/funding/effects.py:126
 msgid "Request refund payment at PSP"
 msgstr "Erstattung bei PSP anfordern"
 
-#: bluebottle/funding/effects.py:133
+#: bluebottle/funding/effects.py:132
 msgid "Create wall update"
 msgstr "Wand-Update erstellen"
 
-#: bluebottle/funding/effects.py:144
+#: bluebottle/funding/effects.py:143
 msgid "Generate wall update for donation"
 msgstr "Wall-Update für Spende generieren"
 
-#: bluebottle/funding/effects.py:150
+#: bluebottle/funding/effects.py:149
 msgid "Delete wallpost"
 msgstr "Wallpost löschen"
 
-#: bluebottle/funding/effects.py:160
+#: bluebottle/funding/effects.py:159
 msgid "Delete wallpost for donation"
 msgstr "Wallpost für Spende löschen"
 
-#: bluebottle/funding/effects.py:166
+#: bluebottle/funding/effects.py:165
 msgid "Submit activities"
 msgstr "Aktivitäten abschicken"
 
-#: bluebottle/funding/effects.py:179
+#: bluebottle/funding/effects.py:178
 #: bluebottle/funding/templates/admin/submit_connected_activities_effect.html:2
 msgid "Submit connected activities"
 msgstr "Verknüpfte Aktivitäten abschicken"
 
-#: bluebottle/funding/effects.py:185
+#: bluebottle/funding/effects.py:184
 #: bluebottle/funding/templates/admin/delete_uploaded_document_effect.html:2
 msgid "Delete uploaded document"
 msgstr "Hochgeladenes Dokument löschen"
 
-#: bluebottle/funding/effects.py:194
+#: bluebottle/funding/effects.py:193
 msgid "Delete verification documents, since they are no longer needed"
 msgstr "Bestätigungsdokumente löschen, da sie nicht mehr benötigt werden"
 
-#: bluebottle/funding/effects.py:201
+#: bluebottle/funding/effects.py:200
 msgid "Trigger payout"
 msgstr "Auszahlung auslösen"
 
-#: bluebottle/funding/effects.py:209
+#: bluebottle/funding/effects.py:208
 msgid "Trigger payout at the PSP"
 msgstr "Auszahlung bei PSP auslösen"
 
-#: bluebottle/funding/effects.py:216
+#: bluebottle/funding/effects.py:215
 #: bluebottle/funding/templates/admin/set_date_effect.html:2
 msgid "Set date"
 msgstr "Datum festlegen"
 
-#: bluebottle/funding/effects.py:225
+#: bluebottle/funding/effects.py:224
 msgid "Set {} to current date"
 msgstr "{} auf aktuelles Datum setzen"
 
-#: bluebottle/funding/effects.py:247
+#: bluebottle/funding/effects.py:246
 msgid "Clear payout event dates"
 msgstr "Lösche Auszahlungstermine"
 
-#: bluebottle/funding/effects.py:264
+#: bluebottle/funding/effects.py:263
 msgid "Create a donation"
 msgstr "Eine Spende erstellen"
 
-#: bluebottle/funding/effects.py:281
+#: bluebottle/funding/effects.py:279
 msgid "Remove anonymous donation"
 msgstr "Anonyme Spende entfernen"
 
-#: bluebottle/funding/effects.py:304
+#: bluebottle/funding/effects.py:302
 msgid "Select or create a payout account"
 msgstr "Wählen oder erstellen Sie ein Auszahlungskonto"
 
@@ -5155,74 +5155,70 @@ msgid "Hide names from all donations"
 msgstr "Namen aus allen Spenden ausblenden"
 
 #: bluebottle/funding/models.py:843
-msgid "Allow guests to donate rewards"
-msgstr "Erlaube Gästen Belohnungen zu spenden"
-
-#: bluebottle/funding/models.py:847
 msgid "Crowdfunding for verified organisations"
 msgstr "Crowdfunding für verifizierte Organisationen"
 
-#: bluebottle/funding/models.py:850
+#: bluebottle/funding/models.py:846
 msgid "When enabled, campaign initiators must select from a list of organisations with a public payout account that will receive the raised money, rather than providing the bank account details themselves."
 msgstr "Wenn aktiviert, müssen Kampagneninitiatoren aus einer Liste von Organisationen mit einem öffentlichen Auszahlungskonto wählen, das das aufgelaufene Geld erhalten wird statt die Kontodaten selbst anzugeben."
 
-#: bluebottle/funding/models.py:857
+#: bluebottle/funding/models.py:853
 msgid "Do IBAN bank account number vs. name checks"
 msgstr "Überprüfen Sie die IBAN-Kontonummer mit dem Namen"
 
-#: bluebottle/funding/models.py:860
+#: bluebottle/funding/models.py:856
 msgid "In the KYC flow do a check to see if bank account number and name match. This will be done by the Surepay API, and only Dutch IBANs are supported. "
 msgstr "Im KYC-Prozess wird überprüft, ob Kontonummer und Name übereinstimmen. Dies erfolgt über die Surepay-API, und nur niederländische IBANs werden unterstützt. "
 
-#: bluebottle/funding/models.py:866
+#: bluebottle/funding/models.py:862
 msgid "Limit donations"
 msgstr "Spenden begrenzen"
 
-#: bluebottle/funding/models.py:869
+#: bluebottle/funding/models.py:865
 msgid "Automatically stop accepting donations once the target is reached."
 msgstr "Nach Erreichen des Ziels automatisch aufhören, Spenden zu akzeptieren."
 
-#: bluebottle/funding/models.py:874
+#: bluebottle/funding/models.py:870
 msgid "Name to use for match funding"
 msgstr "Name für die Finanzierung des Matches"
 
-#: bluebottle/funding/models.py:878
+#: bluebottle/funding/models.py:874
 msgid "Change this if you want to use something else then the platform name for matching amounts."
 msgstr "Ändern Sie diese Option, wenn Sie etwas anderes verwenden wollen, dann den Plattformnamen für passende Beträge."
 
-#: bluebottle/funding/models.py:882
+#: bluebottle/funding/models.py:878
 msgid "verification types"
 msgstr "Verifizierungstypen"
 
-#: bluebottle/funding/models.py:897 bluebottle/funding/models.py:898
+#: bluebottle/funding/models.py:893 bluebottle/funding/models.py:894
 msgid "funding settings"
 msgstr "finanzierungs-Einstellungen"
 
-#: bluebottle/funding/models.py:904
+#: bluebottle/funding/models.py:900
 msgid "Match"
 msgstr "Spiel"
 
-#: bluebottle/funding/models.py:905
+#: bluebottle/funding/models.py:901
 msgid "Mistype"
 msgstr "Tippfehler"
 
-#: bluebottle/funding/models.py:906
+#: bluebottle/funding/models.py:902
 msgid "Close match"
 msgstr "Nahezu passend"
 
-#: bluebottle/funding/models.py:907
+#: bluebottle/funding/models.py:903
 msgid "No match"
 msgstr "Kein Treffer"
 
-#: bluebottle/funding/models.py:918
+#: bluebottle/funding/models.py:914
 msgid "Hashed IBAN to check against"
 msgstr "Gehashte IBAN zur Überprüfung"
 
-#: bluebottle/funding/models.py:921
+#: bluebottle/funding/models.py:917
 msgid "Result of the IBAN check"
 msgstr "Ergebnis der IBAN-Prüfung"
 
-#: bluebottle/funding/models.py:929
+#: bluebottle/funding/models.py:925
 msgid "Name of the account holder"
 msgstr "Name des Kontoinhabers"
 
@@ -10222,7 +10218,8 @@ msgstr "Einstellungen"
 msgid "Manage Reporting"
 msgstr "Berichte verwalten"
 
-#: bluebottle/settings/testing.py:443 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:443
+#: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -10235,26 +10232,30 @@ msgstr "Berichte verwalten"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/impact-booster/settings.py:28
+#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
-#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
-#: tenants/maximising-potential/settings.py:27
-#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
+#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
+#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
+#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
+#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
-#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
+#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
+#: tenants/purpose-in-action/settings.py:27
+#: tenants/rhi-magnesita/settings.py:25
 #: tenants/shell-disaster-relief/settings.py:26
-#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
-#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/shell-grant-management/settings.py:26
+#: tenants/shell-uk/settings.py:26 tenants/startsomething/settings.py:29
+#: tenants/studentbattle/settings.py:27 tenants/twoscale/settings.py:26
+#: tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Englisch"
 
-#: bluebottle/settings/testing.py:444 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
+#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:444
+#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
+#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
@@ -10265,12 +10266,13 @@ msgstr "Englisch"
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
-#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
+#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
+#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
+#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
-#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
-#: tenants/purpose-in-action/settings.py:26
+#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
+#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
+#: tenants/rabobank-cooperatief/settings.py:23
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -10285,28 +10287,31 @@ msgstr "Englisch"
 msgid "Dutch"
 msgstr "Niederländisch"
 
-#: bluebottle/settings/testing.py:445 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
+#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:445
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Französisch"
 
-#: bluebottle/settings/testing.py:446
+#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:446
+#: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Spanisch"
 
-#: bluebottle/settings/testing.py:447
+#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:447
+#: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Deutsch"
 
-#: bluebottle/settings/testing.py:448
+#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugiesisch"
 
-#: bluebottle/settings/testing.py:449
+#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:449
+#: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Ungarisch"
 
-#: bluebottle/settings/testing.py:450
+#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Bulgarisch"
 
@@ -14448,4 +14453,8 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Zweiter"
 msgstr[1] "Sekunden"
+
+#: tenants/goodup-nl/settings.py:27
+msgid "Nederlands"
+msgstr ""
 

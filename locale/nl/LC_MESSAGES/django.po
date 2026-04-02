@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-02 09:53+0200\n"
-"PO-Revision-Date: 2026-04-02 07:56\n"
+"PO-Revision-Date: 2026-04-02 08:05\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -254,7 +254,7 @@ msgstr "Categorieën kopiëren"
 
 #: bluebottle/activities/effects.py:57 bluebottle/deeds/effects.py:43
 msgid "Create effort contribution"
-msgstr "Genereer contributie inspanning"
+msgstr "Genereer inspanningsbijdrage"
 
 #: bluebottle/activities/effects.py:72
 msgid "Set the contribution date."
@@ -2410,13 +2410,13 @@ msgid_plural "\n"
 "            There are %(counter)s unpublished open activities\n"
 "        "
 msgstr[0] "\n"
-"            Er is %(counter)s ongepubliseerde open activiteiten\n"
+"            Er is %(counter)s niet gepubliseerde open activiteiten\n"
 "            "
 msgstr[1] ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:14
 msgid "No unpublished open activities"
-msgstr ""
+msgstr "Geen ongepubliceerde open activiteiten"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:19
 msgid "Publish succeeded activities"

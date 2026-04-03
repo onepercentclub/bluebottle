@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from bluebottle.activity_pub.models import (
     Organization, Inbox, Outbox, PublicKey, PrivateKey, Follow, Person, Place, Event,
-    DoGoodEvent, SubEvent, Address, Image
+    DoGoodEvent, SubEvent, Address, Image, GoodDeed
 )
 from bluebottle.test.factory_models.organizations import OrganizationFactory as BluebottleOrganizationFactory
 
@@ -151,3 +151,15 @@ class DoGoodEventFactory(factory.DjangoModelFactory):
     summary = factory.Faker('text', max_nb_chars=500)
     image = factory.SubFactory(ImageFactory)
     organization = factory.SubFactory(OrganizationFactory)
+
+
+class GoodDeedFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = GoodDeed
+
+    name = factory.Faker('sentence', nb_words=4)
+    summary = factory.Faker('text', max_nb_chars=500)
+    image = factory.SubFactory(ImageFactory)
+    organization = factory.SubFactory(OrganizationFactory)
+    start_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=7))
+    end_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=8))

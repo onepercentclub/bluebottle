@@ -77,6 +77,21 @@ class DeedSerializer(BaseActivitySerializer):
         read_only=True
     )
 
+    def get_contributor_count(self, instance):
+        """Contributor totals as object; use origin total when adopted."""
+        if getattr(instance, 'origin_id', None) and instance.origin_id:
+            origin = getattr(instance, 'origin', None)
+            if origin is not None:
+                synced_total = getattr(origin, 'contributor_count', None) or 0
+                local_total = instance.local_contributor_count
+                total = synced_total if synced_total else local_total
+                return {
+                    'total': total,
+                    'local': local_total,
+                    'remote': max(0, total - local_total),
+                }
+        return super().get_contributor_count(instance)
+
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -93,6 +108,7 @@ class DeedSerializer(BaseActivitySerializer):
 
     class Meta(BaseActivitySerializer.Meta):
         model = Deed
+        meta_fields = BaseActivitySerializer.Meta.meta_fields  # contributor_count from get_contributor_count
         fields = BaseActivitySerializer.Meta.fields + (
             'my_contributor',
             'contributors',
@@ -150,10 +166,23 @@ class DeedParticipantSerializer(BaseContributorSerializer):
         queryset=Deed.objects.all()
     )
     permissions = ResourcePermissionField('deed-participant-detail', view_args=('pk',))
+    display_name = serializers.SerializerMethodField(read_only=True)
+    platform = serializers.SerializerMethodField(read_only=True)
+
+    def get_display_name(self, obj):
+        """Display name: user's full name when set, else display_name (e.g. synced participants)."""
+        return obj.display_name_or_user or None
+
+    def get_platform(self, obj):
+        """Name of the sync source platform when this participant came from another platform."""
+        if obj.sync_actor_id:
+            return getattr(obj.sync_actor, 'name', None)
+        return None
 
     class Meta(BaseContributorSerializer.Meta):
         model = DeedParticipant
         meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
+        fields = BaseContributorSerializer.Meta.fields + ('display_name', 'platform')
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/deeds/participants'

@@ -1,8 +1,8 @@
 from urllib.parse import urlparse
 
+import inflection
 from django.db import connection
 from django.urls import resolve
-import inflection
 from rest_framework import serializers, exceptions
 
 from bluebottle.activity_pub.adapters import adapter
@@ -158,9 +158,13 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
                 not getattr(field, 'many', False)
             ):
                 if validated_data.get(name, None):
-                    field.initial_data = validated_data.get(name, None)
-                    field.is_valid(raise_exception=True)
-                    validated_data[field.source] = field.save()
+                    value = validated_data.get(name)
+                    if isinstance(value, ActivityPubModel):
+                        validated_data[field.source] = value
+                    else:
+                        field.initial_data = value
+                        field.is_valid(raise_exception=True)
+                        validated_data[field.source] = field.save()
 
         validated_data.pop('type', None)
         return self.Meta.model.objects.create(**validated_data)
@@ -171,7 +175,6 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         request_auth = getattr(request, 'auth', None)
         auth_iri = getattr(request_auth, 'iri', None)
 
-        # Do not allow remote request to update local instances
         if (
             is_local(id) and
             request_auth and
@@ -181,10 +184,16 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
             return instance
 
         for name, field in self.fields.items():
-            if isinstance(
-                field,
-                (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
-            ):
+            if isinstance(field, ActivityPubListSerializer):
+                if name not in validated_data:
+                    continue
+                value = validated_data[name]
+                if value is None:
+                    continue
+                field.initial_data = value
+                field.is_valid()
+                validated_data[field.source] = field.save()
+            elif isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data[name]
                     field.is_valid()
@@ -232,6 +241,12 @@ class PolymorphicActivityPubSerializer(
         raise TypeError(f'Missing serializer for model: {model}')
 
     def get_serializer_from_data(self, data):
+        if not isinstance(data, dict):
+            # data may already be a resolved model instance (e.g. Join/Leave object)
+            if isinstance(data, ActivityPubModel):
+                return self.get_serializer_from_model(type(data))
+            raise exceptions.ValidationError('Expected dict or ActivityPubModel instance')
+
         if 'id' in data and 'type' not in data:
             iri = data['id']
 

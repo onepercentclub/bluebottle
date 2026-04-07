@@ -1,6 +1,7 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.activities.ical import ActivityIcal
+from bluebottle.activities.messages.base import BaseParticipantNotification
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
 
@@ -43,21 +44,11 @@ class ManagerTeamWithdrewNotification(ManagerTeamNotification):
     template = "messages/teams/manager_team_withdrew"
 
 
-class UserTeamNotification(TransitionMessage):
+class UserTeamNotification(BaseParticipantNotification):
     context = {
         "title": "activity.title",
         "name": "user.full_name",
     }
-
-    @property
-    def action_link(self):
-        return self.obj.activity.get_absolute_url() + f"?teamId={self.obj.pk}"
-
-    action_title = pgettext("platform-email", "View team")
-
-    def get_recipients(self):
-        """participant"""
-        return [self.obj.user]
 
     class Meta:
         abstract = True
@@ -70,6 +61,7 @@ class UserTeamRemovedNotification(UserTeamNotification):
 
     subject = pgettext("platform-email", 'Your team was removed from the activity "{title}"')
     template = "messages/teams/user_team_removed"
+    link_to_overview = True
 
 
 class UserTeamWithdrewNotification(UserTeamNotification):

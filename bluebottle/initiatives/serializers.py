@@ -228,7 +228,7 @@ class InitiativePreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     activity_count = serializers.SerializerMethodField()
     current_status = serializers.SerializerMethodField()
-    translations = TranslationsSerializer(fields=['title'])
+    translations = TranslationsSerializer(fields=['title', 'pitch'])
 
     def get_current_status(self, obj):
         state = getattr(ReviewStateMachine, obj.current_status.value)

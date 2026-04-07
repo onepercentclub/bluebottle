@@ -180,7 +180,7 @@ class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
     def register_team(self):
         self.registration = TeamScheduleRegistrationFactory.create(activity=self.activity, user=self.user)
-        self.team = self.registration.team
+        self.team = self.registration.teams.first()
         self.team_member = self.team.team_members.first()
         self.slot = self.team.slots.first()
         self.participant = self.slot.participants.first()

@@ -3,7 +3,7 @@ from rest_framework_json_api.relations import (
     ResourceRelatedField,
     HyperlinkedRelatedField,
 )
-from rest_framework_json_api.serializers import ModelSerializer
+from rest_framework_json_api.serializers import ModelSerializer, ValidationError
 
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import (
@@ -187,6 +187,11 @@ class TeamMemberSerializer(ModelSerializer):
                 validated_data["invite_code"] = invite_code
             if request_user and request_user.is_authenticated:
                 validated_data["user"] = request_user
+
+        if self.Meta.model.objects.filter(
+            user=validated_data['user'], team=validated_data['team']
+        ).exists():
+            raise ValidationError('Already participating')
 
         return super().create(validated_data)
 

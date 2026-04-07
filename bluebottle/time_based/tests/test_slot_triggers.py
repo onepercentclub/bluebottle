@@ -206,8 +206,11 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
         self.registration = TeamScheduleRegistrationFactory.create(
             activity=self.activity
         )
-        self.slot = self.registration.team.slots.first()
-        self.members = TeamMemberFactory.create_batch(3, team=self.registration.team)
+        self.slot = self.registration.teams.first().slots.first()
+
+        self.members = TeamMemberFactory.create_batch(3, team=self.registration.teams.first())
+
+
         mail.outbox = []
 
     def assertStatus(self, status, obj=None):
@@ -220,14 +223,14 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
 
     def test_initial_future(self):
         self.assertStatus("new")
-        self.assertStatus("accepted", self.registration.team)
+        self.assertStatus("accepted", self.registration.teams.first())
 
     def test_change_start_finish(self):
         self.slot.start = now() - timedelta(days=2)
         self.slot.save()
 
         self.assertStatus("finished")
-        self.assertStatus("succeeded", self.registration.team)
+        self.assertStatus("succeeded", self.registration.teams.first())
 
         self.assertEqual(len(mail.outbox), 0)
 
@@ -258,7 +261,7 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
                 message.recipients()[0]
                 in [
                     member.user.email
-                    for member in self.registration.team.team_members.all()
+                    for member in self.registration.teams.first().team_members.all()
                 ]
             )
             self.assertTrue(
@@ -273,7 +276,7 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
         self.slot.save()
 
         self.assertStatus("scheduled")
-        self.assertStatus("scheduled", self.registration.team)
+        self.assertStatus("scheduled", self.registration.teams.first())
 
 
 class DateActivitySlotTriggerTestCase(BluebottleTestCase):

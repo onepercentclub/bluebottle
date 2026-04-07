@@ -13693,7 +13693,8 @@ msgctxt "platform-email"
 msgid "\n"
 "                    Once accepted, you are expected to spend around %(duration)s hour(s) every %(period)s, although the actual time may vary.\n"
 "                "
-msgstr "Après acceptation, vous devez contribuer pendant environ %(duration)s heure(s) par %(period)s, bien que la durée réelle puisse varier.                "
+msgstr "\n"
+"Après acceptation, vous devez contribuer pendant environ %(duration)s heure(s) par %(period)s, bien que la durée réelle puisse varier.                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:29
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:25
@@ -14454,4 +14455,3 @@ msgstr[1] "Secondes"
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr ""
-

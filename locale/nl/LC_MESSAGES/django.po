@@ -12942,7 +12942,7 @@ msgctxt "platform-email"
 msgid "\n"
 "Nice work! Your activity <i>%(activity name)s</i> has been registered and the participants contributions have been recorded.\n"
 msgstr "\n"
-"Goed werk! Je activiteit <i>%(activiteitsnaam)s</i> is geregistreerd en de bijdragen van de deelnemers zijn geregistreerd.\n"
+"Goed werk! Je activiteit <i>%(activity name)s</i> is geregistreerd en de bijdragen van de deelnemers zijn geregistreerd.\n"
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_submitted.html:5
 #, python-format
@@ -14443,4 +14443,3 @@ msgstr[1] "Seconden"
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr ""
-

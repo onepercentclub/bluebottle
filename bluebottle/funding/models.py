@@ -839,10 +839,6 @@ class FundingPlatformSettings(BasePlatformSettings):
     anonymous_donations = models.BooleanField(
         _('Hide names from all donations'), default=False
     )
-    allow_anonymous_rewards = models.BooleanField(
-        _('Allow guests to donate rewards'), default=True
-    )
-
     public_accounts = models.BooleanField(
         _('Crowdfunding for verified organisations'),
         default=False,

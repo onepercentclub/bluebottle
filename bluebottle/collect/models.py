@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta  # noqa
 from urllib.parse import urlencode
 
 from django.db import models, connection
@@ -76,6 +76,10 @@ class CollectActivity(Activity):
     target = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
     realized = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
 
+    @property
+    def type(self):
+        return self.collect_type.translations.name if self.collect_type else None
+
     activity_type = _('Collect activity')
 
     @property
@@ -86,15 +90,15 @@ class CollectActivity(Activity):
         verbose_name = _("Collect Campaign")
         verbose_name_plural = _("Collect Campaigns")
         permissions = (
-            ('api_read_collect', 'Can view collect campaign through the API'),
-            ('api_add_collect', 'Can add collect campaign through the API'),
-            ('api_change_collect', 'Can change collect campaign through the API'),
-            ('api_delete_collect', 'Can delete collect campaign through the API'),
+            ('api_read_collectactivity', 'Can view collect campaign through the API'),
+            ('api_add_collectactivity', 'Can add collect campaign through the API'),
+            ('api_change_collectactivity', 'Can change collect campaign through the API'),
+            ('api_delete_collectactivity', 'Can delete collect campaign through the API'),
 
-            ('api_read_own_collect', 'Can view own collect campaign through the API'),
-            ('api_add_own_collect', 'Can add own collect campaign through the API'),
-            ('api_change_own_collect', 'Can change own collect campaign through the API'),
-            ('api_delete_own_collect', 'Can delete own collect campaign through the API'),
+            ('api_read_own_collectactivity', 'Can view own collect campaign through the API'),
+            ('api_add_own_collectactivity', 'Can add own collect campaign through the API'),
+            ('api_change_own_collectactivity', 'Can change own collect campaign through the API'),
+            ('api_delete_own_collectactivity', 'Can delete own collect campaign through the API'),
         )
 
     validators = [

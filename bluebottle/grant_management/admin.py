@@ -520,6 +520,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         "updated",
         'started',
         "has_deleted_data",
+        "valid",
         "status",
         "states",
     )
@@ -537,7 +538,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
     ]
 
     def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),

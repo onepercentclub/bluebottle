@@ -122,10 +122,10 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
         if self.auth.is_authenticated():
             # del self.request.session['saml_request_id']
-            user_data = self.auth.get_attributes()
-            user_data['nameId'] = [self.auth.get_nameid()]
+            self.attributes = self.auth.get_attributes()
+            self.attributes['nameId'] = [self.auth.get_nameid()]
 
-            return self.parse_user(user_data)
+            return self.parse_user(self.attributes)
         else:
             error = "Saml login error: {}, reason: {}, assertions: {}".format(
                 self.auth.get_errors(),

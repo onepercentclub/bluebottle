@@ -210,6 +210,7 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
 
         self.members = TeamMemberFactory.create_batch(3, team=self.registration.teams.first())
 
+
         mail.outbox = []
 
     def assertStatus(self, status, obj=None):
@@ -230,6 +231,29 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
 
         self.assertStatus("finished")
         self.assertStatus("succeeded", self.registration.teams.first())
+
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_user_team_details_changed_after_schedule(self):
+        self.slot.start = now() + timedelta(days=2)
+        self.slot.save()
+        self.assertStatus("scheduled")
+        self.assertStatus("scheduled", self.slot.team)
+        self.assertEqual(len(mail.outbox), 4)
+        message = mail.outbox[0]
+        self.assertTrue(
+            message.subject,
+            f'Your team has been scheduled for the activity "{self.activity.title}."',
+        )
+        message = mail.outbox[1]
+        self.assertTrue(
+            message.subject,
+            f'The date or location for your team has been changed for the activity "{self.activity.title}."',
+        )
+        mail.outbox = []
+
+        self.slot.start = now() + timedelta(days=5)
+        self.slot.save()
 
         self.assertEqual(len(mail.outbox), 4)
         for message in mail.outbox:

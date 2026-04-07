@@ -34,12 +34,6 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 @python_2_unicode_compatible
 class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
-    """
-    An initiative has a collection of activities that are related to a common goal.
-    """
-
-    include_in_documentation = True
-
     status = models.CharField(max_length=40)
     title = models.CharField(_("title"), blank=True, max_length=255)
 
@@ -250,7 +244,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
                 self.slug = "new"
 
         try:
-            if InitiativePlatformSettings.objects.get().require_organization:
+            if InitiativePlatformSettings.load().require_organization:
                 self.has_organization = True
         except InitiativePlatformSettings.DoesNotExist:
             pass
@@ -289,11 +283,13 @@ SEARCH_FILTERS = {
     "office_subregion": (_("Work location group"), _("Select a group")),
     "office_region": (_("Work location region"), _("Select a region")),
     'open': (_('Open initiatives'), _("Make a choice")),
+    "is_local": (_("Local / From partner"), _("Make a choice")),
+
 }
 
 ACTIVITY_SEARCH_FILTERS = [
     (k, v[0]) for k, v in SEARCH_FILTERS.items() if k in [
-        "country", "date", "distance", "is_online", "skill",
+        "country", "date", "distance", "is_online", "is_local", "skill",
         "team_activity", "theme", "category", "office", "office_subregion", "office_region"
     ]
 ]
@@ -355,6 +351,15 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_(
             "Require initiators to specify a partner organisation when creating an initiative."
         ),
+    )
+
+    vet_organizations = models.BooleanField(
+        _('Enable due diligence'),
+        default=False,
+        help_text=_((
+            "Allow admins to indicate if due diligence has been completed "
+            "when approving a grant application."
+        )),
     )
 
     terms_of_service = models.TextField(

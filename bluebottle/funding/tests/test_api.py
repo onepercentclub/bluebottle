@@ -46,6 +46,7 @@ from bluebottle.funding_pledge.tests.factories import (
     PledgePaymentProviderFactory,
 )
 from bluebottle.funding_stripe.models import StripePaymentProvider
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import (
     ExternalAccountFactory,
     StripePaymentProviderFactory,
@@ -811,7 +812,7 @@ class FundingTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create(owner=self.user)
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append('funding')
         settings.save()
 
@@ -936,7 +937,7 @@ class FundingTestCase(BluebottleTestCase):
         )
 
 
-class DonationTestCase(BluebottleTestCase):
+class DonationTestCase(FundingStripeMixin, BluebottleTestCase):
     def setUp(self):
         super(DonationTestCase, self).setUp()
         StripePaymentProviderFactory.create()
@@ -969,6 +970,20 @@ class DonationTestCase(BluebottleTestCase):
         }
 
     def test_create(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['data']['attributes']['status'], 'new')
+        self.assertEqual(data['data']['attributes']['amount'], {'amount': 100, 'currency': 'EUR'})
+        self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
+        self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
+        self.assertIsNone(data['data']['attributes']['client-secret'])
+
+    def test_create_twice(self):
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1899,7 +1914,6 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
     def test_anonymous_donations_setting(self):
         funding_settings = FundingPlatformSettings.load()
         funding_settings.anonymous_donations = True
-        funding_settings.allow_anonymous_rewards = True
         funding_settings.matching_name = "Dagobert Duck"
         funding_settings.save()
         response = self.client.get('/api/config', user=self.user)
@@ -1909,7 +1923,6 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
         self.assertEquals(
             data["platform"]["funding"],
             {
-                "allow_anonymous_rewards": True,
                 "anonymous_donations": True,
                 "business_types": ["individual"],
                 "enable_iban_check": False,
@@ -1955,7 +1968,7 @@ class FundingAnonymousDonationsTestCase(APITestCase):
         'iban_check_url': '',
     }
 )
-class IbanCheckTestCase(APITestCase):
+class IbanCheckTestCase(FundingStripeMixin, APITestCase):
     url_name = 'funding-iban-check'
     serializer = IbanCheckSerializer
     fields = ['iban', 'name', 'matched']

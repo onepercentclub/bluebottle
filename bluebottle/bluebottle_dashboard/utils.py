@@ -56,7 +56,7 @@ def get_menu_items(context):
             group["hide"] = True
 
         if group["app_label"] == "looker":
-            (analytics_settings, _) = AnalyticsPlatformSettings.objects.get_or_create()
+            analytics_settings = AnalyticsPlatformSettings.load()
 
             if analytics_settings.plausible_embed_link:
                 group["items"] = [

@@ -237,10 +237,8 @@ class SignUpTokenTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
-
+        self.settings = MemberPlatformSettings.load()
         super(SignUpTokenTestCase, self).setUp()
-
         self.client = JSONAPITestClient()
 
     def test_create(self):
@@ -373,7 +371,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
 @override_settings(SEND_WELCOME_MAIL=True)
 class CreateUserTestCase(BluebottleTestCase):
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
+        self.settings = MemberPlatformSettings.load()
 
         super(CreateUserTestCase, self).setUp()
 
@@ -506,7 +504,7 @@ class CreateUserTestCase(BluebottleTestCase):
 @override_settings(SEND_WELCOME_MAIL=True)
 class ConfirmSignUpTestCase(BluebottleTestCase):
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
+        self.settings = MemberPlatformSettings.load()
 
         super(ConfirmSignUpTestCase, self).setUp()
         self.email = 'test@example.com'

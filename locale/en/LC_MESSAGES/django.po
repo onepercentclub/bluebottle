@@ -345,6 +345,8 @@ msgstr ""
 #: bluebottle/activities/messages/activity_manager.py:37
 #: bluebottle/funding/messages/funding/activity_manager.py:12
 #: bluebottle/funding/messages/funding/reviewer.py:16
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_refunded.html:15
+#: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:26
 msgctxt "platform-email"
 msgid "View campaign"
 msgstr ""
@@ -533,19 +535,19 @@ msgstr ""
 #: bluebottle/activities/messages/matching.py:200
 #, python-brace-format
 msgctxt "platform-email"
-msgid "{first_name}, a new year, a new chance to make impact"
+msgid "{first_name}, a new year, a new chance to make impact!"
 msgstr ""
 
 #: bluebottle/activities/messages/matching.py:208
 #, python-brace-format
 msgctxt "platform-email"
-msgid "{first_name}, your impact starts here"
+msgid "{first_name}, your impact starts here!"
 msgstr ""
 
 #: bluebottle/activities/messages/matching.py:216
 #, python-brace-format
 msgctxt "platform-email"
-msgid "{first_name}, there's still time to make your mark this year"
+msgid "{first_name}, there's still time to make your mark this year!"
 msgstr ""
 
 #: bluebottle/activities/messages/matching.py:224
@@ -569,6 +571,7 @@ msgid "You have withdrawn from the activity \"{title}\""
 msgstr ""
 
 #: bluebottle/activities/messages/participant.py:47
+#: bluebottle/activities/messages/reviewer.py:22
 #: bluebottle/collect/messages.py:56 bluebottle/deeds/messages.py:57
 #: bluebottle/time_based/messages.py:424 bluebottle/time_based/messages.py:448
 #: bluebottle/time_based/messages.py:752 bluebottle/time_based/messages.py:779
@@ -1600,11 +1603,12 @@ msgstr ""
 #, python-format
 msgctxt "platform-email"
 msgid ""
-"You have created the activity %(title)s but have not published it yet. This "
-"means no one will be able to find your activity and join it."
+"You have created the activity %(title)s but have not published it yet.\n"
+"        This means no one will be able to find your activity and contribute "
+"to it."
 msgstr ""
 
-#: bluebottle/activities/templates/mails/messages/activity_manager/publish_activity_reminder.html:8
+#: bluebottle/activities/templates/mails/messages/activity_manager/publish_activity_reminder.html:9
 msgctxt "platform-email"
 msgid "You can publish your activity from your activity detail page."
 msgstr ""
@@ -4382,9 +4386,12 @@ msgstr ""
 #: bluebottle/collect/templates/mails/messages/collect_activity_reminder.html:8
 msgctxt "platform-email"
 msgid ""
-"This is a good time to send your participants a motivational message to make "
-"your activity a success. Send a message to all your participants via the "
-"update wall on your activity page."
+"\n"
+"        This is a good time to motivate your participants to make your "
+"activity a success.\n"
+"        Send a message to all your participants via the update wall on your "
+"activity page.\n"
+"    "
 msgstr ""
 
 #: bluebottle/collect/templates/mails/messages/collect_participant_joined.html:5
@@ -5068,14 +5075,16 @@ msgid "You have a new donation!💰"
 msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:47
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Your crowdfunding campaign deadline passed"
+msgid "The deadline of your crowdfunding campaign on {site_name} has passed"
 msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:55
 #, python-brace-format
 msgctxt "platform-email"
-msgid "Your campaign \"{title}\" has been successfully completed! 🎉"
+msgid ""
+"Your crowdfunding campaign \"{title}\" has been successfully completed! 🎉"
 msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:63
@@ -5097,55 +5106,56 @@ msgid "Your crowdfunding campaign on {site_name} needs work"
 msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:87
-msgctxt "platform-email"
-msgid "Your crowdfunding campaign has expired"
-msgstr ""
-
-#: bluebottle/funding/messages/funding/activity_manager.py:95
 #, python-brace-format
 msgctxt "platform-email"
-msgid "The donations received for your campaign \"{title}\" will be refunded"
+msgid "Your crowdfunding campaign on {site_name} has expired"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:103
+#: bluebottle/funding/messages/funding/activity_manager.py:96
+#, python-brace-format
+msgctxt "platform-email"
+msgid ""
+"The donations received for your crowdfunding campaign on {site_name} will be "
+"refunded"
+msgstr ""
+
+#: bluebottle/funding/messages/funding/activity_manager.py:104
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign on {site_name} has been approved!"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:111
+#: bluebottle/funding/messages/funding/activity_manager.py:112
 #, python-brace-format
 msgctxt "platform-email"
-msgid "Your crowdfunding campaign \"{title}\" is open for new donations 💸"
+msgid "Your crowdfunding campaign on {site_name} is open for new donations 💸"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:119
+#: bluebottle/funding/messages/funding/activity_manager.py:120
 #, python-brace-format
 msgctxt "platform-email"
-msgid "Your crowdfunding campaign \"{title}\" has been cancelled"
+msgid "Your crowdfunding campaign on {site_name} has been cancelled"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:148
-#: bluebottle/funding/messages/funding/activity_manager.py:156
+#: bluebottle/funding/messages/funding/activity_manager.py:149
+#: bluebottle/funding/messages/funding/activity_manager.py:157
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Action required for your crowdfunding campaign"
+msgid "Action required for your crowdfunding campaign on {site_name}"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:164
-#: bluebottle/funding/messages/funding/activity_manager.py:188
+#: bluebottle/funding/messages/funding/activity_manager.py:165
+#: bluebottle/funding/messages/funding/activity_manager.py:189
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your identity has been verified on {site_name}"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:172
+#: bluebottle/funding/messages/funding/activity_manager.py:173
+#: bluebottle/funding/messages/funding/activity_manager.py:181
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Action required for your identity verification"
-msgstr ""
-
-#: bluebottle/funding/messages/funding/activity_manager.py:180
-msgctxt "platform-email"
-msgid "Action required for identity verification"
+msgid "Action required for identity verification on {site_name}"
 msgstr ""
 
 #: bluebottle/funding/messages/funding/contributor.py:8
@@ -5160,14 +5170,20 @@ msgctxt "platform-email"
 msgid "Your donation for the campaign \"{title}\" will be refunded"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/platform_manager.py:12
+#: bluebottle/funding/messages/funding/platform_manager.py:13
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Live campaign identity verification failed!"
+msgid ""
+"Failed identity verification for a running crowdfunding campaign on "
+"{site_name} ⚠️"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/platform_manager.py:34
+#: bluebottle/funding/messages/funding/platform_manager.py:36
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Incomplete payout account for running campaign"
+msgid ""
+"Incomplete payout account for a running crowdfunding campaign on {site_name} "
+"⚠️"
 msgstr ""
 
 #: bluebottle/funding/messages/funding/reviewer.py:12
@@ -6081,7 +6097,8 @@ msgctxt "platform-email"
 msgid ""
 "\n"
 "Good news, your crowdfunding campaign \"%(title)s\" has been approved!\n"
-"Your campaign will be live and people can start donating.<br>\n"
+"    Your crowdfunding campaign will be live and people can start donating."
+"<br>\n"
 "<br>\n"
 "Share your crowdfunding campaign far and wide to inspire support and attract "
 "contributions!\n"
@@ -6125,14 +6142,15 @@ msgid ""
 "        <b>Here’s what happens next:</b>\n"
 "        <ul>\n"
 "            <li>\n"
-"                Your campaign will be reviewed by the platform manager.\n"
+"                Your crowdfunding campaign will be reviewed by the platform "
+"manager.\n"
 "            </li>\n"
 "            <li>\n"
 "                Once approved, your campaign will be live and people can "
 "start donating.\n"
 "            </li>\n"
 "        </ul>\n"
-"        You will not be able to edit the application when it is in review.\n"
+"    You will not be able to edit the campaign when it is in review.\n"
 "    </p>\n"
 msgstr ""
 
@@ -6190,8 +6208,9 @@ msgstr ""
 msgctxt "platform-email"
 msgid ""
 "\n"
-"            Your campaign deadline for <i>%(title)s\"</i> passed. "
-"Unfortunately, you didn’t reach your campaign goal within the deadline.\n"
+"            Your crowdfunding campaign deadline for <i>%(title)s\"</i> "
+"passed. Unfortunately, you didn’t reach your\n"
+"            campaign goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
 msgstr ""
@@ -6219,12 +6238,6 @@ msgid ""
 "            If you have any questions, you can contact the platform manager "
 "by replying to this email.\n"
 "        "
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_refunded.html:15
-#: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:26
-msgctxt "platform-email"
-msgid "Go to campaign"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/grant_application_approved.html:5
@@ -6268,6 +6281,8 @@ msgid ""
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_marked_incomplete.html:19
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:14
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:21
 msgctxt "platform-email"
 msgid "Provide details"
 msgstr ""
@@ -6330,12 +6345,6 @@ msgid ""
 "    some extra information from you. Please provide this information as soon "
 "as possible.\n"
 "    "
-msgstr ""
-
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:14
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:21
-msgctxt "platform-email"
-msgid "Provide additional details"
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:6
@@ -7637,7 +7646,7 @@ msgid ""
 "    </li>\n"
 "    <li>\n"
 "        Once approved, you’ll need to enter your bank details and complete "
-"and complete the verification process.\n"
+"the verification process.\n"
 "    </li>\n"
 "</ul>\n"
 "<p>\n"

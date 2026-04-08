@@ -338,6 +338,8 @@ msgstr "tevékenység"
 #: bluebottle/activities/messages/activity_manager.py:37
 #: bluebottle/funding/messages/funding/activity_manager.py:12
 #: bluebottle/funding/messages/funding/reviewer.py:16
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_refunded.html:15
+#: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:26
 msgctxt "platform-email"
 msgid "View campaign"
 msgstr "Kampány megtekintése"
@@ -524,20 +526,20 @@ msgstr "Tevékenységek keresése"
 #: bluebottle/activities/messages/matching.py:200
 #, python-brace-format
 msgctxt "platform-email"
-msgid "{first_name}, a new year, a new chance to make impact"
-msgstr "{first_name}, új év, új lehetőség hatás elérésére"
+msgid "{first_name}, a new year, a new chance to make impact!"
+msgstr ""
 
 #: bluebottle/activities/messages/matching.py:208
 #, python-brace-format
 msgctxt "platform-email"
-msgid "{first_name}, your impact starts here"
-msgstr "{first_name}, itt kezdődik a hatásod"
+msgid "{first_name}, your impact starts here!"
+msgstr ""
 
 #: bluebottle/activities/messages/matching.py:216
 #, python-brace-format
 msgctxt "platform-email"
-msgid "{first_name}, there's still time to make your mark this year"
-msgstr "{first_name}, még van időd, hogy nyomot hagyj ebben az évben"
+msgid "{first_name}, there's still time to make your mark this year!"
+msgstr ""
 
 #: bluebottle/activities/messages/matching.py:224
 #, python-brace-format
@@ -560,6 +562,7 @@ msgid "You have withdrawn from the activity \"{title}\""
 msgstr "Visszaléptél a(z) „{title}” tevékenységből"
 
 #: bluebottle/activities/messages/participant.py:47
+#: bluebottle/activities/messages/reviewer.py:22
 #: bluebottle/collect/messages.py:56 bluebottle/deeds/messages.py:57
 #: bluebottle/time_based/messages.py:424 bluebottle/time_based/messages.py:448
 #: bluebottle/time_based/messages.py:752 bluebottle/time_based/messages.py:779
@@ -1543,10 +1546,11 @@ msgstr "És ne felejtsd el megköszönni csodás résztvevőid támogatását."
 #: bluebottle/activities/templates/mails/messages/activity_manager/publish_activity_reminder.html:5
 #, python-format
 msgctxt "platform-email"
-msgid "You have created the activity %(title)s but have not published it yet. This means no one will be able to find your activity and join it."
-msgstr "Létrehoztad a(z) „%(title)s” tevékenységet, de még nem tetted közzé. Ez azt jelenti, hogy senki sem fogja tudni megtalálni a tevékenységedet, és csatlakozni hozzá."
+msgid "You have created the activity %(title)s but have not published it yet.\n"
+"        This means no one will be able to find your activity and contribute to it."
+msgstr ""
 
-#: bluebottle/activities/templates/mails/messages/activity_manager/publish_activity_reminder.html:8
+#: bluebottle/activities/templates/mails/messages/activity_manager/publish_activity_reminder.html:9
 msgctxt "platform-email"
 msgid "You can publish your activity from your activity detail page."
 msgstr "A tevékenységedet a tevékenységed részletes oldaláról teheted közzé."
@@ -4227,8 +4231,11 @@ msgstr "Holnap van a nagy nap, amikor a te „%(title)s” tevékenységed elind
 
 #: bluebottle/collect/templates/mails/messages/collect_activity_reminder.html:8
 msgctxt "platform-email"
-msgid "This is a good time to send your participants a motivational message to make your activity a success. Send a message to all your participants via the update wall on your activity page."
-msgstr "Ez jó alkalom arra, hogy motiváló üzenetet küldj a résztvevőknek, hogy a tevékenységed sikeres legyen. Küldj üzenetet minden résztvevőnek a tevékenységed oldalának faliújságán keresztül."
+msgid "\n"
+"        This is a good time to motivate your participants to make your activity a success.\n"
+"        Send a message to all your participants via the update wall on your activity page.\n"
+"    "
+msgstr ""
 
 #: bluebottle/collect/templates/mails/messages/collect_participant_joined.html:5
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:5
@@ -4899,15 +4906,16 @@ msgid "You have a new donation!💰"
 msgstr "Új adományod érkezett!💰"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:47
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Your crowdfunding campaign deadline passed"
-msgstr "A közösségi finanszírozási kampányod határideje lejárt"
+msgid "The deadline of your crowdfunding campaign on {site_name} has passed"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:55
 #, python-brace-format
 msgctxt "platform-email"
-msgid "Your campaign \"{title}\" has been successfully completed! 🎉"
-msgstr "A(z) „{title}” kampányod sikeresen befejeződött! 🎉"
+msgid "Your crowdfunding campaign \"{title}\" has been successfully completed! 🎉"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:63
 #, python-brace-format
@@ -4928,56 +4936,55 @@ msgid "Your crowdfunding campaign on {site_name} needs work"
 msgstr "A(z) {site_name} oldalon benyújtott közösségi finanszírozási kampányod munkát igényel"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:87
-msgctxt "platform-email"
-msgid "Your crowdfunding campaign has expired"
-msgstr "A közösségi finanszírozási kampányod lejárt"
-
-#: bluebottle/funding/messages/funding/activity_manager.py:95
 #, python-brace-format
 msgctxt "platform-email"
-msgid "The donations received for your campaign \"{title}\" will be refunded"
-msgstr "A(z) „{title}” kampányodra érkezett adományokat visszatérítjük"
+msgid "Your crowdfunding campaign on {site_name} has expired"
+msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:103
+#: bluebottle/funding/messages/funding/activity_manager.py:96
+#, python-brace-format
+msgctxt "platform-email"
+msgid "The donations received for your crowdfunding campaign on {site_name} will be refunded"
+msgstr ""
+
+#: bluebottle/funding/messages/funding/activity_manager.py:104
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign on {site_name} has been approved!"
 msgstr "A(z) {site_name} oldalon beadott közösségi finanszírozási kampányodat jóváhagyták!"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:111
+#: bluebottle/funding/messages/funding/activity_manager.py:112
 #, python-brace-format
 msgctxt "platform-email"
-msgid "Your crowdfunding campaign \"{title}\" is open for new donations 💸"
-msgstr "A(z) „{title}” közösségi finanszírozási kampányod nyitva áll az új adományok számára 💸"
+msgid "Your crowdfunding campaign on {site_name} is open for new donations 💸"
+msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:119
+#: bluebottle/funding/messages/funding/activity_manager.py:120
 #, python-brace-format
 msgctxt "platform-email"
-msgid "Your crowdfunding campaign \"{title}\" has been cancelled"
-msgstr "A(z) „{title}” közösségi finanszírozási kampányodat törölték"
+msgid "Your crowdfunding campaign on {site_name} has been cancelled"
+msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:148
-#: bluebottle/funding/messages/funding/activity_manager.py:156
+#: bluebottle/funding/messages/funding/activity_manager.py:149
+#: bluebottle/funding/messages/funding/activity_manager.py:157
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Action required for your crowdfunding campaign"
-msgstr "A közösségi finanszírozási kampányod intézkedést igényel"
+msgid "Action required for your crowdfunding campaign on {site_name}"
+msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:164
-#: bluebottle/funding/messages/funding/activity_manager.py:188
+#: bluebottle/funding/messages/funding/activity_manager.py:165
+#: bluebottle/funding/messages/funding/activity_manager.py:189
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your identity has been verified on {site_name}"
 msgstr "A személyazonosságodat ellenőriztük a(z) {site_name} oldalon"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:172
+#: bluebottle/funding/messages/funding/activity_manager.py:173
+#: bluebottle/funding/messages/funding/activity_manager.py:181
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Action required for your identity verification"
-msgstr "Személyazonosságod ellenőrzése intézkedést igényel"
-
-#: bluebottle/funding/messages/funding/activity_manager.py:180
-msgctxt "platform-email"
-msgid "Action required for identity verification"
-msgstr "A személyazonosság ellenőrzése intézkedést igényel"
+msgid "Action required for identity verification on {site_name}"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/contributor.py:8
 msgctxt "platform-email"
@@ -4991,15 +4998,17 @@ msgctxt "platform-email"
 msgid "Your donation for the campaign \"{title}\" will be refunded"
 msgstr "A(z) „{title}” kampányra tett adományodat visszatérítjük"
 
-#: bluebottle/funding/messages/funding/platform_manager.py:12
+#: bluebottle/funding/messages/funding/platform_manager.py:13
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Live campaign identity verification failed!"
-msgstr "Az élő kampány azonosítása sikertelen volt!"
+msgid "Failed identity verification for a running crowdfunding campaign on {site_name} ⚠️"
+msgstr ""
 
-#: bluebottle/funding/messages/funding/platform_manager.py:34
+#: bluebottle/funding/messages/funding/platform_manager.py:36
+#, python-brace-format
 msgctxt "platform-email"
-msgid "Incomplete payout account for running campaign"
-msgstr "Hiányos kifizetési számla a folyamatban lévő kampányhoz"
+msgid "Incomplete payout account for a running crowdfunding campaign on {site_name} ⚠️"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/reviewer.py:12
 #, python-brace-format
@@ -5870,14 +5879,10 @@ msgstr "Határidő"
 msgctxt "platform-email"
 msgid "\n"
 "Good news, your crowdfunding campaign \"%(title)s\" has been approved!\n"
-"Your campaign will be live and people can start donating.<br>\n"
+"    Your crowdfunding campaign will be live and people can start donating.<br>\n"
 "<br>\n"
 "Share your crowdfunding campaign far and wide to inspire support and attract contributions!\n"
-msgstr "\n"
-"Jó hír, a „%(title)s” nevű közösségi finanszírozási kampányodat jóváhagyták!\n"
-"Kampányod elindul, és az emberek elkezdhetnek adományozni.<br>\n"
-"<br>\n"
-"Oszd meg kampányodat minél több emberrel, hogy támogatásra ösztönözd őket és vonzd a hozzájárulásokat!\n"
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_needs_work.html:5
 #, python-format
@@ -5916,30 +5921,15 @@ msgid "\n"
 "        <b>Here’s what happens next:</b>\n"
 "        <ul>\n"
 "            <li>\n"
-"                Your campaign will be reviewed by the platform manager.\n"
+"                Your crowdfunding campaign will be reviewed by the platform manager.\n"
 "            </li>\n"
 "            <li>\n"
 "                Once approved, your campaign will be live and people can start donating.\n"
 "            </li>\n"
 "        </ul>\n"
-"        You will not be able to edit the application when it is in review.\n"
+"    You will not be able to edit the campaign when it is in review.\n"
 "    </p>\n"
-msgstr "\n"
-"    <p>\n"
-"        A(z) „%(title)s” nevű közösségi finanszírozási kampányodat benyújtottad a(z) %(site_name)s webhelyre.\n"
-"        <br/>\n"
-"        <br/>\n"
-"        <b>A következő lépések:</b>\n"
-"        <ul>\n"
-"            <li>\n"
-"                Kampányodat a platformmenedzser fogja felülvizsgálni.\n"
-"            </li>\n"
-"            <li>\n"
-"                A jóváhagyás után a kampányod élőben lesz, és az emberek elkezdhetik az adományozást.\n"
-"            </li>\n"
-"        </ul>\n"
-"        A felülvizsgálat ideje alatt nem szerkesztheted a jelentkezést.\n"
-"    </p>\n"
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/donation_success_owner.html:5
 msgctxt "platform-email"
@@ -5996,13 +5986,11 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"            Your campaign deadline for <i>%(title)s\"</i> passed. Unfortunately, you didn’t reach your campaign goal within the deadline.\n"
+"            Your crowdfunding campaign deadline for <i>%(title)s\"</i> passed. Unfortunately, you didn’t reach your\n"
+"            campaign goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
-msgstr "\n"
-"            A <i>%(title)s\"</i> kampányod határideje lejárt. Sajnos nem sikerült elérned a kampány célját a határidőn belül.\n"
-"            Hamarosan egy további információkat tartalmazó e-mailt küldünk neked.\n"
-"        "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_realised_owner.html:5
 #, python-format
@@ -6029,12 +6017,6 @@ msgstr "\n"
 "            <br><br>\n"
 "            Ha bármilyen kérdésed van, az e-mailre válaszolva kapcsolatba léphetsz a platformmenedzserrel.\n"
 "        "
-
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_refunded.html:15
-#: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:26
-msgctxt "platform-email"
-msgid "Go to campaign"
-msgstr "Ugrás a kampányra"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/grant_application_approved.html:5
 #, python-format
@@ -6091,6 +6073,8 @@ msgstr "\n"
 "        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_marked_incomplete.html:19
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:14
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:21
 msgctxt "platform-email"
 msgid "Provide details"
 msgstr "Részletek megadása"
@@ -6166,12 +6150,6 @@ msgid "\n"
 msgstr "\n"
 "    Ahhoz, hogy a(z) %(site_name)s oldalon pénzt gyűjthessünk a szervezeted számára, szükségünk van néhány további információra. Kérjük, minél hamarabb add meg nekünk ezeket az információkat.\n"
 "    "
-
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:14
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:21
-msgctxt "platform-email"
-msgid "Provide additional details"
-msgstr "Adj meg további részleteket"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:6
 #, python-format
@@ -7472,27 +7450,13 @@ msgid "\n"
 "        Your application will be reviewed by the platform manager.\n"
 "    </li>\n"
 "    <li>\n"
-"        Once approved, you’ll need to enter your bank details and complete and complete the verification process.\n"
+"        Once approved, you’ll need to enter your bank details and complete the verification process.\n"
 "    </li>\n"
 "</ul>\n"
 "<p>\n"
 "    You will not be able to edit the application when it is in review.\n"
 "</p>\n"
-msgstr "\n"
-"Benyújtottad a(z) „%(title)s” támogatási kérelmedet a(z) %(site_name)s oldalon.<br>\n"
-"<br>\n"
-"<b>A következő lépések:</b>\n"
-"<ul>\n"
-"    <li>\n"
-"        Kérelmedet a platformmenedzser fogja felülvizsgálni.\n"
-"    </li>\n"
-"    <li>\n"
-"        A jóváhagyás után meg kell adnod banki adataidat, és el kell végezni az ellenőrzési folyamatot.\n"
-"    </li>\n"
-"</ul>\n"
-"<p>\n"
-"    A kérelmet a felülvizsgálata alatt nem módosíthatod.\n"
-"</p>\n"
+msgstr ""
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
 #, python-format

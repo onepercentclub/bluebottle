@@ -51,6 +51,7 @@ MESSAGE_MODULES = {
     'time_based.participants': 'bluebottle.time_based.messages.participants',
     'time_based.teams': 'bluebottle.time_based.messages.teams',
     'time_based.registrations': 'bluebottle.time_based.messages.registrations',
+    'time_based.activity_manager': 'bluebottle.time_based.messages.activity_manager',
 
     'funding.contributor': 'bluebottle.funding.messages.funding.contributor',
     'funding.activity_manager': 'bluebottle.funding.messages.funding.activity_manager',

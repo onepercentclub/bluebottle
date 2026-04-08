@@ -1,9 +1,12 @@
+from django.core.validators import validate_email
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
     HyperlinkedRelatedField,
 )
-from rest_framework_json_api.serializers import ModelSerializer
+from rest_framework_json_api.serializers import ModelSerializer, ValidationError
 
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import (
@@ -12,8 +15,9 @@ from bluebottle.fsm.serializers import (
     TransitionSerializer,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.members.models import Member
-from bluebottle.time_based.models import Team, TeamMember
+from bluebottle.members.models import Member, MemberPlatformSettings
+from bluebottle.time_based.models import Team, TeamMember, ScheduleActivity
+from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -49,8 +53,9 @@ class CanExportTeamMembersPermission(IsOwner):
 class TeamSerializer(ModelSerializer):
     permissions = ResourcePermissionField("team-detail", view_args=("pk",))
     registration = ResourceRelatedField(read_only=True)
-    activity = ResourceRelatedField(read_only=True)
+    activity = ResourceRelatedField(queryset=ScheduleActivity.objects.all())
     user = ResourceRelatedField(read_only=True)
+    slots = ResourceRelatedField(read_only=True, many=True)
 
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
@@ -83,6 +88,10 @@ class TeamSerializer(ModelSerializer):
         read_only=True,
     )
 
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
     def to_representation(self, instance):
         result = super().to_representation(instance)
 
@@ -101,7 +110,6 @@ class TeamSerializer(ModelSerializer):
         model = Team
         fields = (
             "id",
-            "status",
             "registration",
             "invite_code",
             "activity",
@@ -171,23 +179,44 @@ class TeamMemberSerializer(ModelSerializer):
     def create(self, validated_data):
         email = validated_data.pop("email", None)
         invite_code = validated_data.pop("invite_code", None)
+        send_messages = validated_data.pop('send_messages', True)
 
         request = self.context.get("request")
         request_user = request.user if request else None
 
         if email:
-            # Reuse an existing member when the email is already registered.
-            existing_member = Member.objects.filter(email__iexact=email).first()
-            if existing_member:
-                validated_data["user"] = existing_member
-            else:
-                validated_data["invite_code"] = invite_code
+            validated_data['user'] = Member.objects.filter(email__iexact=email).first()
+            if not validated_data['user']:
+                try:
+                    validate_email(email)
+                except Exception:
+                    raise ValidationError(_('Not a valid email address'), code="invalid")
+
+                member_settings = MemberPlatformSettings.load()
+                scim_settings = SCIMPlatformSettings.load()
+
+                if (
+                    (member_settings.closed or member_settings.confirm_signup) and
+                    not scim_settings.enabled
+                ):
+                    try:
+                        validated_data['user'] = Member.create_by_email(email.strip())
+                    except Exception:
+                        raise ValidationError(_('Not a valid email address'), code="invalid")
+                else:
+                    raise ValidationError(_('User with email address not found'), code="not_found")
         else:
             if invite_code:
                 validated_data["invite_code"] = invite_code
             if request_user and request_user.is_authenticated:
                 validated_data["user"] = request_user
 
+        if 'user' in validated_data and self.Meta.model.objects.filter(
+            user=validated_data['user'], team=validated_data['team']
+        ).exists():
+            raise ValidationError('Already participating')
+
+        validated_data['send_messages'] = send_messages
         return super().create(validated_data)
 
 

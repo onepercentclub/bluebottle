@@ -26,6 +26,7 @@ from bluebottle.time_based.models import (
     ScheduleActivity,
     ScheduleRegistration,
     ScheduleParticipant,
+    TeamScheduleParticipant,
     TeamScheduleRegistration,
     Team,
     TimeContribution,
@@ -249,6 +250,14 @@ class RegisteredDateParticipantFactory(FSMModelFactory):
 class ScheduleParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = ScheduleParticipant
+
+    activity = factory.SubFactory(ScheduleActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class TeamScheduleParticipantFactory(FSMModelFactory):
+    class Meta(object):
+        model = TeamScheduleParticipant
 
     activity = factory.SubFactory(ScheduleActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)

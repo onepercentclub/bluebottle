@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-08 09:47+0200\n"
-"PO-Revision-Date: 2026-04-08 08:10\n"
+"POT-Creation-Date: 2026-04-08 11:04+0200\n"
+"PO-Revision-Date: 2026-04-08 09:11\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -527,19 +527,19 @@ msgstr "Trouver des activités"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "{first_name}, a new year, a new chance to make impact!"
-msgstr ""
+msgstr "{first_name}, c’est la nouvelle année : une nouvelle occasion d’agir et d’avoir un impact!"
 
 #: bluebottle/activities/messages/matching.py:208
 #, python-brace-format
 msgctxt "platform-email"
 msgid "{first_name}, your impact starts here!"
-msgstr ""
+msgstr "{first_name}, ici commence votre impact!"
 
 #: bluebottle/activities/messages/matching.py:216
 #, python-brace-format
 msgctxt "platform-email"
 msgid "{first_name}, there's still time to make your mark this year!"
-msgstr ""
+msgstr "{first_name}, il est temps de laisser votre empreinte cette année!"
 
 #: bluebottle/activities/messages/matching.py:224
 #, python-brace-format
@@ -6153,29 +6153,18 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"    Identity verification failed for an organization you manage.\n"
-"    <br />\n"
-"    <br />\n"
-"    Earlier, information to verify your identity was submitted, but\n"
-"    unfortunately, this was not successful. This could be due to various\n"
-"    reasons. Please check the link below and find a link to update your\n"
-"    information If you still have problems, contact the platform manager at %(contact_email)s.\n"
-"    <br />\n"
-"    <br />\n"
-"    Please do this as soon as possible. "
-msgstr "\n"
-"Échec de la vérification d’identité pour une organisation que vous gérez.\n"
-"<br />\n"
-"<br />\n"
-"Des informations de vérification de votre identité ont été envoyée précédemment, sans que cela aboutisse.\n"
-"Plusieurs raisons peuvent être à l’origine de cet échec. Accédez au lien ci-dessous et mettez vos informations à jour.\n"
-"Si des problèmes persistent, contactez le gestionnaire de la plateforme à l’adresse %(contact_email)s.\n"
-"<br />\n"
-"<br />\n"
-"Veuillez le faire dès que possible. \n"
-" "
+"        We recently tried to verify your organisation, but we didn't succeed. This can happen for a few reasons.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        Please use the link below to review and update your information. If you still run into issues, you can contact\n"
+"        the platform manager at %%(contact_email)s.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        Please do this as soon as possible.\n"
+"    "
+msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:22
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:21
 msgctxt "platform-email"
 msgid "Check details"
 msgstr "Vérifier les informations"
@@ -9265,7 +9254,7 @@ msgstr "Définir le mot de passe"
 #: bluebottle/members/templates/mails/messages/account_activation.html:31
 msgctxt "platform-email"
 msgid "Take me there"
-msgstr ""
+msgstr "Y accéder"
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:6
 msgctxt "platform-email"
@@ -9275,21 +9264,14 @@ msgstr "Bonjour,"
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:9
 #, python-format
 msgid "\n"
-"<p>Welcome to the %(site_name)s community.<p>\n"
+"    <p>Welcome to the %(site_name)s community.</p>\n"
 "<p>\n"
 "    Click the link below to create a password and activate your account.\n"
 "</p>\n"
 "<p>\n"
 "    The link will expire in 24 hours.\n"
 "</p>\n"
-msgstr "\n"
-"<p>Bienvenue dans la communauté %(site_name)s.<p>\n"
-"<p>\n"
-"    Cliquez sur le lien ci-dessous pour créer un mot de passe et activer votre compte.\n"
-"</p>\n"
-"<p>\n"
-"    Le lien expirera dans 24 heures.\n"
-"</p>\n"
+msgstr ""
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:22
 msgctxt "platform-email"
@@ -10778,7 +10760,7 @@ msgstr "Ajuster le participant périodique initial et se connecter au créneau"
 
 #: bluebottle/time_based/effects/registrations.py:108
 msgid "Create team for this registration"
-msgstr ""
+msgstr "Créer une équipe pour cette inscription"
 
 #: bluebottle/time_based/effects/registrations.py:124
 msgid "Delete registration if it no longer has participants"
@@ -13248,11 +13230,9 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"<p>%(applicant_name)s applied to your activity \"%(title)s\".<p>\n\n"
+"    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n\n"
 "<p>Review the application and decide if this person is the right fit.</p>\n"
-msgstr "\n"
-"<p>%(applicant_name)s demandé à rejoindre votre activité « %(title)s ».<p>\n\n"
-"<p>Examinez la demande et décidez si cette personne peut participer.</p>\n"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_finished.html:4
 #, python-format
@@ -13553,11 +13533,9 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"  <p>%(applicant_name)s applied to your activity \"%(title)s\".<p>\n"
-"  <p>Review the application and decide if this person is the right fit.</p>\n"
-msgstr "\n"
-"  <p>%(applicant_name)s demandé à rejoindre votre activité « %(title)s ».<p>\n"
-"  <p>Examinez la demande et décidez si cette personne peut participer.</p>\n"
+"    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n"
+"    <p>Review the application and decide if this person is the right fit.</p>\n"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_restarted.html:5
 #, python-format, python-brace-format

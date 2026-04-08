@@ -35,6 +35,7 @@ from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import (
     RichTextField,
     ValidationErrorsField,
@@ -227,6 +228,7 @@ class InitiativePreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     activity_count = serializers.SerializerMethodField()
     current_status = serializers.SerializerMethodField()
+    translations = TranslationsSerializer(fields=['title', 'pitch'])
 
     def get_current_status(self, obj):
         state = getattr(ReviewStateMachine, obj.current_status.value)
@@ -264,9 +266,9 @@ class InitiativePreviewSerializer(ModelSerializer):
     class Meta(object):
         model = Initiative
         fields = (
-            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'status', 'activity_count'
+            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'status', 'activity_count', 'translations'
         )
-        meta_fields = ('current_status',)
+        meta_fields = ('current_status', 'translations')
 
     class JSONAPIMeta(object):
         resource_name = 'initiatives/preview'
@@ -289,6 +291,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     reviewer = ResourceRelatedField(read_only=True)
     promoter = ResourceRelatedField(read_only=True)
     current_status = CurrentStatusField(source='states.current_state')
+    translations = TranslationsSerializer(
+        fields=['title', 'pitch', 'story']
+    )
 
     activities = ActivitiesField()
 
@@ -387,11 +392,12 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'activities', 'segments',
             'errors', 'required', 'stats', 'is_open', 'status', 'is_global',
+            'translations'
         )
 
         meta_fields = (
             'permissions', 'transitions', 'status', 'created', 'required',
-            'errors', 'stats', 'current_status'
+            'errors', 'stats', 'current_status', 'translations'
         )
 
     class JSONAPIMeta(object):

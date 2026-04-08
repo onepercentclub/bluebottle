@@ -1,19 +1,13 @@
 from django.utils.translation import gettext_lazy as _
 
-
-from bluebottle.activities.states import (
-    ActivityStateMachine, ContributionStateMachine,
-)
-from bluebottle.fsm.state import (
-    register, State, Transition
-)
+from bluebottle.activities.states import ActivityStateMachine
+from bluebottle.fsm.state import register, State, Transition
 from bluebottle.time_based.models import (
     DateActivity,
-    TimeContribution,
     DeadlineActivity,
     PeriodicActivity,
-    ScheduleActivity,
     RegisteredDateActivity,
+    ScheduleActivity,
 )
 
 
@@ -77,23 +71,20 @@ class TimeBasedStateMachine(ActivityStateMachine):
         )
     )
 
-    succeed = Transition(
-        [
+    succeed = ActivityStateMachine.succeed.extend(
+        sources=[
             ActivityStateMachine.open,
             ActivityStateMachine.expired,
             full,
         ],
-        ActivityStateMachine.succeeded,
-        name=_('Succeed'),
         description=_(
             'The activity ends and people can no longer register. '
             'Participants will keep their spent hours, '
             'but will no longer be allocated new hours.'),
-        automatic=True,
     )
 
-    cancel = Transition(
-        [
+    cancel = ActivityStateMachine.cancel.extend(
+        sources=[
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted,
@@ -101,8 +92,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
             ActivityStateMachine.succeeded,
             full,
         ],
-        ActivityStateMachine.cancelled,
-        name=_('Cancel'),
         description=_(
             'Cancel if the activity will not be executed. '
             'It will no longer be visible on the platform. '
@@ -116,19 +105,13 @@ class TimeBasedStateMachine(ActivityStateMachine):
         permission=ActivityStateMachine.is_owner,
     )
 
-    expire = Transition(
-        [
+    expire = ActivityStateMachine.expire.extend(
+        sources=[
             ActivityStateMachine.open,
             ActivityStateMachine.submitted,
             ActivityStateMachine.succeeded,
-            full
+            full,
         ],
-        ActivityStateMachine.expired,
-        name=_('Expire'),
-        description=_(
-            "The activity will be cancelled because no one has signed up for the registration deadline."
-        ),
-        automatic=True,
     )
 
 
@@ -150,10 +133,11 @@ class RegistrationActivityStateMachine(TimeBasedStateMachine):
     def can_succeed(self):
         return len(self.instance.active_participants) > 0
 
-    succeed_manually = Transition(
-        [ActivityStateMachine.open, TimeBasedStateMachine.full],
-        ActivityStateMachine.succeeded,
-        name=_('Succeed'),
+    succeed_manually = TimeBasedStateMachine.succeed.extend(
+        sources=[
+            ActivityStateMachine.open,
+            TimeBasedStateMachine.full,
+        ],
         automatic=False,
         description=_("Close this activity and allocate the hours to the participants."),
         conditions=[can_succeed],
@@ -249,8 +233,3 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
             planned,
         ],
     )
-
-
-@register(TimeContribution)
-class TimeContributionStateMachine(ContributionStateMachine):
-    pass

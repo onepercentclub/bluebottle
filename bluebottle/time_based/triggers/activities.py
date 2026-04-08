@@ -54,7 +54,7 @@ from bluebottle.time_based.states.participants import (
 from bluebottle.time_based.states.slots import (
     ScheduleSlotStateMachine,
 )
-from bluebottle.time_based.states.states import (
+from bluebottle.time_based.states.activities import (
     RegistrationActivityStateMachine,
     PeriodicActivityStateMachine,
 )

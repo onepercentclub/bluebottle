@@ -9,7 +9,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.models import (
     DeadlineParticipant,
 )
-from bluebottle.time_based.states.states import TimeBasedStateMachine
+from bluebottle.time_based.states.activities import TimeBasedStateMachine
 
 
 class ParticipantStateMachine(ContributorStateMachine):
@@ -203,79 +203,42 @@ class ParticipantStateMachine(ContributorStateMachine):
 
 
 class RegistrationParticipantStateMachine(ParticipantStateMachine):
-    accept = Transition(
-        [
+    accept = ParticipantStateMachine.accept.extend(
+        sources=[
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
             ParticipantStateMachine.removed,
             ParticipantStateMachine.withdrawn,
             ParticipantStateMachine.succeeded,
         ],
-        ParticipantStateMachine.accepted,
-        name=_("Accept"),
-        description=_("Accept this person as a participant of this activity."),
-        passed_label=_("accepted"),
         automatic=True,
+        permission=None,
     )
 
-    reject = Transition(
-        [
-            ContributorStateMachine.new,
-            ParticipantStateMachine.accepted,
-            ParticipantStateMachine.succeeded,
-        ],
-        ParticipantStateMachine.rejected,
-        name=_("Reject"),
-        description=_("Reject this person as a participant of this activity."),
+    reject = ParticipantStateMachine.reject.extend(
         automatic=True,
+        permission=None,
     )
 
-    restore = Transition(
-        ParticipantStateMachine.cancelled,
-        ParticipantStateMachine.accepted,
-        name=_("Restore"),
+    restore = ParticipantStateMachine.restore.extend(
         description=_("Restore previously cancelled participant"),
-        automatic=True,
     )
 
-    succeed = Transition(
-        [
+    succeed = ParticipantStateMachine.succeed.extend(
+        sources=[
             ParticipantStateMachine.new,
             ParticipantStateMachine.accepted,
             ParticipantStateMachine.failed,
-            ParticipantStateMachine.cancelled
+            ParticipantStateMachine.cancelled,
         ],
-        ParticipantStateMachine.succeeded,
-        name=_('Succeed'),
-        description=_("This participant has completed their contribution."),
         automatic=True,
+        permission=None,
     )
 
-    remove = Transition(
-        [
-            ParticipantStateMachine.new,
-            ParticipantStateMachine.accepted,
-            ParticipantStateMachine.succeeded
-        ],
-        ParticipantStateMachine.removed,
-        name=_('Remove'),
-        passed_label=_('removed'),
-        description=_("Remove this person as a participant of this activity."),
-        automatic=False,
-        permission=ParticipantStateMachine.can_accept_participant,
-    )
-
-    auto_remove = Transition(
-        [
-            ParticipantStateMachine.new,
-            ParticipantStateMachine.accepted,
-            ParticipantStateMachine.succeeded
-        ],
-        ParticipantStateMachine.removed,
-        name=_('Auto remove'),
-        passed_label=_('removed'),
-        description=_("Remove this person as a participant because a parent object has been removed."),
-        automatic=True,
+    auto_remove = ParticipantStateMachine.auto_remove.extend(
+        description=_(
+            "Remove this person as a participant because a parent object has been removed."
+        ),
     )
 
     readd = Transition(
@@ -294,38 +257,20 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
 
 @register(DeadlineParticipant)
 class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
-    add = Transition(
-        [ContributorStateMachine.new],
-        ParticipantStateMachine.accepted,
-        name=_("Add"),
-        description=_("Add this person as a participant of this activity."),
-        automatic=True,
-    )
+    pass
 
 
 @register(RegisteredDateParticipant)
 class RegisteredDateParticipantStateMachine(RegistrationParticipantStateMachine):
-    add = Transition(
-        [ContributorStateMachine.new],
-        ParticipantStateMachine.accepted,
-        name=_("Add"),
-        description=_("Add this person as a participant of this activity."),
-        automatic=True,
+    restore = RegistrationParticipantStateMachine.restore.extend(
+        target=ParticipantStateMachine.succeeded,
     )
-    restore = Transition(
-        ParticipantStateMachine.cancelled,
-        ParticipantStateMachine.succeeded,
-        name=_("Restore"),
-        description=_("Restore previously cancelled participant"),
-        automatic=True,
-    )
-    readd = Transition(
-        [
-            ParticipantStateMachine.removed,
-        ],
-        ParticipantStateMachine.succeeded,
-        name=_("Re-add"),
+    readd = RegistrationParticipantStateMachine.readd.extend(
+        sources=[ParticipantStateMachine.removed],
+        target=ParticipantStateMachine.succeeded,
         description=_("Add previously removed participant"),
+        permission=None,
+        passed_label=None,
     )
 
 
@@ -341,77 +286,52 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
     )
     scheduled = State(_("Scheduled"), "scheduled", _("This person is assigned a slot."))
 
-    accept = Transition(
-        [
+    accept = RegistrationParticipantStateMachine.accept.extend(
+        sources=[
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
             ParticipantStateMachine.removed,
         ],
-        ParticipantStateMachine.accepted,
-        name=_("Accept"),
-        description=_("Accept this person as a participant of this Activity."),
-        passed_label=_("accepted"),
-        automatic=True,
     )
 
-    reject = Transition(
-        [
+    reject = RegistrationParticipantStateMachine.reject.extend(
+        sources=[
             ContributorStateMachine.new,
             RegistrationParticipantStateMachine.accepted,
             RegistrationParticipantStateMachine.succeeded,
             scheduled,
         ],
-        RegistrationParticipantStateMachine.rejected,
-        name=_("Reject"),
-        description=_("Reject this person as a participant of this activity."),
-        automatic=True,
     )
 
-    remove = Transition(
-        [
+    remove = ParticipantStateMachine.remove.extend(
+        sources=[
             ParticipantStateMachine.new,
             RegistrationParticipantStateMachine.accepted,
             ParticipantStateMachine.succeeded,
             scheduled,
         ],
-        ParticipantStateMachine.removed,
-        name=_("Remove"),
-        passed_label=_("removed"),
-        description=_("Remove this person as a participant of this activity."),
-        automatic=False,
-        permission=ParticipantStateMachine.can_accept_participant,
     )
 
-    auto_remove = Transition(
-        [
+    auto_remove = RegistrationParticipantStateMachine.auto_remove.extend(
+        sources=[
             ParticipantStateMachine.new,
             RegistrationParticipantStateMachine.accepted,
             ParticipantStateMachine.succeeded,
             scheduled,
         ],
-        ParticipantStateMachine.removed,
-        name=_("Auto remove"),
-        passed_label=_("removed"),
-        description=_("Remove this person as a participant because a parent object got removed."),
-        automatic=True,
-    )
-
-    withdraw = Transition(
-        [
-            ContributorStateMachine.new,
-            RegistrationParticipantStateMachine.succeeded,
-            RegistrationParticipantStateMachine.accepted,
-            scheduled,
-        ],
-        RegistrationParticipantStateMachine.withdrawn,
-        name=_("Withdraw"),
-        passed_label=_("withdrawn"),
         description=_(
-            "Cancel your participation in the activity. Participation hours will not be counted."
+            "Remove this person as a participant because a parent object got removed."
         ),
-        automatic=False,
-        permission=RegistrationParticipantStateMachine.is_user,
-        hide_from_admin=True,
+    )
+
+    withdraw = ParticipantStateMachine.withdraw.extend(
+        sources=[
+            ContributorStateMachine.new,
+            RegistrationParticipantStateMachine.succeeded,
+            RegistrationParticipantStateMachine.accepted,
+            scheduled,
+        ],
+        target=RegistrationParticipantStateMachine.withdrawn,
     )
 
     schedule = Transition(
@@ -440,18 +360,15 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         automatic=True,
     )
 
-    succeed = Transition(
-        [
+    succeed = RegistrationParticipantStateMachine.succeed.extend(
+        sources=[
             scheduled,
             ParticipantStateMachine.new,
             ParticipantStateMachine.accepted,
-            ParticipantStateMachine.cancelled
+            ParticipantStateMachine.cancelled,
         ],
-        ParticipantStateMachine.succeeded,
-        name=_("Succeed"),
         description=_("Succeed this participant for the Activity."),
         passed_label=_("succeeded"),
-        automatic=True,
     )
 
     reset = Transition(
@@ -462,53 +379,39 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         passed_label=_("reset"),
         automatic=True,
     )
-    cancel = Transition(
-        [
+    cancel = ParticipantStateMachine.cancel.extend(
+        sources=[
             ParticipantStateMachine.new,
             ParticipantStateMachine.accepted,
             ParticipantStateMachine.succeeded,
-            scheduled
+            scheduled,
         ],
-        ParticipantStateMachine.cancelled,
-        name=_('Cancel'),
-        passed_label=_('cancelled'),
-        description=_("Cancel the participant, because the activity was cancelled."),
-        automatic=True,
     )
 
 
 @register(TeamScheduleParticipant)
 class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
-    initiate = Transition(
-        EmptyState(),
-        ScheduleParticipantStateMachine.new,
-        name=_('Initiate'),
+    initiate = ParticipantStateMachine.initiate.extend(
         description=_("Member signs up for team"),
     )
 
-    withdraw = Transition(
-        [
+    withdraw = ScheduleParticipantStateMachine.withdraw.extend(
+        sources=[
             ScheduleParticipantStateMachine.new,
             ScheduleParticipantStateMachine.accepted,
             ScheduleParticipantStateMachine.scheduled,
         ],
-        ScheduleParticipantStateMachine.withdrawn,
-        name=_("Withdraw"),
-        automatic=False,
-        hide_from_admin=True,
-        permission=RegistrationParticipantStateMachine.is_user,
         description=_("Participant withdraws from the team slot."),
-        passed_label=_("withdrawn"),
     )
 
-    reapply = Transition(
-        ScheduleParticipantStateMachine.withdrawn,
-        ScheduleParticipantStateMachine.new,
-        name=_("Reapply"),
-        automatic=False,
+    reapply = ParticipantStateMachine.reapply.extend(
+        target=ScheduleParticipantStateMachine.new,
+        description=_("Participant joins the team slot."),
+        description_front_end=_("Participant joins the team slot."),
+        passed_label=None,
         hide_from_admin=True,
         permission=RegistrationParticipantStateMachine.is_user,
-        description=_("Participant joins the team slot."),
+        conditions=[],
     )
 
 

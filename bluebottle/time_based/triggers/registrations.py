@@ -55,7 +55,7 @@ from bluebottle.time_based.states.registrations import (
     PeriodicRegistrationStateMachine,
     ScheduleRegistrationStateMachine,
 )
-from bluebottle.time_based.states.states import PeriodicActivityStateMachine
+from bluebottle.time_based.states.activities import PeriodicActivityStateMachine
 
 
 def review_needed(effect):

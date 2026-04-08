@@ -1,5 +1,6 @@
-from .participants import *  # noqa
-from .registrations import *  # noqa
-from .slots import *  # noqa
-from .states import *  # noqa
-from .teams import *  # noqa
+from .activities import *  # noqa: F403
+from .contributions import *  # noqa: F403
+from .participants import *  # noqa: F403
+from .registrations import *  # noqa: F403
+from .slots import *  # noqa: F403
+from .teams import *  # noqa: F403

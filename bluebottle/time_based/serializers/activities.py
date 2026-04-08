@@ -136,6 +136,11 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
         self.include_my = include_my
         super().__init__(*args, **kwargs)
 
+    def filter_my(self, queryset):
+        return queryset.filter(
+            user=self.context['request'].user
+        )
+
     def get_links(self, obj=None, lookup_field="pk"):
         return_data = super().get_links(obj, lookup_field)
         queryset = getattr(
@@ -162,7 +167,7 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
                 return_data['my'] = {
                     'href': url + '?filter[my]=true',
                     'meta': {
-                        'count': queryset.filter(user=self.context['request'].user).count()
+                        'count': self.filter_my(queryset).count()
                     }
                 }
             else:
@@ -264,6 +269,38 @@ class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
     )
 
 
+class RelatedTeamsLinkField(RelatedLinkFieldByStatus):
+    def get_links(self, obj=None, lookup_field="pk"):
+        links = super().get_links(obj, lookup_field)
+
+        if self.context['request'].user.is_authenticated:
+            url = self.reverse(
+                self.related_link_view_name, args=(getattr(obj, lookup_field),)
+            )
+            queryset = getattr(
+                obj, self.source or self.field_name or self.parent.field_name
+            )
+            links['owned'] = {
+                "href": f'{url}?filter[owned]=true',
+                "meta": {
+                    "count": queryset.filter(
+                        user=self.context['request'].user
+                    ).count()
+                },
+            }
+
+            links['my'] = {
+                "href": f'{url}?filter[my]=true',
+                "meta": {
+                    "count": queryset.filter(
+                        team_members__user=self.context['request'].user
+                    ).count()
+                },
+            }
+
+        return links
+
+
 class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'schedule-detail'
 
@@ -286,8 +323,9 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         },
     )
 
-    teams = RelatedLinkFieldByStatus(
+    teams = RelatedTeamsLinkField(
         read_only=True,
+        include_my=True,
         related_link_view_name="related-teams",
         related_link_url_kwarg="activity_id",
         statuses={

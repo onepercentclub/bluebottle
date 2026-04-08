@@ -300,7 +300,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" has been successfully completed! \U0001f389'.format(self.funding.title)
+            u'Your crowdfunding campaign "{}" has been successfully completed! \U0001f389'.format(self.funding.title)
         )
 
     def test_succeed_generate_payouts(self):

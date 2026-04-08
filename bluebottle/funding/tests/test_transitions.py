@@ -178,7 +178,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 5)
         self.assertEqual(
             mail.outbox[4].subject,
-            u'Your campaign "{}" has been successfully completed! \U0001f389'.format(
+            u'Your crowdfunding campaign "{}" has been successfully completed! \U0001f389'.format(
                 self.funding.title
             )
         )

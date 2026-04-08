@@ -52,7 +52,7 @@ class FundingRealisedOwnerMessage(FundingActivityManagerMessage):
     """
     Notify the activity manager that their funding campaign was successful.
     """
-    subject = pgettext('platform-email', 'Your campaign "{title}" has been successfully completed! 🎉')
+    subject = pgettext('platform-email', 'Your crowdfunding campaign "{title}" has been successfully completed! 🎉')
     template = 'messages/funding/activity_manager/funding_realised_owner'
 
 

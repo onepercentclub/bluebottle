@@ -142,9 +142,7 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your crowdfunding campaign "{}" has been cancelled'.format(
-                self.funding.title
-            )
+            'Your crowdfunding campaign on Test has been cancelled'
         )
 
     def test_approve_organizer_succeed(self):
@@ -212,9 +210,7 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your crowdfunding campaign "{}" is open for new donations 💸'.format(
-                self.funding.title
-            )
+            u'Your crowdfunding campaign on Test is open for new donations 💸'
         )
 
         self.assertTrue(
@@ -282,15 +278,11 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             owner_mail.subject,
-            u'The donations received for your campaign "{}" will be refunded'.format(
-                self.funding.title
-            )
+            u'The donations received for your crowdfunding campaign on Test will be refunded'
         )
 
         self.assertTrue(
-            'All donations received for your campaign "{}" will be refunded to the donors.'.format(
-                self.funding.title
-            ) in owner_mail.body
+            'All donations received for your crowdfunding campaign on Test will be refunded to the donors.'
         )
 
     def test_succeed_owner_message(self):
@@ -300,7 +292,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" has been successfully completed! \U0001f389'.format(self.funding.title)
+            u'Your crowdfunding campaign "{}" has been successfully completed! \U0001f389'.format(self.funding.title)
         )
 
     def test_succeed_generate_payouts(self):
@@ -595,7 +587,7 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
     def test_reject_mail(self):
         self.account.states.reject(save=True)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Action required for your crowdfunding campaign')
+        self.assertEqual(mail.outbox[0].subject, 'Action required for your crowdfunding campaign on Test')
 
 
 class PayoutStateMachineTests(BluebottleTestCase):

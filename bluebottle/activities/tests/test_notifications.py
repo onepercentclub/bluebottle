@@ -245,7 +245,7 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ1Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Test, a new year, a new chance to make impact")
+        self.assertSubject("Test, a new year, a new chance to make impact!")
         self.assertBodyContains(
             "Ready to make an impact from day one? On Test "
             "you’ll find many activities waiting for you."
@@ -258,7 +258,7 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ2Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Test, your impact starts here")
+        self.assertSubject("Test, your impact starts here!")
         self.assertBodyContains(
             "We know that getting started can sometimes be the hardest part. "
             "That’s why we’ve made it simple to find activities that match your "
@@ -270,7 +270,7 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ3Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Test, there's still time to make your mark this year")
+        self.assertSubject("Test, there's still time to make your mark this year!")
         self.assertBodyContains(
             "We’re halfway through the year and there’s still lots of opportunity to "
             "make impact. Whether you’ve got a few minutes or a few hours, your efforts "

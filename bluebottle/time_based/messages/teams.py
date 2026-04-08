@@ -255,7 +255,7 @@ class UserTeamDetailsChangedNotification(TransitionMessage):
 
 class CaptainTeamDetailsChangedNotification(TransitionMessage):
     """
-    The date/time for your team has been changed
+    The date/time for your team has been changed.
     """
 
     subject = pgettext(

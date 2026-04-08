@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-08 11:04+0200\n"
-"PO-Revision-Date: 2026-04-08 09:11\n"
+"POT-Creation-Date: 2026-04-08 11:52+0200\n"
+"PO-Revision-Date: 2026-04-08 09:54\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -802,7 +802,7 @@ msgstr "Erőfeszítés"
 msgid "Team"
 msgstr "Csapat"
 
-#: bluebottle/activities/models.py:499 bluebottle/time_based/models.py:1642
+#: bluebottle/activities/models.py:499 bluebottle/time_based/models.py:1644
 #, python-brace-format
 msgid "Team {name}"
 msgstr "Csapat {name}"
@@ -1787,10 +1787,13 @@ msgid "Description is required"
 msgstr "Leírás megadása kötelező."
 
 #: bluebottle/activities/utils.py:622 bluebottle/activities/utils.py:633
+#: bluebottle/time_based/serializers/teams.py:193
+#: bluebottle/time_based/serializers/teams.py:205
 msgid "Not a valid email address"
 msgstr "Érvénytelen e-mail cím"
 
 #: bluebottle/activities/utils.py:635
+#: bluebottle/time_based/serializers/teams.py:207
 msgid "User with email address not found"
 msgstr "Felhasználó e-mail címmel nem található"
 
@@ -4027,7 +4030,7 @@ msgid "item"
 msgstr "tétel"
 
 #: bluebottle/collect/models.py:74 bluebottle/time_based/models.py:318
-#: bluebottle/time_based/models.py:557 bluebottle/time_based/models.py:2015
+#: bluebottle/time_based/models.py:557 bluebottle/time_based/models.py:2017
 msgid "location hint"
 msgstr "helymegjelölési tipp"
 
@@ -5028,7 +5031,7 @@ msgid "If you enter a deadline, leave the duration field empty. This will overri
 msgstr "Ha megad egy határidőt, hagyja üresen a tartam mezőt. Ez felülírja a tartamot."
 
 #: bluebottle/funding/models.py:148 bluebottle/time_based/models.py:451
-#: bluebottle/time_based/models.py:1973 bluebottle/time_based/models.py:1997
+#: bluebottle/time_based/models.py:1975 bluebottle/time_based/models.py:1999
 msgid "duration"
 msgstr "tartam"
 
@@ -6150,18 +6153,19 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"        We recently tried to verify your organisation, but we didn't succeed. This can happen for a few reasons.\n"
-"        <br/>\n"
-"        <br/>\n"
-"        Please use the link below to review and update your information. If you still run into issues, you can contact\n"
-"        the platform manager at %%(contact_email)s.\n"
-"        <br/>\n"
-"        <br/>\n"
-"        Please do this as soon as possible.\n"
-"    "
+"    Identity verification failed for an organization you manage.\n"
+"    <br />\n"
+"    <br />\n"
+"    Earlier, information to verify your identity was submitted, but\n"
+"    unfortunately, this was not successful. This could be due to various\n"
+"    reasons. Please check the link below and find a link to update your\n"
+"    information If you still have problems, contact the platform manager at %(contact_email)s.\n"
+"    <br />\n"
+"    <br />\n"
+"    Please do this as soon as possible. "
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:21
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:22
 msgctxt "platform-email"
 msgid "Check details"
 msgstr "Részletek ellenőrzése"
@@ -9256,7 +9260,7 @@ msgstr "Üdv,"
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:9
 #, python-format
 msgid "\n"
-"    <p>Welcome to the %(site_name)s community.</p>\n"
+"<p>Welcome to the %(site_name)s community.<p>\n"
 "<p>\n"
 "    Click the link below to create a password and activate your account.\n"
 "</p>\n"
@@ -9472,7 +9476,7 @@ msgstr "hoz {}"
 msgid "Raise error"
 msgstr "Hiba kiváltása"
 
-#: bluebottle/notifications/management/commands/preview_all_messages.py:810
+#: bluebottle/notifications/management/commands/preview_all_messages.py:811
 msgid "test"
 msgstr "teszt"
 
@@ -10158,8 +10162,7 @@ msgstr "Beállítások"
 msgid "Manage Reporting"
 msgstr "Jelentéskezelés"
 
-#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:443
-#: tenants/accenture/settings.py:30
+#: bluebottle/settings/testing.py:443 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -10172,30 +10175,26 @@ msgstr "Jelentéskezelés"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
+#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
+#: tenants/maximising-potential/settings.py:27
+#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
 #: tenants/shell-disaster-relief/settings.py:26
-#: tenants/shell-grant-management/settings.py:26
-#: tenants/shell-uk/settings.py:26 tenants/startsomething/settings.py:29
-#: tenants/studentbattle/settings.py:27 tenants/twoscale/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
+#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Angol"
 
-#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:444
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
+#: bluebottle/settings/testing.py:444 tenants/abn/settings.py:26
+#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
@@ -10206,13 +10205,12 @@ msgstr "Angol"
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:23
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -10227,31 +10225,28 @@ msgstr "Angol"
 msgid "Dutch"
 msgstr "Holland"
 
-#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:445
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+#: bluebottle/settings/testing.py:445 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Francia"
 
-#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:446
-#: tenants/mars/settings.py:28
+#: bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr "Spanyol"
 
-#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:447
-#: tenants/mars/settings.py:29
+#: bluebottle/settings/testing.py:447
 msgid "German"
 msgstr "Német"
 
-#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:448
+#: bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugál"
 
-#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:449
-#: tenants/mars/settings.py:30
+#: bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr "Magyar"
 
-#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:450
+#: bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Bolgár"
 
@@ -10750,11 +10745,7 @@ msgstr "Hozz létre kezdeti időszakos résztvevőt ehhez a regisztrációhoz"
 msgid "Adjust initial periodic participant and connect to slot"
 msgstr "Állítsd be az első időszakos résztvevőt és csatlakoztasd slothoz"
 
-#: bluebottle/time_based/effects/registrations.py:108
-msgid "Create team for this registration"
-msgstr ""
-
-#: bluebottle/time_based/effects/registrations.py:124
+#: bluebottle/time_based/effects/registrations.py:109
 msgid "Delete registration if it no longer has participants"
 msgstr "Törlés, ha már nem rendelkezik résztvevőkkel"
 
@@ -10774,19 +10765,19 @@ msgstr "Zárd le a tevékenységet"
 msgid "Create registration for this team"
 msgstr "Hozz létre regisztrációt ehhez a csapathoz"
 
-#: bluebottle/time_based/effects/teams.py:34
+#: bluebottle/time_based/effects/teams.py:40
 msgid "Create team member for the team captain"
 msgstr "Hozz létre csapattagot a csapatkapitánynak"
 
-#: bluebottle/time_based/effects/teams.py:52
+#: bluebottle/time_based/effects/teams.py:58
 msgid "Create slot for this team"
 msgstr "Hozz létre időablakot ehhez a csapathoz"
 
-#: bluebottle/time_based/effects/teams.py:81
+#: bluebottle/time_based/effects/teams.py:87
 msgid "Create participants for this team member"
 msgstr "Hozz létre résztvevőket ehhez a csapattaghoz"
 
-#: bluebottle/time_based/effects/teams.py:96
+#: bluebottle/time_based/effects/teams.py:102
 msgid "Delete participants for this team member"
 msgstr "Töröld a résztvevőket ehhez a csapattaghoz"
 
@@ -11343,7 +11334,7 @@ msgid "Free"
 msgstr "Ingyenes"
 
 #: bluebottle/time_based/models.py:214 bluebottle/time_based/models.py:307
-#: bluebottle/time_based/models.py:2004
+#: bluebottle/time_based/models.py:2006
 msgid "online meeting link"
 msgstr "online találkozó link"
 
@@ -11352,26 +11343,26 @@ msgid "Activities on a date"
 msgstr "Tevékenységek egy dátumon"
 
 #: bluebottle/time_based/models.py:301 bluebottle/time_based/models.py:550
-#: bluebottle/time_based/models.py:2000
+#: bluebottle/time_based/models.py:2002
 msgid "is online"
 msgstr "online"
 
 #: bluebottle/time_based/models.py:313 bluebottle/time_based/models.py:553
 #: bluebottle/time_based/models.py:721 bluebottle/time_based/models.py:868
-#: bluebottle/time_based/models.py:2009
+#: bluebottle/time_based/models.py:2011
 msgid "location"
 msgstr "helyszín"
 
 #: bluebottle/time_based/models.py:349 bluebottle/time_based/models.py:383
-#: bluebottle/time_based/models.py:1923 bluebottle/time_based/models.py:1955
+#: bluebottle/time_based/models.py:1925 bluebottle/time_based/models.py:1957
 #, python-brace-format
 msgid "\n"
 "Join: {url}"
 msgstr "\n"
 "Csatlakozz: {url}"
 
-#: bluebottle/time_based/models.py:450 bluebottle/time_based/models.py:1903
-#: bluebottle/time_based/models.py:1995
+#: bluebottle/time_based/models.py:450 bluebottle/time_based/models.py:1905
+#: bluebottle/time_based/models.py:1997
 msgid "start date and time"
 msgstr "kezdő dátum és idő"
 
@@ -11623,65 +11614,65 @@ msgstr "Csapatok a tervezett tevékenységekhez"
 msgid "Team captain"
 msgstr "Csapatkapitány"
 
-#: bluebottle/time_based/models.py:1680
+#: bluebottle/time_based/models.py:1682
 msgid "Team member"
 msgstr "Csapattag"
 
-#: bluebottle/time_based/models.py:1681
+#: bluebottle/time_based/models.py:1683
 msgid "Team members"
 msgstr "Csapattagok"
 
-#: bluebottle/time_based/models.py:1707
+#: bluebottle/time_based/models.py:1709
 #, python-brace-format
 msgid "Team member {name}"
 msgstr "Csapattag {name}"
 
-#: bluebottle/time_based/models.py:1735
+#: bluebottle/time_based/models.py:1737
 msgid "Participant to schedule activities"
 msgstr "Résztvevő a tervezett tevékenységekhez"
 
-#: bluebottle/time_based/models.py:1736
+#: bluebottle/time_based/models.py:1738
 msgid "Participants to schedule activities"
 msgstr "Résztvevők a tervezett tevékenységekhez"
 
-#: bluebottle/time_based/models.py:1802
+#: bluebottle/time_based/models.py:1804
 msgid "Team member participation"
 msgstr "Csapattag részvétel"
 
-#: bluebottle/time_based/models.py:1803
+#: bluebottle/time_based/models.py:1805
 msgid "Team member participations"
 msgstr "Csapattag részvétel"
 
-#: bluebottle/time_based/models.py:1881
+#: bluebottle/time_based/models.py:1883
 msgid "Slot participant"
 msgstr "helyet foglaló résztvevő"
 
-#: bluebottle/time_based/models.py:1882
+#: bluebottle/time_based/models.py:1884
 msgid "Slot participants"
 msgstr "helyet foglaló résztvevők"
 
-#: bluebottle/time_based/models.py:1974
+#: bluebottle/time_based/models.py:1976
 msgid "end date and time"
 msgstr "befejező dátum és idő"
 
-#: bluebottle/time_based/models.py:2028
+#: bluebottle/time_based/models.py:2030
 #, python-brace-format
 msgid "Slot {start}"
 msgstr "Slot {start}"
 
-#: bluebottle/time_based/models.py:2073
+#: bluebottle/time_based/models.py:2075
 msgid "Team duration"
 msgstr "Csapat időtartama"
 
-#: bluebottle/time_based/models.py:2074
+#: bluebottle/time_based/models.py:2076
 msgid "How much time the team is expected to contribute."
 msgstr "Mennyi időt vársz el a csapattól?"
 
-#: bluebottle/time_based/models.py:2106
+#: bluebottle/time_based/models.py:2108
 msgid "Participant to recurring activities"
 msgstr "Résztvevő az ismétlődő tevékenységekhez"
 
-#: bluebottle/time_based/models.py:2107
+#: bluebottle/time_based/models.py:2109
 msgid "Participants to recurring activities"
 msgstr "Résztvevők az ismétlődő tevékenységekhez"
 
@@ -13223,7 +13214,7 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n\n"
+"<p>%(applicant_name)s applied to your activity \"%(title)s\".<p>\n\n"
 "<p>Review the application and decide if this person is the right fit.</p>\n"
 msgstr ""
 
@@ -13246,6 +13237,7 @@ msgstr "\n"
 "</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/participant_joined.html:6
+#: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:6
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
@@ -13465,14 +13457,6 @@ msgstr "\n"
 "                         Ha elfogadtak, elvárjuk, hogy körülbelül %(duration)s órát tölts el a megadott időszak alatt, noha a tényleges idő eltérhet. Ha nincs időszak meghatározva, akkor bármikor hozzájárulhatsz, amikor neked megfelel.\n"
 "                    "
 
-#: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:6
-#, python-format
-msgctxt "platform-email"
-msgid "\n"
-"            You joined to an activity on <b>%(site_name)s!</b>\n"
-"        "
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:21
 #, python-format
 msgctxt "platform-email"
@@ -13525,8 +13509,8 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n"
-"    <p>Review the application and decide if this person is the right fit.</p>\n"
+"  <p>%(applicant_name)s applied to your activity \"%(title)s\".<p>\n"
+"  <p>Review the application and decide if this person is the right fit.</p>\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_restarted.html:5
@@ -14386,8 +14370,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Másodperc"
 msgstr[1] "Másodpercek"
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
-msgstr ""
 

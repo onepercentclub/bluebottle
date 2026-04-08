@@ -595,7 +595,7 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
     def test_reject_mail(self):
         self.account.states.reject(save=True)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Action required for your crowdfunding campaign')
+        self.assertEqual(mail.outbox[0].subject, 'Action required for your crowdfunding campaign on Test')
 
 
 class PayoutStateMachineTests(BluebottleTestCase):

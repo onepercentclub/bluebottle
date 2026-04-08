@@ -651,7 +651,7 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
 
         message = mail.outbox[0]
         self.assertEqual(
-            message.subject, "Action required for your crowdfunding campaign on {site_name}"
+            message.subject, "Action required for your crowdfunding campaign on Test"
         )
         self.assertTrue("/activities/stripe/kyc" in message.body)
 

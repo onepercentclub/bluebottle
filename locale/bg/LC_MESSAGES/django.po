@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-02 09:53+0200\n"
-"PO-Revision-Date: 2026-04-02 07:56\n"
+"POT-Creation-Date: 2026-04-01 13:40+0200\n"
+"PO-Revision-Date: 2026-04-01 11:47\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -45,7 +45,7 @@ msgstr "Детайли"
 #: bluebottle/funding/admin.py:483 bluebottle/funding/admin.py:661
 #: bluebottle/funding/admin.py:869 bluebottle/funding_stripe/admin.py:245
 #: bluebottle/grant_management/admin.py:297
-#: bluebottle/grant_management/admin.py:553 bluebottle/initiatives/admin.py:246
+#: bluebottle/grant_management/admin.py:552 bluebottle/initiatives/admin.py:246
 #: bluebottle/time_based/admin.py:311 bluebottle/time_based/admin.py:459
 #: bluebottle/time_based/admin.py:840 bluebottle/time_based/admin.py:887
 #: bluebottle/time_based/admin.py:1157 bluebottle/time_based/admin.py:1825
@@ -144,12 +144,12 @@ msgid "Share activity"
 msgstr "Сподели активност"
 
 #: bluebottle/activities/admin.py:842 bluebottle/funding/admin.py:225
-#: bluebottle/grant_management/admin.py:543 bluebottle/initiatives/admin.py:216
+#: bluebottle/grant_management/admin.py:542 bluebottle/initiatives/admin.py:216
 msgid "Management"
 msgstr "Управление"
 
 #: bluebottle/activities/admin.py:843 bluebottle/funding/admin.py:226
-#: bluebottle/grant_management/admin.py:544 bluebottle/initiatives/admin.py:233
+#: bluebottle/grant_management/admin.py:543 bluebottle/initiatives/admin.py:233
 msgid "Information"
 msgstr "Информация"
 
@@ -164,14 +164,14 @@ msgid "Participation"
 msgstr "Участие"
 
 #: bluebottle/activities/admin.py:872 bluebottle/bb_accounts/models.py:139
-#: bluebottle/funding/admin.py:234 bluebottle/grant_management/admin.py:550
+#: bluebottle/funding/admin.py:234 bluebottle/grant_management/admin.py:549
 #: bluebottle/initiatives/models.py:135 bluebottle/initiatives/models.py:282
 #: bluebottle/members/models.py:287
 msgid "Work location"
 msgstr "Работно място"
 
 #: bluebottle/activities/admin.py:877 bluebottle/funding/admin.py:242
-#: bluebottle/grant_management/admin.py:558 bluebottle/members/admin.py:646
+#: bluebottle/grant_management/admin.py:557 bluebottle/members/admin.py:646
 #: bluebottle/settings/admin_dashboard.py:217
 msgid "Segments"
 msgstr "Сегменти"
@@ -797,7 +797,7 @@ msgstr "Усилие"
 msgid "Team"
 msgstr "Отбор"
 
-#: bluebottle/activities/models.py:499 bluebottle/time_based/models.py:1642
+#: bluebottle/activities/models.py:499 bluebottle/time_based/models.py:1644
 #, python-brace-format
 msgid "Team {name}"
 msgstr "Отбор {name}"
@@ -4020,7 +4020,7 @@ msgid "item"
 msgstr "артикул"
 
 #: bluebottle/collect/models.py:74 bluebottle/time_based/models.py:318
-#: bluebottle/time_based/models.py:557 bluebottle/time_based/models.py:2015
+#: bluebottle/time_based/models.py:557 bluebottle/time_based/models.py:2017
 msgid "location hint"
 msgstr "Подсказка за локация"
 
@@ -5018,7 +5018,7 @@ msgid "If you enter a deadline, leave the duration field empty. This will overri
 msgstr "Ако въведете срок, оставете полето за продължителност празно. Това ще замени продължителността."
 
 #: bluebottle/funding/models.py:148 bluebottle/time_based/models.py:451
-#: bluebottle/time_based/models.py:1973 bluebottle/time_based/models.py:1997
+#: bluebottle/time_based/models.py:1975 bluebottle/time_based/models.py:1999
 msgid "duration"
 msgstr "продължителност"
 
@@ -10799,11 +10799,7 @@ msgstr "Създайте първоначален периодичен учас�
 msgid "Adjust initial periodic participant and connect to slot"
 msgstr "Настройте първоначалния периодичен участник и свържете го със слота"
 
-#: bluebottle/time_based/effects/registrations.py:108
-msgid "Create team for this registration"
-msgstr ""
-
-#: bluebottle/time_based/effects/registrations.py:124
+#: bluebottle/time_based/effects/registrations.py:109
 msgid "Delete registration if it no longer has participants"
 msgstr "Изтрийте регистрацията, ако вече няма участници"
 
@@ -10823,19 +10819,19 @@ msgstr "Заключете дейността"
 msgid "Create registration for this team"
 msgstr "Създайте регистрация за този екип"
 
-#: bluebottle/time_based/effects/teams.py:34
+#: bluebottle/time_based/effects/teams.py:40
 msgid "Create team member for the team captain"
 msgstr "Създайте член на екипа за капитана на екипа"
 
-#: bluebottle/time_based/effects/teams.py:52
+#: bluebottle/time_based/effects/teams.py:58
 msgid "Create slot for this team"
 msgstr "Създайте слот за този екип"
 
-#: bluebottle/time_based/effects/teams.py:81
+#: bluebottle/time_based/effects/teams.py:87
 msgid "Create participants for this team member"
 msgstr "Създайте участници за този член на екипа"
 
-#: bluebottle/time_based/effects/teams.py:96
+#: bluebottle/time_based/effects/teams.py:102
 msgid "Delete participants for this team member"
 msgstr "Изтрийте участниците за този член на екипа"
 
@@ -11400,7 +11396,7 @@ msgid "Free"
 msgstr "Безплатно"
 
 #: bluebottle/time_based/models.py:214 bluebottle/time_based/models.py:307
-#: bluebottle/time_based/models.py:2004
+#: bluebottle/time_based/models.py:2006
 msgid "online meeting link"
 msgstr "връзка за онлайн среща"
 
@@ -11409,26 +11405,26 @@ msgid "Activities on a date"
 msgstr "Активности на определена дата"
 
 #: bluebottle/time_based/models.py:301 bluebottle/time_based/models.py:550
-#: bluebottle/time_based/models.py:2000
+#: bluebottle/time_based/models.py:2002
 msgid "is online"
 msgstr "е онлайн"
 
 #: bluebottle/time_based/models.py:313 bluebottle/time_based/models.py:553
 #: bluebottle/time_based/models.py:721 bluebottle/time_based/models.py:868
-#: bluebottle/time_based/models.py:2009
+#: bluebottle/time_based/models.py:2011
 msgid "location"
 msgstr "локация"
 
 #: bluebottle/time_based/models.py:349 bluebottle/time_based/models.py:383
-#: bluebottle/time_based/models.py:1923 bluebottle/time_based/models.py:1955
+#: bluebottle/time_based/models.py:1925 bluebottle/time_based/models.py:1957
 #, python-brace-format
 msgid "\n"
 "Join: {url}"
 msgstr "\n"
 "Присъединете се: {url}"
 
-#: bluebottle/time_based/models.py:450 bluebottle/time_based/models.py:1903
-#: bluebottle/time_based/models.py:1995
+#: bluebottle/time_based/models.py:450 bluebottle/time_based/models.py:1905
+#: bluebottle/time_based/models.py:1997
 msgid "start date and time"
 msgstr "начална дата и час"
 
@@ -11680,65 +11676,65 @@ msgstr "Отбори за насрочени активности"
 msgid "Team captain"
 msgstr "Капитан на отбора"
 
-#: bluebottle/time_based/models.py:1680
+#: bluebottle/time_based/models.py:1682
 msgid "Team member"
 msgstr "Член на отбора"
 
-#: bluebottle/time_based/models.py:1681
+#: bluebottle/time_based/models.py:1683
 msgid "Team members"
 msgstr "Членове на отбора"
 
-#: bluebottle/time_based/models.py:1707
+#: bluebottle/time_based/models.py:1709
 #, python-brace-format
 msgid "Team member {name}"
 msgstr "Член на отбора {name}"
 
-#: bluebottle/time_based/models.py:1735
+#: bluebottle/time_based/models.py:1737
 msgid "Participant to schedule activities"
 msgstr "Участник в насрочени активности"
 
-#: bluebottle/time_based/models.py:1736
+#: bluebottle/time_based/models.py:1738
 msgid "Participants to schedule activities"
 msgstr "Участници в насрочени активности"
 
-#: bluebottle/time_based/models.py:1802
+#: bluebottle/time_based/models.py:1804
 msgid "Team member participation"
 msgstr "Участие на член на отбора"
 
-#: bluebottle/time_based/models.py:1803
+#: bluebottle/time_based/models.py:1805
 msgid "Team member participations"
 msgstr "Участия на член на отбора"
 
-#: bluebottle/time_based/models.py:1881
+#: bluebottle/time_based/models.py:1883
 msgid "Slot participant"
 msgstr "участник на слота"
 
-#: bluebottle/time_based/models.py:1882
+#: bluebottle/time_based/models.py:1884
 msgid "Slot participants"
 msgstr "участници на слота"
 
-#: bluebottle/time_based/models.py:1974
+#: bluebottle/time_based/models.py:1976
 msgid "end date and time"
 msgstr "крайна дата и час"
 
-#: bluebottle/time_based/models.py:2028
+#: bluebottle/time_based/models.py:2030
 #, python-brace-format
 msgid "Slot {start}"
 msgstr "Слот {start}"
 
-#: bluebottle/time_based/models.py:2073
+#: bluebottle/time_based/models.py:2075
 msgid "Team duration"
 msgstr "Продължителност на отбора"
 
-#: bluebottle/time_based/models.py:2074
+#: bluebottle/time_based/models.py:2076
 msgid "How much time the team is expected to contribute."
 msgstr "Колко време се очаква да допринесе отборът."
 
-#: bluebottle/time_based/models.py:2106
+#: bluebottle/time_based/models.py:2108
 msgid "Participant to recurring activities"
 msgstr "Участник за повторяеми активности"
 
-#: bluebottle/time_based/models.py:2107
+#: bluebottle/time_based/models.py:2109
 msgid "Participants to recurring activities"
 msgstr "Участници за повторяеми активности"
 

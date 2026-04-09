@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-08 13:00+0200\n"
-"PO-Revision-Date: 2026-04-08 11:06\n"
+"POT-Creation-Date: 2026-04-09 10:27+0200\n"
+"PO-Revision-Date: 2026-04-09 08:28\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -1413,7 +1413,7 @@ msgstr "Leider wurde deine Aktivität „%(title)s“ abgebrochen."
 #: bluebottle/time_based/templates/mails/messages/participant_added_owner.html:10
 #: bluebottle/time_based/templates/mails/messages/participant_removed_owner.html:10
 #: bluebottle/time_based/templates/mails/messages/participants/manager_participant_removed.html:10
-#: bluebottle/time_based/templates/mails/messages/slot_cancelled.html:12
+#: bluebottle/time_based/templates/mails/messages/slot_cancelled.html:14
 #: bluebottle/time_based/templates/mails/messages/teams/captain_teammember_joined.html:10
 #: bluebottle/time_based/templates/mails/messages/teams/captain_teammember_removed.html:10
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_added.html:10
@@ -6155,19 +6155,18 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"    Identity verification failed for an organization you manage.\n"
-"    <br />\n"
-"    <br />\n"
-"    Earlier, information to verify your identity was submitted, but\n"
-"    unfortunately, this was not successful. This could be due to various\n"
-"    reasons. Please check the link below and find a link to update your\n"
-"    information If you still have problems, contact the platform manager at %(contact_email)s.\n"
-"    <br />\n"
-"    <br />\n"
-"    Please do this as soon as possible. "
+"        We recently tried to verify your organisation, but we didn't succeed. This can happen for a few reasons.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        Please use the link below to review and update your information. If you still run into issues, you can contact\n"
+"        the platform manager at %%(contact_email)s.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        Please do this as soon as possible.\n"
+"    "
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:22
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:21
 msgctxt "platform-email"
 msgid "Check details"
 msgstr "Details prüfen"
@@ -9267,7 +9266,7 @@ msgstr "Hallo,"
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:9
 #, python-format
 msgid "\n"
-"<p>Welcome to the %(site_name)s community.<p>\n"
+"    <p>Welcome to the %(site_name)s community.</p>\n"
 "<p>\n"
 "    Click the link below to create a password and activate your account.\n"
 "</p>\n"
@@ -12884,7 +12883,8 @@ msgstr ""
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"Nice work! Your activity <i>%(activity name)s</i> has been registered and the participants contributions have been recorded.\n"
+"    Nice work! Your activity <i>%(title)s</i> has been registered and the participants contributions have been\n"
+"    recorded.\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_submitted.html:5
@@ -13230,7 +13230,7 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"<p>%(applicant_name)s applied to your activity \"%(title)s\".<p>\n\n"
+"    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n\n"
 "<p>Review the application and decide if this person is the right fit.</p>\n"
 msgstr ""
 
@@ -13526,8 +13526,8 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"  <p>%(applicant_name)s applied to your activity \"%(title)s\".<p>\n"
-"  <p>Review the application and decide if this person is the right fit.</p>\n"
+"    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n"
+"    <p>Review the application and decide if this person is the right fit.</p>\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_restarted.html:5

@@ -255,7 +255,10 @@ class Segment(TranslatableModel, models.Model):
         cached_name = cache.get(cache_key)
 
         if cached_name is None:
-            cached_name = str(self.name)
+            try:
+                cached_name = str(self.name)
+            except AttributeError as e:
+                cached_name = self.safe_translation_getter('name', any_language=True) or f'Segment #{self.pk}'
             cache.set(cache_key, cached_name)
 
         return cached_name

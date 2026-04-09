@@ -61,7 +61,7 @@ def get_translated_segments(segment):
 
     for lang in Language.objects.all():
         segment.set_current_language(lang.full_code)
-        name = segment.name
+        name = segment.cached_name
         if name is None:
             continue
         data.append(

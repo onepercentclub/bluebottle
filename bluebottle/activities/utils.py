@@ -316,7 +316,7 @@ class BaseActivitySerializer(ModelSerializer):
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'owner.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeListSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',

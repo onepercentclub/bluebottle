@@ -437,9 +437,10 @@ class InitiativeListSerializer(ModelSerializer):
             'owner', 'activity_managers',
             'slug', 'has_organization', 'transitions',
             'story', 'image', 'theme', 'place',
+            'is_open', 'is_global', 'organization_contact', 'promoter'
         )
 
-        meta_fields = ('permissions', 'status', 'current_status', 'created', 'transitions',)
+        meta_fields = ('permissions', 'status', 'current_status', 'created', 'transitions', 'required', 'errors')
 
     class JSONAPIMeta(object):
         included_resources = [

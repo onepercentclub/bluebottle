@@ -35,6 +35,10 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView, CreatePermi
         OneOf(ResourcePermission, ActivityOwnerPermission, IsStaffMember),
     )
 
+    @property
+    def model(self):
+        return self.queryset.model
+
 
 class TimeBasedActivityDetailView(ActivityDetailView):
     permission_classes = (
@@ -43,6 +47,10 @@ class TimeBasedActivityDetailView(ActivityDetailView):
         DeleteActivityPermission,
         ActivitySegmentPermission,
     )
+
+    @property
+    def model(self):
+        return self.queryset.model
 
     def get_queryset(self, *args, **kwargs):
         qs = super().get_queryset(*args, **kwargs)

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-08 13:00+0200\n"
-"PO-Revision-Date: 2026-04-08 11:06\n"
+"POT-Creation-Date: 2026-04-08 14:45+0200\n"
+"PO-Revision-Date: 2026-04-09 08:18\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -6156,19 +6156,18 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"    Identity verification failed for an organization you manage.\n"
-"    <br />\n"
-"    <br />\n"
-"    Earlier, information to verify your identity was submitted, but\n"
-"    unfortunately, this was not successful. This could be due to various\n"
-"    reasons. Please check the link below and find a link to update your\n"
-"    information If you still have problems, contact the platform manager at %(contact_email)s.\n"
-"    <br />\n"
-"    <br />\n"
-"    Please do this as soon as possible. "
+"        We recently tried to verify your organisation, but we didn't succeed. This can happen for a few reasons.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        Please use the link below to review and update your information. If you still run into issues, you can contact\n"
+"        the platform manager at %%(contact_email)s.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        Please do this as soon as possible.\n"
+"    "
 msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:22
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:21
 msgctxt "platform-email"
 msgid "Check details"
 msgstr "Vérifier les informations"
@@ -9257,7 +9256,7 @@ msgstr "Définir le mot de passe"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:31
 msgctxt "platform-email"
-msgid "Get started"
+msgid "Take me there"
 msgstr ""
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:6
@@ -9268,7 +9267,7 @@ msgstr "Bonjour,"
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:9
 #, python-format
 msgid "\n"
-"<p>Welcome to the %(site_name)s community.<p>\n"
+"    <p>Welcome to the %(site_name)s community.</p>\n"
 "<p>\n"
 "    Click the link below to create a password and activate your account.\n"
 "</p>\n"
@@ -13230,7 +13229,7 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"<p>%(applicant_name)s applied to your activity \"%(title)s\".<p>\n\n"
+"    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n\n"
 "<p>Review the application and decide if this person is the right fit.</p>\n"
 msgstr ""
 
@@ -13526,8 +13525,8 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"  <p>%(applicant_name)s applied to your activity \"%(title)s\".<p>\n"
-"  <p>Review the application and decide if this person is the right fit.</p>\n"
+"    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n"
+"    <p>Review the application and decide if this person is the right fit.</p>\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_restarted.html:5

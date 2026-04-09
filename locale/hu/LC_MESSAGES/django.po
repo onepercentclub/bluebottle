@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-08 14:45+0200\n"
-"PO-Revision-Date: 2026-04-09 08:18\n"
+"POT-Creation-Date: 2026-04-09 10:27+0200\n"
+"PO-Revision-Date: 2026-04-09 08:28\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -1413,7 +1413,7 @@ msgstr "Sajnos a(z) „%(title)s” tevékenységedet törölték."
 #: bluebottle/time_based/templates/mails/messages/participant_added_owner.html:10
 #: bluebottle/time_based/templates/mails/messages/participant_removed_owner.html:10
 #: bluebottle/time_based/templates/mails/messages/participants/manager_participant_removed.html:10
-#: bluebottle/time_based/templates/mails/messages/slot_cancelled.html:12
+#: bluebottle/time_based/templates/mails/messages/slot_cancelled.html:14
 #: bluebottle/time_based/templates/mails/messages/teams/captain_teammember_joined.html:10
 #: bluebottle/time_based/templates/mails/messages/teams/captain_teammember_removed.html:10
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_added.html:10
@@ -9248,7 +9248,7 @@ msgstr "Jelszó beállítása"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:31
 msgctxt "platform-email"
-msgid "Take me there"
+msgid "Get started"
 msgstr ""
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:6
@@ -12876,7 +12876,8 @@ msgstr ""
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"Nice work! Your activity <i>%(activity name)s</i> has been registered and the participants contributions have been recorded.\n"
+"    Nice work! Your activity <i>%(title)s</i> has been registered and the participants contributions have been\n"
+"    recorded.\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_submitted.html:5

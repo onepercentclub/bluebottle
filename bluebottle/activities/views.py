@@ -4,7 +4,7 @@ import qrcode
 from PIL import Image, UnidentifiedImageError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.db.models import Q, F
+from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
 from rest_framework import response, filters
@@ -37,6 +37,7 @@ from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.models import NotificationPlatformSettings
+from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -199,7 +200,9 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
         )
 
 
-class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPIView):
+class ActivityDetailView(
+    JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView
+):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
     model = Activity
@@ -209,12 +212,30 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
-    prefetch_for_includes = {
-        'initiative': ['initiative'],
-        'location': ['location'],
-        'owner': ['owner'],
-        'contributors': ['contributors']
-    }
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        qs = qs.select_related(
+            'owner',
+            'initiative',
+            'theme',
+            'organization',
+            'host_organization',
+            'office_location',
+            'initiative__owner',
+            'initiative__reviewer',
+            'initiative__promoter',
+            'initiative__theme',
+            'initiative__place',
+            'initiative__location',
+            'initiative__image',
+            'initiative__organization',
+            'initiative__organization_contact',
+        ).prefetch_related(
+            'categories',
+            'initiative__categories',
+            'initiative__activity_managers',
+        )
+        return qs
 
 
 class ContributionPagination(JsonApiPagination):

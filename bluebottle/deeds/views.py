@@ -2,20 +2,19 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
 )
-from bluebottle.activities.views import RelatedContributorListView
+from bluebottle.activities.views import RelatedContributorListView, ActivityDetailView
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer, DeedParticipantSerializer,
     DeedParticipantTransitionSerializer
 )
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateDestroyAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
+    ListCreateAPIView, RetrieveUpdateAPIView,
     JsonApiViewMixin, ExportView, IcalView
 )
 
@@ -30,7 +29,7 @@ class DeedListView(JsonApiViewMixin, ListCreateAPIView):
     )
 
 
-class DeedDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
+class DeedDetailView(ActivityDetailView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),

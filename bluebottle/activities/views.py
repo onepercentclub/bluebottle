@@ -205,8 +205,11 @@ class ActivityDetailView(
 ):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
-    model = Activity
     lookup_field = 'pk'
+
+    @property
+    def model(self):
+        return self.queryset.model
 
     permission_classes = (
         OneOf(ResourcePermission, ActivityOwnerPermission),

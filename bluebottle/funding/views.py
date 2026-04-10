@@ -11,6 +11,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ActivitySegmentPermission
 )
+from bluebottle.activities.views import ActivityDetailView
 from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
@@ -25,7 +26,6 @@ from bluebottle.funding.serializers import (
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.filters import SearchFilterBackend
@@ -112,10 +112,13 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     }
 
 
-class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Funding.objects.select_related(
-        'initiative', 'initiative__owner',
-    ).prefetch_related('rewards')
+class FundingDetail(ActivityDetailView):
+    queryset = Funding.objects.all()
+
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        qs = qs.prefetch_related('rewards')
+        return qs
 
     serializer_class = FundingSerializer
     permission_classes = (
@@ -123,15 +126,6 @@ class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefet
         ActivitySegmentPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
-
-    prefetch_for_includes = {
-        'initiative': ['initiative'],
-        'owner': ['owner'],
-        'rewards': ['reward'],
-        'budgetlines': ['budgetlines'],
-        'payment_methods': ['payment_methods'],
-        'fundraisers': ['fundraisers']
-    }
 
 
 class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):

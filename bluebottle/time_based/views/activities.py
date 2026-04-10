@@ -3,9 +3,15 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ActivitySegmentPermission
 )
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
-from bluebottle.time_based.models import DateActivity, DeadlineActivity, PeriodicActivity, ScheduleActivity, \
-    RegisteredDateActivity
+from bluebottle.activities.views import ActivityDetailView
+from bluebottle.time_based.models import (
+    DateActivity,
+    DeadlineActivity,
+    PeriodicActivity,
+    ScheduleActivity,
+    RegisteredDateActivity,
+    TimeBasedActivity,
+)
 from bluebottle.time_based.serializers import (
     DateActivitySerializer, DeadlineActivitySerializer,
     DateTransitionSerializer, DeadlineTransitionSerializer,
@@ -19,7 +25,7 @@ from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateDestroyAPIView, ListCreateAPIView, JsonApiViewMixin,
+    ListCreateAPIView, JsonApiViewMixin,
 )
 
 
@@ -30,13 +36,19 @@ class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView, CreatePermi
     )
 
 
-class TimeBasedActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
+class TimeBasedActivityDetailView(ActivityDetailView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
         DeleteActivityPermission,
         ActivitySegmentPermission,
     )
+
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        if issubclass(qs.model, TimeBasedActivity):
+            qs = qs.select_related('expertise')
+        return qs
 
 
 class DateActivityListView(TimeBasedActivityListView):

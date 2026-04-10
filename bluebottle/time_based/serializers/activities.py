@@ -156,10 +156,23 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
                 self.related_link_view_name, args=(getattr(obj, lookup_field),)
             )
 
+        all_statuses = list(
+            dict.fromkeys(s for group in self.statuses.values() for s in group)
+        )
+        if all_statuses:
+            count_by_status = {
+                row['status']: row['_c']
+                for row in queryset.filter(status__in=all_statuses)
+                .values('status')
+                .annotate(_c=Count('pk', distinct=True))
+            }
+        else:
+            count_by_status = {}
+
         for name, statuses in self.statuses.items():
             return_data[name] = {
                 "href": f'{url}?filter[status]={",".join(statuses)}',
-                "meta": {"count": queryset.filter(status__in=statuses).count()},
+                "meta": {"count": sum(count_by_status.get(s, 0) for s in statuses)},
             }
 
         if self.include_my:
@@ -541,9 +554,14 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             count = 0
             capacity = None
 
-        upcoming_participants = 0
-        for slot in slots:
-            upcoming_participants += slot.contributor_count
+        slot_pks = list(slots.values_list('pk', flat=True))
+        if slot_pks:
+            upcoming_participants = DateParticipant.objects.filter(
+                slot_id__in=slot_pks,
+                status__in=['accepted', 'succeeded'],
+            ).count()
+        else:
+            upcoming_participants = 0
 
         spots_left = None
 

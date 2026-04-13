@@ -2,7 +2,6 @@ from django.db import connection
 import inflection
 from rest_framework import serializers, exceptions
 
-from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context, expand_iri
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, ActivityPubIdField, TypeField
@@ -92,7 +91,7 @@ class ActivityPubSerializer(PolymorphicSerializer):
     model_serializer_mapping = {}
     resource_type_field_name = 'type'
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, full=True, include=False, origin=None, **kwargs):
         super(PolymorphicSerializer, self).__init__(*args, **kwargs)
 
         self.resource_type_model_mapping = {}
@@ -101,7 +100,9 @@ class ActivityPubSerializer(PolymorphicSerializer):
         for model, serializer in self.serializer_mapping.items():
             resource_type = self.to_resource_type(model)
             if callable(serializer):
-                serializer = serializer(*args, **kwargs)
+                serializer = serializer(
+                    *args, full=full, include=include, origin=origin, **kwargs
+                )
                 serializer.parent = self
 
             self.resource_type_model_mapping[resource_type] = model
@@ -116,14 +117,18 @@ class ActivityPubSerializer(PolymorphicSerializer):
 
         return serializer.to_representation(instance)
 
+    @property
+    def data(self):
+        return super(serializers.Serializer, self).data
+
 
 class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSerializerMetaclass):
-    def __init__(self, *args, full=False, include=False, **kwargs):
+    def __init__(self, *args, full=True, include=False, origin=None, **kwargs):
         self.include = include
+        self.full = full
+        self.origin = origin
 
         super().__init__(*args, **kwargs)
-
-        self.full = full
 
     class Meta:
         list_serializer_class = ActivityPubListSerializer
@@ -132,45 +137,14 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
     def to_representation(self, instance):
         representation = super().to_representation(instance)
 
-        if not self.parent or isinstance(self.parent, ActivityPubSerializer):
+        if self.full:
             return representation
         else:
-            if self.include or self.full:
+            if self.include:
                 representation.pop('type', None)
                 return representation
             else:
-                return {'id': representation['id']}
-
-    def to_internal_value(self, data):
-        try:
-            return super().to_internal_value(data)
-        except exceptions.ValidationError:
-            if not isinstance(data, (dict, str)) and 'url' in self.fields:
-                url = getattr(data, 'url', None)
-                if not url and hasattr(data, 'file'):
-                    url = getattr(data.file, 'url', None)
-                if url:
-                    if isinstance(url, str) and url.startswith('/'):
-                        url = connection.tenant.build_absolute_url(url)
-                    name = getattr(data, 'name', None)
-                    if not name and hasattr(data, 'file'):
-                        name = getattr(data.file, 'name', None)
-                    return super().to_internal_value({'url': url, 'name': name})
-            if isinstance(data, str):
-                data = {'id': data}
-
-            if tuple(data.keys()) == ('id',):
-                iri = data['id']
-                instance = self.Meta.model.objects.from_iri(iri)
-
-                if instance:
-                    return type(self)(instance=instance).data
-                elif not is_local(iri):
-                    data = adapter.fetch(iri)
-                    return super().to_internal_value(data)
-
-            else:
-                raise
+                return representation['id']
 
     def save(self, **kwargs):
         iri = self.validated_data.get('id', None)
@@ -181,30 +155,31 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
         return super().save(**kwargs)
 
     def create(self, validated_data):
-        iri = validated_data.pop('id', None)
+        iri = validated_data.get('iri')
         if iri and not is_local(iri):
-            validated_data['iri'] = iri
             instance = self.Meta.model.objects.filter(iri=iri).first()
             if instance:
                 return self.update(instance, validated_data)
 
-        for field in self:
-            if field.name in validated_data and hasattr(field, 'save'):
-                field.save(validated_data[field.name], field.value)
+        for name, field in self.fields.items():
+            if name in validated_data and hasattr(field, 'save'):
+                validated_data[name] = field.save(validated_data[name])
 
         validated_data.pop('type', None)
+        if self.origin:
+            validated_data['federated_object'] = self.origin
 
         return self.Meta.model.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        id = validated_data.pop('id', None)
+        iri = validated_data.pop('iri', None)
         request = self.context.get('request')
         request_auth = getattr(request, 'auth', None)
         auth_iri = getattr(request_auth, 'iri', None)
 
         # Do not allow remote request to update local instances
         if (
-            is_local(id) and
+            is_local(iri) and
             request_auth and
             auth_iri and
             not is_local(auth_iri)
@@ -212,11 +187,8 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
             return instance
 
         for name, field in self.fields.items():
-            from bluebottle.activity_pub.serializers.relations import RelatedResourceField
-            if isinstance(field, RelatedResourceField):
-                related_instance = validated_data.get(name, None)
-                if related_instance:
-                    related_instance.save()
+            if name in validated_data and hasattr(field, 'save'):
+                validated_data[name] = field.save(validated_data[name])
 
         validated_data.pop('type', None)
         return super().update(instance, validated_data)
@@ -248,29 +220,79 @@ class FederatedObjectListSerializer(serializers.ListSerializer):
         return result
 
 
-class FederatedObjectSerializerMetaclass(serializers.SerializerMetaclass):
+class FederatedObjectSerializer(PolymorphicSerializer):
+    serializer_mapping = {}
+    model_serializer_mapping = {}
+    resource_type_field_name = 'type'
+
+    def __init__(self, *args, origin=None, **kwargs):
+        super(PolymorphicSerializer, self).__init__(*args, **kwargs)
+
+        self.resource_type_model_mapping = {}
+        self.model_serializer_mapping = {}
+
+        for model, serializer in self.serializer_mapping.items():
+            resource_type = self.to_resource_type(model)
+            if callable(serializer):
+                serializer = serializer(*args, origin=origin, **kwargs)
+                serializer.parent = self
+
+            self.resource_type_model_mapping[resource_type] = model
+            self.model_serializer_mapping[model] = serializer
+
+    def to_resource_type(self, model_or_instance):
+        serializer = self.serializer_mapping[self._to_model(model_or_instance)]
+        return serializer._declared_fields['type'].type
+
+    def to_representation(self, instance):
+        serializer = self._get_serializer_from_model_or_instance(instance)
+
+        return serializer.to_representation(instance)
+
+
+class FederatedObjectBaseSerializerMetaclass(serializers.SerializerMetaclass):
     def __new__(cls, name, bases, attrs):
         for attr_name, attr in attrs.items():
             if (
                 isinstance(attr, serializers.Serializer) and
                 not isinstance(
-                    attr, (FederatedObjectSerializer, )
+                    attr, (FederatedObjectBaseSerializer, )
                 )
             ):
                 raise TypeError(
                     f'Attribute {attr_name} should be a subclass of FederatedObjectSerializer'
                 )
 
+        type_iri = None
         if 'Meta' in attrs and hasattr(attrs['Meta'], 'model'):
             if 'id' not in attrs or not isinstance(attrs['id'], FederatedIdField):
                 raise TypeError(f'{name} is missing an IdField')
 
-        return super().__new__(cls, name, bases, attrs)
+            if 'type' not in attrs or not isinstance(attrs['type'], TypeField):
+                raise TypeError(f'{name} is missing a TypeField')
+
+            type_iri = expand_iri(attrs['type'].type)
+
+            if expand_iri(attrs['type'].type).startswith('_:'):
+                raise TypeError(f'{attrs["type"].type} is not a correct ActivityPub type')
+
+        result = super().__new__(cls, name, bases, attrs)
+
+        if type_iri:
+            FederatedObjectSerializer.serializer_mapping[result.Meta.model] = result
+
+        return result
 
 
-class FederatedObjectSerializer(serializers.ModelSerializer):
+class FederatedObjectBaseSerializer(
+    serializers.ModelSerializer, metaclass=FederatedObjectBaseSerializerMetaclass
+):
+    def __init__(self, *args, origin=None, **kwargs):
+        self.origin = origin
+        super().__init__(*args, **kwargs)
+
     class Meta:
-        fields = ('id', )
+        fields = ('id', 'type')
         list_serializer_class = FederatedObjectListSerializer
 
     def to_representation(self, instance):
@@ -299,7 +321,13 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
 
                     validated_data[field.source] = field.create(validated_data[field.source])
 
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+
+        if self.origin:
+            self.origin.federated_object = instance
+            self.origin.save()
+
+        return instance
 
     def update(self, instance, validated_data):
         validated_data.pop('id', None)

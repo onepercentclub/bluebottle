@@ -134,7 +134,7 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 @admin.register(Person)
 class PersonAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
-    readonly_fields = ('member', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
+    readonly_fields = ('federated_object', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
 
     def save_formset(self, request, form, formset, change):
         if formset.model == Follow:

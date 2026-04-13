@@ -43,7 +43,6 @@ class OrganizationFactory(factory.DjangoModelFactory):
     inbox = factory.SubFactory(InboxFactory)
     outbox = factory.SubFactory(OutboxFactory)
     public_key = factory.SubFactory(PublicKeyFactory)
-    organization = factory.SubFactory(BluebottleOrganizationFactory)
 
 
 class PersonFactory(factory.DjangoModelFactory):
@@ -51,6 +50,8 @@ class PersonFactory(factory.DjangoModelFactory):
         model = Person
 
     name = factory.Sequence(lambda n: 'Person {0}'.format(n))
+    given_name = factory.Sequence(lambda n: 'Person {0}'.format(n))
+    family_name = factory.Sequence(lambda n: 'Person {0}'.format(n))
     preferred_username = factory.Sequence(lambda n: 'person_{0}'.format(n))
 
     inbox = factory.SubFactory(InboxFactory)

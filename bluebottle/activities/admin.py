@@ -639,8 +639,6 @@ class ActivityChildAdmin(
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
-        'origin',
-        'activity_pub',
         'event',
         'host_organization'
     ]

@@ -1,11 +1,12 @@
 from rest_framework import serializers
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class ActivityPubIdField(serializers.CharField):
     def __init__(self, url_name):
         self.url_name = url_name
 
-        super().__init__(source='iri', required=True, allow_null=True)
+        super().__init__(source='iri', required=False, allow_null=True)
 
     def get_attribute(self, instance):
         result = super().get_attribute(instance)
@@ -14,10 +15,6 @@ class ActivityPubIdField(serializers.CharField):
         else:
             return instance.pub_url
 
-    def to_internal_value(self, data):
-        return super().to_internal_value(data)
-        return {'id': data}
-
 
 class FederatedIdField(serializers.CharField):
     def __init__(self, url_name):
@@ -25,7 +22,8 @@ class FederatedIdField(serializers.CharField):
         super().__init__(source='*')
 
     def to_representation(self, value):
-        return value.activity_pub_url
+        if hasattr(value, 'origin') and value.origin:
+            return value.origin.pub_url
 
     def to_internal_value(self, value):
         return {'id': value}

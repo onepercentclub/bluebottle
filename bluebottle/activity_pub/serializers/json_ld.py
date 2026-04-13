@@ -61,12 +61,17 @@ class PublicKeySerializer(BaseActivityPubSerializer):
 class PersonSerializer(BaseActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:person')
     type = TypeField('Person')
-    inbox = RelatedResourceField(type='inbox')
-    outbox = RelatedResourceField(type='outbox')
-    public_key = RelatedResourceField(type='publicKey')
+    inbox = RelatedResourceField(type='inbox', required=False, allow_null=True)
+    outbox = RelatedResourceField(type='outbox', required=False, allow_null=True)
+    public_key = RelatedResourceField(type='publicKey', include=True, required=False, allow_null=True)
+    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    given_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    family_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta(BaseActivityPubSerializer.Meta):
-        fields = BaseActivityPubSerializer.Meta.fields + ('inbox', 'outbox', 'public_key', 'name')
+        fields = BaseActivityPubSerializer.Meta.fields + (
+            'inbox', 'outbox', 'public_key', 'name', 'given_name', 'family_name',
+        )
         model = Person
 
 
@@ -74,7 +79,7 @@ class ImageSerializer(BaseActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:image')
     type = TypeField('Image')
     url = serializers.URLField()
-    name = serializers.CharField(allow_null=True, allow_blank=True)
+    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta(BaseActivityPubSerializer.Meta):
         model = Image
@@ -91,6 +96,7 @@ class OrganizationSerializer(BaseActivityPubSerializer):
     summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     icon = RelatedResourceField(type='Image', required=False, allow_null=True)
+    image = RelatedResourceField(type='Image', required=False, allow_null=True, include=True)
 
     class Meta(BaseActivityPubSerializer.Meta):
         fields = BaseActivityPubSerializer.Meta.fields + (
@@ -286,28 +292,6 @@ class DoGoodEventSerializer(BaseEventSerializer):
             'sub_event',
         )
 
-    def create(self, validated_data):
-        sub_events = validated_data.pop('sub_event', [])
-        result = super().create(validated_data)
-        field = self.fields['sub_event']
-        field.initial_data = sub_events
-
-        field.is_valid(raise_exception=True)
-        field.save(parent=result)
-        return result
-
-    def update(self, instance, validated_data):
-        sub_events = validated_data.pop('sub_event', [])
-        result = super().update(instance, validated_data)
-
-        field = self.fields['sub_event']
-        field.initial_data = sub_events
-
-        field.is_valid(raise_exception=True)
-        field.save(parent=result)
-
-        return result
-
 
 class BaseActivitySerializer(BaseActivityPubSerializer):
     actor = RelatedResourceField(type=('Organization', 'Person', ))
@@ -432,3 +416,5 @@ class FinishSerializer(BaseActivitySerializer):
 
     class Meta(BaseActivitySerializer.Meta):
         model = Finish
+
+from bluebottle.activity_pub.serializers.federated_activities import *

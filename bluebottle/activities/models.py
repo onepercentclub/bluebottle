@@ -129,10 +129,6 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
     image = ImageField(blank=True, null=True)
 
-    origin = models.ForeignKey(
-        'activity_pub.Event', null=True, related_name="adopted_activities", on_delete=models.SET_NULL
-    )
-
     video_url = models.URLField(
         _("video"),
         max_length=2048,
@@ -207,19 +203,6 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     @property
     def link(self):
         return None
-
-    @property
-    def event(self):
-        from bluebottle.activity_pub.models import Event
-        return Event.objects.get(object=self)
-
-    @property
-    def activity_pub_url(self):
-        from bluebottle.activity_pub.models import Event
-        try:
-            return self.event.iri or self.event.pub_url
-        except Event.DoesNotExist:
-            return None
 
     @property
     def details(self):

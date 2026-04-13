@@ -16,6 +16,7 @@ from requests import Request, Response
 
 from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, LinkedGrantApplication
 from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.clients import client
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event,
@@ -104,8 +105,8 @@ def do_request(url):
         raise Exception(url, response.json())
 
 
-adapter_mock = mock.patch(
-    "bluebottle.activity_pub.adapters.JSONLDAdapter.execute", wraps=execute
+client_mock = mock.patch(
+    "bluebottle.activity_pub.clients.JSONLDClient.execute", wraps=execute
 )
 
 webfinger_mock = mock.patch(
@@ -142,12 +143,12 @@ class ActivityPubTestCase:
         self.json_api_client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
-        adapter_mock.start()
+        client_mock.start()
         webfinger_mock.start()
 
     def tearDown(self):
         super().tearDown()
-        adapter_mock.stop()
+        client_mock.stop()
         webfinger_mock.stop()
 
     def build_absolute_url(self, path):
@@ -169,8 +170,7 @@ class ActivityPubTestCase:
         self.follow = Follow.objects.get(object=get_platform_actor())
 
         self.assertTrue(self.follow)
-        self.assertTrue(self.follow.actor.organization)
-        self.assertTrue(self.follow.actor.organization.logo)
+        self.assertTrue(self.follow.actor.federated_object)
 
     def test_accept(self):
         self.test_follow()
@@ -182,8 +182,7 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())
             self.assertTrue(accept)
-            self.assertTrue(accept.actor.organization)
-            self.assertTrue(accept.actor.organization.logo)
+            self.assertTrue(accept.actor.federated_object)
 
     def create(self, **kwargs):
         self.model = self.factory.create(
@@ -201,7 +200,7 @@ class ActivityPubTestCase:
     def test_publish(self):
         self.test_accept()
         self.create()
-        publish = self.model.event.create_set.first()
+        publish = self.model.origin.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):

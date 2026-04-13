@@ -39,7 +39,7 @@ def get_platform_actor():
     try:
         if site_settings.organization:
             platform_organization = site_settings.organization
-            return platform_organization.activity_pub_organization
+            return platform_organization.origin
     except Organization.DoesNotExist:
         pass
 

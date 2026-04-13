@@ -1,10 +1,16 @@
+import json
+from urllib.parse import urlparse
 from operator import attrgetter
 from io import BytesIO
 
 import mock
+import httmock
 from django.test import RequestFactory
 from requests import Response
 
+from bluebottle.cms.models import SitePlatformSettings
+
+from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.models import (
     GoodDeed, CrowdFunding, GrantApplication, ActivityPubModel, Inbox, Outbox, PublicKey
 )
@@ -14,7 +20,7 @@ from bluebottle.activity_pub.serializers.json_ld import (
 )
 from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
 from bluebottle.activity_pub.tests.factories import (
-    DoGoodEventFactory, OrganizationFactory
+    DoGoodEventFactory, OrganizationFactory, FollowFactory
 )
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -24,10 +30,14 @@ from bluebottle.time_based.tests.factories import DateActivityFactory, DateActiv
 
 
 class JSONLDSerializerTestCase:
-    serializer_class = ActivityPubSerializer
+    mocks = []
 
     def setUp(self):
-        self.instance = self.factory.create()
+        self.renderer = JSONLDRenderer()
+
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
 
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
             self.mock_image_response = Response()
@@ -42,7 +52,8 @@ class JSONLDSerializerTestCase:
         return {'request': request}
 
     def test_to_representation(self):
-        serializer = self.serializer_class(instance=self.instance, context=self.context)
+        self.instance = self.factory.create()
+        serializer = ActivityPubSerializer(instance=self.instance, context=self.context)
 
         representation = serializer.data
 
@@ -52,9 +63,12 @@ class JSONLDSerializerTestCase:
 
         for key, attr in self.mapping.items():
             expected = attrgetter(attr)(self.instance)
-            if isinstance(representation[key], dict) and 'id' in representation[key]:
+            if (
+                isinstance(representation[key], str) and
+                isinstance(expected, ActivityPubModel)
+            ):
                 self.assertEqual(
-                    representation[key]['id'],
+                    representation[key],
                     expected.pub_url
                 )
             else:
@@ -64,12 +78,18 @@ class JSONLDSerializerTestCase:
                 )
 
     def test_create(self):
-        serializer = self.serializer_class(data=self.data, context=self.context)
+        with httmock.HTTMock(*self.mocks):
+            serializer = ActivityPubSerializer(data=self.data, context=self.context)
+            serializer.is_valid()
+
         self.assertTrue(serializer.is_valid())
 
-        instance = serializer.save()
+        self.instance = serializer.save()
+        self.check(serializer)
+
+    def check(self, serializer):
         for key, attr in self.mapping.items():
-            expected = attrgetter(attr)(instance)
+            expected = attrgetter(attr)(self.instance)
             if isinstance(expected, ActivityPubModel):
                 expected = expected.pub_url
 
@@ -78,33 +98,18 @@ class JSONLDSerializerTestCase:
                 expected
             )
 
-    def test_create_existing_relations(self):
-        Inbox(iri=self.data['inbox']).save()
-        Outbox(iri=self.data['outbox']).save()
-        PublicKey(
-            iri=self.data['public_key'],
-            public_key_pem=self.data['public_key']['public_key_pem']
-        ).save()
-        self.test_create()
-
     def test_update(self):
-        serializer = self.serializer_class(data=self.data, context=self.context)
-        self.assertTrue(serializer.is_valid())
+        self.test_create()
+        self.update()
 
-        instance = serializer.save()
-
-        self.data['name'] = 'new name'
-        self.data['public_key']['public_key_pem'] = 'new public_key'
-
-        serializer = self.serializer_class(
-            data=self.data, instance=instance, context=self.context
-        )
-        self.assertTrue(serializer.is_valid())
+        with httmock.HTTMock(*self.mocks):
+            serializer = ActivityPubSerializer(
+                data=self.data, instance=self.instance, context=self.context
+            )
+            self.assertTrue(serializer.is_valid())
 
         serializer.save()
-
-        self.assertEqual(instance.name, 'new name')
-        self.assertEqual(instance.public_key.public_key_pem, 'new public_key')
+        self.check(serializer)
 
 
 class OrganizationSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
@@ -134,6 +139,90 @@ class OrganizationSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCas
             'content': 'Organization content',
         }
         super().setUp()
+
+    def update(self):
+        self.data['name'] = 'new name'
+        self.data['public_key']['public_key_pem'] = 'new public_key'
+
+    def test_create_existing_relations(self):
+        Inbox(iri=self.data['inbox']).save()
+        Outbox(iri=self.data['outbox']).save()
+        PublicKey(
+            iri=self.data['public_key'],
+            public_key_pem=self.data['public_key']['public_key_pem']
+        ).save()
+
+        self.test_create()
+
+
+class FollowSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
+    factory = FollowFactory
+
+    mapping = {
+        'id': 'pub_url',
+        'actor': 'actor',
+        'object': 'object',
+        'adoption_type': 'adoption_type',
+    }
+
+    def setUp(self):
+        self.actor = OrganizationFactory.create(
+            iri='http://example.com/api/json-ld/actor/32'
+        )
+
+        self.object = OrganizationFactory.create(
+            iri='http://example.com/api/json-ld/actor/33'
+        )
+
+        self.next_object = OrganizationFactory.create(
+            iri='http://example.com/api/json-ld/actor/34'
+        )
+
+        self.data = {
+            'type': 'Follow',
+            'id': 'http://example.com/api/json-ld/follow/35',
+            'actor': self.actor.iri,
+            'object': self.object.iri,
+            'adoption_type': 'template',
+        }
+        super().setUp()
+
+    @property
+    def mocks(self):
+        @httmock.urlmatch(method="GET", path=urlparse(self.actor.iri).path)
+        def actor_mock(url, request):
+            data = ActivityPubSerializer(instance=self.actor).data
+
+            return {
+                'content': self.renderer.render(data),
+                'status_code': 200,
+                'headers': {'content-type': 'application/ld+json'}
+            }
+
+        @httmock.urlmatch(method="GET", path=urlparse(self.object.iri).path)
+        def object_mock(url, request):
+            data = ActivityPubSerializer(instance=self.object).data
+
+            return {
+                'content': self.renderer.render(data),
+                'status_code': 200,
+                'headers': {'content-type': 'application/ld+json'}
+            }
+
+        @httmock.urlmatch(method="GET", path=urlparse(self.next_object.iri).path)
+        def next_object_mock(url, request):
+            data = ActivityPubSerializer(instance=self.next_object).data
+
+            return {
+                'content': self.renderer.render(data),
+                'status_code': 200,
+                'headers': {'content-type': 'application/ld+json'}
+            }
+
+        return [actor_mock, object_mock, next_object_mock]
+
+    def update(self):
+        self.data['object'] = self.next_object.iri
 
 
 class DoGoodEventSerializerTestCase(BluebottleTestCase):

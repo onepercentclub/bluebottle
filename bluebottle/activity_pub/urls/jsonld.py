@@ -1,37 +1,12 @@
 from django.urls import re_path
 
 from bluebottle.activity_pub.views import (
-    PersonView, InboxView, OutBoxView, PublicKeyView, FollowView,
-    AcceptView, CreateView, OrganizationView,
-    GoodDeedView, ImageView, CrowdFundingView, CollectCampaignView, PlaceView, AddressView,
-    GrantApplicationView,
-    DoGoodEventView, SubEventView, UpdateView,
-    DeleteView, StartView, CancelView, FinishView
+    JSONLDView, InboxView,
 )
 
 app_name = 'activity_pub'
 
 urlpatterns = [
-    re_path(r'^person/(?P<pk>\d+)$', PersonView.as_view(), name='person'),
     re_path(r'^inbox/(?P<pk>\d+)$', InboxView.as_view(), name='inbox'),
-    re_path(r'^outbox/(?P<pk>\d+)$', OutBoxView.as_view(), name='outbox'),
-    re_path(r'^publickey/(?P<pk>\d+)$', PublicKeyView.as_view(), name='publickey'),
-    re_path(r'^follow/(?P<pk>\d+)$', FollowView.as_view(), name='follow'),
-    re_path(r'^accept/(?P<pk>\d+)$', AcceptView.as_view(), name='accept'),
-    re_path(r'^image/(?P<pk>\d+)$', ImageView.as_view(), name='image'),
-    re_path(r'^place/(?P<pk>\d+)$', PlaceView.as_view(), name='place'),
-    re_path(r'^address/(?P<pk>\d+)$', AddressView.as_view(), name='address'),
-    re_path(r'^good-deed/(?P<pk>\d+)$', GoodDeedView.as_view(), name='good-deed'),
-    re_path(r'^crowd-funding/(?P<pk>\d+)$', CrowdFundingView.as_view(), name='crowd-funding'),
-    re_path(r'^grant-application/(?P<pk>\d+)$', GrantApplicationView.as_view(), name='grant-application'),
-    re_path(r'^collect-campaign/(?P<pk>\d+)$', CollectCampaignView.as_view(), name='collect-campaign'),
-    re_path(r'^do-good-event/(?P<pk>\d+)$', DoGoodEventView.as_view(), name='do-good-event'),
-    re_path(r'^sub-event/(?P<pk>\d+)$', SubEventView.as_view(), name='sub-event'),
-    re_path(r'^create/(?P<pk>\d+)$', CreateView.as_view(), name='create'),
-    re_path(r'^update/(?P<pk>\d+)$', UpdateView.as_view(), name='update'),
-    re_path(r'^delete/(?P<pk>\d+)$', DeleteView.as_view(), name='delete'),
-    re_path(r'^cancel/(?P<pk>\d+)$', CancelView.as_view(), name='cancel'),
-    re_path(r'^start/(?P<pk>\d+)$', StartView.as_view(), name='start'),
-    re_path(r'^finish/(?P<pk>\d+)$', FinishView.as_view(), name='finish'),
-    re_path(r'^organization/(?P<pk>\d+)$', OrganizationView.as_view(), name='organization'),
+    re_path(r'^(?P<type>.+)/(?P<pk>\d+)$', JSONLDView.as_view(), name='resource'),
 ]

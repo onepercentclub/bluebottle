@@ -865,8 +865,15 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             )
 
         if self.organization_id and not hasattr(self.organization, 'activity_pub_organization'):
-            from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
-            ActivityPubOrganization.objects.from_model(self.organization)
+            from bluebottle.activity_pub.serializers.base import (
+                ActivityPubSerializer, FederatedObjectSerializer
+            )
+            serializer = ActivityPubSerializer(
+                data=FederatedObjectSerializer(instance=self.organization).data,
+                origin=self.organization
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
 
         super().save(*args, **kwargs)
 

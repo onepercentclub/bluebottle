@@ -77,7 +77,7 @@ class UpdateEventEffect(Effect):
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return hasattr(self.instance, 'origin') and get_platform_actor() is not None
 
     def __str__(self):
         return str(_('Notify subscribers of the changes'))

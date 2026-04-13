@@ -1,5 +1,7 @@
 from urllib.parse import urlparse
 
+import inflection
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
@@ -46,9 +48,15 @@ class ActivityPubModel(PolymorphicModel):
         if self.iri:
             return self.iri
         else:
-            model_name = self.__class__.__name__.lower()
+            model_name = self.__class__.__name__
             return connection.tenant.build_absolute_url(
-                reverse(f'json-ld:{model_name}', args=(str(self.pk),))
+                reverse(
+                    f'json-ld:resource',
+                    args=(
+                        inflection.dasherize(inflection.underscore(model_name)),
+                        str(self.pk),
+                    )
+                )
             )
 
     class Meta:
@@ -72,6 +80,17 @@ class Actor(ActivityPubModel):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
 
+    def save(self, *args, **kwargs):
+        if self.is_local:
+            if not self.inbox:
+                self.inbox = Inbox.objects.create()
+            if not self.outbox:
+                self.outbox = Outbox.objects.create()
+            if not self.public_key:
+                self.public_key = PublicKey.objects.create()
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
         try:
             return self.person.name
@@ -84,67 +103,21 @@ class Actor(ActivityPubModel):
         return self.preferred_username
 
 
-class PersonManager(ActivityPubManager):
-    def from_model(self, model):
-        if not isinstance(model, Member):
-            raise TypeError("Model should be a member instance")
-
-        try:
-            return model.person
-        except Member.person.RelatedObjectDoesNotExist:
-            inbox = Inbox.objects.create()
-            outbox = Outbox.objects.create()
-
-            public_key = PublicKey.objects.create()
-
-            return Person.objects.create(
-                inbox=inbox,
-                member=model,
-                outbox=outbox,
-                public_key=public_key,
-                name=model.full_name
-            )
-
-
 class Person(Actor):
     name = models.TextField()
+    given_name = models.TextField(null=True, blank=True)
+    family_name = models.TextField(null=True, blank=True)
 
-    member = models.OneToOneField(Member, null=True, on_delete=models.CASCADE)
-
-    objects = PersonManager()
+    federated_object = models.OneToOneField(
+        Member,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
+    )
 
     def __str__(self):
         return self.name
 
-
-class OrganizationManager(ActivityPubManager):
-
-    def from_model(self, model):
-        if not isinstance(model, BluebottleOrganization):
-            raise TypeError("Model should be a organisation instance, not {}".format(type(model)))
-
-        try:
-            return model.activity_pub_organization
-        except BluebottleOrganization.activity_pub_organization.RelatedObjectDoesNotExist:
-            inbox = Inbox.objects.create()
-            outbox = Outbox.objects.create()
-
-            public_key = PublicKey.objects.create()
-            logo_url = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
-
-            return Organization.objects.create(
-                inbox=inbox,
-                organization=model,
-                outbox=outbox,
-                public_key=public_key,
-                name=model.name,
-                icon=Image.objects.create(
-                    url=logo_url,
-                    name=model.logo.name
-                ) if logo_url else None,
-                summary=model.description,
-                preferred_username=model.slug
-            )
 
 
 class Image(ActivityPubModel):
@@ -160,14 +133,12 @@ class Organization(Actor):
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
     icon = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
 
-    organization = models.OneToOneField(
+    federated_object = models.OneToOneField(
         BluebottleOrganization,
         null=True,
         on_delete=models.CASCADE,
-        related_name='activity_pub_organization'
+        related_name='origin'
     )
-
-    objects = OrganizationManager()
 
     class Meta:
         verbose_name = _("partner")
@@ -243,8 +214,8 @@ class Event(ActivityPubModel):
     name = models.CharField(verbose_name=_('Activity title'))
     summary = models.TextField(blank=True, null=True)
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
-    activity = models.OneToOneField(
-        "activities.Activity", null=True, on_delete=models.SET_NULL
+    federated_object = models.OneToOneField(
+        "activities.Activity", null=True, on_delete=models.SET_NULL, related_name='origin'
     )
     url = models.URLField(null=True, blank=True)
 
@@ -279,18 +250,6 @@ class Event(ActivityPubModel):
 
     def __str__(self):
         return self.name
-
-    @property
-    def pub_url(self):
-        if self.iri:
-            return self.iri
-        else:
-            model_name = self.get_real_instance_class().__name__
-            import re
-            dashed_name = re.sub(r'(?<!^)(?=[A-Z])', '-', model_name).lower()
-            return connection.tenant.build_absolute_url(
-                reverse(f'json-ld:{dashed_name}', args=(str(self.pk),))
-            )
 
     class Meta:
         verbose_name = _("Shared/Received activity")

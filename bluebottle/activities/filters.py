@@ -287,6 +287,16 @@ class ReviewingFacet(Facet):
                                 query=Terms(**{"office_subregion__id": subregion_ids})
                             )
                         )
+                offices = getattr(user, "office_manager", None)
+                if offices:
+                    office_ids = list(offices.values_list("id", flat=True))
+                    if office_ids:
+                        must_filters.append(
+                            Nested(
+                                path="office",
+                                query=Terms(**{"office__id": office_ids})
+                            )
+                        )
 
                 segments = getattr(user, "segment_manager", None)
                 if segments and segments.exists():

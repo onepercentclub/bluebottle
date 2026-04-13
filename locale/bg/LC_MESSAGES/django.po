@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-17 10:28+0100\n"
-"PO-Revision-Date: 2026-03-17 09:32\n"
+"POT-Creation-Date: 2026-04-02 09:53+0200\n"
+"PO-Revision-Date: 2026-04-02 07:56\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -45,7 +45,7 @@ msgstr "Детайли"
 #: bluebottle/funding/admin.py:483 bluebottle/funding/admin.py:661
 #: bluebottle/funding/admin.py:869 bluebottle/funding_stripe/admin.py:245
 #: bluebottle/grant_management/admin.py:297
-#: bluebottle/grant_management/admin.py:552 bluebottle/initiatives/admin.py:246
+#: bluebottle/grant_management/admin.py:553 bluebottle/initiatives/admin.py:246
 #: bluebottle/time_based/admin.py:311 bluebottle/time_based/admin.py:459
 #: bluebottle/time_based/admin.py:840 bluebottle/time_based/admin.py:887
 #: bluebottle/time_based/admin.py:1157 bluebottle/time_based/admin.py:1825
@@ -144,12 +144,12 @@ msgid "Share activity"
 msgstr "Сподели активност"
 
 #: bluebottle/activities/admin.py:842 bluebottle/funding/admin.py:225
-#: bluebottle/grant_management/admin.py:542 bluebottle/initiatives/admin.py:216
+#: bluebottle/grant_management/admin.py:543 bluebottle/initiatives/admin.py:216
 msgid "Management"
 msgstr "Управление"
 
 #: bluebottle/activities/admin.py:843 bluebottle/funding/admin.py:226
-#: bluebottle/grant_management/admin.py:543 bluebottle/initiatives/admin.py:233
+#: bluebottle/grant_management/admin.py:544 bluebottle/initiatives/admin.py:233
 msgid "Information"
 msgstr "Информация"
 
@@ -164,14 +164,14 @@ msgid "Participation"
 msgstr "Участие"
 
 #: bluebottle/activities/admin.py:872 bluebottle/bb_accounts/models.py:139
-#: bluebottle/funding/admin.py:234 bluebottle/grant_management/admin.py:549
+#: bluebottle/funding/admin.py:234 bluebottle/grant_management/admin.py:550
 #: bluebottle/initiatives/models.py:135 bluebottle/initiatives/models.py:282
 #: bluebottle/members/models.py:287
 msgid "Work location"
 msgstr "Работно място"
 
 #: bluebottle/activities/admin.py:877 bluebottle/funding/admin.py:242
-#: bluebottle/grant_management/admin.py:557 bluebottle/members/admin.py:646
+#: bluebottle/grant_management/admin.py:558 bluebottle/members/admin.py:646
 #: bluebottle/settings/admin_dashboard.py:217
 msgid "Segments"
 msgstr "Сегменти"
@@ -654,7 +654,7 @@ msgid "Slug"
 msgstr "Slug"
 
 #: bluebottle/activities/models.py:121 bluebottle/activity_links/models.py:54
-#: bluebottle/activity_pub/admin.py:803 bluebottle/cms/models.py:53
+#: bluebottle/activity_pub/admin.py:833 bluebottle/cms/models.py:53
 #: bluebottle/funding/models.py:350
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
 #: bluebottle/grant_management/models.py:489
@@ -859,8 +859,8 @@ msgstr "нуждае се от работа"
 msgid "The activity needs changes before it can be approved."
 msgstr "Активността се нуждае от промени, преди да бъде одобрена."
 
-#: bluebottle/activities/states.py:35 bluebottle/funding/states.py:581
-#: bluebottle/funding/states.py:635 bluebottle/grant_management/states.py:264
+#: bluebottle/activities/states.py:35 bluebottle/funding/states.py:577
+#: bluebottle/funding/states.py:631 bluebottle/grant_management/states.py:264
 #: bluebottle/grant_management/states.py:318
 #: bluebottle/time_based/states/teams.py:54
 #: bluebottle/time_based/states/teams.py:241
@@ -896,7 +896,7 @@ msgstr "Дейността не е изпълнена. Дейността не �
 
 #: bluebottle/activities/states.py:62
 #: bluebottle/common/templates/widget/widget.html:43
-#: bluebottle/funding/states.py:291
+#: bluebottle/funding/states.py:287
 msgid "expired"
 msgstr "изтекъл"
 
@@ -913,7 +913,7 @@ msgid "The activity is accepting new contributions."
 msgstr "Активността приема нови приноси."
 
 #: bluebottle/activities/states.py:71 bluebottle/deeds/states.py:48
-#: bluebottle/funding/states.py:495
+#: bluebottle/funding/states.py:491
 #: bluebottle/time_based/states/participants.py:453
 msgid "succeeded"
 msgstr "успешно"
@@ -935,16 +935,16 @@ msgid "The activity will be submitted for review."
 msgstr "Активността ще бъде подадена за преглед."
 
 #: bluebottle/activities/states.py:187 bluebottle/activities/states.py:200
-#: bluebottle/funding/states.py:88 bluebottle/funding/states.py:667
+#: bluebottle/funding/states.py:84 bluebottle/funding/states.py:663
 #: bluebottle/grant_management/states.py:58
 #: bluebottle/grant_management/states.py:350
 #: bluebottle/initiatives/states.py:123
 msgid "Submit"
 msgstr "Подай"
 
-#: bluebottle/activities/states.py:207 bluebottle/funding/states.py:167
-#: bluebottle/funding/states.py:604 bluebottle/funding/states.py:684
-#: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:218
+#: bluebottle/activities/states.py:207 bluebottle/funding/states.py:163
+#: bluebottle/funding/states.py:600 bluebottle/funding/states.py:680
+#: bluebottle/funding/states.py:718 bluebottle/funding_stripe/states.py:218
 #: bluebottle/grant_management/states.py:110
 #: bluebottle/grant_management/states.py:287
 #: bluebottle/grant_management/states.py:367
@@ -984,7 +984,7 @@ msgid "Auto-publish"
 msgstr "Автоматично публикуване"
 
 #: bluebottle/activities/states.py:249 bluebottle/activities/states.py:265
-#: bluebottle/funding/states.py:105 bluebottle/funding/states.py:515
+#: bluebottle/funding/states.py:101 bluebottle/funding/states.py:511
 #: bluebottle/grant_management/states.py:72
 #: bluebottle/initiatives/states.py:141
 msgid "Approve"
@@ -998,7 +998,7 @@ msgstr "Активността ще бъде видима на предния п
 msgid "The activity will be published and visible in the frontend for people to contribute to,"
 msgstr "Активността ще бъде публикувана и видима в предния план за хората да допринасят."
 
-#: bluebottle/activities/states.py:277 bluebottle/funding/states.py:596
+#: bluebottle/activities/states.py:277 bluebottle/funding/states.py:592
 #: bluebottle/grant_management/states.py:279
 msgid "Request changes"
 msgstr "Искане на промени"
@@ -1012,10 +1012,11 @@ msgstr "Активността се нуждае от промени, преди
 #: bluebottle/activities/templates/admin/activities/share_publish.html:53
 #: bluebottle/activity_links/states.py:67
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:41
-#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_activities.html:34
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:34
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:34
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:49
 #: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
-#: bluebottle/funding/states.py:121 bluebottle/grant_management/states.py:140
+#: bluebottle/funding/states.py:117 bluebottle/grant_management/states.py:140
 #: bluebottle/initiatives/states.py:191
 #: bluebottle/pages/templates/admin/pages/page/translate.html:41
 #: bluebottle/time_based/states/participants.py:188
@@ -1080,8 +1081,8 @@ msgid "Open the activity again, e.g. when a slot reopens."
 msgstr "Отворете отново инициативата, например когато слотът отново е наличен."
 
 #: bluebottle/activities/states.py:362 bluebottle/collect/states.py:34
-#: bluebottle/deeds/states.py:36 bluebottle/funding/states.py:186
-#: bluebottle/funding/states.py:360 bluebottle/time_based/states/states.py:127
+#: bluebottle/deeds/states.py:36 bluebottle/funding/states.py:182
+#: bluebottle/funding/states.py:356 bluebottle/time_based/states/states.py:127
 msgid "Expire"
 msgstr "Изтекъл срок"
 
@@ -1108,9 +1109,9 @@ msgstr "Изтрий активността. Няма да можеш да я в
 #: bluebottle/activities/states.py:463 bluebottle/activities/states.py:484
 #: bluebottle/collect/states.py:24 bluebottle/collect/states.py:142
 #: bluebottle/deeds/states.py:25 bluebottle/deeds/states.py:47
-#: bluebottle/deeds/states.py:147 bluebottle/funding/states.py:218
-#: bluebottle/funding/states.py:306 bluebottle/funding/states.py:438
-#: bluebottle/funding/states.py:549 bluebottle/funding_stripe/states.py:45
+#: bluebottle/deeds/states.py:147 bluebottle/funding/states.py:214
+#: bluebottle/funding/states.py:302 bluebottle/funding/states.py:434
+#: bluebottle/funding/states.py:545 bluebottle/funding_stripe/states.py:45
 #: bluebottle/funding_stripe/states.py:116
 #: bluebottle/grant_management/states.py:155
 #: bluebottle/grant_management/states.py:184
@@ -1125,7 +1126,7 @@ msgstr "Успех"
 
 #: bluebottle/activities/states.py:398 bluebottle/activities/states.py:437
 #: bluebottle/activity_links/states.py:19 bluebottle/contact/models.py:20
-#: bluebottle/funding/states.py:369 bluebottle/grant_management/states.py:174
+#: bluebottle/funding/states.py:365 bluebottle/grant_management/states.py:174
 msgid "New"
 msgstr "Нова"
 
@@ -1135,7 +1136,7 @@ msgstr "Потребителят започна принос"
 
 #: bluebottle/activities/states.py:400 bluebottle/activities/states.py:439
 #: bluebottle/activity_links/states.py:31
-#: bluebottle/activity_links/states.py:59 bluebottle/funding/states.py:385
+#: bluebottle/activity_links/states.py:59 bluebottle/funding/states.py:381
 #: bluebottle/grant_management/states.py:28
 #: bluebottle/grant_management/states.py:177
 #: bluebottle/time_based/states/participants.py:48
@@ -1149,7 +1150,7 @@ msgid "The contribution was successful."
 msgstr "Приносът беше успешен."
 
 #: bluebottle/activities/states.py:402 bluebottle/activities/states.py:441
-#: bluebottle/funding/states.py:390 bluebottle/grant_management/states.py:179
+#: bluebottle/funding/states.py:386 bluebottle/grant_management/states.py:179
 msgid "Failed"
 msgstr "Неуспех"
 
@@ -1158,8 +1159,8 @@ msgid "The contribution failed."
 msgstr "Приносът не успя."
 
 #: bluebottle/activities/states.py:417 bluebottle/activities/states.py:449
-#: bluebottle/funding/states.py:415 bluebottle/funding/states.py:508
-#: bluebottle/funding/states.py:589 bluebottle/funding/states.py:660
+#: bluebottle/funding/states.py:411 bluebottle/funding/states.py:504
+#: bluebottle/funding/states.py:585 bluebottle/funding/states.py:656
 #: bluebottle/funding_stripe/states.py:208
 #: bluebottle/grant_management/states.py:191
 #: bluebottle/grant_management/states.py:272
@@ -1180,8 +1181,8 @@ msgid "The contribution was created."
 msgstr "Приносът беше създаден."
 
 #: bluebottle/activities/states.py:424 bluebottle/activities/states.py:456
-#: bluebottle/funding/states.py:326 bluebottle/funding/states.py:446
-#: bluebottle/funding/states.py:557 bluebottle/grant_management/states.py:166
+#: bluebottle/funding/states.py:322 bluebottle/funding/states.py:442
+#: bluebottle/funding/states.py:553 bluebottle/grant_management/states.py:166
 #: bluebottle/grant_management/states.py:212
 msgid "Fail"
 msgstr "Неуспех"
@@ -1191,7 +1192,7 @@ msgid "The contribution failed. It will not be visible in reports."
 msgstr "Приносът не успя. Няма да бъде видим в докладите."
 
 #: bluebottle/activities/states.py:431 bluebottle/activities/states.py:470
-#: bluebottle/funding/states.py:540 bluebottle/grant_management/states.py:219
+#: bluebottle/funding/states.py:536 bluebottle/grant_management/states.py:219
 #: bluebottle/time_based/states/participants.py:460
 #: bluebottle/time_based/states/slots.py:67
 msgid "Reset"
@@ -1233,7 +1234,8 @@ msgstr "Организаторът все още е зает с настройв
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:6
 #: bluebottle/activities/templates/admin/activities/share_publish.html:6
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:6
-#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_activities.html:6
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:6
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:6
 #: bluebottle/auth/templates/registration/password_reset_complete.html:6
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:6
 #: bluebottle/fsm/templates/admin/change_effects_confirmation.html:15
@@ -1881,7 +1883,7 @@ msgstr "Отменените свързани дейности никога не
 msgid "The link will be created."
 msgstr "Връзката ще бъде създадена."
 
-#: bluebottle/activity_links/states.py:52 bluebottle/funding/states.py:532
+#: bluebottle/activity_links/states.py:52 bluebottle/funding/states.py:528
 #: bluebottle/initiatives/states.py:116 bluebottle/time_based/admin.py:927
 #: bluebottle/time_based/states/slots.py:75
 #: bluebottle/time_based/states/slots.py:261
@@ -1900,134 +1902,135 @@ msgstr "Инициативата ще бъде успешна."
 msgid "The initiative will be cancelled."
 msgstr "Инициативата ще бъде отменена."
 
-#: bluebottle/activity_pub/admin.py:86 bluebottle/activity_pub/models.py:532
+#: bluebottle/activity_pub/admin.py:88 bluebottle/activity_pub/models.py:532
 msgid "Recipient"
 msgstr "Получател"
 
-#: bluebottle/activity_pub/admin.py:87 bluebottle/activity_pub/models.py:533
+#: bluebottle/activity_pub/admin.py:89 bluebottle/activity_pub/models.py:533
 msgid "Recipients"
 msgstr "Получатели"
 
-#: bluebottle/activity_pub/admin.py:112
+#: bluebottle/activity_pub/admin.py:114
 msgid "Republish"
 msgstr "Препубликувай"
 
-#: bluebottle/activity_pub/admin.py:114
+#: bluebottle/activity_pub/admin.py:116
 msgid "Actions"
 msgstr "Действия"
 
-#: bluebottle/activity_pub/admin.py:214
+#: bluebottle/activity_pub/admin.py:216
 #, python-brace-format
 msgid "Republish task queued for recipient {actor}."
 msgstr "Заявка за препубликуване е опашена за получателя {actor}."
 
-#: bluebottle/activity_pub/admin.py:220
+#: bluebottle/activity_pub/admin.py:222
 #, python-brace-format
 msgid "Error queuing republish: {error}"
 msgstr "Грешка при опашване на препубликуване: {error}"
 
-#: bluebottle/activity_pub/admin.py:287
+#: bluebottle/activity_pub/admin.py:289
 msgid "Adoption Status"
 msgstr "Статус на приемане"
 
-#: bluebottle/activity_pub/admin.py:292 bluebottle/activity_pub/admin.py:771
+#: bluebottle/activity_pub/admin.py:294 bluebottle/activity_pub/admin.py:801
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/recipients_list.html:13
 msgid "Adopted"
 msgstr "Приет"
 
-#: bluebottle/activity_pub/admin.py:293
+#: bluebottle/activity_pub/admin.py:295
 msgid "Not Adopted"
 msgstr "Не е приет"
 
-#: bluebottle/activity_pub/admin.py:304 bluebottle/activity_pub/admin.py:537
-#: bluebottle/activity_pub/admin.py:783 bluebottle/activity_pub/admin.py:971
+#: bluebottle/activity_pub/admin.py:306 bluebottle/activity_pub/admin.py:539
+#: bluebottle/activity_pub/admin.py:813 bluebottle/activity_pub/admin.py:1001
 #: bluebottle/activity_pub/models.py:540
 msgid "Partner"
 msgstr "Партньор"
 
-#: bluebottle/activity_pub/admin.py:319
+#: bluebottle/activity_pub/admin.py:321
 msgid "Partner URL"
 msgstr "URL на партньор"
 
-#: bluebottle/activity_pub/admin.py:320
+#: bluebottle/activity_pub/admin.py:322
 msgid "Thi is the website address of the partner you want to follow."
 msgstr "Това е уеб адресът на партньора, когото искате да следвате."
 
-#: bluebottle/activity_pub/admin.py:325 bluebottle/activity_pub/admin.py:388
+#: bluebottle/activity_pub/admin.py:327 bluebottle/activity_pub/admin.py:390
 msgid "This person will be the activity manager of the activities that are adopted."
 msgstr "Този човек ще бъде мениджър на активността на приетите активност."
 
-#: bluebottle/activity_pub/admin.py:329 bluebottle/activity_pub/admin.py:378
+#: bluebottle/activity_pub/admin.py:331 bluebottle/activity_pub/admin.py:380
 #: bluebottle/activity_pub/models.py:569
 msgid "Adoption type"
 msgstr "Тип на приемане"
 
-#: bluebottle/activity_pub/admin.py:334 bluebottle/activity_pub/admin.py:383
+#: bluebottle/activity_pub/admin.py:336 bluebottle/activity_pub/admin.py:385
 #: bluebottle/activity_pub/models.py:570
 msgid "Select how a received activity should be adopted."
 msgstr "Изберете как да бъде приета получената дейност."
 
-#: bluebottle/activity_pub/admin.py:364
+#: bluebottle/activity_pub/admin.py:366
 msgid "Supplier already exists for {}"
 msgstr "Доставчикът вече съществува за {}"
 
-#: bluebottle/activity_pub/admin.py:370 bluebottle/activity_pub/admin.py:479
+#: bluebottle/activity_pub/admin.py:372 bluebottle/activity_pub/admin.py:481
 msgid "Could not determine platform information needed for subscribing. Are you sure the url is correct?"
 msgstr "Не може да се определи информация за платформата, нужна за абониране. Сигурни ли сте, че URL адресът е верен?"
 
-#: bluebottle/activity_pub/admin.py:417 bluebottle/activity_pub/admin.py:552
+#: bluebottle/activity_pub/admin.py:419 bluebottle/activity_pub/admin.py:554
 #: bluebottle/members/models.py:380
 #: bluebottle/time_based/states/registrations.py:18
 msgid "Accepted"
 msgstr "Прието"
 
-#: bluebottle/activity_pub/admin.py:470
+#: bluebottle/activity_pub/admin.py:472
 #, python-format
 msgid "Follow request sent to %s. Your platforms will be connected when the request is accepted."
 msgstr "Искането за следване е изпратено до %s. Вашите платформи ще бъдат свързани, когато искането бъде прието."
 
-#: bluebottle/activity_pub/admin.py:487
+#: bluebottle/activity_pub/admin.py:489
 #, python-format
 msgid "Error creating Follow relationship: %s"
 msgstr "Грешка при създаване на връзка за следване: %s"
 
-#: bluebottle/activity_pub/admin.py:503 bluebottle/activity_pub/models.py:576
+#: bluebottle/activity_pub/admin.py:505 bluebottle/activity_pub/models.py:576
 msgid "Publish mode"
 msgstr "Режим на публикуване"
 
-#: bluebottle/activity_pub/admin.py:508
+#: bluebottle/activity_pub/admin.py:510
 msgid "Select how you want to share activities."
 msgstr "Изберете как искате да споделяте дейности."
 
-#: bluebottle/activity_pub/admin.py:626
+#: bluebottle/activity_pub/admin.py:633 bluebottle/activity_pub/admin.py:649
 #, python-brace-format
 msgid "Publishing {count} activities. This may take a few minutes. You can refresh this page to see the progress."
 msgstr "Публикува се {count} дейности. Това може да отнеме няколко минути. Можете да обновите тази страница, за да видите напредъка."
 
-#: bluebottle/activity_pub/admin.py:706
-#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_activities.html:33
+#: bluebottle/activity_pub/admin.py:736 bluebottle/activity_pub/forms.py:79
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:33
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:33
 msgid "Publish activities"
 msgstr "Публикувайте дейности"
 
-#: bluebottle/activity_pub/admin.py:723
+#: bluebottle/activity_pub/admin.py:753
 msgid "Coordinates"
 msgstr "Координати"
 
-#: bluebottle/activity_pub/admin.py:733 bluebottle/activity_pub/admin.py:1076
+#: bluebottle/activity_pub/admin.py:763 bluebottle/activity_pub/admin.py:1106
 #: bluebottle/geo/admin.py:37
 msgid "Location"
 msgstr "Местоположение"
 
-#: bluebottle/activity_pub/admin.py:734 bluebottle/cms/models.py:560
+#: bluebottle/activity_pub/admin.py:764 bluebottle/cms/models.py:560
 #: bluebottle/cms/models.py:563
 msgid "Locations"
 msgstr "Локации"
 
-#: bluebottle/activity_pub/admin.py:777
+#: bluebottle/activity_pub/admin.py:807
 msgid "Linked"
 msgstr "Свързани"
 
-#: bluebottle/activity_pub/admin.py:810 bluebottle/cms/models.py:207
+#: bluebottle/activity_pub/admin.py:840 bluebottle/cms/models.py:207
 #: bluebottle/cms/models.py:230 bluebottle/cms/models.py:502
 #: bluebottle/cms/models.py:583 bluebottle/cms/models.py:621
 #: bluebottle/cms/models.py:903 bluebottle/cms/models.py:963
@@ -2036,21 +2039,21 @@ msgstr "Свързани"
 msgid "Image"
 msgstr "Снимка"
 
-#: bluebottle/activity_pub/admin.py:927 bluebottle/activity_pub/models.py:243
+#: bluebottle/activity_pub/admin.py:957 bluebottle/activity_pub/models.py:243
 #: bluebottle/notifications/admin.py:146
 msgid "Activity title"
 msgstr "Заглавие на активността"
 
-#: bluebottle/activity_pub/admin.py:957
+#: bluebottle/activity_pub/admin.py:987
 #, python-brace-format
 msgid "{amount} activities have been adopted."
 msgstr "{amount} дейности са били приети."
 
-#: bluebottle/activity_pub/admin.py:993
+#: bluebottle/activity_pub/admin.py:1023
 msgid "You can make changes to this activity after you adopt it which will create a draft version of this activity."
 msgstr "Можете да правите промени в тази активност след като я приемете, което ще създаде на чернова на тази активност."
 
-#: bluebottle/activity_pub/admin.py:1052 bluebottle/time_based/admin.py:635
+#: bluebottle/activity_pub/admin.py:1082 bluebottle/time_based/admin.py:635
 #: bluebottle/time_based/admin.py:915
 msgid "Slots"
 msgstr "Слотове"
@@ -2102,7 +2105,8 @@ msgstr "Няма налични допълнителни партньори, с 
 #: bluebottle/activity_pub/forms.py:62
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:10
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:40
-#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_activities.html:10
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:10
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:10
 msgid "Accept follow request"
 msgstr "Приемете искането за следване"
 
@@ -2113,10 +2117,6 @@ msgstr "Опции за споделяне"
 #: bluebottle/activity_pub/forms.py:68
 msgid "Select how you would like to share activities with this consumer"
 msgstr "Изберете как искате да споделяте дейности с този потребител"
-
-#: bluebottle/activity_pub/forms.py:79
-msgid "Publish all activities"
-msgstr "Публикувайте всички дейности"
 
 #: bluebottle/activity_pub/models.py:55
 msgid "GoodUp Connect object"
@@ -2251,27 +2251,27 @@ msgstr "Автоматично приети тези типове дейност
 msgid "Selected activity types are automatically adopted when they are published."
 msgstr "Избраните типове дейности се приемат автоматично, когато бъдат публикувани."
 
-#: bluebottle/activity_pub/models.py:634
+#: bluebottle/activity_pub/models.py:652
 msgid "Connection"
 msgstr "Връзка"
 
-#: bluebottle/activity_pub/models.py:635
+#: bluebottle/activity_pub/models.py:653
 msgid "Connections"
 msgstr "Връзки"
 
-#: bluebottle/activity_pub/models.py:641 bluebottle/cms/models.py:687
+#: bluebottle/activity_pub/models.py:659 bluebottle/cms/models.py:687
 msgid "Consumer"
 msgstr "Потребител"
 
-#: bluebottle/activity_pub/models.py:642
+#: bluebottle/activity_pub/models.py:660
 msgid "Consumers"
 msgstr "Потребители"
 
-#: bluebottle/activity_pub/models.py:648 bluebottle/cms/models.py:686
+#: bluebottle/activity_pub/models.py:666 bluebottle/cms/models.py:686
 msgid "Supplier"
 msgstr "Доставчик"
 
-#: bluebottle/activity_pub/models.py:649
+#: bluebottle/activity_pub/models.py:667
 msgid "Suppliers"
 msgstr "Доставчици"
 
@@ -2365,27 +2365,75 @@ msgid "Select how activities from this partner should be shared before accepting
 msgstr "Изберете как дейностите от този партньор да бъдат споделени, преди да приемете искането за следване."
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:16
-#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_activities.html:16
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:16
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:16
 msgid "Partner:"
 msgstr "Партньор:"
 
-#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_activities.html:15
-msgid "Publish all open and succeeded activities."
-msgstr "Публикувайте всички отворени и успешни дейности."
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:15
+msgid "Publish all open activities."
+msgstr ""
 
-#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_activities.html:24
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:24
 #, python-format
 msgid "\n"
-"                            Are you sure you want to publish %(count)s activities to %(actor)s?\n"
+"                            Are you sure you want to publish %(count)s open activities to %(actor)s?\n"
 "                        "
-msgstr "\n"
-"                            Сигурни ли сте, че искате да публикувате %(count)s дейности на %(actor)s?\n"
+msgstr ""
+
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:15
+msgid "Publish all succeeded activities."
+msgstr ""
+
+#: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:24
+#, python-format
+msgid "\n"
+"                            Are you sure you want to publish %(count)s succeeded activities to %(actor)s?\n"
 "                        "
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/change_form.html:11
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/change_form.html:23
 msgid "Accept connection"
 msgstr "Приемете връзката"
+
+#: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:5
+msgid "Publish open activities"
+msgstr ""
+
+#: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:7
+#, python-format
+msgid "\n"
+"            There is %(counter)s unpublished open activity\n"
+"            "
+msgid_plural "\n"
+"            There are %(counter)s unpublished open activities\n"
+"        "
+msgstr[0] ""
+msgstr[1] ""
+
+#: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:14
+msgid "No unpublished open activities"
+msgstr ""
+
+#: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:19
+msgid "Publish succeeded activities"
+msgstr ""
+
+#: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:21
+#, python-format
+msgid "\n"
+"            There is %(counter)s unpublished succeeded activity\n"
+"            "
+msgid_plural "\n"
+"            There are %(counter)s unpublished succeeded activities\n"
+"        "
+msgstr[0] ""
+msgstr[1] ""
+
+#: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:28
+msgid "No unpublished succeeded activities"
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/publish_adoption_effect.html:2
 msgid "Announce adoption"
@@ -2902,7 +2950,7 @@ msgstr "\n"
 "    "
 
 #: bluebottle/bb_projects/migrations/0007_auto_20180319_1536.py:41
-#: bluebottle/funding/states.py:274 bluebottle/funding/states.py:395
+#: bluebottle/funding/states.py:270 bluebottle/funding/states.py:391
 msgid "Refunded"
 msgstr "Върнато"
 
@@ -3421,7 +3469,7 @@ msgid "About"
 msgstr "За нас"
 
 #: bluebottle/cms/models.py:120 bluebottle/geo/admin.py:135
-#: bluebottle/geo/admin.py:186
+#: bluebottle/geo/admin.py:190
 msgid "Info"
 msgstr "Информация"
 
@@ -3972,7 +4020,7 @@ msgid "item"
 msgstr "артикул"
 
 #: bluebottle/collect/models.py:74 bluebottle/time_based/models.py:318
-#: bluebottle/time_based/models.py:557 bluebottle/time_based/models.py:2012
+#: bluebottle/time_based/models.py:557 bluebottle/time_based/models.py:2015
 msgid "location hint"
 msgstr "Подсказка за локация"
 
@@ -4970,7 +5018,7 @@ msgid "If you enter a deadline, leave the duration field empty. This will overri
 msgstr "Ако въведете срок, оставете полето за продължителност празно. Това ще замени продължителността."
 
 #: bluebottle/funding/models.py:148 bluebottle/time_based/models.py:451
-#: bluebottle/time_based/models.py:1970 bluebottle/time_based/models.py:1994
+#: bluebottle/time_based/models.py:1973 bluebottle/time_based/models.py:1997
 msgid "duration"
 msgstr "продължителност"
 
@@ -4979,7 +5027,7 @@ msgid "If you enter a duration, leave the deadline field empty for it to be auto
 msgstr "Ако въведете продължителност, оставете полето за срок празно, за да бъде автоматично изчислено."
 
 #: bluebottle/funding/models.py:169 bluebottle/funding/models.py:479
-#: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:312
+#: bluebottle/funding/states.py:486 bluebottle/grant_management/models.py:312
 #: bluebottle/grant_management/models.py:398
 msgid "started"
 msgstr "започна"
@@ -5033,7 +5081,7 @@ msgstr "организатор на набиране на средства"
 msgid "fundraisers"
 msgstr "организатори на набиране на средства"
 
-#: bluebottle/funding/models.py:478 bluebottle/funding/states.py:480
+#: bluebottle/funding/models.py:478 bluebottle/funding/states.py:476
 #: bluebottle/grant_management/models.py:311 bluebottle/utils/transitions.py:13
 msgid "approved"
 msgstr "одобрено"
@@ -5257,93 +5305,93 @@ msgstr "на пауза"
 msgid "The activity is on-hold until KYC is completed"
 msgstr "Дейността е на пауза, докато KYC не бъде завършен"
 
-#: bluebottle/funding/states.py:86
+#: bluebottle/funding/states.py:82
 msgid "Submit the activity for approval."
 msgstr "Подай активността за одобрение."
 
-#: bluebottle/funding/states.py:106
+#: bluebottle/funding/states.py:102
 msgid "The campaign will be visible in the frontend and people can donate."
 msgstr "Кампанията ще бъде видима в предния край и хората могат да дарят."
 
-#: bluebottle/funding/states.py:123
+#: bluebottle/funding/states.py:119
 msgid "Cancel if the campaign will not be executed. The activity manager will not be able to edit the campaign and it won't show up on the search page in the front end. The campaign will still be available in the back office and appear in your reporting."
 msgstr "Отмяна, ако кампанията няма да бъде изпълнена. Управителят на дейността няма да може да редактира кампанията и тя няма да се показва на страницата за търсене в предния край. Кампанията все пак ще бъде налична в задния офис и ще се появи в вашите отчети."
 
-#: bluebottle/funding/states.py:138 bluebottle/grant_management/states.py:93
+#: bluebottle/funding/states.py:134 bluebottle/grant_management/states.py:93
 #: bluebottle/initiatives/states.py:29 bluebottle/initiatives/states.py:155
 msgid "Needs work"
 msgstr "Нуждае се от работа"
 
-#: bluebottle/funding/states.py:140
+#: bluebottle/funding/states.py:136
 msgid "The status of the campaign will be set to 'Needs work'. The activity manager can edit and resubmit the campaign. Don't forget to inform the activity manager of the necessary adjustments."
 msgstr "Статусът на кампанията ще бъде зададен на 'Нуждае се от работа'. Управителят на дейността може да редактира и повторно подаде кампанията. Не забравяйте да информирате управителя на дейността за необходимите корекции."
 
-#: bluebottle/funding/states.py:153
+#: bluebottle/funding/states.py:149
 msgid "Put on hold"
 msgstr "Поставете на пауза"
 
-#: bluebottle/funding/states.py:155
+#: bluebottle/funding/states.py:151
 msgid "The campaign will not be able to receive donations"
 msgstr "Кампанията няма да може да получава дарения"
 
-#: bluebottle/funding/states.py:169
+#: bluebottle/funding/states.py:165
 msgid "Reject in case this campaign doesn't fit your program or the rules of the game. The activity manager will not be able to edit the campaign and it won't show up on the search page in the front end. The campaign will still be available in the back office and appear in your reporting."
 msgstr "Отхвърлете, ако тази кампания не отговаря на вашата програма или правилата на играта. Управителят на дейността няма да може да редактира кампанията и тя няма да се показва на страницата за търсене в предния край. Кампанията все пак ще бъде налична в задния офис и ще се появи в вашите отчети."
 
-#: bluebottle/funding/states.py:188
+#: bluebottle/funding/states.py:184
 msgid "The campaign didn't receive any donations before the deadline and is cancelled."
 msgstr "Кампанията не е получила никакви дарения преди крайния срок и е отменена."
 
-#: bluebottle/funding/states.py:202
+#: bluebottle/funding/states.py:198
 msgid "Extend"
 msgstr "Удължи"
 
-#: bluebottle/funding/states.py:204
+#: bluebottle/funding/states.py:200
 msgid "The campaign will be extended and can receive more donations."
 msgstr "Кампанията ще бъде удължена и може да получи повече дарения."
 
-#: bluebottle/funding/states.py:220
+#: bluebottle/funding/states.py:216
 msgid "The campaign ends and received donations can be payed out. Triggered when the deadline passes."
 msgstr "Кампанията приключва и получените дарения могат да бъдат изплатени. Инициирано, когато срокът изтече."
 
-#: bluebottle/funding/states.py:232
+#: bluebottle/funding/states.py:228
 msgid "Recalculate"
 msgstr "Пресметнете отново"
 
-#: bluebottle/funding/states.py:234
+#: bluebottle/funding/states.py:230
 msgid "The amount of donations received has changed and the payouts will be recalculated."
 msgstr "Сумата на получените дарения се е променила и изплащанията ще бъдат преразгледани."
 
-#: bluebottle/funding/states.py:248
+#: bluebottle/funding/states.py:244
 msgid "Partial"
 msgstr "Частично"
 
-#: bluebottle/funding/states.py:249
+#: bluebottle/funding/states.py:245
 msgid "The campaign ends but the target isn't reached."
 msgstr "Кампанията приключва, но целта не е достигната."
 
-#: bluebottle/funding/states.py:259 bluebottle/funding/states.py:337
-#: bluebottle/funding/states.py:466
+#: bluebottle/funding/states.py:255 bluebottle/funding/states.py:333
+#: bluebottle/funding/states.py:462
 msgid "Refund"
 msgstr "Възстановяване"
 
-#: bluebottle/funding/states.py:261
+#: bluebottle/funding/states.py:257
 msgid "The campaign will be refunded and all donations will be returned to the donors."
 msgstr "Кампанията ще бъде възстановена и всички дарения ще бъдат върнати на дарителите."
 
-#: bluebottle/funding/states.py:276
+#: bluebottle/funding/states.py:272
 msgid "The donation was refunded."
 msgstr "Дарението е възстановено."
 
-#: bluebottle/funding/states.py:280
+#: bluebottle/funding/states.py:276
 msgid "Activity refunded"
 msgstr "Възстановяване на дейност"
 
-#: bluebottle/funding/states.py:282
+#: bluebottle/funding/states.py:278
 msgid "The donation was refunded because the activity refunded."
 msgstr "Дарението е възстановено, защото дейността е възстановена."
 
-#: bluebottle/funding/states.py:286 bluebottle/funding/states.py:374
+#: bluebottle/funding/states.py:282 bluebottle/funding/states.py:370
 #: bluebottle/grant_management/states.py:175
 #: bluebottle/grant_management/states.py:435
 #: bluebottle/time_based/states/participants.py:17
@@ -5352,157 +5400,157 @@ msgstr "Дарението е възстановено, защото дейно�
 msgid "Pending"
 msgstr "В очакване"
 
-#: bluebottle/funding/states.py:288
+#: bluebottle/funding/states.py:284
 msgid "The donation is pending while the payment is still not completed."
 msgstr "Дарението е в очакване, докато плащането все още не е завършено."
 
-#: bluebottle/funding/states.py:307 bluebottle/grant_management/states.py:156
+#: bluebottle/funding/states.py:303 bluebottle/grant_management/states.py:156
 msgid "The donation has been completed"
 msgstr "Дарението е завършено"
 
-#: bluebottle/funding/states.py:314
+#: bluebottle/funding/states.py:310
 msgid "Set pending"
 msgstr "Задайте в очакване"
 
-#: bluebottle/funding/states.py:315
+#: bluebottle/funding/states.py:311
 msgid "The payment for this donation needs to be completed."
 msgstr "Плащането за това дарение трябва да бъде завършено."
 
-#: bluebottle/funding/states.py:327 bluebottle/grant_management/states.py:167
+#: bluebottle/funding/states.py:323 bluebottle/grant_management/states.py:167
 msgid "The donation failed."
 msgstr "Дарението се провали."
 
-#: bluebottle/funding/states.py:338
+#: bluebottle/funding/states.py:334
 msgid "Refund this donation."
 msgstr "Върнете това дарение."
 
-#: bluebottle/funding/states.py:348
+#: bluebottle/funding/states.py:344
 msgid "Activity refund"
 msgstr "Възстановяване на дейност"
 
-#: bluebottle/funding/states.py:350
+#: bluebottle/funding/states.py:346
 msgid "Refund the donation, because the entire activity will be refunded."
 msgstr "Върнете дарението, защото цялата дейност ще бъде възстановена."
 
-#: bluebottle/funding/states.py:361
+#: bluebottle/funding/states.py:357
 msgid "Expire the donation account. This happens when a donation is still 'new' after 10 days"
 msgstr "Изтичане на сметката за дарение. Това се случва, когато дарението все още е 'ново' след 10 дни"
 
-#: bluebottle/funding/states.py:371
+#: bluebottle/funding/states.py:367
 msgid "Payment was started."
 msgstr "Плащането е започнато."
 
-#: bluebottle/funding/states.py:376
+#: bluebottle/funding/states.py:372
 msgid "Payment is authorised and will probably succeed shortly."
 msgstr "Плащането е одобрено и вероятно ще бъде успешно скоро."
 
-#: bluebottle/funding/states.py:379
+#: bluebottle/funding/states.py:375
 msgid "Action needed"
 msgstr "Необходимо е действие"
 
-#: bluebottle/funding/states.py:381
+#: bluebottle/funding/states.py:377
 msgid "Action is needed to complete the payment."
 msgstr "Необходимо е действие, за да завършите плащането."
 
-#: bluebottle/funding/states.py:387
+#: bluebottle/funding/states.py:383
 msgid "Payment is successful."
 msgstr "Плащането бе успешно."
 
-#: bluebottle/funding/states.py:392 bluebottle/funding/states.py:447
+#: bluebottle/funding/states.py:388 bluebottle/funding/states.py:443
 msgid "Payment failed."
 msgstr "Плащането се провали."
 
-#: bluebottle/funding/states.py:397 bluebottle/funding/states.py:467
+#: bluebottle/funding/states.py:393 bluebottle/funding/states.py:463
 msgid "Payment was refunded."
 msgstr "Плащането е възстановено."
 
-#: bluebottle/funding/states.py:400
+#: bluebottle/funding/states.py:396
 msgid "refund requested"
 msgstr "възстановяване поискано"
 
-#: bluebottle/funding/states.py:402
+#: bluebottle/funding/states.py:398
 msgid "Platform requested the payment to be refunded. Waiting for payment provider the confirm the refund"
 msgstr "Платформата поиска плащането да бъде възстановено. Очакване на потвърждение на възстановяването от доставчика на плащания."
 
-#: bluebottle/funding/states.py:416
+#: bluebottle/funding/states.py:412
 msgid "Payment started."
 msgstr "Плащането стартирано."
 
-#: bluebottle/funding/states.py:422
+#: bluebottle/funding/states.py:418
 msgid "Authorise"
 msgstr "Одобрете"
 
-#: bluebottle/funding/states.py:423
+#: bluebottle/funding/states.py:419
 msgid "Payment has been authorised."
 msgstr "Плащането е одобрено."
 
-#: bluebottle/funding/states.py:430
+#: bluebottle/funding/states.py:426
 msgid "Require action"
 msgstr "Необходимо е действие"
 
-#: bluebottle/funding/states.py:431
+#: bluebottle/funding/states.py:427
 msgid "Require action to complete the payment."
 msgstr "Необходимо е действие, за да завършите плащането."
 
-#: bluebottle/funding/states.py:439
+#: bluebottle/funding/states.py:435
 msgid "Payment has been completed."
 msgstr "Плащането е завършено."
 
-#: bluebottle/funding/states.py:454 bluebottle/funding_pledge/states.py:17
+#: bluebottle/funding/states.py:450 bluebottle/funding_pledge/states.py:17
 msgid "Request refund"
 msgstr "Искайте възстановяване"
 
-#: bluebottle/funding/states.py:455
+#: bluebottle/funding/states.py:451
 msgid "Request to refund the payment."
 msgstr "Искане за възстановяване на плащането."
 
-#: bluebottle/funding/states.py:475 bluebottle/funding/states.py:620
+#: bluebottle/funding/states.py:471 bluebottle/funding/states.py:616
 #: bluebottle/grant_management/states.py:303
 msgid "new"
 msgstr "нов"
 
-#: bluebottle/funding/states.py:477
+#: bluebottle/funding/states.py:473
 msgid "Payout has been created"
 msgstr "Изплащането е създадено"
 
-#: bluebottle/funding/states.py:482
+#: bluebottle/funding/states.py:478
 msgid "Payout has been approved and send to the payout app."
 msgstr "Изплащането е одобрено и изпратено до приложението за изплащане."
 
-#: bluebottle/funding/states.py:485 bluebottle/time_based/states/teams.py:63
+#: bluebottle/funding/states.py:481 bluebottle/time_based/states/teams.py:63
 #: bluebottle/time_based/states/teams.py:72
 msgid "scheduled"
 msgstr "планирано"
 
-#: bluebottle/funding/states.py:487
+#: bluebottle/funding/states.py:483
 msgid "Payout has been received by the payout app."
 msgstr "Изплащането е получено от приложението за изплащане."
 
-#: bluebottle/funding/states.py:492
+#: bluebottle/funding/states.py:488
 msgid "Payout was started."
 msgstr "Изплащането беше започнато."
 
-#: bluebottle/funding/states.py:497
+#: bluebottle/funding/states.py:493
 msgid "Payout was completed successfully."
 msgstr "Изплащането е успешно завършено."
 
-#: bluebottle/funding/states.py:500
+#: bluebottle/funding/states.py:496
 msgid "failed"
 msgstr "неуспех"
 
-#: bluebottle/funding/states.py:502
+#: bluebottle/funding/states.py:498
 msgid "Payout failed."
 msgstr "Изплащането се провали."
 
-#: bluebottle/funding/states.py:509
+#: bluebottle/funding/states.py:505
 msgid "Create the payout"
 msgstr "Създайте изплащането"
 
-#: bluebottle/funding/states.py:517
+#: bluebottle/funding/states.py:513
 msgid "Approve the payout so it will be scheduled for execution."
 msgstr "Одобрете изплащането, за да бъде планирано за изпълнение."
 
-#: bluebottle/funding/states.py:524
+#: bluebottle/funding/states.py:520
 #: bluebottle/time_based/states/participants.py:425
 #: bluebottle/time_based/states/slots.py:59
 #: bluebottle/time_based/states/teams.py:62
@@ -5510,143 +5558,143 @@ msgstr "Одобрете изплащането, за да бъде планир
 msgid "Schedule"
 msgstr "Планиране"
 
-#: bluebottle/funding/states.py:525
+#: bluebottle/funding/states.py:521
 msgid "Schedule payout. Triggered by payout app."
 msgstr "Планирайте изплащането. Инициирано от приложението за изплащане."
 
-#: bluebottle/funding/states.py:533
+#: bluebottle/funding/states.py:529
 msgid "Start payout. Triggered by payout app."
 msgstr "Започнете изплащането. Инициирано от приложението за изплащане."
 
-#: bluebottle/funding/states.py:541
+#: bluebottle/funding/states.py:537
 msgid "Payout was rejected by the payout app. Adjust information as needed an approve the payout again."
 msgstr "Изплащането бе отхвърлено от приложението за изплащане. Регулирайте информацията при нужда и одобрете изплащането отново."
 
-#: bluebottle/funding/states.py:550
+#: bluebottle/funding/states.py:546
 msgid "Payout was successful. Triggered by payout app."
 msgstr "Изплащането беше успешно. Инициирано от приложението за изплащане."
 
-#: bluebottle/funding/states.py:558
+#: bluebottle/funding/states.py:554
 msgid "Payout was not successful. Contact support to resolve the issue."
 msgstr "Изплащането не беше успешно. Свържете се с поддръжка, за да разрешите проблема."
 
-#: bluebottle/funding/states.py:566 bluebottle/funding/states.py:630
+#: bluebottle/funding/states.py:562 bluebottle/funding/states.py:626
 #: bluebottle/grant_management/states.py:249
 #: bluebottle/grant_management/states.py:313
 #: bluebottle/segments/templates/widgets/segment-select.html:5
 msgid "verified"
 msgstr "потвърдено"
 
-#: bluebottle/funding/states.py:568 bluebottle/grant_management/states.py:251
+#: bluebottle/funding/states.py:564 bluebottle/grant_management/states.py:251
 msgid "Bank account is verified"
 msgstr "Банковата сметка е потвърдена"
 
-#: bluebottle/funding/states.py:571 bluebottle/funding/states.py:640
+#: bluebottle/funding/states.py:567 bluebottle/funding/states.py:636
 #: bluebottle/grant_management/states.py:254
 #: bluebottle/grant_management/states.py:323
 msgid "incomplete"
 msgstr "непълно"
 
-#: bluebottle/funding/states.py:573 bluebottle/grant_management/states.py:256
+#: bluebottle/funding/states.py:569 bluebottle/grant_management/states.py:256
 msgid "Bank account details are missing or incorrect"
 msgstr "Детайлите на банковата сметка липсват или са неправилни"
 
-#: bluebottle/funding/states.py:576 bluebottle/grant_management/states.py:259
+#: bluebottle/funding/states.py:572 bluebottle/grant_management/states.py:259
 msgid "unverified"
 msgstr "непотвърдено"
 
-#: bluebottle/funding/states.py:578 bluebottle/grant_management/states.py:261
+#: bluebottle/funding/states.py:574 bluebottle/grant_management/states.py:261
 msgid "Bank account still needs to be verified"
 msgstr "Банковата сметка все още трябва да бъде потвърдена"
 
-#: bluebottle/funding/states.py:583 bluebottle/grant_management/states.py:266
+#: bluebottle/funding/states.py:579 bluebottle/grant_management/states.py:266
 msgid "Bank account is rejected"
 msgstr "Банковата сметка е отхвърлена"
 
-#: bluebottle/funding/states.py:590 bluebottle/funding_stripe/states.py:209
+#: bluebottle/funding/states.py:586 bluebottle/funding_stripe/states.py:209
 #: bluebottle/grant_management/states.py:273
 msgid "Bank account details are entered."
 msgstr "Детайлите на банковата сметка са въведени."
 
-#: bluebottle/funding/states.py:597 bluebottle/grant_management/states.py:280
+#: bluebottle/funding/states.py:593 bluebottle/grant_management/states.py:280
 msgid "Bank account is missing details"
 msgstr "Банковата сметка липсва детайли"
 
-#: bluebottle/funding/states.py:605 bluebottle/funding_stripe/states.py:219
+#: bluebottle/funding/states.py:601 bluebottle/funding_stripe/states.py:219
 #: bluebottle/grant_management/states.py:288
 msgid "Reject bank account"
 msgstr "Отхвърлете банковата сметка"
 
-#: bluebottle/funding/states.py:612 bluebottle/funding/states.py:675
-#: bluebottle/funding/states.py:710 bluebottle/funding_stripe/states.py:178
+#: bluebottle/funding/states.py:608 bluebottle/funding/states.py:671
+#: bluebottle/funding/states.py:706 bluebottle/funding_stripe/states.py:178
 #: bluebottle/funding_stripe/states.py:230
 #: bluebottle/grant_management/states.py:295
 #: bluebottle/grant_management/states.py:358
 msgid "Verify"
 msgstr "Потвърдете"
 
-#: bluebottle/funding/states.py:613 bluebottle/funding_stripe/states.py:231
+#: bluebottle/funding/states.py:609 bluebottle/funding_stripe/states.py:231
 #: bluebottle/grant_management/states.py:296
 msgid "Verify that the bank account is complete."
 msgstr "Потвърдете, че банковата сметка е пълна."
 
-#: bluebottle/funding/states.py:622 bluebottle/grant_management/states.py:305
+#: bluebottle/funding/states.py:618 bluebottle/grant_management/states.py:305
 msgid "Payout account was created."
 msgstr "Сметката за изплащане е създадена."
 
-#: bluebottle/funding/states.py:625 bluebottle/grant_management/states.py:308
+#: bluebottle/funding/states.py:621 bluebottle/grant_management/states.py:308
 #: bluebottle/grant_management/states.py:384
 msgid "pending"
 msgstr "в очакване"
 
-#: bluebottle/funding/states.py:627 bluebottle/grant_management/states.py:310
+#: bluebottle/funding/states.py:623 bluebottle/grant_management/states.py:310
 msgid "Payout account is pending verification."
 msgstr "Сметката за изплащане е в очакване на потвърждение."
 
-#: bluebottle/funding/states.py:632 bluebottle/grant_management/states.py:315
+#: bluebottle/funding/states.py:628 bluebottle/grant_management/states.py:315
 msgid "Payout account has been verified."
 msgstr "Сметката за изплащане е потвърдена."
 
-#: bluebottle/funding/states.py:637 bluebottle/grant_management/states.py:320
+#: bluebottle/funding/states.py:633 bluebottle/grant_management/states.py:320
 msgid "Payout account was rejected."
 msgstr "Сметката за изплащане е отхвърлена."
 
-#: bluebottle/funding/states.py:642 bluebottle/grant_management/states.py:325
+#: bluebottle/funding/states.py:638 bluebottle/grant_management/states.py:325
 msgid "Payout account is missing information or documents."
 msgstr "Сметката за изплащане липсва информация или документи."
 
-#: bluebottle/funding/states.py:661 bluebottle/grant_management/states.py:344
+#: bluebottle/funding/states.py:657 bluebottle/grant_management/states.py:344
 msgid "Payout account has been created"
 msgstr "Сметката за изплащане е създадена"
 
-#: bluebottle/funding/states.py:668 bluebottle/grant_management/states.py:351
+#: bluebottle/funding/states.py:664 bluebottle/grant_management/states.py:351
 msgid "Submit payout account for review."
 msgstr "Подайте сметката за изплащане за преглед."
 
-#: bluebottle/funding/states.py:676 bluebottle/funding_stripe/states.py:179
+#: bluebottle/funding/states.py:672 bluebottle/funding_stripe/states.py:179
 #: bluebottle/grant_management/states.py:359
 msgid "Verify the payout account."
 msgstr "Потвърдете сметката за изплащане."
 
-#: bluebottle/funding/states.py:685 bluebottle/grant_management/states.py:368
+#: bluebottle/funding/states.py:681 bluebottle/grant_management/states.py:368
 msgid "Reject the payout account."
 msgstr "Отхвърлете сметката за изплащане."
 
-#: bluebottle/funding/states.py:692 bluebottle/funding_stripe/states.py:192
+#: bluebottle/funding/states.py:688 bluebottle/funding_stripe/states.py:192
 #: bluebottle/grant_management/states.py:375
 msgid "Set incomplete"
 msgstr "Задайте непълно"
 
-#: bluebottle/funding/states.py:694 bluebottle/funding_stripe/states.py:194
+#: bluebottle/funding/states.py:690 bluebottle/funding_stripe/states.py:194
 #: bluebottle/grant_management/states.py:377
 msgid "Mark the payout account as incomplete. The initiator will have to add more information."
 msgstr "Отбележете сметката за изплащане като непълна. Инициаторът ще трябва да добави повече информация."
 
-#: bluebottle/funding/states.py:711
+#: bluebottle/funding/states.py:707
 msgid "Verify the KYC account. You will hereby confirm that you verified the users identity."
 msgstr "Потвърдете KYC сметката. С това потвърдихте, че сте потвърдили самоличността на потребителя."
 
-#: bluebottle/funding/states.py:723
+#: bluebottle/funding/states.py:719
 msgid "Reject the payout account. The uploaded ID scan will be removed with this step."
 msgstr "Отхвърлете сметката за изплащане. Каченото сканиране на документ за самоличност ще бъде премахнато с тази стъпка."
 
@@ -6704,7 +6752,11 @@ msgstr "Регион на работното място"
 msgid "SSO"
 msgstr "SSO"
 
-#: bluebottle/geo/admin.py:185 bluebottle/geo/admin.py:198
+#: bluebottle/geo/admin.py:181
+msgid "Geolocation"
+msgstr ""
+
+#: bluebottle/geo/admin.py:189 bluebottle/geo/admin.py:202
 msgid "Map"
 msgstr "Карта"
 
@@ -9346,11 +9398,11 @@ msgstr "език"
 msgid "Allow comments"
 msgstr "Разрешете коментари"
 
-#: bluebottle/news/models.py:73
+#: bluebottle/news/models.py:79
 msgid "news item"
 msgstr "новинарски елемент"
 
-#: bluebottle/news/models.py:74
+#: bluebottle/news/models.py:80
 msgid "news items"
 msgstr "новинарски елементи"
 
@@ -9478,7 +9530,7 @@ msgstr "до {}"
 msgid "Raise error"
 msgstr "Повдигнете грешка"
 
-#: bluebottle/notifications/management/commands/preview_all_messages.py:809
+#: bluebottle/notifications/management/commands/preview_all_messages.py:810
 msgid "test"
 msgstr "тест"
 
@@ -10164,8 +10216,7 @@ msgstr "Настройки"
 msgid "Manage Reporting"
 msgstr "Управление на отчетност"
 
-#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:440
-#: tenants/accenture/settings.py:30
+#: bluebottle/settings/testing.py:443 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -10178,30 +10229,26 @@ msgstr "Управление на отчетност"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
+#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
+#: tenants/maximising-potential/settings.py:27
+#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
 #: tenants/shell-disaster-relief/settings.py:26
-#: tenants/shell-grant-management/settings.py:26
-#: tenants/shell-uk/settings.py:26 tenants/startsomething/settings.py:29
-#: tenants/studentbattle/settings.py:27 tenants/twoscale/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
+#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Английски"
 
-#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:441
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
+#: bluebottle/settings/testing.py:444 tenants/abn/settings.py:26
+#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
@@ -10212,13 +10259,12 @@ msgstr "Английски"
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:23
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -10233,31 +10279,28 @@ msgstr "Английски"
 msgid "Dutch"
 msgstr "Холандски"
 
-#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:442
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+#: bluebottle/settings/testing.py:445 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Френски"
 
-#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:443
-#: tenants/mars/settings.py:28
+#: bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr "Испански"
 
-#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:444
-#: tenants/mars/settings.py:29
+#: bluebottle/settings/testing.py:447
 msgid "German"
 msgstr "Немски"
 
-#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:445
+#: bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Португалски"
 
-#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:446
-#: tenants/mars/settings.py:30
+#: bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr "Унгарски"
 
-#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:447
+#: bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Български"
 
@@ -10758,7 +10801,7 @@ msgstr "Настройте първоначалния периодичен уч�
 
 #: bluebottle/time_based/effects/registrations.py:108
 msgid "Create team for this registration"
-msgstr "Създайте екип за тази регистрация"
+msgstr ""
 
 #: bluebottle/time_based/effects/registrations.py:124
 msgid "Delete registration if it no longer has participants"
@@ -11201,6 +11244,7 @@ msgstr "Екипът се е оттеглил от вашата активнос
 #: bluebottle/time_based/messages/teams.py:56
 #: bluebottle/time_based/messages/teams.py:168
 #: bluebottle/time_based/messages/teams.py:255
+#: bluebottle/time_based/messages/teams.py:294
 msgctxt "platform-email"
 msgid "View team"
 msgstr "Прегледайте екипа"
@@ -11261,6 +11305,7 @@ msgid "You have withdrawn from {name}'s team for the activity \"{title}\""
 msgstr "Вие се е оттеглили от екипа на {name} за активността \"{title}\""
 
 #: bluebottle/time_based/messages/teams.py:231
+#: bluebottle/time_based/messages/teams.py:270
 #, python-brace-format
 msgctxt "platform-email"
 msgid "The date or location for your team has been changed for the activity \"{title}\""
@@ -11355,7 +11400,7 @@ msgid "Free"
 msgstr "Безплатно"
 
 #: bluebottle/time_based/models.py:214 bluebottle/time_based/models.py:307
-#: bluebottle/time_based/models.py:2001
+#: bluebottle/time_based/models.py:2004
 msgid "online meeting link"
 msgstr "връзка за онлайн среща"
 
@@ -11364,26 +11409,26 @@ msgid "Activities on a date"
 msgstr "Активности на определена дата"
 
 #: bluebottle/time_based/models.py:301 bluebottle/time_based/models.py:550
-#: bluebottle/time_based/models.py:1997
+#: bluebottle/time_based/models.py:2000
 msgid "is online"
 msgstr "е онлайн"
 
 #: bluebottle/time_based/models.py:313 bluebottle/time_based/models.py:553
 #: bluebottle/time_based/models.py:721 bluebottle/time_based/models.py:868
-#: bluebottle/time_based/models.py:2006
+#: bluebottle/time_based/models.py:2009
 msgid "location"
 msgstr "локация"
 
 #: bluebottle/time_based/models.py:349 bluebottle/time_based/models.py:383
-#: bluebottle/time_based/models.py:1920 bluebottle/time_based/models.py:1952
+#: bluebottle/time_based/models.py:1923 bluebottle/time_based/models.py:1955
 #, python-brace-format
 msgid "\n"
 "Join: {url}"
 msgstr "\n"
 "Присъединете се: {url}"
 
-#: bluebottle/time_based/models.py:450 bluebottle/time_based/models.py:1900
-#: bluebottle/time_based/models.py:1992
+#: bluebottle/time_based/models.py:450 bluebottle/time_based/models.py:1903
+#: bluebottle/time_based/models.py:1995
 msgid "start date and time"
 msgstr "начална дата и час"
 
@@ -11643,57 +11688,57 @@ msgstr "Член на отбора"
 msgid "Team members"
 msgstr "Членове на отбора"
 
-#: bluebottle/time_based/models.py:1706
+#: bluebottle/time_based/models.py:1707
 #, python-brace-format
 msgid "Team member {name}"
 msgstr "Член на отбора {name}"
 
-#: bluebottle/time_based/models.py:1732
+#: bluebottle/time_based/models.py:1735
 msgid "Participant to schedule activities"
 msgstr "Участник в насрочени активности"
 
-#: bluebottle/time_based/models.py:1733
+#: bluebottle/time_based/models.py:1736
 msgid "Participants to schedule activities"
 msgstr "Участници в насрочени активности"
 
-#: bluebottle/time_based/models.py:1799
+#: bluebottle/time_based/models.py:1802
 msgid "Team member participation"
 msgstr "Участие на член на отбора"
 
-#: bluebottle/time_based/models.py:1800
+#: bluebottle/time_based/models.py:1803
 msgid "Team member participations"
 msgstr "Участия на член на отбора"
 
-#: bluebottle/time_based/models.py:1878
+#: bluebottle/time_based/models.py:1881
 msgid "Slot participant"
 msgstr "участник на слота"
 
-#: bluebottle/time_based/models.py:1879
+#: bluebottle/time_based/models.py:1882
 msgid "Slot participants"
 msgstr "участници на слота"
 
-#: bluebottle/time_based/models.py:1971
+#: bluebottle/time_based/models.py:1974
 msgid "end date and time"
 msgstr "крайна дата и час"
 
-#: bluebottle/time_based/models.py:2025
+#: bluebottle/time_based/models.py:2028
 #, python-brace-format
 msgid "Slot {start}"
 msgstr "Слот {start}"
 
-#: bluebottle/time_based/models.py:2070
+#: bluebottle/time_based/models.py:2073
 msgid "Team duration"
 msgstr "Продължителност на отбора"
 
-#: bluebottle/time_based/models.py:2071
+#: bluebottle/time_based/models.py:2074
 msgid "How much time the team is expected to contribute."
 msgstr "Колко време се очаква да допринесе отборът."
 
-#: bluebottle/time_based/models.py:2103
+#: bluebottle/time_based/models.py:2106
 msgid "Participant to recurring activities"
 msgstr "Участник за повторяеми активности"
 
-#: bluebottle/time_based/models.py:2104
+#: bluebottle/time_based/models.py:2107
 msgid "Participants to recurring activities"
 msgstr "Участници за повторяеми активности"
 
@@ -12883,26 +12928,14 @@ msgstr "\n"
 msgctxt "platform-email"
 msgid "\n"
 "Good news, your activity \"%(title)s\" has been approved and the participants contributions have been recorded.<br>\n"
-"<br>\n"
-"Share your activity far and wide to inspire support and attract contributions!\n"
-msgstr "\n"
-"Добри новини, вашата активност \"%(title)s\" беше одобрена и приноса на участниците е записан.<br>\n"
-"<br>\n"
-"Споделете вашата активност широко, за да вдъхновите подкрепа и привлечете приноси!\n"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_registered.html:5
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
 "Nice work! Your activity <i>%(activity name)s</i> has been registered and the participants contributions have been recorded.\n"
-"<br>\n"
-"<br>\n"
-"Share your activity far and wide to inspire support and attract contributions!\n"
-msgstr "\n"
-"Добра работа! Вашата дейност <i>%(activity name)s</i> е регистрирана и приносите на участниците са записани.\n"
-"<br>\n"
-"<br>\n"
-"Споделете дейността си широко, за да вдъхновите подкрепа и привлечете приноси!\n"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_submitted.html:5
 #, python-format
@@ -14407,8 +14440,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Секунда"
 msgstr[1] "Секунди"
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
-msgstr "Нидерландски"
 

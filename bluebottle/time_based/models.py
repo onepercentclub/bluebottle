@@ -1724,7 +1724,7 @@ class TeamMember(TriggerMixin, models.Model):
         if self.user:
             return _('Team member {name}').format(name=self.user.full_name)
         else:
-            return None
+            return ''
 
 
 class ScheduleParticipant(Participant, Contributor):

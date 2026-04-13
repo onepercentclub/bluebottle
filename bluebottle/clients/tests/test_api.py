@@ -229,11 +229,11 @@ class TestPlatformSettingsApi(BluebottleTestCase):
     def test_funding_platform_settings(self):
         # Create funding platform settings and confirm they end up correctly in settings api
         FundingPlatformSettings.objects.create(
-            allow_anonymous_rewards=True
+            anonymous_donations=True
         )
 
         response = self.client.get(self.settings_url)
-        self.assertEqual(response.data['platform']['funding']['allow_anonymous_rewards'], True)
+        self.assertEqual(response.data['platform']['funding']['anonymous_donations'], True)
 
     def test_member_platform_settings(self):
         MemberPlatformSettings.objects.create(

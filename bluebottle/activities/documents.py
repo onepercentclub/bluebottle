@@ -435,10 +435,14 @@ class ActivityDocument(Document):
 
         org = instance.host_organization
         logo_url = None
-        if org.logo and org.logo.file:
+        if (
+            org.logo
+            and org.logo.name
+            and org.logo.storage.exists(org.logo.name)
+        ):
             try:
                 logo_url = tenant_url(org.logo.url)
-            except (ValueError, AttributeError):
+            except (ValueError, AttributeError, FileNotFoundError):
                 logo_url = None
 
         return {

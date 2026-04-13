@@ -6,3 +6,4 @@ class Translation(models.Model):
     source_language = models.CharField(max_length=10)
     target_language = models.CharField(max_length=10)
     translation = models.TextField()
+    created = models.DateTimeField(auto_now_add=True, null=True)

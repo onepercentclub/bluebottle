@@ -1,5 +1,4 @@
 import hashlib
-import logging
 from builtins import object
 from collections import namedtuple
 from datetime import datetime
@@ -82,12 +81,9 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantSerializer,
     TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
-from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
-
-logger = logging.getLogger(__name__)
 
 ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity"])
 
@@ -1100,37 +1096,3 @@ class ActivityMessageSerializer(ModelSerializer):
         'sender': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
-
-    def create(self, validated_data):
-        request = self.context['request']
-        activity = validated_data['activity']
-        if activity.owner_id == request.user.pk:
-            raise ValidationError(
-                _('You cannot send a message to yourself as the activity manager.')
-            )
-        validated_data['sender'] = request.user
-        instance = super(ActivityMessageSerializer, self).create(validated_data)
-        self._notify_activity_owner(instance)
-        return instance
-
-    def _notify_activity_owner(self, instance):
-        owner = instance.activity.owner
-        sender = instance.sender
-        try:
-            send_mail(
-                template_name='mails/messages/activity_message_to_manager',
-                subject=_('New message about your activity “{title}”').format(
-                    title=instance.activity.title
-                ),
-                to=owner,
-                reply_to=sender.email,
-                recipient_name=owner.first_name or owner.full_name,
-                sender_name=sender.full_name,
-                title=instance.activity.title,
-                message_text=instance.message,
-                action_link=instance.activity.get_absolute_url(),
-            )
-        except Exception:
-            logger.exception(
-                'Failed to send activity message notification to activity owner'
-            )

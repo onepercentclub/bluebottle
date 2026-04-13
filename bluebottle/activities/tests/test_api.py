@@ -7,6 +7,7 @@ from unittest import mock
 
 import dateutil
 from django.contrib.auth.models import Permission
+from django.db import connection
 from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
@@ -2211,8 +2212,10 @@ class ActivityMessageAPITestCase(BluebottleTestCase):
             }
         }
 
-    @mock.patch('bluebottle.activities.serializers.send_mail')
-    def test_post_authenticated(self, send_mail_mock):
+    @mock.patch(
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
+    )
+    def test_post_authenticated(self, notify_task_mock):
         response = self.client.post(
             self.url,
             data=json.dumps(self._payload(self.activity)),
@@ -2223,10 +2226,19 @@ class ActivityMessageAPITestCase(BluebottleTestCase):
         msg = ActivityMessage.objects.get()
         self.assertEqual(msg.sender, self.sender)
         self.assertEqual(msg.activity_id, self.activity.pk)
-        send_mail_mock.assert_called_once()
-        call_kw = send_mail_mock.call_args[1]
-        self.assertEqual(call_kw['to'], self.owner)
-        self.assertEqual(call_kw['reply_to'], self.sender.email)
+        notify_task_mock.assert_called_once_with(msg.pk, connection.tenant)
+
+    @mock.patch(
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
+    )
+    def test_post_rate_limit(self, notify_task_mock):
+        for _ in range(12):
+            response = self.client.post(
+                self.url,
+                data=json.dumps(self._payload(self.activity)),
+                user=self.sender
+            )
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
     def test_post_anonymous(self):
         response = self.client.post(

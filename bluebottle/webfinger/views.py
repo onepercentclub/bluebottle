@@ -2,7 +2,7 @@ import re
 from rest_framework import generics, renderers, serializers, exceptions
 
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.activity_pub.serializers.json_ld import ActorSerializer
+from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
 
 
 class WebFingerRenderer(renderers.JSONRenderer):
@@ -10,7 +10,7 @@ class WebFingerRenderer(renderers.JSONRenderer):
 
 
 def to_webfinger(actor):
-    data = ActorSerializer().to_representation(actor)
+    data = ActivityPubSerializer().to_representation(actor)
     return {
         'subject': actor.webfinger_uri,
         'aliases': [data['id']],
@@ -25,7 +25,7 @@ def to_webfinger(actor):
 
 class WebFingerSerializer(serializers.Serializer):
     def to_representation(self, obj):
-        data = ActorSerializer().to_representation(obj)
+        data = ActivityPubSerializer().to_representation(obj)
         return {
             'subject': obj.webfinger_uri,
             'aliases': [data['id']],

@@ -1,22 +1,139 @@
+from operator import attrgetter
 from io import BytesIO
 
 import mock
 from django.test import RequestFactory
 from requests import Response
 
-from bluebottle.activity_pub.models import GoodDeed, CrowdFunding, GrantApplication
+from bluebottle.activity_pub.models import (
+    GoodDeed, CrowdFunding, GrantApplication, ActivityPubModel, Inbox, Outbox, PublicKey
+)
 from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import (
-    DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer, GrantApplicationSerializer
+    DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer, GrantApplicationSerializer,
 )
+from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
 from bluebottle.activity_pub.tests.factories import (
-    DoGoodEventFactory
+    DoGoodEventFactory, OrganizationFactory
 )
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
+
+
+class JSONLDSerializerTestCase:
+    serializer_class = ActivityPubSerializer
+
+    def setUp(self):
+        self.instance = self.factory.create()
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
+            self.mock_image_response = Response()
+            self.mock_image_response.raw = BytesIO(image_file.read())
+            self.mock_image_response.status_code = 200
+
+    @property
+    def context(self):
+        request = RequestFactory().get('/')
+        request.user = BlueBottleUserFactory.create()
+
+        return {'request': request}
+
+    def test_to_representation(self):
+        serializer = self.serializer_class(instance=self.instance, context=self.context)
+
+        representation = serializer.data
+
+        self.assertEqual(
+            representation['type'], self.factory._meta.model.__name__
+        )
+
+        for key, attr in self.mapping.items():
+            expected = attrgetter(attr)(self.instance)
+            if isinstance(representation[key], dict) and 'id' in representation[key]:
+                self.assertEqual(
+                    representation[key]['id'],
+                    expected.pub_url
+                )
+            else:
+                self.assertEqual(
+                    representation[key],
+                    expected
+                )
+
+    def test_create(self):
+        serializer = self.serializer_class(data=self.data, context=self.context)
+        self.assertTrue(serializer.is_valid())
+
+        instance = serializer.save()
+        for key, attr in self.mapping.items():
+            expected = attrgetter(attr)(instance)
+            if isinstance(expected, ActivityPubModel):
+                expected = expected.pub_url
+
+            self.assertEqual(
+                serializer.initial_data[key],
+                expected
+            )
+
+    def test_create_existing_relations(self):
+        Inbox(iri=self.data['inbox']).save()
+        Outbox(iri=self.data['outbox']).save()
+        PublicKey(
+            iri=self.data['public_key'],
+            public_key_pem=self.data['public_key']['public_key_pem']
+        ).save()
+        self.test_create()
+
+    def test_update(self):
+        serializer = self.serializer_class(data=self.data, context=self.context)
+        self.assertTrue(serializer.is_valid())
+
+        instance = serializer.save()
+
+        self.data['name'] = 'new name'
+        self.data['public_key']['public_key_pem'] = 'new public_key'
+
+        serializer = self.serializer_class(
+            data=self.data, instance=instance, context=self.context
+        )
+        self.assertTrue(serializer.is_valid())
+
+        serializer.save()
+
+        self.assertEqual(instance.name, 'new name')
+        self.assertEqual(instance.public_key.public_key_pem, 'new public_key')
+
+
+class OrganizationSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
+    factory = OrganizationFactory
+
+    mapping = {
+        'id': 'pub_url',
+        'name': 'name',
+        'content': 'content',
+        'summary': 'summary',
+        'outbox': 'outbox',
+        'inbox': 'inbox',
+    }
+
+    def setUp(self):
+        self.data = {
+            'type': 'Organization',
+            'id': 'http://example.com/api/json-ld/organization/35',
+            'inbox': 'http://example.com/api/json-ld/inbox/32',
+            'outbox': 'http://example.com/api/json-ld/outbox/33',
+            'public_key': {
+                'id': 'http://example.com/api/json-ld/publickey/34',
+                'public_key_pem': 'some-pem-data'
+            },
+            'name': 'Organization name',
+            'summary': 'Organization summart',
+            'content': 'Organization content',
+        }
+        super().setUp()
 
 
 class DoGoodEventSerializerTestCase(BluebottleTestCase):

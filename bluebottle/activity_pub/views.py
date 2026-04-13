@@ -13,7 +13,7 @@ from bluebottle.activity_pub.permissions import InboxPermission, ActivityPubPerm
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers.json_ld import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
-    AcceptSerializer, ActivitySerializer, CreateSerializer,
+    AcceptSerializer, CreateSerializer,
     OrganizationSerializer, GoodDeedSerializer, ImageSerializer,
     CrowdFundingSerializer, CollectCampaignSerializer, PlaceSerializer, AddressSerializer,
     GrantApplicationSerializer,
@@ -63,12 +63,6 @@ class InboxView(generics.CreateAPIView, ActivityPubView):
     queryset = Inbox.objects.all()
 
     permission_classes = [InboxPermission]
-
-    def get_serializer_class(self, *args, **kwargs):
-        if self.request.method == 'POST':
-            return ActivitySerializer
-        else:
-            return self.serializer_class
 
     def get_serializer_context(self):
         return {'request': PickableRequest(self.request)}

@@ -1,26 +1,22 @@
-from django.db import connection
-
 from rest_framework import serializers
-from rest_framework.reverse import reverse
 
 
 class ActivityPubIdField(serializers.CharField):
     def __init__(self, url_name):
         self.url_name = url_name
 
-        super().__init__(source='*', required=False)
+        super().__init__(source='iri', required=True, allow_null=True)
 
-    def to_representation(self, instance):
-        if instance.iri:
-            return instance.iri
+    def get_attribute(self, instance):
+        result = super().get_attribute(instance)
+        if result:
+            return result
         else:
-            return connection.tenant.build_absolute_url(
-                reverse(self.url_name, args=(instance.pk, ))
-            )
+            return instance.pub_url
 
     def to_internal_value(self, data):
-        result = super().to_internal_value(data)
-        return {'id': result}
+        return super().to_internal_value(data)
+        return {'id': data}
 
 
 class FederatedIdField(serializers.CharField):

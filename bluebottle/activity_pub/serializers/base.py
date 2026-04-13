@@ -1,7 +1,4 @@
-from urllib.parse import urlparse
-
 from django.db import connection
-from django.urls import resolve
 import inflection
 from rest_framework import serializers, exceptions
 
@@ -10,6 +7,8 @@ from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context, expand_iri
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, ActivityPubIdField, TypeField
 from bluebottle.activity_pub.utils import is_local
+
+from rest_polymorphic.serializers import PolymorphicSerializer
 
 
 class ActivityPubListSerializer(serializers.ListSerializer):
@@ -51,13 +50,14 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
                 isinstance(attr, serializers.Serializer) and
                 not isinstance(
                     attr,
-                    (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
+                    (BaseActivityPubSerializer, ActivityPubListSerializer)
                 )
             ):
                 raise TypeError(
                     f'Attribute {attr_name} should be a subclass of ActivityPubSerializer'
                 )
 
+        type_iri = None
         if 'Meta' in attrs and hasattr(attrs['Meta'], 'model'):
             if 'id' not in attrs or not isinstance(attrs['id'], ActivityPubIdField):
                 raise TypeError(f'{name} is missing an IdField')
@@ -65,12 +65,13 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
             if 'type' not in attrs or not isinstance(attrs['type'], TypeField):
                 raise TypeError(f'{name} is missing a TypeField')
 
+            type_iri = expand_iri(attrs['type'].type)
             if expand_iri(attrs['type'].type).startswith('_:'):
                 raise TypeError(f'{attrs["type"].type} is not a correct ActivityPub type')
 
             for [attr, field] in attrs.items():
                 if (
-                    isinstance(field, (ActivityPubSerializer, serializers.Field)) and
+                    isinstance(field, (BaseActivityPubSerializer, serializers.Field)) and
                     attr not in ('id', 'type', )
                 ):
                     if expand_iri(inflection.camelize(attr, False)).startswith('_:'):
@@ -78,16 +79,51 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
                             f'{attr} is not a correct ActivityPub type'
                         )
 
-        return super().__new__(cls, name, bases, attrs)
+        result = super().__new__(cls, name, bases, attrs)
+
+        if type_iri:
+            ActivityPubSerializer.serializer_mapping[result.Meta.model] = result
+
+        return result
 
 
-class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSerializerMetaclass):
+class ActivityPubSerializer(PolymorphicSerializer):
+    serializer_mapping = {}
+    model_serializer_mapping = {}
+    resource_type_field_name = 'type'
+
+    def __init__(self, *args, **kwargs):
+        super(PolymorphicSerializer, self).__init__(*args, **kwargs)
+
+        self.resource_type_model_mapping = {}
+        self.model_serializer_mapping = {}
+
+        for model, serializer in self.serializer_mapping.items():
+            resource_type = self.to_resource_type(model)
+            if callable(serializer):
+                serializer = serializer(*args, **kwargs)
+                serializer.parent = self
+
+            self.resource_type_model_mapping[resource_type] = model
+            self.model_serializer_mapping[model] = serializer
+
+    def to_resource_type(self, model_or_instance):
+        serializer = self.serializer_mapping[self._to_model(model_or_instance)]
+        return serializer._declared_fields['type'].type
+
+    def to_representation(self, instance):
+        serializer = self._get_serializer_from_model_or_instance(instance)
+
+        return serializer.to_representation(instance)
+
+
+class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSerializerMetaclass):
     def __init__(self, *args, full=False, include=False, **kwargs):
         self.include = include
 
         super().__init__(*args, **kwargs)
 
-        self.context['full'] = full
+        self.full = full
 
     class Meta:
         list_serializer_class = ActivityPubListSerializer
@@ -96,14 +132,14 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
     def to_representation(self, instance):
         representation = super().to_representation(instance)
 
-        if not self.parent:
+        if not self.parent or isinstance(self.parent, ActivityPubSerializer):
             return representation
         else:
-            if self.include or self.context['full']:
+            if self.include or self.full:
                 representation.pop('type', None)
                 return representation
             else:
-                return representation['id']
+                return {'id': representation['id']}
 
     def to_internal_value(self, data):
         try:
@@ -152,17 +188,12 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
             if instance:
                 return self.update(instance, validated_data)
 
-        for name, field in self.fields.items():
-            if (
-                isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)) and
-                not getattr(field, 'many', False)
-            ):
-                if validated_data.get(name, None):
-                    field.initial_data = validated_data.get(name, None)
-                    field.is_valid(raise_exception=True)
-                    validated_data[field.source] = field.save()
+        for field in self:
+            if field.name in validated_data and hasattr(field, 'save'):
+                field.save(validated_data[field.name], field.value)
 
         validated_data.pop('type', None)
+
         return self.Meta.model.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
@@ -181,14 +212,11 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
             return instance
 
         for name, field in self.fields.items():
-            if isinstance(
-                field,
-                (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
-            ):
-                if validated_data.get(name, None):
-                    field.initial_data = validated_data[name]
-                    field.is_valid()
-                    validated_data[field.source] = field.save()
+            from bluebottle.activity_pub.serializers.relations import RelatedResourceField
+            if isinstance(field, RelatedResourceField):
+                related_instance = validated_data.get(name, None)
+                if related_instance:
+                    related_instance.save()
 
         validated_data.pop('type', None)
         return super().update(instance, validated_data)
@@ -200,117 +228,6 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
             result = {'id': result}
 
         return result
-
-
-class PolymorphicActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
-    def __new__(cls, *args, **kwargs):
-        result = super().__new__(cls, *args, **kwargs)
-        if hasattr(result, 'polymorphic_serializers'):
-            for serializer in result.polymorphic_serializers:
-                if not issubclass(serializer.Meta.model, result.Meta.model):
-                    raise TypeError(f'{serializer.Meta.model} is not a subclass of {result.Meta.model}')
-
-        return result
-
-
-class PolymorphicActivityPubSerializer(
-    serializers.Serializer, metaclass=PolymorphicActivityPubSerializerMetaclass
-):
-    def __init__(self, *args, full=False, **kwargs):
-        full = full
-        super().__init__(*args, **kwargs)
-
-        self._serializers = [
-            serializer(*args, full=full, **kwargs) for serializer in self.polymorphic_serializers
-        ]
-
-    def get_serializer_from_model(self, model):
-        for serializer in self._serializers:
-            if issubclass(model, serializer.Meta.model):
-                return serializer
-
-        raise TypeError(f'Missing serializer for model: {model}')
-
-    def get_serializer_from_data(self, data):
-        if 'id' in data and 'type' not in data:
-            iri = data['id']
-
-            if is_local(iri):
-                resolved = resolve(urlparse(iri).path)
-                return self.get_serializer_from_model(resolved.func.view_class.queryset.model)
-
-        if 'type' not in data:
-            raise exceptions.ValidationError({'type': 'Missing type information'})
-
-        for serializer in self._serializers:
-            type_field = serializer.fields.get('type')
-            # Some nested polymorphic serializers (e.g. EventSerializer) don't
-            # expose a concrete `type` field themselves; skip those here.
-            if type_field is not None and data['type'] == type_field.type:
-                return serializer
-
-        raise exceptions.ValidationError(f'Missing serializer for type: {data["type"]}')
-
-    def bind(self, field_name, parent):
-        super().bind(field_name, parent)
-
-        for serializer in self._serializers:
-            serializer.bind(field_name, parent)
-
-    def to_representation(self, instance):
-        return self.get_serializer_from_model(type(instance)).to_representation(instance)
-
-    def to_internal_value(self, data):
-        try:
-            return self.get_serializer_from_data(data).to_internal_value(data)
-        except exceptions.ValidationError:
-            if isinstance(data, str):
-                data = {'id': data}
-
-            if tuple(data.keys()) == ('id', ):
-                iri = data['id']
-                instance = self.Meta.model.objects.from_iri(iri)
-                if instance:
-                    return type(self)(instance=instance).data
-                elif not is_local(iri):
-                    data = adapter.fetch(iri)
-                    return self.get_serializer_from_data(data).to_internal_value(data)
-            else:
-                raise
-
-    def get_value(self, data):
-        result = super().get_value(data)
-
-        if isinstance(result, str):
-            result = {'id': result}
-
-        return result
-
-    def save(self, *args, **kwargs):
-        self.instance = self.get_serializer_from_data(self.initial_data).save(*args, **kwargs)
-
-        return self.instance
-
-    def create(self, validated_data):
-        return self.get_serialize_from_datar(self.initial_data).create(validated_data)
-
-    def update(self, instance, validated_data):
-        return self.get_serialize_from_datar(instance).update(validated_data)
-
-    def is_valid(self, *args, **kwargs):
-        model_classes = [serializer.Meta.model for serializer in self._serializers]
-
-        if self.instance and type(self.instance) not in model_classes:
-            raise TypeError(f'Incompatible serializers for type: {type(self.instance)}')
-
-        serializer = self.get_serializer_from_data(self.initial_data)
-        serializer.initial_data = self.initial_data
-
-        if serializer.is_valid(*args, **kwargs):
-            self._validated_data = serializer.validated_data
-            return True
-
-        return False
 
 
 class FederatedObjectListSerializer(serializers.ListSerializer):

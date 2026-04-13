@@ -1256,6 +1256,31 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertIn(str(in_region.pk), ids)
         self.assertNotIn(str(out_region.pk), ids)
 
+    def test_filter_reviewing_office_manager(self):
+        managed_location = LocationFactory.create()
+        other_location = LocationFactory.create()
+        in_office = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=managed_location,
+        )
+        out_office = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=other_location,
+        )
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.office_manager.add(managed_location)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([in_office], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(in_office.pk), ids)
+        self.assertNotIn(str(out_office.pk), ids)
+
     def test_filter_reviewing_segment_manager(self):
         segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
         managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)

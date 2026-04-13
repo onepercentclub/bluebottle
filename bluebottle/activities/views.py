@@ -13,7 +13,8 @@ from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import (
-    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer, FileUploadAnswer
+    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer,
+    FileUploadAnswer, ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
@@ -28,7 +29,8 @@ from bluebottle.activities.serializers import (
     ContributionSerializer,
     ActivityQuestionSerializer,
     FileUploadAnswerDocumentSerializer,
-    ActivityAnswerSerializer
+    ActivityAnswerSerializer,
+    ActivityMessageSerializer,
 )
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
@@ -490,6 +492,15 @@ class ActivityAnswerList(JsonApiViewMixin, CreateAPIView):
             OneOf(ResourcePermission, ActivityOwnerPermission),
         ]
     }
+
+
+class ActivityMessageList(JsonApiViewMixin, CreateAPIView):
+    queryset = ActivityMessage.objects.all()
+    serializer_class = ActivityMessageSerializer
+
+    permission_classes = (
+        IsAuthenticated,
+    )
 
 
 class ActivityAnswerDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

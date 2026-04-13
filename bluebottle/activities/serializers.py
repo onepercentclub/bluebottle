@@ -1,4 +1,5 @@
 import hashlib
+import logging
 from builtins import object
 from collections import namedtuple
 from datetime import datetime
@@ -8,10 +9,13 @@ from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
+from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField,
+    ResourceRelatedField,
 )
 from rest_framework_json_api.serializers import (
     ModelSerializer,
@@ -22,7 +26,8 @@ from rest_framework_json_api.serializers import (
 from bluebottle.activities.models import (
     Activity, Contribution, Contributor, ActivityQuestion,
     FileUploadQuestion, SegmentQuestion, TextQuestion, ConfirmationAnswer,
-    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion
+    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion,
+    ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.collect.serializers import (
@@ -77,9 +82,12 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantSerializer,
     TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
+from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
+
+logger = logging.getLogger(__name__)
 
 ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity"])
 
@@ -1069,3 +1077,60 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
         'segment': 'bluebottle.segments.serializers.SegmentListSerializer',
         'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
     }
+
+
+class ActivityMessageSerializer(ModelSerializer):
+    sender = ResourceRelatedField(
+        read_only=True,
+    )
+    activity = PolymorphicResourceRelatedField(
+        ActivitySerializer,
+        queryset=Activity.objects.all(),
+    )
+
+    class Meta(object):
+        model = ActivityMessage
+        fields = ('message', 'created', 'sender', 'activity')
+
+    class JSONAPIMeta(object):
+        resource_name = 'activity-messages'
+        included_resources = ['sender', 'activity']
+
+    included_serializers = {
+        'sender': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+    }
+
+    def create(self, validated_data):
+        request = self.context['request']
+        activity = validated_data['activity']
+        if activity.owner_id == request.user.pk:
+            raise ValidationError(
+                _('You cannot send a message to yourself as the activity manager.')
+            )
+        validated_data['sender'] = request.user
+        instance = super(ActivityMessageSerializer, self).create(validated_data)
+        self._notify_activity_owner(instance)
+        return instance
+
+    def _notify_activity_owner(self, instance):
+        owner = instance.activity.owner
+        sender = instance.sender
+        try:
+            send_mail(
+                template_name='mails/messages/activity_message_to_manager',
+                subject=_('New message about your activity “{title}”').format(
+                    title=instance.activity.title
+                ),
+                to=owner,
+                reply_to=sender.email,
+                recipient_name=owner.first_name or owner.full_name,
+                sender_name=sender.full_name,
+                title=instance.activity.title,
+                message_text=instance.message,
+                action_link=instance.activity.get_absolute_url(),
+            )
+        except Exception:
+            logger.exception(
+                'Failed to send activity message notification to activity owner'
+            )

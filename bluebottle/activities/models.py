@@ -563,6 +563,29 @@ def POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
     return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
 
 
+class ActivityMessage(models.Model):
+    sender = models.ForeignKey(
+        "members.Member",
+        related_name="activity_messages_sent",
+        on_delete=models.CASCADE,
+    )
+    activity = models.ForeignKey(
+        Activity,
+        related_name="activity_messages",
+        on_delete=POLYMORPHIC_CASCADE,
+    )
+    message = models.TextField(_("Message"), max_length=5000)
+    created = models.DateTimeField(default=timezone.now)
+
+    class Meta(object):
+        ordering = ("-created",)
+        verbose_name = _("Activity message")
+        verbose_name_plural = _("Activity messages")
+
+    class JSONAPIMeta(object):
+        resource_name = "activity-messages"
+
+
 class ActivityAnswer(PolymorphicModel):
     activity = models.ForeignKey(
         Activity, on_delete=POLYMORPHIC_CASCADE, related_name='answers'

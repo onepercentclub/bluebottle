@@ -3,6 +3,7 @@ import json
 import re
 from builtins import str
 from datetime import timedelta
+from unittest import mock
 
 import dateutil
 from django.contrib.auth.models import Permission
@@ -15,7 +16,7 @@ from django_elasticsearch_dsl.test import ESTestCase
 from pytz import UTC
 from rest_framework import status
 
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, ActivityMessage
 from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from bluebottle.collect.tests.factories import (
     CollectActivityFactory,
@@ -2183,3 +2184,71 @@ class ActivityLocationAPITestCase(APITestCase):
         with self.closed_site():
             self.perform_get(user=BlueBottleUserFactory.create())
         self.assertStatus(status.HTTP_200_OK)
+
+
+class ActivityMessageAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super(ActivityMessageAPITestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.sender = BlueBottleUserFactory.create()
+        self.activity = DeedFactory.create(owner=self.owner, status='open')
+        self.url = reverse('activity-message-list')
+
+    def _payload(self, activity):
+        return {
+            'data': {
+                'type': 'activity-messages',
+                'attributes': {'message': 'Hello manager'},
+                'relationships': {
+                    'activity': {
+                        'data': {
+                            'type': 'activities/deeds',
+                            'id': str(activity.pk),
+                        }
+                    }
+                }
+            }
+        }
+
+    @mock.patch('bluebottle.activities.serializers.send_mail')
+    def test_post_authenticated(self, send_mail_mock):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+            user=self.sender
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ActivityMessage.objects.count(), 1)
+        msg = ActivityMessage.objects.get()
+        self.assertEqual(msg.sender, self.sender)
+        self.assertEqual(msg.activity_id, self.activity.pk)
+        send_mail_mock.assert_called_once()
+        call_kw = send_mail_mock.call_args[1]
+        self.assertEqual(call_kw['to'], self.owner)
+        self.assertEqual(call_kw['reply_to'], self.sender.email)
+
+    def test_post_anonymous(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_post_owner_to_self(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ActivityMessage.objects.count(), 0)
+
+    def test_post_draft_activity_forbidden(self):
+        draft = DeedFactory.create(owner=self.owner, status='draft')
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(draft)),
+            user=self.sender
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

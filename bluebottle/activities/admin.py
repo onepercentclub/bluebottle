@@ -666,7 +666,8 @@ class ActivityChildAdmin(
         'origin',
         'activity_pub',
         'event',
-        'host_organization'
+        'host_organization',
+        'synced_contributor_count'
     ]
 
     office_fields = (
@@ -853,6 +854,7 @@ class ActivityChildAdmin(
                 return (
                     'origin',
                     'host_organization',
+                    'synced_contributor_count'
                 )
             else:
                 return (

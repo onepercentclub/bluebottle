@@ -65,6 +65,7 @@ class DoGoodEventUpdateSyncSerializer(BaseUpdateSyncSerializer):
                 'name': event_do_good.name,
                 'summary': event_do_good.summary,
                 'capacity': event_do_good.capacity,
+                'contributor_count': event_do_good.contributor_count,
             }
             serializer = FederatedActivitySerializer(
                 instance=activity,

@@ -392,6 +392,19 @@ class FollowingAddForm(forms.ModelForm):
                         "Are you sure the url is correct?",
                     )
                 })
+            try:
+                adapter.follow(self.cleaned_data['platform_url'], self.instance)
+            except requests.exceptions.HTTPError:
+                raise ValidationError({
+                    'platform_url': _(
+                        "Could not determine platform information needed for subscribing. "
+                        "Are you sure the url is correct?",
+                    )
+                })
+            except Exception as error:
+                raise ValidationError({
+                    'platform_url': _("Error creating Follow relationship: %s") % str(error)
+                })
 
 
 class FollowingAdminForm(forms.ModelForm):
@@ -486,35 +499,17 @@ class FollowingAdmin(FollowAdmin):
         return FollowingAdminForm
 
     def save_model(self, request, obj, form, change):
-        """Handle saving of new Following objects using adapter.follow()"""
         if not change:
             platform_url = form.cleaned_data['platform_url']
-            try:
-                adapter.follow(platform_url, obj)
-
-                self.message_user(
-                    request,
-                    _(
-                        "Follow request sent to %s. "
-                        "Your platforms will be connected when the request is accepted."
-                    ) % platform_url,
-                    level="success"
+            self.message_user(
+                request,
+                _(
+                    "Follow request sent to %s. "
+                    "Your platforms will be connected when the request is accepted."
                 )
-            except requests.exceptions.HTTPError:
-                self.message_user(
-                    request,
-                    _(
-                        "Could not determine platform information needed for subscribing. "
-                        "Are you sure the url is correct?"
-                    ),
-                    level="error"
-                )
-            except Exception as error:
-                self.message_user(
-                    request,
-                    _("Error creating Follow relationship: %s") % str(error),
-                    level="error"
-                )
+                % platform_url,
+                level="success",
+            )
         super().save_model(request, obj, form, change)
 
     def response_add(self, request, obj, post_url_continue=None):
@@ -822,7 +817,7 @@ class EventAdminMixin:
         "source",
         "activity",
         "url",
-        "iri"
+        "iri",
     )
     fields = readonly_fields
     list_filter = [AdoptedFilter, SourceFilter]
@@ -1159,7 +1154,8 @@ class CollectCampaignAdmin(EventChildAdmin):
         'location',
         'collect_type',
         'target',
-        'donated'
+        'donated',
+        'contributor_count'
     )
     fields = readonly_fields
 
@@ -1220,6 +1216,7 @@ class DoGoodEventAdmin(EventChildAdmin):
         'join_mode',
         'slot_mode',
         'capacity',
+        'contributor_count'
     )
     fields = readonly_fields
 

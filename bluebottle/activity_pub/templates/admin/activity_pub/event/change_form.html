@@ -51,12 +51,9 @@
             {% if adoption_type == 'sync' %}
                 {% if original.adopted_activity %}
                     <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
-                        <input type="button" value="{% trans 'View adopted activity' %}" class="default"
-                               name="_adopt">
+                        {% trans 'View adopted activity' %}
                     </a>
                 {% else %}
-                    {% trans "Synced deeds can be created automatically when the activity is received, or you can adopt this event manually:" %}
-                    <br/>
                     <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
                         <input type="button" value="{% trans 'Adopt event' %}" class="default" name="_adopt">
                     </a>

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-14 09:02+0200\n"
-"PO-Revision-Date: 2026-04-14 07:06\n"
+"POT-Creation-Date: 2026-04-13 11:58+0200\n"
+"PO-Revision-Date: 2026-04-13 09:59\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -1543,8 +1543,7 @@ msgstr "És ne felejtsd el megköszönni csodás résztvevőid támogatását."
 msgctxt "platform-email"
 msgid "You have created the activity %(title)s but have not published it yet.\n"
 "        This means no one will be able to find your activity and contribute to it."
-msgstr "A(z) %(title)s tevékenységet létrehozta, de még nem publikálta.\n"
-"        Ez azt jelenti, hogy senki sem fogja megtalálni a tevékenységét, és hozzájárulni sem tud."
+msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/publish_activity_reminder.html:9
 msgctxt "platform-email"
@@ -2384,29 +2383,25 @@ msgstr "Partner:"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:15
 msgid "Publish all open activities."
-msgstr "Publikálja az összes nyitott tevékenységet."
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:24
 #, python-format
 msgid "\n"
 "                            Are you sure you want to publish %(count)s open activities to %(actor)s?\n"
 "                        "
-msgstr "\n"
-"                            Biztos benne, hogy publikálni szeretné a(z) %(count)s nyitott tevékenységet %(actor)s részére?\n"
-"                        "
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:15
 msgid "Publish all succeeded activities."
-msgstr "Publikálja az összes sikeres tevékenységet."
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:24
 #, python-format
 msgid "\n"
 "                            Are you sure you want to publish %(count)s succeeded activities to %(actor)s?\n"
 "                        "
-msgstr "\n"
-"                            Biztos benne, hogy publikálni szeretné a(z) %(count)s sikeres tevékenységet %(actor)s részére?\n"
-"                        "
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/change_form.html:11
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/change_form.html:23
@@ -2415,7 +2410,7 @@ msgstr "Kapcsolat elfogadása"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:5
 msgid "Publish open activities"
-msgstr "Nyitott tevékenységek publikálása"
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:7
 #, python-format
@@ -2425,20 +2420,16 @@ msgid "\n"
 msgid_plural "\n"
 "            There are %(counter)s unpublished open activities\n"
 "        "
-msgstr[0] "\n"
-"            Van %(counter)s publikálatlan nyitott tevékenység\n"
-"            "
-msgstr[1] "\n"
-"            Van %(counter)s publikálatlan nyitott tevékenység\n"
-"        "
+msgstr[0] ""
+msgstr[1] ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:14
 msgid "No unpublished open activities"
-msgstr "Nincsenek publikálatlan nyitott tevékenységek"
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:19
 msgid "Publish succeeded activities"
-msgstr "Sikeres tevékenységek publikálása"
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:21
 #, python-format
@@ -2448,16 +2439,12 @@ msgid "\n"
 msgid_plural "\n"
 "            There are %(counter)s unpublished succeeded activities\n"
 "        "
-msgstr[0] "\n"
-"            Van %(counter)s publikálatlan sikeres tevékenység\n"
-"            "
-msgstr[1] "\n"
-"            Van %(counter)s publikálatlan sikeres tevékenység\n"
-"        "
+msgstr[0] ""
+msgstr[1] ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:28
 msgid "No unpublished succeeded activities"
-msgstr "Nincsenek publikálatlan sikeres tevékenységek"
+msgstr ""
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/publish_adoption_effect.html:2
 msgid "Announce adoption"
@@ -3748,7 +3735,7 @@ msgstr "Feltölthetsz egy 16:9 képarányú képet a legjobb eredményekért vag
 msgid "Header"
 msgstr "Fejléc"
 
-#: bluebottle/cms/models.py:516 bluebottle/translations/admin.py:75
+#: bluebottle/cms/models.py:516 bluebottle/translations/admin.py:74
 msgid "Text"
 msgstr "Szöveg"
 
@@ -4246,10 +4233,7 @@ msgid "\n"
 "        This is a good time to motivate your participants to make your activity a success.\n"
 "        Send a message to all your participants via the update wall on your activity page.\n"
 "    "
-msgstr "\n"
-"        Ez egy jó alkalom arra, hogy motiválja a résztvevőit, hogy sikeres legyen a tevékenysége.\n"
-"        Küldjön üzenetet minden résztvevőjének a faliújságon keresztül a tevékenység oldala.\n"
-"    "
+msgstr ""
 
 #: bluebottle/collect/templates/mails/messages/collect_participant_joined.html:5
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:5
@@ -4923,13 +4907,13 @@ msgstr "Új adományod érkezett!💰"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "The deadline of your crowdfunding campaign on {site_name} has passed"
-msgstr "A közösségi finanszírozási kampányának határideje a(z) {site_name} oldalon lejárt"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:55
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign \"{title}\" has been successfully completed! 🎉"
-msgstr "A(z) \"{title}\" közösségi finanszírozási kampánya sikeresen befejeződött! 🎉"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:63
 #, python-brace-format
@@ -4953,13 +4937,13 @@ msgstr "A(z) {site_name} oldalon benyújtott közösségi finanszírozási kamp�
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign on {site_name} has expired"
-msgstr "A(z) {site_name} oldalon a közösségi finanszírozási kampánya lejárt"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:96
 #, python-brace-format
 msgctxt "platform-email"
 msgid "The donations received for your crowdfunding campaign on {site_name} will be refunded"
-msgstr "A(z) {site_name} oldalon beérkezett adományokat visszatérítjük a közösségi finanszírozási kampánya miatt"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:104
 #, python-brace-format
@@ -4971,20 +4955,20 @@ msgstr "A(z) {site_name} oldalon beadott közösségi finanszírozási kampányo
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign on {site_name} is open for new donations 💸"
-msgstr "A(z) {site_name} oldalon a közösségi finanszírozási kampánya új adományokat fogad el 💸"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:120
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign on {site_name} has been cancelled"
-msgstr "A(z) {site_name} oldalon a közösségi finanszírozási kampánya törlésre került"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:149
 #: bluebottle/funding/messages/funding/activity_manager.py:157
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Action required for your crowdfunding campaign on {site_name}"
-msgstr "Akció szükséges a(z) {site_name} oldalon található közösségi finanszírozási kampányához"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/activity_manager.py:165
 #: bluebottle/funding/messages/funding/activity_manager.py:189
@@ -4998,7 +4982,7 @@ msgstr "A személyazonosságodat ellenőriztük a(z) {site_name} oldalon"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Action required for identity verification on {site_name}"
-msgstr "Akció szükséges az azonosításhoz a {site_name} oldalon"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/contributor.py:8
 msgctxt "platform-email"
@@ -5016,13 +5000,13 @@ msgstr "A(z) „{title}” kampányra tett adományodat visszatérítjük"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Failed identity verification for a running crowdfunding campaign on {site_name} ⚠️"
-msgstr "Sikertelen azonosítás a(z) {site_name} oldalon futó közösségi finanszírozási kampányhoz ⚠️"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/platform_manager.py:36
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Incomplete payout account for a running crowdfunding campaign on {site_name} ⚠️"
-msgstr "Hiányos kifizetési számla a(z) {site_name} oldalon futó közösségi finanszírozási kampányhoz ⚠️"
+msgstr ""
 
 #: bluebottle/funding/messages/funding/reviewer.py:12
 #, python-brace-format
@@ -5896,11 +5880,7 @@ msgid "\n"
 "    Your crowdfunding campaign will be live and people can start donating.<br>\n"
 "<br>\n"
 "Share your crowdfunding campaign far and wide to inspire support and attract contributions!\n"
-msgstr "\n"
-"Jó hír, a(z) \"%(title)s\" közösségi finanszírozási kampánya jóváhagyásra került!\n"
-"    A kampánya élni fog, és az emberek elkezdhetnek adományozni.<br>\n"
-"<br>\n"
-"Ossza meg a kampányát széles körben, hogy inspiráljon támogatást és hozzájárulásokat vonzzon!\n"
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_needs_work.html:5
 #, python-format
@@ -5947,22 +5927,7 @@ msgid "\n"
 "        </ul>\n"
 "    You will not be able to edit the campaign when it is in review.\n"
 "    </p>\n"
-msgstr "\n"
-"    <p>\n"
-"        A(z) \"%(title)s\" közösségi finanszírozási kampánya benyújtásra került a(z) %(site_name)s oldalon.\n"
-"        <br/>\n"
-"        <br/>\n"
-"        <b>Az alábbiak történnek:</b>\n"
-"        <ul>\n"
-"            <li>\n"
-"                A kampányát a platformmenedzser fogja áttekinteni.\n"
-"            </li>\n"
-"            <li>\n"
-"                Ha jóváhagyják, kampánya élni fog, és az emberek elkezdhetnek adományozni.\n"
-"            </li>\n"
-"        </ul>\n"
-"    A kampányt nem tudja szerkeszteni, amíg áttekintés alatt áll.\n"
-"    </p>\n"
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/donation_success_owner.html:5
 msgctxt "platform-email"
@@ -6023,10 +5988,7 @@ msgid "\n"
 "            campaign goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
-msgstr "\n"
-"            A(z) \"%(title)s\" közösségi finanszírozási kampányának határideje lejárt. Sajnos nem érte el a kampány célját a határidőn belül.\n"
-"            Hamarosan küldünk egy follow-up e-mailt további információkkal.\n"
-"        "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_realised_owner.html:5
 #, python-format
@@ -6200,15 +6162,7 @@ msgid "\n"
 "        <br/>\n"
 "        Please do this as soon as possible.\n"
 "    "
-msgstr "\n"
-"        Nemrég megpróbáltuk azonosítani az Ön szervezetét, de nem sikerült. Ennek több oka is lehet.\n"
-"        <br/>\n"
-"        <br/>\n"
-"        Kérjük, használja az alábbi hivatkozást az információinak áttekintésére és frissítésére. Ha továbbra is problémákat tapasztal, kapcsolatba léphet a platformmenedzserrel a %%(contact_email)s címen.\n"
-"        <br/>\n"
-"        <br/>\n"
-"        Kérjük, ezt minél előbb tegye meg.\n"
-"    "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:21
 msgctxt "platform-email"
@@ -6766,7 +6720,7 @@ msgstr "SSO"
 
 #: bluebottle/geo/admin.py:181
 msgid "Geolocation"
-msgstr "Geolokáció"
+msgstr ""
 
 #: bluebottle/geo/admin.py:189 bluebottle/geo/admin.py:202
 msgid "Map"
@@ -7491,21 +7445,7 @@ msgid "\n"
 "<p>\n"
 "    You will not be able to edit the application when it is in review.\n"
 "</p>\n"
-msgstr "\n"
-"A(z) \"%(title)s\" támogatási kérelme benyújtásra került a(z) %(site_name)s oldalon.<br>\n"
-"<br>\n"
-"<b>Íme, mi fog történni:</b>\n"
-"<ul>\n"
-"    <li>\n"
-"        A kérelmét a platformmenedzser fogja áttekinteni.\n"
-"    </li>\n"
-"    <li>\n"
-"        Ha jóváhagyják, meg kell adnia a bankszámláját, és be kell fejeznie az azonosítást.\n"
-"    </li>\n"
-"</ul>\n"
-"<p>\n"
-"    A kérelmet nem tudja szerkeszteni, amíg áttekintés alatt áll.\n"
-"</p>\n"
+msgstr ""
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
 #, python-format
@@ -8217,12 +8157,12 @@ msgstr "téma"
 msgid "themes"
 msgstr "témák"
 
-#: bluebottle/initiatives/serializers.py:486
-#: bluebottle/initiatives/serializers.py:503
+#: bluebottle/initiatives/serializers.py:480
+#: bluebottle/initiatives/serializers.py:497
 msgid "Name is required"
 msgstr "Név megadása kötelező"
 
-#: bluebottle/initiatives/serializers.py:504
+#: bluebottle/initiatives/serializers.py:498
 msgid "Email is required"
 msgstr "E-mail megadása kötelező"
 
@@ -9309,7 +9249,7 @@ msgstr "Jelszó beállítása"
 #: bluebottle/members/templates/mails/messages/account_activation.html:31
 msgctxt "platform-email"
 msgid "Get started"
-msgstr "Kezdje el"
+msgstr ""
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:6
 msgctxt "platform-email"
@@ -9326,14 +9266,7 @@ msgid "\n"
 "<p>\n"
 "    The link will expire in 24 hours.\n"
 "</p>\n"
-msgstr "\n"
-"    <p>Üdvözöljük a(z) %(site_name)s közösségében.</p>\n"
-"<p>\n"
-"    Kattintson az alábbi hivatkozásra, hogy jelszót hozzon létre, és aktiválja fiókját.\n"
-"</p>\n"
-"<p>\n"
-"    A hivatkozás 24 órán belül lejár.\n"
-"</p>\n"
+msgstr ""
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:22
 msgctxt "platform-email"
@@ -10228,8 +10161,7 @@ msgstr "Beállítások"
 msgid "Manage Reporting"
 msgstr "Jelentéskezelés"
 
-#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:443
-#: tenants/accenture/settings.py:30
+#: bluebottle/settings/testing.py:443 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -10242,30 +10174,26 @@ msgstr "Jelentéskezelés"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
+#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
+#: tenants/maximising-potential/settings.py:27
+#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
 #: tenants/shell-disaster-relief/settings.py:26
-#: tenants/shell-grant-management/settings.py:26
-#: tenants/shell-uk/settings.py:26 tenants/startsomething/settings.py:29
-#: tenants/studentbattle/settings.py:27 tenants/twoscale/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
+#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Angol"
 
-#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:444
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
+#: bluebottle/settings/testing.py:444 tenants/abn/settings.py:26
+#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
@@ -10276,13 +10204,12 @@ msgstr "Angol"
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:23
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -10297,31 +10224,28 @@ msgstr "Angol"
 msgid "Dutch"
 msgstr "Holland"
 
-#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:445
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+#: bluebottle/settings/testing.py:445 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Francia"
 
-#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:446
-#: tenants/mars/settings.py:28
+#: bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr "Spanyol"
 
-#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:447
-#: tenants/mars/settings.py:29
+#: bluebottle/settings/testing.py:447
 msgid "German"
 msgstr "Német"
 
-#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:448
+#: bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugál"
 
-#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:449
-#: tenants/mars/settings.py:30
+#: bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr "Magyar"
 
-#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:450
+#: bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Bolgár"
 
@@ -12937,8 +12861,7 @@ msgstr "\n"
 msgctxt "platform-email"
 msgid "\n"
 "Good news, your activity \"%(title)s\" has been approved and the participants contributions have been recorded.<br>\n"
-msgstr "\n"
-"Jó hír, a(z) \"%(title)s\" tevékenysége jóváhagyásra került, és a résztvevők hozzájárulásait rögzítették.<br>\n"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_registered.html:5
 #, python-format
@@ -12946,8 +12869,7 @@ msgctxt "platform-email"
 msgid "\n"
 "    Nice work! Your activity <i>%(title)s</i> has been registered and the participants contributions have been\n"
 "    recorded.\n"
-msgstr "\n"
-"    Szép munka! A(z) <i>%(title)s</i> tevékenysége regisztrálva lett, és a résztvevők hozzájárulásait rögzítették.\n"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_submitted.html:5
 #, python-format
@@ -13294,9 +13216,7 @@ msgctxt "platform-email"
 msgid "\n"
 "    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n\n"
 "<p>Review the application and decide if this person is the right fit.</p>\n"
-msgstr "\n"
-"    <p>%(applicant_name)s jelentkezett a(z) \"%(title)s\" tevékenységére.</p>\n\n"
-"<p>Szemlélje át a jelentkezést, és döntse el, hogy ez a személy megfelelő-e.</p>\n"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_finished.html:4
 #, python-format
@@ -13591,9 +13511,7 @@ msgctxt "platform-email"
 msgid "\n"
 "    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n"
 "    <p>Review the application and decide if this person is the right fit.</p>\n"
-msgstr "\n"
-"    <p>%(applicant_name)s jelentkezett a(z) \"%(title)s\" tevékenységére.</p>\n"
-"    <p>Szemlélje át a jelentkezést, és döntse el, hogy ez a személy megfelelő-e.</p>\n"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_restarted.html:5
 #, python-format, python-brace-format
@@ -14221,7 +14139,7 @@ msgstr "Frissítés"
 msgid "Anonymous - {time}"
 msgstr "Névtelen - {time}"
 
-#: bluebottle/updates/serializers.py:77
+#: bluebottle/updates/serializers.py:74
 msgid "At least one of 'message', 'images', or 'video_url' must be set."
 msgstr "Legalább egy 'üzenet', 'képek' vagy 'videó_url' beállítva kell legyen."
 
@@ -14452,8 +14370,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Másodperc"
 msgstr[1] "Másodpercek"
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
-msgstr "Holland"
 

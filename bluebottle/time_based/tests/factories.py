@@ -26,6 +26,7 @@ from bluebottle.time_based.models import (
     ScheduleActivity,
     ScheduleRegistration,
     ScheduleParticipant,
+    TeamScheduleParticipant,
     TeamScheduleRegistration,
     Team,
     TimeContribution,
@@ -43,11 +44,20 @@ class SkillFactory(factory.DjangoModelFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         obj = super(SkillFactory, cls)._create(model_class, *args, **kwargs)
-        for language in Language.objects.all():
-            obj.set_current_language(language.code)
-            obj.name = "Name {} {}".format(language.code, obj.id)
-            obj.description = "Description {} {}".format(language.code, obj.id)
-        obj.save()
+        languages = list(Language.objects.all())
+        if not languages:
+            # Ensure at least en and nl exist for tests (e.g. ES indexing uses get_translated_list)
+            for code in ('en', 'nl'):
+                obj.set_current_language(code)
+                obj.name = "Name {} {}".format(code, obj.id)
+                obj.description = "Description {} {}".format(code, obj.id)
+                obj.save()
+        else:
+            for language in languages:
+                obj.set_current_language(language.full_code)
+                obj.name = "Name {} {}".format(language.code, obj.id)
+                obj.description = "Description {} {}".format(language.code, obj.id)
+            obj.save()
         return obj
 
 
@@ -240,6 +250,14 @@ class RegisteredDateParticipantFactory(FSMModelFactory):
 class ScheduleParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = ScheduleParticipant
+
+    activity = factory.SubFactory(ScheduleActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class TeamScheduleParticipantFactory(FSMModelFactory):
+    class Meta(object):
+        model = TeamScheduleParticipant
 
     activity = factory.SubFactory(ScheduleActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)

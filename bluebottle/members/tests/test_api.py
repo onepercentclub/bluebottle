@@ -237,10 +237,8 @@ class SignUpTokenTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
-
+        self.settings = MemberPlatformSettings.load()
         super(SignUpTokenTestCase, self).setUp()
-
         self.client = JSONAPITestClient()
 
     def test_create(self):
@@ -356,11 +354,24 @@ class SignUpTokenTestCase(BluebottleTestCase):
             'Only emails' in response.json()['errors'][0]['detail']
         )
 
+    def test_create_password_login_disabled(self):
+        email = 'test@secondexample.com'
+        self.settings.login_methods = 'SSO'
+        self.settings.closed = True
+        self.settings.save()
+
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(len(mail.outbox), 0)
+
 
 @override_settings(SEND_WELCOME_MAIL=True)
 class CreateUserTestCase(BluebottleTestCase):
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
+        self.settings = MemberPlatformSettings.load()
 
         super(CreateUserTestCase, self).setUp()
 
@@ -493,7 +504,7 @@ class CreateUserTestCase(BluebottleTestCase):
 @override_settings(SEND_WELCOME_MAIL=True)
 class ConfirmSignUpTestCase(BluebottleTestCase):
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
+        self.settings = MemberPlatformSettings.load()
 
         super(ConfirmSignUpTestCase, self).setUp()
         self.email = 'test@example.com'

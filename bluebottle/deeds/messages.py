@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from django.utils.translation import pgettext_lazy as pgettext
 from django.utils import formats
+from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
 
@@ -54,7 +54,7 @@ class DeedReminderNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""

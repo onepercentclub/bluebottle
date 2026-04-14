@@ -154,17 +154,19 @@ tests_requires = [
     'pylint==2.7.0',
     'pyquery==1.2.17',
     'pylint-django==2.4.4',
-    'tblib==1.3.2',
+    'tblib>=2.0.0',
     'tdaemon==0.1.1',
     'WebTest==2.0.27',
     'sniffer==0.4.0',
     'vine==1.3.0',
-    'Faker==12.3.3'
+    'Faker==12.3.3',
+    'polib==1.2.0',
 ]
 
 dev_requires = [
     'ipdb',
-    'flake8==5.0.4'
+    'flake8==5.0.4',
+    'polib==1.2.0',
 ]
 
 setup(

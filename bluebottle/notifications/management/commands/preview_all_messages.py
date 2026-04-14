@@ -51,6 +51,7 @@ MESSAGE_MODULES = {
     'time_based.participants': 'bluebottle.time_based.messages.participants',
     'time_based.teams': 'bluebottle.time_based.messages.teams',
     'time_based.registrations': 'bluebottle.time_based.messages.registrations',
+    'time_based.activity_manager': 'bluebottle.time_based.messages.activity_manager',
 
     'funding.contributor': 'bluebottle.funding.messages.funding.contributor',
     'funding.activity_manager': 'bluebottle.funding.messages.funding.activity_manager',
@@ -334,6 +335,7 @@ class MockRegistration:
         self.motivation = "I love helping the community!"
         self.participants = DateParticipant.objects.all()
         self.slot = MockSlot(language)
+        self.team = MockTeam(language)
 
     @property
     def owner(self):
@@ -378,7 +380,7 @@ class MockTeam:
         self.pk = 321
         self.name = "Team Awesome"
         self.activity = MockActivity(language)
-        self.owner = MockMember(language)
+        self.user = MockMember(language)
         self.slots = DateActivitySlot.objects.all()
         self.event_data = None
 
@@ -675,6 +677,10 @@ def get_mock_object_for_message(message_class, language='en'):
                     return slot
                 return MockSlot(language)
 
+            if 'Registration' in class_name or 'registrations' in module_name:
+                from bluebottle.time_based.models import PeriodParticipant
+                return get_real_or_mock_object(PeriodParticipant, MockRegistration, language)
+
             if 'Team' in class_name:
                 if 'Scheduled' in class_name:
                     return MockTeamMember(language)
@@ -683,10 +689,6 @@ def get_mock_object_for_message(message_class, language='en'):
                 if 'Member' in class_name:
                     return MockTeamMember(language)
                 return MockTeam(language)
-
-            if 'Registration' in class_name or 'registrations' in module_name:
-                from bluebottle.time_based.models import PeriodParticipant
-                return get_real_or_mock_object(PeriodParticipant, MockRegistration, language)
 
             # Messages with "Date" likely need DateActivity
             if 'Date' in class_name or 'Reminder' in class_name:

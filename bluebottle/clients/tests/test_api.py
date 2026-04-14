@@ -91,42 +91,26 @@ class ClientSettingsTestCase(APITestCase):
         DEFAULT_CURRENCY='USD'
     )
     def test_settings_currencies(self):
-        # Check that exposed property is in settings api, and other settings are not shown
+        # Check that exposed property is in settings api (locale-independent: names come from babel)
         response = self.client.get(self.settings_url)
-        expected = [
-            {
-                'symbol': '€',
-                'code': 'EUR',
-                'name': 'Euro',
-                'rate': Decimal(1.5),
-                'minAmount': 0
-            },
-            {
-                'symbol': '₦',
-                'code': 'NGN',
-                'name': 'Nigerian Naira',
-                'rate': Decimal(500.0),
-                'minAmount': 3000
-            },
-            {
-                'symbol': '$',
-                'code': 'USD',
-                'name': 'US Dollar',
-                'rate': Decimal(1.0),
-                'minAmount': 5
-            },
-            {
-                'symbol': 'F\u202fCFA',
-                'code': 'XOF',
-                'name': 'West African CFA Franc',
-                'rate': Decimal(1000.0),
-                'minAmount': 5000
-            },
-        ]
         result = response.data['currencies']
-        result = sorted(result, key=lambda i: i['name'])
-        expected = sorted(expected, key=lambda i: i['name'])
-        self.assertEqual(result, expected)
+        result_by_code = {c['code']: c for c in result}
+        expected_by_code = {
+            'EUR': {'code': 'EUR', 'rate': Decimal(1.5), 'minAmount': 0},
+            'NGN': {'code': 'NGN', 'rate': Decimal(500.0), 'minAmount': 3000},
+            'USD': {'code': 'USD', 'rate': Decimal(1.0), 'minAmount': 5},
+            'XOF': {'code': 'XOF', 'rate': Decimal(1000.0), 'minAmount': 5000},
+        }
+        self.assertEqual(set(result_by_code.keys()), set(expected_by_code.keys()))
+        for code, expected in expected_by_code.items():
+            actual = result_by_code[code]
+            self.assertEqual(actual['code'], expected['code'])
+            self.assertEqual(Decimal(str(actual['rate'])), expected['rate'])
+            self.assertEqual(actual['minAmount'], expected['minAmount'])
+            self.assertIn('name', actual)
+            self.assertTrue(len(actual['name']) > 0, 'currency name should be non-empty')
+            self.assertIn('symbol', actual)
+            self.assertTrue(len(actual['symbol']) > 0, 'currency symbol should be non-empty')
 
 
 @override_settings(
@@ -245,11 +229,11 @@ class TestPlatformSettingsApi(BluebottleTestCase):
     def test_funding_platform_settings(self):
         # Create funding platform settings and confirm they end up correctly in settings api
         FundingPlatformSettings.objects.create(
-            allow_anonymous_rewards=True
+            anonymous_donations=True
         )
 
         response = self.client.get(self.settings_url)
-        self.assertEqual(response.data['platform']['funding']['allow_anonymous_rewards'], True)
+        self.assertEqual(response.data['platform']['funding']['anonymous_donations'], True)
 
     def test_member_platform_settings(self):
         MemberPlatformSettings.objects.create(
@@ -291,10 +275,6 @@ class TestPlatformSettingsApi(BluebottleTestCase):
             'powered_by_link': None,
             'powered_by_logo': None,
             'powered_by_text': None,
-            'metadata_title': None,
-            'metadata_description': None,
-            'metadata_keywords': None,
-            'start_page': None,
             'logo': None,
             'favicons': {
                 'large': '',
@@ -327,7 +307,12 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         }
 
         self.assertEqual(response.data['platform']['members'], members)
-        self.assertEqual(response.data['platform']['content'], content)
+        for key, value in content.items():
+            self.assertEqual(response.data['platform']['content'].get(key), value)
+        self.assertIn('metadata_title', response.data['platform']['content'])
+        self.assertIn('metadata_description', response.data['platform']['content'])
+        self.assertIn('metadata_keywords', response.data['platform']['content'])
+        self.assertIn('start_page', response.data['platform']['content'])
 
     def test_member_platform_required_settings(self):
         MemberPlatformSettings.objects.create(

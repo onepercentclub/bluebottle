@@ -1,7 +1,7 @@
 from django.urls import re_path
 
 from bluebottle.activities.views import (
-    ActivityLocationList, ActivityPreviewList, ActivityDetail, ActivityTransitionList,
+    ActivityLocationList, ActivityPreviewList, ActivityDetailView, ActivityTransitionList,
     RelatedActivityImageList,
     RelatedActivityImageContent, ActivityImage,
     InviteDetailView, ContributionList, ActivityList,
@@ -29,7 +29,7 @@ urlpatterns = [
 
     re_path(
         r'^/(?P<pk>\d+)$',
-        ActivityDetail.as_view(),
+        ActivityDetailView.as_view(),
         name='activity-detail'
     ),
 

@@ -12,6 +12,7 @@ from bluebottle.initiatives.tests.factories import (
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
+    TeamFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
@@ -206,9 +207,13 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
         self.registration = TeamScheduleRegistrationFactory.create(
             activity=self.activity
         )
-        self.slot = self.registration.team.slots.first()
-
-        self.members = TeamMemberFactory.create_batch(3, team=self.registration.team)
+        self.team = TeamFactory.create(
+            registration=self.registration,
+            activity=self.activity,
+            user=self.registration.user
+        )
+        self.slot = self.team.slots.first()
+        self.members = TeamMemberFactory.create_batch(3, team=self.team)
 
         mail.outbox = []
 
@@ -222,14 +227,37 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
 
     def test_initial_future(self):
         self.assertStatus("new")
-        self.assertStatus("accepted", self.registration.team)
+        self.assertStatus("accepted", self.team)
 
     def test_change_start_finish(self):
         self.slot.start = now() - timedelta(days=2)
         self.slot.save()
 
         self.assertStatus("finished")
-        self.assertStatus("succeeded", self.registration.team)
+        self.assertStatus("succeeded", self.team)
+
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_user_team_details_changed_after_schedule(self):
+        self.slot.start = now() + timedelta(days=2)
+        self.slot.save()
+        self.assertStatus("scheduled")
+        self.assertStatus("scheduled", self.slot.team)
+        self.assertEqual(len(mail.outbox), 4)
+        message = mail.outbox[0]
+        self.assertTrue(
+            message.subject,
+            f'Your team has been scheduled for the activity "{self.activity.title}."',
+        )
+        message = mail.outbox[1]
+        self.assertTrue(
+            message.subject,
+            f'The date or location for your team has been changed for the activity "{self.activity.title}."',
+        )
+        mail.outbox = []
+
+        self.slot.start = now() + timedelta(days=5)
+        self.slot.save()
 
         self.assertEqual(len(mail.outbox), 4)
         for message in mail.outbox:
@@ -237,7 +265,7 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
                 message.recipients()[0]
                 in [
                     member.user.email
-                    for member in self.registration.team.team_members.all()
+                    for member in self.team.team_members.all()
                 ]
             )
             self.assertTrue(
@@ -252,7 +280,7 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
         self.slot.save()
 
         self.assertStatus("scheduled")
-        self.assertStatus("scheduled", self.registration.team)
+        self.assertStatus("scheduled", self.team)
 
 
 class DateActivitySlotTriggerTestCase(BluebottleTestCase):

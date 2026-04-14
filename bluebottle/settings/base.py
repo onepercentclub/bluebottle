@@ -399,6 +399,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
     'bluebottle.scim',
     'bluebottle.updates',
+    'bluebottle.activity_links',
     'bluebottle.translations',
 
     # Custom dashboard
@@ -534,6 +535,10 @@ LOGGING = {
             'handlers': ['console', 'syslog'],
             'propagate': True,
             'level': 'INFO',
+        },
+        "django.security.DisallowedHost": {
+            "handlers": ["null"],
+            "propagate": False,
         },
     }
 }

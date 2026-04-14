@@ -321,10 +321,13 @@ class Geolocation(models.Model):
         resource_name = 'geolocations'
 
     def __str__(self):
-        if self.locality:
+        if self.locality and self.country:
             return u"{}, {}".format(self.locality, self.country.name)
-        else:
-            return self.country.name if self.country else self.formatted_address or '-unknown-'
+        if self.locality:
+            return self.locality
+        if self.country:
+            return self.country.name
+        return self.formatted_address or '-unknown-'
 
     @property
     def timezone(self):

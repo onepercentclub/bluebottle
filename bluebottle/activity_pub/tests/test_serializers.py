@@ -4,18 +4,22 @@ import mock
 from django.test import RequestFactory
 from requests import Response
 
+from bluebottle.activity_pub.models import GoodDeed, CrowdFunding, GrantApplication
 from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
-from bluebottle.activity_pub.serializers.json_ld import DoGoodEventSerializer
+from bluebottle.activity_pub.serializers.json_ld import (
+    DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer, GrantApplicationSerializer
+)
 from bluebottle.activity_pub.tests.factories import (
     DoGoodEventFactory
 )
 from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
 
 
-class DoGoodEventSerializer(BluebottleTestCase):
+class DoGoodEventSerializerTestCase(BluebottleTestCase):
     activity_pub_serializer = DoGoodEventSerializer
     federated_serializer = FederatedDateActivitySerializer
     factory = DateActivityFactory
@@ -56,6 +60,39 @@ class DoGoodEventSerializer(BluebottleTestCase):
         self.assertEqual(do_good_event.name, model.title)
         self.assertEqual(do_good_event.summary, model.description.html)
         self.assertEqual(do_good_event.sub_event.count(), model.slots.count())
+
+    def test_to_json_ld_slots_keep_individual_locations(self):
+        model = self.factory.create(slots=[])
+        first_location = GeolocationFactory.create()
+        second_location = GeolocationFactory.create()
+        DateActivitySlotFactory.create(activity=model, location=first_location)
+        DateActivitySlotFactory.create(activity=model, location=second_location)
+
+        federated_serializer = self.federated_serializer(
+            instance=model,
+            context=self.context
+        )
+
+        activity_pub_serializer = self.activity_pub_serializer(
+            data=federated_serializer.data,
+            context=self.context
+        )
+
+        self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
+        do_good_event = activity_pub_serializer.save()
+
+        serialized_locations = {
+            (
+                slot.location.latitude,
+                slot.location.longitude
+            )
+            for slot in do_good_event.sub_event.all()
+        }
+        expected_locations = {
+            (first_location.position.x, first_location.position.y),
+            (second_location.position.x, second_location.position.y),
+        }
+        self.assertSetEqual(serialized_locations, expected_locations)
 
     def test_to_json_ld_already_exists(self):
         model = self.factory.create()
@@ -128,3 +165,161 @@ class DoGoodEventSerializer(BluebottleTestCase):
         self.assertEqual(activity.title, activity_pub_model.name)
         self.assertEqual(activity.description.html, activity_pub_model.summary)
         self.assertEqual(activity.slots.count(), activity_pub_model.sub_event.count())
+
+    def test_url_field_included_when_set(self):
+        """Test that url field is included in serialized output when it's set."""
+        do_good_event = self.activity_pub_factory.create(
+            url='https://example.com/activity'
+        )
+        serializer = self.activity_pub_serializer(
+            instance=do_good_event, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertEqual(data['url'], 'https://example.com/activity')
+
+    def test_url_field_included_when_none(self):
+        """Test that url field is included in serialized output even when it's None."""
+        do_good_event = self.activity_pub_factory.create(url=None)
+        serializer = self.activity_pub_serializer(
+            instance=do_good_event, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertIsNone(data['url'])
+
+
+class GoodDeedSerializerTest(BluebottleTestCase):
+    serializer_class = GoodDeedSerializer
+
+    @property
+    def context(self):
+        request = RequestFactory().get('/')
+        request.user = BlueBottleUserFactory.create()
+        return {'request': request}
+
+    def test_url_field_included_when_set(self):
+        """Test that url field is included in GoodDeedSerializer when it's set."""
+        good_deed = GoodDeed.objects.create(
+            name='Test Good Deed',
+            summary='Test summary',
+            url='https://example.com/good-deed'
+        )
+
+        serializer = self.serializer_class(
+            instance=good_deed, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertEqual(data['url'], 'https://example.com/good-deed')
+
+    def test_url_field_included_when_none(self):
+        """Test that url field is included in GoodDeedSerializer even when it's None."""
+        good_deed = GoodDeed.objects.create(
+            name='Test Good Deed',
+            summary='Test summary',
+            url=None
+        )
+
+        serializer = self.serializer_class(
+            instance=good_deed, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertIsNone(data['url'])
+
+
+class CrowdFundingSerializerTest(BluebottleTestCase):
+    serializer_class = CrowdFundingSerializer
+
+    @property
+    def context(self):
+        request = RequestFactory().get('/')
+        request.user = BlueBottleUserFactory.create()
+        return {'request': request}
+
+    def test_url_field_included_when_set(self):
+        """Test that url field is included in CrowdFundingSerializer when it's set."""
+        crowd_funding = CrowdFunding.objects.create(
+            name='Test Crowd Funding',
+            summary='Test summary',
+            url='https://example.com/crowd-funding',
+            target=1000.00,
+            target_currency='EUR'
+        )
+
+        serializer = self.serializer_class(
+            instance=crowd_funding, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertEqual(data['url'], 'https://example.com/crowd-funding')
+
+    def test_url_field_included_when_none(self):
+        """Test that url field is included in CrowdFundingSerializer even when it's None."""
+        crowd_funding = CrowdFunding.objects.create(
+            name='Test Crowd Funding',
+            summary='Test summary',
+            url=None,
+            target=1000.00,
+            target_currency='EUR'
+        )
+
+        serializer = self.serializer_class(
+            instance=crowd_funding, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertIsNone(data['url'])
+
+
+class GrantApplicationSerializerTest(BluebottleTestCase):
+    serializer_class = GrantApplicationSerializer
+
+    @property
+    def context(self):
+        request = RequestFactory().get('/')
+        request.user = BlueBottleUserFactory.create()
+        return {'request': request}
+
+    def test_url_field_included_when_set(self):
+        """Test that url field is included in GrantApplicationSerializer when it's set."""
+        grant_application = GrantApplication.objects.create(
+            name='Test Grant Application',
+            summary='Test summary',
+            url='https://example.com/grant-application',
+            target=1000.00,
+            target_currency='EUR'
+        )
+
+        serializer = self.serializer_class(
+            instance=grant_application, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertEqual(data['url'], 'https://example.com/grant-application')
+
+    def test_url_field_included_when_none(self):
+        """Test that url field is included in GrantApplicationSerializer even when it's None."""
+        grant_application = GrantApplication.objects.create(
+            name='Test Grant Application',
+            summary='Test summary',
+            url=None,
+            target=1000.00,
+            target_currency='EUR'
+        )
+
+        serializer = self.serializer_class(
+            instance=grant_application, context=self.context
+        )
+        data = serializer.data
+
+        self.assertIn('url', data)
+        self.assertIsNone(data['url'])

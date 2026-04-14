@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-09 10:27+0200\n"
+"POT-Creation-Date: 2026-04-14 09:02+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3863,7 +3863,7 @@ msgstr ""
 msgid "Header"
 msgstr ""
 
-#: bluebottle/cms/models.py:516 bluebottle/translations/admin.py:74
+#: bluebottle/cms/models.py:516 bluebottle/translations/admin.py:75
 msgid "Text"
 msgstr ""
 
@@ -8380,12 +8380,12 @@ msgstr ""
 msgid "themes"
 msgstr ""
 
-#: bluebottle/initiatives/serializers.py:484
-#: bluebottle/initiatives/serializers.py:501
+#: bluebottle/initiatives/serializers.py:486
+#: bluebottle/initiatives/serializers.py:503
 msgid "Name is required"
 msgstr ""
 
-#: bluebottle/initiatives/serializers.py:502
+#: bluebottle/initiatives/serializers.py:504
 msgid "Email is required"
 msgstr ""
 
@@ -14565,7 +14565,7 @@ msgstr ""
 msgid "Anonymous - {time}"
 msgstr ""
 
-#: bluebottle/updates/serializers.py:74
+#: bluebottle/updates/serializers.py:77
 msgid "At least one of 'message', 'images', or 'video_url' must be set."
 msgstr ""
 

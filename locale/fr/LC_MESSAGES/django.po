@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-09 10:27+0200\n"
-"PO-Revision-Date: 2026-04-09 08:28\n"
+"POT-Creation-Date: 2026-04-14 09:02+0200\n"
+"PO-Revision-Date: 2026-04-14 07:06\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -1542,7 +1542,8 @@ msgstr "Et n’oubliez pas de remercier vos participants pour leur soutien."
 msgctxt "platform-email"
 msgid "You have created the activity %(title)s but have not published it yet.\n"
 "        This means no one will be able to find your activity and contribute to it."
-msgstr ""
+msgstr "Vous avez créé l'activité %(title)s mais vous ne l'avez pas encore publiée.\n"
+"        Cela signifie que personne ne pourra trouver votre activité et y contribuer."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/publish_activity_reminder.html:9
 msgctxt "platform-email"
@@ -2382,25 +2383,29 @@ msgstr "Partenaire:"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:15
 msgid "Publish all open activities."
-msgstr ""
+msgstr "Publier toutes les activités ouvertes."
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:24
 #, python-format
 msgid "\n"
 "                            Are you sure you want to publish %(count)s open activities to %(actor)s?\n"
 "                        "
-msgstr ""
+msgstr "\n"
+"                            Êtes-vous sûr de vouloir publier %(count)s activités ouvertes à %(actor)s ?\n"
+"                        "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:15
 msgid "Publish all succeeded activities."
-msgstr ""
+msgstr "Publier toutes les activités réussies."
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:24
 #, python-format
 msgid "\n"
 "                            Are you sure you want to publish %(count)s succeeded activities to %(actor)s?\n"
 "                        "
-msgstr ""
+msgstr "\n"
+"                            Êtes-vous sûr de vouloir publier %(count)s activités réussies à %(actor)s ?\n"
+"                        "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/change_form.html:11
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/change_form.html:23
@@ -2409,7 +2414,7 @@ msgstr "Accepter la connexion"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:5
 msgid "Publish open activities"
-msgstr ""
+msgstr "Publier les activités ouvertes"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:7
 #, python-format
@@ -2419,16 +2424,20 @@ msgid "\n"
 msgid_plural "\n"
 "            There are %(counter)s unpublished open activities\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            Il y a %(counter)s activité ouverte non publiée\n"
+"            "
+msgstr[1] "\n"
+"            Il y a %(counter)s activités ouvertes non publiées\n"
+"        "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:14
 msgid "No unpublished open activities"
-msgstr ""
+msgstr "Aucune activité ouverte non publiée"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:19
 msgid "Publish succeeded activities"
-msgstr ""
+msgstr "Publier les activités réussies"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:21
 #, python-format
@@ -2438,12 +2447,16 @@ msgid "\n"
 msgid_plural "\n"
 "            There are %(counter)s unpublished succeeded activities\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            Il y a %(counter)s activité réussie non publiée\n"
+"            "
+msgstr[1] "\n"
+"            Il y a %(counter)s activités réussies non publiées\n"
+"        "
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/follower/publish_activities_button.html:28
 msgid "No unpublished succeeded activities"
-msgstr ""
+msgstr "Aucune activité réussie non publiée"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/publish_adoption_effect.html:2
 msgid "Announce adoption"
@@ -3735,7 +3748,7 @@ msgstr "Vous pouvez télécharger une image avec un format 16:9 pour de meilleur
 msgid "Header"
 msgstr "En-tête"
 
-#: bluebottle/cms/models.py:516 bluebottle/translations/admin.py:74
+#: bluebottle/cms/models.py:516 bluebottle/translations/admin.py:75
 msgid "Text"
 msgstr "Texte du texte"
 
@@ -4233,7 +4246,10 @@ msgid "\n"
 "        This is a good time to motivate your participants to make your activity a success.\n"
 "        Send a message to all your participants via the update wall on your activity page.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        C'est un bon moment pour motiver vos participants à faire de votre activité un succès.\n"
+"        Envoyez un message à tous vos participants via le mur de mise à jour sur votre page de l’activité.\n"
+"    "
 
 #: bluebottle/collect/templates/mails/messages/collect_participant_joined.html:5
 #: bluebottle/deeds/templates/mails/messages/deed_participant_joined.html:5
@@ -4910,13 +4926,13 @@ msgstr "Vous avez reçu un nouveau don !💰"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "The deadline of your crowdfunding campaign on {site_name} has passed"
-msgstr ""
+msgstr "La date limite de votre campagne de financement participatif sur {site_name} est passée"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:55
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign \"{title}\" has been successfully completed! 🎉"
-msgstr ""
+msgstr "Votre campagne de financement participatif \"{title}\" a été complétée avec succès ! 🎉"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:63
 #, python-brace-format
@@ -4940,13 +4956,13 @@ msgstr "Votre campagne de financement participatif sur {site_name} nécessite de
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign on {site_name} has expired"
-msgstr ""
+msgstr "Votre campagne de financement participatif sur {site_name} a expiré"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:96
 #, python-brace-format
 msgctxt "platform-email"
 msgid "The donations received for your crowdfunding campaign on {site_name} will be refunded"
-msgstr ""
+msgstr "Les dons reçus pour votre campagne de financement participatif sur {site_name} seront remboursés"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:104
 #, python-brace-format
@@ -4958,20 +4974,20 @@ msgstr "Votre campagne de financement participatif sur {site_name} a été appro
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign on {site_name} is open for new donations 💸"
-msgstr ""
+msgstr "Votre campagne de financement participatif sur {site_name} est ouverte aux nouveaux dons 💸"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:120
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your crowdfunding campaign on {site_name} has been cancelled"
-msgstr ""
+msgstr "Votre campagne de financement participatif sur {site_name} a été annulée"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:149
 #: bluebottle/funding/messages/funding/activity_manager.py:157
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Action required for your crowdfunding campaign on {site_name}"
-msgstr ""
+msgstr "Action requise pour votre campagne de financement participatif sur {site_name}"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:165
 #: bluebottle/funding/messages/funding/activity_manager.py:189
@@ -4985,7 +5001,7 @@ msgstr "Votre identité a été vérifiée sur {site_name}"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Action required for identity verification on {site_name}"
-msgstr ""
+msgstr "Action requise pour la vérification d’identité sur {site_name}"
 
 #: bluebottle/funding/messages/funding/contributor.py:8
 msgctxt "platform-email"
@@ -5003,13 +5019,13 @@ msgstr "Votre don à la campagne « {title} » sera remboursé"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Failed identity verification for a running crowdfunding campaign on {site_name} ⚠️"
-msgstr ""
+msgstr "Échec de la vérification d’identité pour une campagne de financement participatif en cours sur {site_name} ⚠️"
 
 #: bluebottle/funding/messages/funding/platform_manager.py:36
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Incomplete payout account for a running crowdfunding campaign on {site_name} ⚠️"
-msgstr ""
+msgstr "Compte de paiement incomplet pour une campagne de financement participatif en cours sur {site_name} ⚠️"
 
 #: bluebottle/funding/messages/funding/reviewer.py:12
 #, python-brace-format
@@ -5883,7 +5899,11 @@ msgid "\n"
 "    Your crowdfunding campaign will be live and people can start donating.<br>\n"
 "<br>\n"
 "Share your crowdfunding campaign far and wide to inspire support and attract contributions!\n"
-msgstr ""
+msgstr "\n"
+"Bonne nouvelle, votre campagne de financement participatif \"%(title)s\" a été approuvée !\n"
+"    Votre campagne de financement participatif sera en ligne et les gens pourront commencer à faire des dons.<br>\n"
+"<br>\n"
+"Partagez votre campagne de financement participatif largement pour inspirer le soutien et attirer les contributions !\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_needs_work.html:5
 #, python-format
@@ -5930,7 +5950,22 @@ msgid "\n"
 "        </ul>\n"
 "    You will not be able to edit the campaign when it is in review.\n"
 "    </p>\n"
-msgstr ""
+msgstr "\n"
+"    <p>\n"
+"        Votre demande de financement \"%(title)s\" a été soumise sur %(site_name)s.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        <b>Voici ce qui se passe ensuite :</b>\n"
+"        <ul>\n"
+"            <li>\n"
+"                Votre demande sera examinée par le gestionnaire de la plateforme.\n"
+"            </li>\n"
+"            <li>\n"
+"                Une fois approuvée, votre campagne sera en ligne et les gens pourront commencer à faire des dons.\n"
+"            </li>\n"
+"        </ul>\n"
+"    Vous ne pourrez pas modifier la campagne lorsqu’elle est en cours d'examen.\n"
+"    </p>\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/donation_success_owner.html:5
 msgctxt "platform-email"
@@ -5990,7 +6025,11 @@ msgid "\n"
 "            campaign goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            La date limite de votre campagne de financement participatif pour <i>%(title)s\"</i> est passée. Malheureusement, vous n’avez pas atteint votre\n"
+"            objectif de campagne dans le délai imparti.\n"
+"            Nous vous enverrons un email de suivi avec plus d’informations bientôt.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_realised_owner.html:5
 #, python-format
@@ -6165,7 +6204,16 @@ msgid "\n"
 "        <br/>\n"
 "        Please do this as soon as possible.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Nous avons récemment essayé de vérifier votre organisation, mais nous n'avons pas réussi. Cela peut arriver pour plusieurs raisons.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        Veuillez utiliser le lien ci-dessous pour vérifier et mettre à jour vos informations. Si vous rencontrez toujours des problèmes, vous pouvez contacter\n"
+"        le gestionnaire de la plateforme à %%(contact_email)s.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        Merci de le faire dès que possible.\n"
+"    "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:21
 msgctxt "platform-email"
@@ -6723,7 +6771,7 @@ msgstr "SSO"
 
 #: bluebottle/geo/admin.py:181
 msgid "Geolocation"
-msgstr ""
+msgstr "Géolocalisation"
 
 #: bluebottle/geo/admin.py:189 bluebottle/geo/admin.py:202
 msgid "Map"
@@ -7448,7 +7496,21 @@ msgid "\n"
 "<p>\n"
 "    You will not be able to edit the application when it is in review.\n"
 "</p>\n"
-msgstr ""
+msgstr "\n"
+"Votre demande de subvention \"%(title)s\" a été soumise sur %(site_name)s.<br>\n"
+"<br>\n"
+"<b>Voici ce qui se passe ensuite :</b>\n"
+"<ul>\n"
+"    <li>\n"
+"        Votre demande sera examinée par le gestionnaire de la plateforme.\n"
+"    </li>\n"
+"    <li>\n"
+"        Une fois approuvée, vous devrez entrer vos coordonnées bancaires et compléter le processus de vérification.\n"
+"    </li>\n"
+"</ul>\n"
+"<p>\n"
+"    Vous ne pourrez pas modifier la demande lorsqu’elle est en cours d'examen.\n"
+"</p>\n"
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
 #, python-format
@@ -8160,12 +8222,12 @@ msgstr "Thème"
 msgid "themes"
 msgstr "thèmes"
 
-#: bluebottle/initiatives/serializers.py:484
-#: bluebottle/initiatives/serializers.py:501
+#: bluebottle/initiatives/serializers.py:486
+#: bluebottle/initiatives/serializers.py:503
 msgid "Name is required"
 msgstr "Le nom est requis"
 
-#: bluebottle/initiatives/serializers.py:502
+#: bluebottle/initiatives/serializers.py:504
 msgid "Email is required"
 msgstr "L'e-mail est requis"
 
@@ -9257,7 +9319,7 @@ msgstr "Définir le mot de passe"
 #: bluebottle/members/templates/mails/messages/account_activation.html:31
 msgctxt "platform-email"
 msgid "Get started"
-msgstr ""
+msgstr "Commencer"
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:6
 msgctxt "platform-email"
@@ -9274,7 +9336,14 @@ msgid "\n"
 "<p>\n"
 "    The link will expire in 24 hours.\n"
 "</p>\n"
-msgstr ""
+msgstr "\n"
+"    <p>Bienvenue dans la communauté %(site_name)s.</p>\n"
+"<p>\n"
+"    Cliquez sur le lien ci-dessous pour créer un mot de passe et activer votre compte.\n"
+"</p>\n"
+"<p>\n"
+"    Le lien expirera dans 24 heures.\n"
+"</p>\n"
 
 #: bluebottle/members/templates/mails/messages/sign_up_token.html:22
 msgctxt "platform-email"
@@ -12878,7 +12947,8 @@ msgstr "\n"
 msgctxt "platform-email"
 msgid "\n"
 "Good news, your activity \"%(title)s\" has been approved and the participants contributions have been recorded.<br>\n"
-msgstr ""
+msgstr "\n"
+"Bonne nouvelle, votre activité \"%(title)s\" a été approuvée et les contributions des participants ont été enregistrées.<br>\n"
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_registered.html:5
 #, python-format
@@ -12886,7 +12956,9 @@ msgctxt "platform-email"
 msgid "\n"
 "    Nice work! Your activity <i>%(title)s</i> has been registered and the participants contributions have been\n"
 "    recorded.\n"
-msgstr ""
+msgstr "\n"
+"    Bravo ! Votre activité <i>%(title)s</i> a été enregistrée et les contributions des participants ont été\n"
+"    enregistrées.\n"
 
 #: bluebottle/time_based/templates/mails/messages/activity_manager/past_activity_submitted.html:5
 #, python-format
@@ -13232,7 +13304,9 @@ msgctxt "platform-email"
 msgid "\n"
 "    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n\n"
 "<p>Review the application and decide if this person is the right fit.</p>\n"
-msgstr ""
+msgstr "\n"
+"    <p>%(applicant_name)s a postulé à votre activité \"%(title)s\".</p>\n\n"
+"<p>Examinez la candidature et décidez si cette personne est la bonne personne.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/participant_finished.html:4
 #, python-format
@@ -13528,7 +13602,9 @@ msgctxt "platform-email"
 msgid "\n"
 "    <p>%(applicant_name)s applied to your activity \"%(title)s\".</p>\n"
 "    <p>Review the application and decide if this person is the right fit.</p>\n"
-msgstr ""
+msgstr "\n"
+"    <p>%(applicant_name)s a postulé à votre activité \"%(title)s\".</p>\n"
+"    <p>Examinez la candidature et décidez si cette personne est la bonne personne.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_restarted.html:5
 #, python-format, python-brace-format
@@ -14156,7 +14232,7 @@ msgstr "Mise à jour"
 msgid "Anonymous - {time}"
 msgstr "Anonyme - {time}"
 
-#: bluebottle/updates/serializers.py:74
+#: bluebottle/updates/serializers.py:77
 msgid "At least one of 'message', 'images', or 'video_url' must be set."
 msgstr "Au moins un des champs 'message', 'images' ou 'video_url' doit être défini."
 
@@ -14390,5 +14466,5 @@ msgstr[1] "Secondes"
 
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
-msgstr ""
+msgstr "Néerlandais"
 

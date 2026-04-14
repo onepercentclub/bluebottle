@@ -2245,7 +2245,7 @@ class ActivityMessageAPITestCase(BluebottleTestCase):
             self.url,
             data=json.dumps(self._payload(self.activity)),
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_post_owner_to_self(self):
         response = self.client.post(

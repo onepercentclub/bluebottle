@@ -7,9 +7,11 @@ import dateutil
 from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone, now
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField,
     ResourceRelatedField,
@@ -1094,3 +1096,17 @@ class ActivityMessageSerializer(ModelSerializer):
         'sender': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
+
+    def validate_activity(self, activity):
+        if activity.status == 'draft':
+            raise PermissionDenied()
+        return activity
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        activity = attrs.get('activity')
+        if request and activity and activity.owner_id == request.user.pk:
+            raise serializers.ValidationError(
+                {'activity': _('You cannot send a message to yourself as the activity manager.')}
+            )
+        return attrs

@@ -11,6 +11,7 @@ from bluebottle.initiatives.tests.factories import (
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
+    TeamFactory,
     DeadlineActivityFactory,
     DeadlineRegistrationFactory,
     PeriodicActivityFactory, ScheduleActivityFactory, TeamScheduleRegistrationFactory,
@@ -180,7 +181,11 @@ class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
     def register_team(self):
         self.registration = TeamScheduleRegistrationFactory.create(activity=self.activity, user=self.user)
-        self.team = self.registration.team
+        self.team = TeamFactory.create(
+            registration=self.registration,
+            activity=self.activity,
+            user=self.registration.user
+        )
         self.team_member = self.team.team_members.first()
         self.slot = self.team.slots.first()
         self.participant = self.slot.participants.first()

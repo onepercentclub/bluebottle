@@ -50,6 +50,11 @@ class ReviewerActivityNotification(TransitionMessage):
                 Q(subregion_manager=self.activity.office_location.subregion)
                 | Q(subregion_manager__isnull=True)
             )
+        if self.activity.office_location:
+            recipients = recipients.filter(
+                Q(office_manager=self.activity.office_location)
+                | Q(office_manager__isnull=True)
+            )
         if self.activity.segments.exists():
             recipients = recipients.filter(
                 Q(segment_manager__in=self.activity.segments.all())

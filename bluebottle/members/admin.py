@@ -439,6 +439,17 @@ class MemberChangeForm(MemberForm):
         # field does not have access to the initial value
         return self.initial["password"]
 
+    def clean(self):
+        cleaned_data = super().clean()
+        subregion = cleaned_data.get('subregion_manager')
+        office = cleaned_data.get('office_manager')
+        if subregion is not None and office is not None:
+            if subregion.exists() and office.exists():
+                raise forms.ValidationError(
+                    _('You cannot select both work location groups managed and work locations managed.')
+                )
+        return cleaned_data
+
     def save(self, commit=True):
         member = super(MemberChangeForm, self).save(commit=commit)
         segments = []
@@ -547,8 +558,10 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             fields.insert(2, 'accepted')
         if OfficeSubRegion.objects.count():
             fields.insert(4, 'subregion_manager')
+        if Location.objects.count():
+            fields.insert(5, 'office_manager')
         if Segment.objects.count():
-            fields.insert(5, "segment_manager")
+            fields.insert(6, "segment_manager")
         return fields
 
     def get_fieldsets(self, request, obj=None):

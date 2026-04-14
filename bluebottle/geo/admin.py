@@ -11,7 +11,7 @@ from parler.admin import TranslatableAdmin
 from bluebottle.activities.models import Activity
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.geo.models import (
-    GeoFeature, Location, Country, Place,
+    Location, Country, Place,
     Geolocation)
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
@@ -175,6 +175,32 @@ class GeoFeatureInline(admin.TabularInline):
     model = Geolocation.features.through
     extra = 0
     can_delete = False
+    verbose_name = _('Geo-feature')
+    verbose_name_plural = _('Geo-features')
+
+    @admin.display(description=_('Level'))
+    def place_type(self, obj):
+        return obj.geofeature.place_type
+
+    @admin.display(description=_('Code'))
+    def code(self, obj):
+        return obj.geofeature.code
+
+    @admin.display(description=_('Name'))
+    def name(self, obj):
+        return obj.geofeature.name
+
+    readonly_fields = ('place_type', 'code', 'name')
+    fields = readonly_fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Geolocation)

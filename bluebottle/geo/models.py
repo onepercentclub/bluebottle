@@ -389,51 +389,24 @@ class Geolocation(models.Model):
                         if not self.province or replce:
                             self.province = context_item['text']
 
-    def migrate(self):
-        url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{self.position.coords[0]},{self.position.coords[1]}.json"
-        languages = ['nl', 'de', 'fr', 'en']
-
-        data = requests.get(
-            url,
-            params={
-                'access_token': settings.MAPBOX_API_KEY,
-                'permanent': 'true',
-                'language': ','.join(languages)
-            }
-        ).json()
-
-        current_place_type = self.mapbox_id.split('.')[0]
-        relevant_place_types = PLACE_TYPE_ORDER[
-            :PLACE_TYPE_ORDER.index(current_place_type) + 1
-        ]
-
-        for feature in data['features']:
-            mapbox_id = feature['properties'].get('mapbox_id')
-            place_type = feature['place_type'][0]
-            if place_type in relevant_place_types:
-                try:
-                    geo_feature = GeoFeature.objects.get(mapbox_id=mapbox_id)
-                except GeoFeature.DoesNotExist:
-                    geo_feature = GeoFeature(
-                        mapbox_id=mapbox_id,
-                        code=feature['properties'].get('short_code'),
-                        place_type=place_type
-                    )
-
-                    for language in languages:
-                        with switch_language(geo_feature, language):
-                            geo_feature.name = feature[f'text_{language}']
-
-                    geo_feature.save()
-
-                self.features.add(geo_feature)
-
     def save(self, *args, **kwargs):
-        self.migrate()
+        creating = not bool(self.pk)
+        old_mapbox_id = None
         if self.pk:
             old_instance = Geolocation.objects.filter(pk=self.pk).first()
             if old_instance and old_instance.position != self.position:
                 self.update_location(replace=True)
+            if old_instance:
+                old_mapbox_id = old_instance.mapbox_id
         if self.position and self.mapbox_id in ['unknown', '', None]:
             self.update_location()
-        return super().save(*args, **kwargs)
+        result = super().save(*args, **kwargs)
+
+        if settings.MAPBOX_API_KEY and self.position and self.mapbox_id:
+            if creating or old_mapbox_id != self.mapbox_id:
+                from bluebottle.geo.utils import collect_geo_features
+
+                self.features.clear()
+                collect_geo_features(self)
+
+        return result

@@ -8,10 +8,8 @@ from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
-from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField,
     ResourceRelatedField,

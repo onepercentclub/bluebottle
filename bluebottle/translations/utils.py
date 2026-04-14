@@ -1,8 +1,10 @@
 import logging
 import time
+from datetime import timedelta
 
 import requests
 from django.conf import settings
+from django.utils.timezone import now
 
 from bluebottle.translations.models import Translation
 
@@ -16,16 +18,19 @@ class TranslationError(Exception):
 def get_translation_response(text, target_language):
     url = settings.DEEPL_API_URL
     params = {
-        "auth_key": settings.DEEPL_API_KEY,
         "text": text,
         "target_lang": target_language.upper(),
     }
+    headers = {
+        "Authorization": f"DeepL-Auth-Key {settings.DEEPL_API_KEY}",
+    }
 
     for attempt in range(3):
-        resp = requests.post(url, data=params, timeout=20)
+        resp = requests.post(url, data=params, headers=headers, timeout=20)
         if resp.status_code == 200:
             data = resp.json()["translations"][0]
             detected_source = data["detected_source_language"]
+            print(data)
             if detected_source == target_language.upper():
                 translated = {
                     'value': text,
@@ -62,11 +67,16 @@ def translate_text_cached(text, target_language):
         text=text,
         target_language=target_language
     ).first()
+    yesterday = now() - timedelta(days=1)
     if trans:
-        return {
-            "value": trans.translation,
-            "source_language": trans.source_language,
-        }
+        if trans.source_language == '??' and trans.created < yesterday:
+            trans.delete()
+            trans.save()
+        else:
+            return {
+                "value": trans.translation,
+                "source_language": trans.source_language,
+            }
 
     try:
         translated = get_translation_response(text, target_language)
@@ -78,5 +88,6 @@ def translate_text_cached(text, target_language):
             translation=translated["value"],
         )
         return translated
-    except Exception:
+    except Exception as e:
+        print(e)
         return None

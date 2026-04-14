@@ -23,6 +23,7 @@ from django.views import View
 from elasticsearch_dsl.utils import AttrList
 from rest_framework import generics
 from rest_framework import views, response
+from rest_framework.exceptions import APIException
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
@@ -386,7 +387,19 @@ class ESPaginator(Paginator):
         bottom = (number - 1) * self.per_page
         top = bottom + self.per_page
 
-        self.result = self.object_list[1][bottom:top].execute()
+        try:
+            self.result = self.object_list[1][bottom:top].execute()
+        except Exception as e:
+            # When index mappings drift (e.g. segments should be nested but isn't),
+            # ES raises a 400 RequestError which would otherwise bubble up as 500.
+            # Provide a clear hint to rebuild indices.
+            msg = str(e)
+            if 'nested object under path [segments] is not of nested type' in msg:
+                raise APIException(
+                    'Search index mapping is out of date (segments is not nested). '
+                    'Rebuild the Elasticsearch indices for this tenant.'
+                )
+            raise
 
         page = self._get_page(self.result, number, self)
         # Some ES queries don't include aggregations/facets (e.g. plain sorted lists).

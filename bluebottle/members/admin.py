@@ -446,7 +446,7 @@ class MemberChangeForm(MemberForm):
         if subregion is not None and office is not None:
             if subregion.exists() and office.exists():
                 raise forms.ValidationError(
-                    _('You cannot select both work location groups managed and work locations managed. Either pick groups or locations.')
+                    _('You cannot select both work location groups managed and work locations managed.')
                 )
         return cleaned_data
 

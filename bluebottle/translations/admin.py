@@ -65,8 +65,9 @@ class TranslatableLabelAdminMixin:
 
 @admin.register(Translation)
 class TranslationAdmin(admin.ModelAdmin):
-    readonly_fields = ('truncated_text', 'text', 'source_language', 'target_language')
+    readonly_fields = ('truncated_text', 'text', 'source_language', 'target_language', 'created')
     list_display = ('truncated_text', 'target_language', 'source_language')
+    search_fields = ('text', 'translation')
 
     def truncated_text(self, obj):
         return obj.text[:70]
@@ -78,4 +79,5 @@ class TranslationAdmin(admin.ModelAdmin):
         'source_language',
         'translation',
         'target_language',
+        'created'
     )

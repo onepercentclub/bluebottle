@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.gis.db.models import PointField
 from django.urls import reverse
@@ -182,6 +183,10 @@ class GeoFeatureInline(admin.TabularInline):
     def place_type(self, obj):
         return obj.geofeature.place_type
 
+    @admin.display(description=_('Mapbox id'))
+    def mapbox_id(self, obj):
+        return obj.geofeature.mapbox_id
+
     @admin.display(description=_('Code'))
     def code(self, obj):
         return obj.geofeature.code
@@ -190,7 +195,15 @@ class GeoFeatureInline(admin.TabularInline):
     def name(self, obj):
         return obj.geofeature.name
 
-    readonly_fields = ('place_type', 'code', 'name')
+    @admin.display(description=_('Title'))
+    def title(self, obj):
+        return obj.geofeature.place_name
+
+    @admin.display(description=_('Address'))
+    def address(self, obj):
+        return obj.geofeature.address
+
+    readonly_fields = ('place_type', 'mapbox_id', 'code', 'name', 'title', 'address')
     fields = readonly_fields
 
     def has_add_permission(self, request, obj=None):
@@ -203,11 +216,48 @@ class GeoFeatureInline(admin.TabularInline):
         return False
 
 
+class GeolocationAdminForm(forms.ModelForm):
+    mapbox_search = forms.CharField(
+        label=_('Search Mapbox feature'),
+        required=False,
+        help_text=_('Search a country/region/city/address. The selected feature id is stored as mapbox_id.'),
+        widget=forms.TextInput(
+            attrs={
+                'id': 'id_mapbox_search',
+                'data-mapbox-access-token': getattr(settings, 'MAPBOX_API_KEY', '') or '',
+                'autocomplete': 'off',
+            }
+        ),
+    )
+
+    class Meta(object):
+        model = Geolocation
+        fields = '__all__'
+        widgets = {
+            # We set this from the geocoder; keep it out of the user's way.
+            # 'mapbox_id': forms.HiddenInput(),
+        }
+
+
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
-    formfield_overrides = {
-        PointField: {"widget": CustomMapboxPointFieldWidget},
-    }
+    class Media(object):
+        js = (
+            # Mapbox Geocoder assets (we no longer load MapboxPointFieldWidget here)
+            "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js",
+            "/static/assets/admin/js/mapbox-sdk.min.js",
+            "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js",
+            'geo/js/geolocation_admin_mapbox.js',
+        )
+        css = {
+            "all": (
+                "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css",
+                "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css",
+            )
+        }
+
+    form = GeolocationAdminForm
+
     list_display = ('geolocation_label', 'street', 'locality', 'country')
 
     @admin.display(description=_('Geolocation'))
@@ -219,19 +269,36 @@ class GeolocationAdmin(admin.ModelAdmin):
 
     inlines = [GeoFeatureInline]
 
+    readonly_fields = ('static_map_preview', 'current_mapbox_id')
+
+    @admin.display(description=_('Mapbox id'))
+    def current_mapbox_id(self, obj):
+        return getattr(obj, 'mapbox_id', None) or '-'
+
+    @admin.display(description=_('Map preview'))
+    def static_map_preview(self, obj):
+        if not obj or not obj.position:
+            return '-'
+        lon = obj.position.x
+        lat = obj.position.y
+        token = getattr(settings, 'MAPBOX_API_KEY', None)
+        if token:
+            url = (
+                "https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/"
+                f"pin-s+1a73e8({lon},{lat})/{lon},{lat},10/600x300"
+                f"?access_token={token}"
+            )
+            return format_html('<img src="{}" width="600" height="300" style="max-width:100%;height:auto;" />', url)
+        link = f"https://www.openstreetmap.org/?mlat={lat}&mlon={lon}#map=10/{lat}/{lon}"
+        return format_html('<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>', link, link)
+
     fieldsets = (
-        (_('Map'), {'fields': ('position', )}),
+        (_('Map'), {'fields': ('mapbox_search', 'current_mapbox_id', 'mapbox_id', 'static_map_preview',)}),
         (_('Info'), {
             'fields': (
+
                 'locality', 'street', 'street_number', 'postal_code',
-                'province', 'country', 'formatted_address', 'mapbox_id'
+                'province', 'country', 'formatted_address',
             )
         })
     )
-
-    def get_fieldsets(self, request, obj):
-        if obj and obj.position:
-            return self.fieldsets
-        return (
-            (_('Map'), {'fields': ('position', )}),
-        )

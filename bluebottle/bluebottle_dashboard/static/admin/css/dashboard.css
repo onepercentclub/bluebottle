@@ -643,3 +643,7 @@ a.button, a.button:hover {
     font-style: italic;
     color: #aaa;
 }
+
+.mapboxgl-ctrl input {
+    padding-left: 30px
+}

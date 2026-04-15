@@ -192,6 +192,14 @@ class GeolocationSerializer(ModelSerializer):
     included_serializers = {
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'
     }
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        language_code = self.context['request'].LANGUAGE_CODE
+        if obj.feature:
+            obj.feature.set_current_language(language_code)
+            return obj.feature.place_name or obj.feature.name
+        return obj.formatted_address
 
     class Meta(object):
         model = Geolocation
@@ -206,7 +214,8 @@ class GeolocationSerializer(ModelSerializer):
             'static_map_url',
             'formatted_address',
             'timezone',
-            'mapbox_id'
+            'mapbox_id',
+            'name'
         )
 
     class JSONAPIMeta(object):

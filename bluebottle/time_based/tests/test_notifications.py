@@ -162,7 +162,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('A participant has withdrawn from a time slot for your activity "Save the world!"')
         self.assertBodyContains(f'{self.supporter.full_name} has withdrawn from a time slot for your activity')
         self.assertActionLink(self.obj.slot.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_participant_registered_manager(self):
         self.activity.review_title = 'What is your favorite color?'
@@ -196,7 +196,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('A new participant has joined your activity "Save the world!" 🎉')
         self.assertBodyContains('Frans Beckenbauer has joined your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
         self.assertBodyContains('What is your favorite color?')
         self.assertBodyContains('Par-bleu yellow')
 
@@ -225,7 +225,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('A participant has withdrawn from your activity "Save the world!"')
         self.assertBodyContains('Frans Beckenbauer has withdrawn from your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_participant_added_owner_notification(self):
         self.message_class = ManagerParticipantAddedOwnerNotification
@@ -234,7 +234,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('A participant has been added to your activity "Save the world!" 🎉')
         self.assertBodyContains('Frans Beckenbauer has been added to your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_participant_added_notification(self):
         self.message_class = ParticipantAddedNotification
@@ -251,7 +251,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('A participant has been removed from your activity "Save the world!"')
         self.assertBodyContains('Frans Beckenbauer has been removed from your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_participant_joined_notification(self):
         DateParticipantFactory.create(
@@ -287,7 +287,7 @@ class DateSlotNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner])
         self.assertSubject('A slot for your activity "Save the world!" has been cancelled')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_slot_cancelled_with_participant(self):
         participant = DateParticipantFactory.create(
@@ -301,7 +301,7 @@ class DateSlotNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner, participant.user])
         self.assertSubject('A slot for your activity "Save the world!" has been cancelled')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
 
 class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
@@ -328,7 +328,7 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner])
         self.assertSubject('You have a new participant for your activity "Save the world!" 🎉')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
     def test_manager_registration_created_review(self):
         self.activity.review = True
@@ -338,7 +338,7 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.activity.owner])
         self.assertSubject('You have a new application for your activity "Save the world!" 🎉')
         self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View this activity')
 
 
 class RegisteredDateActivityNotificationTestCase(NotificationTestCase):

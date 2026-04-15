@@ -53,7 +53,7 @@ class CollectActivityReminderNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""

@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message%}{% blocktrans with applicant_name=obj.user.full_name context 'platform-email' %}
-<p>{{ applicant_name }} applied to your activity "{{ title}}".<p>
+    <p>{{ applicant_name }} applied to your activity "{{ title }}".</p>
 
 <p>Review the application and decide if this person is the right fit.</p>
 {% endblocktrans %}

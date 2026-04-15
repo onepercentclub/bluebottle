@@ -136,6 +136,11 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
         self.include_my = include_my
         super().__init__(*args, **kwargs)
 
+    def filter_my(self, queryset):
+        return queryset.filter(
+            user=self.context['request'].user
+        )
+
     def get_links(self, obj=None, lookup_field="pk"):
         return_data = super().get_links(obj, lookup_field)
         queryset = getattr(
@@ -151,10 +156,23 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
                 self.related_link_view_name, args=(getattr(obj, lookup_field),)
             )
 
+        all_statuses = list(
+            dict.fromkeys(s for group in self.statuses.values() for s in group)
+        )
+        if all_statuses:
+            count_by_status = {
+                row['status']: row['_c']
+                for row in queryset.filter(status__in=all_statuses)
+                .values('status')
+                .annotate(_c=Count('pk', distinct=True))
+            }
+        else:
+            count_by_status = {}
+
         for name, statuses in self.statuses.items():
             return_data[name] = {
                 "href": f'{url}?filter[status]={",".join(statuses)}',
-                "meta": {"count": queryset.filter(status__in=statuses).count()},
+                "meta": {"count": sum(count_by_status.get(s, 0) for s in statuses)},
             }
 
         if self.include_my:
@@ -162,7 +180,7 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
                 return_data['my'] = {
                     'href': url + '?filter[my]=true',
                     'meta': {
-                        'count': queryset.filter(user=self.context['request'].user).count()
+                        'count': self.filter_my(queryset).count()
                     }
                 }
             else:
@@ -264,6 +282,53 @@ class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
     )
 
 
+class RelatedTeamsLinkField(RelatedLinkFieldByStatus):
+    def get_links(self, obj=None, lookup_field="pk"):
+        links = super().get_links(obj, lookup_field)
+
+        url = self.reverse(
+            self.related_link_view_name, args=(getattr(obj, lookup_field),)
+        )
+
+        if self.context['request'].user.is_authenticated:
+            queryset = getattr(
+                obj, self.source or self.field_name or self.parent.field_name
+            )
+            links['owned'] = {
+                "href": f'{url}?filter[owned]=true',
+                "meta": {
+                    "count": queryset.filter(
+                        user=self.context['request'].user
+                    ).count()
+                },
+            }
+
+            links['my'] = {
+                "href": f'{url}?filter[my]=true',
+                "meta": {
+                    "count": queryset.filter(
+                        team_members__user=self.context['request'].user
+                    ).count()
+                },
+            }
+        else:
+            links['owned'] = {
+                "href": f'{url}?filter[owned]=true',
+                "meta": {
+                    "count": 0
+                },
+            }
+
+            links['my'] = {
+                "href": f'{url}?filter[my]=true',
+                "meta": {
+                    "count": 0
+                },
+            }
+
+        return links
+
+
 class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'schedule-detail'
 
@@ -286,8 +351,9 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         },
     )
 
-    teams = RelatedLinkFieldByStatus(
+    teams = RelatedTeamsLinkField(
         read_only=True,
+        include_my=True,
         related_link_view_name="related-teams",
         related_link_url_kwarg="activity_id",
         statuses={
@@ -487,9 +553,14 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             count = 0
             capacity = None
 
-        upcoming_participants = 0
-        for slot in slots:
-            upcoming_participants += slot.contributor_count
+        slot_pks = list(slots.values_list('pk', flat=True))
+        if slot_pks:
+            upcoming_participants = DateParticipant.objects.filter(
+                slot_id__in=slot_pks,
+                status__in=['accepted', 'succeeded'],
+            ).count()
+        else:
+            upcoming_participants = 0
 
         spots_left = None
 

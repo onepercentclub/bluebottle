@@ -1897,8 +1897,8 @@ class ScheduleRegistrationAdmin(RegistrationChildAdmin):
 
 @admin.register(TeamScheduleRegistration)
 class TeamScheduleRegistrationAdmin(RegistrationChildAdmin):
-    readonly_fields = RegistrationChildAdmin.readonly_fields + ['team']
-    fields = ['team', 'states', 'answer', 'document']
+    readonly_fields = RegistrationChildAdmin.readonly_fields + ['teams']
+    fields = ['teams', 'states', 'answer', 'document']
     verbose_name = _('Team registration')
     verbose_name_plural = _('Team registrations')
 

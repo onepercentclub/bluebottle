@@ -348,15 +348,11 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         return activities
 
     def get_segments(self, instance):
-        segments = []
-        for activity in self.get_activities(instance):
-            for segment in activity.segments.all():
-                if segment not in segments:
-                    segments.append(segment)
-        return segments
+        activities = self.get_activities(instance)
+        return Segment.objects.filter(activities__in=activities).distinct()
 
     def get_stats(self, obj):
-        return get_stats_for_activities(obj.activities)
+        return get_stats_for_activities(self.get_activities(obj))
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',

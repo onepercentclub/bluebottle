@@ -1590,9 +1590,9 @@ class Team(TriggerMixin, models.Model):
 
     invite_code = models.UUIDField(default=uuid.uuid4)
 
-    registration = models.OneToOneField(
+    registration = models.ForeignKey(
         Registration,
-        related_name='team',
+        related_name='teams',
         on_delete=models.CASCADE,
         blank=True,
         null=True
@@ -1652,7 +1652,9 @@ class Team(TriggerMixin, models.Model):
         return str(self.name)
 
     def delete(self, using=None, keep_parents=False):
-        self.registration.delete()
+        if self.registration.teams.count() == 1:
+            self.registration.delete()
+
         return super().delete(using, keep_parents)
 
     def save(self, *args, **kwargs):

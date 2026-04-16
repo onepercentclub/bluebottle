@@ -1,5 +1,6 @@
 (function () {
-    var debug = window && window.location && window.location.search && window.location.search.indexOf('geo_debug=1') !== -1;
+    var lastPlaceId = null;
+    var debug = true
 
     function log() {
         if (!debug || typeof console === 'undefined' || !console.log) return;
@@ -7,93 +8,97 @@
         console.log.apply(console, arguments);
     }
 
-    var lastMapboxId = null;
+    function getPreferredJQuery() {
+        // IMPORTANT: Mapwidgets triggers events using mapWidgets.jQuery.
+        if (window.mapWidgets && window.mapWidgets.jQuery) return window.mapWidgets.jQuery;
+        if (window.django && window.django.jQuery) return window.django.jQuery;
+        if (window.jQuery) return window.jQuery;
+        return null;
+    }
 
-    function findMapboxIdInput(form) {
+    function findMapboxIdInput() {
         return (
-            form.querySelector('input[name="mapbox_id"]') ||
-            form.querySelector('input[name$="-mapbox_id"]') ||
-            form.querySelector('#id_mapbox_id')
+            document.querySelector('#id_mapbox_id') ||
+            document.querySelector('input[name="mapbox_id"]') ||
+            document.querySelector('input[name$="-mapbox_id"]')
         );
     }
 
-    function mountGeocoderOnSearchInput(form) {
-        var searchInput = document.querySelector('#id_mapbox_search');
-        if (!searchInput) {
-            log('[geo admin] no #id_mapbox_search found, skipping geocoder mount');
-            return;
-        }
-
-        var token = searchInput.getAttribute('data-mapbox-access-token');
-        if (!token) {
-            log('[geo admin] no mapbox access token on search input');
-            return;
-        }
-        if (typeof MapboxGeocoder === 'undefined') {
-            log('[geo admin] MapboxGeocoder not loaded yet');
-            return;
-        }
-
-        var geocoder = new MapboxGeocoder({
-            accessToken: token,
-            marker: false,
-            mapboxgl: typeof mapboxgl !== 'undefined' ? mapboxgl : undefined,
-            placeholder: searchInput.getAttribute('placeholder') || 'Search…',
-            types: 'country,region,district,place,locality,postcode,address',
-        });
-
-        // Render geocoder UI into the existing input's parent and hide the original.
-        var wrapper = document.createElement('div');
-        wrapper.className = 'mapbox-geocoder-admin';
-        searchInput.parentNode.insertBefore(wrapper, searchInput);
-        wrapper.appendChild(geocoder.onAdd());
-
-        searchInput.style.display = 'none';
-        log('[geo admin] geocoder mounted');
-
-        geocoder.on('result', function (ev) {
-            var place = ev && ev.result;
-            if (!place || !place.id) {
-                log('[geo admin] geocoder result without id', place);
-                return;
+    function extractPlaceFromArgs(args) {
+        // args[0] is the event. The rest can vary by mapwidgets version.
+        for (var i = 1; i < args.length; i += 1) {
+            var candidate = args[i];
+            if (candidate && typeof candidate === 'object' && candidate.id) {
+                return candidate;
             }
-            lastMapboxId = place.id;
-            var mapboxIdInput = findMapboxIdInput(form);
-            if (mapboxIdInput) {
-                mapboxIdInput.value = place.id;
-                log('[geo admin] set mapbox_id', place.id);
-            } else {
-                log('[geo admin] could not find mapbox_id input');
-            }
-        });
+        }
+        return null;
     }
 
-    if (typeof django === 'undefined' || !django.jQuery) {
-        return;
+    function handlePlaceChanged() {
+        var place = extractPlaceFromArgs(arguments);
+        log('[geo admin] place changed args', arguments);
+        const mapbox_id = place.properties.mapbox_id;
+        if (!mapbox_id) return;
+
+        log('[geo admin] found', place);
+
+        lastPlaceId = mapbox_id;
+        var mapboxIdInput = findMapboxIdInput();
+        if (mapboxIdInput) {
+            mapboxIdInput.value = mapbox_id;
+            log('[geo admin] set mapbox_id', mapbox_id);
+        }
+        var formattedAddressInput = document.querySelector('#id_formatted_address');
+        if (formattedAddressInput && place.place_name) {
+            formattedAddressInput.value = place.place_name;
+        }
     }
 
-    django.jQuery(function () {
-        var form = document.querySelector('#content form');
-        if (!form) {
-            log('[geo admin] no form found on page');
-            return;
-        }
-        mountGeocoderOnSearchInput(form);
-    });
+    var boundWith = null;
 
-    // Safety net: ensure mapbox_id is filled on submit.
-    django.jQuery(document).on('submit', 'form', function () {
-        var form = this;
-        var mapboxIdInput = findMapboxIdInput(form);
-        if (mapboxIdInput && (!mapboxIdInput.value || mapboxIdInput.value === 'unknown') && lastMapboxId) {
-            mapboxIdInput.value = lastMapboxId;
-            log('[geo admin] submit fallback set mapbox_id', lastMapboxId);
-        } else {
-            log('[geo admin] submit', {
-                hasMapboxIdInput: Boolean(mapboxIdInput),
-                mapboxId: mapboxIdInput && mapboxIdInput.value,
-                lastMapboxId: lastMapboxId,
-            });
+    function bindHandlers() {
+        var $ = getPreferredJQuery();
+        if (!$) {
+            log('[geo admin] no jquery found yet');
+            return false;
         }
+
+        var bindingName =
+            $ === (window.mapWidgets && window.mapWidgets.jQuery)
+                ? 'mapWidgets.jQuery'
+                : $ === (window.django && window.django.jQuery)
+                    ? 'django.jQuery'
+                    : 'window.jQuery';
+
+        // If we already bound with mapWidgets.jQuery, don't bind again.
+        if (boundWith === 'mapWidgets.jQuery' && bindingName === 'mapWidgets.jQuery') {
+            return true;
+        }
+
+        // Mapwidget emits these when the built-in geocoder changes.
+        $(document).on('mapboxPointFieldWidget:placeChanged', handlePlaceChanged);
+        // Backwards compat for older trigger names
+        $(document).on('mapbox_point_map_widget:place_changed', handlePlaceChanged);
+
+        // Safety net: ensure mapbox_id is posted on submit.
+        $(document).on('submit', 'form#geolocation_form', function () {
+            var mapboxIdInput = findMapboxIdInput();
+            log('[geo admin] submit', {mapboxId: mapboxIdInput && mapboxIdInput.value, lastPlaceId: lastPlaceId});
+            if (mapboxIdInput && (!mapboxIdInput.value || mapboxIdInput.value === 'unknown') && lastPlaceId) {
+                mapboxIdInput.value = lastPlaceId;
+            }
+        });
+
+        boundWith = bindingName;
+        log('[geo admin] handlers bound using', bindingName);
+        return true;
+    }
+
+    // Script can be loaded before mapwidgets init. Bind now (best effort),
+    // then bind again on load to ensure we eventually bind with mapWidgets.jQuery.
+    bindHandlers();
+    window.addEventListener('load', function () {
+        bindHandlers();
     });
 })();

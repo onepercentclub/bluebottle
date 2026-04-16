@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.db import models
+from django.db.models import Case, IntegerField, Value, When
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
@@ -274,6 +275,7 @@ PLACE_TYPE_ORDER = [
     # 'street',
     # 'block',
     'postcode',
+    'street',
     'address',
     'secondary_address',
 ]
@@ -284,11 +286,44 @@ class GeoFeature(SortableTranslatableModel):
         name=models.CharField(_("Name"), max_length=512),
         place_name=models.CharField(_("Place name"), null=True, blank=True, max_length=5000)
     )
-    address = models.CharField(_("Address"), max_length=5000, null=True, blank=True)
     place_type = models.CharField(_('Place type'), choices=LevelChoices)
     code = models.CharField(_('Code'), max_length=10, null=True)
-    mapbox_id = models.CharField(max_length=100, null=True)
+    mapbox_id = models.CharField(max_length=500, null=True)
 
+    class GeoFeatureQuerySet(models.QuerySet):
+        def with_place_type_rank(self):
+            """
+            Assign a stable ordering based on PLACE_TYPE_ORDER (reversed),
+            so higher-level features (e.g. country) appear first.
+            """
+            reversed_order = list(reversed(PLACE_TYPE_ORDER))
+            whens = [
+                When(place_type=place_type, then=Value(index))
+                for index, place_type in enumerate(reversed_order)
+            ]
+            return self.annotate(
+                place_type_rank=Case(
+                    *whens,
+                    default=Value(len(reversed_order)),
+                    output_field=IntegerField(),
+                )
+            )
+
+    class GeoFeatureManager(models.Manager.from_queryset(GeoFeatureQuerySet)):
+        def get_queryset(self):
+            return (
+                super()
+                .get_queryset()
+                .with_place_type_rank()
+                .order_by('place_type_rank', 'id')
+            )
+
+    objects = GeoFeatureManager()
+
+    class Meta(GeoBaseModel.Meta):
+        # Ordering is implemented in the default manager using PLACE_TYPE_ORDER (reversed).
+        verbose_name = _('Geo feature')
+        verbose_name_plural = _('Geo features')
 
 
 @python_2_unicode_compatible
@@ -299,7 +334,7 @@ class Geolocation(models.Model):
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
     country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
-    mapbox_id = models.CharField(max_length=100, null=True, blank=True)
+    mapbox_id = models.CharField(max_length=500, null=True, blank=True)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
@@ -329,13 +364,10 @@ class Geolocation(models.Model):
         resource_name = 'geolocations'
 
     def __str__(self):
-        if self.locality and self.country:
-            return u"{}, {}".format(self.locality, self.country.name)
-        if self.locality:
-            return self.locality
-        if self.country:
-            return self.country.name
+        if self.features.count():
+            return self.features.first().place_name
         return self.formatted_address or '-unknown-'
+
 
     @property
     def timezone(self):
@@ -473,6 +505,7 @@ class Geolocation(models.Model):
 
         if settings.MAPBOX_API_KEY and self.mapbox_id:
             if creating or old_mapbox_id != self.mapbox_id or not self.features.exists():
+                print("NEED TO UPDATE GEOLOCATION FEATURES")
                 from bluebottle.geo.utils import collect_geo_features
                 self.features.clear()
                 collect_geo_features(self)

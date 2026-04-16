@@ -8,6 +8,7 @@
     }
 
     var lastMapboxId = null;
+    var lastCenter = null;
 
     function findMapboxIdInput(form) {
         return (
@@ -15,6 +16,60 @@
             form.querySelector('input[name$="-mapbox_id"]') ||
             form.querySelector('#id_mapbox_id')
         );
+    }
+
+    function findPositionInput(form) {
+        return (
+            form.querySelector('textarea[name="position"]') ||
+            form.querySelector('input[name="position"]') ||
+            form.querySelector('textarea[name$="-position"]') ||
+            form.querySelector('input[name$="-position"]') ||
+            form.querySelector('#id_position')
+        );
+    }
+
+    function findLatitudeInput(form) {
+        return (
+            form.querySelector('input[name="latitude"]') ||
+            form.querySelector('input[name$="-latitude"]') ||
+            form.querySelector('#id_latitude')
+        );
+    }
+
+    function findLongitudeInput(form) {
+        return (
+            form.querySelector('input[name="longitude"]') ||
+            form.querySelector('input[name$="-longitude"]') ||
+            form.querySelector('#id_longitude')
+        );
+    }
+
+    function setPositionFromCenter(form, center) {
+        if (!center || center.length !== 2) return;
+        var lon = center[0];
+        var lat = center[1];
+        if (typeof lon !== 'number' || typeof lat !== 'number') return;
+
+        var latitudeInput = findLatitudeInput(form);
+        if (latitudeInput) latitudeInput.value = lat;
+        var longitudeInput = findLongitudeInput(form);
+        if (longitudeInput) longitudeInput.value = lon;
+
+        var positionInput = findPositionInput(form);
+        if (!positionInput) {
+            log('[geo admin] could not find position input');
+            return;
+        }
+
+        // GeoDjango PointField admin typically stores WKT: "POINT (lon lat)"
+        positionInput.value = 'POINT (' + lon + ' ' + lat + ')';
+        lastCenter = [lon, lat];
+        log('[geo admin] set position', positionInput.value);
+
+        // Trigger change for any admin JS that listens to it.
+        if (typeof django !== 'undefined' && django.jQuery) {
+            django.jQuery(positionInput).trigger('change');
+        }
     }
 
     function mountGeocoderOnSearchInput(form) {
@@ -65,6 +120,17 @@
             } else {
                 log('[geo admin] could not find mapbox_id input');
             }
+
+            // Also store coordinates so backend can derive street/number.
+            var center = place.center;
+            if ((!center || center.length !== 2) && place.geometry && place.geometry.coordinates) {
+                center = place.geometry.coordinates;
+            }
+            if (center && center.length === 2) {
+                setPositionFromCenter(form, center);
+            } else {
+                log('[geo admin] no coordinates in geocoder result', place);
+            }
         });
     }
 
@@ -88,11 +154,23 @@
         if (mapboxIdInput && (!mapboxIdInput.value || mapboxIdInput.value === 'unknown') && lastMapboxId) {
             mapboxIdInput.value = lastMapboxId;
             log('[geo admin] submit fallback set mapbox_id', lastMapboxId);
+        }
+        var positionInput = findPositionInput(form);
+        if (
+            positionInput &&
+            (!positionInput.value || positionInput.value === 'unknown') &&
+            lastCenter &&
+            lastCenter.length === 2
+        ) {
+            positionInput.value = 'POINT (' + lastCenter[0] + ' ' + lastCenter[1] + ')';
+            log('[geo admin] submit fallback set position', positionInput.value);
         } else {
             log('[geo admin] submit', {
                 hasMapboxIdInput: Boolean(mapboxIdInput),
                 mapboxId: mapboxIdInput && mapboxIdInput.value,
                 lastMapboxId: lastMapboxId,
+                position: positionInput && positionInput.value,
+                lastCenter: lastCenter,
             });
         }
     });

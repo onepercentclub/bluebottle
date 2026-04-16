@@ -2,6 +2,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.gis.db.models import PointField
+from django.contrib.gis.geos import Point
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -13,7 +14,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.geo.models import (
     Location, Country, Place,
-    Geolocation)
+    Geolocation, GeoFeature)
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
 
@@ -217,6 +218,20 @@ class GeoFeatureInline(admin.TabularInline):
 
 
 class GeolocationAdminForm(forms.ModelForm):
+    latitude = forms.DecimalField(
+        label=_('Latitude'),
+        required=False,
+        max_digits=9,
+        decimal_places=6,
+        widget=forms.NumberInput(attrs={'id': 'id_latitude', 'step': 'any'}),
+    )
+    longitude = forms.DecimalField(
+        label=_('Longitude'),
+        required=False,
+        max_digits=9,
+        decimal_places=6,
+        widget=forms.NumberInput(attrs={'id': 'id_longitude', 'step': 'any'}),
+    )
     mapbox_search = forms.CharField(
         label=_('Search Mapbox feature'),
         required=False,
@@ -234,9 +249,23 @@ class GeolocationAdminForm(forms.ModelForm):
         model = Geolocation
         fields = '__all__'
         widgets = {
-            # We set this from the geocoder; keep it out of the user's way.
             # 'mapbox_id': forms.HiddenInput(),
+            # 'position': forms.HiddenInput(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and getattr(self.instance, 'position', None):
+            self.initial['longitude'] = self.instance.position.x
+            self.initial['latitude'] = self.instance.position.y
+
+    def clean(self):
+        cleaned_data = super().clean()
+        lat = cleaned_data.get('latitude')
+        lon = cleaned_data.get('longitude')
+        if lat is not None and lon is not None:
+            self.instance.position = Point(float(lon), float(lat))
+        return cleaned_data
 
 
 @admin.register(Geolocation)
@@ -293,7 +322,9 @@ class GeolocationAdmin(admin.ModelAdmin):
         return format_html('<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>', link, link)
 
     fieldsets = (
-        (_('Map'), {'fields': ('mapbox_search', 'current_mapbox_id', 'mapbox_id', 'static_map_preview',)}),
+        (_('Map'), {
+            'fields': ('mapbox_search', 'current_mapbox_id', 'mapbox_id', 'latitude', 'longitude', 'static_map_preview',
+                       'position')}),
         (_('Info'), {
             'fields': (
 
@@ -302,3 +333,8 @@ class GeolocationAdmin(admin.ModelAdmin):
             )
         })
     )
+
+
+@admin.register(GeoFeature)
+class GeoFeatureAdmin(admin.ModelAdmin):
+    model = GeoFeature

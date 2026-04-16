@@ -271,8 +271,6 @@ PLACE_TYPE_ORDER = [
     'place',
     'locality',
     'neighborhood',
-    # 'street',
-    # 'block',
     'postcode',
     'address',
     'secondary_address',

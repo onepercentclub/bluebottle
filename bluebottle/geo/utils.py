@@ -57,6 +57,10 @@ def collect_geo_features(geolocation):
             or props.get('short_code')
         )
         country_name = get_ctx_name(country_ctx, language) if country_ctx else None
+        street_name = get_ctx_name(context.get('street') or {}, language) if context.get('street') else None
+        neighbourhood_name = get_ctx_name(context.get('neighborhood') or {}, language) if context.get(
+            'neighborhood') else None
+        district_name = get_ctx_name(context.get('district') or {}, language) if context.get('district') else None
         region_name = get_ctx_name(context.get('region') or {}, language) if context.get('region') else None
         place_name = get_ctx_name(context.get('place') or {}, language) if context.get('place') else None
         postcode_name = get_ctx_name(context.get('postcode') or {}, language) if context.get('postcode') else None
@@ -74,13 +78,28 @@ def collect_geo_features(geolocation):
                 'state': region_name,
                 'country': country_name,
             }
-        elif place_type in ('district', 'neighborhood'):
+        elif place_type in ('neighborhood',):
             address = {
+                'road': name,
                 'city': place_name,
                 'state': region_name,
                 'country': country_name,
             }
-        elif place_type in ('street', 'locality'):
+        elif place_type in ('district',):
+            address = {
+                'road': name,
+                'city': place_name,
+                'state': region_name,
+                'country': country_name,
+            }
+        elif place_type in ('locality',):
+            address = {
+                'road': name,
+                'city': place_name,
+                'state': region_name,
+                'country': country_name,
+            }
+        elif place_type in ('street',):
             address = {
                 'road': name,
                 'city': place_name,
@@ -148,6 +167,7 @@ def collect_geo_features(geolocation):
             geo_feature.save(update_fields=['place_type'])
 
         should_update = created or force_update
+        print("Saving feature")
 
         if should_update:
             translations = feature.get('translations') or {}
@@ -189,7 +209,6 @@ def collect_geo_features(geolocation):
     )
     response.raise_for_status()
     data = response.json()
-    print('DATA', data)
 
     features = data.get('features') or []
     if not features:

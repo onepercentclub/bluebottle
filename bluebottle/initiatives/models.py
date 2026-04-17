@@ -339,6 +339,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("generic", _("Same for all activities")),
     )
 
+    LOCATION_DISPLAY_OPTIONS = (
+        ("address", _("Address")),
+        ("neighborhood", _("Neighbourhood")),
+        ("city", _("City")),
+        ("region", _("Region/State")),
+        ("country", _("Country")),
+    )
+
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
@@ -392,6 +400,15 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_(
             "Enter the email address that should receive a Bcc (blind carbon copy) of the terms of service."
         ),
+    )
+
+    location_features = MultiSelectField(
+        _("Location display format"),
+        max_length=1000, choices=LOCATION_DISPLAY_OPTIONS,
+        default=['city', 'country'],
+        help_text=_(
+            "Select the information of the location that is displayed on the activity cards."
+        )
     )
 
     initiative_search_filters = MultiSelectField(

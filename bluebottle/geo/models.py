@@ -6,7 +6,6 @@ from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.db import models
-from django.db.models import Case, IntegerField, Value, When
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
@@ -272,8 +271,6 @@ PLACE_TYPE_ORDER = [
     'place',
     'locality',
     'neighborhood',
-    # 'street',
-    # 'block',
     'postcode',
     'street',
     'address',
@@ -290,38 +287,7 @@ class GeoFeature(SortableTranslatableModel):
     code = models.CharField(_('Code'), max_length=10, null=True)
     mapbox_id = models.CharField(max_length=500, null=True)
 
-    class GeoFeatureQuerySet(models.QuerySet):
-        def with_place_type_rank(self):
-            """
-            Assign a stable ordering based on PLACE_TYPE_ORDER (reversed),
-            so higher-level features (e.g. country) appear first.
-            """
-            reversed_order = list(reversed(PLACE_TYPE_ORDER))
-            whens = [
-                When(place_type=place_type, then=Value(index))
-                for index, place_type in enumerate(reversed_order)
-            ]
-            return self.annotate(
-                place_type_rank=Case(
-                    *whens,
-                    default=Value(len(reversed_order)),
-                    output_field=IntegerField(),
-                )
-            )
-
-    class GeoFeatureManager(models.Manager.from_queryset(GeoFeatureQuerySet)):
-        def get_queryset(self):
-            return (
-                super()
-                .get_queryset()
-                .with_place_type_rank()
-                .order_by('place_type_rank', 'id')
-            )
-
-    objects = GeoFeatureManager()
-
     class Meta(GeoBaseModel.Meta):
-        # Ordering is implemented in the default manager using PLACE_TYPE_ORDER (reversed).
         verbose_name = _('Geo feature')
         verbose_name_plural = _('Geo features')
 

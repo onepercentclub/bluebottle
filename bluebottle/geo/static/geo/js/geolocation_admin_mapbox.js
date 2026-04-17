@@ -1,11 +1,58 @@
 (function () {
     var lastPlaceId = null;
-    var debug = true
+    var debug =
+        window &&
+        window.location &&
+        window.location.search &&
+        window.location.search.indexOf('geo_debug=1') !== -1;
 
     function log() {
         if (!debug || typeof console === 'undefined' || !console.log) return;
         // eslint-disable-next-line no-console
         console.log.apply(console, arguments);
+    }
+
+    function t(text) {
+        if (typeof window.gettext === 'function') return window.gettext(text);
+        return text;
+    }
+
+    function setText(root, selector, text) {
+        var el = root.querySelector(selector);
+        if (!el) return;
+        el.textContent = text;
+    }
+
+    function setPlaceholder(root, selector, text) {
+        var el = root.querySelector(selector);
+        if (!el) return;
+        el.setAttribute('placeholder', text);
+        el.setAttribute('aria-label', text);
+    }
+
+    function translateMapWidgetUI() {
+        var wrap = document.querySelector('#position-mw-wrap');
+        if (!wrap) return false;
+
+        // Buttons
+        setText(wrap, '.mw-btn-add-marker .button-text', t('Point on Map'));
+        setText(wrap, '.mw-btn-my-location .button-text', t('Current Location'));
+        setText(wrap, '.mw-btn-coordinates .button-text', t('Edit Coordinates'));
+        setText(wrap, '.mw-btn-coordinates-done', t('Done'));
+
+        // Help text
+        setText(
+            wrap,
+            '.mw-help-text',
+            t('Place the pin or type address where you want point on the map')
+        );
+
+        // Placeholders (geocoder + coordinate overlay)
+        setPlaceholder(wrap, '.mapboxgl-ctrl-geocoder--input', t('Find a Location by Address'));
+        setPlaceholder(wrap, '.mw-overlay-latitude', t('Ex: 41.015137'));
+        setPlaceholder(wrap, '.mw-overlay-longitude', t('Ex: 28.979530'));
+
+        return true;
     }
 
     function getPreferredJQuery() {
@@ -38,7 +85,7 @@
     function handlePlaceChanged() {
         var place = extractPlaceFromArgs(arguments);
         log('[geo admin] place changed args', arguments);
-        const mapbox_id = place.properties.mapbox_id;
+        var mapbox_id = (place.properties && place.properties.mapbox_id) || (place && place.id);
         if (!mapbox_id) return;
 
         log('[geo admin] found', place);
@@ -101,4 +148,16 @@
     window.addEventListener('load', function () {
         bindHandlers();
     });
+
+    // Translate the map widget UI once it exists. Mapwidgets creates the DOM after init,
+    // so we retry a few times.
+    (function translateWhenReady() {
+        var attempts = 0;
+        var timer = window.setInterval(function () {
+            attempts += 1;
+            if (translateMapWidgetUI() || attempts >= 20) {
+                window.clearInterval(timer);
+            }
+        }, 250);
+    })();
 })();

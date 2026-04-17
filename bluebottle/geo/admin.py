@@ -211,11 +211,7 @@ class GeoFeatureInline(admin.TabularInline):
     def title(self, obj):
         return obj.geofeature.place_name
 
-    @admin.display(description=_('Address'))
-    def address(self, obj):
-        return obj.geofeature.address
-
-    readonly_fields = ('place_type', 'code', 'name', 'title', 'address')
+    readonly_fields = ('place_type', 'code', 'name', 'title')
     fields = readonly_fields
 
     def has_add_permission(self, request, obj=None):

@@ -131,6 +131,17 @@ class ActivityDocument(Document):
         }
     )
 
+    geofeature = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'mapbox_id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+            'place_name': fields.KeywordField(),
+            'place_type': fields.KeywordField(),
+            'language': fields.KeywordField(),
+        }
+    )
+
     expertise = fields.NestedField(
         properties={
             'id': fields.KeywordField(),
@@ -378,6 +389,26 @@ class ActivityDocument(Document):
                     'type': 'impact_location'
                 })
         return locations
+
+    def prepare_geofeature(self, instance):
+        locations = []
+        if hasattr(instance, 'location') and instance.location:
+            locations.append(instance.location)
+        if instance.initiative and instance.initiative.place:
+            locations.append(instance.initiative.place)
+        geofeatures = []
+        for location in locations:
+            for geofeature in location.features.all():
+                geofeatures.append({
+                    'id': geofeature.id,
+                    'mapbox_id': geofeature.mapbox_id,
+                    'name': geofeature.name,
+                    'place_name': geofeature.place_name,
+                    'place_type': geofeature.place_type,
+                    'language': geofeature.language,
+
+                })
+        return geofeatures
 
     def prepare_office_restriction(self, instance):
         office = instance.office_location

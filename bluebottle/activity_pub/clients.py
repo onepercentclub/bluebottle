@@ -44,7 +44,8 @@ class JSONLDClient:
     def get(self, url, auth=None):
         return self.do_request("get", url, auth=auth)
 
-    def post(self, url, data, auth):
+    def post(self, url, data):
+        auth = self.get_auth(get_platform_actor())
         rendered_data = self.renderer.render(data)
         return self.do_request('post', url, data=rendered_data, auth=auth)
 

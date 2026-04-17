@@ -5,6 +5,7 @@ from rest_framework import serializers, exceptions
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context, expand_iri
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, ActivityPubIdField, TypeField
+from bluebottle.activity_pub.serializers import ActivityPubSerializer, FederatedObjectSerializer
 from bluebottle.activity_pub.utils import is_local
 
 from rest_polymorphic.serializers import PolymorphicSerializer
@@ -86,47 +87,10 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
         return result
 
 
-class ActivityPubSerializer(PolymorphicSerializer):
-    serializer_mapping = {}
-    model_serializer_mapping = {}
-    resource_type_field_name = 'type'
-
-    def __init__(self, *args, full=True, include=False, origin=None, **kwargs):
-        super(PolymorphicSerializer, self).__init__(*args, **kwargs)
-
-        self.resource_type_model_mapping = {}
-        self.model_serializer_mapping = {}
-
-        for model, serializer in self.serializer_mapping.items():
-            resource_type = self.to_resource_type(model)
-            if callable(serializer):
-                serializer = serializer(
-                    *args, full=full, include=include, origin=origin, **kwargs
-                )
-                serializer.parent = self
-
-            self.resource_type_model_mapping[resource_type] = model
-            self.model_serializer_mapping[model] = serializer
-
-    def to_resource_type(self, model_or_instance):
-        serializer = self.serializer_mapping[self._to_model(model_or_instance)]
-        return serializer._declared_fields['type'].type
-
-    def to_representation(self, instance):
-        serializer = self._get_serializer_from_model_or_instance(instance)
-
-        return serializer.to_representation(instance)
-
-    @property
-    def data(self):
-        return super(serializers.Serializer, self).data
-
-
 class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSerializerMetaclass):
-    def __init__(self, *args, full=True, include=False, origin=None, **kwargs):
+    def __init__(self, *args, full=True, include=False, **kwargs):
         self.include = include
         self.full = full
-        self.origin = origin
 
         super().__init__(*args, **kwargs)
 
@@ -166,8 +130,6 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
                 validated_data[name] = field.save(validated_data[name])
 
         validated_data.pop('type', None)
-        if self.origin:
-            validated_data['federated_object'] = self.origin
 
         return self.Meta.model.objects.create(**validated_data)
 
@@ -220,36 +182,6 @@ class FederatedObjectListSerializer(serializers.ListSerializer):
         return result
 
 
-class FederatedObjectSerializer(PolymorphicSerializer):
-    serializer_mapping = {}
-    model_serializer_mapping = {}
-    resource_type_field_name = 'type'
-
-    def __init__(self, *args, origin=None, **kwargs):
-        super(PolymorphicSerializer, self).__init__(*args, **kwargs)
-
-        self.resource_type_model_mapping = {}
-        self.model_serializer_mapping = {}
-
-        for model, serializer in self.serializer_mapping.items():
-            resource_type = self.to_resource_type(model)
-            if callable(serializer):
-                serializer = serializer(*args, origin=origin, **kwargs)
-                serializer.parent = self
-
-            self.resource_type_model_mapping[resource_type] = model
-            self.model_serializer_mapping[model] = serializer
-
-    def to_resource_type(self, model_or_instance):
-        serializer = self.serializer_mapping[self._to_model(model_or_instance)]
-        return serializer._declared_fields['type'].type
-
-    def to_representation(self, instance):
-        serializer = self._get_serializer_from_model_or_instance(instance)
-
-        return serializer.to_representation(instance)
-
-
 class FederatedObjectBaseSerializerMetaclass(serializers.SerializerMetaclass):
     def __new__(cls, name, bases, attrs):
         for attr_name, attr in attrs.items():
@@ -287,10 +219,6 @@ class FederatedObjectBaseSerializerMetaclass(serializers.SerializerMetaclass):
 class FederatedObjectBaseSerializer(
     serializers.ModelSerializer, metaclass=FederatedObjectBaseSerializerMetaclass
 ):
-    def __init__(self, *args, origin=None, **kwargs):
-        self.origin = origin
-        super().__init__(*args, **kwargs)
-
     class Meta:
         fields = ('id', 'type')
         list_serializer_class = FederatedObjectListSerializer
@@ -308,10 +236,10 @@ class FederatedObjectBaseSerializer(
 
     def create(self, validated_data):
         iri = validated_data.pop('id', None)
-        validated_data['origin'] = ActivityPubModel.objects.from_iri(iri)
+        origin = validated_data.pop('origin', None)
 
         for field in self.fields.values():
-            if isinstance(field, (FederatedObjectSerializer, )):
+            if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):
                 if (
                     field.source != '*' and
                     field.source in validated_data and
@@ -321,13 +249,14 @@ class FederatedObjectBaseSerializer(
 
                     validated_data[field.source] = field.create(validated_data[field.source])
 
-        instance = super().create(validated_data)
 
-        if self.origin:
-            self.origin.federated_object = instance
-            self.origin.save()
+        result =  super().create(validated_data)
+        origin = ActivityPubModel.objects.from_iri(iri)
+        if origin:
+            origin.federated_object = result
+            origin.save()
 
-        return instance
+        return result
 
     def update(self, instance, validated_data):
         validated_data.pop('id', None)

@@ -262,6 +262,11 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     def questions(self):
         return ActivityQuestion.objects.filter(activity_types__contains=self._meta.model_name)
 
+    @property
+    def activity_pub_url(self):
+        if hasattr(self, 'origin'):
+            return self.origin.pub_url
+
     class Meta(object):
         verbose_name = _("Activity")
         verbose_name_plural = _("Activities")

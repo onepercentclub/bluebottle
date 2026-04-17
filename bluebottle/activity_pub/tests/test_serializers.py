@@ -155,6 +155,18 @@ class OrganizationSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCas
         self.test_create()
 
 
+def mock_rsource(model):
+    @httmock.urlmatch(method="GET", path=urlparse(self.model.iri).path)
+    def actor_mock(url, request):
+        data = ActivityPubSerializer(instance=model).data
+
+        return {
+            'content': self.renderer.render(data),
+            'status_code': 200,
+            'headers': {'content-type': 'application/ld+json'}
+        }
+
+
 class FollowSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
     factory = FollowFactory
 
@@ -189,37 +201,7 @@ class FollowSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
 
     @property
     def mocks(self):
-        @httmock.urlmatch(method="GET", path=urlparse(self.actor.iri).path)
-        def actor_mock(url, request):
-            data = ActivityPubSerializer(instance=self.actor).data
-
-            return {
-                'content': self.renderer.render(data),
-                'status_code': 200,
-                'headers': {'content-type': 'application/ld+json'}
-            }
-
-        @httmock.urlmatch(method="GET", path=urlparse(self.object.iri).path)
-        def object_mock(url, request):
-            data = ActivityPubSerializer(instance=self.object).data
-
-            return {
-                'content': self.renderer.render(data),
-                'status_code': 200,
-                'headers': {'content-type': 'application/ld+json'}
-            }
-
-        @httmock.urlmatch(method="GET", path=urlparse(self.next_object.iri).path)
-        def next_object_mock(url, request):
-            data = ActivityPubSerializer(instance=self.next_object).data
-
-            return {
-                'content': self.renderer.render(data),
-                'status_code': 200,
-                'headers': {'content-type': 'application/ld+json'}
-            }
-
-        return [actor_mock, object_mock, next_object_mock]
+        return [mock_resource(model) for model in [self.actor, self.object, next_object]]
 
     def update(self):
         self.data['object'] = self.next_object.iri

@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Accept, Follow, Start, Update, Cancel, Delete, Finish
+    Accept, Follow, Start, Update, Cancel, Delete, Finish, Event
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -18,7 +18,7 @@ class CreateEffect(Effect):
     template = 'admin/activity_pub/create_effect.html'
 
     def post_save(self, **kwargs):
-        adapter.create_or_update_event(self.instance)
+        adapter.sync(self.instance)
 
     @property
     def followers(self):
@@ -70,14 +70,15 @@ class UpdateEventEffect(Effect):
     template = 'admin/activity_pub/update_event_effect.html'
 
     def post_save(self, **kwargs):
-        adapter.create_or_update_event(self.instance)
-        Update.objects.create(
-            object=self.instance.event
-        )
+        Event.sync(self.instance)
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'origin') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'origin') and
+            self.instance.origin.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the changes'))

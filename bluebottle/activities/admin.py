@@ -47,7 +47,6 @@ from bluebottle.activities.models import (
     ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
-from bluebottle.activity_pub.admin import adapter
 from bluebottle.activity_pub.forms import SharePublishForm
 from bluebottle.activity_pub.models import Follow as ActivityPubFollow, Recipient
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -805,7 +804,8 @@ class ActivityChildAdmin(
             raise PermissionDenied
 
         if not hasattr(activity, 'event'):
-            adapter.create_or_update_event(activity)
+            from bluebottle.activity_pub.models import Event
+            Event.sync(activity)
 
         publish = activity.event.create_set.first()
         new_recipients = form.cleaned_data.get('recipients') or []

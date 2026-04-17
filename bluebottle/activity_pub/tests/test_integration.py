@@ -114,6 +114,20 @@ webfinger_mock = mock.patch(
 )
 
 
+def mock_image_response():
+    with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
+        mock_response = Response()
+        mock_response.raw = BytesIO(image_file.read())
+        mock_response.status_code = 200
+
+    return mock_response
+
+
+@httmock.urlmatch(path=r'/(media|api/activities/.*/image)/.*')
+def image_mock(url, request):
+    return mock_image_response()
+
+
 class ActivityPubTestCase:
     def setUp(self):
         super().setUp()
@@ -158,14 +172,14 @@ class ActivityPubTestCase:
         site_settings = SitePlatformSettings.load()
         self.assertEqual(site_settings.share_activities, ['supplier', 'consumer'])
         self.assertTrue(bool(site_settings.organization))
-        self.assertTrue(bool(site_settings.organization.activity_pub_organization))
+        self.assertTrue(bool(site_settings.organization.origin))
 
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
 
         with LocalTenant(self.other_tenant):
-            with mock.patch('requests.get', return_value=self.mock_response):
-                adapter.follow(platform_url)
+            with httmock.HTTMock(image_mock):
+                Follow.follow(platform_url)
 
         self.follow = Follow.objects.get(object=get_platform_actor())
 
@@ -195,12 +209,12 @@ class ActivityPubTestCase:
     def submit(self):
         self.model.states.submit()
         self.model.states.approve(save=True)
-        adapter.create_or_update_event(self.model)
+        Event.sync(self.model)
 
     def test_publish(self):
         self.test_accept()
         self.create()
-        publish = self.model.origin.create_set.first()
+        publish = self.model.origin.create_set.get()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -219,7 +233,7 @@ class ActivityPubTestCase:
         activity = DeedFactory.create(status='submitted')
         activity.states.approve(save=True)
 
-        publish = activity.event.create_set.first()
+        publish = activity.origin.create_set.first()
         self.assertIsNotNone(publish)
         self.assertTrue(
             Recipient.objects.filter(activity=publish, actor=self.follow.actor).exists()
@@ -253,8 +267,8 @@ class ActivityPubTestCase:
         activity = DeedFactory.create(status='submitted')
         activity.states.approve(save=True)
 
-        adapter.create_or_update_event(activity)
-        publish = activity.event.create_set.first()
+        Event.sync(activity)
+        publish = activity.origin.create_set.get()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -268,7 +282,7 @@ class ActivityPubTestCase:
         self.test_accept()
         self.create()
 
-        publish = self.model.event.create_set.first()
+        publish = self.model.origin.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -294,15 +308,6 @@ class ActivityPubTestCase:
     def approve(self, activity):
         activity.states.approve(save=True)
 
-    @property
-    def mock_response(self):
-        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
-            mock_response = Response()
-            mock_response.raw = BytesIO(image_file.read())
-            mock_response.status_code = 200
-
-        return mock_response
-
     def complete(self):
         self.adopted.theme = ThemeFactory.create()
 
@@ -317,9 +322,9 @@ class AdoptTestCase(ActivityPubTestCase):
             request = RequestFactory().get('/')
             request.user = BlueBottleUserFactory.create()
 
-            with mock.patch('requests.get', return_value=self.mock_response):
+            with httmock.HTTMock(image_mock):
                 with mock.patch.object(Geolocation, 'update_location'):
-                    self.adopted = adapter.adopt(self.event, request)
+                    self.adopted = adapter.adopt(self.event, owner=request.user)
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
@@ -349,9 +354,9 @@ class AdoptTestCase(ActivityPubTestCase):
             request = RequestFactory().get('/')
             request.user = BlueBottleUserFactory.create()
 
-            with mock.patch('requests.get', return_value=self.mock_response):
+            with httmock.HTTMock(image_mock):
                 with mock.patch.object(Geolocation, 'update_location'):
-                    self.adopted = adapter.adopt(self.event, request)
+                    self.adopted = adapter.adopt(self.event, owner=request.user)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
 
@@ -362,21 +367,26 @@ class LinkTestCase(ActivityPubTestCase):
         platform_url = self.build_absolute_url('/')
 
         with LocalTenant(self.other_tenant):
-            with mock.patch('requests.get', return_value=self.mock_response):
+            with httmock.HTTMock(image_mock):
                 follow = Follow(
                     automatic_adoption_activity_types=[
                         self.factory._meta.model._meta.model_name
                     ],
                     adoption_type=AdoptionTypeChoices.link
                 )
-                adapter.follow(platform_url, follow)
-                follow.save()
+                Follow.follow(
+                    platform_url,
+                    automatic_adoption_activity_types=[
+                        self.factory._meta.model._meta.model_name
+                    ],
+                    adoption_type=AdoptionTypeChoices.link
+                )
 
         self.follow = Follow.objects.get(object=get_platform_actor())
 
         self.assertTrue(self.follow)
         self.assertTrue(self.follow.actor.organization)
-        self.assertTrue(self.follow.actor.organization.logo)
+        self.assertTrue(self.follow.actor.organization.icon)
         self.assertEqual(self.follow.adoption_type, AdoptionTypeChoices.link)
 
     def test_update_follow(self):
@@ -391,10 +401,6 @@ class LinkTestCase(ActivityPubTestCase):
         self.assertEqual(follow.adoption_type, AdoptionTypeChoices.template)
 
     def test_link(self):
-        @httmock.urlmatch(netloc='test.localhost')
-        def image_mock(url, request):
-            return self.mock_response
-
         with httmock.HTTMock(image_mock):
             self.test_publish()
 
@@ -492,13 +498,9 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
         self.follow.publish_mode = 'automatic'
         self.follow.save(update_fields=['publish_mode'])
 
-        @httmock.urlmatch(netloc='test.localhost')
-        def image_mock(url, request):
-            return self.mock_response
-
         with httmock.HTTMock(image_mock):
             self.create(status='succeeded')
-            adapter.create_or_update_event(self.model)
+            Event.sync(self.model)
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
@@ -509,13 +511,9 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
         self.follow.publish_mode = 'automatic'
         self.follow.save(update_fields=['publish_mode'])
 
-        @httmock.urlmatch(netloc='test.localhost')
-        def image_mock(url, request):
-            return self.mock_response
-
         with httmock.HTTMock(image_mock):
             self.create(status='cancelled')
-            adapter.create_or_update_event(self.model)
+            Event.sync(self.model)
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
@@ -524,14 +522,10 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
     def test_link_manual_succeeded(self):
         self.test_accept()
 
-        @httmock.urlmatch(netloc='test.localhost')
-        def image_mock(url, request):
-            return self.mock_response
-
         with httmock.HTTMock(image_mock):
             self.create(status='succeeded')
 
-            adapter.create_or_update_event(self.model)
+            Event.sync(self.model)
             publish = self.model.event.create_set.first()
             Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
@@ -619,7 +613,7 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
             )
 
 
-class FundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
+class AdoptFundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
     factory = FundingFactory
 
     def create(self, **kwargs):
@@ -735,7 +729,7 @@ class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
             )
 
 
-class GrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
+class AdoptGrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
     factory = GrantApplicationFactory
 
     def create(self, **kwargs):
@@ -746,7 +740,7 @@ class GrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
         )
         self.model.states.submit(save=True)
         self.model.states.approve(save=True)
-        adapter.create_or_update_event(self.model)
+        Event.sync(self.model)
 
     def test_publish(self):
         super().test_publish()

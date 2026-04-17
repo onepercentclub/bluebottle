@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
-from bluebottle.activity_pub.adapters import client
+from bluebottle.activity_pub.clients import client
 from bluebottle.activity_pub.utils import is_local
 
 

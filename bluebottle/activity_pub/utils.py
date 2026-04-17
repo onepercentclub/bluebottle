@@ -3,7 +3,6 @@ from urllib.parse import urlparse
 from django.db import connection
 import inflection
 
-from bluebottle.activity_pub.models import Organization as Organization
 from bluebottle.cms.models import SitePlatformSettings
 
 
@@ -36,12 +35,8 @@ def is_local(url):
 
 def get_platform_actor():
     site_settings = SitePlatformSettings.load()
-    try:
-        if site_settings.organization:
-            platform_organization = site_settings.organization
-            return platform_organization.origin
-    except Organization.DoesNotExist:
-        pass
+    if site_settings.organization and hasattr(site_settings.organization, 'origin'):
+        return site_settings.organization.origin
 
 
 def timedelta_to_iso(td):

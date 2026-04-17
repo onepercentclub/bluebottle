@@ -177,7 +177,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url, user=self.superuser)
         form = page.forms[1]
 
-        with mock.patch('bluebottle.activity_pub.admin.publish_activities.delay') as delay:
+        with mock.patch('bluebottle.activity_pub.admin.publish_activity.delay') as delay:
             response = form.submit(name='confirm')
 
         self.assertEqual(response.status_code, 302)

@@ -55,11 +55,11 @@ class FederatedSerializerTestCase:
         serializer = FederatedObjectSerializer(instance=self.instance, context=self.context)
 
         activity_pub_serializer = ActivityPubSerializer(
-            data=serializer.data, origin=serializer.instance
+            data=serializer.data
         )
         self.assertTrue(activity_pub_serializer.is_valid())
 
-        activity_pub_serializer.save()
+        activity_pub_serializer.save(federated_object=self.instance)
         self.activity_pub_instance = activity_pub_serializer.instance
 
         self.assertEqual(self.instance, self.activity_pub_instance.federated_object)
@@ -72,7 +72,7 @@ class FederatedSerializerTestCase:
         )
 
         federated_serializer = FederatedObjectSerializer(
-            data=serializer.data, origin=self.activity_pub_instance
+            data=serializer.data
         )
         self.assertTrue(federated_serializer.is_valid())
 

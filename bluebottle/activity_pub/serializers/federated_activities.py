@@ -8,13 +8,16 @@ from django.contrib.gis.geos import Point
 from django.core.files import File
 from django.db import connection, models
 from django.urls import reverse
+
+from django_tools.middlewares.ThreadLocal import get_current_user
+
 from djmoney.money import Money
 from rest_framework import exceptions
 from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
-    SubEvent, RepetitionModeChoices, SlotModeChoices
+    SubEvent, RepetitionModeChoices, SlotModeChoices, Create
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
 from bluebottle.collect.models import CollectActivity, CollectType
@@ -51,7 +54,6 @@ class ImageSerializer(FederatedObjectBaseSerializer):
         if not validated_data:
             return None
 
-        validated_data['owner'] = self.context['request'].user
         image = ActivityPubImage.objects.from_iri(validated_data['id'])
 
         response = requests.get(image.url, timeout=30)
@@ -233,16 +235,20 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
             obj.get_absolute_url()
         )
 
+    def create(self, validated_data):
+        source = Create.objects.get(object__iri=validated_data['id']).actor
+        follow = source.follow_set.get()
+        if follow.default_owner:
+            validated_data['owner'] = follow.default_owner
+
+        validated_data['host_organization'] = source.federated_object
+
+        return super().create(validated_data)
+
     class Meta(FederatedObjectBaseSerializer.Meta):
         fields = FederatedObjectBaseSerializer.Meta.fields + (
             'name', 'summary', 'image', 'organization', 'url'
         )
-
-    def save(self, *args, **kwargs):
-        if not kwargs.get('owner'):
-            kwargs['owner'] = self.context['request'].user
-
-        return super().save(**kwargs)
 
 
 class FederatedDeedSerializer(BaseFederatedActivitySerializer):

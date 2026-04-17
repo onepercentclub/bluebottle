@@ -19,7 +19,8 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 
-from bluebottle.activity_pub.adapters import adapter, publish_activities
+from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.tasks import publish_activity
 from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
     Activity,
@@ -177,7 +178,7 @@ class OrganizationAdmin(ActivityPubModelChildAdmin):
             for form in formset.forms:
                 if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
                     url = form.cleaned_data.get("iri")
-                    adapter.follow(url)
+                    follow = Follow.follow(url)
         else:
             super().save_formset(request, form, formset, change)
 
@@ -464,7 +465,7 @@ class FollowingAdmin(FollowAdmin):
         if not change:
             platform_url = form.cleaned_data['platform_url']
             try:
-                adapter.follow(platform_url, obj)
+                obj.follow(platform_url)
 
                 self.message_user(
                     request,
@@ -625,7 +626,8 @@ class FollowerAdmin(FollowAdmin):
     @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_succeeded_activities.html')
     def publish_succeeeded_activities(self, request, follow, form):
         unpublished = follow.unpublished_succeeded_activities.all()
-        publish_activities.delay(follow.actor, unpublished, connection.tenant)
+        for activity in unpublished:
+            publish_activity.delay(follow.actor, activity, connection.tenant)
 
         self.message_user(
             request,
@@ -641,7 +643,8 @@ class FollowerAdmin(FollowAdmin):
     @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_open_activities.html')
     def publish_open_activities(self, request, follow, form):
         unpublished = follow.unpublished_open_activities.all()
-        publish_activities.delay(follow.actor, unpublished, connection.tenant)
+        for activity in unpublished:
+            publish_activity.delay(follow.actor, unpublished, connection.tenant)
 
         self.message_user(
             request,
@@ -872,7 +875,7 @@ class EventAdminMixin:
             )
 
         try:
-            activity = adapter.adopt(event, request)
+            event.adopt(owner=request.user)
 
             self.message_user(
                 request,
@@ -981,7 +984,8 @@ def adopt_events(modeladmin, request, events):
         if event.source.follow.adoption_type == 'link':
             adapter.link(event)
         if event.source.follow.adoption_type == 'template':
-            adapter.adopt(event)
+            event.adopt(owner=request.user)
+
     modeladmin.message_user(
         request,
         _('{amount} activities have been adopted.').format(amount=len(events)),

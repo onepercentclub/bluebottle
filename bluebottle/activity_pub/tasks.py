@@ -1,6 +1,5 @@
 from celery import shared_task
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.activity_pub.models import Recipient, Event
 
 
 @shared_task(
@@ -17,6 +16,7 @@ def publish_to_recipient(recipient, tenant):
     name="bluebottle.activity_pub.adapters.publish_activities"
 )
 def publish_activity(recipient, activity, tenant):
+    from bluebottle.activity_pub.models import Recipient, Event
     with LocalTenant(tenant, clear_tenant=True):
         event = Event.sync(activity)
         create = event.create_set.first()

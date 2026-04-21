@@ -314,7 +314,7 @@ class Geolocation(models.Model):
 
     def update_location(self, replace=False):
         data = self.reverse_geocode()
-        if data and data != "No results found.":
+        if data and data != "No results found." and not data.startswith('Error:'):
             self.mapbox_id = data['id']
             country = None
             if not self.formatted_address or replace:

@@ -1,4 +1,4 @@
-from rest_framework.relations import RelatedField
+from rest_framework.relations import RelatedField, ManyRelatedField
 from rest_framework.exceptions import ValidationError
 
 from bluebottle.activity_pub.models import ActivityPubModel
@@ -7,11 +7,25 @@ from bluebottle.activity_pub.clients import client
 from bluebottle.activity_pub.utils import is_local
 
 
+class ManyResourceRelatedField(ManyRelatedField):
+    def to_internal_value(self, data):
+        if not isinstance(data, (tuple, list)):
+            # In json-ld list are compacted to single items. Make a list again in that case
+            data = [data]
+
+        return super().to_internal_value(data)
+
+
 class RelatedResourceField(RelatedField):
     def __init__(self, type, include=False, *args, **kwargs):
         self.include = include
         self.type = type
         super().__init__(*args, **kwargs)
+
+    @classmethod
+    def many_init(cls, type, include, *args, **kwargs):
+        kwargs['child_relation'] = cls(type, include)
+        return ManyResourceRelatedField(*args, **kwargs)
 
     def get_queryset(self):
         # TODO: filter queryset on correct types
@@ -27,28 +41,22 @@ class RelatedResourceField(RelatedField):
             data = {'id': data}
 
         if 'type' not in data and isinstance(self.type, str):
-            try:
-                data = dict(type=self.type, **data)
-            except:
-                __import__('ipdb').set_trace()
+            data = dict(type=self.type, **data)
 
         serializer = ActivityPubSerializer()
 
         try:
-            internal_value = serializer.to_internal_value(data)
-        except ValidationError as e:
+            return serializer.to_internal_value(data)
+        except ValidationError:
             if 'id' in data:
-                if is_local(data['id']):
-                    instance = ActivityPubModel.objects.from_iri(data['id'])
+                instance = ActivityPubModel.objects.from_iri(data['id'])
+
+                if instance:
                     local_data = ActivityPubSerializer(instance=instance).data
                     return serializer.to_internal_value(local_data)
-                else:
+                elif not is_local(data['id']):
                     fetched_data = client.fetch(data['id'])
-                    internal_value = serializer.to_internal_value(fetched_data)
-            else:
-                return {'id': None}
-
-        return internal_value
+                    return serializer.to_internal_value(fetched_data)
 
     def save(self, value):
         if value is not None:
@@ -60,5 +68,4 @@ class RelatedResourceField(RelatedField):
 
             serializer._validated_data = value
             serializer._errors = []
-
             return serializer.save()

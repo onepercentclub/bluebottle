@@ -1,5 +1,3 @@
-import logging
-
 from bluebottle.activity_pub.serializers import (
     ActivityPubSerializer, FederatedObjectSerializer
 )
@@ -17,8 +15,8 @@ class JSONLDAdapter():
 
         return serializer.save()
 
-    def publish(self, activity, actor):
-        data = ActivityPubSerializer().to_representation(activity)
+    def publish(self, event, actor):
+        data = ActivityPubSerializer().to_representation(event)
         from bluebottle.activity_pub.clients import client
         client.post(actor.inbox.iri, data=data)
 
@@ -41,20 +39,6 @@ class JSONLDAdapter():
         )
         serializer.is_valid(raise_exception=True)
         return serializer.save(federated_object=model)
-
-    def link(self, event, request=None):
-        from bluebottle.activity_links.serializers import LinkedActivitySerializer
-
-        serializer = LinkedActivitySerializer(
-            data=ActivityPubSerializer(instance=event).data,
-            instance=event.linked_activity,
-        )
-        serializer.is_valid(raise_exception=True)
-
-        return serializer.save(
-            host_organization=event.source.federation_object,
-            event=event
-        )
 
 
 adapter = JSONLDAdapter()

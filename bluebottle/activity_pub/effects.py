@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Accept, Follow, Start, Update, Cancel, Delete, Finish, Event
+    Accept, Follow, Start, Cancel, Delete, Finish, Event
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -89,12 +89,16 @@ class CancelEffect(Effect):
 
     def post_save(self, **kwargs):
         Cancel.objects.create(
-            object=self.instance.event
+            object=self.instance.origin
         )
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'origin') and
+            self.instance.origin.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the cancelation'))
@@ -105,12 +109,16 @@ class StartEffect(Effect):
 
     def post_save(self, **kwargs):
         Start.objects.create(
-            object=self.instance.event
+            object=self.instance.origin
         )
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'origin') and
+            self.instance.origin.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the start of an activity'))
@@ -121,12 +129,16 @@ class FinishEffect(Effect):
 
     def post_save(self, **kwargs):
         Finish.objects.create(
-            object=self.instance.event
+            object=self.instance.origin
         )
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'origin') and
+            self.instance.origin.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the end'))
@@ -137,12 +149,16 @@ class DeletedEffect(Effect):
 
     def post_save(self, **kwargs):
         Delete.objects.create(
-            object=self.instance.event
+            object=self.instance.origin
         )
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'origin') and
+            self.instance.origin.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the deletion'))

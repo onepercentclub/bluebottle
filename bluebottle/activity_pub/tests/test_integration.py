@@ -16,7 +16,6 @@ from requests import Request, Response
 
 from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, LinkedGrantApplication
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.clients import client
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event,
@@ -179,7 +178,9 @@ class ActivityPubTestCase:
 
         with LocalTenant(self.other_tenant):
             with httmock.HTTMock(image_mock):
-                Follow.follow(platform_url)
+                follow = Follow()
+                follow.follow(platform_url)
+                follow.save()
 
         self.follow = Follow.objects.get(object=get_platform_actor())
 
@@ -209,7 +210,7 @@ class ActivityPubTestCase:
     def submit(self):
         self.model.states.submit()
         self.model.states.approve(save=True)
-        Event.sync(self.model)
+        adapter.sync(self.model)
 
     def test_publish(self):
         self.test_accept()
@@ -267,7 +268,7 @@ class ActivityPubTestCase:
         activity = DeedFactory.create(status='submitted')
         activity.states.approve(save=True)
 
-        Event.sync(activity)
+        adapter.sync(activity)
         publish = activity.origin.create_set.get()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
@@ -374,13 +375,14 @@ class LinkTestCase(ActivityPubTestCase):
                     ],
                     adoption_type=AdoptionTypeChoices.link
                 )
-                Follow.follow(
-                    platform_url,
+                follow = Follow(
                     automatic_adoption_activity_types=[
                         self.factory._meta.model._meta.model_name
                     ],
                     adoption_type=AdoptionTypeChoices.link
                 )
+                follow.follow(platform_url)
+                follow.save()
 
         self.follow = Follow.objects.get(object=get_platform_actor())
 
@@ -415,7 +417,7 @@ class LinkTestCase(ActivityPubTestCase):
     def test_link_notifies_source_platform(self):
         self.test_link()
 
-        accept = Accept.objects.get(object=self.model.event)
+        accept = Accept.objects.get(object=self.model.origin)
         self.assertEqual(accept.actor, self.follow.actor)
 
     def test_update(self):
@@ -423,7 +425,7 @@ class LinkTestCase(ActivityPubTestCase):
         self.test_link()
         self.model.title = title
 
-        with mock.patch('requests.get', return_value=self.mock_response):
+        with httmock.HTTMock(image_mock):
             self.model.save()
 
         with LocalTenant(self.other_tenant):
@@ -500,7 +502,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
 
         with httmock.HTTMock(image_mock):
             self.create(status='succeeded')
-            Event.sync(self.model)
+            adapter.sync(self.model)
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
@@ -513,7 +515,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
 
         with httmock.HTTMock(image_mock):
             self.create(status='cancelled')
-            Event.sync(self.model)
+            adapter.sync(self.model)
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
@@ -525,8 +527,8 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
         with httmock.HTTMock(image_mock):
             self.create(status='succeeded')
 
-            Event.sync(self.model)
-            publish = self.model.event.create_set.first()
+            adapter.sync(self.model)
+            publish = self.model.origin.create_set.first()
             Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -576,7 +578,7 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
     def test_update_donated_amount(self):
         self.test_link()
 
-        with mock.patch('requests.get', return_value=self.mock_response):
+        with httmock.HTTMock(image_mock):
             self.model.amount_donated = Money(12, 'EUR')
             self.model.save()
 
@@ -740,7 +742,7 @@ class AdoptGrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
         )
         self.model.states.submit(save=True)
         self.model.states.approve(save=True)
-        Event.sync(self.model)
+        adapter.sync(self.model)
 
     def test_publish(self):
         super().test_publish()
@@ -810,7 +812,7 @@ class AdoptDeadlineActivityTestCase(AdoptTestCase, BluebottleTestCase):
         )
         self.submit()
 
-        publish = self.model.event.create_set.first()
+        publish = self.model.origin.create_set.get()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):

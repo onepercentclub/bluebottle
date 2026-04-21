@@ -228,7 +228,7 @@ class CollectCampaignSerializer(BaseEventSerializer):
 
 class SubEventSerializer(BaseActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:sub-event')
-    type = TypeField('Event')
+    type = TypeField('subEvent')
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
@@ -417,4 +417,5 @@ class FinishSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Finish
 
-from bluebottle.activity_pub.serializers.federated_activities import *
+
+from bluebottle.activity_pub.serializers.federated_activities import *  # noqa

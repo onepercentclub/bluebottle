@@ -178,7 +178,7 @@ class OrganizationAdmin(ActivityPubModelChildAdmin):
             for form in formset.forms:
                 if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
                     url = form.cleaned_data.get("iri")
-                    follow = Follow.follow(url)
+                    Follow.follow(url)
         else:
             super().save_formset(request, form, formset, change)
 
@@ -875,7 +875,7 @@ class EventAdminMixin:
             )
 
         try:
-            event.adopt(owner=request.user)
+            activity = adapter.adopt(event, owner=request.user)
 
             self.message_user(
                 request,

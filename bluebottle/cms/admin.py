@@ -219,7 +219,6 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
     def is_linking_activities(self):
         return Following.objects.filter(adoption_type='link').exists()
 
-
     def terminated_info(self, obj):
         active_members = Member.objects.filter(is_active=True)
         return mark_safe(

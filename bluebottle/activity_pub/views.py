@@ -5,23 +5,12 @@ from rest_framework import generics, status, response, exceptions
 
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
-    ActivityPubModel, Person, Inbox, Outbox, PublicKey, Follow, Accept, Create, Organization,
-    GoodDeed, Image, CrowdFunding, CollectCampaign, Place, Address, DoGoodEvent, SubEvent, Update,
-    Delete, Start, Cancel, Finish, GrantApplication
+    ActivityPubModel, Inbox
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import InboxPermission, ActivityPubPermission
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
-from bluebottle.activity_pub.serializers.json_ld import (
-    PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
-    AcceptSerializer, CreateSerializer,
-    OrganizationSerializer, GoodDeedSerializer, ImageSerializer,
-    CrowdFundingSerializer, CollectCampaignSerializer, PlaceSerializer, AddressSerializer,
-    GrantApplicationSerializer,
-    DoGoodEventSerializer, SubEventSerializer, UpdateSerializer,
-    DeleteSerializer, StartSerializer, CancelSerializer, FinishSerializer
-)
 from bluebottle.clients.utils import LocalTenant
 
 
@@ -58,6 +47,7 @@ def create_task(request, tenant):
 
 class PickableRequest:
     pickled_fields = ['path', 'user', 'headers', 'auth', 'data']
+
     def __init__(self, request):
         for field in self.pickled_fields:
             setattr(self, field, getattr(request, field))

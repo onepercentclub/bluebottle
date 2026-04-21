@@ -57,7 +57,7 @@ class ActivityPubModel(PolymorphicModel):
             model_name = self.__class__.__name__
             return connection.tenant.build_absolute_url(
                 reverse(
-                    f'json-ld:resource',
+                    'json-ld:resource',
                     args=(
                         inflection.dasherize(inflection.underscore(model_name)),
                         str(self.pk),
@@ -125,7 +125,6 @@ class Person(Actor):
         return self.name
 
 
-
 class Image(ActivityPubModel):
     name = models.CharField(max_length=1000, null=True)
     url = models.URLField(null=True)
@@ -136,6 +135,7 @@ class Image(ActivityPubModel):
         on_delete=models.CASCADE,
         related_name='origin'
     )
+
 
 class Organization(Actor):
     name = models.CharField(max_length=300)
@@ -153,7 +153,6 @@ class Organization(Actor):
     )
 
     def save(self, *args, **kwargs):
-        created = not self.pk
         super().save(*args, **kwargs)
 
         if not self.is_local and not self.federated_object:
@@ -256,18 +255,6 @@ class Event(ActivityPubModel):
                 Update.objects.create(
                     object=self
                 )
-
-    def adopt(self, owner=None):
-
-        follow = self.source.follow_set.get()
-        if follow.default_owner:
-            owner = follow.default_owner
-
-        return adapter.adopt(
-            self,
-            host_organization=self.source.federated_object,
-            owner=follow.default_owner or owner
-        )
 
     @property
     def source(self):
@@ -603,12 +590,8 @@ class Follow(Activity):
         verbose_name=_("Publish mode"),
     )
 
-    @classmethod
-    def follow(cls, url, **kwargs):
-        follow = cls(object=adapter.discover(url), **kwargs)
-
-        follow.save()
-        return follow
+    def follow(self, url, **kwargs):
+        self.object = adapter.discover(url)
 
     @property
     def default_recipients(self):
@@ -647,32 +630,33 @@ class Follow(Activity):
         return DoGoodActivity.objects.filter(
             status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
         ).exclude(
-            event__create__recipients__actor=self.actor,
+            origin__create__recipients__actor=self.actor,
         )
 
     @property
     def unpublished_open_activities(self):
-        return DoGoodActivity.objects.filter(
+        return self.unpublished_activities.filter(
             status__in=['open', 'full', 'running'],
-        ).exclude(
-            event__create__recipients__actor=self.actor,
         )
 
     @property
     def unpublished_succeeded_activities(self):
-        return DoGoodActivity.objects.filter(
+        return self.unpublished_activities.filter(
             status__in=['succeeded', 'partially_funded'],
-        ).exclude(
-            event__create__recipients__actor=self.actor,
         )
 
     def save(self, *args, **kwargs):
-        created = bool(self.pk)
+        created = not bool(self.pk)
 
         if not hasattr(self, 'actor'):
             self.actor = get_platform_actor()
 
         super().save(*args, **kwargs)
+
+        if not created:
+            Update.objects.create(
+                object=self
+            )
 
     def __str__(self):
         return str(self.object)
@@ -718,15 +702,15 @@ class Create(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
-        created = not self.pk
         super().save(*args, **kwargs)
 
-        if self.object.federated_object.status in ('open', 'granted', ):
-            Start.objects.create(object=self.object)
-        elif self.object.federated_object.status == 'succeeded':
-            Finish.objects.create(object=self.object)
-        else:
-            Cancel.objects.create(object=self.object)
+        if self.is_local and self.object.federated_object:
+            if self.object.federated_object.status in ('open', 'granted', ):
+                Start.objects.create(object=self.object)
+            elif self.object.federated_object.status == 'succeeded':
+                Finish.objects.create(object=self.object)
+            else:
+                Cancel.objects.create(object=self.object)
 
     @property
     def followers(self):

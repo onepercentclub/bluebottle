@@ -1,5 +1,6 @@
 from celery import shared_task
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.activity_pub.models import Recipient, Event
 
 
 @shared_task(
@@ -9,6 +10,7 @@ from bluebottle.clients.utils import LocalTenant
 def publish_to_recipient(recipient, tenant):
     with LocalTenant(tenant, clear_tenant=True):
         recipient.publish()
+
 
 @shared_task(
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},

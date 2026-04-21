@@ -6,15 +6,13 @@ import pytz
 import requests
 from django.contrib.gis.geos import Point
 from django.core.files import File
-from django.db import connection, models
+from django.db import connection
 from django.urls import reverse
 
-from django_tools.middlewares.ThreadLocal import get_current_user
 
 from djmoney.money import Money
 from rest_framework import exceptions
 from rest_framework import serializers
-from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
     SubEvent, RepetitionModeChoices, SlotModeChoices, Create
@@ -171,7 +169,6 @@ class MemberSerializer(FederatedObjectBaseSerializer):
         fields = FederatedObjectBaseSerializer.Meta.fields + (
             'name', 'family_name', 'given_name', 'summary', 'icon'
         )
-
 
 
 class OrganizationSerializer(FederatedObjectBaseSerializer):

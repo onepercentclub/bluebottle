@@ -247,6 +247,20 @@ class ScheduleParticipantDetailAPITestCase(TimeBasedParticipantDetailAPITestCase
         'deadline': date.today() + timedelta(days=20),
     }
 
+    def test_patch_slot(self):
+        self.model = self.participant
+        new_slot = ScheduleSlotFactory.create(activity=self.activity)
+        current_user = self.model.user
+        self.perform_update(
+            {'slot': new_slot},
+            user=self.activity.owner
+        )
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertEqual(self.model.user, current_user)
+        self.assertEqual(self.model.slot, new_slot)
+
 
 class ScheduleParticipantTransitionListAPITestCase(TimeBasedParticipantTransitionListAPITestCase, APITestCase):
     url_name = 'schedule-participant-transitions'

@@ -42,32 +42,6 @@ class FundingDocument(ActivityDocument):
         if isinstance(related_instance, Donor):
             return Funding.objects.filter(contributors=related_instance)
 
-    def prepare_location(self, instance):
-        locations = []
-        if hasattr(instance, 'impact_location') and instance.impact_location:
-            locations.append({
-                'id': instance.impact_location.id,
-                'name': instance.impact_location.formatted_address,
-                'locality': instance.impact_location.locality,
-                'country_code': instance.impact_location.country.alpha2_code,
-                'country': instance.impact_location.country.name,
-                'type': 'location'
-            })
-        elif instance.initiative and instance.initiative.place:
-            if instance.initiative.place.country:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'country_code': instance.initiative.place.country.alpha2_code,
-                    'country': instance.initiative.place.country.name,
-                    'type': 'impact_location'
-                })
-            else:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'type': 'impact_location'
-                })
-        return locations
-
     def prepare_position(self, instance):
         positions = []
         if hasattr(instance, 'impact_location') and instance.impact_location and instance.impact_location.position:

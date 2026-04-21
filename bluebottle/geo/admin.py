@@ -228,9 +228,9 @@ class GeolocationAdminForm(forms.ModelForm):
     class Meta(object):
         model = Geolocation
         fields = '__all__'
-        widgets = {
-            'mapbox_id': forms.HiddenInput()
-        }
+        # widgets = {
+        #     'mapbox_id': forms.HiddenInput()
+        # }
 
 
 

@@ -54,6 +54,7 @@ from bluebottle.grant_management.serializers import (
     GrantSerializer,
     GrantApplicationSerializer
 )
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import (
     DateParticipant,
     PeriodicParticipant,
@@ -381,31 +382,33 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_location(self, obj):
         location = False
+        has_single_location = True
         if hasattr(obj, "slots") and obj.slots:
             slots = self.get_filtered_slots(obj, only_upcoming=True)
             if not len(slots):
                 slots = self.get_filtered_slots(obj)
-
             if len(set(slot.locality for slot in slots)) == 1:
                 location = slots[0]
+            else:
+                has_single_location = False
 
-        elif obj.type == "funding":
-            places = [
-                location for location in obj.location if
-                location.type in ("impact_location", "location")
-            ]
-            if places:
-                location = places[0]
-        elif len(obj.location):
-            order = [
-                "location",
-                "office",
-                "place",
-                "initiative_office",
-                "impact_location",
-            ]
+        if len(obj.geofeature):
+            location_features = InitiativePlatformSettings.load().location_features
+            language = get_current_language()
+            features = [f for f in (obj.geofeature or []) if f.language == language]
+            if not features:
+                features = list(obj.geofeature or [])
 
-            location = sorted(obj.location, key=lambda loc: order.index(getattr(loc, 'type', 'location')))[0]
+            parts = []
+            for place_type in location_features:
+                match = next(
+                    (f for f in features if f.place_type == place_type),
+                    None,
+                )
+                if match:
+                    parts.append(match.name)
+
+            return ", ".join([p for p in parts if p])
 
         if location:
             if location.locality:

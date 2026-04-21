@@ -6,6 +6,8 @@ from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.db import models
+from django.db.models import Case, When, Value
+from django.db.models.fields import IntegerField
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
@@ -278,6 +280,21 @@ PLACE_TYPE_ORDER = [
 ]
 
 
+class GeoFeatureQueryset(models.QuerySet):
+    def order_by_type(self):
+        order = PLACE_TYPE_ORDER[::-1]
+        ordering = Case(
+            *[
+                When(place_type=value, then=Value(index))
+                for index, value in enumerate(order)
+            ],
+            default=Value(len(order)),
+            output_field=IntegerField()
+        )
+
+        return self.annotate(custom_order=ordering).order_by('custom_order')
+
+
 class GeoFeature(SortableTranslatableModel):
     translations = TranslatedFields(
         name=models.CharField(_("Name"), max_length=512),
@@ -286,6 +303,8 @@ class GeoFeature(SortableTranslatableModel):
     place_type = models.CharField(_('Place type'), choices=LevelChoices)
     code = models.CharField(_('Code'), max_length=10, null=True)
     mapbox_id = models.CharField(max_length=500, null=True)
+
+    objects = GeoFeatureQueryset.as_manager()
 
     class Meta(GeoBaseModel.Meta):
         verbose_name = _('Geo feature')
@@ -331,7 +350,7 @@ class Geolocation(models.Model):
 
     def __str__(self):
         if self.features.count():
-            return self.features.first().place_name
+            return self.features.order_by_type().first().place_name
         return self.formatted_address or '-unknown-'
 
 
@@ -421,7 +440,6 @@ class Geolocation(models.Model):
         so selecting a country/region doesn't accidentally resolve to a postcode/address.
         """
         data = self.geocode_by_id(self.mapbox_id)
-        print('DATA', data)
         if data and data != "No results found.":
             if not self.formatted_address or replace:
                 self.formatted_address = data.get('place_name')
@@ -467,11 +485,24 @@ class Geolocation(models.Model):
                 Geolocation.objects.filter(pk=self.pk).values_list('mapbox_id', flat=True).first()
             )
 
+        if settings.MAPBOX_API_KEY and self.mapbox_id:
+            from bluebottle.geo.utils import normalize_mapbox_id
+
+            self.mapbox_id = normalize_mapbox_id(
+                mapbox_id=self.mapbox_id,
+                street=self.street,
+                street_number=self.street_number,
+                formatted_address=self.formatted_address,
+                locality=self.locality,
+                province=self.province,
+                country_name=self.country.name if self.country_id else None,
+                position=(self.position.x, self.position.y) if self.position else None,
+            )
+
         result = super().save(*args, **kwargs)
 
         if settings.MAPBOX_API_KEY and self.mapbox_id:
             if creating or old_mapbox_id != self.mapbox_id or not self.features.exists():
-                print("NEED TO UPDATE GEOLOCATION FEATURES")
                 from bluebottle.geo.utils import collect_geo_features
                 self.features.clear()
                 collect_geo_features(self)

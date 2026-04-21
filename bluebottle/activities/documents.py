@@ -11,6 +11,7 @@ from bluebottle.initiatives.documents import deduplicate, get_translated_list, g
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.segments.models import Segment
 from bluebottle.utils.documents import MultiTenantIndex, TextField
+from bluebottle.utils.models import Language
 from bluebottle.utils.search import Search
 
 
@@ -25,6 +26,26 @@ activity.settings(
     number_of_shards=1,
     number_of_replicas=0
 )
+
+
+def get_translated_geofeatures(obj):
+    data = []
+    current_language = obj._current_language
+
+    for lang in Language.objects.all():
+        obj.set_current_language(lang.full_code)
+        data.append(
+            {
+                'id': obj.pk,
+                'language': lang.full_code,
+                'name': obj.name,
+                'place_name': obj.place_name,
+                'place_type': obj.place_type,
+                'mapbox_id': obj.mapbox_id,
+            }
+        )
+    obj._current_language = current_language
+    return data
 
 
 class ActivityDocument(Document):
@@ -356,8 +377,8 @@ class ActivityDocument(Document):
                 'id': instance.location.id,
                 'name': instance.location.formatted_address,
                 'locality': instance.location.locality,
-                'country_code': instance.location.country.alpha2_code,
-                'country': instance.location.country.name,
+                'country_code': instance.location.country.alpha2_code if instance.location.country else None,
+                'country': instance.location.country.name if instance.location.country else None,
                 'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:
@@ -394,20 +415,14 @@ class ActivityDocument(Document):
         locations = []
         if hasattr(instance, 'location') and instance.location:
             locations.append(instance.location)
+        if hasattr(instance, 'impact_location') and instance.impact_location:
+            locations.append(instance.impact_location)
         if instance.initiative and instance.initiative.place:
             locations.append(instance.initiative.place)
         geofeatures = []
         for location in locations:
             for geofeature in location.features.all():
-                geofeatures.append({
-                    'id': geofeature.id,
-                    'mapbox_id': geofeature.mapbox_id,
-                    'name': geofeature.name,
-                    'place_name': geofeature.place_name,
-                    'place_type': geofeature.place_type,
-                    'language': geofeature.language,
-
-                })
+                geofeatures += get_translated_geofeatures(geofeature)
         return geofeatures
 
     def prepare_office_restriction(self, instance):

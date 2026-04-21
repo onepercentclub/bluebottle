@@ -1,4 +1,6 @@
 import requests
+import re
+from typing import Optional, Tuple
 from django.conf import settings
 from parler.utils.context import switch_language
 
@@ -29,6 +31,111 @@ def pick_preferred_reverse_geocode_feature(features):
                     if (f.get('place_type') or [None])[0] == preferred:
                         return f
     return first
+
+
+def extract_house_number_from_address_fields(
+    street_number: Optional[str] = None,
+    street: Optional[str] = None,
+    formatted_address: Optional[str] = None,
+) -> Optional[str]:
+    if street_number:
+        candidate = str(street_number).strip()
+        if re.match(r"^\d+[A-Za-z]?$", candidate):
+            return candidate
+    if street:
+        s = str(street).strip()
+        m = re.search(r"\b(\d+[A-Za-z]?)\b", s)
+        if m:
+            return m.group(1)
+    if formatted_address:
+        first_line = str(formatted_address).split(",")[0].strip()
+        if first_line:
+            matches = list(re.finditer(r"\b(\d+[A-Za-z]?)\b", first_line))
+            if matches:
+                return matches[-1].group(1)
+    return None
+
+
+def normalize_mapbox_id(
+    *,
+    mapbox_id: Optional[str],
+    street: Optional[str] = None,
+    street_number: Optional[str] = None,
+    formatted_address: Optional[str] = None,
+    locality: Optional[str] = None,
+    province: Optional[str] = None,
+    country_name: Optional[str] = None,
+    position: Optional[Tuple[float, float]] = None,  # (lon, lat)
+    access_token: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Normalize legacy v5-style ids ("place.123", "address.456") to modern v6 ids (URN/hash).
+    Returns the new id, or the original when it can't be resolved.
+    """
+    if not mapbox_id:
+        return None
+
+    token = access_token or settings.MAPBOX_API_KEY
+    if not token:
+        return mapbox_id
+
+    current = str(mapbox_id).strip()
+
+    def is_modern(value: str) -> bool:
+        return value.startswith("dXJu") or value.startswith("urn:")
+
+    def v6_forward(params):
+        response = requests.get(
+            "https://api.mapbox.com/search/geocode/v6/forward",
+            params={**params, "access_token": token, "limit": 1},
+            timeout=30,
+        )
+        response.raise_for_status()
+        payload = response.json() or {}
+        features = payload.get("features") or []
+        return features[0] if features else None
+
+    # If it looks like a legacy id, try resolving it directly via v6.
+    if "." in current and not is_modern(current):
+        resolved = v6_forward({"q": current, "permanent": "true"})
+        resolved_id = (resolved or {}).get("id")
+        if resolved_id and is_modern(resolved_id):
+            current = resolved_id
+
+    # Special-case legacy address ids: resolve via a better address query.
+    if mapbox_id.startswith("address.") and not is_modern(current):
+        house_number = extract_house_number_from_address_fields(
+            street_number=street_number,
+            street=street,
+            formatted_address=formatted_address,
+        )
+        query_parts = []
+        street_line = str(street).strip() if street else ""
+        if not street_line and formatted_address:
+            street_line = str(formatted_address).split(",")[0].strip()
+        if street_line:
+            if house_number and house_number not in street_line:
+                query_parts.append(f"{street_line} {house_number}")
+            else:
+                query_parts.append(street_line)
+        if locality:
+            query_parts.append(str(locality))
+        if country_name:
+            query_parts.append(str(country_name))
+        elif province:
+            query_parts.append(str(province))
+
+        q = ", ".join([p for p in query_parts if p])
+        if q:
+            params = {"q": q, "types": "address", "permanent": "true"}
+            if position:
+                params["proximity"] = f"{position[0]},{position[1]}"
+            resolved = v6_forward(params)
+            resolved_id = (resolved or {}).get("id")
+            if resolved_id and is_modern(resolved_id):
+                current = resolved_id
+
+    return current
 
 
 def collect_geo_features(geolocation):
@@ -167,7 +274,6 @@ def collect_geo_features(geolocation):
             geo_feature.save(update_fields=['place_type'])
 
         should_update = created or force_update
-        print("Saving feature")
 
         if should_update:
             translations = feature.get('translations') or {}

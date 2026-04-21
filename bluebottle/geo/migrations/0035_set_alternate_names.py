@@ -9,7 +9,6 @@ def save_locations(apps, schema_editor):
     for location in Location.objects.all():
         location.alternate_names = [location.name, location.slug]
         location.save()
-        print(location.alternate_names)
 
 
 class Migration(migrations.Migration):

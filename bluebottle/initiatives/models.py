@@ -342,7 +342,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     LOCATION_DISPLAY_OPTIONS = (
         ("address", _("Address")),
         ("neighborhood", _("Neighbourhood")),
-        ("city", _("City")),
+        ("place", _("City")),
         ("region", _("Region/State")),
         ("country", _("Country")),
     )
@@ -405,7 +405,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     location_features = MultiSelectField(
         _("Location display format"),
         max_length=1000, choices=LOCATION_DISPLAY_OPTIONS,
-        default=['city', 'country'],
+        default=['place', 'country'],
         help_text=_(
             "Select the information of the location that is displayed on the activity cards."
         )

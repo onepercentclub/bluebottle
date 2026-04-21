@@ -286,10 +286,11 @@ class RelatedTeamsLinkField(RelatedLinkFieldByStatus):
     def get_links(self, obj=None, lookup_field="pk"):
         links = super().get_links(obj, lookup_field)
 
+        url = self.reverse(
+            self.related_link_view_name, args=(getattr(obj, lookup_field),)
+        )
+
         if self.context['request'].user.is_authenticated:
-            url = self.reverse(
-                self.related_link_view_name, args=(getattr(obj, lookup_field),)
-            )
             queryset = getattr(
                 obj, self.source or self.field_name or self.parent.field_name
             )
@@ -308,6 +309,20 @@ class RelatedTeamsLinkField(RelatedLinkFieldByStatus):
                     "count": queryset.filter(
                         team_members__user=self.context['request'].user
                     ).count()
+                },
+            }
+        else:
+            links['owned'] = {
+                "href": f'{url}?filter[owned]=true',
+                "meta": {
+                    "count": 0
+                },
+            }
+
+            links['my'] = {
+                "href": f'{url}?filter[my]=true',
+                "meta": {
+                    "count": 0
                 },
             }
 

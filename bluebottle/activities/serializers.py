@@ -77,6 +77,7 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantSerializer,
     TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
@@ -220,6 +221,8 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_type = serializers.SerializerMethodField()
     collect_target = serializers.SerializerMethodField()
     realized = serializers.SerializerMethodField()
+
+    translations = TranslationsSerializer(fields=['title'])
 
     def get_host_logo(self, obj):
         if obj.host_organization and obj.host_organization.logo:
@@ -593,10 +596,12 @@ class ActivityPreviewSerializer(ModelSerializer):
             "activity",
             "capacity",
             "contributor_count",
+            "translations"
         )
         meta_fields = (
             "current_status",
             "created",
+            "translations"
         )
 
     class JSONAPIMeta:

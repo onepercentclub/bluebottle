@@ -31,18 +31,16 @@ class JSONLDView(generics.RetrieveAPIView):
         )
 
 
-@shared_task()
+@shared_task(
+    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
+)
 def create_task(request, tenant):
     with LocalTenant(tenant):
-        try:
-            serializer = ActivityPubSerializer(
-                data=request.data, context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-        except exceptions.ValidationError as e:
-            print(e)
-            logger.error(e)
+        serializer = ActivityPubSerializer(
+            data=request.data, context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
 
 class PickableRequest:

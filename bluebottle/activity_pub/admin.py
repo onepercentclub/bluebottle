@@ -298,9 +298,9 @@ class AdoptedFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(adopted_activities__isnull=False)
+            return queryset.filter(federated_object__isnull=False)
         elif self.value() == 'no':
-            return queryset.filter(adopted_activities__isnull=True)
+            return queryset.filter(federated_object__isnull=True)
 
 
 class SourceFilter(admin.SimpleListFilter):
@@ -558,7 +558,7 @@ class FollowerAdmin(FollowAdmin):
         fields = super().get_fields(request, obj)
         if obj and self.accepted(obj):
             fields += (
-                'publish_mode', "shared_activities", "adopted_activities",
+                'publish_mode', "shared_activities", "federated_object",
                 "short_adoption_type", "publish_activities_button"
             )
         return fields
@@ -634,7 +634,7 @@ class FollowerAdmin(FollowAdmin):
             _(
                 "Publishing {count} activities. "
                 "This may take a few minutes. You can refresh this page to see the progress.",
-            ).format(count=unpublished.count()),
+            ).format(count=len(unpublished)),
             level="success"
         )
 
@@ -644,14 +644,14 @@ class FollowerAdmin(FollowAdmin):
     def publish_open_activities(self, request, follow, form):
         unpublished = follow.unpublished_open_activities.all()
         for activity in unpublished:
-            publish_activity.delay(follow.actor, unpublished, connection.tenant)
+            publish_activity.delay(follow.actor, activity, connection.tenant)
 
         self.message_user(
             request,
             _(
                 "Publishing {count} activities. "
                 "This may take a few minutes. You can refresh this page to see the progress.",
-            ).format(count=unpublished.count()),
+            ).format(count=len(unpublished)),
             level="success"
         )
 
@@ -730,8 +730,8 @@ class FollowerAdmin(FollowAdmin):
                 {
                     'publish_open_url': publish_open_url,
                     'publish_succeeded_url': publish_succeeded_url,
-                    'open_count': obj.unpublished_open_activities.count(),
-                    'succeeded_count': obj.unpublished_succeeded_activities.count(),
+                    'open_count': len(obj.unpublished_open_activities),
+                    'succeeded_count': len(obj.unpublished_succeeded_activities),
                 },
             )
         )

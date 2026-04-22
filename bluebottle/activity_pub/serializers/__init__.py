@@ -8,6 +8,7 @@ from bluebottle.time_based.models import (
 )
 
 
+
 class ActivityPubSerializer(PolymorphicSerializer):
     serializer_mapping = {}
     model_serializer_mapping = {}
@@ -38,6 +39,16 @@ class ActivityPubSerializer(PolymorphicSerializer):
         serializer = self._get_serializer_from_model_or_instance(instance)
 
         return serializer.to_representation(instance)
+
+    def save(self, *args, **kwargs):
+        print('saving', self.validated_data)
+        iri = self.validated_data.get('iri', None)
+
+        if iri:
+            from bluebottle.activity_pub.models import ActivityPubModel
+            self.instance = ActivityPubModel.objects.from_iri(iri)
+
+        return super().save(*args, **kwargs)
 
     @property
     def data(self):

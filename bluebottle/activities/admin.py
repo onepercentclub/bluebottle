@@ -765,7 +765,7 @@ class ActivityChildAdmin(
     def activity_pub(self, obj):
         recipients = []
         try:
-            event = obj.event
+            event = obj.origin
             if event:
                 publishes = event.create_set.all().prefetch_related("recipients__actor")
                 for publish in publishes:
@@ -777,7 +777,7 @@ class ActivityChildAdmin(
                                 "adopted": event.accept_set.filter(actor=actor).exists(),
                             }
                         )
-        except ObjectDoesNotExist:
+        except (ObjectDoesNotExist, AttributeError):
             pass
 
         share_link = None
@@ -803,11 +803,11 @@ class ActivityChildAdmin(
         if not request.user.has_perm("activity.add_activity"):
             raise PermissionDenied
 
-        if not hasattr(activity, 'event'):
+        if not hasattr(activity, 'orgin'):
             from bluebottle.activity_pub.models import Event
             Event.sync(activity)
 
-        publish = activity.event.create_set.first()
+        publish = activity.origin.create_set.first()
         new_recipients = form.cleaned_data.get('recipients') or []
         for actor in new_recipients:
             Recipient.objects.get_or_create(actor=actor, activity=publish)
@@ -823,9 +823,8 @@ class ActivityChildAdmin(
 
     def get_activity_pub_fields(self, request, obj=None):
         if obj:
-            if hasattr(obj, 'origin'):
+            if hasattr(obj, 'origin') and not obj.origin.is_local:
                 return (
-                    'origin',
                     'host_organization',
                 )
             else:
@@ -1016,7 +1015,7 @@ class ActivityAdmin(
         ScheduleActivity,
         RegisteredDateActivity
     )
-    readonly_fields = ['link', 'review_status', 'activity_pub_url']
+    readonly_fields = ['link', 'review_status', 'activity_pub_url', 'origin']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
     def lookup_allowed(self, key, value):

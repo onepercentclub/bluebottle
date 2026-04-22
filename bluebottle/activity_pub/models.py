@@ -264,7 +264,7 @@ class Event(ActivityPubModel):
 
     @property
     def adopted_activity(self):
-        return self.adopted_activities.first()
+        return self.federated_object or self.linked_activities.first()
 
     @property
     def adopted(self):
@@ -615,11 +615,12 @@ class Follow(Activity):
 
     @property
     def adopted_activities(self):
+        __import__('ipdb').set_trace()
         if self.is_local:
             return Event.objects.filter(
                 create__actor=self.object,
             ).filter(
-                Q(linked_activities__isnull=False) | Q(adopted_activities__isnull=False)
+                Q(linked_activities__isnull=False) | Q(federated_object__isnull=False)
             )
         return Accept.objects.filter(
             actor=self.actor,

@@ -40,7 +40,6 @@ def update(sender, instance, created, **kwargs):
 def start(sender, instance, created, **kwargs):
     try:
         if not instance.is_local:
-            logger.error(f'starting {instance.object.iri}')
             link = LinkedActivity.objects.filter(event=instance.object).get()
             link.states.start(save=True)
     except Exception as e:

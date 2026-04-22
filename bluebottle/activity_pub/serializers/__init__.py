@@ -8,7 +8,6 @@ from bluebottle.time_based.models import (
 )
 
 
-
 class ActivityPubSerializer(PolymorphicSerializer):
     serializer_mapping = {}
     model_serializer_mapping = {}

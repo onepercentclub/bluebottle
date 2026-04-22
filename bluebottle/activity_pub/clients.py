@@ -50,8 +50,6 @@ class JSONLDClient:
 
     def fetch(self, url):
         auth = self.get_auth(get_platform_actor())
-        if url == 'id':
-            __import__('ipdb').set_trace()
         return self.get(url, auth=auth)
 
 

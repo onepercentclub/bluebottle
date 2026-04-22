@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.clients import client
 from bluebottle.activity_pub.models import (
     Accept,
     CrowdFunding,
@@ -30,6 +30,7 @@ from bluebottle.activity_pub.serializers.fields import (
     ActivityPubIdField, TypeField,
 )
 from bluebottle.activity_pub.serializers.relations import RelatedResourceField
+from bluebottle.activity_pub.utils import is_local
 
 
 class InboxSerializer(BaseActivityPubSerializer):
@@ -97,10 +98,12 @@ class OrganizationSerializer(BaseActivityPubSerializer):
     content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     icon = RelatedResourceField(type='Image', required=False, allow_null=True)
     image = RelatedResourceField(type='Image', required=False, allow_null=True, include=True)
+    preferred_username = serializers.CharField(required=False, allow_null=True)
 
     class Meta(BaseActivityPubSerializer.Meta):
         fields = BaseActivityPubSerializer.Meta.fields + (
-            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content', 'image', 'icon'
+            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content',
+            'image', 'icon', 'preferred_username'
         )
         model = Organization
 
@@ -357,9 +360,11 @@ class UpdateSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Update
 
-    def save(self, *args, **kwargs):
-        self.validated_data['object'] = adapter.fetch(self.validated_data['object']['id'])
-        return super().save(*args, **kwargs)
+    def to_internal_value(self, data):
+        if isinstance(data['object'], str) and not is_local(data['object']):
+            data['object'] = client.fetch(data['object'])
+
+        return super().to_internal_value(data)
 
 
 class DeleteSerializer(BaseActivitySerializer):

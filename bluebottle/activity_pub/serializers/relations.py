@@ -48,15 +48,14 @@ class RelatedResourceField(RelatedField):
         try:
             return serializer.to_internal_value(data)
         except ValidationError:
-            if 'id' in data:
-                instance = ActivityPubModel.objects.from_iri(data['id'])
+            instance = ActivityPubModel.objects.from_iri(data['id'])
 
-                if instance:
-                    local_data = ActivityPubSerializer(instance=instance).data
-                    return serializer.to_internal_value(local_data)
-                elif not is_local(data['id']):
-                    fetched_data = client.fetch(data['id'])
-                    return serializer.to_internal_value(fetched_data)
+            if instance:
+                local_data = ActivityPubSerializer(instance=instance).data
+                return serializer.to_internal_value(local_data)
+            elif not is_local(data['id']):
+                fetched_data = client.fetch(data['id'])
+                return serializer.to_internal_value(fetched_data)
 
     def save(self, value):
         if value is not None:

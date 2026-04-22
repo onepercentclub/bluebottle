@@ -639,6 +639,7 @@ class ActivityChildAdmin(
         'review_status',
         'send_impact_reminder_message_link',
         'event',
+        'activity_pub',
         'host_organization'
     ]
 
@@ -762,7 +763,6 @@ class ActivityChildAdmin(
             return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
 
     def activity_pub(self, obj):
-
         recipients = []
         try:
             event = obj.event
@@ -823,7 +823,7 @@ class ActivityChildAdmin(
 
     def get_activity_pub_fields(self, request, obj=None):
         if obj:
-            if obj.origin:
+            if hasattr(obj, 'origin'):
                 return (
                     'origin',
                     'host_organization',
@@ -845,7 +845,7 @@ class ActivityChildAdmin(
             site_settings.share_activities and
             request.user.has_perm("activity_pub.add_event") and (
                 site_settings.is_publishing_activities or
-                (obj and obj.origin)
+                (obj and hasattr(obj, 'origin'))
             )
         ):
             fieldsets.append(

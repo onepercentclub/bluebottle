@@ -175,6 +175,7 @@ class OrganizationSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:organization')
     type = TypeField('Organization')
     name = serializers.CharField(allow_null=True)
+    preferred_username = serializers.CharField(allow_null=True, source='slug')
     summary = serializers.CharField(
         source='description',
         allow_blank=True,
@@ -185,7 +186,9 @@ class OrganizationSerializer(FederatedObjectBaseSerializer):
 
     class Meta:
         model = Organization
-        fields = FederatedObjectBaseSerializer.Meta.fields + ('name', 'summary', 'icon')
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
+            'name', 'summary', 'icon', 'preferred_username'
+        )
 
 
 class LocationSerializer(FederatedObjectBaseSerializer):

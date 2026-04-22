@@ -523,7 +523,7 @@ class Recipient(models.Model):
         created = not self.pk
         super().save(*args, **kwargs)
 
-        if created:
+        if created and not self.actor.is_local:
             publish_to_recipient.delay(self, connection.tenant)
 
             if isinstance(self.activity, Create):

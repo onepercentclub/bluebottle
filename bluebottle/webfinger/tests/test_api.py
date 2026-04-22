@@ -25,8 +25,8 @@ class WebFingerTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         path = reverse(
-            "activity_pub:organization",
-            args=(self.organization.activity_pub_organization.pk, )
+            "activity_pub:resource",
+            args=('organization', self.organization.origin.pk, )
         )
         organization_url = f'http://test.localhost{path}'
 

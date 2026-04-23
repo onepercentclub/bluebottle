@@ -9,11 +9,13 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
 from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import (
-    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer, FileUploadAnswer
+    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer,
+    FileUploadAnswer, ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
@@ -28,7 +30,8 @@ from bluebottle.activities.serializers import (
     ContributionSerializer,
     ActivityQuestionSerializer,
     FileUploadAnswerDocumentSerializer,
-    ActivityAnswerSerializer
+    ActivityAnswerSerializer,
+    ActivityMessageSerializer,
 )
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
@@ -490,6 +493,27 @@ class ActivityAnswerList(JsonApiViewMixin, CreateAPIView):
             OneOf(ResourcePermission, ActivityOwnerPermission),
         ]
     }
+
+
+class ActivityMessageThrottle(UserRateThrottle):
+    def allow_request(self, request, view):
+        if request.user.is_superuser:
+            return True
+        return super().allow_request(request, view)
+
+
+class ActivityMessageList(JsonApiViewMixin, CreateAPIView):
+    queryset = ActivityMessage.objects.all()
+    serializer_class = ActivityMessageSerializer
+
+    permission_classes = (
+        IsAuthenticated,
+    )
+    throttle_classes = [ActivityMessageThrottle]
+
+    def perform_create(self, serializer):
+        serializer.validated_data['sender'] = self.request.user
+        super().perform_create(serializer)
 
 
 class ActivityAnswerDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

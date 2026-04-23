@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-14 11:45+0200\n"
-"PO-Revision-Date: 2026-04-14 09:47\n"
+"POT-Creation-Date: 2026-04-23 14:29+0200\n"
+"PO-Revision-Date: 2026-04-23 12:32\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -3016,7 +3016,7 @@ msgid "Users"
 msgstr "Utilizadores"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
-#: bluebottle/initiatives/admin.py:397 bluebottle/initiatives/models.py:174
+#: bluebottle/initiatives/admin.py:398 bluebottle/initiatives/models.py:174
 #: bluebottle/members/admin.py:221 bluebottle/members/admin.py:823
 msgid "Initiatives"
 msgstr "Iniciativas"
@@ -3309,7 +3309,7 @@ msgstr "iniciativas"
 
 #: bluebottle/categories/models.py:18 bluebottle/geo/models.py:136
 #: bluebottle/impact/models.py:37 bluebottle/initiatives/models.py:98
-#: bluebottle/initiatives/models.py:591 bluebottle/organizations/models.py:23
+#: bluebottle/initiatives/models.py:599 bluebottle/organizations/models.py:23
 #: bluebottle/segments/models.py:28 bluebottle/segments/models.py:124
 msgid "slug"
 msgstr "eixo"
@@ -3336,7 +3336,7 @@ msgstr "Imagem do logotipo da categoria"
 #: bluebottle/geo/models.py:61 bluebottle/geo/models.py:74
 #: bluebottle/geo/models.py:89 bluebottle/geo/models.py:121
 #: bluebottle/geo/models.py:135 bluebottle/impact/models.py:49
-#: bluebottle/initiatives/models.py:595 bluebottle/looker/models.py:13
+#: bluebottle/initiatives/models.py:603 bluebottle/looker/models.py:13
 #: bluebottle/offices/models.py:9 bluebottle/offices/models.py:25
 #: bluebottle/organizations/models.py:22 bluebottle/organizations/models.py:90
 #: bluebottle/segments/models.py:25 bluebottle/segments/models.py:110
@@ -3347,7 +3347,7 @@ msgstr "Nome"
 #: bluebottle/categories/models.py:48 bluebottle/categories/models.py:92
 #: bluebottle/funding/models.py:397 bluebottle/funding/models.py:428
 #: bluebottle/geo/models.py:122 bluebottle/geo/models.py:160
-#: bluebottle/initiatives/models.py:596 bluebottle/offices/models.py:10
+#: bluebottle/initiatives/models.py:604 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:24
 #: bluebottle/time_based/models.py:1147
 msgid "description"
@@ -4007,7 +4007,7 @@ msgid "You have joined the activity \"{title}\""
 msgstr "Você entrou na atividade \"{title}\""
 
 #: bluebottle/collect/models.py:19 bluebottle/funding_stripe/states.py:157
-#: bluebottle/initiatives/models.py:592 bluebottle/time_based/models.py:1143
+#: bluebottle/initiatives/models.py:600 bluebottle/time_based/models.py:1143
 msgid "disabled"
 msgstr "desabilitado"
 
@@ -7833,11 +7833,11 @@ msgstr "Locais de trabalho"
 msgid "Options"
 msgstr "Opções"
 
-#: bluebottle/initiatives/admin.py:356 bluebottle/pages/models.py:300
+#: bluebottle/initiatives/admin.py:357 bluebottle/pages/models.py:300
 msgid "Terms of service"
 msgstr "Termos de serviço"
 
-#: bluebottle/initiatives/admin.py:368 bluebottle/initiatives/models.py:465
+#: bluebottle/initiatives/admin.py:369 bluebottle/initiatives/models.py:473
 #: bluebottle/time_based/models.py:111
 msgid "Hour registration"
 msgstr "Registro de horas"
@@ -8144,84 +8144,92 @@ msgstr "E-mail Bcc com os termos de serviço"
 msgid "Enter the email address that should receive a Bcc (blind carbon copy) of the terms of service."
 msgstr "Insira o endereço de e-mail que deve receber um Bcc (cópia oculta) dos termos de serviço."
 
+#: bluebottle/initiatives/models.py:398
+msgid "Restrict posting updates"
+msgstr "Restringir postagens de atualizações"
+
 #: bluebottle/initiatives/models.py:401
+msgid "Restrict posting of updates on the activity wall to only activity managers and staff users"
+msgstr "Restringir postagens de atualizações no mural da atividade apenas para gerentes de atividades e usuários da equipe"
+
+#: bluebottle/initiatives/models.py:409
 msgid "Activity search: more filters"
 msgstr "Pesquisa de atividades: mais filtros"
 
-#: bluebottle/initiatives/models.py:411
+#: bluebottle/initiatives/models.py:419
 msgid "Include full activities in upcoming activities list"
 msgstr "Incluir atividades completas na lista de próximas atividades"
 
-#: bluebottle/initiatives/models.py:416
+#: bluebottle/initiatives/models.py:424
 msgid "Allow activity managers to indicate the impact they make."
 msgstr "Permitir que os gerentes de atividade indiquem o impacto que produzem."
 
-#: bluebottle/initiatives/models.py:420
+#: bluebottle/initiatives/models.py:428
 msgid "Allow admins to add (sub)regions to their work location."
 msgstr "Permitir que administradores adicionem (sub)regiões aos seus locais de trabalho."
 
-#: bluebottle/initiatives/models.py:426
+#: bluebottle/initiatives/models.py:434
 msgid "Allow activity managers to specify work location restrictions on activities."
 msgstr "Permitir que gerentes de atividade especifiquem restrições de localização do trabalho nas atividades."
 
-#: bluebottle/initiatives/models.py:430
+#: bluebottle/initiatives/models.py:438
 msgid "Default work location restriction"
 msgstr "Restrição padrão de localização do trabalho"
 
-#: bluebottle/initiatives/models.py:439
+#: bluebottle/initiatives/models.py:447
 msgid "Enable date activities to have multiple slots."
 msgstr "Permite que as atividades de data tenham vários slots."
 
-#: bluebottle/initiatives/models.py:444
+#: bluebottle/initiatives/models.py:452
 msgid "Allow admins to open up initiatives for any user to add activities."
 msgstr "Permitir que os administradores abram iniciativas para qualquer usuário adicionar atividades."
 
-#: bluebottle/initiatives/models.py:450
+#: bluebottle/initiatives/models.py:458
 msgid "Add a link to activities so managers can download a contributor list."
 msgstr "Adicione um link às atividades para que os gerentes possam baixar uma lista de colaboradores."
 
-#: bluebottle/initiatives/models.py:454
+#: bluebottle/initiatives/models.py:462
 msgid "Enable matching"
 msgstr "Habilitar correspondência"
 
-#: bluebottle/initiatives/models.py:469
+#: bluebottle/initiatives/models.py:477
 msgid "Hour registration only applies to time-based activity types."
 msgstr "O registro de horas só se aplica a tipos de atividades baseados no tempo."
 
-#: bluebottle/initiatives/models.py:473
+#: bluebottle/initiatives/models.py:481
 msgid "Code / URL"
 msgstr "Código / URL"
 
-#: bluebottle/initiatives/models.py:477
+#: bluebottle/initiatives/models.py:485
 msgid "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, this code or link will be used for every activity and can’t be changed."
 msgstr "Deixe vazio se ‘único por atividade’ foi selecionado. Se você selecionou ‘mesmo para todas as atividades’, esse código ou link será usado para cada atividade e não pode ser alterado."
 
-#: bluebottle/initiatives/models.py:483
+#: bluebottle/initiatives/models.py:491
 msgid "Enable reviewing"
 msgstr "Habilitar a revisão"
 
-#: bluebottle/initiatives/models.py:486
+#: bluebottle/initiatives/models.py:494
 msgid "Review initiatives and activities. Activities created within an initiative will not need to be reviewed. Crowdfunding activities will always need to be reviewed"
 msgstr "Revise iniciativas e atividades. As atividades criadas no âmbito de uma iniciativa não precisarão ser revisadas. As atividades de Crowdfunding precisarão sempre ser revistas."
 
-#: bluebottle/initiatives/models.py:508 bluebottle/initiatives/models.py:509
+#: bluebottle/initiatives/models.py:516 bluebottle/initiatives/models.py:517
 msgid "Activity & initiative settings"
 msgstr "Configurações de atividade e iniciativa"
 
-#: bluebottle/initiatives/models.py:515
+#: bluebottle/initiatives/models.py:523
 msgid "Hour registration data is required when 'generic' hour registration is selected."
 msgstr "Os dados do registro de horas são necessários quando 'genérico' é selecionado como tipo de registro de horas."
 
-#: bluebottle/initiatives/models.py:534
+#: bluebottle/initiatives/models.py:542
 #, python-brace-format
 msgid "Select {filter_name}"
 msgstr "Selecionar {filter_name}"
 
-#: bluebottle/initiatives/models.py:609
+#: bluebottle/initiatives/models.py:617
 msgid "theme"
 msgstr "Tema"
 
-#: bluebottle/initiatives/models.py:610
+#: bluebottle/initiatives/models.py:618
 msgid "themes"
 msgstr "temas"
 
@@ -10241,8 +10249,7 @@ msgstr "Confirgurações"
 msgid "Manage Reporting"
 msgstr "Gerenciar relatórios"
 
-#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:443
-#: tenants/accenture/settings.py:30
+#: bluebottle/settings/testing.py:443 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -10255,30 +10262,26 @@ msgstr "Gerenciar relatórios"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
+#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
+#: tenants/maximising-potential/settings.py:27
+#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
 #: tenants/shell-disaster-relief/settings.py:26
-#: tenants/shell-grant-management/settings.py:26
-#: tenants/shell-uk/settings.py:26 tenants/startsomething/settings.py:29
-#: tenants/studentbattle/settings.py:27 tenants/twoscale/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
+#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Português-Brasil"
 
-#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:444
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
+#: bluebottle/settings/testing.py:444 tenants/abn/settings.py:26
+#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
@@ -10289,13 +10292,12 @@ msgstr "Português-Brasil"
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:23
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -10310,31 +10312,28 @@ msgstr "Português-Brasil"
 msgid "Dutch"
 msgstr "Neerlandês"
 
-#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:445
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+#: bluebottle/settings/testing.py:445 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Francês"
 
-#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:446
-#: tenants/mars/settings.py:28
+#: bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr "Espanhol"
 
-#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:447
-#: tenants/mars/settings.py:29
+#: bluebottle/settings/testing.py:447
 msgid "German"
 msgstr "Alemão"
 
-#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:448
+#: bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Português"
 
-#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:449
-#: tenants/mars/settings.py:30
+#: bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr "Húngaro"
 
-#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:450
+#: bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Búlgaro"
 
@@ -14467,8 +14466,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Segundo"
 msgstr[1] "segundos"
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
-msgstr "Holandês"
 

@@ -90,10 +90,31 @@ class Deed(Activity):
     def participants(self):
         if self.pk:
             return self.contributors.instance_of(DeedParticipant).filter(
-                status__in=('accepted', 'succeeded', )
+                status__in=('accepted', 'succeeded', 'new')
             )
         else:
             return []
+
+    @property
+    def failed_participants(self):
+        if self.pk:
+            return self.contributors.instance_of(DeedParticipant).filter(
+                status__in=('failed',)
+            )
+        else:
+            return []
+
+    @property
+    def contributor_count(self):
+        """Total number of participants (for syncing to Event.contributor_count when deed has origin)."""
+        if not self.pk:
+            return 0
+        return (
+            self.contributors.instance_of(DeedParticipant).filter(
+                status__in=('accepted', 'succeeded')
+            ).count()
+            + (self.deleted_successful_contributors or 0)
+        )
 
     @property
     def succeeded_contributor_count(self):

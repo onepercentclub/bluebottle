@@ -4,7 +4,6 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
-from django.db.models import Q
 from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
@@ -251,6 +250,10 @@ class Event(ActivityPubModel):
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL
     )
+    contributor_count = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Total contributors from all platforms')
+    )
 
     @property
     def source(self):
@@ -408,27 +411,31 @@ class AdoptionModeChoices(DjangoChoices):
 
 
 class AdoptionTypeChoices(DjangoChoices):
-    template = ChoiceItem(
-        'template',
+    clone = ChoiceItem(
+        'clone',
         _('Use received activities as template to create your own activities.')
     )
     link = ChoiceItem(
         'link',
         _('Show adopted activities as links to the partner platform.')
     )
+    sync = ChoiceItem(
+        'sync',
+        _('Fully synced copy; Participants sync with source.')
+    )
 
 
 class ShortAdoptionTypeChoices(DjangoChoices):
-    template = ChoiceItem(
-        'template',
+    clone = ChoiceItem(
+        'clone',
         _('Template')
     )
     link = ChoiceItem(
         'link',
         _('Link')
     )
-    hosted = ChoiceItem(
-        'hosted',
+    sync = ChoiceItem(
+        'sync',
         _('Fully synced')
     )
 
@@ -462,7 +469,22 @@ class SubEvent(ActivityPubModel):
         on_delete=models.CASCADE,
         related_name='sub_event'
     )
-    slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.SET_NULL)
+    slot = models.OneToOneField(
+        'time_based.DateActivitySlot',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    contributor_count = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Accepted participants for this slot.'),
+    )
+    capacity = models.PositiveIntegerField(
+        _('Capacity'),
+        null=True,
+        blank=True,
+        help_text=_('Per-slot attendee limit (schema.org maximumAttendeeCapacity). Mirrors activity slot.'),
+    )
 
     class Meta:
         verbose_name = _("Sub event")
@@ -494,6 +516,12 @@ class DoGoodEvent(Event):
         choices=SlotModeChoices.choices,
         default=SlotModeChoices.set,
         null=True
+    )
+    capacity = models.PositiveIntegerField(
+        _('maximum attendee capacity'),
+        null=True,
+        blank=True,
+        help_text=_('Overall attendee limit (schema.org maximumAttendeeCapacity). Mirrors time-based activity.'),
     )
 
     class Meta(Event.Meta):
@@ -548,7 +576,7 @@ class Follow(Activity):
         verbose_name=_("Default activity owner"),
         help_text=_(
             "This user will be assigned as the activity manager for any activity "
-            "adopted as a template. It can be left empty and no activity manager "
+            "cloned from a template. It can be left empty and no activity manager "
             "will be assigned by default."
         ),
         on_delete=models.SET_NULL,
@@ -565,7 +593,7 @@ class Follow(Activity):
 
     adoption_type = models.CharField(
         choices=AdoptionTypeChoices.choices,
-        default=AdoptionTypeChoices.template,
+        default=AdoptionTypeChoices.clone,
         verbose_name=_("Adoption type"),
         help_text=_("Select how a received activity should be adopted."),
     )
@@ -594,7 +622,12 @@ class Follow(Activity):
 
     @property
     def short_adoption_type(self):
-        return ShortAdoptionTypeChoices.labels[self.adoption_type]
+        # `adoption_type` is stored on Follow and may contain legacy/unknown values.
+        # The admin should never 500 because of an unexpected choice value.
+        return ShortAdoptionTypeChoices.labels.get(
+            self.adoption_type,
+            str(self.adoption_type) if self.adoption_type is not None else ''
+        )
 
     @property
     def adopted_activities(self):
@@ -602,7 +635,19 @@ class Follow(Activity):
             return Event.objects.filter(
                 create__actor=self.object,
             ).filter(
-                Q(linked_activities__isnull=False) | Q(adopted_activities__isnull=False)
+                adopted_activities__isnull=False
+            )
+        return Accept.objects.filter(
+            actor=self.actor,
+        )
+
+    @property
+    def linked_activities(self):
+        if self.is_local:
+            return Event.objects.filter(
+                create__actor=self.object,
+            ).filter(
+                linked_activities__isnull=False
             )
         return Accept.objects.filter(
             actor=self.actor,
@@ -713,8 +758,78 @@ class Update(Activity):
             for create in self.object.create_set.all():
                 for recipient in create.recipients.all():
                     yield recipient.actor
+        elif isinstance(self.object, SubEvent):
+            parent = self.object.parent
+            if parent:
+                for create in parent.create_set.all():
+                    for recipient in create.recipients.all():
+                        yield recipient.actor
         else:
             raise TypeError(f'Cannot create Update for {self.object}')
+
+
+class Join(Activity):
+    """Sent by a follower when a user joins a synced deed; object is the source GoodDeed."""
+    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+    # Participant info sent to source for full participant list
+    participant_sync_id = models.CharField(
+        _("Participant sync id"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Stable id to match this participant on Leave."),
+    )
+    participant_name = models.CharField(
+        _("Participant name"),
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    participant_email = models.EmailField(
+        _("Participant email"),
+        blank=True,
+        null=True,
+    )
+    sub_event = models.ForeignKey(
+        'activity_pub.SubEvent',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+
+    @property
+    def default_recipients(self):
+        create = self.object.create_set.first()
+        if create:
+            yield create.actor
+
+
+class Leave(Activity):
+    """Sent by a follower when a user leaves a synced deed; object is the source GoodDeed."""
+    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+    participant_sync_id = models.CharField(
+        _("Participant sync id"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Stable id to match the participant to remove."),
+    )
+    sub_event = models.ForeignKey(
+        'activity_pub.SubEvent',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+
+    @property
+    def default_recipients(self):
+        create = self.object.create_set.first()
+        if create:
+            yield create.actor
 
 
 class Transition(Activity):
@@ -744,3 +859,6 @@ class Cancel(Transition):
 
 class Finish(Transition):
     pass
+
+
+from bluebottle.activity_pub.signals import *  # noqa

@@ -33,6 +33,16 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 @python_2_unicode_compatible
 class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
+    LOCAL_CONTRIBUTOR_STATUSES = (
+        "new",
+        "accepted",
+        "scheduled",
+        "participating",
+        "running",
+        "succeeded",
+        "activity_refunded",
+    )
+
     class TeamActivityChoices(DjangoChoices):
         teams = ChoiceItem("teams", label=_("Teams"))
         individuals = ChoiceItem("individuals", label=_("Individuals"))
@@ -115,6 +125,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     deleted_successful_contributors = models.PositiveIntegerField(
         _("Number of deleted successful contributors"), default=0, null=True, blank=True
     )
+    synced_contributor_count = models.PositiveIntegerField(default=0)
 
     title = models.CharField(_("Title"), max_length=255)
     slug = models.SlugField(_("Slug"), max_length=100, default="new")
@@ -211,7 +222,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     @property
     def event(self):
         from bluebottle.activity_pub.models import Event
-        return Event.objects.get(object=self)
+        return Event.objects.get(activity=self)
 
     @property
     def activity_pub_url(self):
@@ -237,6 +248,27 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     @property
     def succeeded_contributor_count(self):
         raise NotImplementedError
+
+    @property
+    def local_contributor_count(self):
+        contributors = getattr(self, "contributors", None)
+        if contributors is None:
+            return 0
+        return contributors.not_instance_of(Organizer).filter(
+            status__in=self.LOCAL_CONTRIBUTOR_STATUSES
+        ).count()
+
+    @property
+    def remote_contributor_count(self):
+        synced_total = self.synced_contributor_count or 0
+        return max(0, synced_total - self.local_contributor_count)
+
+    @property
+    def total_contributor_count(self):
+        synced_total = self.synced_contributor_count or 0
+        if synced_total:
+            return synced_total
+        return self.local_contributor_count
 
     @property
     def activity_date(self):
@@ -339,6 +371,57 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 
 
 @python_2_unicode_compatible
+class RemoteContributor(models.Model):
+    """
+    Remote identity for a contributor without a local user (e.g. synced from another platform).
+    Stores display name, email, sync id, and which Actor the Join came from.
+    """
+    display_name = models.CharField(
+        _("Display name"),
+        max_length=255,
+        blank=True,
+        default="",
+        help_text=_("Name when no user is linked (e.g. synced participants)."),
+    )
+    email = models.EmailField(
+        _("Email"),
+        blank=True,
+        null=True,
+        help_text=_("Email when no user is linked (e.g. synced participants)."),
+    )
+    sync_id = models.CharField(
+        _("Sync identifier"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Remote participant id for matching Join/Leave in synced activities."),
+    )
+    # Which ActivityPub Actor sent the Join (the platform this participant came from)
+    sync_actor = models.ForeignKey(
+        "activity_pub.Actor",
+        verbose_name=_("Sync source (Actor)"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="synced_remote_contributors",
+        help_text=_("The ActivityPub Actor (platform) that sent the Join this participant came from."),
+    )
+
+    class Meta(object):
+        verbose_name = _("Remote contributor")
+        verbose_name_plural = _("Remote contributors")
+        constraints = [
+            models.UniqueConstraint(
+                fields=['sync_actor', 'sync_id'],
+                name='activities_remotecontributor_unique_actor_sync_id',
+            ),
+        ]
+
+    def __str__(self):
+        return self.display_name or self.email or (str(self.sync_id) if self.sync_id else '') or str(_("Anonymous"))
+
+
+@python_2_unicode_compatible
 class Contributor(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
@@ -366,6 +449,31 @@ class Contributor(TriggerMixin, PolymorphicModel):
         on_delete=models.SET_NULL,
     )
 
+    remote_contributor = models.ForeignKey(
+        "RemoteContributor",
+        verbose_name=_("Remote contributor"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="contributors",
+        help_text=_("When set, this contributor is a synced participant without a local user."),
+    )
+
+    @property
+    def remote_user(self):
+        """Backward compatibility: alias for remote_contributor."""
+        return self.remote_contributor
+
+    @property
+    def sync_actor(self):
+        """Sync source Actor from remote_contributor when present (backward compatibility)."""
+        return self.remote_contributor.sync_actor if self.remote_contributor_id else None
+
+    @property
+    def sync_actor_id(self):
+        """ID of sync_actor for backward compatibility (e.g. serializers)."""
+        return self.remote_contributor.sync_actor_id if self.remote_contributor_id else None
+
     @property
     def contributor(self):
         return self
@@ -378,6 +486,29 @@ class Contributor(TriggerMixin, PolymorphicModel):
     @property
     def owner(self):
         return self.user
+
+    @property
+    def sync_id(self):
+        """Sync identifier from remote_contributor when present (for backward compatibility)."""
+        return self.remote_contributor.sync_id if self.remote_contributor_id else None
+
+    @property
+    def display_name_or_user(self):
+        """Name to display: from user.full_name when set, else remote_contributor.display_name."""
+        if self.user_id:
+            return self.user.full_name
+        if self.remote_contributor_id:
+            return self.remote_contributor.display_name or ''
+        return ''
+
+    @property
+    def email_or_user(self):
+        """Email: from user when set, else remote_contributor.email."""
+        if self.user_id:
+            return self.user.email
+        if self.remote_contributor_id:
+            return self.remote_contributor.email
+        return None
 
     @property
     def is_team_captain(self):
@@ -399,6 +530,8 @@ class Contributor(TriggerMixin, PolymorphicModel):
     def __str__(self):
         if self.user:
             return str(self.user)
+        if self.remote_contributor and self.remote_contributor.display_name:
+            return self.remote_contributor.display_name
         return str(_("Anonymous"))
 
 
@@ -654,5 +787,4 @@ class FileUploadAnswer(ActivityAnswer):
         return self.file
 
 
-from bluebottle.activities.signals import *  # noqa
 from bluebottle.activities.states import *  # noqa

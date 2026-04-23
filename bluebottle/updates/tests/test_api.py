@@ -9,6 +9,8 @@ from bluebottle.updates.models import Update
 from bluebottle.updates.serializers import UpdateSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
+
 
 class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
@@ -40,6 +42,33 @@ class UpdateListTestCase(APITestCase):
         self.assertAttribute('message', self.defaults['message'])
         self.assertAttribute('created')
         self.assertEqual(len(mail.outbox), 2)
+
+    def test_create_restricted_activity_owner(self):
+        settings = InitiativePlatformSettings.load()
+        settings.restrict_updates = True
+        settings.save()
+
+        self.perform_create(user=self.defaults['activity'].owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_restricted_staff(self):
+        settings = InitiativePlatformSettings.load()
+        settings.restrict_updates = True
+        settings.save()
+
+        self.perform_create(user=BlueBottleUserFactory.create(is_staff=True))
+
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_restricted_normal_user(self):
+        settings = InitiativePlatformSettings.load()
+        settings.restrict_updates = True
+        settings.save()
+
+        self.perform_create(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_create_without_message(self):
 

@@ -349,6 +349,7 @@ class InitiativePlatformSettingsAdmin(
                     "enable_matching_emails",
                     "include_full_activities",
                     "enable_reviewing",
+                    "restrict_updates",
                 )
             },
         ),

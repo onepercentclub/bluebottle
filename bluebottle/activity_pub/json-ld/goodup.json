@@ -19,6 +19,8 @@
     "country": "schema:addressCountry",
     "locality": "schema:addressLocality",
     "region": "schema:addressRegion",
+    "givenName": "schema:givenName",
+    "familyName": "schema:familyName",
     "target": "goodup:target",
     "targetCurrency": "goodup:targetCurrency",
     "donated": "goodup:donated",

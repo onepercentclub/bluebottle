@@ -47,7 +47,6 @@ from bluebottle.activities.models import (
     ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
-from bluebottle.activity_pub.admin import adapter
 from bluebottle.activity_pub.forms import SharePublishForm
 from bluebottle.activity_pub.models import Follow as ActivityPubFollow, Recipient
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -639,9 +638,8 @@ class ActivityChildAdmin(
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
-        'origin',
-        'activity_pub',
         'event',
+        'activity_pub',
         'host_organization'
     ]
 
@@ -765,10 +763,9 @@ class ActivityChildAdmin(
             return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
 
     def activity_pub(self, obj):
-
         recipients = []
         try:
-            event = obj.event
+            event = obj.origin
             if event:
                 publishes = event.create_set.all().prefetch_related("recipients__actor")
                 for publish in publishes:
@@ -780,7 +777,7 @@ class ActivityChildAdmin(
                                 "adopted": event.accept_set.filter(actor=actor).exists(),
                             }
                         )
-        except ObjectDoesNotExist:
+        except (ObjectDoesNotExist, AttributeError):
             pass
 
         share_link = None
@@ -806,10 +803,11 @@ class ActivityChildAdmin(
         if not request.user.has_perm("activity.add_activity"):
             raise PermissionDenied
 
-        if not hasattr(activity, 'event'):
-            adapter.create_or_update_event(activity)
+        if not hasattr(activity, 'orgin'):
+            from bluebottle.activity_pub.models import Event
+            Event.sync(activity)
 
-        publish = activity.event.create_set.first()
+        publish = activity.origin.create_set.first()
         new_recipients = form.cleaned_data.get('recipients') or []
         for actor in new_recipients:
             Recipient.objects.get_or_create(actor=actor, activity=publish)
@@ -825,9 +823,8 @@ class ActivityChildAdmin(
 
     def get_activity_pub_fields(self, request, obj=None):
         if obj:
-            if obj.origin:
+            if hasattr(obj, 'origin') and not obj.origin.is_local:
                 return (
-                    'origin',
                     'host_organization',
                 )
             else:
@@ -847,7 +844,7 @@ class ActivityChildAdmin(
             site_settings.share_activities and
             request.user.has_perm("activity_pub.add_event") and (
                 site_settings.is_publishing_activities or
-                (obj and obj.origin)
+                (obj and hasattr(obj, 'origin'))
             )
         ):
             fieldsets.append(
@@ -1018,7 +1015,7 @@ class ActivityAdmin(
         ScheduleActivity,
         RegisteredDateActivity
     )
-    readonly_fields = ['link', 'review_status', 'activity_pub_url']
+    readonly_fields = ['link', 'review_status', 'activity_pub_url', 'origin']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
     def lookup_allowed(self, key, value):

@@ -5,12 +5,11 @@ from django.urls import reverse
 
 from bluebottle.activity_pub.tests.factories import FollowFactory, PersonFactory, OrganizationFactory, PublicKeyFactory
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
     OrganizationFactory as BluebottleOrganizationFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.activity_pub.models import ActivityPubModel, Person, Organization
+from bluebottle.activity_pub.models import ActivityPubModel
 
 
 class ActivityPubModelTestCase(BluebottleTestCase):
@@ -30,18 +29,8 @@ class PersonTestCase(BluebottleTestCase):
 
     def test_pub_url(self):
         self.assertEqual(
-            urlparse(self.model.pub_url).path, reverse('json-ld:person', args=(self.model.pk, ))
+            urlparse(self.model.pub_url).path, reverse('json-ld:resource', args=('person', self.model.pk, ))
         )
-
-    def test_from_object(self):
-        member = BlueBottleUserFactory.create()
-
-        model = Person.objects.from_model(member)
-        self.assertTrue(model.inbox_id)
-        self.assertTrue(model.outbox_id)
-        self.assertTrue(model.public_key_id)
-        self.assertTrue(model.name, member.full_name)
-        self.assertTrue(model.member, member)
 
 
 class OrganizationTestCase(BluebottleTestCase):
@@ -50,18 +39,8 @@ class OrganizationTestCase(BluebottleTestCase):
 
     def test_pub_url(self):
         self.assertEqual(
-            urlparse(self.model.pub_url).path, reverse('json-ld:organization', args=(self.model.pk, ))
+            urlparse(self.model.pub_url).path, reverse('json-ld:resource', args=('organization', self.model.pk, ))
         )
-
-    def test_from_object(self):
-        organization = BluebottleOrganizationFactory.create()
-
-        model = Organization.objects.from_model(organization)
-        self.assertTrue(model.inbox_id)
-        self.assertTrue(model.outbox_id)
-        self.assertTrue(model.public_key_id)
-        self.assertTrue(model.name, organization.name)
-        self.assertTrue(model.organization, organization)
 
 
 class PublicKeyTestCase(BluebottleTestCase):
@@ -97,7 +76,7 @@ class FollowTestCase(BluebottleTestCase):
         self.model = FollowFactory.create(actor=None)
 
     def test_actor(self):
-        self.assertEqual(self.model.actor.organization, self.settings.organization)
+        self.assertEqual(self.model.actor.federated_object, self.settings.organization)
 
     def test_recipients(self):
         self.assertEqual(

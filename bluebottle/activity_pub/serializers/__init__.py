@@ -40,7 +40,6 @@ class ActivityPubSerializer(PolymorphicSerializer):
         return serializer.to_representation(instance)
 
     def save(self, *args, **kwargs):
-        print('saving', self.validated_data)
         iri = self.validated_data.get('iri', None)
 
         if iri:

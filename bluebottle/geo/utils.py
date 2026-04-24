@@ -1,6 +1,7 @@
-import requests
 import re
 from typing import Optional, Tuple
+
+import requests
 from django.conf import settings
 from parler.utils.context import switch_language
 
@@ -131,9 +132,36 @@ def normalize_mapbox_id(
             if position:
                 params["proximity"] = f"{position[0]},{position[1]}"
             resolved = v6_forward(params)
+            if not resolved:
+                # Some "address.*" values without a house number resolve to a street (or higher-level feature)
+                # rather than an address. Retry with broader types so we can still pick a suitable parent.
+                params_broad = {
+                    **params,
+                    "types": "address,street,place,locality,postcode,district,region,country",
+                }
+                resolved = v6_forward(params_broad)
             resolved_id = (resolved or {}).get("id")
-            if resolved_id and is_modern(resolved_id):
-                current = resolved_id
+            resolved_type = ((resolved or {}).get("properties") or {}).get("feature_type") or (
+                ((resolved or {}).get("place_type") or [None])[0]
+            )
+
+            # When a legacy address id has no house number, Mapbox often resolves it to a street feature.
+            # In that case we prefer a higher-level parent (place/locality/district/region/country) so we
+            # don't accidentally "pin" the geolocation to a specific street.
+            if not house_number and resolved_type in ("street", "address"):
+                context = ((resolved or {}).get("properties") or {}).get("context") or {}
+                for preferred in ("place", "locality", "district", "region", "country", "postcode"):
+                    ctx = context.get(preferred) or {}
+                    ctx_id = ctx.get("mapbox_id")
+                    if ctx_id and is_modern(str(ctx_id)):
+                        current = str(ctx_id)
+                        break
+                else:
+                    if resolved_id and is_modern(resolved_id):
+                        current = resolved_id
+            else:
+                if resolved_id and is_modern(resolved_id):
+                    current = resolved_id
 
     return current
 

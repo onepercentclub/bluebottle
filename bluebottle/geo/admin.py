@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.gis.db.models import PointField
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from mapwidgets.widgets import MapboxPointFieldWidget
@@ -252,7 +253,7 @@ class GeolocationAdmin(admin.ModelAdmin):
         return str(obj)
 
     list_filter = ('country', )
-    readonly_fields = ('place_name',)
+    readonly_fields = ('place_name', 'latlong', 'relations')
     search_fields = ('locality', 'street', 'formatted_address', 'mapbox_id')
 
     inlines = [GeoFeatureInline]
@@ -260,12 +261,58 @@ class GeolocationAdmin(admin.ModelAdmin):
     def place_name(self, obj):
         return str(obj)
 
+    def latlong(self, obj):
+        if obj.position:
+            return f"{obj.position.coords[1]}  - {obj.position.coords[0]}"
+        return '-'
+
+    @admin.display(description=_('Relations'))
+    def relations(self, obj):
+        rows = []
+
+        for rel in Geolocation._meta.related_objects:
+            if not rel.one_to_many:
+                continue
+
+            rel_model = rel.related_model
+            fk_name = rel.field.name
+            if not fk_name:
+                continue
+
+            try:
+                count = rel_model.objects.filter(**{fk_name: obj}).count()
+            except Exception:
+                continue
+
+            if count == 0:
+                continue
+
+            try:
+                changelist_url = reverse(
+                    f"admin:{rel_model._meta.app_label}_{rel_model._meta.model_name}_changelist"
+                )
+            except Exception:
+                continue
+
+            query = urlencode({f"{fk_name}__id__exact": str(obj.pk)})
+            url = f"{changelist_url}?{query}"
+
+            label = rel_model._meta.verbose_name_plural
+            rows.append(format_html('<li><a href="{}">{} {}</a></li>', url, count, label))
+
+        if not rows:
+            return '-'
+
+        return format_html('<ul style="margin-left: 0; display: inline-block;">{}</ul>',
+                           format_html("".join([str(r) for r in rows])))
+
     fieldsets = (
-        (_('Map'), {'fields': ('position', 'mapbox_id', 'place_name')}),
+        (_('Map'), {'fields': ('position', 'mapbox_id', 'place_name', 'latlong')}),
         (_('Info'), {
             'fields': (
                 'locality', 'street', 'street_number', 'postal_code',
                 'province', 'country', 'formatted_address'
             )
-        })
+        }),
+        (_('Relations'), {'fields': ('relations',)}),
     )

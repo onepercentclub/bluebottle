@@ -38,5 +38,3 @@ class ImpactTypeAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixi
         url = reverse('admin:activities_activity_changelist')
         total = obj.goals.count()
         return format_html('<a href="{}?goals__type__id__exact={}">{} activities</a>', url, obj.id, total)
-
-

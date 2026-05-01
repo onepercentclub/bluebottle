@@ -387,8 +387,6 @@ class MemberPlatformSettingsAdmin(
         return super(MemberPlatformSettingsAdmin, self).changeform_view(request, object_id, form_url, extra_context)
 
 
-
-
 class SegmentSelect(Select):
     template_name = 'widgets/segment-select.html'
 
@@ -1055,8 +1053,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         return False
 
 
-
-
 class NewGroupChangeForm(forms.ModelForm):
     pass
 
@@ -1083,5 +1079,3 @@ class TokenAdmin(admin.ModelAdmin):
     raw_id_fields = ('user',)
     readonly_fields = ('key',)
     fields = ('user', 'key')
-
-

@@ -13,8 +13,10 @@ urlpatterns = [
     # Grants
     path('', GrantApplicationList.as_view(), name='grant-application-list'),
     re_path(r'^/(?P<pk>[\d]+)$', GrantApplicationDetail.as_view(), name='grant-application-detail'),
-    path('/transitions', GrantApplicationTransitionList.as_view(),
-            name='grant-application-transition-list'),
+    path(
+        '/transitions', GrantApplicationTransitionList.as_view(),
+        name='grant-application-transition-list'
+    ),
 
     re_path(
         r'^/grant-payouts/(?P<pk>[\d]+)$',

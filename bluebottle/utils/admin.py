@@ -31,8 +31,6 @@ class LanguageAdmin(admin.ModelAdmin):
     list_display = ('code', 'language_name', 'native_name')
 
 
-
-
 def prep_field(request, obj, field, manyToManySep=';'):
     """ Returns the field as a unicode string. If the field is a callable, it
     attempts to call it first, without arguments.

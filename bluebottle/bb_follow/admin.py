@@ -17,5 +17,3 @@ class FollowAdmin(admin.ModelAdmin):
             return getattr(obj.followed_object, 'title', '-')
         else:
             return '-'
-
-

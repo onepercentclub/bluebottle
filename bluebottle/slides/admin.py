@@ -110,5 +110,3 @@ class SlideAdmin(admin.ModelAdmin):
         self.message_user(request, message)
 
     make_published.short_description = _("Mark selected entries as published")
-
-

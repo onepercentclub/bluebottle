@@ -22,7 +22,6 @@ from django.views.generic.detail import DetailView
 from django.views import View
 from elasticsearch_dsl.utils import AttrList
 from rest_framework import generics
-from rest_framework import views, response
 from rest_framework.exceptions import APIException
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_json_api.exceptions import exception_handler

@@ -66,8 +66,6 @@ class CountryAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
 
 
-
-
 class LocationMergeForm(forms.Form):
     to = forms.ModelChoiceField(
         label=_("Merge with"),
@@ -167,8 +165,6 @@ class PlaceInline(admin.ModelAdmin):
         'position',
         'mapbox_id'
     ]
-
-
 
 
 @admin.register(Geolocation)

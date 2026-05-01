@@ -254,5 +254,3 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         if request.user.is_superuser:
             extra_context['import_url'] = reverse('admin:{0}_{1}_import'.format(*info))
         return super(NewsItemAdmin, self).changelist_view(request, extra_context)
-
-

@@ -10,5 +10,3 @@ class RedirectAdmin(admin.ModelAdmin):
     )
 
     search_fields = ('old_path', 'new_path')
-
-

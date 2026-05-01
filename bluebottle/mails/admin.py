@@ -7,5 +7,3 @@ from bluebottle.utils.admin import BasePlatformSettingsAdmin
 @admin.register(MailPlatformSettings)
 class MailPlatformSettingsAdmin(BasePlatformSettingsAdmin):
     pass
-
-

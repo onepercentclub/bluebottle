@@ -49,5 +49,3 @@ class CategoryAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin,
         return format_html(
             '<a href="{}?categories__id={}">{} {}</a>',
             url, obj.id, count, _('initiatives'))
-
-

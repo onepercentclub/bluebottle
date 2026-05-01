@@ -22,6 +22,7 @@ from bluebottle.time_based.models import (
 
 logger = logging.getLogger('bluebottle')
 
+
 @app.on_after_configure.connect
 def periodic_task(sender, **kwargs):
     sender.add_periodic_task(
@@ -84,6 +85,7 @@ def periodic_task(sender, **kwargs):
         crontab(minute='*/15'),
         registered_date_activity_tasks.s()
     )
+
 
 @app.task
 def date_activity_tasks():

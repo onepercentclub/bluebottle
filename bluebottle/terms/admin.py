@@ -20,13 +20,9 @@ class TermsAdmin(admin.ModelAdmin):
     raw_id_fields = ('author',)
 
 
-
-
 @admin.register(TermsAgreement)
 class TermsAgreementAdmin(admin.ModelAdmin):
     model = TermsAgreement
     readonly_fields = ('user', 'terms')
     fields = readonly_fields
     list_display = readonly_fields
-
-

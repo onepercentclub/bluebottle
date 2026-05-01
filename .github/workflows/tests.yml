@@ -216,14 +216,14 @@ jobs:
 
           export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init -)"
-          pyenv install -s 3.9.19
-          pyenv global 3.9.19
-          pyenv shell 3.9.19
+          pyenv install -s 3.11.4
+          pyenv global 3.11.4
+          pyenv shell 3.11.4
           python --version
 
           # Fallback to HOME-based paths when configured paths are not writable on this runner user.
           if [ ! -w "$(dirname "$VENV_DIR")" ]; then
-            VENV_DIR="$HOME/venvs/bluebottle-py39"
+            VENV_DIR="$HOME/venvs/bluebottle-py311"
           fi
           if [ ! -w "$(dirname "$PIP_CACHE_DIR")" ]; then
             PIP_CACHE_DIR="$HOME/.cache/pip"
@@ -232,27 +232,27 @@ jobs:
           echo "VENV_DIR=$VENV_DIR" >> "$GITHUB_ENV"
           echo "PIP_CACHE_DIR=$PIP_CACHE_DIR" >> "$GITHUB_ENV"
           echo "PYENV_ROOT=$PYENV_ROOT" >> "$GITHUB_ENV"
-          
+
           mkdir -p "$(dirname "$VENV_DIR")" "$PIP_CACHE_DIR"
-          
-          # If venv exists but isn't Python 3.9, delete it
+
+          # If venv exists but isn't Python 3.11, delete it
           if [ -x "$VENV_DIR/bin/python" ]; then
             VPY="$("$VENV_DIR/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
-            if [ "$VPY" != "3.9" ]; then
-              echo "Existing venv is Python $VPY; recreating for 3.9"
+            if [ "$VPY" != "3.11" ]; then
+              echo "Existing venv is Python $VPY; recreating for 3.11"
               rm -rf "$VENV_DIR"
             fi
           fi
-          
-          # Create venv with Python 3.9
+
+          # Create venv with Python 3.11
           if [ ! -x "$VENV_DIR/bin/python" ]; then
             python -m venv "$VENV_DIR"
           fi
-          
+
           source "$VENV_DIR/bin/activate"
           python --version
-          
-          # Use sane tooling for Python 3.9
+
+          # Use sane tooling for Python 3.11
           python -m pip install --upgrade "pip==24.0" "setuptools==69.5.1" wheel
           python -m pip --version
           python -c "import pkg_resources"

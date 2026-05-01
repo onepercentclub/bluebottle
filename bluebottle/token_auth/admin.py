@@ -9,6 +9,3 @@ class LoginTokenAdmin(admin.ModelAdmin):
 
     def short_token(self, obj):
         return obj.token[:20] + '&hellip;'
-
-
-

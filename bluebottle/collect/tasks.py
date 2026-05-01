@@ -9,6 +9,7 @@ from bluebottle.collect.models import CollectActivity
 
 logger = logging.getLogger('bluebottle')
 
+
 @app.on_after_configure.connect
 def periodic_task(sender, **kwargs):
     sender.add_periodic_task(

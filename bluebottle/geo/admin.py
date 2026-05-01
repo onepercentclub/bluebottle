@@ -59,13 +59,13 @@ class LocationFilter(admin.SimpleListFilter):
             return queryset
 
 
+@admin.register(Country)
 class CountryAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
     search_fields = ('translations__name', 'alpha2_code', 'alpha3_code')
     fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
 
 
-admin.site.register(Country, CountryAdmin)
 
 
 class LocationMergeForm(forms.Form):
@@ -83,6 +83,7 @@ class LocationMergeForm(forms.Form):
         self.fields["to"].queryset = self.fields["to"].queryset.exclude(pk=obj.pk)
 
 
+@admin.register(Location)
 class LocationAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
     formfield_overrides = {
         PointField: {"widget": CustomMapboxPointFieldWidget},
@@ -168,7 +169,6 @@ class PlaceInline(admin.ModelAdmin):
     ]
 
 
-admin.site.register(Location, LocationAdmin)
 
 
 @admin.register(Geolocation)

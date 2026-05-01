@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import Follow
 
 
+@admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     model = Follow
     raw_id_fields = ('user', )
@@ -18,4 +19,3 @@ class FollowAdmin(admin.ModelAdmin):
             return '-'
 
 
-admin.site.register(Follow, FollowAdmin)

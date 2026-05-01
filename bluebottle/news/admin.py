@@ -8,7 +8,7 @@ from django.forms import Form
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
-from django.urls import re_path
+from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.timezone import now
@@ -24,6 +24,7 @@ class NewsItemImportForm(Form):
     json_file = forms.FileField(label=_('JSON file'), help_text=_('Select a JSON file exported from another platform'))
 
 
+@admin.register(NewsItem)
 class NewsItemAdmin(PlaceholderFieldAdmin):
     list_display = ('title', 'online', 'status', 'publication_date')
     list_filter = ('status',)
@@ -53,15 +54,15 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         base_urls = super(NewsItemAdmin, self).get_urls()
         info = self.model._meta.app_label, self.model._meta.model_name
         urlpatterns = [
-            re_path(
-                r'^(?P<pk>\d+)/export/$',
+            path(
+                '<int:pk>/export/',
                 self.admin_site.admin_view(
                     self.export_news_item
                 ),
                 name="{0}_{1}_export".format(*info)
             ),
-            re_path(
-                r'^import/$',
+            path(
+                'import/',
                 self.admin_site.admin_view(
                     self.import_news_items
                 ),
@@ -255,4 +256,3 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         return super(NewsItemAdmin, self).changelist_view(request, extra_context)
 
 
-admin.site.register(NewsItem, NewsItemAdmin)

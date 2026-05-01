@@ -1,7 +1,8 @@
 import logging
 
 from celery.schedules import crontab
-from celery.task import periodic_task
+
+from bluebottle.celery import app
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -21,12 +22,70 @@ from bluebottle.time_based.models import (
 
 logger = logging.getLogger('bluebottle')
 
+@app.on_after_configure.connect
+def periodic_task(sender, **kwargs):
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        date_activity_tasks.s()
 
-@periodic_task(
-    run_every=(crontab(minute='*/15')),
-    name="date_activity_tasks",
-    ignore_result=True
-)
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        date_participant_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        registered_date_activity_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        time_contribution_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        deadline_activity_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        periodic_activity_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        schedule_activity_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        periodic_slot_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        schedule_slot_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        team_schedule_slot_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        team_schedule_slot_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        registered_date_activity_tasks.s()
+    )
+
+@app.task
 def date_activity_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -36,11 +95,7 @@ def date_activity_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute='*/15')),
-    name="date_participant_tasks",
-    ignore_result=True
-)
+@app.task
 def date_participant_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -48,11 +103,7 @@ def date_participant_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute='*/15')),
-    name="time_contribution_tasks",
-    ignore_result=True
-)
+@app.task
 def time_contribution_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -60,11 +111,7 @@ def time_contribution_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute='*/15')),
-    name="deadline_activity_tasks",
-    ignore_result=True
-)
+@app.task
 def deadline_activity_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -72,11 +119,7 @@ def deadline_activity_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute='*/15')),
-    name="periodic_activity_tasks",
-    ignore_result=True
-)
+@app.task
 def periodic_activity_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -84,11 +127,7 @@ def periodic_activity_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute="*/15")),
-    name="schedule_activity_tasks",
-    ignore_result=True,
-)
+@app.task
 def schedule_activity_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -96,11 +135,7 @@ def schedule_activity_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute='*/15')),
-    name="periodic_slot_tasks",
-    ignore_result=True
-)
+@app.task
 def periodic_slot_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -108,9 +143,7 @@ def periodic_slot_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute="*/15")), name="schedule_slot_tasks", ignore_result=True
-)
+@app.task
 def schedule_slot_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -118,11 +151,7 @@ def schedule_slot_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute="*/15")),
-    name="team_schedule_slot_tasks",
-    ignore_result=True,
-)
+@app.task
 def team_schedule_slot_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -130,11 +159,7 @@ def team_schedule_slot_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute='*/15')),
-    name="registered_date_activity_tasks",
-    ignore_result=True
-)
+@app.task
 def registered_date_activity_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):

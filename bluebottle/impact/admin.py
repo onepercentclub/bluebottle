@@ -20,6 +20,7 @@ class ImpactGoalInline(admin.TabularInline):
     unit.short_description = _('Unit')
 
 
+@admin.register(ImpactType)
 class ImpactTypeAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('name', 'active', 'activities')
 
@@ -39,4 +40,3 @@ class ImpactTypeAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixi
         return format_html('<a href="{}?goals__type__id__exact={}">{} activities</a>', url, obj.id, total)
 
 
-admin.site.register(ImpactType, ImpactTypeAdmin)

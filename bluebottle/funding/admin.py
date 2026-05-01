@@ -13,7 +13,8 @@ from django.db import connection, models
 from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
 from django.template import loader
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from past.utils import old_div
@@ -431,8 +432,8 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     def get_urls(self):
         urls = super(StateMachineAdminMixin, self).get_urls()
         custom_urls = [
-            re_path(
-                r'^(?P<pk>.+)/sync/$',
+            path(
+                '<path:pk>/sync/',
                 self.admin_site.admin_view(self.sync_payment),
                 name='funding_donation_sync',
             )
@@ -487,8 +488,8 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     def get_urls(self):
         urls = super(PaymentChildAdmin, self).get_urls()
         process_urls = [
-            re_path(r'^(?P<pk>\d+)/check/$', self.check_status, name="funding_payment_check"),
-            re_path(r'^(?P<pk>\d+)/refund/$', self.refund, name="funding_payment_refund"),
+            path('<int:pk>/check/', self.check_status, name="funding_payment_check"),
+            path('<int:pk>/refund/', self.refund, name="funding_payment_refund"),
         ]
         return process_urls + urls
 

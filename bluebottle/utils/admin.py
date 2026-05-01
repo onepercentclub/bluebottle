@@ -25,12 +25,12 @@ from .models import Language
 from ..segments.models import SegmentType
 
 
+@admin.register(Language)
 class LanguageAdmin(admin.ModelAdmin):
     model = Language
     list_display = ('code', 'language_name', 'native_name')
 
 
-admin.site.register(Language, LanguageAdmin)
 
 
 def prep_field(request, obj, field, manyToManySep=';'):

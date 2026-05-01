@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.collect.views import (
@@ -10,42 +11,42 @@ from bluebottle.collect.views import (
 
 
 urlpatterns = [
-    re_path(
-        r'^$',
+    path(
+        '',
         CollectActivityListView.as_view(),
         name='collect-activity-list'
     ),
 
-    re_path(
-        r'^/(?P<pk>\d+)$',
+    path(
+        '/<int:pk>',
         CollectActivityDetailView.as_view(),
         name='collect-activity-detail'
     ),
 
-    re_path(
-        r'^/transitions$',
+    path(
+        '/transitions',
         CollectActivityTransitionList.as_view(),
         name='collect-activity-transition-list'
     ),
 
-    re_path(
-        r'^/(?P<activity_id>\d+)/contributors$',
+    path(
+        '/<int:activity_id>/contributors',
         CollectActivityRelatedCollectContributorList.as_view(),
         name='related-collect-contributors'
     ),
 
-    re_path(
-        r'^/contributors$',
+    path(
+        '/contributors',
         CollectContributorList.as_view(),
         name='collect-contributor-list'
     ),
-    re_path(
-        r'^/contributors/(?P<pk>\d+)$',
+    path(
+        '/contributors/<int:pk>',
         CollectContributorDetail.as_view(),
         name='collect-contributor-detail'
     ),
-    re_path(
-        r'^/contributors/transitions$',
+    path(
+        '/contributors/transitions',
         CollectContributorTransitionList.as_view(),
         name='collect-contributor-transition-list'
     ),
@@ -56,19 +57,19 @@ urlpatterns = [
         name='collect-contributors-export'
     ),
 
-    re_path(
-        r'^/types/$',
+    path(
+        '/types/',
         CollectTypeList.as_view(),
         name='collect-type-list'
     ),
-    re_path(
-        r'^/types/(?P<pk>\d+)$',
+    path(
+        '/types/<int:pk>',
         CollectTypeDetail.as_view(),
         name='collect-type-detail'
     ),
 
-    re_path(
-        r'^/ical/(?P<pk>\d+)$',
+    path(
+        '/ical/<int:pk>',
         CollectIcalView.as_view(),
         name='collect-ical'
     ),

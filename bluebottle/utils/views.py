@@ -30,7 +30,6 @@ from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from taggit.models import Tag
 
 from bluebottle.activities.ical import ActivityIcal
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
@@ -45,29 +44,12 @@ from .utils import get_current_language
 mime = magic.Magic(mime=True)
 
 
-class TagList(views.APIView):
-    """ All tags in use on this system """
-
-    def get(self, request, format=None):
-        data = [tag.name for tag in Tag.objects.all()[:20]]
-        return response.Response(data)
-
-
 class LanguageList(generics.ListAPIView):
     serializer_class = LanguageSerializer
     queryset = Language.objects.all()
 
     def get_queryset(self):
         return Language.objects.order_by('language_name').all()
-
-
-class TagSearch(views.APIView):
-    """ Search tags in use on this system """
-
-    def get(self, request, format=None, search=''):
-        data = [tag.name for tag in
-                Tag.objects.filter(name__startswith=search).all()[:20]]
-        return response.Response(data)
 
 
 class ModelTranslationViewMixin():

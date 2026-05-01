@@ -8,6 +8,7 @@ from .models import Slide
 from ..offices.models import OfficeSubRegion
 
 
+@admin.register(Slide)
 class SlideAdmin(admin.ModelAdmin):
     list_display = ('title', 'sequence', 'status', 'modification_date', 'language')
     list_filter = ('status', 'language')
@@ -111,4 +112,3 @@ class SlideAdmin(admin.ModelAdmin):
     make_published.short_description = _("Mark selected entries as published")
 
 
-admin.site.register(Slide, SlideAdmin)

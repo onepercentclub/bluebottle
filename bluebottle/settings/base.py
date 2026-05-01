@@ -425,7 +425,6 @@ TENANT_APPS = (
     'django_wysiwyg',
     'django.contrib.humanize',
     'django_tools',
-    'taggit',
 
     'bluebottle.cms',
 

@@ -45,7 +45,7 @@ jobs:
       DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
       LANG: en_GB.UTF-8
       LC_ALL: en_GB.UTF-8
-      VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py39
+      VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py311
       PIP_CACHE_DIR: /home/github_actions_runner/.cache/pip
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
       PG_CLI_IMAGE: postgis/postgis:14-3.3
@@ -238,7 +238,7 @@ jobs:
           # If venv exists but isn't Python 3.11, delete it
           if [ -x "$VENV_DIR/bin/python" ]; then
             VPY="$("$VENV_DIR/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
-            if [ "$VPY" != "3.11" ]; then
+            if [ "$VPY" != "3.11.4" ]; then
               echo "Existing venv is Python $VPY; recreating for 3.11"
               rm -rf "$VENV_DIR"
             fi

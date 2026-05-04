@@ -1,5 +1,7 @@
 from urllib.parse import urlparse
 
+import inflection
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
@@ -10,15 +12,21 @@ from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
+from bluebottle.activities.models import Activity as DoGoodActivity
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
+from bluebottle.files.models import Image as BluebottleImage
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
+
+from bluebottle.activity_pub.tasks import publish_to_recipient
+from bluebottle.activity_pub.utils import is_local, get_platform_actor
+
+from bluebottle.activity_pub.adapters import adapter
 
 
 class ActivityPubManager(PolymorphicManager):
     def from_iri(self, iri):
-        from bluebottle.activity_pub.utils import is_local
 
         if iri:
             if is_local(iri):
@@ -46,9 +54,15 @@ class ActivityPubModel(PolymorphicModel):
         if self.iri:
             return self.iri
         else:
-            model_name = self.__class__.__name__.lower()
+            model_name = self.__class__.__name__
             return connection.tenant.build_absolute_url(
-                reverse(f'json-ld:{model_name}', args=(str(self.pk),))
+                reverse(
+                    'json-ld:resource',
+                    args=(
+                        inflection.dasherize(inflection.underscore(model_name)),
+                        str(self.pk),
+                    )
+                )
             )
 
     class Meta:
@@ -72,6 +86,17 @@ class Actor(ActivityPubModel):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
 
+    def save(self, *args, **kwargs):
+        if self.is_local:
+            if not self.inbox:
+                self.inbox = Inbox.objects.create()
+            if not self.outbox:
+                self.outbox = Outbox.objects.create()
+            if not self.public_key:
+                self.public_key = PublicKey.objects.create()
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
         try:
             return self.person.name
@@ -84,72 +109,32 @@ class Actor(ActivityPubModel):
         return self.preferred_username
 
 
-class PersonManager(ActivityPubManager):
-    def from_model(self, model):
-        if not isinstance(model, Member):
-            raise TypeError("Model should be a member instance")
-
-        try:
-            return model.person
-        except Member.person.RelatedObjectDoesNotExist:
-            inbox = Inbox.objects.create()
-            outbox = Outbox.objects.create()
-
-            public_key = PublicKey.objects.create()
-
-            return Person.objects.create(
-                inbox=inbox,
-                member=model,
-                outbox=outbox,
-                public_key=public_key,
-                name=model.full_name
-            )
-
-
 class Person(Actor):
     name = models.TextField()
+    given_name = models.TextField(null=True, blank=True)
+    family_name = models.TextField(null=True, blank=True)
 
-    member = models.OneToOneField(Member, null=True, on_delete=models.CASCADE)
-
-    objects = PersonManager()
+    federated_object = models.OneToOneField(
+        Member,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
+    )
 
     def __str__(self):
         return self.name
 
 
-class OrganizationManager(ActivityPubManager):
-
-    def from_model(self, model):
-        if not isinstance(model, BluebottleOrganization):
-            raise TypeError("Model should be a organisation instance, not {}".format(type(model)))
-
-        try:
-            return model.activity_pub_organization
-        except BluebottleOrganization.activity_pub_organization.RelatedObjectDoesNotExist:
-            inbox = Inbox.objects.create()
-            outbox = Outbox.objects.create()
-
-            public_key = PublicKey.objects.create()
-            logo_url = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
-
-            return Organization.objects.create(
-                inbox=inbox,
-                organization=model,
-                outbox=outbox,
-                public_key=public_key,
-                name=model.name,
-                icon=Image.objects.create(
-                    url=logo_url,
-                    name=model.logo.name
-                ) if logo_url else None,
-                summary=model.description,
-                preferred_username=model.slug
-            )
-
-
 class Image(ActivityPubModel):
     name = models.CharField(max_length=1000, null=True)
     url = models.URLField(null=True)
+
+    federated_object = models.OneToOneField(
+        BluebottleImage,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
+    )
 
 
 class Organization(Actor):
@@ -160,14 +145,18 @@ class Organization(Actor):
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
     icon = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
 
-    organization = models.OneToOneField(
+    federated_object = models.OneToOneField(
         BluebottleOrganization,
         null=True,
         on_delete=models.CASCADE,
-        related_name='activity_pub_organization'
+        related_name='origin'
     )
 
-    objects = OrganizationManager()
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if not self.is_local and not self.federated_object:
+            adapter.adopt(self)
 
     class Meta:
         verbose_name = _("partner")
@@ -243,14 +232,29 @@ class Event(ActivityPubModel):
     name = models.CharField(verbose_name=_('Activity title'))
     summary = models.TextField(blank=True, null=True)
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
-    activity = models.OneToOneField(
-        "activities.Activity", null=True, on_delete=models.SET_NULL
+    federated_object = models.OneToOneField(
+        "activities.Activity", null=True, on_delete=models.SET_NULL, related_name='origin'
     )
     url = models.URLField(null=True, blank=True)
 
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL
     )
+
+    @classmethod
+    def sync(cls, activity):
+        return adapter.sync(activity)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.is_local:
+            if not self.create_set.exists():
+                Create.objects.create(actor=get_platform_actor(), object=self)
+            else:
+                Update.objects.create(
+                    object=self
+                )
 
     @property
     def source(self):
@@ -260,7 +264,7 @@ class Event(ActivityPubModel):
 
     @property
     def adopted_activity(self):
-        return self.adopted_activities.first()
+        return self.federated_object or self.linked_activities.first()
 
     @property
     def adopted(self):
@@ -279,18 +283,6 @@ class Event(ActivityPubModel):
 
     def __str__(self):
         return self.name
-
-    @property
-    def pub_url(self):
-        if self.iri:
-            return self.iri
-        else:
-            model_name = self.get_real_instance_class().__name__
-            import re
-            dashed_name = re.sub(r'(?<!^)(?=[A-Z])', '-', model_name).lower()
-            return connection.tenant.build_absolute_url(
-                reverse(f'json-ld:{dashed_name}', args=(str(self.pk),))
-            )
 
     class Meta:
         verbose_name = _("Shared/Received activity")
@@ -507,7 +499,6 @@ class Activity(ActivityPubModel):
     default_recipients = []
 
     def save(self, *args, **kwargs):
-        from bluebottle.activity_pub.utils import get_platform_actor
         if not getattr(self, 'actor_id', None):
             self.actor = get_platform_actor()
 
@@ -527,6 +518,29 @@ class Recipient(models.Model):
     activity = models.ForeignKey('activity_pub.Activity', on_delete=models.CASCADE, related_name='recipients')
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
     send = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+
+        if created and not self.actor.is_local:
+            publish_to_recipient.delay(self, connection.tenant)
+
+            if isinstance(self.activity, Create):
+                for transition_cls in [Start, Finish, Cancel]:
+                    for transition in transition_cls.objects.filter(
+                        object=self.activity.object
+                    ):
+                        Recipient.objects.get_or_create(
+                            actor=self.actor,
+                            activity=transition
+                        )
+
+    def publish(self):
+        adapter.publish(self.activity, self.actor)
+
+        self.send = True
+        self.save()
 
     class Meta:
         verbose_name = _("Recipient")
@@ -576,6 +590,9 @@ class Follow(Activity):
         verbose_name=_("Publish mode"),
     )
 
+    def follow(self, url, **kwargs):
+        self.object = adapter.discover(url)
+
     @property
     def default_recipients(self):
         return [self.object]
@@ -598,11 +615,12 @@ class Follow(Activity):
 
     @property
     def adopted_activities(self):
+        __import__('ipdb').set_trace()
         if self.is_local:
             return Event.objects.filter(
                 create__actor=self.object,
             ).filter(
-                Q(linked_activities__isnull=False) | Q(adopted_activities__isnull=False)
+                Q(linked_activities__isnull=False) | Q(federated_object__isnull=False)
             )
         return Accept.objects.filter(
             actor=self.actor,
@@ -610,37 +628,33 @@ class Follow(Activity):
 
     @property
     def unpublished_activities(self):
-        from bluebottle.activities.models import Activity as DoGoodActivity
         return DoGoodActivity.objects.filter(
             status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
         ).exclude(
-            event__create__recipients__actor=self.actor,
+            origin__create__recipients__actor=self.actor,
         )
 
     @property
     def unpublished_open_activities(self):
-        from bluebottle.activities.models import Activity as DoGoodActivity
-        return DoGoodActivity.objects.filter(
+        return self.unpublished_activities.filter(
             status__in=['open', 'full', 'running'],
-        ).exclude(
-            event__create__recipients__actor=self.actor,
         )
 
     @property
     def unpublished_succeeded_activities(self):
-        from bluebottle.activities.models import Activity as DoGoodActivity
-        return DoGoodActivity.objects.filter(
+        return self.unpublished_activities.filter(
             status__in=['succeeded', 'partially_funded'],
-        ).exclude(
-            event__create__recipients__actor=self.actor,
         )
 
     def save(self, *args, **kwargs):
-        created = bool(self.pk)
+        created = not bool(self.pk)
+
+        if not hasattr(self, 'actor'):
+            self.actor = get_platform_actor()
 
         super().save(*args, **kwargs)
 
-        if created and self.is_local:
+        if not created:
             Update.objects.create(
                 object=self
             )
@@ -688,10 +702,19 @@ class Accept(Activity):
 class Create(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.is_local and self.object.federated_object:
+            if self.object.federated_object.status in ('open', 'granted', ):
+                Start.objects.create(object=self.object)
+            elif self.object.federated_object.status == 'succeeded':
+                Finish.objects.create(object=self.object)
+            else:
+                Cancel.objects.create(object=self.object)
+
     @property
     def followers(self):
-        from bluebottle.activity_pub.utils import get_platform_actor
-
         actor = get_platform_actor()
         followers = Follow.objects.filter(publish_mode='automatic', accept__actor=actor)
         return followers

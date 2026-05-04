@@ -5,9 +5,8 @@ from django.utils import timezone
 
 from bluebottle.activity_pub.models import (
     Organization, Inbox, Outbox, PublicKey, PrivateKey, Follow, Person, Place, Event,
-    DoGoodEvent, SubEvent, Address, Image
+    DoGoodEvent, SubEvent, Address, Image, GoodDeed, CrowdFunding, Create
 )
-from bluebottle.test.factory_models.organizations import OrganizationFactory as BluebottleOrganizationFactory
 
 
 class PrivateKeyFactory(factory.DjangoModelFactory):
@@ -43,7 +42,6 @@ class OrganizationFactory(factory.DjangoModelFactory):
     inbox = factory.SubFactory(InboxFactory)
     outbox = factory.SubFactory(OutboxFactory)
     public_key = factory.SubFactory(PublicKeyFactory)
-    organization = factory.SubFactory(BluebottleOrganizationFactory)
 
 
 class PersonFactory(factory.DjangoModelFactory):
@@ -51,6 +49,8 @@ class PersonFactory(factory.DjangoModelFactory):
         model = Person
 
     name = factory.Sequence(lambda n: 'Person {0}'.format(n))
+    given_name = factory.Sequence(lambda n: 'Person {0}'.format(n))
+    family_name = factory.Sequence(lambda n: 'Person {0}'.format(n))
     preferred_username = factory.Sequence(lambda n: 'person_{0}'.format(n))
 
     inbox = factory.SubFactory(InboxFactory)
@@ -63,6 +63,13 @@ class FollowFactory(factory.DjangoModelFactory):
         model = Follow
 
     object = factory.SubFactory(OrganizationFactory)
+    actor = factory.SubFactory(OrganizationFactory)
+
+
+class CreateFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Create
+
     actor = factory.SubFactory(OrganizationFactory)
 
 
@@ -130,7 +137,7 @@ class ImageFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Image
 
-    url = factory.Faker('image_url')
+    url = 'http://example.com/image/1'
 
 
 class DoGoodEventFactory(factory.DjangoModelFactory):
@@ -151,3 +158,34 @@ class DoGoodEventFactory(factory.DjangoModelFactory):
     summary = factory.Faker('text', max_nb_chars=500)
     image = factory.SubFactory(ImageFactory)
     organization = factory.SubFactory(OrganizationFactory)
+
+
+class GoodDeedFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = GoodDeed
+
+    name = factory.Faker('sentence', nb_words=4)
+    summary = factory.Faker('text', max_nb_chars=500)
+    image = factory.SubFactory(ImageFactory)
+    organization = factory.SubFactory(OrganizationFactory)
+
+    start_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=7))
+    end_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=8))
+
+
+class CrowdFundingFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = CrowdFunding
+
+    name = factory.Faker('sentence', nb_words=4)
+    summary = factory.Faker('text', max_nb_chars=500)
+    image = factory.SubFactory(ImageFactory)
+    organization = factory.SubFactory(OrganizationFactory)
+
+    start_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=7))
+    end_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=8))
+
+    target = 5000
+    target_currency = 'EUR'
+    donated = 2000
+    donated_currency = 'EUR'

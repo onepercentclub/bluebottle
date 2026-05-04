@@ -14,6 +14,7 @@ from nested_inline.admin import NestedStackedInline
 from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
+from bluebottle.activity_pub.models import Following
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
     Stat, Quote, Person, Step, Logo, ResultPage, HomePage, ContentLink,
@@ -213,6 +214,10 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
             fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info',)
 
         return fieldsets
+
+    @property
+    def is_linking_activities(self):
+        return Following.objects.filter(adoption_type='link').exists()
 
     def terminated_info(self, obj):
         active_members = Member.objects.filter(is_active=True)

@@ -86,15 +86,15 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
             'bluebottle.activity_pub.admin.client.get',
             return_value=self.other_platform_url
         ), mock.patch(
-            'bluebottle.activity_pub.admin.adapter.follow'
-        ) as follow:
-            follow.side_effect = lambda url, model=None: setattr(model, 'object', actor)
+            'bluebottle.activity_pub.adapters.adapter.discover'
+        ) as discover:
+            discover.side_effect = lambda url: actor
             return form.submit()
 
     def create_published_activity(self, follow, status='open'):
         activity = DeedFactory.create(status=status)
-        adapter.create_or_update_event(activity)
-        publish = activity.event.create_set.first()
+        adapter.sync(activity)
+        publish = activity.origin.create_set.first()
         Recipient.objects.create(actor=follow.actor, activity=publish)
         return activity
 
@@ -177,7 +177,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url, user=self.superuser)
         form = page.forms[1]
 
-        with mock.patch('bluebottle.activity_pub.admin.publish_activities.delay') as delay:
+        with mock.patch('bluebottle.activity_pub.admin.publish_activity.delay') as delay:
             response = form.submit(name='confirm')
 
         self.assertEqual(response.status_code, 302)

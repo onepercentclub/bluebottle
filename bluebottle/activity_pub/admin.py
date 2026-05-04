@@ -19,7 +19,8 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 
-from bluebottle.activity_pub.adapters import adapter, publish_activities
+from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.tasks import publish_activity
 from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
     Activity,
@@ -134,7 +135,7 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 @admin.register(Person)
 class PersonAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
-    readonly_fields = ('member', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
+    readonly_fields = ('federated_object', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
 
     def save_formset(self, request, form, formset, change):
         if formset.model == Follow:
@@ -177,7 +178,7 @@ class OrganizationAdmin(ActivityPubModelChildAdmin):
             for form in formset.forms:
                 if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
                     url = form.cleaned_data.get("iri")
-                    adapter.follow(url)
+                    Follow.follow(url)
         else:
             super().save_formset(request, form, formset, change)
 
@@ -297,9 +298,9 @@ class AdoptedFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(adopted_activities__isnull=False)
+            return queryset.filter(federated_object__isnull=False)
         elif self.value() == 'no':
-            return queryset.filter(adopted_activities__isnull=True)
+            return queryset.filter(federated_object__isnull=True)
 
 
 class SourceFilter(admin.SimpleListFilter):
@@ -464,7 +465,7 @@ class FollowingAdmin(FollowAdmin):
         if not change:
             platform_url = form.cleaned_data['platform_url']
             try:
-                adapter.follow(platform_url, obj)
+                obj.follow(platform_url)
 
                 self.message_user(
                     request,
@@ -557,7 +558,7 @@ class FollowerAdmin(FollowAdmin):
         fields = super().get_fields(request, obj)
         if obj and self.accepted(obj):
             fields += (
-                'publish_mode', "shared_activities", "adopted_activities",
+                'publish_mode', "shared_activities", "federated_object",
                 "short_adoption_type", "publish_activities_button"
             )
         return fields
@@ -625,14 +626,15 @@ class FollowerAdmin(FollowAdmin):
     @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_succeeded_activities.html')
     def publish_succeeeded_activities(self, request, follow, form):
         unpublished = follow.unpublished_succeeded_activities.all()
-        publish_activities.delay(follow.actor, unpublished, connection.tenant)
+        for activity in unpublished:
+            publish_activity.delay(follow.actor, activity, connection.tenant)
 
         self.message_user(
             request,
             _(
                 "Publishing {count} activities. "
                 "This may take a few minutes. You can refresh this page to see the progress.",
-            ).format(count=unpublished.count()),
+            ).format(count=len(unpublished)),
             level="success"
         )
 
@@ -641,14 +643,15 @@ class FollowerAdmin(FollowAdmin):
     @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_open_activities.html')
     def publish_open_activities(self, request, follow, form):
         unpublished = follow.unpublished_open_activities.all()
-        publish_activities.delay(follow.actor, unpublished, connection.tenant)
+        for activity in unpublished:
+            publish_activity.delay(follow.actor, activity, connection.tenant)
 
         self.message_user(
             request,
             _(
                 "Publishing {count} activities. "
                 "This may take a few minutes. You can refresh this page to see the progress.",
-            ).format(count=unpublished.count()),
+            ).format(count=len(unpublished)),
             level="success"
         )
 
@@ -727,8 +730,8 @@ class FollowerAdmin(FollowAdmin):
                 {
                     'publish_open_url': publish_open_url,
                     'publish_succeeded_url': publish_succeeded_url,
-                    'open_count': obj.unpublished_open_activities.count(),
-                    'succeeded_count': obj.unpublished_succeeded_activities.count(),
+                    'open_count': len(obj.unpublished_open_activities),
+                    'succeeded_count': len(obj.unpublished_succeeded_activities),
                 },
             )
         )
@@ -872,7 +875,7 @@ class EventAdminMixin:
             )
 
         try:
-            activity = adapter.adopt(event, request)
+            activity = adapter.adopt(event, owner=request.user)
 
             self.message_user(
                 request,
@@ -981,7 +984,8 @@ def adopt_events(modeladmin, request, events):
         if event.source.follow.adoption_type == 'link':
             adapter.link(event)
         if event.source.follow.adoption_type == 'template':
-            adapter.adopt(event)
+            event.adopt(owner=request.user)
+
     modeladmin.message_user(
         request,
         _('{amount} activities have been adopted.').format(amount=len(events)),

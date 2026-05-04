@@ -6,18 +6,20 @@ import pytz
 import requests
 from django.contrib.gis.geos import Point
 from django.core.files import File
-from django.db import connection, models
+from django.db import connection
 from django.urls import reverse
+
+
 from djmoney.money import Money
 from rest_framework import exceptions
 from rest_framework import serializers
-from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
-    SubEvent, RepetitionModeChoices, SlotModeChoices
-from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
-from bluebottle.activity_pub.serializers.fields import FederatedIdField
+    SubEvent, RepetitionModeChoices, SlotModeChoices, Create
+from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
+from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
 from bluebottle.collect.models import CollectActivity, CollectType
+from bluebottle.members.models import Member
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
@@ -33,10 +35,13 @@ from bluebottle.utils.models import get_default_language
 logger = logging.getLogger(__name__)
 
 
-class ImageSerializer(FederatedObjectSerializer):
+class ImageSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:image')
+    type = TypeField('Image')
+
     url = serializers.SerializerMethodField()
     name = serializers.CharField(allow_null=True, allow_blank=True, required=False)
+    type = TypeField('Image')
 
     def get_url(self, instance):
         return connection.tenant.build_absolute_url(
@@ -47,7 +52,6 @@ class ImageSerializer(FederatedObjectSerializer):
         if not validated_data:
             return None
 
-        validated_data['owner'] = self.context['request'].user
         image = ActivityPubImage.objects.from_iri(validated_data['id'])
 
         response = requests.get(image.url, timeout=30)
@@ -59,7 +63,7 @@ class ImageSerializer(FederatedObjectSerializer):
 
     class Meta:
         model = Image
-        fields = FederatedObjectSerializer.Meta.fields + (
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
             'url', 'name'
         )
 
@@ -87,7 +91,8 @@ class ImageField(serializers.Field):
     def to_representation(self, value):
         if not value:
             return None
-        return value
+
+        return {'url': connection.tenant.build_absolute_url(value.url)}
 
 
 class DateField(serializers.Field):
@@ -119,8 +124,9 @@ class CountryField(serializers.CharField):
                 raise exceptions.ValidationError(f'Unknown country code: {result}')
 
 
-class AddressSerializer(FederatedObjectSerializer):
+class AddressSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:address')
+    type = TypeField('Address')
 
     street_address = serializers.CharField(source='street', required=False, allow_null=True)
     postal_code = serializers.CharField(required=False, allow_null=True)
@@ -131,8 +137,8 @@ class AddressSerializer(FederatedObjectSerializer):
 
     class Meta:
         model = Geolocation
-        fields = (
-            'id', 'street_address', 'postal_code', 'locality',
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
+            'street_address', 'postal_code', 'locality',
             'region', 'country'
         )
 
@@ -144,9 +150,32 @@ class AddressSerializer(FederatedObjectSerializer):
         return result
 
 
-class OrganizationSerializer(FederatedObjectSerializer):
+class MemberSerializer(FederatedObjectBaseSerializer):
+    id = FederatedIdField('json-ld:person')
+    type = TypeField('Person')
+    name = serializers.CharField(source="full_name", allow_null=True, read_only=True)
+    given_name = serializers.CharField(source="first_name", allow_null=True)
+    family_name = serializers.CharField(source="last_name", allow_null=True)
+    summary = serializers.CharField(
+        source='description',
+        allow_blank=True,
+        allow_null=True,
+        required=False
+    )
+    icon = ImageField(source='logo', required=False, allow_null=True)
+
+    class Meta:
+        model = Member
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
+            'name', 'family_name', 'given_name', 'summary', 'icon'
+        )
+
+
+class OrganizationSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:organization')
+    type = TypeField('Organization')
     name = serializers.CharField(allow_null=True)
+    preferred_username = serializers.CharField(allow_null=True, source='slug')
     summary = serializers.CharField(
         source='description',
         allow_blank=True,
@@ -157,11 +186,14 @@ class OrganizationSerializer(FederatedObjectSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'name', 'summary', 'icon')
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
+            'name', 'summary', 'icon', 'preferred_username'
+        )
 
 
-class LocationSerializer(FederatedObjectSerializer):
+class LocationSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:place')
+    type = TypeField('Place')
     latitude = serializers.FloatField(source='position.x', allow_null=True)
     longitude = serializers.FloatField(source='position.y', allow_null=True)
     name = serializers.CharField(source='formatted_address', allow_null=True)
@@ -170,7 +202,7 @@ class LocationSerializer(FederatedObjectSerializer):
 
     class Meta:
         model = Geolocation
-        fields = ('id', 'latitude', 'longitude', 'name', 'address',)
+        fields = FederatedObjectBaseSerializer.Meta.fields + ('latitude', 'longitude', 'name', 'address',)
 
     def create(self, validated_data):
         if not validated_data:
@@ -191,7 +223,7 @@ class LocationSerializer(FederatedObjectSerializer):
         return super().create(validated_data)
 
 
-class BaseFederatedActivitySerializer(FederatedObjectSerializer):
+class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description', allow_blank=True, allow_null=True)
     image = ImageSerializer(required=False, allow_null=True)
@@ -203,20 +235,26 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
             obj.get_absolute_url()
         )
 
-    class Meta(FederatedObjectSerializer.Meta):
-        fields = FederatedObjectSerializer.Meta.fields + (
+    def create(self, validated_data):
+        source = Create.objects.get(object__iri=validated_data['id']).actor
+        follow = source.follow_set.get()
+        if follow.default_owner:
+            validated_data['owner'] = follow.default_owner
+
+        validated_data['host_organization'] = source.federated_object
+
+        return super().create(validated_data)
+
+    class Meta(FederatedObjectBaseSerializer.Meta):
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
             'name', 'summary', 'image', 'organization', 'url'
         )
-
-    def save(self, *args, **kwargs):
-        if not kwargs.get('owner'):
-            kwargs['owner'] = self.context['request'].user
-
-        return super().save(**kwargs)
 
 
 class FederatedDeedSerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:good-deed')
+    type = TypeField('GoodDeed')
+
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='end', allow_null=True)
 
@@ -269,6 +307,8 @@ class ParlerNameRelatedField(serializers.RelatedField):
 
 class FederatedCollectSerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:collect-campaign')
+    type = TypeField('CollectCampaign')
+
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='end', allow_null=True)
     collect_type = ParlerNameRelatedField(
@@ -292,6 +332,7 @@ class FederatedCollectSerializer(BaseFederatedActivitySerializer):
 
 class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:crowd-funding')
+    type = TypeField('CrowdFunding')
 
     location = LocationSerializer(source='impact_location', allow_null=True, required=False)
 
@@ -323,6 +364,7 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
 
 class FederatedGrantApplicationSerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:grant-application')
+    type = TypeField('GrantApplication')
 
     location = LocationSerializer(source='impact_location', allow_null=True, required=False)
 
@@ -412,6 +454,7 @@ class RepetitionModeField(serializers.Field):
 
 class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:do-good-event')
+    type = TypeField('DoGoodEvent')
 
     location = LocationSerializer(allow_null=True, required=False)
 
@@ -433,6 +476,7 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
 
 class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:do-good-event')
+    type = TypeField('DoGoodEvent')
 
     location = LocationSerializer(allow_null=True, required=False)
 
@@ -459,8 +503,9 @@ class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer)
         )
 
 
-class SlotsSerializer(FederatedObjectSerializer):
+class SlotsSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:sub-event')
+    type = TypeField('subEvent')
 
     name = serializers.CharField(source='title', required=False, allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
@@ -495,7 +540,7 @@ class SlotsSerializer(FederatedObjectSerializer):
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivitySlot
-        fields = FederatedObjectSerializer.Meta.fields + (
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
             'name', 'location', 'start_time', 'end_time',
             'event_attendance_mode', 'duration',
         )
@@ -503,6 +548,7 @@ class SlotsSerializer(FederatedObjectSerializer):
 
 class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:do-good-event')
+    type = TypeField('DoGoodEvent')
 
     sub_event = SlotsSerializer(many=True, source='slots')
     join_mode = JoinModeField()
@@ -541,6 +587,7 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
 
 class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:do-good-event')
+    type = TypeField('DoGoodEvent')
 
     location = LocationSerializer(allow_null=True, required=False)
     image = ImageSerializer(required=False, allow_null=True)
@@ -567,6 +614,7 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
 
 class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
     id = FederatedIdField('json-ld:do-good-event')
+    type = TypeField('DoGoodEvent')
 
     location = LocationSerializer(allow_null=True, required=False)
 
@@ -588,77 +636,3 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
             'location', 'start_time', 'end_time', 'application_deadline',
             'event_attendance_mode', 'duration', 'join_mode', 'slot_mode'
         )
-
-
-class FederatedActivitySerializer(PolymorphicSerializer):
-    resource_type_field_name = 'type'
-
-    polymorphic_serializers = [
-        FederatedDeadlineActivitySerializer,
-        FederatedDeedSerializer,
-        FederatedDateActivitySerializer,
-        FederatedFundingSerializer,
-        FederatedGrantApplicationSerializer,
-        FederatedCollectSerializer,
-        FederatedRegisteredDateActivitySerializer,
-        FederatedPeriodicActivitySerializer,
-        FederatedScheduleActivitySerializer,
-    ]
-
-    model_type_mapping = {
-        Deed: 'GoodDeed',
-        Funding: 'CrowdFunding',
-        GrantApplication: 'GrantApplication',
-        DateActivity: 'DoGoodEvent',
-        PeriodicActivity: 'DoGoodEvent',
-        RegisteredDateActivity: 'DoGoodEvent',
-        DeadlineActivity: 'DoGoodEvent',
-        ScheduleActivity: 'DoGoodEvent',
-        CollectActivity: 'CollectCampaign',
-
-    }
-
-    def __new__(cls, *args, **kwargs):
-        cls.model_serializer_mapping = dict(
-            (serializer.Meta.model, serializer) for serializer in cls.polymorphic_serializers
-        )
-
-        return super().__new__(cls, *args, **kwargs)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.resource_type_model_mapping['DeadlineActivity'] = DeadlineActivity
-        self.resource_type_model_mapping['DateActivity'] = DateActivity
-        self.resource_type_model_mapping['RegisteredDateActivity'] = RegisteredDateActivity
-        self.resource_type_model_mapping['PeriodicActivity'] = PeriodicActivity
-        self.resource_type_model_mapping['ScheduleActivity'] = ScheduleActivity
-
-    def to_resource_type(self, model_or_instance):
-        if isinstance(model_or_instance, models.Model):
-            model = type(model_or_instance)
-        else:
-            model = model_or_instance
-
-        return self.model_type_mapping[model]
-
-    def _get_resource_type_from_mapping(self, data):
-        if data.get('type') == 'DoGoodEvent':
-            if data.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
-                return 'ScheduleActivity'
-            elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
-                return 'PeriodicActivity'
-            elif data.get('join_mode', None) in ('selected', JoinModeChoices.selected):
-                return 'RegisteredDateActivity'
-            elif len(data.get('sub_event', [])) > 0:
-                return 'DateActivity'
-            else:
-                return 'DeadlineActivity'
-
-        return super()._get_resource_type_from_mapping(data)
-
-    def save(self, *args, **kwargs):
-        if not kwargs.get('owner'):
-            kwargs['owner'] = self.context['request'].user
-
-        return super().save(**kwargs)

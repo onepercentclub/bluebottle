@@ -501,10 +501,6 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
-        'sentry': {
-            'level': 'INFO',
-            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
-        },
         'json': {
             'level': 'INFO',
             'class': 'logging.handlers.TimedRotatingFileHandler',

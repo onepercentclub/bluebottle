@@ -54,7 +54,7 @@ install_requires = [
     'django-loginas==0.3.2',
     'django-map-widgets==0.5.1',
     'django-memoize==2.3.1',
-    'django-money==3.6.0',
+    'django-money==3.5.4',
     'django-multiselectfield==1.0.1',
     'django-nested-inline==0.4.6',
     'django-otp==1.2.0',

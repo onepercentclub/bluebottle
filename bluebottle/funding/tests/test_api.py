@@ -1514,7 +1514,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
             donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
-                payment=PledgePaymentFactory.create()
             )
             PledgePaymentFactory.create(donation=donation)
 

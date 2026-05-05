@@ -43,7 +43,7 @@ install_requires = [
     'django-dynamic-fixture==1.9.5',
     'django-elasticsearch-dsl==7.4',
     'django-extensions==3.2.3',
-    'django-filter==2.4.0',
+    'django-filter==25.2',
     'django-fluent-contents==3.1',
     'django-fluent-dashboard==1.0a1',
     'django-fsm==2.5.0',

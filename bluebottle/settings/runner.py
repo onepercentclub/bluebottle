@@ -8,6 +8,8 @@ DATABASES = {
         "HOST": os.environ.get("PGHOST", "localhost"),
         "PORT": os.environ.get("PGPORT", "5432"),
         "NAME": "bluebottle_test",
+        "USER": "testuser",
+        "PASSWORD": "password",
     },
 
 }

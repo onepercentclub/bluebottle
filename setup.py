@@ -136,7 +136,6 @@ install_requires = [
     # Github requirements
     'django-exportdb@git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',
     'django-tenant-extras@git+https://github.com/onepercentclub/django-tenant-extras.git@ae234877e24e9dbccfab8a758a3ca4d6bbef1cb3#egg=django-tenant-extras-2.0.17-ae23487',
-    'django-fluent-contents@git+https://github.com/onepercentclub/django-fluent-contents.git@27f309c7b54bdfa4fada4a8a2d9ae744e967bc31#egg=django-fluent-contents-27f309',
 ]
 
 tests_requires = [

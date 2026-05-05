@@ -72,7 +72,7 @@ install_requires = [
     'django-two-factor-auth[phonenumbers]==1.17.0',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
-    'django_polymorphic==4.11.3',
+    'django_polymorphic==4.1.0',
     'djangorestframework-jsonapi==7.1.0',
     'djangorestframework==3.15.2',
     'dkimpy==1.0.5',

@@ -17,15 +17,15 @@ class TeamTriggerTestCase(BluebottleTestCase):
     def setUp(self):
         self.captain = BlueBottleUserFactory.create()
         initiative = InitiativeFactory.create()
-        activity = ScheduleActivityFactory.create(
+        self.activity = ScheduleActivityFactory.create(
             team_activity='teams',
             initiative=initiative
         )
         initiative.states.submit()
         initiative.states.approve(save=True)
-        activity.states.publish(save=True)
+        self.activity.states.publish(save=True)
 
-        self.team = TeamFactory.create(activity=activity, user=self.captain)
+        self.team = TeamFactory.create(activity=self.activity, user=self.captain)
 
     def test_initiate(self):
         self.assertEqual(self.team.status, "accepted")
@@ -40,6 +40,77 @@ class TeamTriggerTestCase(BluebottleTestCase):
         )
         self.assertEqual(
             self.team.team_members.get().participants.get().user, self.captain
+        )
+
+    def test_initiate_review(self):
+        self.activity.review = True
+        self.activity.save()
+
+        registration = TeamScheduleRegistrationFactory.create(
+            activity=self.activity
+        )
+        team = TeamFactory.create(
+            activity=registration.activity, user=registration.user, registration=registration
+        )
+
+        self.assertEqual(team.status, "new")
+        self.assertEqual(team.registration.status, "new")
+
+        self.assertEqual(team.team_members.get().status, "active")
+        self.assertEqual(team.team_members.get().user, registration.user)
+        self.assertEqual(
+            team.team_members.get().participants.get().status, "new"
+        )
+        self.assertEqual(
+            team.team_members.get().participants.get().user, registration.user
+        )
+
+    def test_accept(self):
+        self.activity.review = True
+        self.activity.save()
+
+        self.registration = TeamScheduleRegistrationFactory.create(
+            activity=self.activity
+        )
+        team = TeamFactory.create(
+            activity=self.registration.activity,
+            user=self.registration.user,
+            registration=self.registration
+        )
+        self.registration.states.accept(save=True)
+        team.refresh_from_db()
+
+        self.assertEqual(team.status, "accepted")
+        self.assertEqual(team.registration.status, "accepted")
+
+        self.assertEqual(team.team_members.get().status, "active")
+        self.assertEqual(team.team_members.get().user, self.registration.user)
+        self.assertEqual(
+            team.team_members.get().participants.get().status, "accepted"
+        )
+        self.assertEqual(
+            team.team_members.get().participants.get().user, self.registration.user
+        )
+
+    def test_accept_second_team(self):
+        self.test_accept()
+
+        team = TeamFactory.create(
+            activity=self.registration.activity,
+            user=self.registration.user,
+            registration=self.registration
+        )
+
+        self.assertEqual(team.status, "accepted")
+        self.assertEqual(team.registration.status, "accepted")
+
+        self.assertEqual(team.team_members.get().status, "active")
+        self.assertEqual(team.team_members.get().user, self.registration.user)
+        self.assertEqual(
+            team.team_members.get().participants.get().status, "accepted"
+        )
+        self.assertEqual(
+            team.team_members.get().participants.get().user, self.registration.user
         )
 
     def test_cancel_activity(self):

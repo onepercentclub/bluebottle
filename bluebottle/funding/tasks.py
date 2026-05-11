@@ -1,7 +1,7 @@
 import logging
 
 from celery.schedules import crontab
-from celery.task import periodic_task
+from bluebottle.celery import app
 from djmoney.contrib.exchange.backends import OpenExchangeRatesBackend
 
 from bluebottle.clients.models import Client
@@ -10,11 +10,25 @@ from bluebottle.clients.utils import LocalTenant
 logger = logging.getLogger('bluebottle')
 
 
-@periodic_task(
-    run_every=(crontab(hour='*/15')),
-    name="funding_tasks",
-    ignore_result=True
-)
+@app.on_after_configure.connect
+def periodic_task(sender, **kwargs):
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        funding_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(hour=2, minute=20),
+        donor_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(hour=2, minute=20),
+        update_rates.s()
+    )
+
+
+@app.task
 def funding_tasks():
     from bluebottle.funding.models import Funding
     for tenant in Client.objects.all():
@@ -23,11 +37,7 @@ def funding_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(hour=2, minute=20)),
-    name="donor_tasks",
-    ignore_result=True
-)
+@app.task
 def donor_tasks():
     from bluebottle.funding.models import Donor
     for tenant in Client.objects.all():
@@ -36,10 +46,6 @@ def donor_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(hour=3, minute=10)),
-    name="update_rates",
-    ignore_result=True
-)
+@app.task
 def update_rates():
     OpenExchangeRatesBackend().update_rates()

@@ -203,7 +203,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
     """
 
     def process_request(self, request):
-        if 'HTTP_X_LOCKDOWN' not in request.META:
+        if 'x-lockdown' not in request.headers:
             return None
 
         try:
@@ -239,7 +239,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
             if not locked_date:
                 return None
 
-        passwords = (request.META['HTTP_X_LOCKDOWN'],)
+        passwords = (request.headers['x-lockdown'],)
         form_data = request.method == 'POST' and request.POST or None
         if self.form:
             form_class = self.form

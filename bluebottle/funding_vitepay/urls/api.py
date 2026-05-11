@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.funding_vitepay.views import (
@@ -7,18 +8,18 @@ from bluebottle.funding_vitepay.views import (
 )
 
 urlpatterns = [
-    re_path(
-        r'^/payments/$',
+    path(
+        '/payments/',
         VitepayPaymentList.as_view(),
         name='vitepay-payment-list'
     ),
-    re_path(
-        r'^/webhook/$',
+    path(
+        '/webhook/',
         VitepayWebhookView.as_view(),
         name='vitepay-payment-webhook'
     ),
-    re_path(
-        r'^/bank-accounts/$',
+    path(
+        '/bank-accounts/',
         VitepayBankAccountAccountList.as_view(),
         name='vitepay-external-account-list'
     ),

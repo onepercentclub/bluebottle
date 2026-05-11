@@ -69,6 +69,7 @@ def _init_worker_with_es(
     process_setup=None,
     process_setup_args=None,
     debug_mode=None,
+    used_aliases=None
 ):
     with counter.get_lock():
         counter.value += 1
@@ -93,7 +94,8 @@ def _init_worker_with_es(
         django_test_runner.django.setup()
         django_test_runner.setup_test_environment(debug=debug_mode)
 
-    for alias in django_test_runner.connections:
+    db_aliases = used_aliases or django_test_runner.connections
+    for alias in db_aliases:
         connection = django_test_runner.connections[alias]
         if start_method == "spawn":
             connection.settings_dict.update(initial_settings[alias])

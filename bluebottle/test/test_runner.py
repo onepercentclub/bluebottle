@@ -1,5 +1,6 @@
 import locale
 import os
+import atexit
 from builtins import range
 
 from django.conf import settings
@@ -40,6 +41,28 @@ def _wipe_stale_pid_test_elasticsearch_indices():
         from elasticsearch_dsl import connections
         es = connections.get_connection()
         pattern = f'{prefix}-pid*'
+        es.indices.delete(
+            index=pattern,
+            params={'ignore_unavailable': 'true'},
+        )
+    except Exception:
+        pass
+
+
+def _wipe_worker_test_elasticsearch_indices(worker_id):
+    """
+    Delete indices matching {ELASTICSEARCH_TEST_INDEX_PREFIX}-w{worker_id}-*
+    (parallel test worker indices). Keeps per-worker isolation during the run,
+    but cleans up shards afterwards so ES memory/shard count doesn't grow on
+    long-lived self-hosted runners.
+    """
+    prefix = getattr(settings, 'ELASTICSEARCH_TEST_INDEX_PREFIX', None)
+    if not prefix or not worker_id:
+        return
+    try:
+        from elasticsearch_dsl import connections
+        es = connections.get_connection()
+        pattern = f'{prefix}-w{worker_id}-*'
         es.indices.delete(
             index=pattern,
             params={'ignore_unavailable': 'true'},
@@ -103,6 +126,8 @@ def _init_worker_with_es(
 
     if worker_id:
         os.environ["DJANGO_TEST_PROCESS_NUMBER"] = str(worker_id)
+        # Cleanup this worker's per-worker indices when the worker process exits.
+        atexit.register(_wipe_worker_test_elasticsearch_indices, worker_id)
     # Complete ES index setup before this worker is used; Django does not
     # assign tests to a worker until its initializer returns.
     _setup_es_indices()

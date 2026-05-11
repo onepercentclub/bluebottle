@@ -93,10 +93,10 @@ class BaseTransitionEffect(Effect):
 
     def __str__(self):
         if self.instance:
-            return _('{transition} {object}').format(
+            return str(_('{transition} {object}').format(
                 transition=self.transition.name,
                 object=str(self.instance)
-            )
+            ))
         return str(self.transition.target)
 
     @property
@@ -106,21 +106,21 @@ class BaseTransitionEffect(Effect):
     def to_html(self):
         if self.conditions:
             try:
-                return _('{transition} {object} if {conditions}').format(
+                return str(_('{transition} {object} if {conditions}').format(
                     transition=self.transition.name,
                     object=str(self.instance),
                     conditions=" and ".join([c.__doc__ for c in self.conditions])
-                )
+                ))
             except TypeError:
-                return _('{transition} {object} if {conditions}').format(
+                return str(_('{transition} {object} if {conditions}').format(
                     transition=self.transition.name,
                     object=str(self.instance),
                     conditions=" and ".join([str(c) for c in self.conditions])
-                )
-        return _('{transition} {object}').format(
+                ))
+        return str(_('{transition} {object}').format(
             transition=self.transition.name,
             object=str(self.instance)
-        )
+        ))
 
 
 def TransitionEffect(transition, field='states', conditions=None, post_save=False, display=True):
@@ -167,7 +167,7 @@ class BaseRelatedTransitionEffect(Effect):
                     instance, parent=self.instance, **self.options
                 )
 
-                if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
+                if effect not in effects and effect.is_valid:
                     self.executed = True
                     effect.pre_save(effects=effects)
                     effects.append(effect)
@@ -181,11 +181,11 @@ class BaseRelatedTransitionEffect(Effect):
 
     def __str__(self):
         if self.description:
-            return self.description
-        return _('{transition} related {object}').format(
+            return str(self.description)
+        return str(_('{transition} related {object}').format(
             transition=self.transition_effect_class.transition.name,
             object=self.relation
-        )
+        ))
 
     def __repr__(self):
         return '<Related Transition Effect: {} on {}>'.format(self.transition, list(self.instances))
@@ -198,15 +198,15 @@ class BaseRelatedTransitionEffect(Effect):
                     conditions.append(c.__doc__ or str(c))
                 except TypeError:
                     conditions.append(str(c))
-            return _('{transition} related {object} if {conditions}').format(
+            return str(_('{transition} related {object} if {conditions}').format(
                 transition=self.transition_effect_class.transition.name,
                 object=str(self.relation),
                 conditions=" and ".join(conditions)
-            )
-        return _('{transition} related {object}').format(
+            ))
+        return str(_('{transition} related {object}').format(
             transition=self.transition_effect_class.transition.name,
             object=str(self.relation),
-        )
+        ))
 
 
 def RelatedTransitionEffect(

@@ -67,10 +67,15 @@ class CollectActivitySerializer(BaseActivitySerializer):
             return instance.contributors.filter(user=user).instance_of(CollectContributor).first()
 
     def get_contributor_count(self, instance):
-        return instance.contributors.not_instance_of(Organizer).filter(
+        local_total = instance.contributors.not_instance_of(Organizer).filter(
             status__in=['accepted', 'succeeded', 'activity_refunded'],
             user__isnull=False
         ).count()
+        return {
+            'total': local_total,
+            'local': local_total,
+            'remote': 0,
+        }
 
     target = serializers.FloatField(allow_null=True, required=False)
     realized = serializers.FloatField(allow_null=True, required=False)

@@ -189,3 +189,5 @@ class CrowdFundingFactory(factory.DjangoModelFactory):
     target_currency = 'EUR'
     donated = 2000
     donated_currency = 'EUR'
+    start_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=7))
+    end_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=8))

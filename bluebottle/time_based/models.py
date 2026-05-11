@@ -5,6 +5,7 @@ import pytz
 from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
+from django.urls import reverse
 from django.utils import timezone
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
@@ -113,7 +114,6 @@ class TimeBasedActivity(Activity):
         blank=True, null=True,
         max_length=300,
     )
-
     activity_type = _('Time-based activity')
 
     @property
@@ -322,17 +322,33 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     )
 
     @property
+    def is_adopted(self):
+        return self.origin is not None
+
+    @property
+    def host_organization(self):
+        return self.activity.host_organization if self.activity else None
+
+    @property
     def event(self):
         from bluebottle.activity_pub.models import SubEvent
         try:
-            return SubEvent.objects.get(slot=self)
+            return self.subevent
         except SubEvent.DoesNotExist:
             pass
 
     @property
     def activity_pub_url(self):
-        if self.event:
-            return self.event.iri
+        sub = self.event
+        if sub is None and self.origin_id:
+            sub = self.origin
+        if sub is None:
+            return None
+        if sub.iri:
+            return sub.iri
+        return connection.tenant.build_absolute_url(
+            reverse('json-ld:sub-event', args=(sub.pk,))
+        )
 
     @property
     def uid(self):
@@ -449,6 +465,7 @@ class DateActivitySlot(ActivitySlot):
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
+    remote_contributor_count = models.PositiveIntegerField(default=0)
 
     @property
     def owners(self):
@@ -999,6 +1016,7 @@ class Participant(Contributor):
 
     class Meta:
         abstract = True
+        ordering = ('-created',)
 
 
 class DateParticipant(Participant):

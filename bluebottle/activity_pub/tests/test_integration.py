@@ -25,7 +25,7 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectTypeFactory
-from bluebottle.deeds.tests.factories import DeedFactory
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
 from bluebottle.funding_stripe.tests.base import FundingStripeMixin
@@ -44,7 +44,8 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
     DeadlineActivityFactory,
-    RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
+    RegisteredDateActivityFactory,
+    RegisteredDateParticipantFactory,
     PeriodicActivityFactory,
     ScheduleActivityFactory,
 )
@@ -173,20 +174,6 @@ class ActivityPubTestCase:
         self.assertTrue(bool(site_settings.organization))
         self.assertTrue(bool(site_settings.organization.origin))
 
-    def test_follow(self):
-        platform_url = self.build_absolute_url('/')
-
-        with LocalTenant(self.other_tenant):
-            with httmock.HTTMock(image_mock):
-                follow = Follow()
-                follow.follow(platform_url)
-                follow.save()
-
-        self.follow = Follow.objects.get(object=get_platform_actor())
-
-        self.assertTrue(self.follow)
-        self.assertTrue(self.follow.actor.federated_object)
-
     def test_accept(self):
         self.test_follow()
 
@@ -313,7 +300,24 @@ class ActivityPubTestCase:
         self.adopted.theme = ThemeFactory.create()
 
 
-class AdoptTestCase(ActivityPubTestCase):
+class TemplateTestCase(ActivityPubTestCase):
+    def test_follow(self):
+        platform_url = self.build_absolute_url('/')
+
+        with LocalTenant(self.other_tenant):
+            with httmock.HTTMock(image_mock):
+
+                follow = Follow(
+                    adoption_type=AdoptionTypeChoices.template
+                )
+                follow.follow(platform_url)
+                follow.save()
+
+        self.follow = Follow.objects.get(object=get_platform_actor())
+
+        self.assertTrue(self.follow)
+        self.assertTrue(self.follow.actor.federated_object)
+
     def test_adopt(self):
         self.test_publish()
 
@@ -361,6 +365,50 @@ class AdoptTestCase(ActivityPubTestCase):
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
 
+class SyncTestCase(ActivityPubTestCase):
+    def test_follow(self):
+        platform_url = self.build_absolute_url('/')
+        with LocalTenant(self.other_tenant):
+            with httmock.HTTMock(image_mock):
+
+                follow = Follow(
+                    adoption_type=AdoptionTypeChoices.sync
+                )
+                follow.follow(platform_url)
+                follow.save()
+
+        self.follow = Follow.objects.get(object=get_platform_actor())
+
+        self.assertTrue(self.follow)
+        self.assertTrue(self.follow.actor.federated_object)
+
+    def test_adopt(self):
+        self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            self.event = Event.objects.get()
+
+            request = RequestFactory().get('/')
+            request.user = BlueBottleUserFactory.create()
+
+            with httmock.HTTMock(image_mock):
+                with mock.patch.object(Geolocation, 'update_location'):
+                    self.adopted = adapter.adopt(self.event, owner=request.user)
+                    self.assertEqual(self.adopted.title, self.model.title)
+                    self.assertEqual(self.adopted.origin, self.event)
+                    self.assertEqual(self.adopted.image.origin, self.event.image)
+
+                    self.complete()
+                    self.adopted.states.submit(save=True)
+
+                    self.approve(self.adopted)
+                    accept = Accept.objects.last()
+                    self.assertTrue(accept)
+
+        accept = Accept.objects.first()
+        self.assertTrue(accept)
+
+
 class LinkTestCase(ActivityPubTestCase):
     expected_link_status = 'open'
 
@@ -369,12 +417,6 @@ class LinkTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             with httmock.HTTMock(image_mock):
-                follow = Follow(
-                    automatic_adoption_activity_types=[
-                        self.factory._meta.model._meta.model_name
-                    ],
-                    adoption_type=AdoptionTypeChoices.link
-                )
                 follow = Follow(
                     automatic_adoption_activity_types=[
                         self.factory._meta.model._meta.model_name
@@ -396,11 +438,11 @@ class LinkTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             follow = Follow.objects.get()
-            follow.adoption_type = AdoptionTypeChoices.template
+            follow.adoption_type = AdoptionTypeChoices.clone
             follow.save()
 
         follow = Follow.objects.get(object=get_platform_actor())
-        self.assertEqual(follow.adoption_type, AdoptionTypeChoices.template)
+        self.assertEqual(follow.adoption_type, AdoptionTypeChoices.clone)
 
     def test_link(self):
         with httmock.HTTMock(image_mock):
@@ -457,7 +499,7 @@ class LinkTestCase(ActivityPubTestCase):
                 LinkedActivity.objects.get()
 
 
-class AdoptDeedTestCase(AdoptTestCase, BluebottleTestCase):
+class TemplateDeedTestCase(TemplateTestCase, BluebottleTestCase):
     factory = DeedFactory
 
     def create(self, **kwargs):
@@ -480,6 +522,29 @@ class AdoptDeedTestCase(AdoptTestCase, BluebottleTestCase):
 
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.end, self.model.end)
+
+
+class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
+    factory = DeedFactory
+
+    def create(self, **kwargs):
+        super().create(
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date(),
+            organization=None,
+            **kwargs
+        )
+        if 'status' not in kwargs:
+            self.submit()
+            self.approve(save=True)
+
+    def test_join(self):
+        super().test_adopt()
+
+        DeedParticipantFactory.create(activity=self.adopted)
+
+        with LocalTenant(self.other_tenant):
+            __import__('ipdb').set_trace()
 
 
 class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
@@ -615,7 +680,7 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
             )
 
 
-class AdoptFundingTestCase(FundingStripeMixin, AdoptTestCase, BluebottleTestCase):
+class TemplateFundingTestCase(FundingStripeMixin, TemplateTestCase, BluebottleTestCase):
     factory = FundingFactory
 
     def create(self, **kwargs):
@@ -731,7 +796,7 @@ class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
             )
 
 
-class AdoptGrantApplicationTestCase(AdoptTestCase, BluebottleTestCase):
+class TemplateGrantApplicationTestCase(TemplateTestCase, BluebottleTestCase):
     factory = GrantApplicationFactory
 
     def create(self, **kwargs):
@@ -788,7 +853,7 @@ class LinkDeadlineActivityTestCase(LinkTestCase, BluebottleTestCase):
         self.submit()
 
 
-class AdoptDeadlineActivityTestCase(AdoptTestCase, BluebottleTestCase):
+class TemplateDeadlineActivityTestCase(TemplateTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
 
     def create(self, **kwargs):
@@ -857,7 +922,7 @@ class LinkScheduleActivityTestCase(LinkTestCase, BluebottleTestCase):
         super().test_link()
 
 
-class AdoptScheduleActivityTestCase(AdoptTestCase, BluebottleTestCase):
+class TemplateScheduleActivityTestCase(TemplateTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
 
     def create(self):
@@ -902,7 +967,7 @@ class LinkPeriodicActivityTestCase(LinkTestCase, BluebottleTestCase):
         self.submit()
 
 
-class AdoptPeriodicActivityTestCase(AdoptTestCase, BluebottleTestCase):
+class TemplatePeriodicActivityTestCase(TemplateTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory
 
     def create(self):
@@ -957,7 +1022,7 @@ class LinkRegisteredDateActivityTestCase(LinkTestCase, BluebottleTestCase):
         pass
 
 
-class AdoptRegisteredDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
+class TemplateRegisteredDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
     factory = RegisteredDateActivityFactory
 
     def create(self):
@@ -1015,7 +1080,7 @@ class LinkedDateActivityTestCase(LinkTestCase, BluebottleTestCase):
         self.submit()
 
 
-class AdoptDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
+class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
     def create(self, **kwargs):
@@ -1060,7 +1125,7 @@ class LinkedSingleSlotDateActivityTestCase(LinkTestCase, BluebottleTestCase):
         self.submit()
 
 
-class AdoptSingleSlotDateActivityTestCase(AdoptTestCase, BluebottleTestCase):
+class TemplateSingleSlotDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
     def create(self, **kwargs):
@@ -1115,7 +1180,7 @@ class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
             self.assertIsNotNone(link)
 
 
-class AdoptCollectActivityTestCase(AdoptTestCase, BluebottleTestCase):
+class TemplateCollectActivityTestCase(TemplateTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
 
     def create(self):

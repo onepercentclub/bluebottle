@@ -5,6 +5,8 @@ from django.utils.timezone import now
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.activities.models import RemoteContributor
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory, OrganizationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -90,6 +92,16 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
 
         self.assertMeta("registration-status", {"accepted": 3, "new": 1, "rejected": 2})
 
+    def test_contributor_count_uses_remote_total_for_synced_activity(self):
+        self.model.origin = DoGoodEventFactory.create(contributor_count=6)
+        self.model.synced_contributor_count = 6
+        self.model.save(update_fields=['origin', 'synced_contributor_count'])
+        DeadlineParticipantFactory.create(activity=self.model, status='accepted')
+
+        self.perform_get(user=self.model.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('contributor-count', {'total': 6, 'local': 1, 'remote': 5})
+
 
 class DeadlineActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):
     url_name = 'deadline-transition-list'
@@ -162,6 +174,34 @@ class DeadlineParticipantRelatedListAPITestCase(TimeBasedParticipantRelatedListA
         'deadline': date.today() + timedelta(days=20),
     }
 
+    def test_get_remote_contributor_display_name_and_platform(self):
+        platform_actor = OrganizationFactory.create(name='Partner Platform')
+        remote_contributor = RemoteContributor.objects.create(
+            display_name='Remote Deadline Participant',
+            email='remote@example.com',
+            sync_id='deadline-remote-1',
+            sync_actor=platform_actor,
+        )
+        participant = DeadlineParticipantFactory.create(
+            activity=self.activity,
+            user=None,
+            remote_contributor=remote_contributor,
+            status='succeeded',
+        )
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        payload = next(
+            item for item in self.response.json()['data']
+            if item['id'] == str(participant.pk)
+        )
+        self.assertEqual(
+            payload['attributes']['display-name'],
+            'Remote Deadline Participant'
+        )
+        self.assertEqual(payload['attributes']['platform'], 'Partner Platform')
+
 
 class DeadlineParticipantDetailAPITestCase(TimeBasedParticipantDetailAPITestCase, APITestCase):
     url_name = 'deadline-participant-detail'
@@ -173,6 +213,28 @@ class DeadlineParticipantDetailAPITestCase(TimeBasedParticipantDetailAPITestCase
         'start': date.today() + timedelta(days=10),
         'deadline': date.today() + timedelta(days=20),
     }
+
+    def test_get_remote_contributor_display_name_and_platform(self):
+        platform_actor = OrganizationFactory.create(name='Partner Platform')
+        remote_contributor = RemoteContributor.objects.create(
+            display_name='Remote Deadline Participant',
+            email='remote@example.com',
+            sync_id='deadline-remote-2',
+            sync_actor=platform_actor,
+        )
+        self.participant.user = None
+        self.participant.remote_contributor = remote_contributor
+        self.participant.save(update_fields=['user', 'remote_contributor'])
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        attributes = self.response.json()['data']['attributes']
+        self.assertEqual(
+            attributes['display-name'],
+            'Remote Deadline Participant'
+        )
+        self.assertEqual(attributes['platform'], 'Partner Platform')
 
 
 class DeadlineParticipantTransitionListAPITestCase(TimeBasedParticipantTransitionListAPITestCase, APITestCase):

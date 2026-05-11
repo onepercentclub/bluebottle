@@ -115,7 +115,6 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
         auth_iri = getattr(request_auth, 'iri', None)
         many_related = {}
 
-        # Do not allow remote request to update local instances
         if (
             is_local(iri) and
             request_auth and

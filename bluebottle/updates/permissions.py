@@ -1,6 +1,8 @@
 from rest_framework import permissions
 from rest_framework.permissions import SAFE_METHODS
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
+
 
 class IsAuthorPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -61,3 +63,26 @@ class UpdateRelatedActivityPermission(permissions.BasePermission):
 
     def has_action_permission(self, method, user, obj):
         return True
+
+
+class CanPostUpdatePermission(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        settings = InitiativePlatformSettings.load()
+
+        return (
+            not settings.restrict_updates or
+            request.user in list(obj.owners)
+            or request.user.is_staff
+        )
+
+    def has_object_action_permission(self, method, user, obj):
+        if method in SAFE_METHODS:
+            return True
+
+        settings = InitiativePlatformSettings.load()
+
+        return (
+            not settings.restrict_updates or
+            user in list(obj.owners)
+            or user.is_staff
+        )

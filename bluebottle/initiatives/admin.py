@@ -181,8 +181,8 @@ class InitiativeAdmin(
         ("organization", "Organization"),
         ("owner__full_name", "Owner"),
         ("owner__email", "Owner email"),
-        ("promotor__full_name", "Promotor"),
-        ("promotor__email", "Promotor email"),
+        ("promoter__full_name", "Promoter"),
+        ("promoter__email", "Promoter email"),
         ("reviewer__full_name", "Reviewer"),
         ("reviewer__email", "Reviewer email"),
     )
@@ -349,6 +349,7 @@ class InitiativePlatformSettingsAdmin(
                     "enable_matching_emails",
                     "include_full_activities",
                     "enable_reviewing",
+                    "restrict_updates",
                 )
             },
         ),

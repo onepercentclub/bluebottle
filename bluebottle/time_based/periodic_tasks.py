@@ -33,7 +33,7 @@ from bluebottle.time_based.states.states import (
     TimeBasedStateMachine,
     TimeContributionStateMachine,
 )
-from bluebottle.time_based.triggers.triggers import has_participants, has_no_participants
+from bluebottle.time_based.effect_conditions import has_no_participants, has_participants
 
 
 class TimeBasedActivityRegistrationDeadlinePassedTask(ModelPeriodicTask):

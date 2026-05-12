@@ -16,8 +16,6 @@ readme = read_file('README.rst')
 changes = ''
 
 install_requires = [
-    # django-choices (djchoices) imports pkg_resources; keep explicit so venvs never drop it.
-    'setuptools>=70.0.0',
     'Babel==2.16.0',
     'Django==4.2.30',
     'Pillow==10.4.0',
@@ -119,6 +117,7 @@ install_requires = [
     'requests_http_signature==0.7.1',
     'schwifty==2.1.0',
     'scss==0.8.73',
+    'setuptools==81.0.0',
     'social-auth-core==4.5.4',
     'social-auth-app-django==5.4.2',
     'sorl-thumbnail==12.11.0',

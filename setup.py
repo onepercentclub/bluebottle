@@ -16,6 +16,8 @@ readme = read_file('README.rst')
 changes = ''
 
 install_requires = [
+    # django-choices (djchoices) imports pkg_resources; keep explicit so venvs never drop it.
+    'setuptools>=70.0.0',
     'Babel==2.16.0',
     'Django==4.2.30',
     'Pillow==10.4.0',

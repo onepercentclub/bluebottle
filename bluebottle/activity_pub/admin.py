@@ -290,10 +290,9 @@ class StartAdmin(ActivityAdmin):
 
 @admin.register(Join)
 class JoinAdmin(ActivityAdmin):
-    list_display = ("id", "actor", "object", "participant_sync_id", "participant_name", "participant_email")
+    list_display = ("id", "actor", "object", )
     readonly_fields = (
         'iri', 'actor', 'object', 'pub_url',
-        'participant_sync_id', 'participant_name', 'participant_email',
     )
     inlines = [RecipientInline]
 
@@ -502,7 +501,6 @@ class FollowingAdmin(FollowAdmin):
     def save_model(self, request, obj, form, change):
         if not change:
             platform_url = form.cleaned_data['platform_url']
-<<<<<<< HEAD
             try:
                 obj.follow(platform_url)
 
@@ -528,15 +526,8 @@ class FollowingAdmin(FollowAdmin):
                     request,
                     _("Error creating Follow relationship: %s") % str(error),
                     level="error"
-            self.message_user(
-                request,
-                _(
-                    "Follow request sent to %s. "
-                    "Your platforms will be connected when the request is accepted."
                 )
-                % platform_url,
-                level="success",
-            )
+
         super().save_model(request, obj, form, change)
 
     def response_add(self, request, obj, post_url_continue=None):
@@ -937,7 +928,6 @@ class EventAdminMixin:
 
         try:
             activity = adapter.adopt(event, owner=request.user)
-            activity = adapter.clone(event, owner=request.user)
 
             self.message_user(
                 request,

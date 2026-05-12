@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_links.models import LinkedActivity
-from bluebottle.activity_pub.adapters import adapter, resolve_sub_event_for_synced_date_join
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Accept, Follow, Start, Update, Cancel, Delete, Finish, Join, Leave,
     Create, Recipient, Event, SubEvent,
@@ -253,63 +253,11 @@ class SendJoinEffect(Effect):
     conditions = [activity_is_synced]
 
     def post_save(self, **kwargs):
-        import uuid
-        from bluebottle.deeds.models import DeedParticipant
-        from bluebottle.time_based.models import DateActivity, DateParticipant, DeadlineParticipant
-
-        actor = get_platform_actor()
-        if actor is None:
-            return
-
-        contributor = self.instance
-        if not isinstance(contributor, (DeedParticipant, DeadlineParticipant, DateParticipant)):
-            return
-        deed = contributor.activity
-        if not getattr(deed, 'origin', None):
-            return
-
-        # Ensure we have a stable sync_id for this participant (for Leave matching)
-        if not contributor.sync_id:
-            from bluebottle.activities.models import RemoteContributor
-
-            create = Create.objects.filter(object=deed.origin).first()
-            source_actor = create.actor if create else None
-
-            remote_contributor = RemoteContributor.objects.create(
-                sync_id=str(uuid.uuid4()),
-                display_name=contributor.display_name_or_user or '',
-                email=contributor.email_or_user,
-                sync_actor=source_actor,
-            )
-            contributor.remote_contributor = remote_contributor
-            contributor.save(update_fields=['remote_contributor'])
-
-        # Name and email: from user when present, else from remote_contributor
-        participant_name = contributor.display_name_or_user or None
-        participant_email = contributor.email_or_user or None
-
-        sub_event = None
-        if isinstance(contributor, DateParticipant):
-            if not isinstance(deed, DateActivity):
-                return
-            slot = contributor.slot
-            if slot is not None and not getattr(slot, 'origin_id', None):
-                adapter.create_or_update_event(deed)
-                slot.refresh_from_db()
-            sub_event = resolve_sub_event_for_synced_date_join(contributor, deed)
-
-        join_activity = Join.objects.create(
-            actor=actor,
-            object=deed.origin,
-            participant_sync_id=contributor.sync_id,
-            participant_name=participant_name,
-            participant_email=participant_email,
-            sub_event=sub_event,
+        join = Join.objects.create(
+            actor=adapter.sync(self.instance.user),
+            object=self.instance.activity.origin
         )
-        if join_activity.recipients.count() == 0:
-            create = Create.objects.filter(object=deed.origin).first()
-            if create:
-                Recipient.objects.get_or_create(actor=create.actor, activity=join_activity)
+        join.save()
 
     @property
     def is_valid(self):

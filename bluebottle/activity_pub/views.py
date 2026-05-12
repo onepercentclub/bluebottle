@@ -39,6 +39,9 @@ def create_task(request, tenant):
         serializer = ActivityPubSerializer(
             data=request.data, context={'request': request}
         )
+        print(serializer, request.data.get('type'))
+        if request.data.get('type') == 'Join':
+            __import__('ipdb').set_trace()
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

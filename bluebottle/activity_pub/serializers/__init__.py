@@ -82,6 +82,11 @@ class FederatedObjectSerializer(PolymorphicSerializer):
     def _get_resource_type_from_mapping(self, mapping):
         resource_type = super()._get_resource_type_from_mapping(mapping)
         if resource_type == 'DoGoodEvent':
+            from bluebottle.activity_pub.models import ActivityPubModel
+
+            resource = ActivityPubModel.objects.from_iri(mapping['id'])
+
+            resource_type = resource.activity_type
             if mapping.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
                 return 'ScheduleActivity'
             elif mapping.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':

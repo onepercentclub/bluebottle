@@ -12,7 +12,7 @@ from bluebottle.activity_links.models import (
     LinkedFunding, LinkedDateSlot, LinkedCollectCampaign, LinkedPeriodicActivity,
     LinkedScheduleActivity, LinkedGrantApplication
 )
-from bluebottle.activity_pub.models import Image as ActivityPubImage
+from bluebottle.activity_pub.models import Create, ActivityPubModel, Image as ActivityPubImage
 from bluebottle.files.models import Image
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer
@@ -120,7 +120,18 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
         if location_data:
             validated_data['location'] = Geolocation.objects.create(**location_data)
 
-        return super().create(validated_data)
+        source = Create.objects.get(object__iri=validated_data['id']).actor
+        validated_data['host_organization'] = source.federated_object
+
+        result = super().create(validated_data)
+        __import__('ipdb').set_trace()
+
+        origin = ActivityPubModel.objects.from_iri(iri)
+        if origin:
+            origin.federated_object = result
+            origin.save()
+
+        return result
 
     def update(self, instance, validated_data):
         image_data = validated_data.pop('image', None)

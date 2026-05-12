@@ -665,7 +665,6 @@ class ActivityChildAdmin(
         'event',
         'activity_pub',
         'host_organization'
-        'synced_contributor_count'
     ]
 
     office_fields = (

@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
-from bluebottle.activities.models import Activity as DoGoodActivity
+from bluebottle.activities.models import Activity as DoGoodActivity, Contributor
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
@@ -102,6 +102,7 @@ class Person(Actor):
     name = models.TextField()
     given_name = models.TextField(null=True, blank=True)
     family_name = models.TextField(null=True, blank=True)
+    email = models.TextField(null=True, blank=True)
 
     federated_object = models.OneToOneField(
         Member,
@@ -224,6 +225,14 @@ class Event(ActivityPubModel):
     federated_object = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL, related_name='origin'
     )
+
+    link = models.OneToOneField(
+        "activity_links.LinkedActivity",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='origin'
+    )
+
     url = models.URLField(null=True, blank=True)
 
     organization = models.ForeignKey(
@@ -239,6 +248,7 @@ class Event(ActivityPubModel):
         return adapter.sync(activity)
 
     def save(self, *args, **kwargs):
+        created = self.pk
         super().save(*args, **kwargs)
 
         if self.is_local:
@@ -506,6 +516,19 @@ class DoGoodEvent(Event):
         help_text=_('Overall attendee limit (schema.org maximumAttendeeCapacity). Mirrors time-based activity.'),
     )
 
+    @property
+    def activity_type(self):
+        if self.slot_mode == 'ScheduledSlotMode':
+            return 'ScheduleActivity'
+        elif self.slot_mode == 'PeriodicSlotMode':
+            return 'PeriodicActivity'
+        elif self.join_mode == 'SelectedJoinMode':
+            return 'RegisteredDateActivity'
+        elif len(self.sub_event.all()) > 0:
+            return 'DateActivity'
+        else:
+            return 'DeadlineActivity'
+
     class Meta(Event.Meta):
         verbose_name = _('Date activity')
         verbose_name_plural = _('Date activities')
@@ -725,7 +748,7 @@ class Create(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
-        created = self.pj
+        created = not self.pk
         super().save(*args, **kwargs)
 
         if created and self.is_local and self.object.federated_object:
@@ -773,25 +796,6 @@ class Join(Activity):
     """Sent by a follower when a user joins a synced deed; object is the source GoodDeed."""
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
-    # Participant info sent to source for full participant list
-    participant_sync_id = models.CharField(
-        _("Participant sync id"),
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text=_("Stable id to match this participant on Leave."),
-    )
-    participant_name = models.CharField(
-        _("Participant name"),
-        max_length=255,
-        blank=True,
-        null=True,
-    )
-    participant_email = models.EmailField(
-        _("Participant email"),
-        blank=True,
-        null=True,
-    )
     sub_event = models.ForeignKey(
         'activity_pub.SubEvent',
         null=True,
@@ -799,6 +803,19 @@ class Join(Activity):
         on_delete=models.SET_NULL,
         related_name='+',
     )
+
+    federated_object = models.OneToOneField(
+        Contributor,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
+    )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if not self.is_local and not self.federated_object:
+            adapter.adopt(self)
 
     @property
     def default_recipients(self):

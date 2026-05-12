@@ -203,7 +203,6 @@ class FederatedObjectBaseSerializer(
 
     def create(self, validated_data):
         iri = validated_data.pop('id', None)
-        origin = validated_data.pop('origin', None)
 
         for field in self.fields.values():
             if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):

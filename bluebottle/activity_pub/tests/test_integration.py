@@ -536,14 +536,12 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
         )
         if 'status' not in kwargs:
             self.submit()
-            self.approve(save=True)
 
     def test_join(self):
         super().test_adopt()
 
-        DeedParticipantFactory.create(activity=self.adopted)
-
         with LocalTenant(self.other_tenant):
+            DeedParticipantFactory.create(activity=self.adopted)
             __import__('ipdb').set_trace()
 
 

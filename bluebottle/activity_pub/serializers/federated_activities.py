@@ -18,6 +18,7 @@ from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as 
     SubEvent, RepetitionModeChoices, SlotModeChoices, Create
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
+from bluebottle.activities.models import Contributor
 from bluebottle.collect.models import CollectActivity, CollectType
 from bluebottle.members.models import Member
 from bluebottle.deeds.models import Deed
@@ -156,6 +157,7 @@ class MemberSerializer(FederatedObjectBaseSerializer):
     name = serializers.CharField(source="full_name", allow_null=True, read_only=True)
     given_name = serializers.CharField(source="first_name", allow_null=True)
     family_name = serializers.CharField(source="last_name", allow_null=True)
+    email = serializers.CharField(allow_null=True)
     summary = serializers.CharField(
         source='description',
         allow_blank=True,
@@ -167,7 +169,7 @@ class MemberSerializer(FederatedObjectBaseSerializer):
     class Meta:
         model = Member
         fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'name', 'family_name', 'given_name', 'summary', 'icon'
+            'name', 'family_name', 'given_name', 'email', 'summary', 'icon'
         )
 
 
@@ -843,3 +845,19 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
             'location', 'start_time', 'end_time', 'application_deadline',
             'event_attendance_mode', 'duration', 'join_mode', 'slot_mode'
         )
+
+
+class JoinSerializer(FederatedObjectBaseSerializer):
+    id = FederatedIdField('json-ld:join')
+    type = TypeField('Join')
+    actor = MemberSerializer(source='external_user')
+    object = serializers.CharField(allow_null=True)
+
+    class Meta:
+        model = Contributor
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
+            'actor', 'object',
+        )
+
+    def create(self, validated_data):
+        __import__('ipdb').set_trace()

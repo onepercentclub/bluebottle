@@ -13,9 +13,11 @@ from django.urls import reverse
 from djmoney.money import Money
 from rest_framework import exceptions
 from rest_framework import serializers
+from rest_framework.relations import RelatedField
 
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
-    SubEvent, RepetitionModeChoices, SlotModeChoices, Create
+    SubEvent, RepetitionModeChoices, SlotModeChoices, Create, ActivityPubModel
+from bluebottle.activity_pub.serializers import ActivityPubSerializer, FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
 from bluebottle.activities.models import Contributor
@@ -847,17 +849,31 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
         )
 
 
+class RelatedResourceField(RelatedField):
+    def get_queryset(self):
+        # TODO: filter queryset on correct types
+        return ActivityPubModel.objects.all()
+
+    def to_representation(self, value):
+        return FederatedObjectSerializer(
+            full=False, include=self.include
+        ).to_representation(value)
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = {'id': data}
+
+        return ActivityPubModel.objects.from_iri(data['id']).federated_object
+
+
 class JoinSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:join')
     type = TypeField('Join')
-    actor = MemberSerializer(source='external_user')
-    object = serializers.CharField(allow_null=True)
+    actor = RelatedResourceField(source="external_user")
+    object = RelatedResourceField(source='activity')
 
     class Meta:
         model = Contributor
         fields = FederatedObjectBaseSerializer.Meta.fields + (
             'actor', 'object',
         )
-
-    def create(self, validated_data):
-        __import__('ipdb').set_trace()

@@ -48,8 +48,8 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
             except ObjectDoesNotExist:
                 related = None
 
-            registry_delete_related_task.apply_async(
-                [doc_instance, related, tenant], countdown=2
+            registry_delete_related_task.delay_on_commit(
+                doc_instance, related, tenant
             )
 
     def handle_delete(self, sender, instance, **kwargs):
@@ -58,8 +58,8 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         Given an individual model instance, create a task to delete the object from index.
         """
         if sender in self.models:
-            registry_delete_task.apply_async(
-                args=[instance, connection.tenant], countdown=2
+            registry_delete_task.delay_on_commit(
+                instance, connection.tenant
             )
 
     def handle_save(self, sender, instance, **kwargs):
@@ -76,13 +76,13 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         tenant = connection.tenant
 
         if sender in self.models:
-            registry_update_task.apply_async(
-                args=[model_info, tenant], countdown=2
+            registry_update_task.delay_on_commit(
+                model_info, tenant
             )
 
         if sender in self.related_models:
-            registry_update_related_task.apply_async(
-                args=[model_info, tenant], countdown=2
+            registry_update_related_task.delay_on_commit(
+                model_info, tenant
             )
 
 

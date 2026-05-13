@@ -15,6 +15,7 @@ from django.utils.html import format_html
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
+from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language, to_text, get_tenant_name
@@ -146,6 +147,11 @@ class TransitionMessage(object):
     def __str__(self):
         return self.subject
 
+    @property
+    def reply_to(self):
+        mail_settings = MailPlatformSettings.load()
+        return mail_settings.reply_to
+
     def get_template(self):
         return self.template
 
@@ -212,6 +218,9 @@ class TransitionMessage(object):
     def compose_and_send(self, **base_context):
         for message in self.get_messages(**base_context):
             context = self.get_context(message.recipient, **base_context)
+            reply_to = self.reply_to
+            if reply_to:
+                context['reply_to'] = reply_to
             message.save()
 
             message.send(**context)

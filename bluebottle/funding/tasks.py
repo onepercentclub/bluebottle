@@ -34,7 +34,7 @@ def update_rates():
 
 
 app.add_periodic_task(
-    crontab(minute='*/1'),
+    crontab(minute='*/15'),
     funding_tasks.s()
 )
 

@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.deeds.views import (
@@ -8,42 +9,42 @@ from bluebottle.deeds.views import (
 
 
 urlpatterns = [
-    re_path(
-        r'^$',
+    path(
+        '',
         DeedListView.as_view(),
         name='deed-list'
     ),
 
-    re_path(
-        r'^/(?P<pk>\d+)$',
+    path(
+        '/<int:pk>',
         DeedDetailView.as_view(),
         name='deed-detail'
     ),
 
-    re_path(
-        r'^/transitions$',
+    path(
+        '/transitions',
         DeedTransitionList.as_view(),
         name='deed-transition-list'
     ),
 
-    re_path(
-        r'^/(?P<activity_id>\d+)/participants$',
+    path(
+        '/<int:activity_id>/participants',
         DeedRelatedParticipantList.as_view(),
         name='related-deed-participants'
     ),
 
-    re_path(
-        r'^/participants$',
+    path(
+        '/participants',
         ParticipantList.as_view(),
         name='deed-participant-list'
     ),
-    re_path(
-        r'^/participants/(?P<pk>\d+)$',
+    path(
+        '/participants/<int:pk>',
         ParticipantDetail.as_view(),
         name='deed-participant-detail'
     ),
-    re_path(
-        r'^/participants/transitions$',
+    path(
+        '/participants/transitions',
         ParticipantTransitionList.as_view(),
         name='deed-participant-transition-list'
     ),
@@ -54,8 +55,8 @@ urlpatterns = [
         name='deed-participant-export'
     ),
 
-    re_path(
-        r'^/ical/(?P<pk>\d+)$',
+    path(
+        '/ical/<int:pk>',
         DeedIcalView.as_view(),
         name='deed-ical'
     ),

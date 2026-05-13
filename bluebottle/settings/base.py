@@ -425,7 +425,6 @@ TENANT_APPS = (
     'django_wysiwyg',
     'django.contrib.humanize',
     'django_tools',
-    'taggit',
 
     'bluebottle.cms',
 
@@ -501,10 +500,6 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        },
-        'sentry': {
-            'level': 'INFO',
-            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
         },
         'json': {
             'level': 'INFO',
@@ -803,8 +798,9 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 TWO_FACTOR_SMS_GATEWAY = 'two_factor.gateways.twilio.gateway.Twilio'
 
 TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 30
-TWO_FACTOR_REMEMBER_COOKIE_SECURE = False if DEBUG else True
+TWO_FACTOR_REMEMBER_COOKIE_SECURE = True
 TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY = True
+TWO_FACTOR_REMEMBER_COOKIE_PREFIX = '__HOST-remember-two-factor-'
 
 LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale/'),)
 

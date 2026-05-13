@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.forms import ChoiceField
 from django.http import HttpResponseRedirect
 from django.template import loader
-from django.urls import re_path
+from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -153,8 +153,8 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     def get_urls(self):
         urls = super(StripePayoutAccountAdmin, self).get_urls()
         custom_urls = [
-            re_path(
-                r'^(?P<account_id>.+)/check_status/$',
+            path(
+                '<path:account_id>/check_status/',
                 self.admin_site.admin_view(self.check_status),
                 name='funding-stripe-account-check',
             ),

@@ -479,7 +479,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
 
-        self.assertEqual(user_data[9], u'35.00 €')
+        self.assertEqual(user_data[9], u'€35.00')
         self.assertEqual(user_data[10], '47.0')
 
     def test_member_unicode_export(self):

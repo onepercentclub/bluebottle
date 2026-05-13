@@ -10,17 +10,15 @@ from bluebottle.deeds.models import Deed
 logger = logging.getLogger('bluebottle')
 
 
-@app.on_after_configure.connect
-def periodic_task(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        deed_tasks.s()
-    )
-
-
 @app.task
 def deed_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in Deed.get_periodic_tasks():
                 task.execute()
+
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    deed_tasks.s()
+)

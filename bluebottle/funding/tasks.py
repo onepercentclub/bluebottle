@@ -9,24 +9,7 @@ from bluebottle.clients.utils import LocalTenant
 
 logger = logging.getLogger('bluebottle')
 
-
-@app.on_after_configure.connect
-def periodic_task(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        funding_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(hour=2, minute=20),
-        donor_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(hour=2, minute=20),
-        update_rates.s()
-    )
-
+from celery.utils.log import get_task_logger
 
 @app.task
 def funding_tasks():
@@ -49,3 +32,19 @@ def donor_tasks():
 @app.task
 def update_rates():
     OpenExchangeRatesBackend().update_rates()
+
+
+app.add_periodic_task(
+    crontab(minute='*/1'),
+    funding_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(hour=2, minute=20),
+    donor_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(hour=2, minute=20),
+    update_rates.s()
+)

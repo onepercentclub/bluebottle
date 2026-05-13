@@ -9,7 +9,6 @@ from bluebottle.clients.utils import LocalTenant
 
 logger = logging.getLogger('bluebottle')
 
-from celery.utils.log import get_task_logger
 
 @app.task
 def funding_tasks():

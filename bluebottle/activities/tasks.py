@@ -28,24 +28,6 @@ from bluebottle.time_based.models import TeamMember, Registration
 logger = logging.getLogger('bluebottle')
 
 
-@app.on_after_configure.connect
-def periodic_task(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(0, 0, day_of_month='2'),
-        recommend.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute=0, hour=10),
-        do_good_hours_reminder.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute=0, hour=10),
-        data_retention_contribution_task.s()
-    )
-
-
 def get_matching_activities(user):
     settings = InitiativePlatformSettings.load()
 
@@ -256,3 +238,19 @@ def data_retention_contribution_task():
                         f"DATA RETENTION: {tenant.schema_name} deleting {team_members.count()} team members"
                     )
                     team_members.delete()
+
+
+app.add_periodic_task(
+    crontab(0, 0, day_of_month='2'),
+    recommend.s()
+)
+
+app.add_periodic_task(
+    crontab(minute=0, hour=10),
+    do_good_hours_reminder.s()
+)
+
+app.add_periodic_task(
+    crontab(minute=0, hour=10),
+    data_retention_contribution_task.s()
+)

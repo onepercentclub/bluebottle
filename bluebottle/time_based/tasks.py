@@ -23,70 +23,6 @@ from bluebottle.time_based.models import (
 logger = logging.getLogger('bluebottle')
 
 
-@app.on_after_configure.connect
-def periodic_task(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        date_activity_tasks.s()
-
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        date_participant_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        registered_date_activity_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        time_contribution_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        deadline_activity_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        periodic_activity_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        schedule_activity_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        periodic_slot_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        schedule_slot_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        team_schedule_slot_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        team_schedule_slot_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        registered_date_activity_tasks.s()
-    )
-
-
 @app.task
 def date_activity_tasks():
     for tenant in Client.objects.all():
@@ -169,3 +105,65 @@ def registered_date_activity_tasks():
                 task.execute()
             for task in RegisteredDateActivity.get_periodic_tasks():
                 task.execute()
+
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    date_activity_tasks.s()
+
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    date_participant_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    registered_date_activity_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    time_contribution_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    deadline_activity_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    periodic_activity_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    schedule_activity_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    periodic_slot_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    schedule_slot_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    team_schedule_slot_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    team_schedule_slot_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    registered_date_activity_tasks.s()
+)

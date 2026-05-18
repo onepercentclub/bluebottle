@@ -416,9 +416,14 @@ class StripePayoutAccount(PayoutAccount):
                     )
                 elif not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
                     business_profile.mcc = "8398"  # Default MCC for non-profits and crowdfunding
+                    company = {"structure": "incorporated_non_profit"}
+
+                    if self.country == "MX":
+                        company = {}
+
                     stripe.Account.modify(
                         self.account_id,
-                        company={"structure": "incorporated_non_profit"},
+                        company=company,
                         business_profile=business_profile,
                     )
 

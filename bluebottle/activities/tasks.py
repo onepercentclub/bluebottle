@@ -4,7 +4,7 @@ from datetime import date, datetime
 from celery import shared_task
 from celery.schedules import crontab
 from dateutil.relativedelta import relativedelta
-from django.db.models import Case, When
+from django.db.models import Case, Count, When
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from elasticsearch_dsl.query import (
@@ -217,6 +217,31 @@ def data_retention_contribution_task():
                     team_members.update(
                         user=None,
                     )
+
+            if settings.retention_delete:
+                history = now() - relativedelta(months=settings.retention_delete)
+                contributors = Contributor.objects.filter(created__lt=history)
+                if contributors.count():
+                    logger.info(
+                        f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count()} contributors'
+                    )
+                    successful = contributors.filter(contributions__status='succeeded').values('activity_id').\
+                        annotate(total=Count('activity_id')).order_by('activity_id')
+                    for success in successful:
+                        activity = Activity.objects.filter(id=success['activity_id']).get()
+                        activity.deleted_successful_contributors = success['total']
+                        activity.save(run_triggers=False)
+                    for contributor in contributors:
+                        contributions = contributor.contributions.all()
+                        contributions.update(contributor=None)
+                        contributor.delete()
+
+                team_members = TeamMember.objects.filter(created__lt=history)
+                if team_members.count():
+                    logger.info(
+                        f"DATA RETENTION: {tenant.schema_name} deleting {team_members.count()} team members"
+                    )
+                    team_members.delete()
 
 
 @shared_task(name='bluebottle.activities.tasks.send_activity_message_notification_email')

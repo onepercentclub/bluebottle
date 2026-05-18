@@ -66,7 +66,7 @@ install_requires = [
     'django-solo==2.3.0',
     'django-subquery==1.0.4',
     'django-quill-editor==0.1.40',
-    'django-tenant-schemas==1.12.0',
+    'django-tenant-schemas==2.0.0',
     'django-tinymce==4.1.0',
     'django-tools==0.48.3',
     'django-two-factor-auth[phonenumbers]==1.17.0',

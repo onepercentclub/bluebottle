@@ -217,9 +217,6 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
     'django.contrib.auth.hashers.BCryptPasswordHasher',
-    'django.contrib.auth.hashers.SHA1PasswordHasher',
-    'django.contrib.auth.hashers.MD5PasswordHasher',
-    'django.contrib.auth.hashers.CryptPasswordHasher',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -608,7 +605,15 @@ EXPOSED_TENANT_PROPERTIES = [
     'readOnlyFields', 'search_options', 'tasks'
 ]
 
-DEFAULT_FILE_STORAGE = 'bluebottle.utils.storage.TenantFileSystemStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": 'bluebottle.utils.storage.TenantFileSystemStorage',
+    },
+
+    "staticfiles": {
+        "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 PROJECT_PAYOUT_FEES = {
     'beneath_threshold': 1,

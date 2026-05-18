@@ -9,19 +9,6 @@ from bluebottle.clients.utils import LocalTenant
 logger = logging.getLogger('bluebottle')
 
 
-@app.on_after_configure.connect
-def periodic_task(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        grant_provider_tasks.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute='*/20'),
-        check_grant_payment_readiness.s()
-    )
-
-
 @app.task
 def grant_provider_tasks():
     from bluebottle.grant_management.models import GrantProvider
@@ -40,3 +27,14 @@ def check_grant_payment_readiness():
         with LocalTenant(tenant, clear_tenant=True):
             for payment in GrantPayment.objects.filter(status='pending'):
                 payment.check_status()
+
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    grant_provider_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/20'),
+    check_grant_payment_readiness.s()
+)

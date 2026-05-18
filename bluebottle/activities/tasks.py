@@ -30,24 +30,6 @@ from bluebottle.time_based.models import TeamMember, Registration
 logger = logging.getLogger('bluebottle')
 
 
-@app.on_after_configure.connect
-def periodic_task(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(0, 0, day_of_month='2'),
-        recommend.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute=0, hour=10),
-        do_good_hours_reminder.s()
-    )
-
-    sender.add_periodic_task(
-        crontab(minute=0, hour=10),
-        data_retention_contribution_task.s()
-    )
-
-
 def get_matching_activities(user):
     settings = InitiativePlatformSettings.load()
 
@@ -278,3 +260,19 @@ def send_activity_message_notification_email(activity_message_id, tenant):
             logger.exception(
                 'Failed to send activity message notification to activity owner'
             )
+
+
+app.add_periodic_task(
+    crontab(0, 0, day_of_month='2'),
+    recommend.s()
+)
+
+app.add_periodic_task(
+    crontab(minute=0, hour=10),
+    do_good_hours_reminder.s()
+)
+
+app.add_periodic_task(
+    crontab(minute=0, hour=10),
+    data_retention_contribution_task.s()
+)

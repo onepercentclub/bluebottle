@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-13 09:20+0200\n"
-"PO-Revision-Date: 2026-05-13 07:25\n"
+"POT-Creation-Date: 2026-05-18 17:14+0200\n"
+"PO-Revision-Date: 2026-05-18 15:21\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -353,7 +353,7 @@ msgstr "Jelentkezés megtekintése"
 
 #: bluebottle/activities/messages/activity_manager.py:41
 #: bluebottle/activities/messages/base.py:25
-#: bluebottle/activities/templates/mails/messages/activity_message_to_manager.html:18
+#: bluebottle/activities/templates/mails/messages/activity_message_to_manager.html:20
 #: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
 #: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
 #: bluebottle/time_based/messages.py:85 bluebottle/time_based/messages.py:128
@@ -1254,10 +1254,10 @@ msgstr "nulla"
 msgid "The organizer is still busy setting up the activity."
 msgstr "A szervező még mindig éppen az aktivitás beállításán dolgozik."
 
-#: bluebottle/activities/tasks.py:266
+#: bluebottle/activities/tasks.py:274
 #, python-brace-format
-msgid "New message about your activity “{title}”"
-msgstr "Új üzenet a tevékenységedről „{title}”"
+msgid "Someone is trying to get in touch with you about your activity on “{platform}”"
+msgstr "Valaki megpróbál kapcsolatba lépni veled a „{platform}” platformon végzett tevékenységed miatt"
 
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:6
 #: bluebottle/activities/templates/admin/activities/share_publish.html:6
@@ -1594,14 +1594,18 @@ msgid "\n"
 "        %(sender_name)s sent you a message about your activity “%(title)s”.\n"
 "        <br/>\n"
 "        <br/>\n"
+"        <b>The message</b>\n"
+"        <br/>\n"
 "        %(message_text)s\n"
 "    "
 msgstr "\n"
-"        Szia %(recipient_name)s,\n"
+"        Helló %(recipient_name)s,\n"
 "        <br/>\n"
 "        <br/>\n"
-"        %(sender_name)s küldött neked egy üzenetet a tevékenységeddel kapcsolatban „%(title)s”.\n"
+"        %(sender_name)s üzenetet küldött neked a „%(title)s” tevékenységeddel kapcsolatban.\n"
 "        <br/>\n"
+"        <br/>\n"
+"        <b>Az üzenet</b>\n"
 "        <br/>\n"
 "        %(message_text)s\n"
 "    "
@@ -6645,28 +6649,28 @@ msgstr "\"acct_...\"-val kezdődik..."
 msgid "Verification type"
 msgstr "Az ellenőrzés típusa"
 
-#: bluebottle/funding_stripe/models.py:428
+#: bluebottle/funding_stripe/models.py:433
 #, python-format
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Nem alkalmazható - jótékonysági projekt finanszírozása a %(platform)s platformon, egy GoodUp platform."
 
-#: bluebottle/funding_stripe/models.py:644
+#: bluebottle/funding_stripe/models.py:649
 msgid "stripe payout account"
 msgstr "stripe kifizetési fiók"
 
-#: bluebottle/funding_stripe/models.py:645
+#: bluebottle/funding_stripe/models.py:650
 msgid "stripe payout accounts"
 msgstr "stripe kifizetési fiókok"
 
-#: bluebottle/funding_stripe/models.py:663
+#: bluebottle/funding_stripe/models.py:668
 msgid "Starts with 'ba_...'"
 msgstr "\"ba_...\"-val kezdődik..."
 
-#: bluebottle/funding_stripe/models.py:711
+#: bluebottle/funding_stripe/models.py:716
 msgid "Bank account"
 msgstr "Banki számla"
 
-#: bluebottle/funding_stripe/models.py:712
+#: bluebottle/funding_stripe/models.py:717
 msgid "Bank accounts"
 msgstr "Banki számlák"
 

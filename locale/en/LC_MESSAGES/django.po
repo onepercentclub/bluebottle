@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-13 09:20+0200\n"
+"POT-Creation-Date: 2026-05-18 17:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -360,7 +360,7 @@ msgstr ""
 
 #: bluebottle/activities/messages/activity_manager.py:41
 #: bluebottle/activities/messages/base.py:25
-#: bluebottle/activities/templates/mails/messages/activity_message_to_manager.html:18
+#: bluebottle/activities/templates/mails/messages/activity_message_to_manager.html:20
 #: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
 #: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
 #: bluebottle/time_based/messages.py:85 bluebottle/time_based/messages.py:128
@@ -1310,9 +1310,11 @@ msgstr ""
 msgid "The organizer is still busy setting up the activity."
 msgstr ""
 
-#: bluebottle/activities/tasks.py:266
+#: bluebottle/activities/tasks.py:274
 #, python-brace-format
-msgid "New message about your activity “{title}”"
+msgid ""
+"Someone is trying to get in touch with you about your activity on "
+"“{platform}”"
 msgstr ""
 
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:6
@@ -1651,6 +1653,8 @@ msgid ""
 "        <br/>\n"
 "        %(sender_name)s sent you a message about your activity “%(title)s”.\n"
 "        <br/>\n"
+"        <br/>\n"
+"        <b>The message</b>\n"
 "        <br/>\n"
 "        %(message_text)s\n"
 "    "
@@ -6785,30 +6789,30 @@ msgstr ""
 msgid "Verification type"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:428
+#: bluebottle/funding_stripe/models.py:433
 #, python-format
 msgid ""
 "Not applicable - raising funds for a do-good project on %(platform)s, a "
 "GoodUp platform."
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:644
+#: bluebottle/funding_stripe/models.py:649
 msgid "stripe payout account"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:645
+#: bluebottle/funding_stripe/models.py:650
 msgid "stripe payout accounts"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:663
+#: bluebottle/funding_stripe/models.py:668
 msgid "Starts with 'ba_...'"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:711
+#: bluebottle/funding_stripe/models.py:716
 msgid "Bank account"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:712
+#: bluebottle/funding_stripe/models.py:717
 msgid "Bank accounts"
 msgstr ""
 

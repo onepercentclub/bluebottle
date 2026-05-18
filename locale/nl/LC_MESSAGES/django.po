@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-13 11:58+0200\n"
-"PO-Revision-Date: 2026-04-13 09:59\n"
+"POT-Creation-Date: 2026-04-23 14:29+0200\n"
+"PO-Revision-Date: 2026-04-23 12:32\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -3006,7 +3006,7 @@ msgid "Users"
 msgstr "Gebruikers"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
-#: bluebottle/initiatives/admin.py:397 bluebottle/initiatives/models.py:174
+#: bluebottle/initiatives/admin.py:398 bluebottle/initiatives/models.py:174
 #: bluebottle/members/admin.py:221 bluebottle/members/admin.py:823
 msgid "Initiatives"
 msgstr "Initiatieven"
@@ -3299,7 +3299,7 @@ msgstr "initiatieven"
 
 #: bluebottle/categories/models.py:18 bluebottle/geo/models.py:136
 #: bluebottle/impact/models.py:37 bluebottle/initiatives/models.py:98
-#: bluebottle/initiatives/models.py:591 bluebottle/organizations/models.py:23
+#: bluebottle/initiatives/models.py:599 bluebottle/organizations/models.py:23
 #: bluebottle/segments/models.py:28 bluebottle/segments/models.py:124
 msgid "slug"
 msgstr "url"
@@ -3326,7 +3326,7 @@ msgstr "Categorie logo"
 #: bluebottle/geo/models.py:61 bluebottle/geo/models.py:74
 #: bluebottle/geo/models.py:89 bluebottle/geo/models.py:121
 #: bluebottle/geo/models.py:135 bluebottle/impact/models.py:49
-#: bluebottle/initiatives/models.py:595 bluebottle/looker/models.py:13
+#: bluebottle/initiatives/models.py:603 bluebottle/looker/models.py:13
 #: bluebottle/offices/models.py:9 bluebottle/offices/models.py:25
 #: bluebottle/organizations/models.py:22 bluebottle/organizations/models.py:90
 #: bluebottle/segments/models.py:25 bluebottle/segments/models.py:110
@@ -3337,7 +3337,7 @@ msgstr "naam"
 #: bluebottle/categories/models.py:48 bluebottle/categories/models.py:92
 #: bluebottle/funding/models.py:397 bluebottle/funding/models.py:428
 #: bluebottle/geo/models.py:122 bluebottle/geo/models.py:160
-#: bluebottle/initiatives/models.py:596 bluebottle/offices/models.py:10
+#: bluebottle/initiatives/models.py:604 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:24
 #: bluebottle/time_based/models.py:1147
 msgid "description"
@@ -3739,7 +3739,7 @@ msgstr "Je kunt een afbeelding uploaden met een beeldverhouding van 16:9 voor de
 msgid "Header"
 msgstr "Header"
 
-#: bluebottle/cms/models.py:516 bluebottle/translations/admin.py:74
+#: bluebottle/cms/models.py:516 bluebottle/translations/admin.py:75
 msgid "Text"
 msgstr "Tekst"
 
@@ -3997,7 +3997,7 @@ msgid "You have joined the activity \"{title}\""
 msgstr "Je neemt deel aan de activiteit \"{title}\""
 
 #: bluebottle/collect/models.py:19 bluebottle/funding_stripe/states.py:157
-#: bluebottle/initiatives/models.py:592 bluebottle/time_based/models.py:1143
+#: bluebottle/initiatives/models.py:600 bluebottle/time_based/models.py:1143
 msgid "disabled"
 msgstr "geblokkeerd"
 
@@ -7812,11 +7812,11 @@ msgstr "Werk locaties"
 msgid "Options"
 msgstr "Opties"
 
-#: bluebottle/initiatives/admin.py:356 bluebottle/pages/models.py:300
+#: bluebottle/initiatives/admin.py:357 bluebottle/pages/models.py:300
 msgid "Terms of service"
 msgstr "Gebruiksvoorwaarden"
 
-#: bluebottle/initiatives/admin.py:368 bluebottle/initiatives/models.py:465
+#: bluebottle/initiatives/admin.py:369 bluebottle/initiatives/models.py:473
 #: bluebottle/time_based/models.py:111
 msgid "Hour registration"
 msgstr "Urenregistratie"
@@ -8123,93 +8123,101 @@ msgstr "Verstuur BCC e-mail met de gebruiksvoorwaarden"
 msgid "Enter the email address that should receive a Bcc (blind carbon copy) of the terms of service."
 msgstr "Voer het e-mailadres in dat een Bcc (blinde kopie) van de servicevoorwaarden moet ontvangen."
 
+#: bluebottle/initiatives/models.py:398
+msgid "Restrict posting updates"
+msgstr "Beperk het plaatsen van updates"
+
 #: bluebottle/initiatives/models.py:401
+msgid "Restrict posting of updates on the activity wall to only activity managers and staff users"
+msgstr "Beperk het plaatsen van updates op de activiteitenmuur tot alleen activiteitbeheerders en stafgebruikers"
+
+#: bluebottle/initiatives/models.py:409
 msgid "Activity search: more filters"
 msgstr "Activiteit zoeken: meer filters"
 
-#: bluebottle/initiatives/models.py:411
+#: bluebottle/initiatives/models.py:419
 msgid "Include full activities in upcoming activities list"
 msgstr "Toon activiteiten die vol zijn in de lijst van komende activiteit"
 
-#: bluebottle/initiatives/models.py:416
+#: bluebottle/initiatives/models.py:424
 msgid "Allow activity managers to indicate the impact they make."
 msgstr "Verzoek de activiteitsmanager om de gemaakte impact van zijn activiteit in te vullen."
 
-#: bluebottle/initiatives/models.py:420
+#: bluebottle/initiatives/models.py:428
 msgid "Allow admins to add (sub)regions to their work location."
 msgstr "Sta admins toe om (sub)regio's aan hun werk locatie toe te voegen."
 
-#: bluebottle/initiatives/models.py:426
+#: bluebottle/initiatives/models.py:434
 msgid "Allow activity managers to specify work location restrictions on activities."
 msgstr "Sta activiteitenbeheerders toe om beperkingen op werk locaties voor activiteiten op te geven."
 
-#: bluebottle/initiatives/models.py:430
+#: bluebottle/initiatives/models.py:438
 msgid "Default work location restriction"
 msgstr "Standaard werk locatie beperking"
 
-#: bluebottle/initiatives/models.py:439
+#: bluebottle/initiatives/models.py:447
 msgid "Enable date activities to have multiple slots."
 msgstr "Activiteiten met meerdere slots."
 
-#: bluebottle/initiatives/models.py:444
+#: bluebottle/initiatives/models.py:452
 msgid "Allow admins to open up initiatives for any user to add activities."
 msgstr "Sta open initiatieven toe, waar iedere gebruiker activiteiten aan kan toevoegen."
 
-#: bluebottle/initiatives/models.py:450
+#: bluebottle/initiatives/models.py:458
 msgid "Add a link to activities so managers can download a contributor list."
 msgstr "Toon een link bij activiteiten zodat managers een lijst met deelnemers kunnen downloaden."
 
-#: bluebottle/initiatives/models.py:454
+#: bluebottle/initiatives/models.py:462
 msgid "Enable matching"
 msgstr "Matchen inschakelen"
 
-#: bluebottle/initiatives/models.py:469
+#: bluebottle/initiatives/models.py:477
 msgid "Hour registration only applies to time-based activity types."
 msgstr "Urenregistratie geldt alleen voor tijdgebonden activiteiten."
 
-#: bluebottle/initiatives/models.py:473
+#: bluebottle/initiatives/models.py:481
 msgid "Code / URL"
 msgstr "Code / URL"
 
-#: bluebottle/initiatives/models.py:477
+#: bluebottle/initiatives/models.py:485
 msgid "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, this code or link will be used for every activity and can’t be changed."
 msgstr "Laat leeg als 'uniek per activiteit' is geselecteerd. Als je 'zelfde voor alle activiteiten' hebt geselecteerd, wordt deze code of link voor elke activiteit gebruikt en kan deze niet worden gewijzigd."
 
-#: bluebottle/initiatives/models.py:483
+#: bluebottle/initiatives/models.py:491
 msgid "Enable reviewing"
 msgstr "Beoordelen inschakelen"
 
-#: bluebottle/initiatives/models.py:486
+#: bluebottle/initiatives/models.py:494
 msgid "Review initiatives and activities. Activities created within an initiative will not need to be reviewed. Crowdfunding activities will always need to be reviewed"
 msgstr "Beoordeel initiatieven en activiteiten. Activiteiten die binnen een initiatief zijn aangemaakt, hoeven niet apart beoordeeld te worden. Crowdfundingactiviteiten moeten altijd beoordeeld worden."
 
-#: bluebottle/initiatives/models.py:508 bluebottle/initiatives/models.py:509
+#: bluebottle/initiatives/models.py:516 bluebottle/initiatives/models.py:517
 msgid "Activity & initiative settings"
 msgstr "Activiteit & initiatief instellingen"
 
-#: bluebottle/initiatives/models.py:515
+#: bluebottle/initiatives/models.py:523
 msgid "Hour registration data is required when 'generic' hour registration is selected."
 msgstr "Urenregistratiegegevens zijn vereist wanneer de 'generieke' urenregistratie is geselecteerd."
 
-#: bluebottle/initiatives/models.py:534
+#: bluebottle/initiatives/models.py:542
 #, python-brace-format
 msgid "Select {filter_name}"
 msgstr "Selecteer {filter_name}"
 
-#: bluebottle/initiatives/models.py:609
+#: bluebottle/initiatives/models.py:617
 msgid "theme"
 msgstr "thema"
 
-#: bluebottle/initiatives/models.py:610
+#: bluebottle/initiatives/models.py:618
 msgid "themes"
 msgstr "thema's"
 
-#: bluebottle/initiatives/serializers.py:480
-#: bluebottle/initiatives/serializers.py:497
+#: bluebottle/initiatives/serializers.py:486
+#: bluebottle/initiatives/serializers.py:503
 msgid "Name is required"
 msgstr "Naam is verplicht"
 
-#: bluebottle/initiatives/serializers.py:498
+#: bluebottle/initiatives/serializers.py:504
 msgid "Email is required"
 msgstr "E-mail is verplicht"
 
@@ -9280,7 +9288,7 @@ msgctxt "platform-email"
 msgid "\n"
 "<p >You’re now officially part of the %(site_name)s community. Connect, share and work with others on initiatives that you care about.</p>\n"
 msgstr "\n"
-"<p >Je bent maakt nu officieel deel uit van de %(site_name)s-community. Maak contact, deel en werk samen met anderen aan initiatieven waar jij om geeft.</p>\n"
+"<p >Je maakt nu officieel deel uit van de %(site_name)s-community. Maak contact, deel en werk samen met anderen aan initiatieven waar jij om geeft.</p>\n"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:16
 #, python-format
@@ -9316,7 +9324,7 @@ msgid "\n"
 "    The link will expire in 24 hours.\n"
 "</p>\n"
 msgstr "\n"
-"<p>Welkom bij de %(site_name)s.</p>\n"
+"<p>Welkom bij de %(site_name)s-community.</p>\n"
 "<p>\n"
 "    Klik op de onderstaande link om een wachtwoord aan te maken en je account te activeren.\n"
 "</p>\n"
@@ -13557,8 +13565,8 @@ msgid "\n"
 "  <p>%(applicant_name)s has joined your activity \"%(title)s\"!</p>\n"
 "  <p>Give the new participant a warm welcome.</p>\n"
 msgstr "\n"
-"<p>%(applicant_name)s heeft zich aangemeld voor je activiteit \"%(title)s\"!</p>\n"
-"<p>Geef de nieuwe deelnemer een warm welkom.</p>\n"
+"  <p>%(applicant_name)s heeft zich aangemeld voor je activiteit \"%(title)s\"!</p>\n"
+"  <p>Geef de nieuwe deelnemer een warm welkom.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_created_review.html:4
 #, python-format
@@ -14192,7 +14200,7 @@ msgstr "Update"
 msgid "Anonymous - {time}"
 msgstr "Anoniem - {time}"
 
-#: bluebottle/updates/serializers.py:74
+#: bluebottle/updates/serializers.py:77
 msgid "At least one of 'message', 'images', or 'video_url' must be set."
 msgstr "Ten minste één van 'bericht', 'images' of 'video_url' moet zijn ingesteld."
 

@@ -1,9 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import icalendar
 from html import unescape
-
-from django.utils.timezone import utc
 
 from bluebottle.utils.utils import to_text
 
@@ -31,12 +29,12 @@ class ActivityIcal:
         event.add('url', instance.get_absolute_url())
 
         if isinstance(instance.start, datetime):
-            event.add('dtstart', instance.start.astimezone(utc))
+            event.add('dtstart', instance.start.astimezone(timezone.utc))
         else:
             event.add('dtstart', instance.start)
 
         if isinstance(instance.end, datetime):
-            event.add('dtend', instance.end.astimezone(utc))
+            event.add('dtend', instance.end.astimezone(timezone.utc))
         else:
             event.add('dtend', instance.end)
 

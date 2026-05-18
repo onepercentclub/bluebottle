@@ -16,7 +16,8 @@ from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.urls import NoReverseMatch, re_path, reverse
+from django.urls import path
+from django.urls import NoReverseMatch, reverse
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
@@ -127,6 +128,7 @@ class SocialLoginSettingsInline(admin.TabularInline):
     model = SocialLoginSettings
 
 
+@admin.register(MemberPlatformSettings)
 class MemberPlatformSettingsAdmin(
     DynamicArrayMixin, TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin,
     NonSortableParentAdmin,
@@ -326,8 +328,8 @@ class MemberPlatformSettingsAdmin(
         urls = super(MemberPlatformSettingsAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^renew-access-code/$',
+            path(
+                'renew-access-code/',
                 self.admin_site.admin_view(self.renew_access_code),
                 name='members_memberplatformsettings_renew_code'
             ),
@@ -383,9 +385,6 @@ class MemberPlatformSettingsAdmin(
                 )
 
         return super(MemberPlatformSettingsAdmin, self).changeform_view(request, object_id, form_url, extra_context)
-
-
-admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)
 
 
 class SegmentSelect(Select):
@@ -512,6 +511,7 @@ class MemberMessagesInline(TabularInlinePaginated):
             return obj.content_object or 'Related object'
 
 
+@admin.register(Member)
 class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
     date_hierarchy = 'date_joined'
@@ -976,18 +976,18 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^login-as/(?P<pk>\d+)/$',
+            path(
+                'login-as/<int:pk>/',
                 self.admin_site.admin_view(self.login_as),
                 name='members_member_login_as'
             ),
-            re_path(
-                r'^password-reset/(?P<pk>\d+)/$',
+            path(
+                'password-reset/<int:pk>/',
                 self.send_password_reset_mail,
                 name='auth_user_password_reset_mail'
             ),
-            re_path(
-                r'^resend_welcome_email/(?P<pk>\d+)/$',
+            path(
+                'resend_welcome_email/<int:pk>/',
                 self.resend_welcome_email,
                 name='auth_user_resend_welcome_mail'
             )
@@ -1066,9 +1066,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         return False
 
 
-admin.site.register(Member, MemberAdmin)
-
-
 class NewGroupChangeForm(forms.ModelForm):
     pass
 
@@ -1090,10 +1087,8 @@ admin.site.unregister(Group)
 admin.site.register(Group, GroupsAdmin)
 
 
+@admin.register(Token)
 class TokenAdmin(admin.ModelAdmin):
     raw_id_fields = ('user',)
     readonly_fields = ('key',)
     fields = ('user', 'key')
-
-
-admin.site.register(Token, TokenAdmin)

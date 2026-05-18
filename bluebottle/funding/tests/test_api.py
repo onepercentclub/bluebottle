@@ -1919,7 +1919,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
-        self.assertEquals(
+        self.assertEqual(
             data["platform"]["funding"],
             {
                 "anonymous_donations": True,

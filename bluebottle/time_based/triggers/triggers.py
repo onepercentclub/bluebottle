@@ -26,7 +26,6 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedOwnerNotification,
     ParticipantWithdrewNotification,
 )
-from bluebottle.time_based.effect_conditions import has_no_participants, has_participants
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,

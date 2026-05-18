@@ -2,13 +2,11 @@ import logging
 from datetime import date, datetime
 
 from celery import shared_task
-from django.utils.translation import gettext_lazy as _
-
 from celery.schedules import crontab
-from bluebottle.celery import app
 from dateutil.relativedelta import relativedelta
-from django.db.models import Count, Case, When
+from django.db.models import Case, When
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from elasticsearch_dsl.query import (
     Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
 )
@@ -22,6 +20,7 @@ from bluebottle.activities.messages.matching import (
     DoGoodHoursReminderQ2Notification
 )
 from bluebottle.activities.models import Activity, Contributor
+from bluebottle.celery import app
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -260,6 +259,7 @@ def send_activity_message_notification_email(activity_message_id, tenant):
 
         owner = instance.activity.owner
         sender = instance.sender
+        reply_to = f"{sender.full_name} <{sender.email}>"
         try:
             send_mail(
                 template_name='mails/messages/activity_message_to_manager',
@@ -267,7 +267,7 @@ def send_activity_message_notification_email(activity_message_id, tenant):
                     title=instance.activity.title
                 ),
                 to=owner,
-                reply_to=sender.email,
+                reply_to=reply_to,
                 recipient_name=owner.first_name or owner.full_name,
                 sender_name=sender.full_name,
                 title=instance.activity.title,

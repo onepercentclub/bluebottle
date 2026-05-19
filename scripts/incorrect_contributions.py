@@ -1,13 +1,43 @@
-from django.db.models import Q, Count
+from django.db.models import Count, OuterRef, Q, Subquery
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.collect.models import CollectContribution
+from bluebottle.collect.models import CollectContribution, CollectContributor
 from bluebottle.time_based.models import (
-    DeadlineActivity, DeadlineRegistration, TimeContribution, DeadlineParticipant,
+    DateActivity,
+    DateActivitySlot,
+    DateParticipant,
+    DateRegistration,
+    DeadlineActivity,
+    DeadlineParticipant,
+    DeadlineRegistration,
+    PeriodicActivity,
+    PeriodicParticipant,
     ScheduleActivity,
-    PeriodicActivity, DateRegistration, DateParticipant
+    ScheduleParticipant,
+    TeamScheduleParticipant,
+    TimeContribution,
 )
+
+
+def _participant_pks(participant_model, **filters):
+    return participant_model.objects.filter(**filters).values('pk')
+
+
+def _contrib_filter(participant_model, **participant_filters):
+    """Match contributions to a concrete participant type (subclass fields allowed)."""
+    return {'contributor_id__in': _participant_pks(participant_model, **participant_filters)}
+
+
+def _exclude_valid_participants(queryset, participant_model, **valid_state):
+    """Exclude rows whose contributor matches all participant filters (AND)."""
+    return queryset.exclude(contributor_id__in=_participant_pks(participant_model, **valid_state))
+
+
+def _activities_with_participants(participant_model, **participant_filters):
+    return {
+        'id__in': participant_model.objects.filter(**participant_filters).values('activity_id'),
+    }
 
 
 def run(*args):
@@ -22,56 +52,69 @@ def run(*args):
                 user__isnull=False,
                 slot__isnull=False
             )
-            succeeded_date_contributions = TimeContribution.objects.filter(
-                status='succeeded',
-                contributor__dateparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__dateparticipant__registration__isnull=False
-            ).exclude(
-                Q(contributor__dateparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
-                Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
+            succeeded_date_contributions = _exclude_valid_participants(
+                TimeContribution.objects.filter(
+                    status='succeeded',
+                    **_contrib_filter(
+                        DateParticipant,
+                        user__isnull=False,
+                        registration__isnull=False,
+                    ),
+                ),
+                DateParticipant,
+                registration__status__in=('accepted', 'new'),
+                status__in=('succeeded', 'new', 'accepted'),
+                activity__status__in=('open', 'succeeded', 'full'),
             )
             succeeded_periodic_contributions = TimeContribution.objects.filter(
                 status='succeeded',
-                contributor__periodicparticipant__isnull=False
+                **_contrib_filter(PeriodicParticipant),
             ).exclude(
-                Q(contributor__periodicparticipant__registration__status__in=('accepted', 'new')) |
-                Q(contributor__status__in=('succeeded', 'new', 'accepted')) |
-                Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
+                Q(contributor_id__in=_participant_pks(
+                    PeriodicParticipant, registration__status__in=('accepted', 'new'),
+                ))
+                | Q(contributor_id__in=_participant_pks(
+                    PeriodicParticipant, status__in=('succeeded', 'new', 'accepted'),
+                ))
+                | Q(contributor_id__in=_participant_pks(
+                    PeriodicParticipant, activity__status__in=('open', 'succeeded', 'full'),
+                ))
             )
-            succeeded_deadline_contributions = TimeContribution.objects.filter(
-                status='succeeded',
-                contributor__deadlineparticipant__isnull=False,
-                contributor__user__isnull=False
-            ).exclude(
-                Q(contributor__deadlineparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
-                Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
+            succeeded_deadline_contributions = _exclude_valid_participants(
+                TimeContribution.objects.filter(
+                    status='succeeded',
+                    **_contrib_filter(DeadlineParticipant, user__isnull=False),
+                ),
+                DeadlineParticipant,
+                registration__status__in=('accepted', 'new'),
+                status__in=('succeeded', 'new', 'accepted'),
+                activity__status__in=('open', 'succeeded', 'full'),
             )
 
-            succeeded_schedule_contributions = TimeContribution.objects.filter(
-                status='succeeded',
-                contributor__scheduleparticipant__isnull=False,
-                contributor__activity__team_activity='individuals'
-            ).exclude(
-                Q(contributor__scheduleparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled', 'unscheduled')) &
-                Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
+            succeeded_schedule_contributions = _exclude_valid_participants(
+                TimeContribution.objects.filter(
+                    status='succeeded',
+                    **_contrib_filter(
+                        ScheduleParticipant, activity__team_activity='individuals',
+                    ),
+                ),
+                ScheduleParticipant,
+                registration__status__in=('accepted', 'new'),
+                status__in=('succeeded', 'new', 'accepted', 'scheduled', 'unscheduled'),
+                activity__status__in=('open', 'succeeded', 'full'),
             )
-            succeeded_team_schedule_contributions = TimeContribution.objects.filter(
-                status='succeeded',
-                contributor__teamscheduleparticipant__isnull=False,
-                contributor__activity__team_activity='teams'
-            ).exclude(
-                Q(contributor__teamscheduleparticipant__team_member__status__in=(
-                    'active',
-                )) &
-                Q(contributor__teamscheduleparticipant__team_member__team__status__in=(
-                    'succeeded', 'scheduled', 'accepted'
-                )) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled')) &
-                Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
+            succeeded_team_schedule_contributions = _exclude_valid_participants(
+                TimeContribution.objects.filter(
+                    status='succeeded',
+                    **_contrib_filter(
+                        TeamScheduleParticipant, activity__team_activity='teams',
+                    ),
+                ),
+                TeamScheduleParticipant,
+                team_member__status__in=('active',),
+                team_member__team__status__in=('succeeded', 'scheduled', 'accepted'),
+                status__in=('succeeded', 'new', 'accepted', 'scheduled'),
+                activity__status__in=('open', 'succeeded', 'full'),
             )
             succeeded_contributions = (
                 succeeded_date_contributions |
@@ -81,66 +124,75 @@ def run(*args):
                 succeeded_team_schedule_contributions
             )
 
-            new_failed_date_contributions = TimeContribution.objects.filter(
-                status='new',
-                contributor__dateparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__dateparticipant__registration__isnull=False
-            ).exclude(
-                Q(contributor__dateparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('new', 'succeeded', 'accepted')) &
-                Q(contributor__activity__status__in=(
-                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
-                ))
+            new_failed_date_contributions = _exclude_valid_participants(
+                TimeContribution.objects.filter(
+                    status='new',
+                    **_contrib_filter(
+                        DateParticipant,
+                        user__isnull=False,
+                        registration__isnull=False,
+                    ),
+                ),
+                DateParticipant,
+                registration__status__in=('accepted', 'new'),
+                status__in=('new', 'succeeded', 'accepted'),
+                activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                ),
             )
-            new_failed_periodic_contributions = TimeContribution.objects.filter(
-                status='new',
-                contributor__periodicparticipant__isnull=False
-            ).exclude(
-                Q(contributor__periodicparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('new', 'accepted', 'succeeded')) &
-                Q(contributor__activity__status__in=(
-                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
-                ))
+            new_failed_periodic_contributions = _exclude_valid_participants(
+                TimeContribution.objects.filter(
+                    status='new',
+                    **_contrib_filter(PeriodicParticipant),
+                ),
+                PeriodicParticipant,
+                registration__status__in=('accepted', 'new'),
+                status__in=('new', 'accepted', 'succeeded'),
+                activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                ),
             )
-            new_failed_deadline_contributions = TimeContribution.objects.filter(
-                status='new',
-                contributor__deadlineparticipant__isnull=False,
-                contributor__user__isnull=False
-            ).exclude(
-                Q(contributor__deadlineparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('new', 'succeeded', 'accepted')) &
-                Q(contributor__activity__status__in=(
-                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
-                ))
+            new_failed_deadline_contributions = _exclude_valid_participants(
+                TimeContribution.objects.filter(
+                    status='new',
+                    **_contrib_filter(DeadlineParticipant, user__isnull=False),
+                ),
+                DeadlineParticipant,
+                registration__status__in=('accepted', 'new'),
+                status__in=('new', 'succeeded', 'accepted'),
+                activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                ),
             )
 
-            new_failed_schedule_contributions = TimeContribution.objects.filter(
-                status='new',
-                contributor__scheduleparticipant__isnull=False,
-                contributor__activity__team_activity='individuals'
-            ).exclude(
-                Q(contributor__scheduleparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('new', 'succeeded', 'accepted', 'scheduled', 'unscheduled')) &
-                Q(contributor__activity__status__in=(
-                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
-                ))
+            new_failed_schedule_contributions = _exclude_valid_participants(
+                TimeContribution.objects.filter(
+                    status='new',
+                    **_contrib_filter(
+                        ScheduleParticipant, activity__team_activity='individuals',
+                    ),
+                ),
+                ScheduleParticipant,
+                registration__status__in=('accepted', 'new'),
+                status__in=('new', 'succeeded', 'accepted', 'scheduled', 'unscheduled'),
+                activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                ),
             )
-            new_failed_team_schedule_contributions = TimeContribution.objects.filter(
-                status='new',
-                contributor__teamscheduleparticipant__isnull=False,
-                contributor__activity__team_activity='teams'
-            ).exclude(
-                Q(contributor__teamscheduleparticipant__team_member__status__in=(
-                    'active',
-                )) &
-                Q(contributor__teamscheduleparticipant__team_member__team__status__in=(
-                    'new', 'scheduled', 'accepted'
-                )) &
-                Q(contributor__status__in=('new', 'succeeded', 'accepted', 'scheduled')) &
-                Q(contributor__activity__status__in=(
-                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded'
-                ))
+            new_failed_team_schedule_contributions = _exclude_valid_participants(
+                TimeContribution.objects.filter(
+                    status='new',
+                    **_contrib_filter(
+                        TeamScheduleParticipant, activity__team_activity='teams',
+                    ),
+                ),
+                TeamScheduleParticipant,
+                team_member__status__in=('active',),
+                team_member__team__status__in=('new', 'scheduled', 'accepted'),
+                status__in=('new', 'succeeded', 'accepted', 'scheduled'),
+                activity__status__in=(
+                    'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                ),
             )
             new_should_be_failed = (
                 new_failed_schedule_contributions |
@@ -154,57 +206,69 @@ def run(*args):
 
             new_succeeded_date_contributions = TimeContribution.objects.filter(
                 status='new',
-                contributor__dateparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('new', 'accepted', 'registered', 'succeeded'),
-                contributor__dateparticipant__registration__status__in=('accepted',),
-                contributor__activity__status__in=('succeeded',)
+                **_contrib_filter(
+                    DateParticipant,
+                    user__isnull=False,
+                    status__in=('new', 'accepted', 'registered', 'succeeded'),
+                    registration__status__in=('accepted',),
+                    activity__status__in=('succeeded',),
+                ),
             )
 
             new_succeeded_deadline_contributions = TimeContribution.objects.filter(
                 status='new',
-                contributor__deadlineparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'succeeded', 'registered'),
-                contributor__deadlineparticipant__registration__status__in=('accepted',),
-                contributor__activity__status__in=('succeeded',)
+                **_contrib_filter(
+                    DeadlineParticipant,
+                    user__isnull=False,
+                    status__in=('accepted', 'succeeded', 'registered'),
+                    registration__status__in=('accepted',),
+                    activity__status__in=('succeeded',),
+                ),
             )
             new_succeeded_periodic_contributions = TimeContribution.objects.filter(
                 status='new',
-                contributor__periodicparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'stopped'),
-                contributor__periodicparticipant__registration__status__in=('accepted', 'stopped'),
-                contributor__activity__status__in=('succeeded', 'open')
+                **_contrib_filter(
+                    PeriodicParticipant,
+                    user__isnull=False,
+                    status__in=('accepted', 'stopped'),
+                    registration__status__in=('accepted', 'stopped'),
+                    activity__status__in=('succeeded', 'open'),
+                ),
             )
 
             new_succeeded_schedule_contributions = TimeContribution.objects.filter(
                 status='new',
-                contributor__activity__team_activity='individuals',
-                contributor__scheduleparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'stopped'),
-                contributor__scheduleparticipant__registration__status__in=('accepted', 'stopped'),
-                contributor__activity__status__in=('succeeded',)
+                **_contrib_filter(
+                    ScheduleParticipant,
+                    activity__team_activity='individuals',
+                    user__isnull=False,
+                    status__in=('accepted', 'stopped'),
+                    registration__status__in=('accepted', 'stopped'),
+                    activity__status__in=('succeeded',),
+                ),
             )
             new_succeeded_schedule_team_contributions = TimeContribution.objects.filter(
                 status='new',
-                contributor__activity__team_activity='teams',
-                contributor__scheduleparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'stopped'),
-                contributor__scheduleparticipant__registration__status__in=('accepted', 'stopped'),
-                contributor__activity__status__in=('succeeded',),
-                contributor__teamscheduleparticipant__team_member__status__in=('active',),
-                contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled'),
+                **_contrib_filter(
+                    TeamScheduleParticipant,
+                    activity__team_activity='teams',
+                    user__isnull=False,
+                    status__in=('accepted', 'stopped'),
+                    registration__status__in=('accepted', 'stopped'),
+                    activity__status__in=('succeeded',),
+                    team_member__status__in=('active',),
+                    team_member__team__status__in=('succeeded', 'scheduled'),
+                ),
             )
 
             new_succeeded_collect_contributions = CollectContribution.objects.filter(
                 status='new',
-                contributor__collectcontributor__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'registered', 'succeeded'),
-                contributor__activity__status__in=('succeeded',)
+                **_contrib_filter(
+                    CollectContributor,
+                    user__isnull=False,
+                    status__in=('accepted', 'registered', 'succeeded'),
+                    activity__status__in=('succeeded',),
+                ),
             )
 
             new_should_be_succeeded = (
@@ -217,111 +281,132 @@ def run(*args):
 
             failed_date_contributions = TimeContribution.objects.filter(
                 status='failed',
-                contributor__dateparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'registered', 'succeeded'),
-                contributor__dateparticipant__registration__status__in=('accepted',),
-                contributor__activity__status__in=('open', 'succeeded', 'full',)
+                **_contrib_filter(
+                    DateParticipant,
+                    user__isnull=False,
+                    status__in=('accepted', 'registered', 'succeeded'),
+                    registration__status__in=('accepted',),
+                    activity__status__in=('open', 'succeeded', 'full'),
+                ),
             )
 
             failed_deadline_contributions = TimeContribution.objects.filter(
                 status='failed',
-                contributor__deadlineparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'succeeded', 'registered'),
-                contributor__deadlineparticipant__registration__status__in=('accepted',),
-                contributor__activity__status__in=('open', 'succeeded', 'full',)
+                **_contrib_filter(
+                    DeadlineParticipant,
+                    user__isnull=False,
+                    status__in=('accepted', 'succeeded', 'registered'),
+                    registration__status__in=('accepted',),
+                    activity__status__in=('open', 'succeeded', 'full'),
+                ),
             )
             failed_periodic_contributions = TimeContribution.objects.filter(
                 status='failed',
-                contributor__periodicparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'stopped'),
-                contributor__periodicparticipant__registration__status__in=('accepted', 'stopped'),
-                contributor__activity__status__in=('open', 'succeeded', 'full',)
+                **_contrib_filter(
+                    PeriodicParticipant,
+                    user__isnull=False,
+                    status__in=('accepted', 'stopped'),
+                    registration__status__in=('accepted', 'stopped'),
+                    activity__status__in=('open', 'succeeded', 'full'),
+                ),
             )
 
             failed_schedule_contributions = TimeContribution.objects.filter(
                 status='failed',
-                contributor__activity__team_activity='individuals',
-                contributor__scheduleparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'stopped'),
-                contributor__scheduleparticipant__registration__status__in=('accepted', 'stopped'),
-                contributor__activity__status__in=('open', 'succeeded',)
+                **_contrib_filter(
+                    ScheduleParticipant,
+                    activity__team_activity='individuals',
+                    user__isnull=False,
+                    status__in=('accepted', 'stopped'),
+                    registration__status__in=('accepted', 'stopped'),
+                    activity__status__in=('open', 'succeeded'),
+                ),
             )
             failed_schedule_team_contributions = TimeContribution.objects.filter(
                 status='failed',
-                contributor__activity__team_activity='teams',
-                contributor__scheduleparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'stopped'),
-                contributor__scheduleparticipant__registration__status__in=('accepted', 'stopped'),
-                contributor__activity__status__in=('open', 'succeeded', 'full',),
-                contributor__teamscheduleparticipant__team_member__status__in=('active', ),
-                contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled'),
+                **_contrib_filter(
+                    TeamScheduleParticipant,
+                    activity__team_activity='teams',
+                    user__isnull=False,
+                    status__in=('accepted', 'stopped'),
+                    registration__status__in=('accepted', 'stopped'),
+                    activity__status__in=('open', 'succeeded', 'full'),
+                    team_member__status__in=('active',),
+                    team_member__team__status__in=('succeeded', 'scheduled'),
+                ),
             )
 
-            failed_collect_contributions = TimeContribution.objects.filter(
+            failed_collect_contributions = CollectContribution.objects.filter(
                 status='failed',
-                contributor__collectcontributor__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'registered', 'succeeded'),
-                contributor__activity__status__in=('succeeded',)
+                **_contrib_filter(
+                    CollectContributor,
+                    user__isnull=False,
+                    status__in=('accepted', 'registered', 'succeeded'),
+                    activity__status__in=('succeeded',),
+                ),
             )
 
-            failed_contributions = (
+            failed_time_contributions = (
                 failed_date_contributions |
                 failed_deadline_contributions |
                 failed_periodic_contributions |
                 failed_schedule_contributions |
-                failed_schedule_team_contributions |
-                failed_collect_contributions
+                failed_schedule_team_contributions
             )
 
             failed_date_contributions_new = TimeContribution.objects.filter(
                 status='failed',
-                contributor__dateparticipant__isnull=False,
-                contributor__status__in=('new',),
+                **_contrib_filter(
+                    DateParticipant,
+                    status__in=('new',),
+                    activity__status__in=('open', 'succeeded', 'full'),
+                ),
                 slot_participant__status__in=('registered',),
-                contributor__activity__status__in=('open', 'succeeded', 'full',)
             )
             failed_deadline_contributions_new = TimeContribution.objects.filter(
                 status='failed',
-                contributor__deadlineparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('new',),
-                contributor__deadlineparticipant__registration__status__in=('new',),
-                contributor__activity__status__in=('open', 'succeeded', 'full',)
+                **_contrib_filter(
+                    DeadlineParticipant,
+                    user__isnull=False,
+                    status__in=('new',),
+                    registration__status__in=('new',),
+                    activity__status__in=('open', 'succeeded', 'full'),
+                ),
             )
             failed_periodic_contributions_new = TimeContribution.objects.filter(
                 status='failed',
-                contributor__periodicparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'stopped'),
-                contributor__periodicparticipant__registration__status__in=('new', ),
-                contributor__activity__status__in=('open', 'succeeded', 'full',)
+                **_contrib_filter(
+                    PeriodicParticipant,
+                    user__isnull=False,
+                    status__in=('accepted', 'stopped'),
+                    registration__status__in=('new',),
+                    activity__status__in=('open', 'succeeded', 'full'),
+                ),
             )
 
             failed_schedule_contributions_new = TimeContribution.objects.filter(
                 status='failed',
-                contributor__activity__team_activity='individuals',
-                contributor__scheduleparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'stopped'),
-                contributor__scheduleparticipant__registration__status__in=('new',),
-                contributor__activity__status__in=('open', 'succeeded', 'full',)
+                **_contrib_filter(
+                    ScheduleParticipant,
+                    activity__team_activity='individuals',
+                    user__isnull=False,
+                    status__in=('accepted', 'stopped'),
+                    registration__status__in=('new',),
+                    activity__status__in=('open', 'succeeded', 'full'),
+                ),
             )
             failed_schedule_team_contributions_new = TimeContribution.objects.filter(
                 status='failed',
-                contributor__activity__team_activity='teams',
-                contributor__scheduleparticipant__isnull=False,
-                contributor__user__isnull=False,
-                contributor__status__in=('accepted', 'stopped'),
-                contributor__scheduleparticipant__registration__status__in=('new', ),
-                contributor__activity__status__in=('open', 'succeeded', 'full',),
-                contributor__teamscheduleparticipant__team_member__status__in=('active', ),
-                contributor__teamscheduleparticipant__team_member__team__status__in=('new', 'succeeded', 'scheduled')
+                **_contrib_filter(
+                    TeamScheduleParticipant,
+                    activity__team_activity='teams',
+                    user__isnull=False,
+                    status__in=('accepted', 'stopped'),
+                    registration__status__in=('new',),
+                    activity__status__in=('open', 'succeeded', 'full'),
+                    team_member__status__in=('active',),
+                    team_member__team__status__in=('new', 'succeeded', 'scheduled'),
+                ),
             )
 
             failed_contributions_new = (
@@ -332,17 +417,25 @@ def run(*args):
                 failed_schedule_team_contributions_new
             )
 
-            registrations_without_participant = DateRegistration.objects.filter(
-                status='accepted',
-                participants__isnull=True,
-            ).annotate(
-                slot_count=Count('activity__timebasedactivity__dateactivity__slots', distinct=True),
-            ).filter(
-                slot_count=1
+            _slots_per_activity = (
+                DateActivitySlot.objects.filter(activity_id=OuterRef('activity_id'))
+                .values('activity_id')
+                .annotate(cnt=Count('id'))
+                .values('cnt')
+            )
+            registrations_without_participant = (
+                DateRegistration.objects.filter(
+                    status='accepted',
+                    participants__isnull=True,
+                    activity_id__in=DateActivity.objects.values('pk'),
+                )
+                .annotate(slot_count=Subquery(_slots_per_activity))
+                .filter(slot_count=1)
             )
 
             errors = (
-                failed_contributions.count() or
+                failed_time_contributions.count() or
+                failed_collect_contributions.count() or
                 succeeded_contributions.count() or
                 failed_contributions_new.count() or
                 registrations_without_participant.count() or
@@ -354,10 +447,17 @@ def run(*args):
                 total_errors = True
 
                 print("### Tenant {}:".format(client.name))
-                if failed_contributions.count():
-                    print(f'failed or new but should be succeeded: {failed_contributions.count()}')
+                failed_count = (
+                    failed_time_contributions.count() + failed_collect_contributions.count()
+                )
+                if failed_count:
+                    print(f'failed or new but should be succeeded: {failed_count}')
                     if verbose:
-                        print(f'IDs: {" ".join([str(c.id) for c in failed_contributions])}')
+                        failed_ids = (
+                            [str(c.id) for c in failed_time_contributions]
+                            + [str(c.id) for c in failed_collect_contributions]
+                        )
+                        print(f'IDs: {" ".join(failed_ids)}')
                 if failed_contributions_new.count():
                     print(f'failed but should be new: {failed_contributions_new.count()}')
                     if verbose:
@@ -400,29 +500,41 @@ def run(*args):
                             participant.save()
 
                     for activity in DeadlineActivity.objects.filter(
-                        contributors__deadlineparticipant__status__in=('succeeded', ),
-                        status__in=('expired', 'draft', 'submitted', 'needs_work')
+                        **_activities_with_participants(
+                            DeadlineParticipant,
+                            status__in=('succeeded',),
+                        ),
+                        status__in=('expired', 'draft', 'submitted', 'needs_work'),
                     ):
                         activity.status = 'succeeded'
                         activity.save()
 
                     for activity in ScheduleActivity.objects.filter(
-                        contributors__scheduleparticipant__status__in=('succeeded', ),
-                        status__in=('expired', 'draft', 'submitted', 'needs_work')
+                        **_activities_with_participants(
+                            ScheduleParticipant,
+                            status__in=('succeeded',),
+                        ),
+                        status__in=('expired', 'draft', 'submitted', 'needs_work'),
                     ):
                         activity.status = 'succeeded'
                         activity.save()
 
                     for activity in ScheduleActivity.objects.filter(
-                        contributors__teamscheduleparticipant__status__in=('succeeded', ),
-                        status__in=('expired', 'draft', 'submitted', 'needs_work')
+                        **_activities_with_participants(
+                            TeamScheduleParticipant,
+                            status__in=('succeeded',),
+                        ),
+                        status__in=('expired', 'draft', 'submitted', 'needs_work'),
                     ):
                         activity.status = 'succeeded'
                         activity.save()
 
                     for activity in PeriodicActivity.objects.filter(
-                        contributors__periodicparticipant__status__in=('succeeded', ),
-                        status__in=('expired', 'draft', 'submitted', 'needs_work')
+                        **_activities_with_participants(
+                            PeriodicParticipant,
+                            status__in=('succeeded',),
+                        ),
+                        status__in=('expired', 'draft', 'submitted', 'needs_work'),
                     ):
                         activity.status = 'succeeded'
                         activity.save()
@@ -430,7 +542,8 @@ def run(*args):
                     succeeded_contributions.update(status='failed')
                     new_should_be_failed.update(status='failed')
                     new_should_be_succeeded.update(status='succeeded')
-                    failed_contributions.update(status='succeeded')
+                    failed_time_contributions.update(status='succeeded')
+                    failed_collect_contributions.update(status='succeeded')
                     failed_contributions_new.update(status='new')
                     new_succeeded_collect_contributions.update(status='succeeded')
                     for registration in registrations_without_participant.all():

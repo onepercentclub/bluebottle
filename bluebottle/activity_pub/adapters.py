@@ -175,9 +175,9 @@ def publish_to_recipient(recipient, tenant):
         if recipient.send:
             raise TypeError('Already published activity to actor')
 
-        if inbox is None or inbox.is_local:
+        if inbox is None or inbox.is_local or not inbox.iri:
             logger.warning(f"Actor {actor} has no inbox, skipping publish")
-            pass
+            return
 
         try:
             data = ActivitySerializer().to_representation(activity)

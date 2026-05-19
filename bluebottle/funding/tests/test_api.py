@@ -29,17 +29,6 @@ from bluebottle.funding.tests.factories import (
     RewardFactory,
 )
 from bluebottle.funding.tests.test_admin import generate_mock_bank_account
-from bluebottle.funding_flutterwave.tests.factories import (
-    FlutterwaveBankAccountFactory,
-    FlutterwavePaymentFactory,
-    FlutterwavePaymentProviderFactory,
-)
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider
-from bluebottle.funding_lipisha.tests.factories import (
-    LipishaBankAccountFactory,
-    LipishaPaymentFactory,
-    LipishaPaymentProviderFactory,
-)
 from bluebottle.funding_pledge.tests.factories import (
     PledgeBankAccountFactory,
     PledgePaymentFactory,
@@ -52,12 +41,6 @@ from bluebottle.funding_stripe.tests.factories import (
     StripePaymentProviderFactory,
     StripePayoutAccountFactory,
     StripeSourcePaymentFactory,
-)
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider
-from bluebottle.funding_vitepay.tests.factories import (
-    VitepayBankAccountFactory,
-    VitepayPaymentFactory,
-    VitepayPaymentProviderFactory,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -1582,137 +1565,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
             1000.0
         )
 
-    def test_get_vitepay_payout(self):
-        VitepayPaymentProvider.objects.all().delete()
-        VitepayPaymentProviderFactory.create()
-        self.funding.bank_account = VitepayBankAccountFactory.create(
-            account_name="Test Tester",
-            mobile_number="12345",
-            status="verified",
-            connect_account=PlainPayoutAccountFactory.create(status="verified"),
-        )
-        self.funding.states.submit()
-        self.funding.states.approve(save=True)
-
-        for i in range(5):
-            donation = DonorFactory.create(
-                amount=Money(200, 'EUR'),
-                activity=self.funding, status='succeeded',
-            )
-            VitepayPaymentFactory.create(donation=donation)
-
-        for i in range(2):
-            donation = DonorFactory.create(
-                amount=Money(200, 'EUR'),
-                activity=self.funding,
-                status='new',
-            )
-            VitepayPaymentFactory.create(donation=donation)
-            donation.states.fail()
-            donation.save()
-
-        self.funding.states.succeed()
-        self.funding.save()
-
-        response = self.client.get(
-            self.get_payout_url(self.funding.payouts.first()),
-            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()
-
-        self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
-
-        self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
-
-    def test_get_lipisha_payout(self):
-        LipishaPaymentProvider.objects.all().delete()
-        LipishaPaymentProviderFactory.create()
-        self.funding.bank_account = LipishaBankAccountFactory.create(
-            status="verified",
-            connect_account=PlainPayoutAccountFactory.create(status="verified"),
-        )
-        self.funding.states.submit()
-        self.funding.states.approve(save=True)
-
-        for i in range(5):
-            donation = DonorFactory.create(
-                amount=Money(200, 'EUR'),
-                activity=self.funding, status='succeeded',
-            )
-            LipishaPaymentFactory.create(donation=donation)
-
-        for i in range(2):
-            donation = DonorFactory.create(
-                amount=Money(200, 'EUR'),
-                activity=self.funding,
-                status='new',
-            )
-            LipishaPaymentFactory.create(donation=donation)
-            donation.states.fail()
-            donation.save()
-
-        self.funding.states.succeed()
-        self.funding.save()
-
-        response = self.client.get(
-            self.get_payout_url(self.funding.payouts.first()),
-            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()
-
-        self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
-
-        self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
-
-    def test_get_flutterwave_payout(self):
-        FlutterwavePaymentProviderFactory.create()
-        self.funding.bank_account = FlutterwaveBankAccountFactory.create(
-            status="verified",
-            connect_account=PlainPayoutAccountFactory.create(status="verified"),
-        )
-
-        self.funding.states.submit()
-        self.funding.states.approve(save=True)
-
-        for i in range(5):
-            donation = DonorFactory.create(
-                amount=Money(200, 'EUR'),
-                activity=self.funding, status='succeeded',
-            )
-            FlutterwavePaymentFactory.create(donation=donation)
-
-        for i in range(2):
-            donation = DonorFactory.create(
-                amount=Money(200, 'EUR'),
-                activity=self.funding,
-                status='new',
-            )
-            FlutterwavePaymentFactory.create(donation=donation)
-            donation.states.fail()
-            donation.save()
-
-        self.funding.states.succeed()
-        self.funding.save()
-
-        response = self.client.get(
-            self.get_payout_url(self.funding.payouts.first()),
-            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()
-
-        self.assertEqual(data['data']['id'], str(self.funding.payouts.first().pk))
-
-        self.assertEqual(len(data['data']['relationships']['donations']['data']), 5)
-
     def test_get_pledge_payout(self):
         PledgePaymentProviderFactory.create()
         self.funding.bank_account = PledgeBankAccountFactory.create(
@@ -1919,7 +1771,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
-        self.assertEquals(
+        self.assertEqual(
             data["platform"]["funding"],
             {
                 "anonymous_donations": True,

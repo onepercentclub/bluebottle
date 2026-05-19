@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-13 09:20+0200\n"
-"PO-Revision-Date: 2026-05-13 07:25\n"
+"POT-Creation-Date: 2026-05-18 17:14+0200\n"
+"PO-Revision-Date: 2026-05-18 15:21\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -353,7 +353,7 @@ msgstr "Bewerbung anzeigen"
 
 #: bluebottle/activities/messages/activity_manager.py:41
 #: bluebottle/activities/messages/base.py:25
-#: bluebottle/activities/templates/mails/messages/activity_message_to_manager.html:18
+#: bluebottle/activities/templates/mails/messages/activity_message_to_manager.html:20
 #: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
 #: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
 #: bluebottle/time_based/messages.py:85 bluebottle/time_based/messages.py:128
@@ -1254,10 +1254,10 @@ msgstr "reset"
 msgid "The organizer is still busy setting up the activity."
 msgstr "Der Veranstalter ist immer noch damit beschäftigt, die Aktivität einzurichten."
 
-#: bluebottle/activities/tasks.py:266
+#: bluebottle/activities/tasks.py:274
 #, python-brace-format
-msgid "New message about your activity “{title}”"
-msgstr "Neue Nachricht zu deiner Aktivität „{title}“"
+msgid "Someone is trying to get in touch with you about your activity on “{platform}”"
+msgstr "Jemand versucht, Sie bezüglich Ihrer Aktivität auf „{platform}“ zu kontaktieren."
 
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:6
 #: bluebottle/activities/templates/admin/activities/share_publish.html:6
@@ -1594,14 +1594,18 @@ msgid "\n"
 "        %(sender_name)s sent you a message about your activity “%(title)s”.\n"
 "        <br/>\n"
 "        <br/>\n"
+"        <b>The message</b>\n"
+"        <br/>\n"
 "        %(message_text)s\n"
 "    "
 msgstr "\n"
 "        Hallo %(recipient_name)s,\n"
 "        <br/>\n"
 "        <br/>\n"
-"        %(sender_name)s hat dir eine Nachricht über deine Aktivität „%(title)s“ gesendet.\n"
+"        %(sender_name)s hat Ihnen eine Nachricht zu Ihrer Aktivität „%(title)s“ geschickt.\n"
 "        <br/>\n"
+"        <br/>\n"
+"        <b>Die Nachricht</b>\n"
 "        <br/>\n"
 "        %(message_text)s\n"
 "    "
@@ -6646,28 +6650,28 @@ msgstr "Beginnt mit 'acct_...'"
 msgid "Verification type"
 msgstr "Verifizierungstyp"
 
-#: bluebottle/funding_stripe/models.py:428
+#: bluebottle/funding_stripe/models.py:433
 #, python-format
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Nicht anwendbar - Gelder für ein gemeinnütziges Projekt auf %(platform)s, einer GoodUp-Plattform, sammeln."
 
-#: bluebottle/funding_stripe/models.py:644
+#: bluebottle/funding_stripe/models.py:649
 msgid "stripe payout account"
 msgstr "Streifen Auszahlungskonto"
 
-#: bluebottle/funding_stripe/models.py:645
+#: bluebottle/funding_stripe/models.py:650
 msgid "stripe payout accounts"
 msgstr "Streifen Auszahlungskonten"
 
-#: bluebottle/funding_stripe/models.py:663
+#: bluebottle/funding_stripe/models.py:668
 msgid "Starts with 'ba_...'"
 msgstr "Beginnt mit 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:711
+#: bluebottle/funding_stripe/models.py:716
 msgid "Bank account"
 msgstr "Bankkonto"
 
-#: bluebottle/funding_stripe/models.py:712
+#: bluebottle/funding_stripe/models.py:717
 msgid "Bank accounts"
 msgstr "Bankkonten"
 

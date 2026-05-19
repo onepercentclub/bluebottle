@@ -22,7 +22,7 @@ from bluebottle.activities.messages.matching import (
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.celery import app
 from bluebottle.clients.models import Client
-from bluebottle.clients.utils import LocalTenant
+from bluebottle.clients.utils import LocalTenant, tenant_name
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.time_based.models import TeamMember, Registration
@@ -267,17 +267,18 @@ def send_activity_message_notification_email(activity_message_id, tenant):
         owner = instance.activity.owner
         sender = instance.sender
         reply_to = f"{sender.full_name} <{sender.email}>"
+        site_name = tenant_name()
         try:
             send_mail(
                 template_name='mails/messages/activity_message_to_manager',
-                subject=_('New message about your activity “{title}”').format(
+                subject=_('Someone is trying to get in touch with you about your activity on “{platform}”').format(
                     title=instance.activity.title
                 ),
                 to=owner,
                 reply_to=reply_to,
                 recipient_name=owner.first_name or owner.full_name,
                 sender_name=sender.full_name,
-                title=instance.activity.title,
+                platform=site_name,
                 message_text=instance.message,
                 action_link=instance.activity.get_absolute_url(),
             )

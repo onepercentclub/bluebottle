@@ -3,6 +3,7 @@ from io import BytesIO
 
 import requests
 from celery import shared_task
+from django.conf import settings
 from django.db import connection
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -201,7 +202,13 @@ def publish_to_recipient(recipient, tenant):
 @receiver(post_save, sender=Recipient)
 def publish_recipient(instance, created, **kwargs):
     if created:
-        publish_to_recipient.delay(instance, connection.tenant)
+        if (
+            getattr(settings, 'TESTING', False) or
+            getattr(settings, 'CELERY_ALWAYS_EAGER', False)
+        ):
+            publish_to_recipient(instance, connection.tenant)
+        else:
+            publish_to_recipient.delay(instance, connection.tenant)
 
         # Sometimes we need to send follow up activities to the recipient,
         # for example when the activity transitioned before the recipient was created

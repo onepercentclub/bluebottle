@@ -1,4 +1,4 @@
-from django.urls import re_path
+from django.urls import path
 
 from bluebottle.activity_pub.views import (
     JSONLDView, InboxView,
@@ -7,6 +7,6 @@ from bluebottle.activity_pub.views import (
 app_name = 'activity_pub'
 
 urlpatterns = [
-    re_path(r'^inbox/(?P<pk>\d+)$', InboxView.as_view(), name='inbox'),
-    re_path(r'^(?P<type>.+)/(?P<pk>\d+)$', JSONLDView.as_view(), name='resource'),
+    path(r'^inbox/(?P<pk>\d+)$', InboxView.as_view(), name='inbox'),
+    path(r'^(?P<type>.+)/(?P<pk>\d+)$', JSONLDView.as_view(), name='resource'),
 ]

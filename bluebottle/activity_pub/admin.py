@@ -137,7 +137,7 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 @admin.register(Person)
 class PersonAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
-    readonly_fields = ('federated_object', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
+    readonly_fields = ('origin', 'adopted', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
 
     def save_formset(self, request, form, formset, change):
         if formset.model == Follow:
@@ -316,9 +316,9 @@ class AdoptedFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(federated_object__isnull=False)
+            return queryset.filter(adopted__isnull=False)
         elif self.value() == 'no':
-            return queryset.filter(federated_object__isnull=True)
+            return queryset.filter(adopted__isnull=True)
 
 
 class SourceFilter(admin.SimpleListFilter):
@@ -603,7 +603,7 @@ class FollowerAdmin(FollowAdmin):
         fields = super().get_fields(request, obj)
         if obj and self.accepted(obj):
             fields += (
-                'publish_mode', "shared_activities", "federated_object",
+                'publish_mode', "shared_activities", "adopted", "origin",
                 "short_adoption_type", "publish_activities_button"
             )
         return fields

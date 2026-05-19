@@ -434,7 +434,7 @@ class ExternalAccountDetails(
 class IntentWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
 
         try:
@@ -513,7 +513,7 @@ class IntentWebHookView(View):
 class SessionWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
 
         try:
@@ -535,7 +535,7 @@ class ConnectWebHookView(View):
     def post(self, request, **kwargs):
 
         payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
         try:
             event = stripe.Webhook.construct_event(

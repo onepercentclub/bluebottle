@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.funding_lipisha.views import (
@@ -6,18 +7,18 @@ from bluebottle.funding_lipisha.views import (
     LipishaBankAccountAccountList)
 
 urlpatterns = [
-    re_path(
-        r'^/payments/$',
+    path(
+        '/payments/',
         LipishaPaymentList.as_view(),
         name='lipisha-payment-list'
     ),
-    re_path(
-        r'^/webhook/$',
+    path(
+        '/webhook/',
         LipishaWebHookView.as_view(),
         name='lipisha-payment-webhook'
     ),
-    re_path(
-        r'^/bank-accounts/$',
+    path(
+        '/bank-accounts/',
         LipishaBankAccountAccountList.as_view(),
         name='lipisha-external-account-list'
     ),

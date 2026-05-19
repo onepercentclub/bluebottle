@@ -202,7 +202,7 @@ class ActivityPubTestCase:
     def test_publish(self):
         self.test_accept()
         self.create()
-        publish = self.model.origin.create_set.get()
+        publish = self.model.activity_pub_model.create_set.get()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):

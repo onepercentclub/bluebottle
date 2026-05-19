@@ -1,8 +1,8 @@
 import logging
-from celery import shared_task
 from django.db import connection
 from rest_framework import generics, status, response
 
+from bluebottle.celery import app
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     ActivityPubModel, Inbox
@@ -31,7 +31,7 @@ class JSONLDView(generics.RetrieveAPIView):
         )
 
 
-@shared_task(
+@app.task(
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
 )
 def create_task(request, tenant):
@@ -39,10 +39,9 @@ def create_task(request, tenant):
         serializer = ActivityPubSerializer(
             data=request.data, context={'request': request}
         )
-        print(serializer, request.data.get('type'))
+        print(serializer.initial_data, serializer.initial_data.get('type'))
+
         serializer.is_valid(raise_exception=True)
-        if request.data.get('type') == 'Start':
-            __import__('ipdb').set_trace()
         serializer.save()
 
 

@@ -1,8 +1,8 @@
-from celery import shared_task
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.celery import app
 
 
-@shared_task(
+@app.task(
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
     name="bluebottle.activity_pub.tasks.publish_to_recipient"
 )
@@ -11,7 +11,7 @@ def publish_to_recipient(recipient, tenant):
         recipient.publish()
 
 
-@shared_task(
+@app.task(
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
     name="bluebottle.activity_pub.adapters.publish_activities"
 )

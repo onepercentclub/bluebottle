@@ -11,4 +11,8 @@ accept_content = ['pickle']
 task_result_expires = 18000
 
 if getattr(settings, 'CELERY_ALWAYS_EAGER', False):
-    always_eager = True
+    task_always_eager = True
+    task_eager_propagates = True
+    eager_propagates_exceptions = getattr(
+            settings, 'CELERY_EAGER_PROPAGATES_EXCEPTIONS', True
+        )

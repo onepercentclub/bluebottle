@@ -51,7 +51,7 @@ class WebFingerView(generics.RetrieveAPIView):
         if re.match(f'{self.request.scheme}://{self.request.get_host()}/?$', resource):
             settings = SitePlatformSettings.load()
 
-            if settings.organization and hasattr(settings.organization, 'origin'):
-                return settings.organization.origin
+            if settings.organization and hasattr(settings.organization, 'activity_pub_model'):
+                return settings.organization.activity_pub_model
 
         raise exceptions.NotFound()

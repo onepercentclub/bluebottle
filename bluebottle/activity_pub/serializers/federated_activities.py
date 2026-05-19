@@ -82,7 +82,7 @@ class ImageField(serializers.Field):
             response = requests.get(image_url, timeout=30)
             response.raise_for_status()
 
-            return File(BytesIO(response.content), name=image.name)
+            return File(BytesIO(response.content), name=image.name or 'file')
         except requests.exceptions.HTTPError as e:
             # If image is not found (404), log and return None since logo is an optional field
             if e.response.status_code == 404:
@@ -258,7 +258,7 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
         if follow.default_owner:
             validated_data['owner'] = follow.default_owner
 
-        validated_data['host_organization'] = source.federated_object
+        validated_data['host_organization'] = source.adopted
 
         return super().create(validated_data)
 
@@ -857,11 +857,28 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
         )
 
 
+class RelatedResourceField(RelatedField):
+    def get_queryset(self):
+        # TODO: filter queryset on correct types
+        return ActivityPubModel.objects.all()
+
+    def to_representation(self, value):
+        return FederatedObjectSerializer(
+            full=False, include=self.include
+        ).to_representation(value)
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = {'id': data}
+
+        return ActivityPubModel.objects.from_iri(data['id']).origin
+
+
 class JoinSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:join')
     type = TypeField('Join')
     actor = MemberSerializer()
-    object = FederatedObjectSerializer(source='activity')
+    object = RelatedResourceField(source='activity')
 
     class Meta:
         model = Contributor
@@ -880,10 +897,6 @@ class JoinSerializer(FederatedObjectBaseSerializer):
         member_serializer = MemberSerializer(data=self.initial_data['actor'])
         member_serializer.is_valid(raise_exception=True)
         validated_data['remote_user'] = member_serializer.save()
-
-        validated_data['activity'] = ActivityPubModel.objects.from_iri(
-            validated_data['activity']['id']
-        ).federated_object
 
         contributor_model = self.participant_model_mapping[type(validated_data['activity'])]
         instance = contributor_model.objects.create(

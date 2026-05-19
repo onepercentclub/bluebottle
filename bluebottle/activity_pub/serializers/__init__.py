@@ -80,6 +80,8 @@ class FederatedObjectSerializer(PolymorphicSerializer):
         self.resource_type_model_mapping['DeadlineActivity'] = DeadlineActivity
 
     def _get_resource_type_from_mapping(self, mapping):
+        if isinstance(mapping, str):
+            __import__('ipdb').set_trace()
         resource_type = super()._get_resource_type_from_mapping(mapping)
         if resource_type == 'DoGoodEvent':
             from bluebottle.activity_pub.models import ActivityPubModel

@@ -872,6 +872,7 @@ class Leave(Activity):
 
 class Transition(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+    transitioned = models.BooleanField(default=False)
 
     @property
     def default_recipients(self):
@@ -880,7 +881,7 @@ class Transition(Activity):
                 yield recipient.actor
 
     def save(self, *args, **kwargs):
-        if not self.transitioned:
+        if not self.is_local and not self.transitioned:
             self.transition()
 
         super().save(*args, **kwargs)
@@ -894,22 +895,27 @@ class Transition(Activity):
 
 class Delete(Transition):
     def transition(self):
-        __import__('ipdb').set_trace()
+        if self.object.adopted:
+            self.object.adopted.states.cancel(save=True)
 
 
 class Start(Transition):
     def transition(self):
         __import__('ipdb').set_trace()
+        if self.object.adopted:
+            self.object.adopted.states.start(save=True)
 
 
 class Cancel(Transition):
     def transition(self):
-        __import__('ipdb').set_trace()
+        if self.object.adopted:
+            self.object.adopted.states.cancel(save=True)
 
 
 class Finish(Transition):
     def transition(self):
-        __import__('ipdb').set_trace()
+        if self.object.adopted:
+            self.object.adopted.states.succeed(save=True)
 
 
 from bluebottle.activity_pub.signals import *  # noqa

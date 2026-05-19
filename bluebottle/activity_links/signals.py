@@ -61,6 +61,7 @@ def update(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Start)
 def start(sender, instance, created, **kwargs):
+    return
     try:
         if not instance.is_local:
             link = LinkedActivity.objects.filter(event=instance.object).get()

@@ -35,8 +35,8 @@ def is_local(url):
 
 def get_platform_actor():
     site_settings = SitePlatformSettings.load()
-    if site_settings.organization and hasattr(site_settings.organization, 'origin'):
-        return site_settings.organization.origin
+    if site_settings.organization and hasattr(site_settings.organization, 'activity_pub_model'):
+        return site_settings.organization.activity_pub_model
 
 
 def timedelta_to_iso(td):

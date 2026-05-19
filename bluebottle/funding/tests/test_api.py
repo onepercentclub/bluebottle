@@ -545,7 +545,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(sheet['B1'].value, 'Name')
         self.assertEqual(sheet['C1'].value, 'Date')
         self.assertEqual(sheet['D1'].value, 'Amount')
-        self.assertEqual(sheet['D2'].value, '35.00 €')
+        self.assertEqual(sheet['D2'].value, '€35.00')
         self.assertEqual(sheet['D3'].value, None)
 
         wrong_signature_response = self.client.get(export_url + '111')
@@ -570,7 +570,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(sheet['B1'].value, 'Name')
         self.assertEqual(sheet['C1'].value, 'Date')
         self.assertEqual(sheet['D1'].value, 'Amount')
-        self.assertEqual(sheet['D2'].value, '35.00 €')
+        self.assertEqual(sheet['D2'].value, '€35.00')
         self.assertEqual(sheet['D3'].value, None)
 
         wrong_signature_response = self.client.get(export_url + '111')
@@ -1514,7 +1514,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
             donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
-                payment=PledgePaymentFactory.create()
             )
             PledgePaymentFactory.create(donation=donation)
 

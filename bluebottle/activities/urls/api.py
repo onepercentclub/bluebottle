@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.activities.views import (
@@ -10,31 +11,31 @@ from bluebottle.activities.views import (
 )
 
 urlpatterns = [
-    re_path(
-        r'^/transitions$',
+    path(
+        '/transitions',
         ActivityTransitionList.as_view(),
         name='activity-transition-list'),
 
-    re_path(
-        r'^/search$',
+    path(
+        '/search',
         ActivityPreviewList.as_view(),
         name='activity-preview-list'
     ),
 
-    re_path(
-        r'^/contributions$',
+    path(
+        '/contributions',
         ContributionList.as_view(),
         name='contribution-list'
     ),
 
-    re_path(
-        r'^/(?P<pk>\d+)$',
+    path(
+        '/<int:pk>',
         ActivityDetailView.as_view(),
         name='activity-detail'
     ),
 
-    re_path(
-        r'^/$',
+    path(
+        '/',
         ActivityList.as_view(),
         name='activity-list'
     ),
@@ -51,8 +52,8 @@ urlpatterns = [
         name='activity-qr-code'
     ),
 
-    re_path(
-        r'^/related-images$',
+    path(
+        '/related-images',
         RelatedActivityImageList.as_view(),
         name='related-activity-image-list'
     ),
@@ -68,8 +69,8 @@ urlpatterns = [
         name='invite-detail'
     ),
 
-    re_path(
-        r'^/locations/$',
+    path(
+        '/locations/',
         ActivityLocationList.as_view(),
         name='activity-location-list'
     ),
@@ -80,20 +81,20 @@ urlpatterns = [
         name='activity-question-list'
     ),
 
-    re_path(
-        r'^/answers/$',
+    path(
+        '/answers/',
         ActivityAnswerList.as_view(),
         name='activity-answer-list'
     ),
 
-    re_path(
-        r'^/answers/(?P<pk>\d+)$',
+    path(
+        '/answers/<int:pk>',
         ActivityAnswerDetail.as_view(),
         name='activity-answer-detail'
     ),
 
-    re_path(
-        r'^/answers/(?P<pk>\d+)/document/$',
+    path(
+        '/answers/<int:pk>/document/',
         FileUploadAnswerDocumentView.as_view(),
         name='file-upload-answer-document'
     ),

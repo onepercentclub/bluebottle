@@ -124,6 +124,9 @@ class TransitionMessage(object):
                 context[key] = attrgetter(item)(self.obj)
             except AttributeError:
                 context[key] = None
+            except Exception as e:
+                __import__('ipdb').set_trace()
+                print(e)
 
         if 'context' in self.options:
             context.update(self.options['context'])

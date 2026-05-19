@@ -773,7 +773,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_country(self):
-        matching_country, other_country = CountryFactory.create_batch(2)
+        matching_country = CountryFactory.create(alpha2_code='NL')
+        other_country = CountryFactory.create(alpha2_code='DE')
 
         matching = InitiativeFactory.create_batch(2, status='approved')
         for initiative in matching:

@@ -9,7 +9,6 @@ import django.db.models.deletion
 import django_extensions.db.fields
 import localflavor.generic.models
 import sorl.thumbnail.fields
-import taggit.managers
 
 from django.db.models import DecimalField
 
@@ -35,7 +34,6 @@ class Migration(migrations.Migration):
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('bb_projects', '0001_initial'),
         ('categories', '0001_initial'),
-        ('taggit', '0002_auto_20150616_2121'),
         ('organizations', '0001_initial'),
     ]
 
@@ -91,7 +89,6 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(blank=True, help_text='Project organization', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='organization', to='organizations.Organization', verbose_name='organization')),
                 ('owner', models.ForeignKey(help_text='Campaigner', on_delete=django.db.models.deletion.CASCADE, related_name='owner', to=settings.AUTH_USER_MODEL, verbose_name='campaigner')),
                 ('status', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='bb_projects.ProjectPhase')),
-                ('tags', taggit.managers.TaggableManager(blank=True, help_text='Add tags', through='taggit.TaggedItem', to='taggit.Tag', verbose_name='tags')),
                 #('theme', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='bb_projects.ProjectTheme')),
             ],
             options={

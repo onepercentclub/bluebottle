@@ -2,7 +2,7 @@ import logging
 from datetime import date, datetime
 
 from celery.schedules import crontab
-from celery.task import periodic_task
+from bluebottle.celery import app
 from dateutil.relativedelta import relativedelta
 from django.db.models import Count, Case, When
 from django.utils.timezone import now
@@ -134,11 +134,7 @@ def get_matching_activities(user):
     ).order_by(preserved)
 
 
-@periodic_task(
-    run_every=(crontab(0, 0, day_of_month='2')),
-    name="recommend",
-    ignore_result=True
-)
+@app.task
 def recommend():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -155,11 +151,7 @@ def recommend():
                         logger.error(e)
 
 
-@periodic_task(
-    run_every=(crontab(minute=0, hour=10)),
-    name="do_good_hours_reminder",
-    ignore_result=True
-)
+@app.task
 def do_good_hours_reminder():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -188,11 +180,7 @@ def do_good_hours_reminder():
                         logger.error(e)
 
 
-@periodic_task(
-    run_every=(crontab(minute=0, hour=10)),
-    name="data_retention_contributions",
-    ignore_result=True
-)
+@app.task
 def data_retention_contribution_task():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
@@ -250,3 +238,19 @@ def data_retention_contribution_task():
                         f"DATA RETENTION: {tenant.schema_name} deleting {team_members.count()} team members"
                     )
                     team_members.delete()
+
+
+app.add_periodic_task(
+    crontab(0, 0, day_of_month='2'),
+    recommend.s()
+)
+
+app.add_periodic_task(
+    crontab(minute=0, hour=10),
+    do_good_hours_reminder.s()
+)
+
+app.add_periodic_task(
+    crontab(minute=0, hour=10),
+    data_retention_contribution_task.s()
+)

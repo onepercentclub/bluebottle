@@ -1,8 +1,6 @@
 Project Bluebottle
 ==================
 
-.. image:: https://travis-ci.org/onepercentclub/bluebottle.png?branch=master
-   :target: https://travis-ci.org/onepercentclub/bluebottle
 .. image:: https://coveralls.io/repos/github/onepercentclub/bluebottle/badge.svg?branch=master
    :target: https://coveralls.io/github/onepercentclub/bluebottle?branch=master
 .. image:: https://requires.io/github/onepercentclub/bluebottle/requirements.svg?branch=master

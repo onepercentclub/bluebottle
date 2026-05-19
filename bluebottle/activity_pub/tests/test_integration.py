@@ -184,7 +184,7 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())
             self.assertTrue(accept)
-            self.assertTrue(accept.actor.federated_object)
+            self.assertTrue(accept.actor.adopted)
 
     def create(self, **kwargs):
         self.model = self.factory.create(
@@ -316,7 +316,7 @@ class TemplateTestCase(ActivityPubTestCase):
         self.follow = Follow.objects.get(object=get_platform_actor())
 
         self.assertTrue(self.follow)
-        self.assertTrue(self.follow.actor.federated_object)
+        self.assertTrue(self.follow.actor.adopted)
 
     def test_adopt(self):
         self.test_publish()
@@ -380,7 +380,7 @@ class SyncTestCase(ActivityPubTestCase):
         self.follow = Follow.objects.get(object=get_platform_actor())
 
         self.assertTrue(self.follow)
-        self.assertTrue(self.follow.actor.federated_object)
+        self.assertTrue(self.follow.actor.adopted)
 
     def test_adopt(self):
         self.test_publish()
@@ -541,8 +541,10 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
         super().test_adopt()
 
         with LocalTenant(self.other_tenant):
-            DeedParticipantFactory.create(activity=self.adopted)
-            __import__('ipdb').set_trace()
+            self.participant = DeedParticipantFactory.create(activity=self.adopted)
+
+        synced_participant = self.model.participants.get()
+        self.assertEqual(self.participant.user.email, synced_participant.remote_user.email)
 
 
 class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):

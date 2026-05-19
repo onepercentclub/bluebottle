@@ -452,10 +452,6 @@ class JoinSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Join
 
-    def save(self, *args, **kwargs):
-        __import__('ipdb').set_trace()
-        return super().save(*args, *kwargs)
-
 
 class LeaveSerializer(BaseActivitySerializer):
     id = ActivityPubIdField(url_name='json-ld:leave')

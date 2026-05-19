@@ -38,7 +38,7 @@ from bluebottle.activities.models import (
     FileUploadAnswer,
     FileUploadQuestion,
     Organizer,
-    RemoteContributor,
+    RemoteMember,
     SegmentAnswer,
     SegmentQuestion,
     Team,
@@ -90,11 +90,11 @@ from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import get_human_readable_duration
 
 
-@admin.register(RemoteContributor)
-class RemoteContributorAdmin(admin.ModelAdmin):
-    list_display = ['id', 'display_name', 'email', 'sync_id', 'sync_actor']
-    search_fields = ['display_name', 'email', 'sync_id']
-    readonly_fields = ['display_name', 'email', 'sync_id', 'sync_actor']
+@admin.register(RemoteMember)
+class RemoteMemberAdmin(admin.ModelAdmin):
+    list_display = ['id', 'full_name', 'email', ]
+    search_fields = ['full_name', 'email', ]
+    readonly_fields = ['full_name', 'email', ]
 
 
 @admin.register(Contributor)
@@ -150,20 +150,20 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
 class BaseContributorInline(TabularInlinePaginated):
     model = Contributor
     raw_id_fields = ['user']
-    readonly_fields = ['edit', 'created', 'status_label', 'remote_contributor', 'platform']
+    readonly_fields = ['edit', 'created', 'status_label', 'remote_user', 'platform']
     fields = ['edit', 'created', 'user', 'status_label']
     extra = 0
     per_page = 10
     ordering = ['-created']
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('user', 'remote_contributor')
+        return super().get_queryset(request).select_related('user', 'remote_user')
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         try:
             obj.event
-            return list(fields) + ['remote_contributor', 'platform']
+            return list(fields) + ['remote_user', 'platform']
         except Activity.event.RelatedObjectDoesNotExist:
             pass
         except AttributeError:
@@ -175,8 +175,9 @@ class BaseContributorInline(TabularInlinePaginated):
     can_delete = True
 
     def platform(self, obj):
-        if obj.remote_contributor:
-            return obj.remote_contributor.sync_actor
+        if obj.remote_user:
+            __import__('ipdb').set_trace()
+            return obj.remote_user.sync_actor
         return "-"
 
     def has_change_permission(self, request, obj=None):

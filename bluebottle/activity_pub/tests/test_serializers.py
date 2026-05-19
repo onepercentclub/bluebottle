@@ -1,7 +1,6 @@
 from datetime import datetime
 from urllib.parse import urlparse
 from operator import attrgetter
-import datetime
 from io import BytesIO
 
 import httmock

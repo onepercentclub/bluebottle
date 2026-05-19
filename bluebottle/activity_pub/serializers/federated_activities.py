@@ -20,10 +20,10 @@ from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as 
 from bluebottle.activity_pub.serializers import ActivityPubSerializer, FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
-from bluebottle.activities.models import Contributor
+from bluebottle.activities.models import Contributor, RemoteMember
 from bluebottle.collect.models import CollectActivity, CollectType
 from bluebottle.members.models import Member
-from bluebottle.deeds.models import Deed
+from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
@@ -172,6 +172,14 @@ class MemberSerializer(FederatedObjectBaseSerializer):
         model = Member
         fields = FederatedObjectBaseSerializer.Meta.fields + (
             'name', 'family_name', 'given_name', 'email', 'summary', 'icon'
+        )
+
+    def create(self, validated_data):
+        return RemoteMember.objects.create(
+            **dict(
+                (key, value) for key, value in validated_data.items() if
+                key not in ['id', 'type']
+            )
         )
 
 
@@ -849,31 +857,37 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
         )
 
 
-class RelatedResourceField(RelatedField):
-    def get_queryset(self):
-        # TODO: filter queryset on correct types
-        return ActivityPubModel.objects.all()
-
-    def to_representation(self, value):
-        return FederatedObjectSerializer(
-            full=False, include=self.include
-        ).to_representation(value)
-
-    def to_internal_value(self, data):
-        if isinstance(data, str):
-            data = {'id': data}
-
-        return ActivityPubModel.objects.from_iri(data['id']).federated_object
-
-
 class JoinSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:join')
     type = TypeField('Join')
-    actor = RelatedResourceField(source="external_user")
-    object = RelatedResourceField(source='activity')
+    actor = MemberSerializer()
+    object = FederatedObjectSerializer(source='activity')
 
     class Meta:
         model = Contributor
         fields = FederatedObjectBaseSerializer.Meta.fields + (
             'actor', 'object',
         )
+
+    participant_model_mapping = {
+        Deed: DeedParticipant
+    }
+
+    def create(self, validated_data):
+        validated_data.pop('id')
+        validated_data.pop('actor')
+
+        member_serializer = MemberSerializer(data=self.initial_data['actor'])
+        member_serializer.is_valid(raise_exception=True)
+        validated_data['remote_user'] = member_serializer.save()
+
+        validated_data['activity'] = ActivityPubModel.objects.from_iri(
+            validated_data['activity']['id']
+        ).federated_object
+
+        contributor_model = self.participant_model_mapping[type(validated_data['activity'])]
+        instance = contributor_model.objects.create(
+            **validated_data
+        )
+        self.instance = instance
+        return instance

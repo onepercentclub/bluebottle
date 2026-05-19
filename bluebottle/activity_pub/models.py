@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
-from bluebottle.activities.models import Activity as DoGoodActivity, Contributor
+from bluebottle.activities.models import Activity as DoGoodActivity, Contributor, RemoteMember
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
@@ -76,11 +76,6 @@ class Actor(ActivityPubModel):
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
-    def follow(self):
-        follow = Follow.objects.filter(object=self).first()
-        return follow
-
-    @property
     def webfinger_uri(self):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
@@ -104,12 +99,25 @@ class Person(Actor):
     family_name = models.TextField(null=True, blank=True)
     email = models.TextField(null=True, blank=True)
 
-    federated_object = models.OneToOneField(
+    origin = models.OneToOneField(
         Member,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub'
+    )
+
+    adopted = models.OneToOneField(
+        RemoteMember,
         null=True,
         on_delete=models.CASCADE,
         related_name='origin'
     )
+
+    @property
+    def follow(self):
+        follow = Follow.objects.filter(object=self).first()
+        return follow
+
 
     def __str__(self):
         return self.name or self.prefered_username
@@ -119,7 +127,14 @@ class Image(ActivityPubModel):
     name = models.CharField(max_length=1000, null=True)
     url = models.URLField(null=True)
 
-    federated_object = models.OneToOneField(
+    origin = models.OneToOneField(
+        BluebottleImage,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub_model'
+    )
+
+    adopted = models.OneToOneField(
         BluebottleImage,
         null=True,
         on_delete=models.CASCADE,
@@ -135,7 +150,14 @@ class Organization(Actor):
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
     icon = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
 
-    federated_object = models.OneToOneField(
+    origin = models.OneToOneField(
+        BluebottleOrganization,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub_model'
+    )
+
+    adopted = models.OneToOneField(
         BluebottleOrganization,
         null=True,
         on_delete=models.CASCADE,
@@ -145,7 +167,7 @@ class Organization(Actor):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        if not self.is_local and not self.federated_object:
+        if not self.is_local and not self.adopted:
             adapter.adopt(self)
 
     class Meta:
@@ -222,7 +244,10 @@ class Event(ActivityPubModel):
     name = models.CharField(verbose_name=_('Activity title'))
     summary = models.TextField(blank=True, null=True)
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
-    federated_object = models.OneToOneField(
+    origin = models.OneToOneField(
+        "activities.Activity", null=True, on_delete=models.SET_NULL, related_name='activity_pub_model'
+    )
+    adopted = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL, related_name='origin'
     )
 
@@ -248,7 +273,6 @@ class Event(ActivityPubModel):
         return adapter.sync(activity)
 
     def save(self, *args, **kwargs):
-        created = self.pk
         super().save(*args, **kwargs)
 
         if self.is_local:
@@ -267,18 +291,7 @@ class Event(ActivityPubModel):
 
     @property
     def adopted_activity(self):
-        return self.federated_object or self.linked_activities.first()
-
-    @property
-    def adopted(self):
-        return (
-            self.adopted_activity is not None or
-            self.linked_activity is not None
-        )
-
-    @property
-    def linked_activity(self):
-        return self.linked_activities.first()
+        return self.adopted or self.link
 
     @property
     def adoption_type(self):
@@ -665,7 +678,7 @@ class Follow(Activity):
             return Event.objects.filter(
                 create__actor=self.object,
             ).filter(
-                Q(linked_activities__isnull=False) | Q(federated_object__isnull=False)
+                Q(link__isnull=False) | Q(adopted__isnull=False)
             )
         return Accept.objects.filter(
             actor=self.actor,
@@ -751,10 +764,10 @@ class Create(Activity):
         created = not self.pk
         super().save(*args, **kwargs)
 
-        if created and self.is_local and self.object.federated_object:
-            if self.object.federated_object.status in ('open', 'granted', ):
+        if created and self.is_local:
+            if self.object.origin.status in ('open', 'granted', ):
                 Start.objects.create(object=self.object)
-            elif self.object.federated_object.status == 'succeeded':
+            elif self.object.origin.status == 'succeeded':
                 Finish.objects.create(object=self.object)
             else:
                 Cancel.objects.create(object=self.object)
@@ -804,7 +817,14 @@ class Join(Activity):
         related_name='+',
     )
 
-    federated_object = models.OneToOneField(
+    origin = models.OneToOneField(
+        Contributor,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub_model'
+    )
+
+    adopted = models.OneToOneField(
         Contributor,
         null=True,
         on_delete=models.CASCADE,
@@ -814,7 +834,7 @@ class Join(Activity):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        if not self.is_local and not self.federated_object:
+        if not self.is_local and not self.adopted:
             adapter.adopt(self)
 
     @property
@@ -859,24 +879,37 @@ class Transition(Activity):
             for recipient in create.recipients.all():
                 yield recipient.actor
 
+    def save(self, *args, **kwargs):
+        if not self.transitioned:
+            self.transition()
+
+        super().save(*args, **kwargs)
+
+    def transition(self):
+        raise NotImplemented
+
     class Meta:
         abstract = True
 
 
 class Delete(Transition):
-    pass
+    def transition(self):
+        __import__('ipdb').set_trace()
 
 
 class Start(Transition):
-    pass
+    def transition(self):
+        __import__('ipdb').set_trace()
 
 
 class Cancel(Transition):
-    pass
+    def transition(self):
+        __import__('ipdb').set_trace()
 
 
 class Finish(Transition):
-    pass
+    def transition(self):
+        __import__('ipdb').set_trace()
 
 
 from bluebottle.activity_pub.signals import *  # noqa

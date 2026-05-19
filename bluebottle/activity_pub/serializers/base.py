@@ -156,7 +156,7 @@ class FederatedObjectBaseSerializerMetaclass(serializers.SerializerMetaclass):
             if (
                 isinstance(attr, serializers.Serializer) and
                 not isinstance(
-                    attr, (FederatedObjectBaseSerializer, )
+                    attr, (FederatedObjectBaseSerializer, FederatedObjectSerializer)
                 )
             ):
                 raise TypeError(
@@ -201,6 +201,13 @@ class FederatedObjectBaseSerializer(
 
         return representation
 
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            instance = ActivityPubModel.objects.from_iri(data)
+            data = ActivityPubSerializer(instance=instance).data
+
+        return super().to_internal_value(data)
+
     def create(self, validated_data):
         iri = validated_data.pop('id', None)
 
@@ -211,14 +218,19 @@ class FederatedObjectBaseSerializer(
                     field.source in validated_data and
                     validated_data[field.source]
                 ):
-                    field.initial_data = validated_data[field.source]
+                    field_data = validated_data[field.source]
+                    if is_local(field_data['id']):
+                        __import__('ipdb').set_trace()
+                        validated_data[field.source] = ActivityPubModel.objects.from_iri(field_data['id']).federated_object
+                    else:
+                        field.initial_data = field_data
 
-                    validated_data[field.source] = field.create(validated_data[field.source])
+                        validated_data[field.source] = field.create(field_data)
 
         result = super().create(validated_data)
         origin = ActivityPubModel.objects.from_iri(iri)
         if origin:
-            origin.federated_object = result
+            origin.adopted = result
             origin.save()
 
         return result

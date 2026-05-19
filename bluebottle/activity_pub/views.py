@@ -41,7 +41,7 @@ def create_task(request, tenant):
         )
         print(serializer, request.data.get('type'))
         serializer.is_valid(raise_exception=True)
-        if request.data.get('type') == 'Join':
+        if request.data.get('type') == 'Start':
             __import__('ipdb').set_trace()
         serializer.save()
 

@@ -312,7 +312,7 @@ def contributor_is_active(effect):
 def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
     settings = MemberPlatformSettings.load()
-    return (not settings.closed) and effect.instance.user.is_active
+    return (not settings.closed) and effect.instance.actual_user.is_active
 
 
 def participant_is_inactive(effect):

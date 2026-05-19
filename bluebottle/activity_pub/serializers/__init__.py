@@ -107,3 +107,12 @@ class FederatedObjectSerializer(PolymorphicSerializer):
     def to_representation(self, instance):
         serializer = self._get_serializer_from_model_or_instance(instance)
         return serializer.to_representation(instance)
+
+    def to_internal_value(self, data):
+        from bluebottle.activity_pub.models import ActivityPubModel
+
+        if isinstance(data, str):
+            instance = ActivityPubModel.objects.from_iri(data)
+            data = ActivityPubSerializer(instance=instance).data
+
+        return super().to_internal_value(data)

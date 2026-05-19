@@ -226,20 +226,15 @@ class DeletedEffect(Effect):
 
 def activity_is_synced(effect):
     """Contributor's activity has an origin (synced from another platform)."""
-    activity = getattr(effect.instance, 'activity', None)
-    return getattr(activity, 'origin', None) is not None
+    return getattr(effect.instance.activity, 'origin', None) is not None
 
 
-def contributor_has_sync_source(effect):
-    contributor = effect.instance
-    return (
-        getattr(contributor, 'sync_id', None) and
-        getattr(contributor, 'sync_actor', None) is not None
-    )
+def contributor_is_local(effect):
+    return effect.instance.remote_user is None
 
 
 def can_send_leave(effect):
-    return activity_is_synced(effect) or contributor_has_sync_source(effect)
+    return activity_is_synced(effect)
 
 
 class SendJoinEffect(Effect):
@@ -250,7 +245,7 @@ class SendJoinEffect(Effect):
     """
     template = 'admin/activity_pub/send_join_effect.html'
     post_save = True
-    conditions = [activity_is_synced]
+    conditions = [activity_is_synced, contributor_is_local]
 
     def post_save(self, **kwargs):
         join = Join.objects.create(
@@ -261,6 +256,7 @@ class SendJoinEffect(Effect):
 
     @property
     def is_valid(self):
+
         return super().is_valid
 
     def __str__(self):

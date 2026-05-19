@@ -22,13 +22,11 @@ class JSONLDAdapter():
         client.post(actor.inbox.iri, data=data)
 
 
-    def adopt(self, instance, automatic=False, **kwargs):
+    def adopt(self, instance, **kwargs):
         serializer = FederatedObjectSerializer(
             data=ActivityPubSerializer(instance=instance).data
         )
         serializer.is_valid(raise_exception=True)
-        if automatic:
-            __import__('ipdb').set_trace()
         return serializer.save(**kwargs)
 
     def link(self, instance, **kwargs):
@@ -51,7 +49,7 @@ class JSONLDAdapter():
             instance=instance,
         )
         serializer.is_valid(raise_exception=True)
-        return serializer.save(federated_object=model)
+        return serializer.save(origin=model)
 
 
 adapter = JSONLDAdapter()

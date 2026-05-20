@@ -6,7 +6,6 @@ from celery.schedules import crontab
 from dateutil.relativedelta import relativedelta
 from django.db.models import Case, Count, When
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
 from elasticsearch_dsl.query import (
     Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
 )
@@ -22,7 +21,7 @@ from bluebottle.activities.messages.matching import (
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.celery import app
 from bluebottle.clients.models import Client
-from bluebottle.clients.utils import LocalTenant, tenant_name
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.time_based.models import TeamMember, Registration
@@ -246,9 +245,11 @@ def data_retention_contribution_task():
 
 @shared_task(name='bluebottle.activities.tasks.send_activity_message_notification_email')
 def send_activity_message_notification_email(activity_message_id, tenant):
+    from bluebottle.activities.messages.activity_manager import (
+        ContactActivityManagerNotification,
+    )
     from bluebottle.activities.models import ActivityMessage
     from bluebottle.clients.utils import LocalTenant
-    from bluebottle.utils.email_backend import send_mail
 
     with LocalTenant(tenant, clear_tenant=True):
         try:
@@ -264,24 +265,8 @@ def send_activity_message_notification_email(activity_message_id, tenant):
             )
             return
 
-        owner = instance.activity.owner
-        sender = instance.sender
-        reply_to = f"{sender.full_name} <{sender.email}>"
-        site_name = tenant_name()
         try:
-            send_mail(
-                template_name='mails/messages/activity_message_to_manager',
-                subject=_('Someone is trying to get in touch with you about your activity on “{platform}”').format(
-                    title=instance.activity.title
-                ),
-                to=owner,
-                reply_to=reply_to,
-                recipient_name=owner.first_name or owner.full_name,
-                sender_name=sender.full_name,
-                platform=site_name,
-                message_text=instance.message,
-                action_link=instance.activity.get_absolute_url(),
-            )
+            ContactActivityManagerNotification(instance).compose_and_send()
         except Exception:
             logger.exception(
                 'Failed to send activity message notification to activity owner'

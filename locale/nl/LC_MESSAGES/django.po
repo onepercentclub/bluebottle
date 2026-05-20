@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-18 17:14+0200\n"
-"PO-Revision-Date: 2026-05-18 15:21\n"
+"POT-Creation-Date: 2026-05-20 09:52+0200\n"
+"PO-Revision-Date: 2026-05-20 07:54\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -32,6 +32,11 @@ msgstr "status"
 #: bluebottle/time_based/admin.py:1036 bluebottle/time_based/admin.py:1380
 msgid "Edit"
 msgstr "Bewerken"
+
+#: bluebottle/activities/admin.py:168 bluebottle/activities/models.py:402
+#: bluebottle/activities/models.py:500 bluebottle/time_based/admin.py:542
+msgid "Anonymous"
+msgstr "Anoniem"
 
 #: bluebottle/activities/admin.py:220 bluebottle/activities/admin.py:343
 #: bluebottle/funding_stripe/admin.py:203
@@ -352,21 +357,20 @@ msgid "View application"
 msgstr "Aanvraag bekijken"
 
 #: bluebottle/activities/messages/activity_manager.py:41
-#: bluebottle/activities/messages/base.py:25
-#: bluebottle/activities/templates/mails/messages/activity_message_to_manager.html:20
-#: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
-#: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
-#: bluebottle/time_based/messages.py:85 bluebottle/time_based/messages.py:128
-#: bluebottle/time_based/messages.py:167 bluebottle/time_based/messages.py:206
-#: bluebottle/time_based/messages.py:229 bluebottle/time_based/messages.py:268
-#: bluebottle/time_based/messages.py:302 bluebottle/time_based/messages.py:325
-#: bluebottle/time_based/messages.py:348 bluebottle/time_based/messages.py:373
-#: bluebottle/time_based/messages.py:398 bluebottle/time_based/messages.py:470
-#: bluebottle/time_based/messages.py:504 bluebottle/time_based/messages.py:527
-#: bluebottle/time_based/messages.py:550 bluebottle/time_based/messages.py:572
-#: bluebottle/time_based/messages.py:594 bluebottle/time_based/messages.py:617
-#: bluebottle/time_based/messages.py:638 bluebottle/time_based/messages.py:709
-#: bluebottle/time_based/messages.py:730 bluebottle/time_based/messages.py:839
+#: bluebottle/activities/messages/base.py:25 bluebottle/collect/messages.py:33
+#: bluebottle/collect/messages.py:77 bluebottle/deeds/messages.py:34
+#: bluebottle/deeds/messages.py:78 bluebottle/time_based/messages.py:85
+#: bluebottle/time_based/messages.py:128 bluebottle/time_based/messages.py:167
+#: bluebottle/time_based/messages.py:206 bluebottle/time_based/messages.py:229
+#: bluebottle/time_based/messages.py:268 bluebottle/time_based/messages.py:302
+#: bluebottle/time_based/messages.py:325 bluebottle/time_based/messages.py:348
+#: bluebottle/time_based/messages.py:373 bluebottle/time_based/messages.py:398
+#: bluebottle/time_based/messages.py:470 bluebottle/time_based/messages.py:504
+#: bluebottle/time_based/messages.py:527 bluebottle/time_based/messages.py:550
+#: bluebottle/time_based/messages.py:572 bluebottle/time_based/messages.py:594
+#: bluebottle/time_based/messages.py:617 bluebottle/time_based/messages.py:638
+#: bluebottle/time_based/messages.py:709 bluebottle/time_based/messages.py:730
+#: bluebottle/time_based/messages.py:839
 #: bluebottle/time_based/messages/messages.py:88
 #: bluebottle/time_based/messages/messages.py:131
 #: bluebottle/time_based/messages/messages.py:170
@@ -755,10 +759,6 @@ msgstr "Bijdrage"
 msgid "Contributions"
 msgstr "Bijdragen"
 
-#: bluebottle/activities/models.py:402 bluebottle/activities/models.py:500
-msgid "Anonymous"
-msgstr "Anoniem"
-
 #: bluebottle/activities/models.py:408
 msgid "Activity owner"
 msgstr "Activiteit eigenaar"
@@ -836,26 +836,9 @@ msgstr "Formulier vraag"
 msgid "Form questions"
 msgstr "Formulier vragen"
 
-#: bluebottle/activities/models.py:577 bluebottle/contact/models.py:33
-#: bluebottle/notifications/models.py:112
-msgid "Message"
-msgstr "Bericht"
-
-#: bluebottle/activities/models.py:582
-msgid "Activity message"
-msgstr "Activiteitsbericht"
-
-#: bluebottle/activities/models.py:583
-msgid "Activity messages"
-msgstr "Activiteitsberichten"
-
 #: bluebottle/activities/periodic_tasks.py:30
 msgid "Send a reminder whe activities are unpublished for more then 3 days"
 msgstr "Stuur een herinnering wanneer activiteiten meer dan 3 dagen gedepubliceerd zijn"
-
-#: bluebottle/activities/serializers.py:1115
-msgid "You cannot send a message to yourself as the activity manager."
-msgstr "Je kunt jezelf geen bericht sturen als de activiteitbeheerder."
 
 #: bluebottle/activities/states.py:16 bluebottle/time_based/states/slots.py:136
 #: bluebottle/utils/transitions.py:10
@@ -1254,11 +1237,6 @@ msgstr "herstel"
 msgid "The organizer is still busy setting up the activity."
 msgstr "De organisator is nog bezig met het opzetten van de activiteit."
 
-#: bluebottle/activities/tasks.py:274
-#, python-brace-format
-msgid "Someone is trying to get in touch with you about your activity on “{platform}”"
-msgstr "Iemand probeert contact met je op te nemen over je activiteit op “{platform}”"
-
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:6
 #: bluebottle/activities/templates/admin/activities/share_publish.html:6
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/accept_publish_mode.html:6
@@ -1582,32 +1560,6 @@ msgid "\n"
 msgstr "\n"
 "            Bedankt voor het aanmaken van een %(activity_type)s voor \"%(title)s\". Hier zijn de Gebruiksvoorwaarden.\n"
 "        "
-
-#: bluebottle/activities/templates/mails/messages/activity_message_to_manager.html:5
-#, python-format
-msgctxt "platform-email"
-msgid "\n"
-"        Hi %(recipient_name)s,\n"
-"        <br/>\n"
-"        <br/>\n"
-"        %(sender_name)s sent you a message about your activity “%(title)s”.\n"
-"        <br/>\n"
-"        <br/>\n"
-"        <b>The message</b>\n"
-"        <br/>\n"
-"        %(message_text)s\n"
-"    "
-msgstr "\n"
-"        Hallo %(recipient_name)s,\n"
-"        <br/>\n"
-"        <br/>\n"
-"        %(sender_name)s heeft je een bericht gestuurd over je activiteit “%(title)s”.\n"
-"        <br/>\n"
-"        <br/>\n"
-"        <b>Het bericht</b>\n"
-"        <br/>\n"
-"        %(message_text)s\n"
-"    "
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:7
 #, python-format
@@ -4356,6 +4308,10 @@ msgstr "Afgerond"
 #: bluebottle/contact/models.py:29 bluebottle/utils/models.py:217
 msgid "author"
 msgstr "auteur"
+
+#: bluebottle/contact/models.py:33 bluebottle/notifications/models.py:112
+msgid "Message"
+msgstr "Bericht"
 
 #: bluebottle/contact/models.py:35 bluebottle/statistics/models.py:248
 #: bluebottle/utils/models.py:221
@@ -7956,8 +7912,8 @@ msgid "co-initiators"
 msgstr "mede-initiator"
 
 #: bluebottle/initiatives/models.py:74
-msgid "Co-initiators can create and edit activities for this initiative, but cannot edit the initiative itself."
-msgstr "De mede-initiator kan activiteiten aanmaken en managen voor dit initiatief, maar kan het initiatief zelf niet managen."
+msgid "Co-initiators can create and edit activities for this initiative, and can edit the initiative itself."
+msgstr "Mede-initiators kunnen activiteiten aanmaken en bewerken voor dit initiatief, en kunnen het initiatief zelf bewerken."
 
 #: bluebottle/initiatives/models.py:81
 msgid "promoter"
@@ -10265,8 +10221,7 @@ msgstr "Instellingen"
 msgid "Manage Reporting"
 msgstr "Rapportage beheren"
 
-#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:443
-#: tenants/accenture/settings.py:30
+#: bluebottle/settings/testing.py:443 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -10279,48 +10234,42 @@ msgstr "Rapportage beheren"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
+#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
+#: tenants/maximising-potential/settings.py:27
+#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
 #: tenants/shell-disaster-relief/settings.py:26
-#: tenants/shell-grant-management/settings.py:26
-#: tenants/shell-uk/settings.py:26 tenants/startsomething/settings.py:29
-#: tenants/studentbattle/settings.py:27 tenants/twoscale/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
+#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Engels"
 
-#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:444
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
+#: bluebottle/settings/testing.py:444 tenants/abn/settings.py:26
+#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
-#: tenants/buurtmaaltijden/settings.py:24 tenants/corona/settings.py:25
-#: tenants/crowdfunding-010/settings.py:26
+#: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
 #: tenants/crowdfunding-voornatuur/settings.py:26
 #: tenants/gasunie/settings.py:26 tenants/geef-om-zorg/settings.py:26
 #: tenants/gent/settings.py:25 tenants/goes/settings.py:25
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:23
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -10335,31 +10284,28 @@ msgstr "Engels"
 msgid "Dutch"
 msgstr "Nederlands"
 
-#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:445
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+#: bluebottle/settings/testing.py:445 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Frans"
 
-#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:446
-#: tenants/mars/settings.py:28
+#: bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr "Spaans"
 
-#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:447
-#: tenants/mars/settings.py:29
+#: bluebottle/settings/testing.py:447
 msgid "German"
 msgstr "Duits"
 
-#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:448
+#: bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugees"
 
-#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:449
-#: tenants/mars/settings.py:30
+#: bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr "Hongaars"
 
-#: bluebottle/settings/local.py:733 bluebottle/settings/testing.py:450
+#: bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Bulgaars"
 
@@ -11768,11 +11714,6 @@ msgstr "Deelnemers"
 msgid "end date and time"
 msgstr "einddatum en -tijd"
 
-#: bluebottle/time_based/models.py:2031
-#, python-brace-format
-msgid "Slot {start}"
-msgstr "Tijdsblok {start}"
-
 #: bluebottle/time_based/models.py:2076
 msgid "Team duration"
 msgstr "Team tijdsduur"
@@ -11789,48 +11730,48 @@ msgstr "Deelnemers aan periodieke activiteiten"
 msgid "Participants to recurring activities"
 msgstr "Deelnemers aan periodieke activiteiten"
 
-#: bluebottle/time_based/periodic_tasks.py:57
+#: bluebottle/time_based/periodic_tasks.py:52
 msgid "Lock an activity when the registration date has passed."
 msgstr "Sluit inschrijvingen voor een activiteit nadat de registratiedeadline is verstreken."
 
-#: bluebottle/time_based/periodic_tasks.py:79
+#: bluebottle/time_based/periodic_tasks.py:74
 msgid "Finish an activity when all slots are completed."
 msgstr "Voltooi een activiteit wanneer alle slots zijn voltooid."
 
-#: bluebottle/time_based/periodic_tasks.py:95
+#: bluebottle/time_based/periodic_tasks.py:90
 msgid "Start the slot."
 msgstr "Start tijdsblok."
 
-#: bluebottle/time_based/periodic_tasks.py:111
+#: bluebottle/time_based/periodic_tasks.py:106
 msgid "Finish a slot when end time has passed."
 msgstr "Eindig tijdsblok als de eindtijd voorbij is."
 
-#: bluebottle/time_based/periodic_tasks.py:128
+#: bluebottle/time_based/periodic_tasks.py:123
 msgid "Finish an activity when end time has passed."
 msgstr "Beëindig een activiteit als de eindtijd voorbij is."
 
-#: bluebottle/time_based/periodic_tasks.py:149
+#: bluebottle/time_based/periodic_tasks.py:144
 msgid "Send a reminder 24 hours before the activity slot."
 msgstr "Stuur een herinnering 24 uur voor het activiteitslot."
 
-#: bluebottle/time_based/periodic_tasks.py:168
+#: bluebottle/time_based/periodic_tasks.py:163
 msgid "Finish an activity when deadline has passed."
 msgstr "Beëindig een activiteit wanneer de deadline is verstreken."
 
-#: bluebottle/time_based/periodic_tasks.py:182
+#: bluebottle/time_based/periodic_tasks.py:177
 msgid "Finish an activity when start has passed."
 msgstr "Beëindig een activiteit als de starttijd voorbij is."
 
-#: bluebottle/time_based/periodic_tasks.py:197
+#: bluebottle/time_based/periodic_tasks.py:192
 msgid "Start a slot when the start date passed"
 msgstr "Start een slot wanneer de startdatum is doorgegeven"
 
-#: bluebottle/time_based/periodic_tasks.py:212
+#: bluebottle/time_based/periodic_tasks.py:207
 msgid "Finish a slot when the end date passed"
 msgstr "Voltooi een slot wanneer de einddatum is verstreken"
 
-#: bluebottle/time_based/periodic_tasks.py:224
-#: bluebottle/time_based/periodic_tasks.py:241
+#: bluebottle/time_based/periodic_tasks.py:219
+#: bluebottle/time_based/periodic_tasks.py:236
 msgid "Start a new slot when the current one is finished"
 msgstr "Start een nieuwe plek wanneer de huidige is voltooid"
 
@@ -14480,8 +14421,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Seconde"
 msgstr[1] "Seconden"
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
-msgstr "Nederlands"
 

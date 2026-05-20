@@ -72,7 +72,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         verbose_name=_("co-initiators"),
         help_text=_(
             "Co-initiators can create and edit activities for "
-            "this initiative, but cannot edit the initiative itself."
+            "this initiative, and can edit the initiative itself."
         ),
         related_name="activity_managers_%(class)ss",
     )

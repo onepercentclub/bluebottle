@@ -232,6 +232,11 @@ class TransitionMessage(object):
     def send_delayed(self):
         cache.set(self.task_id, True, self.delay)
 
+        from django.conf import settings
+        if getattr(settings, 'TESTING', False) or getattr(settings, 'CELERY_ALWAYS_EAGER', False):
+            compose_and_send(self, connection.tenant)
+            return
+
         compose_and_send.apply_async(
             [self, connection.tenant],
             countdown=self.delay,

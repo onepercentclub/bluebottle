@@ -355,6 +355,15 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(data['totalResults'], 1)
         self.assertEqual(data['startIndex'], 1)
 
+    def test_get_filtered_with_quotes(self):
+        response = self.client.get(
+            self.url + f"?filter=userName eq \"{self.users[0].remote_id}\"",
+            token=self.token
+        )
+        data = response.json()
+        self.assertEqual(data['totalResults'], 1)
+        self.assertEqual(data['startIndex'], 1)
+
     def test_get_invalid_filter(self):
         response = self.client.get(
             self.url + f"?filter=userName ge {self.users[0].remote_id}",

@@ -21,19 +21,14 @@ from bluebottle.time_based.models import (
     TeamScheduleSlot,
     RegisteredDateActivity
 )
-# Import from submodules, not bluebottle.time_based.states package __init__: loading
-# the package pulls participants before states.states exists, while models.py is still
-# executing its import of this module (circular import / partially initialized states).
-from bluebottle.time_based.states.slots import (
-    DateActivitySlotStateMachine,
-    PeriodicSlotStateMachine,
-    ScheduleSlotStateMachine,
-)
-from bluebottle.time_based.states.states import (
+from bluebottle.time_based.states import (
     TimeBasedStateMachine,
     TimeContributionStateMachine,
+    DateActivitySlotStateMachine,
+    ScheduleSlotStateMachine,
 )
-from bluebottle.time_based.effect_conditions import has_no_participants, has_participants
+from bluebottle.time_based.states.slots import PeriodicSlotStateMachine
+from bluebottle.time_based.triggers.triggers import has_participants, has_no_participants
 
 
 class TimeBasedActivityRegistrationDeadlinePassedTask(ModelPeriodicTask):

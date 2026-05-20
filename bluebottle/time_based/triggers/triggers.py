@@ -30,8 +30,8 @@ from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
 )
-from bluebottle.time_based.states.participants import ParticipantStateMachine
-from bluebottle.time_based.states.states import (
+from bluebottle.time_based.states import (
+    ParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
 )
@@ -68,9 +68,21 @@ def activity_has_status_full(effect):
     return effect.instance.activity.status == 'full'
 
 
+def has_participants(effect):
+    """ has participants"""
+    return len(effect.instance.active_participants) > 0
+
+
 def has_accepted_participants(effect):
     """ has accepted participants"""
     return len(effect.instance.accepted_participants) > 0
+
+
+def has_no_participants(effect):
+    """
+    has no participants
+    """
+    return len(effect.instance.active_participants) == 0
 
 
 def has_open_slots(effect):

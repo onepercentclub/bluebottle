@@ -1,10 +1,10 @@
+from django.utils.html import format_html
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.funding.models import Funding
 from bluebottle.grant_management.models import GrantApplication
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
-from django.utils.html import format_html
 
 
 class OwnerActivityNotification(TransitionMessage):
@@ -178,7 +178,6 @@ class ContactActivityManagerNotification(TransitionMessage):
         context.update({
             'sender_name': sender.full_name,
             'title': self.obj.activity.title,
-            'platform': context['site_name'],
             'recipient_name': recipient.first_name or recipient.full_name,
         })
         return context

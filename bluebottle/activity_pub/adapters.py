@@ -179,15 +179,10 @@ def publish_to_recipient(recipient, tenant):
             logger.warning(f"Actor {actor} has no inbox, skipping publish")
             return
 
-        inbox_url = inbox.iri
-        if not inbox_url:
-            logger.warning(f"Actor {actor} has no inbox URL, skipping publish")
-            return
-
         try:
             data = ActivitySerializer().to_representation(activity)
             auth = adapter.get_auth(activity.actor)
-            adapter.post(inbox_url, data=data, auth=auth)
+            adapter.post(inbox.iri, data=data, auth=auth)
             recipient.send = True
             recipient.save()
 

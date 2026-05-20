@@ -54,7 +54,7 @@ class LoginTestCase(BluebottleTestCase):
             token, algorithms='HS256', options=dict(verify_signature=False)
         )
 
-        self.assertEquals(list(decoded.keys()), ['username', 'exp', 'orig_iat'])
+        self.assertEqual(list(decoded.keys()), ['username', 'exp', 'orig_iat'])
         self.assertEqual(decoded['username'], self.user.pk)
 
         current_user_response = self.client.get(

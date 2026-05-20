@@ -29,7 +29,8 @@ from bluebottle.funding.models import Funding
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.states import ParticipantStateMachine, SlotStateMachine, DateActivitySlotStateMachine
+from bluebottle.time_based.states.participants import ParticipantStateMachine
+from bluebottle.time_based.states.slots import DateActivitySlotStateMachine, SlotStateMachine
 
 
 def should_approve_instantly(effect):

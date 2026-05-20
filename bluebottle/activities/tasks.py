@@ -1,16 +1,15 @@
 import logging
 from datetime import date, datetime
 
+from celery import shared_task
 from celery.schedules import crontab
-from bluebottle.celery import app
 from dateutil.relativedelta import relativedelta
-from django.db.models import Count, Case, When
+from django.db.models import Case, Count, When
 from django.utils.timezone import now
 from elasticsearch_dsl.query import (
     Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
 )
 
-from bluebottle.activities.documents import activity
 from bluebottle.activities.messages.matching import (
     MatchingActivitiesNotification,
     DoGoodHoursReminderQ1Notification,
@@ -19,6 +18,7 @@ from bluebottle.activities.messages.matching import (
     DoGoodHoursReminderQ2Notification
 )
 from bluebottle.activities.models import Activity, Contributor
+from bluebottle.celery import app
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -44,6 +44,7 @@ def get_matching_activities(user):
         )
     ) | ConstantScore(boost=0.5, filter=MatchAll())
 
+    from bluebottle.activities.documents import activity
     search = activity.search().filter(
         Q('terms', status=['open', 'running']) &
         (
@@ -220,7 +221,9 @@ def data_retention_contribution_task():
                 history = now() - relativedelta(months=settings.retention_delete)
                 contributors = Contributor.objects.filter(created__lt=history)
                 if contributors.count():
-                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count()} contributors')
+                    logger.info(
+                        f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count()} contributors'
+                    )
                     successful = contributors.filter(contributions__status='succeeded').values('activity_id').\
                         annotate(total=Count('activity_id')).order_by('activity_id')
                     for success in successful:
@@ -238,6 +241,36 @@ def data_retention_contribution_task():
                         f"DATA RETENTION: {tenant.schema_name} deleting {team_members.count()} team members"
                     )
                     team_members.delete()
+
+
+@shared_task(name='bluebottle.activities.tasks.send_activity_message_notification_email')
+def send_activity_message_notification_email(activity_message_id, tenant):
+    from bluebottle.activities.messages.activity_manager import (
+        ContactActivityManagerNotification,
+    )
+    from bluebottle.activities.models import ActivityMessage
+    from bluebottle.clients.utils import LocalTenant
+
+    with LocalTenant(tenant, clear_tenant=True):
+        try:
+            instance = ActivityMessage.objects.select_related(
+                'sender',
+                'activity',
+                'activity__owner',
+            ).get(pk=activity_message_id)
+        except ActivityMessage.DoesNotExist:
+            logger.warning(
+                'ActivityMessage id=%s not found for notification email',
+                activity_message_id,
+            )
+            return
+
+        try:
+            ContactActivityManagerNotification(instance).compose_and_send()
+        except Exception:
+            logger.exception(
+                'Failed to send activity message notification to activity owner'
+            )
 
 
 app.add_periodic_task(

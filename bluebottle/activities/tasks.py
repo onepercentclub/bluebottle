@@ -10,7 +10,6 @@ from elasticsearch_dsl.query import (
     Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
 )
 
-from bluebottle.activities.documents import activity
 from bluebottle.activities.messages.matching import (
     MatchingActivitiesNotification,
     DoGoodHoursReminderQ1Notification,
@@ -45,6 +44,7 @@ def get_matching_activities(user):
         )
     ) | ConstantScore(boost=0.5, filter=MatchAll())
 
+    from bluebottle.activities.documents import activity
     search = activity.search().filter(
         Q('terms', status=['open', 'running']) &
         (

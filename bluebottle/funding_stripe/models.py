@@ -467,7 +467,7 @@ class StripePayoutAccount(PayoutAccount):
                 "mcc": "8398" if self.business_type != BusinessTypeChoices.company else "",
                 "product_description": "Not applicable - raising funds for a do-good project on a GoodUp platform."
             }
-            if self.business_type == BusinessTypeChoices.individual:
+            if self.business_type == BusinessTypeChoices.individual or self.country == "MX":
                 company = None
             else:
                 company = {"structure": "incorporated_non_profit"}

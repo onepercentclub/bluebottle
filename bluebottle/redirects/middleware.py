@@ -27,7 +27,7 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
             return response
 
         full_path = request.get_full_path()
-        http_host = request.META.get('HTTP_HOST', '')
+        http_host = request.headers.get('host', '')
 
         if http_host:
             # Crappy workaround for localhost.

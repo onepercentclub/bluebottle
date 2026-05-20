@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_saml_request(request):
-    http_host = request.META.get('HTTP_HOST', None)
-    if 'HTTP_X_FORWARDED_FOR' in request.META:
+    http_host = request.headers.get('host', None)
+    if 'x-forwarded-for' in request.headers:
         server_port = None
-        https = request.META.get('HTTP_X_FORWARDED_PROTO') == 'https'
+        https = request.headers.get('x-forwarded-proto') == 'https'
     else:
         server_port = request.META.get('SERVER_PORT')
         https = request.is_secure()

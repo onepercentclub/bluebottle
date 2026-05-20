@@ -124,6 +124,9 @@ class TransitionMessage(object):
                 context[key] = attrgetter(item)(self.obj)
             except AttributeError:
                 context[key] = None
+            except Exception as e:
+                __import__('ipdb').set_trace()
+                print(e)
 
         if 'context' in self.options:
             context.update(self.options['context'])
@@ -219,6 +222,11 @@ class TransitionMessage(object):
 
     def send_delayed(self):
         cache.set(self.task_id, True, self.delay)
+
+        from django.conf import settings
+        if getattr(settings, 'TESTING', False) or getattr(settings, 'CELERY_ALWAYS_EAGER', False):
+            compose_and_send(self, connection.tenant)
+            return
 
         compose_and_send.apply_async(
             [self, connection.tenant],

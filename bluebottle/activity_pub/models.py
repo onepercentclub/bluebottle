@@ -4,6 +4,7 @@ import inflection
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
 from django.urls import reverse, resolve
@@ -26,7 +27,6 @@ from bluebottle.activity_pub.adapters import adapter
 
 class ActivityPubManager(PolymorphicManager):
     def from_iri(self, iri):
-
         if iri:
             if is_local(iri):
                 resolved = resolve(urlparse(iri).path)
@@ -806,8 +806,10 @@ class Update(Activity):
 
 
 class Join(Activity):
-    """Sent by a follower when a user joins a synced deed; object is the source GoodDeed."""
-    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+    """Sent by a follower when a user joins an Event"""
+    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveBigIntegerField()
+    object = GenericForeignKey("object_content_type", "object_id")
 
     sub_event = models.ForeignKey(
         'activity_pub.SubEvent',
@@ -882,40 +884,41 @@ class Transition(Activity):
 
     def save(self, *args, **kwargs):
         if not self.is_local and not self.transitioned:
-            self.transition()
+            if self.transition():
+                self.transition = True
 
         super().save(*args, **kwargs)
 
     def transition(self):
         raise NotImplemented
 
-    class Meta:
-        abstract = True
-
 
 class Delete(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.cancel(save=True)
+            return True
 
 
 class Start(Transition):
     def transition(self):
-        __import__('ipdb').set_trace()
         if self.object.adopted:
             self.object.adopted.states.start(save=True)
+            return True
 
 
 class Cancel(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.cancel(save=True)
+            return True
 
 
 class Finish(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.succeed(save=True)
+            return True
 
 
 from bluebottle.activity_pub.signals import *  # noqa

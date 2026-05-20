@@ -43,6 +43,7 @@ from bluebottle.time_based.models import RegisteredDateActivity
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
+    DateParticipantFactory,
     DeadlineActivityFactory,
     RegisteredDateActivityFactory,
     RegisteredDateParticipantFactory,
@@ -544,6 +545,7 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
             self.participant = DeedParticipantFactory.create(activity=self.adopted)
 
         synced_participant = self.model.participants.get()
+        self.assertTrue(synced_participant.origin)
         self.assertEqual(self.participant.user.email, synced_participant.remote_user.email)
 
 
@@ -1105,6 +1107,35 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
 
         with LocalTenant(self.other_tenant):
             self.assertEqual(self.adopted.slots.count(), 3)
+
+
+class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self, **kwargs):
+        super().create(slots=[], organization=None, **kwargs)
+
+        DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.model,
+            location=None,
+            is_online=True
+        )
+
+        self.submit()
+
+    def test_join(self):
+        super().test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            self.participant = DateParticipantFactory.create(
+                activity=self.adopted, slot=self.adopted.slots.first()
+            )
+
+        synced_participant = self.model.participants.get()
+        self.assertTrue(synced_participant.origin)
+        self.assertEqual(self.participant.user.email, synced_participant.remote_user.email)
+
 
 
 @override_settings(

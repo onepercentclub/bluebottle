@@ -891,7 +891,7 @@ class JoinSerializer(FederatedObjectBaseSerializer):
     }
 
     def create(self, validated_data):
-        validated_data.pop('id')
+        iri = validated_data.pop('id')
         validated_data.pop('actor')
 
         member_serializer = MemberSerializer(data=self.initial_data['actor'])
@@ -899,8 +899,13 @@ class JoinSerializer(FederatedObjectBaseSerializer):
         validated_data['remote_user'] = member_serializer.save()
 
         contributor_model = self.participant_model_mapping[type(validated_data['activity'])]
-        instance = contributor_model.objects.create(
+        self.instance = contributor_model.objects.create(
             **validated_data
         )
-        self.instance = instance
-        return instance
+
+        origin = ActivityPubModel.objects.from_iri(iri)
+        if origin:
+            origin.adopted = self.instance
+            origin.save()
+
+        return self.instance

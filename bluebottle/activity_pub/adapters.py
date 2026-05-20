@@ -22,12 +22,23 @@ class JSONLDAdapter():
         client.post(actor.inbox.iri, data=data)
 
     def adopt(self, instance, **kwargs):
+        from bluebottle.activity_pub.models import Transition
+
         serializer = FederatedObjectSerializer(
             data=ActivityPubSerializer(instance=instance).data
         )
         serializer.is_valid(raise_exception=True)
-        __import__('ipdb').set_trace()
-        return serializer.save(**kwargs)
+
+        result = serializer.save(**kwargs)
+
+        try:
+            # Re-run all transitions that might have happened before the model was adopted
+            for transition in Transition.objects.filter(object=instance):
+                transition.save()
+        except ValueError:
+            pass
+
+        return result
 
     def link(self, instance, **kwargs):
         from bluebottle.activity_links.serializers import LinkedActivitySerializer

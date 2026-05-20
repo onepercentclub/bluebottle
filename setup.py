@@ -17,7 +17,7 @@ changes = ''
 
 install_requires = [
     'Babel==2.16.0',
-    'Django==4.2.30',
+    'Django==5.2.13',
     'Pillow==10.4.0',
     'PyLD==2.0.4',
     'South==1.0.2',
@@ -43,7 +43,7 @@ install_requires = [
     'django-dynamic-fixture==1.9.5',
     'django-elasticsearch-dsl==7.4',
     'django-extensions==3.2.3',
-    'django-filter==25.1',
+    'django-filter==25.2',
     'django-fluent-contents==3.1',
     'django-fluent-dashboard==1.0a1',
     'django-fsm==2.5.0',
@@ -117,7 +117,6 @@ install_requires = [
     'requests_http_signature==0.7.1',
     'schwifty==2.1.0',
     'scss==0.8.73',
-    'setuptools==81.0.0',
     'social-auth-core==4.5.4',
     'social-auth-app-django==5.4.2',
     'sorl-thumbnail==12.11.0',

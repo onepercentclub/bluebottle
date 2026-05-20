@@ -154,7 +154,7 @@ class ContactActivityManagerNotification(TransitionMessage):
         'platform-email',
         'Someone is trying to get in touch with you about your activity on "{site_name}"',
     )
-    template = 'messages/activity_message_to_manager'
+    template = 'messages/activity_manager/activity_message_to_manager'
 
     context = {
         'message_text': 'message',
@@ -176,9 +176,9 @@ class ContactActivityManagerNotification(TransitionMessage):
         context = super().get_context(recipient)
         sender = self.obj.sender
         context.update({
-            'sender_name': sender.full_name,
+            'sender_name': sender.first_name,
             'title': self.obj.activity.title,
-            'recipient_name': recipient.first_name or recipient.full_name,
+            'recipient_name': recipient.first_name,
         })
         return context
 

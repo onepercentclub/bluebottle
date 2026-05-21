@@ -1,4 +1,5 @@
-from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 
 
 class InitiativeStatusPermission(ResourcePermission):
@@ -24,3 +25,16 @@ class InitiativeOwnerPermission(ResourceOwnerPermission):
             user.is_staff or
             user.is_superuser
         )
+
+
+class ContactActivityManagerPermission(BasePermission):
+
+    def has_permission(self, request, view):
+        settings = InitiativePlatformSettings.load()
+        return settings.contact_activity_manager
+
+    def __repr__(self):
+        return 'ContactActivityManagerPermission'
+
+    def has_object_action_permission(self, action, user, obj):
+        return True

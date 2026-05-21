@@ -2264,3 +2264,20 @@ class ActivityMessageAPITestCase(BluebottleTestCase):
             user=self.sender
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @mock.patch(
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
+    )
+    def test_post_disabled_by_platform_setting(self, notify_task_mock):
+        settings = InitiativePlatformSettings.load()
+        settings.contact_activity_manager = False
+        settings.save()
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+            user=self.sender,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(ActivityMessage.objects.count(), 0)
+        notify_task_mock.assert_not_called()

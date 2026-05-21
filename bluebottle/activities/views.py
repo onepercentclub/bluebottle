@@ -38,6 +38,7 @@ from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
+from bluebottle.initiatives.permissions import ContactActivityManagerPermission
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
@@ -499,6 +500,7 @@ class ActivityMessageList(JsonApiViewMixin, CreateAPIView):
 
     permission_classes = (
         IsAuthenticated,
+        ContactActivityManagerPermission
     )
     throttle_classes = [ActivityMessageThrottle]
 

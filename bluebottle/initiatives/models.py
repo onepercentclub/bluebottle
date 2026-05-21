@@ -362,6 +362,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
         )),
     )
 
+    contact_activity_manager = models.BooleanField(
+        verbose_name=_('Contact activity manager'),
+        help_text=_('Allow users to send messages to activity managers.'),
+        default=True
+    )
+
     terms_of_service = models.TextField(
         _("Terms of Service"),
         blank=True,

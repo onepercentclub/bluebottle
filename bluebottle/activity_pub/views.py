@@ -1,8 +1,8 @@
-from celery import shared_task
 from django.conf import settings
 from django.db import connection
 from rest_framework import generics, status, response
 
+from bluebottle.celery import app
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Create, Organization,
@@ -44,7 +44,10 @@ class OrganizationView(ActivityPubView):
     queryset = Organization.objects.all()
 
 
-@shared_task()
+@app.task(
+    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
+    name="bluebottle.activity_pub.adapters.publish_activities"
+)
 def create_task(serializer, tenant):
     with LocalTenant(tenant):
         serializer.is_valid(raise_exception=True)

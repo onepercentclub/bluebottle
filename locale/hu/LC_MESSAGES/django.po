@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-20 11:58+0200\n"
-"PO-Revision-Date: 2026-05-20 09:59\n"
+"POT-Creation-Date: 2026-05-21 12:28+0200\n"
+"PO-Revision-Date: 2026-05-21 10:29\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -32,6 +32,11 @@ msgstr "állapot"
 #: bluebottle/time_based/admin.py:1036 bluebottle/time_based/admin.py:1380
 msgid "Edit"
 msgstr "Szerkesztés"
+
+#: bluebottle/activities/admin.py:168 bluebottle/activities/models.py:402
+#: bluebottle/activities/models.py:500 bluebottle/time_based/admin.py:542
+msgid "Anonymous"
+msgstr "Névtelen"
 
 #: bluebottle/activities/admin.py:220 bluebottle/activities/admin.py:343
 #: bluebottle/funding_stripe/admin.py:203
@@ -471,7 +476,7 @@ msgstr "Tedd közzé a tevékenységedet"
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Someone is trying to get in touch with you about your activity on \"{site_name}\""
-msgstr ""
+msgstr "Valaki próbál kapcsolatba lépni veled a \"{site_name}\" oldalon végzett tevékenységeddel kapcsolatban"
 
 #: bluebottle/activities/messages/activity_manager.py:191
 msgctxt "platform-email"
@@ -761,10 +766,6 @@ msgstr "Hozzájárulás"
 msgid "Contributions"
 msgstr "Hozzájárulások"
 
-#: bluebottle/activities/models.py:402 bluebottle/activities/models.py:500
-msgid "Anonymous"
-msgstr "Névtelen"
-
 #: bluebottle/activities/models.py:408
 msgid "Activity owner"
 msgstr "Tevékenység tulajdonosa"
@@ -849,11 +850,11 @@ msgstr "Üzenet"
 
 #: bluebottle/activities/models.py:582
 msgid "Activity message"
-msgstr ""
+msgstr "Tevékenység üzenet"
 
 #: bluebottle/activities/models.py:583
 msgid "Activity messages"
-msgstr ""
+msgstr "Tevékenység üzenetek"
 
 #: bluebottle/activities/periodic_tasks.py:30
 msgid "Send a reminder whe activities are unpublished for more then 3 days"
@@ -861,7 +862,7 @@ msgstr "Emlékeztető küldése, ha a tevékenységek több mint 3 napig nem jel
 
 #: bluebottle/activities/serializers.py:1115
 msgid "You cannot send a message to yourself as the activity manager."
-msgstr ""
+msgstr "Tevékenységmenedzserként nem küldhetsz üzenetet saját magadnak."
 
 #: bluebottle/activities/states.py:16 bluebottle/time_based/states/slots.py:136
 #: bluebottle/utils/transitions.py:10
@@ -1482,9 +1483,22 @@ msgid "\n"
 "        %(message_text)s\n"
 "        <br/>\n"
 "        <br/>\n"
-"        Reply to this message to reply to %(sender_name)s\n"
+"        Reply to this email to reply to %(sender_name)s.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Szia %(recipient_name)s,\n"
+"        <br/>\n"
+"        <br/>\n"
+"        %(sender_name)s üzenetet küldött neked a tevékenységedről „%(title)s”.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        <b>Az üzenet</b>\n"
+"        <br/>\n"
+"        %(message_text)s\n"
+"        <br/>\n"
+"        <br/>\n"
+"        Válaszolj erre az emailre, hogy válaszolj %(sender_name)s-nak.\n"
+"    "
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_needs_work.html:5
 #, python-format
@@ -10269,8 +10283,7 @@ msgstr "Beállítások"
 msgid "Manage Reporting"
 msgstr "Jelentéskezelés"
 
-#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:443
-#: tenants/accenture/settings.py:30
+#: bluebottle/settings/testing.py:443 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -10283,48 +10296,42 @@ msgstr "Jelentéskezelés"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
+#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
+#: tenants/maximising-potential/settings.py:27
+#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
 #: tenants/shell-disaster-relief/settings.py:26
-#: tenants/shell-grant-management/settings.py:26
-#: tenants/shell-uk/settings.py:26 tenants/startsomething/settings.py:29
-#: tenants/studentbattle/settings.py:27 tenants/twoscale/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
+#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Angol"
 
-#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:444
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
+#: bluebottle/settings/testing.py:444 tenants/abn/settings.py:26
+#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
-#: tenants/buurtmaaltijden/settings.py:24 tenants/corona/settings.py:25
-#: tenants/crowdfunding-010/settings.py:26
+#: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
 #: tenants/crowdfunding-voornatuur/settings.py:26
 #: tenants/gasunie/settings.py:26 tenants/geef-om-zorg/settings.py:26
 #: tenants/gent/settings.py:25 tenants/goes/settings.py:25
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:23
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -10339,31 +10346,28 @@ msgstr "Angol"
 msgid "Dutch"
 msgstr "Holland"
 
-#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:445
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+#: bluebottle/settings/testing.py:445 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Francia"
 
-#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:446
-#: tenants/mars/settings.py:28
+#: bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr "Spanyol"
 
-#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:447
-#: tenants/mars/settings.py:29
+#: bluebottle/settings/testing.py:447
 msgid "German"
 msgstr "Német"
 
-#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:448
+#: bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugál"
 
-#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:449
-#: tenants/mars/settings.py:30
+#: bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr "Magyar"
 
-#: bluebottle/settings/local.py:733 bluebottle/settings/testing.py:450
+#: bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Bolgár"
 
@@ -11772,11 +11776,6 @@ msgstr "helyet foglaló résztvevők"
 msgid "end date and time"
 msgstr "befejező dátum és idő"
 
-#: bluebottle/time_based/models.py:2031
-#, python-brace-format
-msgid "Slot {start}"
-msgstr ""
-
 #: bluebottle/time_based/models.py:2076
 msgid "Team duration"
 msgstr "Csapat időtartama"
@@ -11793,48 +11792,48 @@ msgstr "Résztvevő az ismétlődő tevékenységekhez"
 msgid "Participants to recurring activities"
 msgstr "Résztvevők az ismétlődő tevékenységekhez"
 
-#: bluebottle/time_based/periodic_tasks.py:57
+#: bluebottle/time_based/periodic_tasks.py:52
 msgid "Lock an activity when the registration date has passed."
 msgstr "Lockolj egy tevékenységet, amikor a regisztrációs időszak véget ért."
 
-#: bluebottle/time_based/periodic_tasks.py:79
+#: bluebottle/time_based/periodic_tasks.py:74
 msgid "Finish an activity when all slots are completed."
 msgstr "Fejezd be a tevékenységet, amikor minden hely betelt."
 
-#: bluebottle/time_based/periodic_tasks.py:95
+#: bluebottle/time_based/periodic_tasks.py:90
 msgid "Start the slot."
 msgstr "Indítsd el a helyet."
 
-#: bluebottle/time_based/periodic_tasks.py:111
+#: bluebottle/time_based/periodic_tasks.py:106
 msgid "Finish a slot when end time has passed."
 msgstr "Fejezd be a helyet, amikor a végidő lejárt."
 
-#: bluebottle/time_based/periodic_tasks.py:128
+#: bluebottle/time_based/periodic_tasks.py:123
 msgid "Finish an activity when end time has passed."
 msgstr "Fejezd be a tevékenységet, amikor a végidő lejárt."
 
-#: bluebottle/time_based/periodic_tasks.py:149
+#: bluebottle/time_based/periodic_tasks.py:144
 msgid "Send a reminder 24 hours before the activity slot."
 msgstr "Küldj emlékeztetőt 24 órával a tevékenység helye előtt."
 
-#: bluebottle/time_based/periodic_tasks.py:168
+#: bluebottle/time_based/periodic_tasks.py:163
 msgid "Finish an activity when deadline has passed."
 msgstr "Fejezd be a tevékenységet, amikor a határidő lejárt."
 
-#: bluebottle/time_based/periodic_tasks.py:182
+#: bluebottle/time_based/periodic_tasks.py:177
 msgid "Finish an activity when start has passed."
 msgstr "Fejezd be a tevékenységet, amikor a kezdődött idő eltelt."
 
-#: bluebottle/time_based/periodic_tasks.py:197
+#: bluebottle/time_based/periodic_tasks.py:192
 msgid "Start a slot when the start date passed"
 msgstr "Indítsd el a helyet, amikor a kezdő dátum lejárt"
 
-#: bluebottle/time_based/periodic_tasks.py:212
+#: bluebottle/time_based/periodic_tasks.py:207
 msgid "Finish a slot when the end date passed"
 msgstr "Fejezd be a helyet, amikor a befejező dátum lejárt"
 
-#: bluebottle/time_based/periodic_tasks.py:224
-#: bluebottle/time_based/periodic_tasks.py:241
+#: bluebottle/time_based/periodic_tasks.py:219
+#: bluebottle/time_based/periodic_tasks.py:236
 msgid "Start a new slot when the current one is finished"
 msgstr "Indítsd el az új helyet, amikor a jelenlegi véget ért"
 
@@ -14494,8 +14493,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Másodperc"
 msgstr[1] "Másodpercek"
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
-msgstr ""
 

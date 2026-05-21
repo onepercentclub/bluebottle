@@ -35,3 +35,6 @@ class ContactActivityManagerPermission(BasePermission):
 
     def __repr__(self):
         return 'ContactActivityManagerPermission'
+
+    def has_object_action_permission(self, action, user, obj):
+        return True

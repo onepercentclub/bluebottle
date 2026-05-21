@@ -863,21 +863,6 @@ class Leave(Activity):
     """Sent by a follower when a user leaves a synced deed; object is the source GoodDeed."""
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
-    participant_sync_id = models.CharField(
-        _("Participant sync id"),
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text=_("Stable id to match the participant to remove."),
-    )
-    sub_event = models.ForeignKey(
-        'activity_pub.SubEvent',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='+',
-    )
-
     @property
     def default_recipients(self):
         create = self.object.create_set.first()

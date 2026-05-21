@@ -299,8 +299,8 @@ class JoinAdmin(ActivityAdmin):
 
 @admin.register(Leave)
 class LeaveAdmin(ActivityAdmin):
-    list_display = ("id", "actor", "object", "participant_sync_id")
-    readonly_fields = ('iri', 'actor', 'object', 'pub_url', 'participant_sync_id')
+    list_display = ("id", "actor", "object", )
+    readonly_fields = ('iri', 'actor', 'object', 'pub_url', )
     inlines = [RecipientInline]
 
 

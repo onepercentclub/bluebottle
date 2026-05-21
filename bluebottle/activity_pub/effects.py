@@ -200,7 +200,6 @@ class SendLeaveEffect(Effect):
     """
     Send a Leave activity to the source platform when a user leaves a synced deed.
     Runs only when the activity is synced (via activity_is_synced condition).
-    Includes participant_sync_id so the source can remove the right participant.
     """
     template = 'admin/activity_pub/send_leave_effect.html'
     conditions = [can_send_leave]

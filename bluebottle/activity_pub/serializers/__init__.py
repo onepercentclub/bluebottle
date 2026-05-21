@@ -13,9 +13,9 @@ class ActivityPubSerializer(PolymorphicSerializer):
     model_serializer_mapping = {}
     resource_type_field_name = 'type'
 
-    def __init__(self, *args, full=True, include=False, **kwargs):
+    def __init__(self, *args, full=True, include=False, origin=None, **kwargs):
         super(PolymorphicSerializer, self).__init__(*args, **kwargs)
-
+        self.origin = origin
         self.resource_type_model_mapping = {}
         self.model_serializer_mapping = {}
 
@@ -23,7 +23,7 @@ class ActivityPubSerializer(PolymorphicSerializer):
             resource_type = self.to_resource_type(model)
             if callable(serializer):
                 serializer = serializer(
-                    *args, full=full, include=include, **kwargs
+                    *args, full=full, include=include, origin=origin, **kwargs
                 )
                 serializer.parent = self
 
@@ -80,15 +80,8 @@ class FederatedObjectSerializer(PolymorphicSerializer):
         self.resource_type_model_mapping['DeadlineActivity'] = DeadlineActivity
 
     def _get_resource_type_from_mapping(self, mapping):
-        if isinstance(mapping, str):
-            __import__('ipdb').set_trace()
         resource_type = super()._get_resource_type_from_mapping(mapping)
         if resource_type == 'DoGoodEvent':
-            from bluebottle.activity_pub.models import ActivityPubModel
-
-            resource = ActivityPubModel.objects.from_iri(mapping['id'])
-
-            resource_type = resource.activity_type
             if mapping.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
                 return 'ScheduleActivity'
             elif mapping.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':

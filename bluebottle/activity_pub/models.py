@@ -13,6 +13,8 @@ from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.activities.models import Activity as DoGoodActivity, Contributor, RemoteMember
+from bluebottle.time_based.models import DateActivitySlot
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
@@ -92,7 +94,6 @@ class Actor(ActivityPubModel):
         super().save(*args, **kwargs)
 
 
-
 class Person(Actor):
     name = models.TextField()
     given_name = models.TextField(null=True, blank=True)
@@ -103,7 +104,7 @@ class Person(Actor):
         Member,
         null=True,
         on_delete=models.CASCADE,
-        related_name='activity_pub'
+        related_name='activity_pub_model'
     )
 
     adopted = models.OneToOneField(
@@ -117,7 +118,6 @@ class Person(Actor):
     def follow(self):
         follow = Follow.objects.filter(object=self).first()
         return follow
-
 
     def __str__(self):
         return self.name or self.prefered_username
@@ -474,12 +474,6 @@ class SubEvent(ActivityPubModel):
         on_delete=models.CASCADE,
         related_name='sub_event'
     )
-    slot = models.OneToOneField(
-        'time_based.DateActivitySlot',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
     contributor_count = models.PositiveIntegerField(
         default=0,
         help_text=_('Accepted participants for this slot.'),
@@ -489,6 +483,20 @@ class SubEvent(ActivityPubModel):
         null=True,
         blank=True,
         help_text=_('Per-slot attendee limit (schema.org maximumAttendeeCapacity). Mirrors activity slot.'),
+    )
+
+    origin = models.OneToOneField(
+        DateActivitySlot,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub_model'
+    )
+
+    adopted = models.OneToOneField(
+        DateActivitySlot,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
     )
 
     class Meta:
@@ -678,7 +686,7 @@ class Follow(Activity):
             return Event.objects.filter(
                 create__actor=self.object,
             ).filter(
-                Q(link__isnull=False) | Q(adopted__isnull=False)
+                models.Q(link__isnull=False) | models.Q(adopted__isnull=False)
             )
         return Accept.objects.filter(
             actor=self.actor,
@@ -841,9 +849,14 @@ class Join(Activity):
 
     @property
     def default_recipients(self):
-        create = self.object.create_set.first()
-        if create:
-            yield create.actor
+        try:
+            create = self.object.create_set.get()
+        except Exception as e:
+            print(e)
+            __import__('ipdb').set_trace()
+            create = self.object.parent.create_set.get()
+
+        yield create.actor
 
 
 class Leave(Activity):
@@ -890,7 +903,7 @@ class Transition(Activity):
         super().save(*args, **kwargs)
 
     def transition(self):
-        raise NotImplemented
+        raise NotImplementedError()
 
 
 class Delete(Transition):
@@ -903,7 +916,11 @@ class Delete(Transition):
 class Start(Transition):
     def transition(self):
         if self.object.adopted:
-            self.object.adopted.states.start(save=True)
+            try:
+                self.object.adopted.states.publish(save=True)
+            except TransitionNotPossible:
+                pass
+
             return True
 
 

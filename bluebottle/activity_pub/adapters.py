@@ -50,17 +50,12 @@ class JSONLDAdapter():
         return serializer.save(**kwargs)
 
     def sync(self, model):
-        if hasattr(model, 'origin') and model.origin:
-            instance = model.origin
-        else:
-            instance = None
-
         serializer = ActivityPubSerializer(
             data=FederatedObjectSerializer(model).data,
-            instance=instance,
+            origin=model
         )
         serializer.is_valid(raise_exception=True)
-        return serializer.save(origin=model)
+        return serializer.save()
 
 
 adapter = JSONLDAdapter()

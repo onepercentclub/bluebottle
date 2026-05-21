@@ -7,7 +7,6 @@ from bluebottle.fsm.triggers import (
     TriggerManager,
     ModelChangedTrigger,
 )
-from bluebottle.activity_pub.effects import UpdateDateActivitySlotPublishedEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import ActiveTimeContributionsTransitionEffect, RescheduleDateSlotContributions
 from bluebottle.time_based.effects.effects import (
@@ -778,7 +777,6 @@ class DateActivitySlotTriggers(TriggerManager):
                 'status',
             ],
             effects=[
-                UpdateDateActivitySlotPublishedEffect,
             ],
         ),
 

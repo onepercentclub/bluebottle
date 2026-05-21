@@ -67,7 +67,7 @@ class StateMachineAdminMixin(object):
                                     send_messages=send_messages
                                 )
             rendered_effects = get_effects(effects)
-            
+
             if rendered_effects:
 
                 cancel_link = reverse(

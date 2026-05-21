@@ -15,23 +15,29 @@ from rest_framework import exceptions
 from rest_framework import serializers
 from rest_framework.relations import RelatedField
 
-from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
-    SubEvent, RepetitionModeChoices, SlotModeChoices, Create, ActivityPubModel
-from bluebottle.activity_pub.serializers import ActivityPubSerializer, FederatedObjectSerializer
+from bluebottle.activity_pub.models import (
+    EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices,
+    RepetitionModeChoices, SlotModeChoices, Create, ActivityPubModel
+)
+from bluebottle.activity_pub.serializers import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
 from bluebottle.activities.models import Contributor, RemoteMember
 from bluebottle.collect.models import CollectActivity, CollectType
+from bluebottle.collect.tests.factories import CollectTypeFactory
 from bluebottle.members.models import Member
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
-from bluebottle.funding.models import Funding
+from bluebottle.funding.models import Donor, Funding
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.grant_management.models import GrantApplication
 from bluebottle.organizations.models import Organization
-from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
-    PeriodicActivity, ScheduleActivity
+from bluebottle.time_based.models import (
+    DateActivitySlot, DateParticipant, DeadlineActivity, DateActivity,
+    DeadlineParticipant, RegisteredDateActivity,
+    PeriodicActivity, RegisteredDateParticipant, ScheduleActivity
+)
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.models import get_default_language
 
@@ -553,102 +559,6 @@ class SlotsSerializer(FederatedObjectBaseSerializer):
         data['contributor_count'] = instance.contributor_count
         return data
 
-    def create(self, validated_data):
-        iri = validated_data.get('id')
-        activity = validated_data.get('activity')
-        sub_event = None
-        location = validated_data.get('location')
-        if isinstance(location, dict):
-            validated_data['location'] = LocationSerializer(context=self.context).create(location)
-
-        if iri:
-            try:
-                sub_event = SubEvent.objects.get(iri=iri)
-            except SubEvent.DoesNotExist:
-                sub_event = None
-
-        existing_slot = None
-        if activity:
-            start = validated_data.get('start')
-            duration = validated_data.get('duration')
-
-            if sub_event:
-                existing_slot = DateActivitySlot.objects.filter(
-                    activity=activity,
-                    origin=sub_event
-                ).first()
-
-                if existing_slot is None:
-                    source_slot = getattr(sub_event, 'slot', None)
-                    if source_slot is not None and source_slot.activity_id == activity.pk:
-                        existing_slot = source_slot
-
-            # Prefer matching an "orphan" slot by start/duration, so we link
-            # origin instead of creating duplicates.
-            if existing_slot is None and start is not None:
-                qs = DateActivitySlot.objects.filter(
-                    activity=activity,
-                    start=start,
-                )
-                if sub_event is not None:
-                    qs = qs.filter(origin__isnull=True) | DateActivitySlot.objects.filter(
-                        activity=activity,
-                        origin=sub_event,
-                    )
-                if duration is not None:
-                    match = qs.filter(duration=duration).first()
-                    if match is not None:
-                        existing_slot = match
-                if existing_slot is None:
-                    existing_slot = qs.first()
-
-            # Single-slot fallback (covers cases where SubEvent has no `iri` yet).
-            #
-            # Important: don't apply this when we have enough information to create
-            # a distinct slot (e.g. a specific start/duration), otherwise syncing a
-            # multi-slot event can incorrectly "reuse" the first created slot for
-            # subsequent sub events.
-            if (
-                existing_slot is None
-                and sub_event is None
-                and start is None
-                and duration is None
-                and activity.slots.count() == 1
-            ):
-                existing_slot = activity.slots.first()
-
-        if existing_slot is not None:
-            if sub_event is not None and existing_slot.origin_id != sub_event.pk:
-                validated_data['origin'] = sub_event
-            return self.update(existing_slot, validated_data)
-
-        validated_data.pop('id', None)
-        if sub_event is not None:
-            validated_data['origin'] = sub_event
-        slot = DateActivitySlot(**validated_data)
-        slot.save(run_triggers=False)
-        return slot
-
-    def update(self, instance, validated_data):
-        validated_data.pop('id', None)
-        location = validated_data.get('location')
-        if isinstance(location, dict):
-            validated_data['location'] = LocationSerializer(context=self.context).create(location)
-        update_data = {}
-        for key, value in validated_data.items():
-            if key == 'location':
-                update_data['location_id'] = value.pk if value else None
-            elif key == 'activity':
-                update_data['activity_id'] = value.pk if value else None
-            elif key == 'origin':
-                update_data['origin_id'] = value.pk if value else None
-            else:
-                update_data[key] = value
-        if update_data:
-            DateActivitySlot.objects.filter(pk=instance.pk).update(**update_data)
-            instance.refresh_from_db()
-        return instance
-
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivitySlot
         fields = FederatedObjectBaseSerializer.Meta.fields + (
@@ -657,112 +567,6 @@ class SlotsSerializer(FederatedObjectBaseSerializer):
             'status', 'location_hint', 'online_meeting_url',
             'contributor_count',
         )
-
-
-class FederatedSubEventSerializer(SlotsSerializer):
-    pass
-
-
-def _source_slot_for_sub_event(sub_event, source_date):
-    if source_date is None:
-        return None
-    if sub_event.slot_id:
-        slot = sub_event.slot
-        if slot is not None and getattr(slot, 'activity_id', None) == source_date.pk:
-            return slot
-    return DateActivitySlot.objects.filter(activity=source_date, origin=sub_event).first()
-
-
-def _is_online_from_sub_event(sub_event):
-    if sub_event.event_attendance_mode == 'OnlineEventAttendanceMode':
-        return True
-    if sub_event.event_attendance_mode == 'OfflineEventAttendanceMode':
-        return False
-    return None
-
-
-def _adopted_slot_has_active_participants(slot):
-    return slot.participants.filter(
-        status__in=['new', 'accepted', 'succeeded', 'scheduled', 'participating'],
-    ).exists()
-
-
-def sync_adopted_date_slots_from_source(event_do_good, source_date, adopted_date):
-    subs = list(event_do_good.sub_event.order_by('start_time', 'id'))
-    if not subs and source_date is not None and source_date.slots.exists():
-        return
-
-    if subs:
-        known_sub_ids = {s.pk for s in subs}
-        for loose in adopted_date.slots.exclude(origin_id__in=known_sub_ids).exclude(
-            origin_id__isnull=True
-        ):
-            loose.origin = None
-            loose.save(update_fields=['origin'])
-
-    for sub in subs:
-        src_slot = _source_slot_for_sub_event(sub, source_date)
-        start_for_match = src_slot.start if src_slot is not None else sub.start_time
-        ad_slot = DateActivitySlot.objects.filter(activity=adopted_date, origin=sub).first()
-        if ad_slot is None and src_slot is not None:
-            ad_slot = DateActivitySlot.objects.filter(
-                activity=adopted_date,
-                origin__isnull=True,
-                start=src_slot.start,
-            ).first()
-        if ad_slot is None and start_for_match is not None:
-            ad_slot = DateActivitySlot.objects.filter(
-                activity=adopted_date,
-                origin__isnull=True,
-                start=start_for_match,
-            ).first()
-        if ad_slot is None and len(subs) == 1:
-            orphans = list(adopted_date.slots.filter(origin__isnull=True))
-            if len(orphans) == 1:
-                ad_slot = orphans[0]
-        if ad_slot is not None and ad_slot.origin_id != sub.pk:
-            ad_slot.origin = sub
-            ad_slot.save(run_triggers=False, update_fields=['origin'])
-
-        payload = {
-            'name': src_slot.title if src_slot is not None else sub.name,
-            'start_time': src_slot.start if src_slot is not None else sub.start_time,
-            'duration': src_slot.duration if src_slot is not None else sub.duration,
-            'capacity': src_slot.capacity if src_slot is not None else sub.capacity,
-            'status': src_slot.status if src_slot is not None else None,
-            'location_hint': src_slot.location_hint if src_slot is not None else None,
-            'online_meeting_url': src_slot.online_meeting_url if src_slot is not None else None,
-            'contributor_count': sub.contributor_count or 0,
-        }
-        if sub.iri:
-            payload['id'] = sub.iri
-        if src_slot is not None:
-            payload['event_attendance_mode'] = (
-                'OnlineEventAttendanceMode' if src_slot.is_online else 'OfflineEventAttendanceMode'
-            )
-            src_location = getattr(src_slot, 'location', None)
-            location_ap_id = None
-            if isinstance(src_location, dict):
-                location_ap_id = src_location.get('id')
-            else:
-                location_ap_id = getattr(src_location, 'activity_pub_url', None)
-            if location_ap_id:
-                payload['location'] = {'id': location_ap_id}
-        else:
-            is_online = _is_online_from_sub_event(sub)
-            if is_online is not None:
-                payload['event_attendance_mode'] = (
-                    'OnlineEventAttendanceMode' if is_online else 'OfflineEventAttendanceMode'
-                )
-
-        serializer = SlotsSerializer(instance=ad_slot, data=payload, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(activity=adopted_date)
-
-    for orphan in adopted_date.slots.filter(origin__isnull=True):
-        if _adopted_slot_has_active_participants(orphan):
-            continue
-        orphan.delete()
 
 
 class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
@@ -863,9 +667,7 @@ class RelatedResourceField(RelatedField):
         return ActivityPubModel.objects.all()
 
     def to_representation(self, value):
-        return FederatedObjectSerializer(
-            full=False, include=self.include
-        ).to_representation(value)
+        return FederatedObjectSerializer().to_representation(value)
 
     def to_internal_value(self, data):
         if isinstance(data, str):
@@ -877,7 +679,7 @@ class RelatedResourceField(RelatedField):
 class JoinSerializer(FederatedObjectBaseSerializer):
     id = FederatedIdField('json-ld:join')
     type = TypeField('Join')
-    actor = MemberSerializer()
+    actor = MemberSerializer(source='user')
     object = RelatedResourceField(source='activity')
 
     class Meta:
@@ -887,18 +689,31 @@ class JoinSerializer(FederatedObjectBaseSerializer):
         )
 
     participant_model_mapping = {
-        Deed: DeedParticipant
+        Deed: DeedParticipant,
+        DateActivitySlot: DateParticipant,
+        DeadlineActivity: DeadlineParticipant,
+        ScheduleActivity: ScheduleActivity,
+        RegisteredDateActivity: RegisteredDateParticipant,
+        PeriodicActivity: PeriodicActivity,
+        CollectActivity: CollectTypeFactory,
+        Funding: Donor
     }
 
     def create(self, validated_data):
         iri = validated_data.pop('id')
-        validated_data.pop('actor')
+        validated_data.pop('user')
 
         member_serializer = MemberSerializer(data=self.initial_data['actor'])
         member_serializer.is_valid(raise_exception=True)
         validated_data['remote_user'] = member_serializer.save()
 
-        contributor_model = self.participant_model_mapping[type(validated_data['activity'])]
+        model_type = type(validated_data['activity'])
+        contributor_model = self.participant_model_mapping[model_type]
+
+        if model_type == DateActivitySlot:
+            validated_data['slot'] = validated_data['activity']
+            validated_data['activity'] = validated_data['slot'].activity
+
         self.instance = contributor_model.objects.create(
             **validated_data
         )

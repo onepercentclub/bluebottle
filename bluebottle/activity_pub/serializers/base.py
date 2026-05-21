@@ -5,7 +5,7 @@ from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context, expand_iri
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, ActivityPubIdField, TypeField
 from bluebottle.activity_pub.serializers import ActivityPubSerializer, FederatedObjectSerializer
-from bluebottle.activity_pub.serializers.relations import RelatedResourceField
+from bluebottle.activity_pub.serializers.relations import RelatedResourceField, ManyResourceRelatedField
 from bluebottle.activity_pub.utils import is_local
 
 
@@ -51,7 +51,8 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
 
 
 class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSerializerMetaclass):
-    def __init__(self, *args, full=True, include=False, **kwargs):
+    def __init__(self, *args, full=True, include=False, origin=None, **kwargs):
+        self.origin = origin
         self.include = include
         self.full = full
 
@@ -91,15 +92,14 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
 
         for name, field in self.fields.items():
             if name in validated_data:
-                if isinstance(field, relations.ManyRelatedField):
-                    many_related[name] = [
-                        field.child_relation.save(item) for item in validated_data.pop(name)
-                    ]
-
+                if isinstance(field, ManyResourceRelatedField):
+                    many_related[name] = field.save(validated_data.pop(name))
                 if isinstance(field, RelatedResourceField):
                     validated_data[name] = field.save(validated_data[name])
 
         validated_data.pop('type', None)
+        if self.origin:
+            validated_data['origin'] = self.origin
 
         instance = self.Meta.model.objects.create(**validated_data)
 
@@ -221,7 +221,9 @@ class FederatedObjectBaseSerializer(
                     field_data = validated_data[field.source]
                     if is_local(field_data['id']):
                         __import__('ipdb').set_trace()
-                        validated_data[field.source] = ActivityPubModel.objects.from_iri(field_data['id']).federated_object
+                        validated_data[field.source] = ActivityPubModel.objects.from_iri(
+                            field_data['id']
+                        ).federated_object
                     else:
                         field.initial_data = field_data
 

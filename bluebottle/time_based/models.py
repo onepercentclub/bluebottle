@@ -318,10 +318,6 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
 
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    origin = models.ForeignKey(
-        'activity_pub.SubEvent', null=True, related_name="adopted_slots", on_delete=models.SET_NULL
-    )
-
     @property
     def is_adopted(self):
         return self.origin is not None

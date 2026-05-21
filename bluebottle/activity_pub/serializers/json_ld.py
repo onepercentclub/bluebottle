@@ -259,7 +259,7 @@ class SubEventSerializer(BaseActivityPubSerializer):
         model = SubEvent
         fields = BaseActivityPubSerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode',
-            'contributor_count', 'capacity'
+            'contributor_count', 'capacity', 'name'
         )
 
 

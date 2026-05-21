@@ -124,9 +124,8 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
         validated_data['host_organization'] = source.federated_object
 
         result = super().create(validated_data)
-        __import__('ipdb').set_trace()
 
-        origin = ActivityPubModel.objects.from_iri(iri)
+        origin = ActivityPubModel.objects.from_iri(validated_data['id'])
         if origin:
             origin.federated_object = result
             origin.save()

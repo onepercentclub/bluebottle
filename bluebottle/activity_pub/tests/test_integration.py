@@ -173,7 +173,7 @@ class ActivityPubTestCase:
         site_settings = SitePlatformSettings.load()
         self.assertEqual(site_settings.share_activities, ['supplier', 'consumer'])
         self.assertTrue(bool(site_settings.organization))
-        self.assertTrue(bool(site_settings.organization.origin))
+        self.assertTrue(bool(site_settings.organization.activity_pub_model))
 
     def test_accept(self):
         self.test_follow()
@@ -222,7 +222,7 @@ class ActivityPubTestCase:
         activity = DeedFactory.create(status='submitted')
         activity.states.approve(save=True)
 
-        publish = activity.origin.create_set.first()
+        publish = activity.activity_pub_model.create_set.first()
         self.assertIsNotNone(publish)
         self.assertTrue(
             Recipient.objects.filter(activity=publish, actor=self.follow.actor).exists()
@@ -257,7 +257,7 @@ class ActivityPubTestCase:
         activity.states.approve(save=True)
 
         adapter.sync(activity)
-        publish = activity.origin.create_set.get()
+        publish = activity.activity_pub_model.create_set.get()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -271,7 +271,7 @@ class ActivityPubTestCase:
         self.test_accept()
         self.create()
 
-        publish = self.model.origin.create_set.first()
+        publish = self.model.activity_pub_model.create_set.first()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -544,9 +544,52 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
         with LocalTenant(self.other_tenant):
             self.participant = DeedParticipantFactory.create(activity=self.adopted)
 
+        self.synced_participant = self.model.participants.get()
+        self.assertTrue(self.synced_participant.origin)
+        self.assertEqual(
+            self.participant.user.email, self.synced_participant.remote_user.email
+        )
+
+    def test_leave(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.states.withdraw(save=True)
+
         synced_participant = self.model.participants.get()
         self.assertTrue(synced_participant.origin)
-        self.assertEqual(self.participant.user.email, synced_participant.remote_user.email)
+        self.assertEqual(
+            self.participant.status, 'withdrawn'
+        )
+
+    def test_update(self):
+        super().test_adopt()
+
+        self.model.title = 'Some new title'
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            print(self.adopted.title)
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.model.title, 'Some new title')
+
+    def test_succeed(self):
+        super().test_adopt()
+
+        self.model.states.succeed(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.model.status, 'succeeded')
+
+    def test_cancel(self):
+        super().test_adopt()
+
+        self.model.states.cancel(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.model.status, 'cancelled')
 
 
 class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
@@ -1135,7 +1178,6 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         synced_participant = self.model.participants.get()
         self.assertTrue(synced_participant.origin)
         self.assertEqual(self.participant.user.email, synced_participant.remote_user.email)
-
 
 
 @override_settings(

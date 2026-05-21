@@ -46,7 +46,7 @@ class OrganizationView(ActivityPubView):
 
 @app.task(
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
-    name="bluebottle.activity_pub.adapters.publish_activities"
+    name="bluebottle.activity_pub.view.create_task"
 )
 def create_task(serializer, tenant):
     with LocalTenant(tenant):

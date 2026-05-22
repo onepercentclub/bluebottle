@@ -415,8 +415,7 @@ class Member(BlueBottleBaseUser):
         OfficeSubRegion,
         verbose_name=_("Work location groups managed"),
         help_text=_(
-            "Select one or more groups to filter on. "
-            "The user will only see data related to those selected groups. Leave empty to show all data."
+            "Filter this user's view to one or more location groups. Leave empty to show data from all locations."
         ),
         blank=True,
     )
@@ -425,8 +424,7 @@ class Member(BlueBottleBaseUser):
         Location,
         verbose_name=_("Work locations managed"),
         help_text=_(
-            "Select one or more work locations to filter on. "
-            "The user will only see data related to those selected office locations. Leave empty to show all data."
+            "Filter this user's view to specific work locations. Leave empty to show data from all locations."
         ),
         blank=True,
     )

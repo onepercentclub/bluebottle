@@ -16,8 +16,8 @@ from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.urls import path
 from django.urls import NoReverseMatch, reverse
+from django.urls import path
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
@@ -557,11 +557,12 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         if settings.account_creation_rules == 'whitelist_and_request':
             fields.insert(2, 'accepted')
         if OfficeSubRegion.objects.count():
-            fields.insert(4, 'subregion_manager')
+            fields.insert(4, 'office_manager_info')
+            fields.insert(5, 'subregion_manager')
         if Location.objects.count():
-            fields.insert(5, 'office_manager')
+            fields.insert(6, 'office_manager')
         if Segment.objects.count():
-            fields.insert(6, "segment_manager")
+            fields.insert(7, "segment_manager")
         return fields
 
     def get_fieldsets(self, request, obj=None):
@@ -694,6 +695,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             "hours_planned",
             "all_contributions",
             "data_retention_info",
+            "office_manager_info"
         ]
 
         user_groups = request.user.groups.all()
@@ -739,6 +741,11 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         months = member_settings.retention_anonymize or member_settings.retention_delete
         return admin_info_box(
             _('Only data from the last {months} months is shown.').format(months=months)
+        )
+
+    def office_manager_info(self, obj):
+        return admin_info_box(
+            _("Fill in either 'Work location groups managed' or 'Work locations managed', not both.")
         )
 
     def hours_spent(self, obj):

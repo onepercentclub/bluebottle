@@ -14,11 +14,9 @@
         {{ message_text }}
         <br/>
         <br/>
-        Reply to this message to reply to {{ sender_name }}
+        Reply to this message to reply to {{ sender_first_name }}
     {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-    <a href="{{ action_link }}"
-       class="action-email">{% blocktrans context 'platform-email' %}View activity{% endblocktrans %}</a>
 {% endblock %}

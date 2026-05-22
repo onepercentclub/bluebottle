@@ -165,10 +165,6 @@ class ContactActivityManagerNotification(TransitionMessage):
         sender = self.obj.sender
         return f'{sender.full_name} <{sender.email}>'
 
-    @property
-    def action_link(self):
-        return self.obj.activity.get_absolute_url()
-
     def get_recipients(self):
         return [self.obj.activity.owner]
 

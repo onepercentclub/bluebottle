@@ -802,6 +802,16 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_unknown_filters_are_ignored(self):
+        matching = InitiativeFactory.create_batch(2, status='approved')
+
+        self.search({
+            'distance': '20km',
+            'activity-type': 'grantapplication',
+            'is_online': '1',
+        })
+        self.assertFound(matching)
+
     def test_filter_office(self):
         settings = InitiativePlatformSettings.load()
         settings.search_filters_initiatives.add(

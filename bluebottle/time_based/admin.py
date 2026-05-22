@@ -9,7 +9,8 @@ from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, T
 from django.http import HttpResponseRedirect
 from django.template import defaultfilters, loader
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
@@ -1074,7 +1075,7 @@ class SlotAdmin(StateMachineAdmin):
     activity_link.short_description = _('Activity')
 
     def get_form(self, request, obj=None, **kwargs):
-        if obj and not obj.is_online and obj.location:
+        if obj and not obj.is_online and obj.location and obj.start:
             local_start = obj.start.astimezone(timezone(obj.location.timezone))
             platform_start = obj.start.astimezone(get_current_timezone())
             offset = local_start.utcoffset() - platform_start.utcoffset()
@@ -1307,8 +1308,8 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
         urls = super(DateSlotAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/duplicate/$',
+            path(
+                '<int:pk>/duplicate/',
                 self.admin_site.admin_view(self.duplicate_slot),
                 name='time_based_dateactivityslot_duplicate'
             )

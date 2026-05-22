@@ -1,10 +1,10 @@
+from django.utils.html import format_html
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.funding.models import Funding
 from bluebottle.grant_management.models import GrantApplication
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
-from django.utils.html import format_html
 
 
 class OwnerActivityNotification(TransitionMessage):
@@ -144,6 +144,43 @@ class PublishActivityReminderNotification(OwnerActivityNotification):
     }
 
     action_title = pgettext('platform-email', 'Publish your activity')
+
+
+class ContactActivityManagerNotification(TransitionMessage):
+    """
+    Notify the activity manager that someone sent a message via the contact form.
+    """
+    subject = pgettext(
+        'platform-email',
+        'Someone is trying to get in touch with you about your activity on "{site_name}"',
+    )
+    template = 'messages/activity_manager/activity_message_to_manager'
+
+    context = {
+        'message_text': 'message',
+    }
+
+    @property
+    def reply_to(self):
+        sender = self.obj.sender
+        return f'{sender.full_name} <{sender.email}>'
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    def get_recipients(self):
+        return [self.obj.activity.owner]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        sender = self.obj.sender
+        context.update({
+            'sender_name': sender.first_name,
+            'title': self.obj.activity.title,
+            'recipient_name': recipient.first_name,
+        })
+        return context
 
 
 class TermsOfServiceNotification(OwnerActivityNotification):

@@ -49,7 +49,7 @@ class SCIMUser(object):
 class SCIMAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         token = SCIMPlatformSettings.load().bearer_token
-        if request.META.get('HTTP_AUTHORIZATION') == 'Bearer {}'.format(token):
+        if request.headers.get('authorization') == 'Bearer {}'.format(token):
             return (SCIMUser(), None)
 
     def authenticate_header(self, request):

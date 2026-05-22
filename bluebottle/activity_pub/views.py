@@ -1,4 +1,5 @@
 from celery import shared_task
+from django.conf import settings
 from django.db import connection
 from rest_framework import generics, status, response
 
@@ -75,7 +76,13 @@ class InboxView(generics.CreateAPIView, ActivityPubView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        create_task.delay(serializer, connection.tenant)
+        if (
+            getattr(settings, 'TESTING', False) or
+            getattr(settings, 'CELERY_ALWAYS_EAGER', False)
+        ):
+            create_task(serializer, connection.tenant)
+        else:
+            create_task.delay(serializer, connection.tenant)
         return response.Response(status=status.HTTP_204_NO_CONTENT)
 
 

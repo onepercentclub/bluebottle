@@ -633,7 +633,7 @@ class BaseContributorSerializer(ModelSerializer):
                         raise ValidationError(_('Not a valid email address'), code="invalid")
                 else:
                     raise ValidationError(_('User with email address not found'), code="not_found")
-        elif self.context['request'].user.is_authenticated:
+        elif self.context['request'].user.is_authenticated and not self.instance:
             data['user'] = self.context['request'].user
 
             if data['user'].required:

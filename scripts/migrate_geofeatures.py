@@ -10,7 +10,7 @@ def run(*args):
     if not settings.MAPBOX_API_KEY:
         raise RuntimeError('settings.MAPBOX_API_KEY is not set')
 
-    for tenant in Client.objects.all():
+    for tenant in Client.objects.filter(schema_name='onepercent').all():
         with LocalTenant(tenant):
             locations = (
                 Geolocation.objects.filter(position__isnull=False)
@@ -30,4 +30,3 @@ def run(*args):
                         f'{tenant.schema_name}: geolocation {location.pk}: '
                         f'migrated {migrated} features'
                     )
-

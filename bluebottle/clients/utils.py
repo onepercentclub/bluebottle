@@ -17,9 +17,6 @@ from djmoney.contrib.exchange.models import get_rate
 from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.clients import properties
-from bluebottle.funding.utils import get_currency_settings
-from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
-from bluebottle.funding_stripe.utils import get_stripe_settings
 from bluebottle.utils.models import Language, get_current_language
 
 logger = logging.getLogger(__name__)
@@ -217,6 +214,9 @@ def get_public_properties(request):
 
     # First load tenant settings that should always be exposed
     if connection.tenant:
+        from bluebottle.funding.utils import get_currency_settings
+        from bluebottle.funding_flutterwave.utils import get_flutterwave_settings
+        from bluebottle.funding_stripe.utils import get_stripe_settings
 
         current_tenant = connection.tenant
         properties = get_tenant_properties()

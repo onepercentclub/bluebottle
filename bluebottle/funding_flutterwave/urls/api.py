@@ -1,21 +1,22 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.funding_flutterwave.views import FlutterwavePaymentList, FlutterwaveWebhookView, \
     FlutterwaveBankAccountAccountList, FlutterwaveBankAccountAccountDetail
 
 urlpatterns = [
-    re_path(
-        r'^/payments/$',
+    path(
+        '/payments/',
         FlutterwavePaymentList.as_view(),
         name='flutterwave-payment-list'
     ),
-    re_path(
-        r'^/webhook/$',
+    path(
+        '/webhook/',
         FlutterwaveWebhookView.as_view(),
         name='flutterwave-payment-webhook'
     ),
-    re_path(
-        r'^/bank-accounts/$',
+    path(
+        '/bank-accounts/',
         FlutterwaveBankAccountAccountList.as_view(),
         name='flutterwave-external-account-list'
     ),

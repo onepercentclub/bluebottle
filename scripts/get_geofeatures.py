@@ -302,7 +302,7 @@ def run(*args):
         raise RuntimeError('settings.MAPBOX_API_KEY is not set')
 
     schema_name = None
-    mapbox_mismatch_km = 10.0
+    mapbox_mismatch_km = 50.0
     for arg in args:
         if arg.startswith("tenant="):
             schema_name = arg.split("=", 1)[1].strip() or None

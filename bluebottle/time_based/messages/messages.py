@@ -834,7 +834,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     template = 'messages/participants/slot_participant_registered'
     context = {
         'title': 'activity.title',
-        'participant_name': 'participant.user.full_name',
+        'participant_name': 'user.full_name',
     }
 
     def attachments(self, recipient=None):

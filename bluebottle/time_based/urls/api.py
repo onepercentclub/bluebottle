@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import include, re_path
 
 from bluebottle.time_based.views import (
@@ -8,8 +9,8 @@ from bluebottle.time_based.views import (
 )
 
 urlpatterns = [
-    re_path(
-        r'^/contributions/time/(?P<pk>\d+)$',
+    path(
+        '/contributions/time/<int:pk>',
         TimeContributionDetail.as_view(),
         name='time-contribution-detail'
     ),
@@ -20,39 +21,39 @@ urlpatterns = [
         name='slot-participant-export'
     ),
 
-    re_path(
-        r'^/slot/transitions$',
+    path(
+        '/slot/transitions',
         DateSlotTransitionList.as_view(),
         name='slot-transition-list'
     ),
 
-    re_path(
-        r'^/skills$',
+    path(
+        '/skills',
         SkillList.as_view(),
         name='skill-list'
     ),
-    re_path(
-        r'^/skills/(?P<pk>\d+)$',
+    path(
+        '/skills/<int:pk>',
         SkillDetail.as_view(),
         name='skill'
     ),
 
-    re_path(
-        r'^/period/(?P<pk>\d+)$',
+    path(
+        '/period/<int:pk>',
         PeriodActivityDetailView.as_view(),
         name="period-detail",
     ),
 
-    re_path(
-        r'^/registrations/(?P<pk>\d+)/document$',
+    path(
+        '/registrations/<int:pk>/document',
         RegistrationDocumentDetail.as_view(),
         name='registration-document'
     ),
 
-    re_path(r"^/date", include("bluebottle.time_based.urls.date_api")),
-    re_path(r"^/deadline", include("bluebottle.time_based.urls.deadline_api")),
-    re_path(r"^/registered-date", include("bluebottle.time_based.urls.registered_date_api")),
-    re_path(r"^/periodic", include("bluebottle.time_based.urls.periodic_api")),
-    re_path(r"^/schedule", include("bluebottle.time_based.urls.schedule_api")),
-    re_path(r"^/teams", include("bluebottle.time_based.urls.team_api")),
+    path("/date", include("bluebottle.time_based.urls.date_api")),
+    path("/deadline", include("bluebottle.time_based.urls.deadline_api")),
+    path("/registered-date", include("bluebottle.time_based.urls.registered_date_api")),
+    path("/periodic", include("bluebottle.time_based.urls.periodic_api")),
+    path("/schedule", include("bluebottle.time_based.urls.schedule_api")),
+    path("/teams", include("bluebottle.time_based.urls.team_api")),
 ]

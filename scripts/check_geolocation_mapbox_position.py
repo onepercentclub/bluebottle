@@ -9,7 +9,37 @@ from django.conf import settings
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.geo.models import Geolocation
+from bluebottle.geo.models import Geolocation, PLACE_TYPE_ORDER
+
+_COARSE_PLACE_TYPES = frozenset({"country", "region"})
+# Lower rank = finer (more specific) place type; matches GeoFeatureQueryset.order_by_type().
+_PLACE_TYPE_RANK = {
+    place_type: rank for rank, place_type in enumerate(PLACE_TYPE_ORDER[::-1])
+}
+
+
+def _finest_place_type(geo: Geolocation) -> Optional[str]:
+    features = list(geo.features.all())
+    if features:
+        finest = min(
+            features,
+            key=lambda feature: _PLACE_TYPE_RANK.get(
+                feature.place_type, len(_PLACE_TYPE_RANK)
+            ),
+        )
+        return finest.place_type
+    mapbox_id = (geo.mapbox_id or "").strip()
+    if "." in mapbox_id:
+        return mapbox_id.split(".", 1)[0]
+    return None
+
+
+def _threshold_for_place_type(
+    base_threshold_meters: float, finest_place_type: Optional[str]
+) -> float:
+    if finest_place_type in _COARSE_PLACE_TYPES:
+        return base_threshold_meters * 20
+    return base_threshold_meters
 
 
 def _haversine_meters(
@@ -66,6 +96,8 @@ def find_geolocation_mapbox_position_mismatches(
     """
     Compare Geolocation.position with coordinates returned by geocoding mapbox_id.
 
+    Uses a 20x higher distance threshold when the finest geo feature is country or region.
+
     Returns counts for summary printing.
     """
     cache: Dict[str, Optional[Tuple[float, float, str]]] = {}
@@ -74,6 +106,7 @@ def find_geolocation_mapbox_position_mismatches(
         Geolocation.objects.exclude(mapbox_id__isnull=True)
         .exclude(mapbox_id="")
         .exclude(position__isnull=True)
+        .prefetch_related("features")
         .order_by("pk")
     )
 
@@ -160,16 +193,23 @@ def find_geolocation_mapbox_position_mismatches(
             lon2=mb_lon,
             lat2=mb_lat,
         )
-        if dist_m >= threshold_meters:
+        finest_place_type = _finest_place_type(geo)
+        effective_threshold_m = _threshold_for_place_type(
+            threshold_meters, finest_place_type
+        )
+        if dist_m >= effective_threshold_m:
             mismatches += 1
             dist_km = dist_m / 1000.0
             print(
                 "pk={pk} mapbox_id={mapbox_id} dist_km={dist:.3f} "
+                "threshold_m={threshold_m:.0f} finest_place_type={finest_place_type!r} "
                 "pos=({pos_lat:.6f},{pos_lon:.6f}) mapbox=({mb_lat:.6f},{mb_lon:.6f}) "
                 "place_name={place_name!r}".format(
                     pk=geo.pk,
                     mapbox_id=mapbox_id,
                     dist=dist_km,
+                    threshold_m=effective_threshold_m,
+                    finest_place_type=finest_place_type,
                     pos_lat=pos_lat,
                     pos_lon=pos_lon,
                     mb_lat=mb_lat,
@@ -183,9 +223,9 @@ def find_geolocation_mapbox_position_mismatches(
             rate = (scanned / elapsed) if elapsed > 0 else 0.0
             pct = (scanned / total * 100.0) if total else 0.0
             print(
-                "progress: {scanned}/{total} ({pct:.1f}%) "
+                "++\nprogress: {scanned}/{total} ({pct:.1f}%) "
                 "mismatches={mismatches} missing_coords={missing_coords} errors={errors} "
-                "cache={cache} rate={rate:.1f}/s".format(
+                "cache={cache} rate={rate:.1f}/s \n------\n".format(
                     scanned=scanned,
                     total=total or "?",
                     pct=pct,
@@ -211,7 +251,7 @@ def run(*args):
         raise RuntimeError("settings.MAPBOX_API_KEY is not set")
 
     schema_name = None
-    threshold_meters: float = 2000.0
+    threshold_meters: float = 50000.0
     limit: Optional[int] = None
     progress_every: int = 100
     print_missing_coords: bool = True
@@ -236,7 +276,7 @@ def run(*args):
     for tenant in tenants:
         with LocalTenant(tenant):
             print(
-                f"{tenant.schema_name}: checking Geolocation.position vs mapbox_id "
+                f"\n######\n{tenant.schema_name}: checking Geolocation.position vs mapbox_id "
                 f"(threshold_m={threshold_meters}, limit={limit})…"
             )
             stats = find_geolocation_mapbox_position_mismatches(

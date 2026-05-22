@@ -7,8 +7,8 @@ import dateutil
 from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone, now
+from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -386,15 +386,12 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_location(self, obj):
         location = False
-        has_single_location = True
         if hasattr(obj, "slots") and obj.slots:
             slots = self.get_filtered_slots(obj, only_upcoming=True)
             if not len(slots):
                 slots = self.get_filtered_slots(obj)
             if len(set(slot.locality for slot in slots)) == 1:
                 location = slots[0]
-            else:
-                has_single_location = False
 
         if len(obj.geofeature):
             location_features = InitiativePlatformSettings.load().location_features

@@ -266,6 +266,7 @@ class LevelChoices(DjangoChoices):
     address = ChoiceItem('country', label=_("Address"))
     secondary_address = ChoiceItem('country', label=_("Secondary address"))
 
+
 PLACE_TYPE_ORDER = [
     'country',
     'region',
@@ -352,7 +353,6 @@ class Geolocation(models.Model):
         if self.features.count():
             return self.features.order_by_type().first().place_name
         return self.formatted_address or '-unknown-'
-
 
     @property
     def timezone(self):

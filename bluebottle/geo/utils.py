@@ -207,7 +207,7 @@ def collect_geo_features(geolocation):
         if place_type in ('address', 'secondary_address'):
             address = {
                 'house_number': (props.get('address_number') or feature.get('address') or props.get('address')),
-                'road': (props.get('street_name') or feature.get('text') or props.get('name')),
+                'road': (street_name or feature.get('text') or props.get('name')),
                 'city': place_name,
                 'postcode': postcode_name,
                 'state': region_name,
@@ -215,14 +215,14 @@ def collect_geo_features(geolocation):
             }
         elif place_type in ('neighborhood',):
             address = {
-                'road': name,
+                'road': neighbourhood_name,
                 'city': place_name,
                 'state': region_name,
                 'country': country_name,
             }
         elif place_type in ('district',):
             address = {
-                'road': name,
+                'road': district_name,
                 'city': place_name,
                 'state': region_name,
                 'country': country_name,

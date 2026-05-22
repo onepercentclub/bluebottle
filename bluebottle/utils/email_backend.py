@@ -179,6 +179,7 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
 
     site_platform_settings = SitePlatformSettings.load()
     mail_platform_settings = MailPlatformSettings.load()
+
     kwargs.update({
         'settings': mail_platform_settings,
         'content': site_platform_settings,

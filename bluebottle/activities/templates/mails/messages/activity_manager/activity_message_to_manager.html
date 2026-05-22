@@ -14,8 +14,12 @@
         {{ message_text }}
         <br/>
         <br/>
-        Reply to this message to reply to {{ sender_first_name }}
     {% endblocktrans %}
+    <div class="info-box">
+        {% blocktrans context 'platform-email' %}
+            Reply to this message to respond to {{ sender_first_name }}
+        {% endblocktrans %}
+    </div>
 {% endblock %}
 
 {% block action %}

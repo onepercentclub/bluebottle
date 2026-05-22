@@ -172,7 +172,8 @@ class ContactActivityManagerNotification(TransitionMessage):
         context = super().get_context(recipient)
         sender = self.obj.sender
         context.update({
-            'sender_name': sender.first_name,
+            'sender_first_name': sender.first_name,
+            'sender_name': sender.full_name,
             'title': self.obj.activity.title,
             'recipient_name': recipient.first_name,
         })

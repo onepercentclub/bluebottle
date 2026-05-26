@@ -7,7 +7,7 @@ from bluebottle.activities.views import (
     RelatedActivityImageContent, ActivityImage,
     InviteDetailView, ContributionList, ActivityList,
     ActivityQuestionList, ActivityAnswerList, ActivityAnswerDetail,
-    FileUploadAnswerDocumentView, ActivityQrCode
+    FileUploadAnswerDocumentView, ActivityQrCode, ActivityMessageList,
 )
 
 urlpatterns = [
@@ -81,8 +81,14 @@ urlpatterns = [
         name='activity-question-list'
     ),
 
-    path(
-        '/answers/',
+    re_path(
+        r'^/activity-messages/$',
+        ActivityMessageList.as_view(),
+        name='activity-message-list'
+    ),
+
+    re_path(
+        r'^/answers/$',
         ActivityAnswerList.as_view(),
         name='activity-answer-list'
     ),

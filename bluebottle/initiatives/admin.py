@@ -337,18 +337,25 @@ class InitiativePlatformSettingsAdmin(
             },
         ),
         (
-            _("Options"),
+            _("Management"),
             {
                 "fields": (
+                    "enable_reviewing",
                     "contact_method",
-                    "require_organization",
                     "vet_organizations",
                     "enable_impact",
                     "enable_open_initiatives",
                     "enable_participant_exports",
+                )
+            },
+        ),
+        (
+            _("Options"),
+            {
+                "fields": (
+                    "contact_activity_manager",
                     "enable_matching_emails",
                     "include_full_activities",
-                    "enable_reviewing",
                     "restrict_updates",
                 )
             },

@@ -9,11 +9,13 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
 from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import (
-    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer, FileUploadAnswer
+    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer,
+    FileUploadAnswer, ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
@@ -28,13 +30,15 @@ from bluebottle.activities.serializers import (
     ContributionSerializer,
     ActivityQuestionSerializer,
     FileUploadAnswerDocumentSerializer,
-    ActivityAnswerSerializer
+    ActivityAnswerSerializer,
+    ActivityMessageSerializer,
 )
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
+from bluebottle.initiatives.permissions import ContactActivityManagerPermission
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
@@ -270,25 +274,16 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
         if upcoming:
             queryset = queryset.filter(
                 Q(start__gte=now())
-                | Q(contributor__deadlineparticipant__status__in=['new'])
-                | Q(contributor__teamscheduleparticipant__slot__status__in=['new'])
-                | Q(contributor__scheduleparticipant__slot__status__in=['new'])
-                | Q(contributor__periodicparticipant__status='new')
-                | Q(contributor__periodicparticipant__slot__status__in=['new', 'running'])
+                | Q(contributor__status__in=['new'])
+                | Q(contributor__participant__slot__status__in=['new', 'running'])
             ).order_by("start")
         else:
             queryset = queryset.filter(
                 start__lte=now(),
             ).exclude(
-                contributor__scheduleparticipant__slot__status__in=['new']
+                contributor__participant__slot__status__in=['new', 'running']
             ).exclude(
-                contributor__deadlineparticipant__status__in=['new']
-            ).exclude(
-                contributor__teamscheduleparticipant__slot__status__in=['new']
-            ).exclude(
-                contributor__periodicparticipant__status='new'
-            ).exclude(
-                contributor__periodicparticipant__slot__status__in=['new', 'running']
+                contributor__status__in=['new']
             ).order_by("-start")
 
         return queryset
@@ -490,6 +485,28 @@ class ActivityAnswerList(JsonApiViewMixin, CreateAPIView):
             OneOf(ResourcePermission, ActivityOwnerPermission),
         ]
     }
+
+
+class ActivityMessageThrottle(UserRateThrottle):
+    def allow_request(self, request, view):
+        if request.user.is_superuser:
+            return True
+        return super().allow_request(request, view)
+
+
+class ActivityMessageList(JsonApiViewMixin, CreateAPIView):
+    queryset = ActivityMessage.objects.all()
+    serializer_class = ActivityMessageSerializer
+
+    permission_classes = (
+        IsAuthenticated,
+        ContactActivityManagerPermission
+    )
+    throttle_classes = [ActivityMessageThrottle]
+
+    def perform_create(self, serializer):
+        serializer.validated_data['sender'] = self.request.user
+        super().perform_create(serializer)
 
 
 class ActivityAnswerDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

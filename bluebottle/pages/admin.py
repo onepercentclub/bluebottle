@@ -11,7 +11,7 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
-from django.urls import re_path
+from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -117,29 +117,29 @@ class PageAdmin(PlaceholderFieldAdmin):
         base_urls = super(PageAdmin, self).get_urls()
         info = self.model._meta.app_label, self.model._meta.model_name
         urlpatterns = [
-            re_path(
-                r'^(?P<pk>\d+)/preview/$',
+            path(
+                '<int:pk>/preview/',
                 self.admin_site.admin_view(
                     self.preview_canvas
                 ),
                 name="{0}_{1}_preview".format(*info)
             ),
-            re_path(
-                r'^(?P<pk>\d+)/export/$',
+            path(
+                '<int:pk>/export/',
                 self.admin_site.admin_view(
                     self.export_page
                 ),
                 name="{0}_{1}_export".format(*info)
             ),
-            re_path(
-                r'^import/$',
+            path(
+                'import/',
                 self.admin_site.admin_view(
                     self.import_pages
                 ),
                 name="{0}_{1}_import".format(*info)
             ),
-            re_path(
-                r'^(?P<pk>\d+)/translate/$',
+            path(
+                '<int:pk>/translate/',
                 self.admin_site.admin_view(
                     self.translate_page
                 ),

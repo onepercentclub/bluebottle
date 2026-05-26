@@ -228,14 +228,6 @@ class LinkedFundingDocument(LinkedActivityDocument):
     def prepare_end(self, instance):
         return [instance.end]
 
-    def prepare_image(self, instance):
-        if instance.image:
-            return {
-                'id': instance.pk,
-                'file': instance.image.file.name,
-                'type': 'activity'
-            }
-
     def prepare_slug(self, instance):
         return f'linked-funding-{instance.id}'
 

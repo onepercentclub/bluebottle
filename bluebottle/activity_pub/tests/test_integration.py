@@ -454,7 +454,7 @@ class LinkTestCase(ActivityPubTestCase):
             self.assertEqual(link.status, self.expected_link_status)
             self.assertEqual(link.title, self.model.title)
             self.assertTrue(link.image)
-            accept = Accept.objects.get(object=link.event)
+            accept = Accept.objects.get(object=link.origin)
             self.assertEqual(accept.actor, Follow.objects.get().actor)
 
     def test_link_notifies_source_platform(self):
@@ -565,13 +565,15 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
     def test_update(self):
         super().test_adopt()
 
-        self.model.title = 'Some new title'
-        self.model.save()
+        with httmock.HTTMock(image_mock):
+            self.model.title = 'Some new title'
+            self.model.save()
 
         with LocalTenant(self.other_tenant):
             print(self.adopted.title)
+            __import__('ipdb').set_trace()
             self.adopted.refresh_from_db()
-            self.assertEqual(self.model.title, 'Some new title')
+            self.assertEqual(self.adopted.title, 'Some new title')
 
     def test_succeed(self):
         super().test_adopt()

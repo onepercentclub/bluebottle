@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.activities.models import RemoteContributor
-from bluebottle.activity_pub.tests.factories import DoGoodEventFactory, OrganizationFactory
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.projects import ThemeFactory

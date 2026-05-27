@@ -47,12 +47,9 @@ class PublishAdoptionEffect(Effect):
     template = 'admin/activity_pub/publish_adoption_effect.html'
 
     def post_save(self, **kwargs):
-        if hasattr(self.instance, 'origin'):
-            event = self.instance.origin
-        else:
-            event = self.instance.event
-
+        event = self.instance.origin
         actor = get_platform_actor()
+
         Accept.objects.create(actor=actor, object=event)
 
     @property
@@ -76,8 +73,8 @@ class UpdateEventEffect(Effect):
     @property
     def is_valid(self):
         return (
-            hasattr(self.instance, 'origin') and
-            self.instance.origin.is_local and
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
             get_platform_actor() is not None
         )
 

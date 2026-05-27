@@ -101,6 +101,7 @@ class LinkedLocationSerializer(GeolocationSerializer):
 
 
 class BaseLinkedActivitySerializer(serializers.ModelSerializer):
+    id = serializers.CharField()
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
     url = serializers.URLField(source='link')
@@ -108,7 +109,7 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LinkedActivity
-        fields = ('name', 'summary', 'url', 'image')
+        fields = ('name', 'summary', 'url', 'image', 'id')
 
     def create(self, validated_data):
         image_data = validated_data.pop('image', None)
@@ -120,14 +121,15 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
         if location_data:
             validated_data['location'] = Geolocation.objects.create(**location_data)
 
-        source = Create.objects.get(object__iri=validated_data['id']).actor
-        validated_data['host_organization'] = source.federated_object
+        iri = validated_data.pop('id')
+        source = Create.objects.get(object__iri=iri).actor
+        validated_data['host_organization'] = source.adopted
 
         result = super().create(validated_data)
 
-        origin = ActivityPubModel.objects.from_iri(validated_data['id'])
+        origin = ActivityPubModel.objects.from_iri(iri)
         if origin:
-            origin.federated_object = result
+            origin.link = result
             origin.save()
 
         return result

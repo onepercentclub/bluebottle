@@ -241,7 +241,7 @@ class FederatedObjectBaseSerializer(
         validated_data.pop('id', None)
 
         for name, field in self.fields.items():
-            if isinstance(field, (FederatedObjectSerializer, )):
+            if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data[name]
                     field.is_valid()

@@ -325,6 +325,8 @@ class GoodDeed(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
+    activity_type = 'deed'
+
     class Meta:
         verbose_name = _("Deed")
         verbose_name_plural = _("Deeds")
@@ -342,6 +344,8 @@ class CollectCampaign(Event):
         null=True,
     )
 
+    activity_type = 'collectactivity'
+
     class Meta:
         verbose_name = _("Collect campaign")
         verbose_name_plural = _("Collect campaigns")
@@ -357,6 +361,8 @@ class CrowdFunding(Event):
     end_time = models.DateTimeField(null=True)
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
+
+    activity_type = 'funding'
 
     class Meta:
         verbose_name = _("Funding")
@@ -779,6 +785,17 @@ class Create(Activity):
                 Finish.objects.create(object=self.object)
             else:
                 Cancel.objects.create(object=self.object)
+        elif not self.is_local:
+            follow = Follow.objects.get(object=self.actor)
+
+            if (
+                isinstance(self.object, Event) and
+                self.object.activity_type.lower() in follow.automatic_adoption_activity_types
+            ):
+                if follow.adoption_type == 'sync':
+                    adapter.adopt(self.object)
+                elif follow.adoption_type == 'link':
+                    adapter.link(self.object)
 
     @property
     def followers(self):
@@ -793,6 +810,16 @@ class Create(Activity):
 
 class Update(Activity):
     object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+        if created and not self.object.is_local:
+            if hasattr(self.object, 'adopted'):
+                adapter.adopt(self.object)
+            elif hasattr(self.object, 'link'):
+                __import__('ipdb').set_trace()
+                adapter.link(self.object)
 
     @property
     def default_recipients(self):
@@ -851,9 +878,7 @@ class Join(Activity):
     def default_recipients(self):
         try:
             create = self.object.create_set.get()
-        except Exception as e:
-            print(e)
-            __import__('ipdb').set_trace()
+        except Exception:
             create = self.object.parent.create_set.get()
 
         yield create.actor
@@ -897,16 +922,26 @@ class Delete(Transition):
             self.object.adopted.states.cancel(save=True)
             return True
 
+        if self.object.link:
+            self.object.link.states.cancel(save=True)
+            return True
+
 
 class Start(Transition):
     def transition(self):
         if self.object.adopted:
             try:
                 self.object.adopted.states.publish(save=True)
+                return True
             except TransitionNotPossible:
                 pass
 
-            return True
+        if self.object.link:
+            try:
+                self.object.link.states.start(save=True)
+                return True
+            except TransitionNotPossible:
+                pass
 
 
 class Cancel(Transition):
@@ -915,11 +950,19 @@ class Cancel(Transition):
             self.object.adopted.states.cancel(save=True)
             return True
 
+        if self.object.link:
+            self.object.link.states.cancel(save=True)
+            return True
+
 
 class Finish(Transition):
     def transition(self):
         if self.object.adopted:
             self.object.adopted.states.succeed(save=True)
+            return True
+
+        if self.object.link:
+            self.object.link.states.succeed(save=True)
             return True
 
 

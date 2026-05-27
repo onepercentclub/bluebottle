@@ -27,6 +27,9 @@ class JSONLDAdapter():
         serializer = FederatedObjectSerializer(
             data=ActivityPubSerializer(instance=instance).data
         )
+        if hasattr(instance, 'adopted'):
+            serializer.instance = instance.adopted
+
         serializer.is_valid(raise_exception=True)
 
         result = serializer.save(**kwargs)
@@ -54,6 +57,7 @@ class JSONLDAdapter():
             data=FederatedObjectSerializer(model).data,
             origin=model
         )
+
         serializer.is_valid(raise_exception=True)
         return serializer.save()
 

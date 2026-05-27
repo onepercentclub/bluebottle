@@ -5,6 +5,21 @@
 
 
 {% block after_fieldsets %}
+    {% if request.GET.debug_nested %}
+        <div class="help">
+            <strong>Nested debug:</strong>
+            plugin={{ inline_admin_formset.opts.plugin|default:"(none)" }},
+            plugin_inlines={{ inline_admin_formset.opts.inlines|length|default:0 }},
+            form_inlines={{ inline_admin_form.form.inlines|length|default:0 }}
+        </div>
+    {% endif %}
+
+    {% if inline_admin_form.form.inlines %}
+        {% for nested_inline_admin_formset in inline_admin_form.form.inlines %}
+            {% include nested_inline_admin_formset.opts.template with inline_admin_formset=nested_inline_admin_formset %}
+        {% endfor %}
+    {% endif %}
+
     {% if inline_admin_form.original %}
         {% include inline_admin_form.original.preview_template with instance=inline_admin_form.original %}
     {% endif %}

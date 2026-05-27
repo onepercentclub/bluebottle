@@ -1,0 +1,109 @@
+{% load i18n admin_urls static admin_modify django_template_additions %}
+
+{# Based on Django's tabular inline template, with nested inline recursion. #}
+
+<div class="js-inline-admin-formset inline-group{% if recursive_formset %} {{ recursive_formset.formset.prefix|default:"Root" }}-nested-inline {% if prev_prefix %} {{ prev_prefix }}-{{ loopCounter }}-nested-inline{% endif %} nested-inline{% endif %}"
+     id="{{ inline_admin_formset.formset.prefix }}-group"
+     data-inline-type="tabular"
+     data-inline-formset="{{ inline_admin_formset.inline_formset_data }}">
+  {% with recursive_formset=inline_admin_formset stacked_template='admin/edit_inline/stacked-nested.html' tabular_template='admin/edit_inline/tabular-nested.html' %}
+  <div class="tabular inline-related {% if forloop.last %}last-related{% endif %}">
+    {{ recursive_formset.formset.management_form }}
+    <fieldset class="module {{ recursive_formset.classes }}">
+      {% if recursive_formset.formset.max_num == 1 %}
+        <h2>{{ recursive_formset.opts.verbose_name|capfirst }}</h2>
+      {% else %}
+        <h2>{{ recursive_formset.opts.verbose_name_plural|capfirst }}</h2>
+      {% endif %}
+      {{ recursive_formset.formset.non_form_errors }}
+
+      <table>
+        <thead>
+          <tr>
+            <th class="original"></th>
+            {% for field in recursive_formset.fields %}
+              <th class="column-{{ field.name }}{% if field.required %} required{% endif %}{% if field.widget.is_hidden %} hidden{% endif %}">
+                {{ field.label|capfirst }}
+                {% if field.help_text %}
+                  <img src="{% static "admin/img/icon-unknown.svg" %}" class="help help-tooltip" width="10" height="10" alt="({{ field.help_text|striptags }})" title="{{ field.help_text|striptags }}">
+                {% endif %}
+              </th>
+            {% endfor %}
+            {% if recursive_formset.formset.can_delete and recursive_formset.has_delete_permission %}
+              <th>{% translate "Delete?" %}</th>
+            {% endif %}
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for inline_admin_form in recursive_formset %}
+            {% if inline_admin_form.form.non_field_errors %}
+              <tr class="row-form-errors">
+                <td colspan="{{ inline_admin_form|cell_count }}">{{ inline_admin_form.form.non_field_errors }}</td>
+              </tr>
+            {% endif %}
+
+            <tr class="form-row {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}{% if forloop.last and recursive_formset.has_add_permission %} empty-form{% endif %}"
+                id="{{ recursive_formset.formset.prefix }}-{% if forloop.last and recursive_formset.has_add_permission %}empty{% else %}{{ forloop.counter0 }}{% endif %}">
+              <td class="original">
+                {% if inline_admin_form.original or inline_admin_form.show_url %}
+                  <p>
+                    {% if inline_admin_form.original %}
+                      {{ inline_admin_form.original }}
+                      {% if inline_admin_form.model_admin.show_change_link and inline_admin_form.model_admin.has_registered_model %}
+                        <a href="{% url inline_admin_form.model_admin.opts|admin_urlname:'change' inline_admin_form.original.pk|admin_urlquote %}"
+                           class="{{ recursive_formset.has_change_permission|yesno:'inlinechangelink,inlineviewlink' }}">
+                          {% if recursive_formset.has_change_permission %}{% translate "Change" %}{% else %}{% translate "View" %}{% endif %}
+                        </a>
+                      {% endif %}
+                    {% endif %}
+                    {% if inline_admin_form.show_url %}<a href="{{ inline_admin_form.absolute_url }}">{% translate "View on site" %}</a>{% endif %}
+                  </p>
+                {% endif %}
+
+                {% if inline_admin_form.needs_explicit_pk_field %}{{ inline_admin_form.pk_field.field }}{% endif %}
+                {% if inline_admin_form.fk_field %}{{ inline_admin_form.fk_field.field }}{% endif %}
+              </td>
+
+              {% for fieldset in inline_admin_form %}
+                {% for line in fieldset %}
+                  {% for field in line %}
+                    <td class="{% if field.field.name %}field-{{ field.field.name }}{% endif %}{% if field.field.is_hidden %} hidden{% endif %}">
+                      {% if field.is_readonly %}
+                        <p>{{ field.contents }}</p>
+                      {% else %}
+                        {{ field.field.errors.as_ul }}
+                        {{ field.field }}
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                {% endfor %}
+              {% endfor %}
+
+              {% if recursive_formset.formset.can_delete and recursive_formset.has_delete_permission %}
+                <td class="delete">{% if inline_admin_form.original %}{{ inline_admin_form.deletion_field.field }}{% endif %}</td>
+              {% endif %}
+            </tr>
+
+            {% if inline_admin_form.form.nested_formsets %}
+              <tr class="nested-inline-row">
+                <td colspan="{{ inline_admin_form|cell_count }}">
+                  {% for inline_admin_formset in inline_admin_form.form.nested_formsets %}
+                    {% if inline_admin_formset.opts.template == stacked_template %}
+                      {% include stacked_template with prev_prefix=recursive_formset.formset.prefix loopCounter=forloop.counter0 %}
+                    {% else %}
+                      {% include tabular_template with prev_prefix=recursive_formset.formset.prefix loopCounter=forloop.counter0 %}
+                    {% endif %}
+                    <div class="nested-inline-bottom-border"></div>
+                  {% endfor %}
+                </td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </fieldset>
+  </div>
+  {% endwith %}
+</div>
+

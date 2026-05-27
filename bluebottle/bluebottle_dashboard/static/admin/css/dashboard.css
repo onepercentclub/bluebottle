@@ -643,3 +643,15 @@ a.button, a.button:hover {
     font-style: italic;
     color: #aaa;
 }
+
+#homepage_form label[for=id_content] {
+    display: none
+}
+
+.js-inline-admin-formset {
+    margin: 0 32px;
+}
+
+.js-inline-admin-formset .inline-related {
+    margin: 16px 0;
+}

@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-import math
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
-import requests
 from django.conf import settings
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.geo.mapbox import (
+    coords_from_feature,
+    geocode_by_id,
+    haversine_km,
+    v6_forward_first_feature,
+)
 from bluebottle.geo.models import Geolocation, PLACE_TYPE_ORDER
 
 _COARSE_PLACE_TYPES = frozenset({"country", "region"})
@@ -42,48 +46,33 @@ def _threshold_for_place_type(
     return base_threshold_meters
 
 
-def _haversine_meters(
-    *,
-    lon1: float,
-    lat1: float,
-    lon2: float,
-    lat2: float,
-) -> float:
-    # Earth radius (WGS84-ish mean), meters
-    r = 6371008.8
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlambda = math.radians(lon2 - lon1)
+def _resolve_mapbox_id_coords_cached(
+    mapbox_id: str,
+    cache: Dict[str, Optional[Tuple[float, float, str]]],
+) -> Optional[Tuple[float, float, str]]:
+    if mapbox_id in cache:
+        return cache[mapbox_id]
 
-    a = (
-        math.sin(dphi / 2) ** 2
-        + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
-    )
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    return r * c
+    try:
+        feature = geocode_by_id(mapbox_id)
+        coords = coords_from_feature(feature)
+        if isinstance(feature, dict) and coords:
+            cache[mapbox_id] = (coords[0], coords[1], str(feature.get('place_name') or ''))
+            return cache[mapbox_id]
 
+        feature = v6_forward_first_feature(q=mapbox_id)
+        coords = coords_from_feature(feature)
+        if isinstance(feature, dict) and coords:
+            props = feature.get('properties') or {}
+            place_name = str(props.get('full_address') or props.get('name') or '')
+            cache[mapbox_id] = (coords[0], coords[1], place_name)
+            return cache[mapbox_id]
 
-def _coords_from_mapbox_feature(feature: Any) -> Optional[Tuple[float, float]]:
-    if not isinstance(feature, dict):
-        return None
+        cache[mapbox_id] = None
+    except Exception:
+        cache[mapbox_id] = None
 
-    geometry = feature.get("geometry") or {}
-    coords = geometry.get("coordinates")
-    if isinstance(coords, (list, tuple)) and len(coords) >= 2:
-        try:
-            return float(coords[0]), float(coords[1])  # lon, lat
-        except (TypeError, ValueError):
-            return None
-
-    center = feature.get("center")
-    if isinstance(center, (list, tuple)) and len(center) >= 2:
-        try:
-            return float(center[0]), float(center[1])  # lon, lat
-        except (TypeError, ValueError):
-            return None
-
-    return None
+    return cache[mapbox_id]
 
 
 def find_geolocation_mapbox_position_mismatches(
@@ -124,49 +113,19 @@ def find_geolocation_mapbox_position_mismatches(
     mismatches = 0
     errors = 0
     started = time.monotonic()
-    token = settings.MAPBOX_API_KEY
 
     for geo in qs.iterator(chunk_size=500):
         scanned += 1
 
-        mapbox_id = (geo.mapbox_id or "").strip()
+        mapbox_id = (geo.mapbox_id or '').strip()
         if not mapbox_id or not geo.position:
             continue
 
-        cached = cache.get(mapbox_id)
-        if cached is None and mapbox_id not in cache:
-            try:
-                # Legacy ids like `poi.*` are typically resolved via v5 Places permanent id lookup.
-                feature = geo.geocode_by_id(mapbox_id)
-                coords = _coords_from_mapbox_feature(feature)
-                if isinstance(feature, dict) and coords:
-                    place_name = str(feature.get("place_name") or "")
-                    cache[mapbox_id] = (coords[0], coords[1], place_name)
-                else:
-                    params = {"q": mapbox_id, "permanent": "true"}
-                    response = requests.get(
-                        "https://api.mapbox.com/search/geocode/v6/forward",
-                        params={**params, "access_token": token, "limit": 1},
-                        timeout=30,
-                    )
-                    response.raise_for_status()
-                    data = response.json() or {}
-                    features = data.get("features") or []
-                    feature = features[0] if features else {}
-                    if isinstance(feature, dict):
-                        coords = _coords_from_mapbox_feature(feature)
-                        place_name = str(feature.get("place_name") or "")
-                        if coords:
-                            cache[mapbox_id] = (coords[0], coords[1], place_name)
-                        else:
-                            cache[mapbox_id] = None
-                    else:
-                        cache[mapbox_id] = None
-            except Exception:
-                errors += 1
-                cache[mapbox_id] = None
-
-        resolved = cache.get(mapbox_id)
+        try:
+            resolved = _resolve_mapbox_id_coords_cached(mapbox_id, cache)
+        except Exception:
+            errors += 1
+            resolved = None
         if not resolved:
             missing_coords += 1
             if print_missing_coords:
@@ -187,12 +146,12 @@ def find_geolocation_mapbox_position_mismatches(
         pos_lon = float(geo.position.x)
         pos_lat = float(geo.position.y)
 
-        dist_m = _haversine_meters(
+        dist_m = haversine_km(
             lon1=pos_lon,
             lat1=pos_lat,
             lon2=mb_lon,
             lat2=mb_lat,
-        )
+        ) * 1000
         finest_place_type = _finest_place_type(geo)
         effective_threshold_m = _threshold_for_place_type(
             threshold_meters, finest_place_type

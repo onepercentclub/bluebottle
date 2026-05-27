@@ -1,7 +1,6 @@
 from builtins import object
 
 import geocoder
-import requests
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
@@ -364,147 +363,18 @@ class Geolocation(models.Model):
         return 'Europe/Amsterdam'
 
     def reverse_geocode(self):
-        access_token = settings.MAPBOX_API_KEY
-        if not access_token:
-            return None
+        from bluebottle.geo.mapbox import reverse_geocode_position
+        return reverse_geocode_position(self.position)
 
-        [lon, lat] = self.position.coords
-        url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{lon},{lat}.json"
-        response = requests.get(url, params={'access_token': access_token})
-
-        if response.status_code == 200:
-            data = response.json()
-            if 'features' in data and len(data['features']) > 0:
-                from bluebottle.geo.utils import pick_preferred_reverse_geocode_feature
-
-                return pick_preferred_reverse_geocode_feature(data['features'])
-            else:
-                return "No results found."
-        else:
-            return f"Error: {response.status_code}, {response.text}"
-
-    def geocode_by_id(self, mapbox_id):
-        access_token = settings.MAPBOX_API_KEY
-        if not access_token or not mapbox_id:
-            return None
-
-        url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{mapbox_id}.json"
-        response = requests.get(url, params={'access_token': access_token})
-
-        if response.status_code == 200:
-            data = response.json()
-            features = data.get('features') or []
-            if features:
-                return features[0]
-            return "No results found."
-        return f"Error: {response.status_code}, {response.text}"
-
-    def update_location(self, replace=False, preserve_mapbox_id=False):
-        data = self.reverse_geocode()
-        if data and data != "No results found.":
-            previous_mapbox_id = self.mapbox_id
-            if not (preserve_mapbox_id and previous_mapbox_id):
-                self.mapbox_id = data['id']
-            country = None
-            if not self.formatted_address or replace:
-                self.formatted_address = data['place_name']
-            if 'context' in data:
-                country = Country.objects.filter(alpha2_code__iexact=data['context'][-1]['short_code']).first()
-            elif 'short_code' in data['properties']:
-                country = Country.objects.filter(alpha2_code__iexact=data['properties']['short_code']).first()
-            if country:
-                self.country = country
-            else:
-                raise ValueError(f"Country not found for {data['context'][-1]['short_code']}")
-            if data['place_type'][0] == 'address':
-                if not self.street or replace:
-                    self.street = data['text']
-                if not self.street_number or replace:
-                    self.street_number = getattr(data, 'address', '')
-
-            if 'context' in data:
-                for context_item in data['context']:
-                    if 'place' in context_item['id']:
-                        if not self.locality or replace:
-                            self.locality = context_item['text']
-                    elif 'postcode' in context_item['id']:
-                        if not self.postal_code or replace:
-                            self.postal_code = context_item['text']
-                    elif 'region' in context_item['id']:
-                        if not self.province or replace:
-                            self.province = context_item['text']
-
-    def update_location_from_mapbox_id(self, replace=False):
-        """
-        Update fields based on the selected feature id (not lat/lng reverse lookup),
-        so selecting a country/region doesn't accidentally resolve to a postcode/address.
-        """
-        data = self.geocode_by_id(self.mapbox_id)
-        if data and data != "No results found.":
-            if not self.formatted_address or replace:
-                self.formatted_address = data.get('place_name')
-
-            country = None
-            if 'context' in data and data['context']:
-                country = Country.objects.filter(
-                    alpha2_code__iexact=data['context'][-1].get('short_code')
-                ).first()
-            elif (data.get('properties') or {}).get('short_code'):
-                country = Country.objects.filter(
-                    alpha2_code__iexact=data['properties']['short_code']
-                ).first()
-
-            if country:
-                self.country = country
-
-            place_type = (data.get('place_type') or [None])[0]
-            if place_type == 'address':
-                if not self.street or replace:
-                    self.street = data.get('text')
-                if not self.street_number or replace:
-                    # Mapbox returns 'address' as a string field on the feature dict
-                    self.street_number = data.get('address') or self.street_number
-
-            for context_item in data.get('context') or []:
-                context_id = context_item.get('id', '')
-                if 'place' in context_id:
-                    if not self.locality or replace:
-                        self.locality = context_item.get('text')
-                elif 'postcode' in context_id:
-                    if not self.postal_code or replace:
-                        self.postal_code = context_item.get('text')
-                elif 'region' in context_id:
-                    if not self.province or replace:
-                        self.province = context_item.get('text')
+    def geocode_by_id(self, mapbox_id=None):
+        from bluebottle.geo.mapbox import geocode_by_id
+        return geocode_by_id(mapbox_id or self.mapbox_id)
 
     def save(self, *args, **kwargs):
+        from bluebottle.geo.geolocation import prepare_geolocation_for_save, sync_geolocation_after_save
+
         creating = not bool(self.pk)
-        old_mapbox_id = None
-        if self.pk:
-            old_mapbox_id = (
-                Geolocation.objects.filter(pk=self.pk).values_list('mapbox_id', flat=True).first()
-            )
-
-        if settings.MAPBOX_API_KEY and self.mapbox_id:
-            from bluebottle.geo.utils import normalize_mapbox_id
-
-            self.mapbox_id = normalize_mapbox_id(
-                mapbox_id=self.mapbox_id,
-                street=self.street,
-                street_number=self.street_number,
-                formatted_address=self.formatted_address,
-                locality=self.locality,
-                province=self.province,
-                country_name=self.country.name if self.country_id else None,
-                position=(self.position.x, self.position.y) if self.position else None,
-            )
-
+        old_mapbox_id = prepare_geolocation_for_save(self)
         result = super().save(*args, **kwargs)
-
-        if settings.MAPBOX_API_KEY and self.mapbox_id:
-            if creating or old_mapbox_id != self.mapbox_id or not self.features.exists():
-                from bluebottle.geo.utils import collect_geo_features
-                self.features.clear()
-                collect_geo_features(self)
-
+        sync_geolocation_after_save(self, creating=creating, old_mapbox_id=old_mapbox_id)
         return result

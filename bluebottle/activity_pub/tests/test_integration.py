@@ -319,18 +319,17 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(Geolocation, 'update_location'):
-                    self.adopted = adapter.adopt(self.event, request)
-                    self.assertEqual(self.adopted.title, self.model.title)
-                    self.assertEqual(self.adopted.origin, self.event)
-                    self.assertEqual(self.adopted.image.origin, self.event.image)
+                self.adopted = adapter.adopt(self.event, request)
+                self.assertEqual(self.adopted.title, self.model.title)
+                self.assertEqual(self.adopted.origin, self.event)
+                self.assertEqual(self.adopted.image.origin, self.event.image)
 
-                    self.complete()
-                    self.adopted.states.submit(save=True)
+                self.complete()
+                self.adopted.states.submit(save=True)
 
-                    self.approve(self.adopted)
-                    accept = Accept.objects.last()
-                    self.assertTrue(accept)
+                self.approve(self.adopted)
+                accept = Accept.objects.last()
+                self.assertTrue(accept)
 
         accept = Accept.objects.first()
         self.assertTrue(accept)
@@ -351,9 +350,8 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(Geolocation, 'update_location'):
-                    self.adopted = adapter.adopt(self.event, request)
-                    self.assertEqual(self.adopted.owner, follow.default_owner)
+                self.adopted = adapter.adopt(self.event, request)
+                self.assertEqual(self.adopted.owner, follow.default_owner)
 
 
 class LinkTestCase(ActivityPubTestCase):

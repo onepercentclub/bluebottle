@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Optional, Tuple
 
 from django.conf import settings
+from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.db.models import Q
 
@@ -24,6 +25,23 @@ def _haversine_km(*, lon1: float, lat1: float, lon2: float, lat2: float) -> floa
     )
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return r * c
+
+
+def _position_is_null_island(position) -> bool:
+    if not position:
+        return False
+    try:
+        return float(position.x) == 0.0 and float(position.y) == 0.0
+    except (TypeError, ValueError, AttributeError):
+        return False
+
+
+def clear_null_island_positions():
+    """
+    Unset (0, 0) positions — a common placeholder that reverse-geocodes to the same
+    point and causes unrelated geolocations to share a mapbox_id and get merged.
+    """
+    return Geolocation.objects.filter(position=Point(0, 0)).update(position=None)
 
 
 def _coords_from_mapbox_feature_dict(feature) -> Optional[Tuple[float, float]]:
@@ -323,6 +341,10 @@ def run(*args):
             n_deleted = delete_unreferenced_geolocations()
             print(f'{tenant.schema_name}: deleted {n_deleted} unreferenced rows')
 
+            print(f'{tenant.schema_name}: clear (0, 0) positions…')
+            n_cleared = clear_null_island_positions()
+            print(f'{tenant.schema_name}: cleared position on {n_cleared} rows')
+
             print(f'{tenant.schema_name}: merge duplicate geolocations…')
             n_merged = merge_duplicate_geolocations()
             print(f'{tenant.schema_name}: merged {n_merged} duplicate source rows')
@@ -338,6 +360,9 @@ def run(*args):
             resolved_coords_cache = {}
 
             for n, location in enumerate(qs.iterator(), start=1):
+                if _position_is_null_island(location.position):
+                    location.position = None
+
                 # If the stored mapbox_id resolves far away from the known position, prefer a fresh
                 # reverse-geocode from the position to re-collect higher-quality geo features.
                 if (

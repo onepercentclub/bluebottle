@@ -644,8 +644,10 @@ a.button, a.button:hover {
     color: #aaa;
 }
 
-#homepage_form label[for=id_content] {
-    display: none
+#homepage_form label[for=id_content],
+#page_form label[for=id_body],
+#platformpage_form label[for=id_body] {
+    display: none;
 }
 
 .js-inline-admin-formset {
@@ -654,4 +656,8 @@ a.button, a.button:hover {
 
 .js-inline-admin-formset .inline-related {
     margin: 16px 0;
+}
+
+.form-row.categories select {
+    height: 300px;
 }

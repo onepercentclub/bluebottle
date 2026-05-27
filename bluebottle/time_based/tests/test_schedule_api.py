@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from io import BytesIO
 
 from django.urls import reverse
+from django.utils.timezone import now
 from openpyxl import load_workbook
 from rest_framework import status
 
@@ -379,6 +380,25 @@ class ScheduleActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
         'deadline': date.today() + timedelta(days=20),
     }
 
+    def test_get(self):
+        for participant in self.participants:
+            participant.slot.start = now() + timedelta(days=10)
+            participant.slot.save()
+
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        self.assertEqual(len(workbook.worksheets), 1)
+
+        sheet = workbook.get_active_sheet()
+
+        self.assertEqual(
+            tuple(sheet.values)[0],
+            ('Email', 'Name', 'Start', 'Registration Date', 'Status', 'Registration answer', )
+        )
+
 
 class TeamScheduleActivityExportTestCase(
     TimeBasedActivityAPIExportTestCase, APITestCase
@@ -394,6 +414,11 @@ class TeamScheduleActivityExportTestCase(
     }
 
     def test_get(self):
+        for team in self.participants:
+            slot = team.slots.first()
+            slot.start = now() + timedelta(days=10)
+            slot.save()
+
         self.perform_get(user=self.activity.owner)
 
         self.assertStatus(status.HTTP_200_OK)
@@ -411,6 +436,7 @@ class TeamScheduleActivityExportTestCase(
                 "Captain email",
                 "Captain name",
                 "Registration Date",
+                "Start",
                 "Status",
                 "Registration answer",
             ),
@@ -423,6 +449,7 @@ class TeamScheduleActivityExportTestCase(
                     "Email",
                     "Name",
                     "Registration Date",
+                    "Start",
                     "Status",
                     "Is captain",
                 ),

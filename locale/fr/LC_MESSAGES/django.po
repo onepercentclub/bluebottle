@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-22 09:29+0200\n"
-"PO-Revision-Date: 2026-05-22 07:31\n"
+"POT-Creation-Date: 2026-05-27 12:07+0200\n"
+"PO-Revision-Date: 2026-05-27 10:13\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -353,21 +353,20 @@ msgid "View application"
 msgstr "Voir la demande"
 
 #: bluebottle/activities/messages/activity_manager.py:41
-#: bluebottle/activities/messages/base.py:25
-#: bluebottle/activities/templates/mails/messages/activity_manager/activity_message_to_manager.html:23
-#: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
-#: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
-#: bluebottle/time_based/messages.py:85 bluebottle/time_based/messages.py:128
-#: bluebottle/time_based/messages.py:167 bluebottle/time_based/messages.py:206
-#: bluebottle/time_based/messages.py:229 bluebottle/time_based/messages.py:268
-#: bluebottle/time_based/messages.py:302 bluebottle/time_based/messages.py:325
-#: bluebottle/time_based/messages.py:348 bluebottle/time_based/messages.py:373
-#: bluebottle/time_based/messages.py:398 bluebottle/time_based/messages.py:470
-#: bluebottle/time_based/messages.py:504 bluebottle/time_based/messages.py:527
-#: bluebottle/time_based/messages.py:550 bluebottle/time_based/messages.py:572
-#: bluebottle/time_based/messages.py:594 bluebottle/time_based/messages.py:617
-#: bluebottle/time_based/messages.py:638 bluebottle/time_based/messages.py:709
-#: bluebottle/time_based/messages.py:730 bluebottle/time_based/messages.py:839
+#: bluebottle/activities/messages/base.py:25 bluebottle/collect/messages.py:33
+#: bluebottle/collect/messages.py:77 bluebottle/deeds/messages.py:34
+#: bluebottle/deeds/messages.py:78 bluebottle/time_based/messages.py:85
+#: bluebottle/time_based/messages.py:128 bluebottle/time_based/messages.py:167
+#: bluebottle/time_based/messages.py:206 bluebottle/time_based/messages.py:229
+#: bluebottle/time_based/messages.py:268 bluebottle/time_based/messages.py:302
+#: bluebottle/time_based/messages.py:325 bluebottle/time_based/messages.py:348
+#: bluebottle/time_based/messages.py:373 bluebottle/time_based/messages.py:398
+#: bluebottle/time_based/messages.py:470 bluebottle/time_based/messages.py:504
+#: bluebottle/time_based/messages.py:527 bluebottle/time_based/messages.py:550
+#: bluebottle/time_based/messages.py:572 bluebottle/time_based/messages.py:594
+#: bluebottle/time_based/messages.py:617 bluebottle/time_based/messages.py:638
+#: bluebottle/time_based/messages.py:709 bluebottle/time_based/messages.py:730
+#: bluebottle/time_based/messages.py:839
 #: bluebottle/time_based/messages/messages.py:88
 #: bluebottle/time_based/messages/messages.py:131
 #: bluebottle/time_based/messages/messages.py:170
@@ -1483,13 +1482,12 @@ msgid "\n"
 "        %(message_text)s\n"
 "        <br/>\n"
 "        <br/>\n"
-"        Reply to this message to reply to %(sender_name)s\n"
 "    "
 msgstr "\n"
 "        Bonjour %(recipient_name)s,\n"
 "        <br/>\n"
 "        <br/>\n"
-"        %(sender_name)s vous a envoyé un message concernant votre activité « %(title)s ».\n"
+"        %(sender_name)s vous a envoyé un message concernant votre activité « %(title)s ». \n"
 "        <br/>\n"
 "        <br/>\n"
 "        <b>Le message</b>\n"
@@ -1497,8 +1495,17 @@ msgstr "\n"
 "        %(message_text)s\n"
 "        <br/>\n"
 "        <br/>\n"
-"        Répondez à ce message pour répondre à %(sender_name)s\n"
 "    "
+
+#: bluebottle/activities/templates/mails/messages/activity_manager/activity_message_to_manager.html:19
+#, python-format
+msgctxt "platform-email"
+msgid "\n"
+"            Reply to this message to respond to %(sender_name)s\n"
+"        "
+msgstr "\n"
+"            Répondez à ce message pour répondre à %(sender_name)s\n"
+"        "
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_needs_work.html:5
 #, python-format
@@ -8679,7 +8686,7 @@ msgstr "Seules les données des derniers mois {months} sont affichées."
 
 #: bluebottle/members/admin.py:748
 msgid "Fill in either 'Work location groups managed' or 'Work locations managed', not both."
-msgstr "Remplissez soit 'Groupes de lieux de travail gérés' soit 'Lieux de travail gérés', pas les deux."
+msgstr "Remplissez soit \"Groupes de lieux de travail gérés\" soit \"Lieux de travail gérés\", pas les deux."
 
 #: bluebottle/members/admin.py:754
 msgid "Hours spent this year"
@@ -9162,7 +9169,7 @@ msgstr "Groupes de lieu de travail gérés"
 
 #: bluebottle/members/models.py:418
 msgid "Filter this user's view to one or more location groups. Leave empty to show data from all locations."
-msgstr "Filtrer la vue de cet utilisateur à un ou plusieurs groupes de lieux. Laissez vide pour montrer les données de tous les lieux."
+msgstr "Filtrer la vue de cet utilisateur pour un ou plusieurs groupes de lieux. Laissez vide pour afficher les données de tous les lieux."
 
 #: bluebottle/members/models.py:425
 msgid "Work locations managed"
@@ -9170,7 +9177,7 @@ msgstr "Lieux de travail gérés"
 
 #: bluebottle/members/models.py:427
 msgid "Filter this user's view to specific work locations. Leave empty to show data from all locations."
-msgstr "Filtrer la vue de cet utilisateur à des lieux de travail spécifiques. Laissez vide pour montrer les données de tous les lieux."
+msgstr "Filtrer la vue de cet utilisateur pour des lieux de travail spécifiques. Laissez vide pour afficher les données de tous les lieux."
 
 #: bluebottle/members/models.py:434
 msgid "Segments managed"

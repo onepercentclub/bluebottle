@@ -52,7 +52,7 @@ class PublishAdoptionEffect(Effect):
             event = self.instance.event
 
         actor = get_platform_actor()
-        Accept.objects.create(actor=actor, object=event)
+        Accept.objects.get_or_create(actor=actor, object=event)
 
     @property
     def is_valid(self):

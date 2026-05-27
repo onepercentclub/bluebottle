@@ -1568,6 +1568,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             office_location=LocationFactory.create(country=other_country),
             status='open',
         )
+        DeadlineActivityFactory.create_batch(
+            3,
+            location=GeolocationFactory.create(country=None),
+            status='open',
+        )
 
         self.search({'country': matching_country.pk})
 

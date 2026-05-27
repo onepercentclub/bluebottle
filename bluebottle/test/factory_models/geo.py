@@ -71,6 +71,6 @@ class GeolocationFactory(factory.DjangoModelFactory):
     mapbox_id = 'some-mapbox-id'
     formatted_address = factory.LazyAttribute(
         lambda o: '{} {} {} {}'.format(
-            o.street, o.street_number, o.locality, o.country.name
+            o.street, o.street_number, o.locality, o.country.name if o.country else ''
         )
     )

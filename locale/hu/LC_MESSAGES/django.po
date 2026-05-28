@@ -1504,7 +1504,7 @@ msgid "\n"
 "            Reply to this message to respond to %(sender_name)s\n"
 "        "
 msgstr "\n"
-"            Válaszolj erre az üzenetre, hogy reagálj %.sender_name)s-re.\n"
+"            Válaszolj erre az üzenetre, hogy reagálj %(sender_name)s-re.\n"
 "        "
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_needs_work.html:5
@@ -14543,4 +14543,3 @@ msgstr[1] "Másodpercek"
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr "Holland"
-

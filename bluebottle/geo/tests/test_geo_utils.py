@@ -1,6 +1,5 @@
 from django.test import TestCase
 
-from bluebottle.geo.models import Country
 from bluebottle.geo.utils import (
     resolve_country_from_code,
     resolve_country_from_mapbox_context,

@@ -15,6 +15,10 @@ V6_FORWARD_URL = 'https://api.mapbox.com/search/geocode/v6/forward'
 
 
 def haversine_km(*, lon1: float, lat1: float, lon2: float, lat2: float) -> float:
+    """Great-circle distance in km between two lon/lat points.
+
+    Used by resolve_mapbox_mismatch and scripts/check_geolocation_mapbox_position.py.
+    """
     r = 6371.0088
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
@@ -28,6 +32,7 @@ def haversine_km(*, lon1: float, lat1: float, lon2: float, lat2: float) -> float
 
 
 def coords_from_feature(feature: Any) -> Optional[Tuple[float, float]]:
+    """Extract (lon, lat) from a Mapbox feature geometry.coordinates or center."""
     if not isinstance(feature, dict):
         return None
     geometry = feature.get('geometry') or {}
@@ -47,10 +52,12 @@ def coords_from_feature(feature: Any) -> Optional[Tuple[float, float]]:
 
 
 def is_modern_mapbox_id(value: str) -> bool:
+    """Return True for permanent v6-style ids (dXJu… or urn:), as opposed to legacy v5 ids."""
     return value.startswith('dXJu') or value.startswith('urn:')
 
 
 def mapbox_id_from_feature(feature: dict) -> Optional[str]:
+    """Read the canonical mapbox id from a feature id or properties.mapbox_id."""
     if not isinstance(feature, dict):
         return None
     props = feature.get('properties') or {}
@@ -58,6 +65,7 @@ def mapbox_id_from_feature(feature: dict) -> Optional[str]:
 
 
 def feature_type_from_feature(feature: dict) -> Optional[str]:
+    """Read place type (address, place, etc.) from feature properties or place_type."""
     if not isinstance(feature, dict):
         return None
     props = feature.get('properties') or {}
@@ -66,6 +74,10 @@ def feature_type_from_feature(feature: dict) -> Optional[str]:
 
 
 def pick_preferred_reverse_geocode_feature(features):
+    """Pick the best reverse-geocode result; prefer parent place when address accuracy is low.
+
+    Used by reverse_geocode_position before returning a v5 Places API feature.
+    """
     if not features:
         return None
     first = features[0]
@@ -86,7 +98,10 @@ def pick_preferred_reverse_geocode_feature(features):
 
 
 def reverse_geocode_position(position) -> Optional[dict]:
-    """Reverse-geocode a GIS point via Mapbox v5 Places API."""
+    """Reverse-geocode a GIS point via Mapbox v5 Places API.
+
+    Called from Geolocation.reverse_geocode and resolve_mapbox_mismatch.
+    """
     access_token = settings.MAPBOX_API_KEY
     if not access_token or not position:
         return None
@@ -105,7 +120,10 @@ def reverse_geocode_position(position) -> Optional[dict]:
 
 
 def geocode_by_id(mapbox_id: str) -> Optional[dict]:
-    """Look up a feature by permanent mapbox id via Mapbox v5 Places API."""
+    """Look up a feature by permanent mapbox id via Mapbox v5 Places API.
+
+    Called from Geolocation.geocode_by_id and resolve_mapbox_id_coords.
+    """
     access_token = settings.MAPBOX_API_KEY
     if not access_token or not mapbox_id:
         return None
@@ -128,6 +146,10 @@ def v6_forward_first_feature(
     languages: Optional[str] = None,
     permanent: bool = True,
 ) -> Optional[dict]:
+    """Mapbox v6 forward geocode returning the top feature, or None.
+
+    Used by geolocation mismatch resolution, id normalization, and collect_geo_features.
+    """
     if not (q or '').strip():
         return None
 
@@ -156,8 +178,9 @@ def v6_forward_first_feature(
 
 
 def resolve_mapbox_id_coords(mapbox_id: str) -> Optional[Tuple[float, float]]:
-    """
-    Resolve coordinates for a stored mapbox id (v5 id lookup, then v6 forward).
+    """Resolve coordinates for a stored mapbox id (v5 id lookup, then v6 forward).
+
+    Used by resolve_mapbox_mismatch and check_geolocation_mapbox_position.py.
     """
     if not mapbox_id:
         return None

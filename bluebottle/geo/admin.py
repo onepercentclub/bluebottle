@@ -170,7 +170,7 @@ class PlaceInline(admin.ModelAdmin):
 
 @admin.register(GeoFeature)
 class GeoFeatureAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
-    list_display = ('name', 'place_type', 'code')
+    list_display = ('id', 'name', 'place_type', 'code')
     list_filter = ('place_type',)
     search_fields = (
         'translations__name',
@@ -180,36 +180,33 @@ class GeoFeatureAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     )
     fields = ('name', 'place_name', 'place_type', 'mapbox_id', 'code')
 
+    ordering = ["-id"]
+
 
 class GeoFeatureInline(admin.TabularInline):
+    """Read-only GeoFeature columns on the Geolocation ↔ GeoFeature M2M through table."""
     model = Geolocation.features.through
     extra = 0
     can_delete = False
     verbose_name = _('Geo-feature')
     verbose_name_plural = _('Geo-features')
+    readonly_fields = ('place_type', 'code', 'name', 'place_name')
+    fields = readonly_fields
 
-    @admin.display(description=_('Level'))
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('geofeature')
+
     def place_type(self, obj):
         return obj.geofeature.place_type
 
-    @admin.display(description=_('Mapbox id'))
-    def mapbox_id(self, obj):
-        return obj.geofeature.mapbox_id
-
-    @admin.display(description=_('Code'))
     def code(self, obj):
         return obj.geofeature.code
 
-    @admin.display(description=_('Name'))
     def name(self, obj):
         return obj.geofeature.name
 
-    @admin.display(description=_('Title'))
-    def title(self, obj):
+    def place_name(self, obj):
         return obj.geofeature.place_name
-
-    readonly_fields = ('place_type', 'code', 'name', 'title')
-    fields = readonly_fields
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -221,27 +218,18 @@ class GeoFeatureInline(admin.TabularInline):
         return False
 
 
-class GeolocationAdminForm(forms.ModelForm):
-    class Meta(object):
-        model = Geolocation
-        fields = '__all__'
-        widgets = {
-            'mapbox_id': forms.HiddenInput()
-        }
-
 
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
     class Media(object):
         js = ('geo/js/geolocation_admin_mapbox.js',)
 
-    form = GeolocationAdminForm
 
     formfield_overrides = {
         PointField: {"widget": CustomMapboxPointFieldWidget},
     }
 
-    list_display = ('geolocation_label', 'street', 'locality', 'country')
+    list_display = ('geolocation_label', 'street', 'locality', 'country', 'mapbox_id')
 
     @admin.display(description=_('Geolocation'))
     def geolocation_label(self, obj):
@@ -249,7 +237,7 @@ class GeolocationAdmin(admin.ModelAdmin):
 
     list_filter = ('country', )
     readonly_fields = ('place_name', 'latlong', 'relations')
-    search_fields = ('locality', 'street', 'formatted_address', 'mapbox_id')
+    search_fields = ('locality', 'street', 'formatted_address')
 
     inlines = [GeoFeatureInline]
 

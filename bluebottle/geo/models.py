@@ -20,6 +20,7 @@ from timezonefinder import TimezoneFinder
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
+from ..utils.managers import SortableTranslatableManager, SortableTranslatableQuerySet
 from ..utils.models import SortableTranslatableModel
 
 tf = TimezoneFinder()
@@ -280,7 +281,7 @@ PLACE_TYPE_ORDER = [
 ]
 
 
-class GeoFeatureQueryset(models.QuerySet):
+class GeoFeatureQueryset(SortableTranslatableQuerySet):
     def order_by_type(self):
         order = PLACE_TYPE_ORDER[::-1]
         ordering = Case(
@@ -295,16 +296,20 @@ class GeoFeatureQueryset(models.QuerySet):
         return self.annotate(custom_order=ordering).order_by('custom_order')
 
 
+class GeoFeatureManager(SortableTranslatableManager):
+    queryset_class = GeoFeatureQueryset
+
+
 class GeoFeature(SortableTranslatableModel):
     translations = TranslatedFields(
         name=models.CharField(_("Name"), max_length=512),
         place_name=models.CharField(_("Place name"), null=True, blank=True, max_length=5000)
     )
     place_type = models.CharField(_('Place type'), choices=LevelChoices)
-    code = models.CharField(_('Code'), max_length=10, null=True)
+    code = models.CharField(_('Code'), max_length=10, null=True, blank=True)
     mapbox_id = models.CharField(max_length=500, null=True)
 
-    objects = GeoFeatureQueryset.as_manager()
+    objects = GeoFeatureManager()
 
     class Meta(GeoBaseModel.Meta):
         verbose_name = _('Geo feature')
@@ -348,10 +353,12 @@ class Geolocation(models.Model):
     class JSONAPIMeta(object):
         resource_name = 'geolocations'
 
-    def __str__(self):
-        if self.features.count():
-            return self.features.order_by_type().first().place_name
-        return self.formatted_address or '-unknown-'
+    # def __str__(self):
+    #     if self.features.count():
+    #         feature = self.features.all().order_by_type().first()
+    #         if feature and feature.place_name:
+    #             return feature.place_name
+    #     return self.formatted_address or '-unknown-'
 
     @property
     def timezone(self):

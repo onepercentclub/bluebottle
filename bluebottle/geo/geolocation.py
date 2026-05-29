@@ -39,6 +39,7 @@ def extract_house_number_from_address_fields(
     street: Optional[str] = None,
     formatted_address: Optional[str] = None,
 ) -> Optional[str]:
+    """Extract a house number from address fields for legacy v5 address.* id normalization."""
     if street_number:
         candidate = str(street_number).strip()
         if re.match(r'^\d+[A-Za-z]?$', candidate):
@@ -62,6 +63,7 @@ def extract_house_number_from_address_fields(
 
 
 def _normalize_country_alpha2(code):
+    """Normalize Mapbox country codes (e.g. NL-ZH → NL) to a two-letter alpha-2 code."""
     if not code:
         return None
     code = str(code).strip()
@@ -73,6 +75,7 @@ def _normalize_country_alpha2(code):
 
 
 def resolve_country_from_code(code):
+    """Look up a Country row by alpha-2 code when syncing geolocation.country from Mapbox."""
     alpha2 = _normalize_country_alpha2(code)
     if not alpha2:
         return None
@@ -80,6 +83,7 @@ def resolve_country_from_code(code):
 
 
 def resolve_country_from_mapbox_context(context):
+    """Resolve Country from a Mapbox v5 context list or v6 context dict."""
     if not context:
         return None
 
@@ -99,6 +103,7 @@ def resolve_country_from_mapbox_context(context):
 
 
 def resolve_country_from_mapbox_feature(feature):
+    """Resolve Country from a Mapbox geocode feature (country type or nested context)."""
     if not feature:
         return None
 
@@ -119,7 +124,10 @@ def resolve_country_from_mapbox_feature(feature):
 
 
 def sync_geolocation_country(geolocation, *, context=None, mapbox_feature=None):
-    """Set geolocation.country from Mapbox context/feature or linked country GeoFeature."""
+    """Set geolocation.country from Mapbox context/feature or a linked country GeoFeature.
+
+    Called from collect_geo_features and sync_geolocation_after_save when country is missing.
+    """
     country = None
     if mapbox_feature:
         country = resolve_country_from_mapbox_feature(mapbox_feature)
@@ -157,6 +165,8 @@ def normalize_mapbox_id(
 ) -> Optional[str]:
     """
     Normalize legacy v5-style ids (``place.123``, ``address.456``) to modern v6 ids.
+
+    Called from prepare_geolocation_for_save before each Geolocation.save().
     Returns the new id, or the original when it cannot be resolved.
     """
     if not mapbox_id:
@@ -169,6 +179,7 @@ def normalize_mapbox_id(
     current = str(mapbox_id).strip()
 
     def v6_forward(params):
+        """Single-result Mapbox v6 forward geocode used during legacy id normalization."""
         response = requests.get(
             'https://api.mapbox.com/search/geocode/v6/forward',
             params={**params, 'access_token': token, 'limit': 1},
@@ -242,7 +253,10 @@ def normalize_mapbox_id(
 
 
 def prepare_geolocation_for_save(geolocation) -> Optional[str]:
-    """Normalize mapbox_id before persisting. Returns previous mapbox_id when updating."""
+    """Normalize mapbox_id before persisting.
+
+    Hooked from Geolocation.save(); returns the previous mapbox_id when updating.
+    """
     old_mapbox_id = None
     if geolocation.pk:
         old_mapbox_id = (
@@ -267,7 +281,10 @@ def prepare_geolocation_for_save(geolocation) -> Optional[str]:
 
 
 def sync_geolocation_after_save(geolocation, *, creating: bool, old_mapbox_id=None):
-    """Collect GeoFeatures and country after the row has been saved."""
+    """Collect GeoFeatures and country after the row has been saved.
+
+    Hooked from Geolocation.save(); clears and rebuilds features when mapbox_id changes.
+    """
     if not (settings.MAPBOX_API_KEY and geolocation.mapbox_id):
         return
 
@@ -286,6 +303,7 @@ def sync_geolocation_after_save(geolocation, *, creating: bool, old_mapbox_id=No
 
 
 def position_is_null_island(position) -> bool:
+    """Return True when position is (0, 0), a common placeholder cleared by get_geofeatures."""
     if not position:
         return False
     try:
@@ -301,6 +319,8 @@ def try_resolve_mismatch_via_formatted_address(
 ) -> Optional[str]:
     """
     Re-resolve mapbox_id from formatted_address when it disagrees with position.
+
+    First step inside resolve_mapbox_mismatch; returns a new id when within max_dist_km.
     """
     addr = (geolocation.formatted_address or '').strip()
     if not addr or not geolocation.position:
@@ -346,7 +366,7 @@ def resolve_mapbox_mismatch(
     """
     When mapbox_id coords disagree with position, try formatted-address then reverse geocode.
 
-    Returns (method, new_mapbox_id, distance_km) or None.
+    Called from scripts/get_geofeatures.py; returns (method, new_mapbox_id, distance_km) or None.
     """
     if not (geolocation.position and geolocation.mapbox_id):
         return None
@@ -410,6 +430,10 @@ def clear_null_island_positions():
 
 
 def backfill_street_number_for_legacy_address_mapbox_ids():
+    """Bulk-set street_number on rows with legacy address.* mapbox ids.
+
+    Run by scripts/get_geofeatures.py before normalizing ids.
+    """
     qs = Geolocation.objects.filter(mapbox_id__startswith='address.').filter(
         Q(street_number__isnull=True) | Q(street_number=''),
     )
@@ -436,6 +460,10 @@ def backfill_street_number_for_legacy_address_mapbox_ids():
 
 
 def delete_unreferenced_geolocations():
+    """Delete Geolocation rows with no reverse FK references anywhere in the schema.
+
+    Run by scripts/get_geofeatures.py to remove orphaned rows before bulk save.
+    """
     referenced = set()
     for rel in Geolocation._meta.related_objects:
         if not rel.one_to_many:
@@ -467,6 +495,7 @@ def delete_unreferenced_geolocations():
 
 
 def _cluster_key(row):
+    """Grouping key for duplicate geolocation detection (mapbox_id + street_number for addresses)."""
     mapbox_id = (row.get('mapbox_id') or '').strip()
     if not mapbox_id:
         return None
@@ -478,6 +507,7 @@ def _cluster_key(row):
 
 
 def merge_geolocations_fk_only(source, target):
+    """Merge duplicate geolocations: reassign FKs and M2M features to target, then delete source."""
     source_pk = source.pk
     target_pk = target.pk
     with transaction.atomic():
@@ -494,6 +524,10 @@ def merge_geolocations_fk_only(source, target):
 
 
 def merge_duplicate_geolocations():
+    """Find and merge geolocations sharing the same mapbox_id (and street_number for addresses).
+
+    Called by scripts/get_geofeatures.py before and after bulk save.
+    """
     rows = (
         Geolocation.objects.exclude(
             Q(mapbox_id__isnull=True) | Q(mapbox_id=''),

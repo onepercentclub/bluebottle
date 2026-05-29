@@ -49,16 +49,16 @@ class FundingDocument(ActivityDocument):
                 'id': instance.impact_location.id,
                 'name': instance.impact_location.formatted_address,
                 'locality': instance.impact_location.locality,
-                'country_code': instance.impact_location.country.alpha2_code,
-                'country': instance.impact_location.country.name,
+                'country_code': instance.impact_location.country.alpha2_code if instance.impact_location.country else None,
+                'country': instance.impact_location.country.name if instance.impact_location.country else None,
                 'type': 'location'
             })
         elif instance.initiative and instance.initiative.place:
             if instance.initiative.place.country:
                 locations.append({
                     'locality': instance.initiative.place.locality,
-                    'country_code': instance.initiative.place.country.alpha2_code,
-                    'country': instance.initiative.place.country.name,
+                    'country_code': instance.initiative.place.country.alpha2_code if instance.initiative.place.country else None,
+                    'country': instance.initiative.place.country.name if instance.initiative.place.country else None,
                     'type': 'impact_location'
                 })
             else:

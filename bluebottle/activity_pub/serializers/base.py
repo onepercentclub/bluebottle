@@ -244,6 +244,7 @@ class FederatedObjectBaseSerializer(
             if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data[name]
+                    field.instance = getattr(instance, field.source, None)
                     field.is_valid()
                     validated_data[field.source] = field.save()
 

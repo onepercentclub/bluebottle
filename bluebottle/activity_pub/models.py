@@ -591,6 +591,8 @@ class Recipient(models.Model):
         created = not self.pk
         super().save(*args, **kwargs)
 
+        if isinstance(self.activity, Join):
+            __import__('ipdb').set_trace()
         if created and not self.actor.is_local:
             publish_to_recipient.delay(self, connection.tenant)
 
@@ -815,10 +817,9 @@ class Update(Activity):
         created = not self.pk
         super().save(*args, **kwargs)
         if created and not self.object.is_local:
-            if hasattr(self.object, 'adopted'):
+            if hasattr(self.object, 'adopted') and self.object.adopted:
                 adapter.adopt(self.object)
-            elif hasattr(self.object, 'link'):
-                __import__('ipdb').set_trace()
+            elif hasattr(self.object, 'link') and self.object.link:
                 adapter.link(self.object)
 
     @property
@@ -881,6 +882,7 @@ class Join(Activity):
         except Exception:
             create = self.object.parent.create_set.get()
 
+        __import__('ipdb').set_trace()
         yield create.actor
 
 

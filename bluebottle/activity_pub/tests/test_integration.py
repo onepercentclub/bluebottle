@@ -204,7 +204,9 @@ class ActivityPubTestCase:
         self.test_accept()
         self.create()
         publish = self.model.activity_pub_model.create_set.get()
-        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+
+        with httmock.HTTMock(image_mock):
+            Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
             self.event = Event.objects.get()
@@ -272,7 +274,9 @@ class ActivityPubTestCase:
         self.create()
 
         publish = self.model.activity_pub_model.create_set.first()
-        Recipient.objects.create(actor=self.follow.actor, activity=publish)
+
+        with httmock.HTTMock(image_mock):
+            Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()
@@ -460,7 +464,7 @@ class LinkTestCase(ActivityPubTestCase):
     def test_link_notifies_source_platform(self):
         self.test_link()
 
-        accept = Accept.objects.get(object=self.model.origin)
+        accept = Accept.objects.get(object=self.model.activity_pub_model)
         self.assertEqual(accept.actor, self.follow.actor)
 
     def test_update(self):
@@ -477,7 +481,9 @@ class LinkTestCase(ActivityPubTestCase):
 
     def test_cancel(self):
         self.test_link()
-        self.model.states.cancel(save=True)
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.cancel(save=True)
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
@@ -485,7 +491,8 @@ class LinkTestCase(ActivityPubTestCase):
 
     def test_finish(self):
         self.test_link()
-        self.model.states.succeed(save=True)
+        with httmock.HTTMock(image_mock):
+            self.model.states.succeed(save=True)
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
@@ -542,8 +549,10 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
         super().test_adopt()
 
         with LocalTenant(self.other_tenant):
+            __import__('ipdb').set_trace()
             self.participant = DeedParticipantFactory.create(activity=self.adopted)
 
+        __import__('ipdb').set_trace()
         self.synced_participant = self.model.participants.get()
         self.assertTrue(self.synced_participant.origin)
         self.assertEqual(
@@ -570,15 +579,16 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
             self.model.save()
 
         with LocalTenant(self.other_tenant):
-            print(self.adopted.title)
-            __import__('ipdb').set_trace()
+            self.event.refresh_from_db()
+            self.assertEqual(self.event.name, 'Some new title')
             self.adopted.refresh_from_db()
             self.assertEqual(self.adopted.title, 'Some new title')
 
     def test_succeed(self):
         super().test_adopt()
 
-        self.model.states.succeed(save=True)
+        with httmock.HTTMock(image_mock):
+            self.model.states.succeed(save=True)
 
         with LocalTenant(self.other_tenant):
             self.adopted.refresh_from_db()
@@ -587,7 +597,8 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
     def test_cancel(self):
         super().test_adopt()
 
-        self.model.states.cancel(save=True)
+        with httmock.HTTMock(image_mock):
+            self.model.states.cancel(save=True)
 
         with LocalTenant(self.other_tenant):
             self.adopted.refresh_from_db()
@@ -640,7 +651,7 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             self.create(status='succeeded')
 
             adapter.sync(self.model)
-            publish = self.model.origin.create_set.first()
+            publish = self.model.activity_pub_model.create_set.first()
             Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):

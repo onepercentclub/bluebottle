@@ -68,15 +68,18 @@ class RelatedResourceField(RelatedField):
 
         try:
             return serializer.to_internal_value(data)
-        except ValidationError:
-            instance = ActivityPubModel.objects.from_iri(data['id'])
+        except ValidationError as e:
+            if 'id' in data:
+                instance = ActivityPubModel.objects.from_iri(data['id'])
 
-            if instance:
-                local_data = ActivityPubSerializer(instance=instance).data
-                return serializer.to_internal_value(local_data)
-            elif not is_local(data['id']):
-                fetched_data = client.fetch(data['id'])
-                return serializer.to_internal_value(fetched_data)
+                if instance:
+                    local_data = ActivityPubSerializer(instance=instance).data
+                    return serializer.to_internal_value(local_data)
+                elif not is_local(data['id']):
+                    fetched_data = client.fetch(data['id'])
+                    return serializer.to_internal_value(fetched_data)
+            else:
+                raise e
 
     def get_related_origin(self):
         try:

@@ -53,9 +53,12 @@ class ImageSerializer(FederatedObjectBaseSerializer):
     type = TypeField('Image')
 
     def get_url(self, instance):
-        return connection.tenant.build_absolute_url(
-            reverse('activity-image', args=(instance.activity_set.first().pk, ORIGINAL_SIZE))
-        )
+        if len(instance.activity_set.all()) > 0:
+            return connection.tenant.build_absolute_url(
+                reverse('activity-image', args=(instance.activity_set.first().pk, ORIGINAL_SIZE))
+            )
+        else:
+            __import__('ipdb').set_trace()
 
     def create(self, validated_data):
         if not validated_data:

@@ -183,6 +183,7 @@ class SendJoinEffect(Effect):
     conditions = [activity_is_synced, contributor_is_local]
 
     def post_save(self, **kwargs):
+        __import__('ipdb').set_trace()
         adapter.sync(self.instance)
 
     @property

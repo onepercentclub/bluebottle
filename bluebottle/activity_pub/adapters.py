@@ -48,6 +48,7 @@ class JSONLDAdapter():
 
         serializer = LinkedActivitySerializer(
             data=ActivityPubSerializer(instance=instance).data,
+            instance=instance.link
         )
         serializer.is_valid(raise_exception=True)
         return serializer.save(**kwargs)

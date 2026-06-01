@@ -135,6 +135,7 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
         return result
 
     def update(self, instance, validated_data):
+        id = validated_data.pop('id')
         image_data = validated_data.pop('image', None)
         if image_data:
             image_instance = getattr(instance, 'image', None)

@@ -205,7 +205,7 @@ class TermsOfServiceNotification(OwnerActivityNotification):
             self.obj.organization and self.obj.organization.name or self.obj.owner.full_name
         )
         settings = InitiativePlatformSettings.load()
-        template = settings.terms_of_service_mail_text or settings.terms_of_service
+        template = settings.terms_of_service_mail_text or settings.terms_of_service or "Please contact your platform manager to share the Terms of Service."
         template = template.replace('\n', '<br />')
         context['terms_of_service'] = format_html(template, **context)
         return context

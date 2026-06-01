@@ -236,6 +236,13 @@ class Place(ActivityPubModel):
 
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
 
+    origin = models.OneToOneField(
+        "geo.Geolocation", null=True, on_delete=models.SET_NULL, related_name='activity_pub_model'
+    )
+    adopted = models.OneToOneField(
+        "geo.Geolocation", null=True, on_delete=models.SET_NULL, related_name='origin'
+    )
+
     def __str__(self):
         return self.name or self.id
 
@@ -591,8 +598,6 @@ class Recipient(models.Model):
         created = not self.pk
         super().save(*args, **kwargs)
 
-        if isinstance(self.activity, Join):
-            __import__('ipdb').set_trace()
         if created and not self.actor.is_local:
             publish_to_recipient.delay(self, connection.tenant)
 
@@ -882,7 +887,6 @@ class Join(Activity):
         except Exception:
             create = self.object.parent.create_set.get()
 
-        __import__('ipdb').set_trace()
         yield create.actor
 
 
@@ -925,7 +929,7 @@ class Delete(Transition):
             return True
 
         if self.object.link:
-            self.object.link.states.cancel(save=True)
+            self.object.link.delete()
             return True
 
 

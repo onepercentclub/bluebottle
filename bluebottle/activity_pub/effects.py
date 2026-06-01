@@ -87,14 +87,14 @@ class CancelEffect(Effect):
 
     def post_save(self, **kwargs):
         Cancel.objects.create(
-            object=self.instance.origin
+            object=self.instance.activity_pub_model
         )
 
     @property
     def is_valid(self):
         return (
-            hasattr(self.instance, 'origin') and
-            self.instance.origin.is_local and
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
             get_platform_actor() is not None
         )
 
@@ -107,14 +107,14 @@ class StartEffect(Effect):
 
     def post_save(self, **kwargs):
         Start.objects.create(
-            object=self.instance.origin
+            object=self.instance.activity_pub_model
         )
 
     @property
     def is_valid(self):
         return (
-            hasattr(self.instance, 'origin') and
-            self.instance.origin.is_local and
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
             get_platform_actor() is not None
         )
 
@@ -127,14 +127,14 @@ class FinishEffect(Effect):
 
     def post_save(self, **kwargs):
         Finish.objects.create(
-            object=self.instance.origin
+            object=self.instance.activity_pub_model
         )
 
     @property
     def is_valid(self):
         return (
-            hasattr(self.instance, 'origin') and
-            self.instance.origin.is_local and
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
             get_platform_actor() is not None
         )
 
@@ -147,14 +147,14 @@ class DeletedEffect(Effect):
 
     def post_save(self, **kwargs):
         Delete.objects.create(
-            object=self.instance.origin
+            object=self.instance.activity_pub_model
         )
 
     @property
     def is_valid(self):
         return (
-            hasattr(self.instance, 'origin') and
-            self.instance.origin.is_local and
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
             get_platform_actor() is not None
         )
 
@@ -183,7 +183,6 @@ class SendJoinEffect(Effect):
     conditions = [activity_is_synced, contributor_is_local]
 
     def post_save(self, **kwargs):
-        __import__('ipdb').set_trace()
         adapter.sync(self.instance)
 
     @property

@@ -21,6 +21,9 @@ class FederatedIdField(serializers.CharField):
         super().__init__(source='*')
 
     def to_representation(self, value):
+        if hasattr(value, 'origin') and value.origin:
+            return value.origin.pub_url
+
         if hasattr(value, 'activity_pub_model') and value.activity_pub_model:
             return value.activity_pub_model.pub_url
 

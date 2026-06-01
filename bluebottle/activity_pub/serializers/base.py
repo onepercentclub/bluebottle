@@ -220,7 +220,6 @@ class FederatedObjectBaseSerializer(
                 ):
                     field_data = validated_data[field.source]
                     if is_local(field_data['id']):
-                        __import__('ipdb').set_trace()
                         validated_data[field.source] = ActivityPubModel.objects.from_iri(
                             field_data['id']
                         ).federated_object

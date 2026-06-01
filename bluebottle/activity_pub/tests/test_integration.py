@@ -313,7 +313,7 @@ class TemplateTestCase(ActivityPubTestCase):
             with httmock.HTTMock(image_mock):
 
                 follow = Follow(
-                    adoption_type=AdoptionTypeChoices.template
+                    adoption_type=AdoptionTypeChoices.clone
                 )
                 follow.follow(platform_url)
                 follow.save()
@@ -549,10 +549,8 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
         super().test_adopt()
 
         with LocalTenant(self.other_tenant):
-            __import__('ipdb').set_trace()
             self.participant = DeedParticipantFactory.create(activity=self.adopted)
 
-        __import__('ipdb').set_trace()
         self.synced_participant = self.model.participants.get()
         self.assertTrue(self.synced_participant.origin)
         self.assertEqual(

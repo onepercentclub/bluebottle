@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-22 09:29+0200\n"
-"PO-Revision-Date: 2026-05-22 07:31\n"
+"POT-Creation-Date: 2026-05-27 12:07+0200\n"
+"PO-Revision-Date: 2026-05-27 10:13\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -353,21 +353,20 @@ msgid "View application"
 msgstr "Ver solicitud"
 
 #: bluebottle/activities/messages/activity_manager.py:41
-#: bluebottle/activities/messages/base.py:25
-#: bluebottle/activities/templates/mails/messages/activity_manager/activity_message_to_manager.html:23
-#: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
-#: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
-#: bluebottle/time_based/messages.py:85 bluebottle/time_based/messages.py:128
-#: bluebottle/time_based/messages.py:167 bluebottle/time_based/messages.py:206
-#: bluebottle/time_based/messages.py:229 bluebottle/time_based/messages.py:268
-#: bluebottle/time_based/messages.py:302 bluebottle/time_based/messages.py:325
-#: bluebottle/time_based/messages.py:348 bluebottle/time_based/messages.py:373
-#: bluebottle/time_based/messages.py:398 bluebottle/time_based/messages.py:470
-#: bluebottle/time_based/messages.py:504 bluebottle/time_based/messages.py:527
-#: bluebottle/time_based/messages.py:550 bluebottle/time_based/messages.py:572
-#: bluebottle/time_based/messages.py:594 bluebottle/time_based/messages.py:617
-#: bluebottle/time_based/messages.py:638 bluebottle/time_based/messages.py:709
-#: bluebottle/time_based/messages.py:730 bluebottle/time_based/messages.py:839
+#: bluebottle/activities/messages/base.py:25 bluebottle/collect/messages.py:33
+#: bluebottle/collect/messages.py:77 bluebottle/deeds/messages.py:34
+#: bluebottle/deeds/messages.py:78 bluebottle/time_based/messages.py:85
+#: bluebottle/time_based/messages.py:128 bluebottle/time_based/messages.py:167
+#: bluebottle/time_based/messages.py:206 bluebottle/time_based/messages.py:229
+#: bluebottle/time_based/messages.py:268 bluebottle/time_based/messages.py:302
+#: bluebottle/time_based/messages.py:325 bluebottle/time_based/messages.py:348
+#: bluebottle/time_based/messages.py:373 bluebottle/time_based/messages.py:398
+#: bluebottle/time_based/messages.py:470 bluebottle/time_based/messages.py:504
+#: bluebottle/time_based/messages.py:527 bluebottle/time_based/messages.py:550
+#: bluebottle/time_based/messages.py:572 bluebottle/time_based/messages.py:594
+#: bluebottle/time_based/messages.py:617 bluebottle/time_based/messages.py:638
+#: bluebottle/time_based/messages.py:709 bluebottle/time_based/messages.py:730
+#: bluebottle/time_based/messages.py:839
 #: bluebottle/time_based/messages/messages.py:88
 #: bluebottle/time_based/messages/messages.py:131
 #: bluebottle/time_based/messages/messages.py:170
@@ -1483,7 +1482,6 @@ msgid "\n"
 "        %(message_text)s\n"
 "        <br/>\n"
 "        <br/>\n"
-"        Reply to this message to reply to %(sender_name)s\n"
 "    "
 msgstr "\n"
 "        Hola %(recipient_name)s,\n"
@@ -1497,8 +1495,17 @@ msgstr "\n"
 "        %(message_text)s\n"
 "        <br/>\n"
 "        <br/>\n"
-"        Responde a este mensaje para contestar a %(sender_name)s\n"
 "    "
+
+#: bluebottle/activities/templates/mails/messages/activity_manager/activity_message_to_manager.html:19
+#, python-format
+msgctxt "platform-email"
+msgid "\n"
+"            Reply to this message to respond to %(sender_name)s\n"
+"        "
+msgstr "\n"
+"            Responde a este mensaje para contestar a %(sender_name)s\n"
+"        "
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_needs_work.html:5
 #, python-format
@@ -9165,15 +9172,15 @@ msgstr "Grupos de ubicación de trabajo gestionados"
 
 #: bluebottle/members/models.py:418
 msgid "Filter this user's view to one or more location groups. Leave empty to show data from all locations."
-msgstr "Filtrar la vista de este usuario a uno o más grupos de ubicación. Deja vacío para mostrar datos de todas las ubicaciones."
+msgstr "Filtra la vista de este usuario a uno o más grupos de ubicación. Deja vacío para mostrar datos de todas las ubicaciones."
 
 #: bluebottle/members/models.py:425
 msgid "Work locations managed"
-msgstr "Grupos de ubicación de trabajo gestionados"
+msgstr "Ubicaciones de trabajo gestionadas"
 
 #: bluebottle/members/models.py:427
 msgid "Filter this user's view to specific work locations. Leave empty to show data from all locations."
-msgstr "Filtrar la vista de este usuario a ubicaciones de trabajo específicas. Deja vacío para mostrar datos de todas las ubicaciones."
+msgstr "Filtra la vista de este usuario a ubicaciones de trabajo específicas. Deja vacío para mostrar datos de todas las ubicaciones."
 
 #: bluebottle/members/models.py:434
 msgid "Segments managed"

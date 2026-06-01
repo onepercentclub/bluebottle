@@ -136,6 +136,9 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         id = validated_data.pop('id')
+        print(id)
+        __import__('ipdb').set_trace()
+
         image_data = validated_data.pop('image', None)
         if image_data:
             image_instance = getattr(instance, 'image', None)

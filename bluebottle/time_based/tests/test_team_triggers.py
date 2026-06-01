@@ -119,8 +119,12 @@ class TeamTriggerTestCase(BluebottleTestCase):
 
     def test_reject(self):
         registration = TeamScheduleRegistrationFactory.create()
-        team = registration.team
+        team = TeamFactory.create(
+            activity=registration.activity, user=registration.user
+        )
         registration.states.reject(save=True)
+
+        team.refresh_from_db()
 
         self.assertEqual(team.status, "rejected")
         self.assertEqual(team.registration.status, "rejected")
@@ -128,9 +132,13 @@ class TeamTriggerTestCase(BluebottleTestCase):
 
     def test_reaccept(self):
         registration = TeamScheduleRegistrationFactory.create()
-        team = registration.team
+        team = TeamFactory.create(
+            activity=registration.activity, user=registration.user
+        )
         registration.states.reject(save=True)
         registration.states.accept(save=True)
+
+        team.refresh_from_db()
 
         self.assertEqual(team.status, "accepted")
         self.assertEqual(registration.status, "accepted")
@@ -191,3 +199,97 @@ class TeamMemberTriggerTestCase(BluebottleTestCase):
 
         self.assertEqual(self.team_member.status, "active")
         self.assertEqual(self.team_member.participants.get().status, "accepted")
+
+
+class SecondTeamMemberTriggerTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.captain = BlueBottleUserFactory.create()
+        initiative = InitiativeFactory.create()
+        activity = ScheduleActivityFactory.create(
+            team_activity=True, initiative=initiative
+        )
+        initiative.states.submit()
+        initiative.states.approve(save=True)
+        activity.states.publish(save=True)
+
+        self.team = TeamFactory.create(activity=activity, user=self.captain)
+        self.team_member = TeamMemberFactory.create(team=self.team)
+
+        self.other_team = TeamFactory.create(activity=activity, user=self.captain)
+        self.other_team_member = TeamMemberFactory.create(team=self.other_team)
+
+    def test_initiate(self):
+        self.assertEqual(self.team_member.status, "active")
+        self.assertEqual(self.other_team_member.status, "active")
+
+        self.assertEqual(self.team_member.participants.get().status, "accepted")
+        self.assertEqual(self.other_team_member.participants.get().status, "accepted")
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            "Someone has joined your team on Test",
+        )
+
+        self.assertEqual(
+            mail.outbox[-2].subject,
+            f"You are now part of {self.team.user.full_name}'s team on Test",
+        )
+
+    def test_withdraw(self):
+        self.other_team_member.states.withdraw(save=True)
+
+        self.assertEqual(self.other_team_member.status, "withdrawn")
+        self.assertEqual(self.other_team_member.participants.get().status, "withdrawn")
+
+        self.assertEqual(self.team_member.status, "active")
+        self.assertEqual(self.team_member.participants.get().status, "accepted")
+
+    def test_reapply(self):
+        self.other_team_member.states.withdraw(save=True)
+        self.other_team_member.states.reapply(save=True)
+
+        self.assertEqual(self.other_team_member.status, "active")
+        self.assertEqual(self.other_team_member.participants.get().status, "accepted")
+
+    def test_remove(self):
+        self.other_team_member.states.remove(save=True)
+
+        self.assertEqual(self.other_team_member.status, "removed")
+        self.assertEqual(self.other_team_member.participants.get().status, "removed")
+
+        self.assertEqual(self.team_member.status, "active")
+        self.assertEqual(self.team_member.participants.get().status, "accepted")
+
+    def test_readd(self):
+        self.other_team_member.states.remove(save=True)
+        self.other_team_member.states.readd(save=True)
+
+        self.assertEqual(self.other_team_member.status, "active")
+        self.assertEqual(self.other_team_member.participants.get().status, "accepted")
+
+    def test_reject_registration(self):
+        self.team.registration.states.reject(save=True)
+
+        self.team.refresh_from_db()
+        self.other_team.refresh_from_db()
+        self.team_member.refresh_from_db()
+        self.other_team_member.refresh_from_db()
+
+        self.assertEqual(self.team.status, "rejected")
+        self.assertEqual(self.other_team.status, "rejected")
+        self.assertEqual(self.team_member.status, "rejected")
+        self.assertEqual(self.other_team_member.status, "rejected")
+
+    def test_re_accept_registration(self):
+        self.test_reject_registration()
+        self.team.registration.states.accept(save=True)
+
+        self.team.refresh_from_db()
+        self.other_team.refresh_from_db()
+        self.team_member.refresh_from_db()
+        self.other_team_member.refresh_from_db()
+
+        self.assertEqual(self.team.status, "accepted")
+        self.assertEqual(self.other_team.status, "accepted")
+        self.assertEqual(self.team_member.status, "active")
+        self.assertEqual(self.other_team_member.status, "active")

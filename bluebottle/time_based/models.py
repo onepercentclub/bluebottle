@@ -1,5 +1,6 @@
 import uuid
 from urllib.parse import urlencode
+import datetime
 
 import pytz
 from django.core.validators import MaxValueValidator
@@ -376,7 +377,7 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     def google_calendar_link(self):
         def format_date(date):
             if date:
-                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                return date.astimezone(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 
         details = self.activity.details
         if self.is_online and self.online_meeting_url:
@@ -1572,9 +1573,9 @@ class Team(TriggerMixin, models.Model):
 
     invite_code = models.UUIDField(default=uuid.uuid4)
 
-    registration = models.OneToOneField(
+    registration = models.ForeignKey(
         Registration,
-        related_name='team',
+        related_name='teams',
         on_delete=models.CASCADE,
         blank=True,
         null=True
@@ -1634,7 +1635,9 @@ class Team(TriggerMixin, models.Model):
         return str(self.name)
 
     def delete(self, using=None, keep_parents=False):
-        self.registration.delete()
+        if self.registration.teams.count() == 1:
+            self.registration.delete()
+
         return super().delete(using, keep_parents)
 
     def save(self, *args, **kwargs):
@@ -1916,7 +1919,7 @@ class Slot(models.Model):
     def google_calendar_link(self):
         def format_date(date):
             if date:
-                return date.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+                return date.astimezone(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
         details = self.details
         if self.is_online and self.online_meeting_url:

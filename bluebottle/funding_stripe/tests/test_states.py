@@ -6,11 +6,11 @@ from mock import patch
 
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
 from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
+from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
     StripePaymentFactory, ExternalAccountFactory, StripePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
 
 
 class BaseStripePaymentStateMachineTests(FundingStripeTestCase):
@@ -234,7 +234,7 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
         )
 
     def test_verify(self):
@@ -261,7 +261,7 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
 
         self.assertEqual(self.account.status, "incomplete")
         self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
         )
 
     def test_reject_disable_payments(self):
@@ -276,7 +276,7 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
 
         self.assertEqual(self.account.status, "disabled")
         self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
         )
 
 

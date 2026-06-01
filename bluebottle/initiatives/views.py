@@ -181,7 +181,7 @@ class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIV
     serializer_class = RelatedInitiativeImageSerializer
 
     related_permission_classes = {
-        'content_object': [ResourceOwnerPermission]
+        'content_object': [InitiativeOwnerPermission]
     }
 
     permission_classes = []

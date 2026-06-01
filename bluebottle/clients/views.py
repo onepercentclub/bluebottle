@@ -33,7 +33,7 @@ class SettingsView(views.APIView):
 
         is_jwt_authenticated = (
             request.user.is_authenticated
-            and request.META.get('HTTP_AUTHORIZATION', '').startswith('JWT ')
+            and request.headers.get('authorization', '').startswith('JWT ')
         )
 
         if member_settings['closed'] and not is_jwt_authenticated:

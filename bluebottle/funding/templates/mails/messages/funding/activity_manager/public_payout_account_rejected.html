@@ -4,16 +4,15 @@
 {% block message %}
 <p class="donation-intro">
     {% blocktrans context 'platform-email' %}
-    Identity verification failed for an organization you manage.
-    <br />
-    <br />
-    Earlier, information to verify your identity was submitted, but
-    unfortunately, this was not successful. This could be due to various
-    reasons. Please check the link below and find a link to update your
-    information If you still have problems, contact the platform manager at {{ contact_email }}.
-    <br />
-    <br />
-    Please do this as soon as possible. {% endblocktrans %}
+        We recently tried to verify your organisation, but we didn't succeed. This can happen for a few reasons.
+        <br/>
+        <br/>
+        Please use the link below to review and update your information. If you still run into issues, you can contact
+        the platform manager at %(contact_email)s.
+        <br/>
+        <br/>
+        Please do this as soon as possible.
+    {% endblocktrans %}
 </p>
 {% endblock message %}
 

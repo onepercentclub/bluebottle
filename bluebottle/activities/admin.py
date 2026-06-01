@@ -8,7 +8,8 @@ from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
@@ -462,8 +463,8 @@ class BulkAddMixin(object):
         urls = super(BulkAddMixin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/bulk_add/$',
+            path(
+                '<int:pk>/bulk_add/',
                 self.admin_site.admin_view(self.bulk_add_participants),
                 name='{}_{}_bulk_add'.format(
                     self.model._meta.app_label,
@@ -932,16 +933,16 @@ class ActivityChildAdmin(
         urls = super(ActivityChildAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/send-impact-reminder-message$',
+            path(
+                '<int:pk>/send-impact-reminder-message',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
                     self.model._meta.app_label,
                     self.model._meta.model_name
                 ),
             ),
-            re_path(
-                r'^(?P<pk>\d+)/share_activity$',
+            path(
+                '<int:pk>/share_activity',
                 self.admin_site.admin_view(self.share_activity),
                 name='{}_{}_share_activity'.format(
                     self.model._meta.app_label,
@@ -1047,8 +1048,7 @@ class ActivityAdmin(
             filters = filters + ['team_activity']
         return filters
 
-    list_display = ['__str__', 'created', 'type', 'state_name',
-                    'link', 'highlight']
+    list_display = ['__str__', 'created', 'type', 'state_name', 'highlight']
 
     def location_link(self, obj):
         if not obj.office_location:

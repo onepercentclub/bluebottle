@@ -545,7 +545,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(sheet['B1'].value, 'Name')
         self.assertEqual(sheet['C1'].value, 'Date')
         self.assertEqual(sheet['D1'].value, 'Amount')
-        self.assertEqual(sheet['D2'].value, '35.00 €')
+        self.assertEqual(sheet['D2'].value, '€35.00')
         self.assertEqual(sheet['D3'].value, None)
 
         wrong_signature_response = self.client.get(export_url + '111')
@@ -570,7 +570,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(sheet['B1'].value, 'Name')
         self.assertEqual(sheet['C1'].value, 'Date')
         self.assertEqual(sheet['D1'].value, 'Amount')
-        self.assertEqual(sheet['D2'].value, '35.00 €')
+        self.assertEqual(sheet['D2'].value, '€35.00')
         self.assertEqual(sheet['D3'].value, None)
 
         wrong_signature_response = self.client.get(export_url + '111')
@@ -1514,7 +1514,6 @@ class PayoutDetailTestCase(BluebottleTestCase):
             donation = DonorFactory.create(
                 amount=Money(200, 'EUR'),
                 activity=self.funding, status='succeeded',
-                payment=PledgePaymentFactory.create()
             )
             PledgePaymentFactory.create(donation=donation)
 
@@ -1914,17 +1913,15 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
     def test_anonymous_donations_setting(self):
         funding_settings = FundingPlatformSettings.load()
         funding_settings.anonymous_donations = True
-        funding_settings.allow_anonymous_rewards = True
         funding_settings.matching_name = "Dagobert Duck"
         funding_settings.save()
         response = self.client.get('/api/config', user=self.user)
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
-        self.assertEquals(
+        self.assertEqual(
             data["platform"]["funding"],
             {
-                "allow_anonymous_rewards": True,
                 "anonymous_donations": True,
                 "business_types": ["individual"],
                 "enable_iban_check": False,

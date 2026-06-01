@@ -141,10 +141,6 @@ class DonorTriggerTests(FundingStripeMixin, BluebottleTestCase):
         self.payment.states.succeed(save=True)
 
     def test_succeed_anonymous_reward(self):
-        settings = FundingPlatformSettings.load()
-        settings.allow_anonymous_rewards = False
-        settings.save()
-
         donor = DonorFactory.create(
             activity=self.funding, amount=Money(500, 'EUR'), reward=RewardFactory.create(), user=None
         )
@@ -154,21 +150,6 @@ class DonorTriggerTests(FundingStripeMixin, BluebottleTestCase):
         donor.refresh_from_db()
         self.assertEqual(donor.status, 'succeeded')
         self.assertIsNone(donor.reward)
-
-    def test_succeed_anonymous_reward_allowed(self):
-
-        reward = RewardFactory.create()
-        donor = DonorFactory.create(
-            activity=self.funding, amount=Money(500, 'EUR'), reward=reward, user=None
-        )
-        self.assertEqual(donor.reward, reward)
-        payment = StripePaymentFactory.create(donation=donor)
-        payment.states.succeed(save=True)
-
-        donor.refresh_from_db()
-
-        self.assertEqual(donor.status, 'succeeded')
-        self.assertEqual(donor.reward, reward)
 
     def test_change_donor_amount(self):
         self.assertEqual(self.donor.amount, Money(500, 'EUR'))

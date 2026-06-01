@@ -17,11 +17,17 @@ class CreateTeamRegistrationEffect(Effect):
         raise ValueError(f'No registration defined for activity model {self.instance.activity.__class__.__name__}')
 
     def post_save(self, **kwargs):
-        registration = self.get_registration_model().objects.create(
-            activity=self.instance.activity,
-            user=self.instance.user,
-            status='accepted'
-        )
+        registration = self.instance.activity.registrations.filter(
+            user=self.instance.user
+        ).first()
+
+        if not registration:
+            registration = self.get_registration_model().objects.create(
+                activity=self.instance.activity,
+                user=self.instance.user,
+                status='accepted'
+            )
+
         self.instance.registration = registration
         self.instance.save()
 

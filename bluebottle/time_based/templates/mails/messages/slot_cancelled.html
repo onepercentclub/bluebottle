@@ -6,7 +6,9 @@
         {% blocktrans context 'platform-email' %}Unfortunately your slot for the activity "{{ title }}" has been cancelled.{% endblocktrans %}
     </p>
     <p>
-        {% include 'mails/messages/partial/slots.html' %}
+        {% for slot in slots %}
+            {% include 'mails/messages/partial/slot.html' %}
+        {% endfor %}
     </p>
     <p>
         {% blocktrans context 'platform-email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}

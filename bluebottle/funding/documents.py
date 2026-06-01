@@ -45,20 +45,22 @@ class FundingDocument(ActivityDocument):
     def prepare_location(self, instance):
         locations = []
         if hasattr(instance, 'impact_location') and instance.impact_location:
+            country = instance.impact_location.country
             locations.append({
                 'id': instance.impact_location.id,
                 'name': instance.impact_location.formatted_address,
                 'locality': instance.impact_location.locality,
-                'country_code': instance.impact_location.country.alpha2_code if instance.impact_location.country else None,
-                'country': instance.impact_location.country.name if instance.impact_location.country else None,
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
                 'type': 'location'
             })
         elif instance.initiative and instance.initiative.place:
             if instance.initiative.place.country:
+                country = instance.initiative.place.country
                 locations.append({
                     'locality': instance.initiative.place.locality,
-                    'country_code': instance.initiative.place.country.alpha2_code if instance.initiative.place.country else None,
-                    'country': instance.initiative.place.country.name if instance.initiative.place.country else None,
+                    'country_code': country.alpha2_code if country else None,
+                    'country': country.name if country else None,
                     'type': 'impact_location'
                 })
             else:

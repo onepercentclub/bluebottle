@@ -428,7 +428,7 @@ TENANT_APPS = (
     'django.contrib.gis',
     'djmoney',
     'solo',
-    'nested_inline',
+    'nested_admin',
     'tabular_permissions',
     'django.forms',
     'axes',

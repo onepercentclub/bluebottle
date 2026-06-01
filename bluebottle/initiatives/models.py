@@ -72,7 +72,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         verbose_name=_("co-initiators"),
         help_text=_(
             "Co-initiators can create and edit activities for "
-            "this initiative, but cannot edit the initiative itself."
+            "this initiative, and can edit the initiative itself."
         ),
         related_name="activity_managers_%(class)ss",
     )
@@ -360,6 +360,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
             "Allow admins to indicate if due diligence has been completed "
             "when approving a grant application."
         )),
+    )
+
+    contact_activity_manager = models.BooleanField(
+        verbose_name=_('Contact activity manager'),
+        help_text=_('Allow users to send messages to activity managers.'),
+        default=True
     )
 
     terms_of_service = models.TextField(

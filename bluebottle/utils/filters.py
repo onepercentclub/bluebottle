@@ -141,6 +141,11 @@ class Search(FacetedSearch):
         self.user = user
         self.index = self.doc_types[0]._name
 
+        filters = {
+            key: value for key, value in filters.items()
+            if key in self.facets
+        }
+
         super().__init__(query, filters, sort)
 
     @property

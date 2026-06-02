@@ -1,15 +1,15 @@
-import icalendar
 from datetime import date, timedelta
 from io import BytesIO
 
+import icalendar
 from django.urls import reverse
 from django.utils.timezone import now
 from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
     ScheduleActivitySerializer,
@@ -396,7 +396,7 @@ class ScheduleActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Start', 'Registration Date', 'Status', 'Registration answer', )
+            ('Email', 'Name', 'Registration Date', 'Start', 'Status', 'Registration answer',)
         )
 
 

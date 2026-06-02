@@ -1,7 +1,6 @@
 from django.db.models import Q
 
 from bluebottle.activities.permissions import ContributorPermission, ActivityManagerPermission
-from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
@@ -48,7 +47,7 @@ from bluebottle.utils.views import (
 )
 
 
-class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, CreatePermissionMixin):
+class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 
     permission_classes = (
         OneOf(
@@ -241,8 +240,11 @@ class DateRegistrationRelatedParticipantView(
             else:
                 queryset = self.queryset.filter(
                     Q(user=self.request.user) |
+                    Q(activity__owner=self.request.user) |
+                    Q(activity__initiative__owner=self.request.user) |
+                    Q(activity__initiative__activity_managers=self.request.user) |
                     Q(status__in=('accepted', 'succeeded',))
-                ).order_by('-id')
+                ).order_by('-id').distinct()
         else:
             queryset = self.queryset.filter(
                 status__in=('accepted', 'succeeded',)

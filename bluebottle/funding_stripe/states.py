@@ -184,6 +184,7 @@ class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
         [
             PayoutAccountStateMachine.pending,
             PayoutAccountStateMachine.verified,
+            PayoutAccountStateMachine.rejected,
             PayoutAccountStateMachine.new,
             disabled
         ],

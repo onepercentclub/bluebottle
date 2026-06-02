@@ -1,6 +1,6 @@
 from builtins import object
 from builtins import str
-from collections import Iterable
+from collections.abc import Iterable
 from functools import partial
 
 from django.template.loader import render_to_string
@@ -21,7 +21,7 @@ class Effect(object):
     def render(cls, effects):
         context = {
             'opts': effects[0].instance.__class__._meta,
-            'effects': effects
+            'effects': effects,
         }
         return render_to_string(cls.template, context)
 

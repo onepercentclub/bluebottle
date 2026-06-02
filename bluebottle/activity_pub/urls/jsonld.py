@@ -1,29 +1,37 @@
-from django.urls import re_path
+from django.urls import path
 
 from bluebottle.activity_pub.views import (
     PersonView, InboxView, OutBoxView, PublicKeyView, FollowView,
-    AcceptView, PublishView, AnnounceView, OrganizationView,
-    GoodDeedView, ImageView, CrowdFundingView, PlaceView, AddressView,
-    DoGoodEventView, SubEventView
+    AcceptView, CreateView, OrganizationView,
+    GoodDeedView, ImageView, CrowdFundingView, CollectCampaignView, PlaceView, AddressView,
+    GrantApplicationView,
+    DoGoodEventView, SubEventView, UpdateView,
+    DeleteView, StartView, CancelView, FinishView
 )
 
 app_name = 'activity_pub'
 
 urlpatterns = [
-    re_path(r'^person/(?P<pk>\d+)$', PersonView.as_view(), name='person'),
-    re_path(r'^inbox/(?P<pk>\d+)$', InboxView.as_view(), name='inbox'),
-    re_path(r'^outbox/(?P<pk>\d+)$', OutBoxView.as_view(), name='outbox'),
-    re_path(r'^publickey/(?P<pk>\d+)$', PublicKeyView.as_view(), name='public-key'),
-    re_path(r'^follow/(?P<pk>\d+)$', FollowView.as_view(), name='follow'),
-    re_path(r'^accept/(?P<pk>\d+)$', AcceptView.as_view(), name='accept'),
-    re_path(r'^image/(?P<pk>\d+)$', ImageView.as_view(), name='image'),
-    re_path(r'^place/(?P<pk>\d+)$', PlaceView.as_view(), name='place'),
-    re_path(r'^address/(?P<pk>\d+)$', AddressView.as_view(), name='address'),
-    re_path(r'^good-deed/(?P<pk>\d+)$', GoodDeedView.as_view(), name='good-deed'),
-    re_path(r'^crowd-funding/(?P<pk>\d+)$', CrowdFundingView.as_view(), name='crowd-funding'),
-    re_path(r'^do-good-event/(?P<pk>\d+)$', DoGoodEventView.as_view(), name='do-good-event'),
-    re_path(r'^sub-event/(?P<pk>\d+)$', SubEventView.as_view(), name='sub-event'),
-    re_path(r'^publish/(?P<pk>\d+)$', PublishView.as_view(), name='publish'),
-    re_path(r'^announce/(?P<pk>\d+)$', AnnounceView.as_view(), name='announce'),
-    re_path(r'^organization/(?P<pk>\d+)$', OrganizationView.as_view(), name='organization'),
+    path('person/<int:pk>', PersonView.as_view(), name='person'),
+    path('inbox/<int:pk>', InboxView.as_view(), name='inbox'),
+    path('outbox/<int:pk>', OutBoxView.as_view(), name='outbox'),
+    path('publickey/<int:pk>', PublicKeyView.as_view(), name='public-key'),
+    path('follow/<int:pk>', FollowView.as_view(), name='follow'),
+    path('accept/<int:pk>', AcceptView.as_view(), name='accept'),
+    path('image/<int:pk>', ImageView.as_view(), name='image'),
+    path('place/<int:pk>', PlaceView.as_view(), name='place'),
+    path('address/<int:pk>', AddressView.as_view(), name='address'),
+    path('good-deed/<int:pk>', GoodDeedView.as_view(), name='good-deed'),
+    path('crowd-funding/<int:pk>', CrowdFundingView.as_view(), name='crowd-funding'),
+    path('grant-application/<int:pk>', GrantApplicationView.as_view(), name='grant-application'),
+    path('collect-campaign/<int:pk>', CollectCampaignView.as_view(), name='collect-campaign'),
+    path('do-good-event/<int:pk>', DoGoodEventView.as_view(), name='do-good-event'),
+    path('sub-event/<int:pk>', SubEventView.as_view(), name='sub-event'),
+    path('create/<int:pk>', CreateView.as_view(), name='create'),
+    path('update/<int:pk>', UpdateView.as_view(), name='update'),
+    path('delete/<int:pk>', DeleteView.as_view(), name='delete'),
+    path('cancel/<int:pk>', CancelView.as_view(), name='cancel'),
+    path('start/<int:pk>', StartView.as_view(), name='start'),
+    path('finish/<int:pk>', FinishView.as_view(), name='finish'),
+    path('organization/<int:pk>', OrganizationView.as_view(), name='organization'),
 ]

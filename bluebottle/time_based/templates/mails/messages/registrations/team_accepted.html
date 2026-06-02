@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}
-    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+    {% blocktrans with manager=obj.activity.owner.full_name context 'platform-email' %}
         <p>Good news, your team has been accepted for the activity "{{ title }}"!</p>
         <p>If your team is unable to participate, please withdraw via the activity page so that others can take your place.</p>
     {% endblocktrans %}

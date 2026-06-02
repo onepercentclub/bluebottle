@@ -1,4 +1,4 @@
-from django.urls import re_path
+from django.urls import path
 
 from bluebottle.organizations.views import (
     OrganizationList, OrganizationDetail,
@@ -6,19 +6,19 @@ from bluebottle.organizations.views import (
 )
 
 urlpatterns = [
-    re_path(r'^$', OrganizationList.as_view(), name='organization_list'),
-    re_path(
-        r'^/(?P<pk>\d+)$',
+    path('', OrganizationList.as_view(), name='organization_list'),
+    path(
+        '/<int:pk>',
         OrganizationDetail.as_view(),
         name='organization_detail'
     ),
-    re_path(
-        r'^/contacts$',
+    path(
+        '/contacts',
         OrganizationContactList.as_view(),
         name='organization_contact_list'
     ),
-    re_path(
-        r'^/contacts/(?P<pk>\d+)$',
+    path(
+        '/contacts/<int:pk>',
         OrganizationContactDetail.as_view(),
         name='organization_contact_detail'
     )

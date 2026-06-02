@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib.auth.models import Group
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.activity_manager import (
@@ -35,8 +36,9 @@ class ActivityNotificationTestCase(NotificationTestCase):
         )
         self.reviewer = BlueBottleUserFactory.create(
             is_staff=True,
-            submitted_initiative_notifications=True
+            submitted_initiative_notifications=True,
         )
+        self.reviewer.groups.add(Group.objects.get(name='Staff'))
 
     def test_activity_submitted_reviewer_notification(self):
         self.message_class = ActivitySubmittedReviewerNotification
@@ -46,6 +48,36 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Please take a moment to review this activity')
         self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('View this activity')
+
+    def test_activity_submitted_frontend_reviewer_notification(self):
+        self.reviewer.submitted_initiative_notifications = True
+        self.reviewer.is_staff = False
+        self.reviewer.subregion_manager.set([])
+        self.reviewer.segment_manager.set([])
+        self.reviewer.save()
+        self.message_class = ActivitySubmittedReviewerNotification
+        self.create()
+
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new activity is ready to be reviewed on Test')
+        self.assertBodyContains('Please take a moment to review this activity')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View this activity')
+
+    def test_activity_submitted_frontend_reviewer_no_notifications(self):
+        self.reviewer.submitted_initiative_notifications = False
+        self.reviewer.is_staff = False
+        self.reviewer.subregion_manager.set([])
+        self.reviewer.segment_manager.set([])
+        self.reviewer.save()
+        other_reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True,
+        )
+        self.message_class = ActivitySubmittedReviewerNotification
+        self.create()
+
+        self.assertRecipients([other_reviewer])
 
     def test_activity_published_reviewer_notification(self):
         self.message_class = ActivityPublishedReviewerNotification
@@ -213,7 +245,7 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ1Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Test, a new year, a new chance to make impact")
+        self.assertSubject("Test, a new year, a new chance to make impact!")
         self.assertBodyContains(
             "Ready to make an impact from day one? On Test "
             "you’ll find many activities waiting for you."
@@ -226,7 +258,7 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ2Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Test, your impact starts here")
+        self.assertSubject("Test, your impact starts here!")
         self.assertBodyContains(
             "We know that getting started can sometimes be the hardest part. "
             "That’s why we’ve made it simple to find activities that match your "
@@ -238,7 +270,7 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ3Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Test, there's still time to make your mark this year")
+        self.assertSubject("Test, there's still time to make your mark this year!")
         self.assertBodyContains(
             "We’re halfway through the year and there’s still lots of opportunity to "
             "make impact. Whether you’ve got a few minutes or a few hours, your efforts "

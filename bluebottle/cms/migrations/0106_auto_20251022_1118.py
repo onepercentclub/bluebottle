@@ -2,16 +2,6 @@
 
 from django.db import migrations
 
-def set_terminated(apps, schema_editor):
-    SitePlatformSettings = apps.get_model('cms', 'SitePlatformSettings')
-    AnalyticsPlatformSettings = apps.get_model('analytics', 'AnalyticsPlatformSettings')
-
-    analytics_settings = AnalyticsPlatformSettings.objects.get()
-    settings = SitePlatformSettings.objects.get()
-
-    settings.terminated = analytics_settings.terminated
-    settings.save()
-
 
 class Migration(migrations.Migration):
 
@@ -20,5 +10,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(set_terminated, migrations.RunPython.noop)
     ]

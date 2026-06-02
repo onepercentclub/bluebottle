@@ -3,7 +3,7 @@
 
 {% block content %}
     <p class="donation-intro">
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             Hi {{ recipient_name }},
             <br/><br/>
             For an ongoing crowdfunding campaign, identity verification failed.
@@ -16,6 +16,6 @@
 
 {% block action %}
     <a href="{{ site }}/admin/funding/payoutaccount/{{ id }}" class="action-email">
-       {% trans 'Check payout account' context 'email' %}
+       {% trans 'Check payout account' context 'platform-email' %}
     </a>
 {% endblock %}`

@@ -15,7 +15,7 @@ from multiselectfield import MultiSelectField
 from parler.managers import TranslatableManager, TranslatableQuerySet
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.managers import PolymorphicManager
-from polymorphic.models import PolymorphicModel
+from polymorphic.models import PolymorphicModel, PolymorphicTypeInvalid
 from polymorphic.query import PolymorphicQuerySet
 
 from bluebottle.files.fields import ImageField, PrivateDocumentField
@@ -205,6 +205,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     @property
+    def link(self):
+        return None
+
+    @property
     def event(self):
         from bluebottle.activity_pub.models import Event
         return Event.objects.get(object=self)
@@ -213,9 +217,13 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     def activity_pub_url(self):
         from bluebottle.activity_pub.models import Event
         try:
-            return self.event.iri
+            return self.event.iri or self.event.pub_url
         except Event.DoesNotExist:
             return None
+
+    @property
+    def details(self):
+        return f"{self.description.html}, {self.get_absolute_url()}"
 
     @property
     def owners(self):
@@ -277,6 +285,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         permissions = (
             ("api_read_activity", "Can view activity through the API"),
             ("api_read_own_activity", "Can view own activity through the API"),
+            ("api_review_activity", "Can review activities through the API"),
         )
 
     def __str__(self):
@@ -303,7 +312,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        type = self.get_real_instance().__class__.__name__.lower()
+        try:
+            type = self.get_real_instance().__class__.__name__.lower()
+        except PolymorphicTypeInvalid:
+            type = self.__class__.__name__.lower()
         return (
             f"{domain}/{language}/activities/details/{type}/{self.id}/{self.slug}"
         )
@@ -547,8 +559,37 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
         verbose_name_plural = _("Form questions")
 
 
+def POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
+    return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
+
+
+class ActivityMessage(models.Model):
+    sender = models.ForeignKey(
+        "members.Member",
+        related_name="activity_messages_sent",
+        on_delete=models.CASCADE,
+    )
+    activity = models.ForeignKey(
+        Activity,
+        related_name="activity_messages",
+        on_delete=POLYMORPHIC_CASCADE,
+    )
+    message = models.TextField(_("Message"), max_length=5000)
+    created = models.DateTimeField(default=timezone.now)
+
+    class Meta(object):
+        ordering = ("-created",)
+        verbose_name = _("Activity message")
+        verbose_name_plural = _("Activity messages")
+
+    class JSONAPIMeta(object):
+        resource_name = "activity-messages"
+
+
 class ActivityAnswer(PolymorphicModel):
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='answers')
+    activity = models.ForeignKey(
+        Activity, on_delete=POLYMORPHIC_CASCADE, related_name='answers'
+    )
     question = models.ForeignKey(ActivityQuestion, on_delete=models.CASCADE)
 
     class Meta:
@@ -636,5 +677,5 @@ class FileUploadAnswer(ActivityAnswer):
         return self.file
 
 
-from bluebottle.activities.signals import *  # noqa
 from bluebottle.activities.states import *  # noqa
+from bluebottle.activities.signals import *  # noqa

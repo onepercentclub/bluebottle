@@ -18,12 +18,16 @@ from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.files.fields import ImageField
-from bluebottle.geo.models import Place
+from bluebottle.geo.models import Place, Location
 from bluebottle.utils.fields import CheckboxField
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..offices.models import OfficeSubRegion
 from ..segments.models import SegmentType, Segment
+
+
+def default_support_groups():
+    return ['Engineering Team', 'Support']
 
 
 class SocialLoginSettings(models.Model):
@@ -54,7 +58,8 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
 
     DISPLAY_MEMBER_OPTIONS = (
         ('full_name', _('Full name')),
-        ('first_name', _('First name')),
+        ('first_name', _('First name (members)')),
+        ('first_name_strict', _('First name (also activity managers)')),
     )
 
     REQUIRED_QUESTIONS_OPTIONS = (
@@ -144,6 +149,13 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         verbose_name=_('Whitelisted email domains'),
         blank=True, null=True,
         default=list,
+    )
+
+    support_groups = ArrayField(
+        models.CharField(),
+        verbose_name=_('Support login groups'),
+        default=default_support_groups,
+        help_text=_('Groups that can login in using support accounts'),
     )
 
     session_only = models.BooleanField(
@@ -305,7 +317,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     display_member_names = models.CharField(
         _('Display member names'),
         choices=DISPLAY_MEMBER_OPTIONS,
-        max_length=12,
+        max_length=50,
         default='full_name',
         help_text=_(
             'How names of members will be displayed for visitors and other members.'
@@ -403,8 +415,16 @@ class Member(BlueBottleBaseUser):
         OfficeSubRegion,
         verbose_name=_("Work location groups managed"),
         help_text=_(
-            "Select one or more groups to filter on. "
-            "The user will only see data related to those selected groups. Leave empty to show all data."
+            "Filter this user's view to one or more location groups. Leave empty to show data from all locations."
+        ),
+        blank=True,
+    )
+
+    office_manager = models.ManyToManyField(
+        Location,
+        verbose_name=_("Work locations managed"),
+        help_text=_(
+            "Filter this user's view to specific work locations. Leave empty to show data from all locations."
         ),
         blank=True,
     )
@@ -555,11 +575,6 @@ class Member(BlueBottleBaseUser):
     @property
     def hours_planned(self):
         return self.get_hours('new')
-
-    def save(self, *args, **kwargs):
-        if not (self.is_staff or self.is_superuser) and self.submitted_initiative_notifications:
-            self.submitted_initiative_notifications = False
-        super(Member, self).save(*args, **kwargs)
 
 
 class UserSegment(models.Model):

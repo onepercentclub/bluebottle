@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import include, re_path
 from django.conf.urls.static import static
 from django.conf import settings
@@ -10,165 +11,170 @@ from bluebottle.bb_accounts.views import AxesObtainJSONWebToken, AuthView
 from bluebottle.utils.views import LoginWithView
 
 urlpatterns = [
-    re_path(
-        r'^api/config',
+    path(
+        'api/config',
         include('bluebottle.clients.urls.api')
     ),
     re_path(
         r'^api/redirects/?',
         include('bluebottle.redirects.urls.api')
     ),
-    re_path(
-        r'^api/users/',
+    path(
+        'api/users/',
         include('bluebottle.bb_accounts.urls.api')
     ),
-    re_path(
-        r'^api/categories/',
+    path(
+        'api/categories/',
         include('bluebottle.categories.urls.api')
     ),
-    re_path(
-        r'^api/geo/',
+    path(
+        'api/geo/',
         include('bluebottle.geo.urls.api')
     ),
-    re_path(
-        r'^api/news/',
+    path(
+        'api/news/',
         include('bluebottle.news.urls.api')
     ),
-    re_path(
-        r'^api/utils/',
+    path(
+        'api/utils/',
         include('bluebottle.utils.urls.api')
     ),
-    re_path(
-        r'^api/terms/',
+    path(
+        'api/terms/',
         include('bluebottle.terms.urls.api')
     ),
-    re_path(
-        r'^api/metadata/',
+    path(
+        'api/metadata/',
         include('bluebottle.utils.urls.api')
     ),
 
-    re_path(
-        r'^api/statistics/',
+    path(
+        'api/statistics/',
         include('bluebottle.statistics.urls.api')
     ),
-    re_path(
-        r'^api/cms/',
+    path(
+        'api/cms/',
         include('bluebottle.cms.urls.api')
     ),
-    re_path(
-        r'^api/pages/',
+    path(
+        'api/pages/',
         include('bluebottle.cms.urls.api')
     ),
-    re_path(
-        r'^api/initiatives',
+    path(
+        'api/initiatives',
         include('bluebottle.initiatives.urls.api')
     ),
-    re_path(
-        r'^api/activities',
+    path(
+        'api/activities',
         include('bluebottle.activities.urls.api')
     ),
 
-    re_path(
-        r'^api/time-based',
+    path(
+        'api/time-based',
         include('bluebottle.time_based.urls.api')
     ),
-    re_path(
-        r'^api/deeds',
+    path(
+        'api/deeds',
         include('bluebottle.deeds.urls.api')
     ),
-    re_path(
-        r'^api/collect',
+    path(
+        'api/collect',
         include('bluebottle.collect.urls.api')
     ),
-    re_path(
-        r'^api/assignments',
+    path(
+        'api/assignments',
         include('bluebottle.time_based.urls.old_assignments')
     ),
-    re_path(
-        r'^api/grant-management',
+    path(
+        'api/grant-management',
         include('bluebottle.grant_management.urls.api')
     ),
-    re_path(
-        r'^api/funding',
+    path(
+        'api/funding',
         include('bluebottle.funding.urls.api')
     ),
-    re_path(
-        r'^api/funding/pledge',
+    path(
+        'api/funding/pledge',
         include('bluebottle.funding_pledge.urls.api')
     ),
-    re_path(
-        r'^api/funding/stripe',
+    path(
+        'api/funding/stripe',
         include('bluebottle.funding_stripe.urls.api')
     ),
-    re_path(
-        r'^api/funding/vitepay',
+    path(
+        'api/funding/vitepay',
         include('bluebottle.funding_vitepay.urls.api')
     ),
-    re_path(
-        r'^api/funding/flutterwave',
+    path(
+        'api/funding/flutterwave',
         include('bluebottle.funding_flutterwave.urls.api')
     ),
-    re_path(
-        r'^api/funding/lipisha',
+    path(
+        'api/funding/lipisha',
         include('bluebottle.funding_lipisha.urls.api')
     ),
-    re_path(
-        r'^api/funding/telesom',
+    path(
+        'api/funding/telesom',
         include('bluebottle.funding_telesom.urls.api')
     ),
-    re_path(
-        r'^api/impact/',
+    path(
+        'api/impact/',
         include('bluebottle.impact.urls.api')
     ),
-    re_path(
-        r'^api/segments/',
+    path(
+        'api/segments/',
         include('bluebottle.segments.urls.api')
     ),
 
-    re_path(
-        r'^api/updates/',
+    path(
+        'api/updates/',
         include('bluebottle.updates.urls.api')
     ),
 
-    re_path(
-        r'^api/files/',
+    path(
+        'api/files/',
         include('bluebottle.files.urls.api')
     ),
 
-    re_path(
-        r'^api/organizations',
+    path(
+        'api/organizations',
         include('bluebottle.organizations.urls.api')
     ),
 
     # JSON Web Token based authentication for Django REST framework
     re_path(r'^api/token-auth/', AxesObtainJSONWebToken.as_view(), name='token-auth'),
 
-    re_path(r'^api/token-auth-refresh/$', refresh_jwt_token),
+    path('api/token-auth-refresh/', refresh_jwt_token),
 
     # JSON-API Web Token based authentication for Django REST framework
-    re_path(r'^api/auth$', AuthView.as_view(), name='auth'),
+    path('api/auth', AuthView.as_view(), name='auth'),
 
     # So token authorization
-    re_path(
-        r'^api/auth/',
+    path(
+        'api/auth/',
         include('bluebottle.auth.urls.api')
     ),
 
-    re_path(
-        r'^api/json-ld/',
+    path(
+        'api/json-ld/',
         include('bluebottle.activity_pub.urls.jsonld', namespace='json-ld')
     ),
 
-    re_path(r'token/', include('bluebottle.token_auth.urls')),
+    path(
+        'api/activity-links/',
+        include('bluebottle.activity_links.urls.api', namespace='activity-links')
+    ),
 
-    re_path(r'^api/scim/v2/', include('bluebottle.scim.urls.api')),
+    path('token/', include('bluebottle.token_auth.urls')),
+
+    path('api/scim/v2/', include('bluebottle.scim.urls.api')),
 
     re_path(
         r'^login-with/(?P<user_id>[0-9]+)/(?P<token>[0-9A-Za-z:\-_]{1,200})',
         LoginWithView.as_view(), name='login-with'
     ),
 
-    re_path(r'^.well-known/webfinger', include('bluebottle.webfinger.urls'))
+    path('.well-known/webfinger', include('bluebottle.webfinger.urls'))
 ]
 
 
@@ -192,16 +198,16 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += [
 
-    re_path(
+    path(
         '',
         include('social_django.urls', namespace='social')
     ),
 
     # Needed for the self-documenting API in Django Rest Framework.
-    re_path(
-        r'^api-auth/',
+    path(
+        'api-auth/',
         include('rest_framework.urls', namespace='rest_framework')
     ),
 
-    re_path(r'^', include('django.conf.urls.i18n')),
+    path('', include('django.conf.urls.i18n')),
 ]

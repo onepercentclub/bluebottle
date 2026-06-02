@@ -181,8 +181,8 @@ class InitiativeAdmin(
         ("organization", "Organization"),
         ("owner__full_name", "Owner"),
         ("owner__email", "Owner email"),
-        ("promotor__full_name", "Promotor"),
-        ("promotor__email", "Promotor email"),
+        ("promoter__full_name", "Promoter"),
+        ("promoter__email", "Promoter email"),
         ("reviewer__full_name", "Reviewer"),
         ("reviewer__email", "Reviewer email"),
     )
@@ -208,7 +208,7 @@ class InitiativeAdmin(
         ]
         detail_fields.append("place")
 
-        if InitiativePlatformSettings.objects.get().enable_open_initiatives:
+        if InitiativePlatformSettings.load().enable_open_initiatives:
             detail_fields.append("is_open")
 
         fieldsets = (
@@ -337,17 +337,26 @@ class InitiativePlatformSettingsAdmin(
             },
         ),
         (
-            _("Options"),
+            _("Management"),
             {
                 "fields": (
+                    "enable_reviewing",
                     "contact_method",
-                    "require_organization",
+                    "vet_organizations",
                     "enable_impact",
                     "enable_open_initiatives",
                     "enable_participant_exports",
+                )
+            },
+        ),
+        (
+            _("Options"),
+            {
+                "fields": (
+                    "contact_activity_manager",
                     "enable_matching_emails",
                     "include_full_activities",
-                    "enable_reviewing",
+                    "restrict_updates",
                 )
             },
         ),

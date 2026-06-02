@@ -87,7 +87,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         )
 
     def test_activities_link_regions_enabled(self):
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         activities_link = self.region_admin.activities(self.europe)
@@ -115,7 +115,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
     def test_office_filters_regions_enabled(self):
         request = MockRequest()
         request.user = BlueBottleUserFactory.create()
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         filters = self.activity_admin.get_list_filter(request)
@@ -127,7 +127,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         request = MockRequest()
         request.user = BlueBottleUserFactory.create()
         request.user.subregion_manager.add(self.subregions[0])
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         filters = self.activity_admin.get_list_filter(request)
@@ -157,7 +157,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'Work location group')
         self.assertNotContains(response, 'Work location region')
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         response = self.client.get(self.activities_url)
@@ -184,7 +184,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         url = reverse('admin:index')
         page = self.app.get(url)
         self.assertFalse('Office group' in page.text)
-        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         url = reverse('admin:index')

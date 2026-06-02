@@ -1,3 +1,4 @@
+from django_tools.middlewares.ThreadLocal import get_current_user
 from future import standard_library
 
 standard_library.install_aliases()
@@ -159,6 +160,20 @@ class PermissionField(BasePermissionField):
         return all(perm.has_action_permission(
             method, user, view.model
         ) for perm in view.get_permissions())
+
+
+class UserPermissionField(serializers.Serializer):
+    """
+    Field that can be used to return user permissions
+    """
+
+    def __init__(self, permission, *args, **kwargs):
+        self.permission = permission
+        super(UserPermissionField, self).__init__(source='*', *args, **kwargs)
+
+    def to_representation(self, instance):
+        user = get_current_user()
+        return user.has_perm(self.permission)
 
 
 class ResourcePermissionField(BasePermissionField):

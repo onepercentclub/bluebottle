@@ -1,0 +1,27 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans context 'platform-email' %}
+        Hi {{ recipient_name }},
+        <br/>
+        <br/>
+        {{ sender_name }} sent you a message about your activity “{{ title }}”.
+        <br/>
+        <br/>
+        <b>The message</b>
+        <br/>
+        {{ message_text }}
+        <br/>
+        <br/>
+        Reply to this email to reply to {{ sender_name }}.
+    {% endblocktrans %}
+    <div class="info-box">
+        {% blocktrans context 'platform-email' %}
+            Reply to this message to respond to {{ sender_name }}
+        {% endblocktrans %}
+    </div>
+{% endblock %}
+
+{% block action %}
+{% endblock %}

@@ -8,7 +8,8 @@ from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
@@ -356,7 +357,10 @@ class EffortContributionAdmin(ContributionChildAdmin):
 class ActivityFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs and connection.tenant.schema_name != 'public':
-            for segment_type in SegmentType.objects.all():
+            segment_types = SegmentType.objects.all()
+
+            for segment_type in segment_types:
+
                 attrs[segment_type.field_name] = forms.ModelMultipleChoiceField(
                     required=False,
                     label=segment_type.name,
@@ -373,11 +377,10 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
 
-        if connection.tenant.schema_name != 'public':
+        if connection.tenant.schema_name != 'public' and self.instance.pk:
             for segment_type in SegmentType.objects.all():
-                if self.instance.pk:
-                    self.initial[segment_type.field_name] = self.instance.segments.filter(
-                        segment_type=segment_type).all()
+                selected = self.instance.segments.filter(segment_type=segment_type).all()
+                self.initial[segment_type.field_name] = selected
 
 
 class TeamInline(admin.TabularInline):
@@ -460,8 +463,8 @@ class BulkAddMixin(object):
         urls = super(BulkAddMixin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/bulk_add/$',
+            path(
+                '<int:pk>/bulk_add/',
                 self.admin_site.admin_view(self.bulk_add_participants),
                 name='{}_{}_bulk_add'.format(
                     self.model._meta.app_label,
@@ -680,7 +683,7 @@ class ActivityChildAdmin(
 
     def get_inline_instances(self, request, obj=None):
         inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
-        if InitiativePlatformSettings.objects.get().enable_impact:
+        if InitiativePlatformSettings.load().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
             inlines.append(impact_goal_inline)
 
@@ -696,7 +699,7 @@ class ActivityChildAdmin(
 
     def get_list_filter(self, request):
         filters = list(self.list_filter)
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
@@ -728,7 +731,7 @@ class ActivityChildAdmin(
         return fields
 
     def get_detail_fields(self, request, obj):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         detail_fields = self.detail_fields
         if isinstance(detail_fields, list):
             detail_fields = tuple(detail_fields)
@@ -768,14 +771,14 @@ class ActivityChildAdmin(
         try:
             event = obj.event
             if event:
-                publishes = event.publish_set.all().prefetch_related("recipients__actor")
+                publishes = event.create_set.all().prefetch_related("recipients__actor")
                 for publish in publishes:
                     for recipient in publish.recipients.all():
                         actor = recipient.actor
                         recipients.append(
                             {
                                 "actor": actor,
-                                "adopted": event.announce_set.filter(actor=actor).exists(),
+                                "adopted": event.accept_set.filter(actor=actor).exists(),
                             }
                         )
         except ObjectDoesNotExist:
@@ -805,12 +808,12 @@ class ActivityChildAdmin(
             raise PermissionDenied
 
         if not hasattr(activity, 'event'):
-            adapter.create_event(activity)
+            adapter.create_or_update_event(activity)
 
-        publish = activity.event.publish_set.first()
+        publish = activity.event.create_set.first()
         new_recipients = form.cleaned_data.get('recipients') or []
         for actor in new_recipients:
-            Recipient.objects.create(actor=actor, activity=publish)
+            Recipient.objects.get_or_create(actor=actor, activity=publish)
 
         self.message_user(
             request,
@@ -835,7 +838,7 @@ class ActivityChildAdmin(
         return []
 
     def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
@@ -930,16 +933,16 @@ class ActivityChildAdmin(
         urls = super(ActivityChildAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/send-impact-reminder-message$',
+            path(
+                '<int:pk>/send-impact-reminder-message',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
                     self.model._meta.app_label,
                     self.model._meta.model_name
                 ),
             ),
-            re_path(
-                r'^(?P<pk>\d+)/share_activity$',
+            path(
+                '<int:pk>/share_activity',
                 self.admin_site.admin_view(self.share_activity),
                 name='{}_{}_share_activity'.format(
                     self.model._meta.app_label,
@@ -1030,7 +1033,7 @@ class ActivityAdmin(
         return super(ActivityAdmin, self).lookup_allowed(key, value)
 
     def get_list_filter(self, request):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         filters = list(self.list_filter)
         from bluebottle.geo.models import Location
         if Location.objects.count():
@@ -1045,8 +1048,7 @@ class ActivityAdmin(
             filters = filters + ['team_activity']
         return filters
 
-    list_display = ['__str__', 'created', 'type', 'state_name',
-                    'link', 'highlight']
+    list_display = ['__str__', 'created', 'type', 'state_name', 'highlight']
 
     def location_link(self, obj):
         if not obj.office_location:

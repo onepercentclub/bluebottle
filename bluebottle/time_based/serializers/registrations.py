@@ -177,12 +177,12 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
 class TeamScheduleRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('team-schedule-registration-detail', view_args=('pk',))
     participants = ResourceRelatedField(many=True, read_only=True)
-    team = ResourceRelatedField(read_only=True)
+    teams = ResourceRelatedField(read_only=True, many=True)
 
     class Meta(RegistrationSerializer.Meta):
         model = TeamScheduleRegistration
         fields = RegistrationSerializer.Meta.fields + [
-            "team",
+            "teams",
         ]
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
@@ -192,8 +192,8 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
             'document',
             'activity',
             'participants',
-            'team',
-            'team.slots'
+            'teams',
+            'teams.slots'
         ]
 
     included_serializers = dict(
@@ -201,9 +201,9 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
         **{
             "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
             "document": "bluebottle.time_based.serializers.RegistrationDocumentSerializer",
-            "team": "bluebottle.time_based.serializers.teams.TeamSerializer",
+            "teams": "bluebottle.time_based.serializers.teams.TeamSerializer",
+            'teams.slots': 'bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer',
             "participants": "bluebottle.time_based.serializers.TeamScheduleParticipantSerializer",
-            'team.slots': 'bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer'
         }
     )
 

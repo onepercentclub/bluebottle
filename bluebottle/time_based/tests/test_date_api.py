@@ -342,13 +342,13 @@ class DateSlotDetailAPITestCase(APITestCase):
             )
 
             self.assertEqual(str(ical_event["summary"]), self.activity.title)
-            self.assertEqual(ical_event["url"], self.activity.get_absolute_url())
+            self.assertEqual(ical_event["url"], self.model.get_absolute_url())
             self.assertEqual(
                 ical_event["organizer"], "MAILTO:{}".format(self.activity.owner.email)
             )
 
     def test_export_download_anonymous(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.enable_participant_exports = True
         settings.save()
 
@@ -360,7 +360,7 @@ class DateSlotDetailAPITestCase(APITestCase):
         self.assertIsNone(self.response.json()['data']['attributes']['participants-export-url'])
 
     def test_export_download_owner(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.enable_participant_exports = True
         settings.save()
 
@@ -640,7 +640,7 @@ class DateActivitySpotsLeftAPITestCase(APITestCase):
         self.owner = BlueBottleUserFactory.create()
         self.initiative = InitiativeFactory.create(status='approved', owner=self.owner)
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append('dateactivity')
         settings.save()
 

@@ -56,7 +56,7 @@ def get_menu_items(context):
             group["hide"] = True
 
         if group["app_label"] == "looker":
-            (analytics_settings, _) = AnalyticsPlatformSettings.objects.get_or_create()
+            analytics_settings = AnalyticsPlatformSettings.load()
 
             if analytics_settings.plausible_embed_link:
                 group["items"] = [
@@ -110,12 +110,12 @@ def get_menu_items(context):
     return groups
 
 
-def recent_log_entries(polymorpic=True):
+def recent_log_entries(polymorphic=True):
     log_entries = LogEntry.objects.filter(
         action_flag=9,
         object_id=functions.Cast(OuterRef('id'), output_field=CharField()),
     )
-    if polymorpic:
+    if polymorphic:
         log_entries = log_entries.filter(
             content_type=OuterRef('polymorphic_ctype')
         )

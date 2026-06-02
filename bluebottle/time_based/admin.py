@@ -9,7 +9,8 @@ from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, T
 from django.http import HttpResponseRedirect
 from django.template import defaultfilters, loader
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
@@ -25,6 +26,7 @@ from polymorphic.admin import (
 from pytz import timezone
 
 from bluebottle.activities.admin import (
+    ActivityBulkAddForm,
     ActivityChildAdmin,
     BaseContributorInline,
     BulkAddMixin,
@@ -180,7 +182,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         fields = super().get_registration_fields(request, obj)
         settings = InitiativePlatformSettings.load()
         if settings.hour_registration == 'per_activity':
-            fields = ('hour_registration_data',) + fields
+            fields = ['hour_registration_data'] + list(fields)
         return fields
 
     def registration_link(self, obj):
@@ -405,8 +407,24 @@ class TeamScheduleSlotAdminInline(BaseSlotAdminInline):
     model = TeamScheduleSlot
 
 
+class TeamBulkAddForm(ActivityBulkAddForm):
+    send_messages = forms.BooleanField(
+        label=_('Send messages'),
+        help_text=_('Email participants that they have been added to this team.'),
+        initial=True,
+        required=False
+    )
+
+    title = _('Bulk add participants')
+
+
 @admin.register(Team)
-class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMachineAdmin):
+class TeamAdmin(
+    PolymorphicInlineSupportMixin,
+    RegionManagerAdminMixin,
+    BulkAddMixin,
+    StateMachineAdmin,
+):
     model = Team
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
@@ -421,6 +439,8 @@ class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMac
 
     list_filter = [StateMachineFilter]
     office_subregion_path = 'activity__office_location__subregion'
+
+    bulk_add_form = TeamBulkAddForm
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
@@ -1288,8 +1308,8 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
         urls = super(DateSlotAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/duplicate/$',
+            path(
+                '<int:pk>/duplicate/',
                 self.admin_site.admin_view(self.duplicate_slot),
                 name='time_based_dateactivityslot_duplicate'
             )
@@ -1828,8 +1848,8 @@ class ScheduleRegistrationAdmin(RegistrationChildAdmin):
 
 @admin.register(TeamScheduleRegistration)
 class TeamScheduleRegistrationAdmin(RegistrationChildAdmin):
-    readonly_fields = RegistrationChildAdmin.readonly_fields + ['team']
-    fields = ['team', 'states', 'answer', 'document']
+    readonly_fields = RegistrationChildAdmin.readonly_fields + ['teams']
+    fields = ['teams', 'states', 'answer', 'document']
     verbose_name = _('Team registration')
     verbose_name_plural = _('Team registrations')
 

@@ -11,7 +11,7 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class TestMessage(TransitionMessage):
-    subject = pgettext('email', "Test message for {title}")
+    subject = pgettext('platform-email', "Test message for {title}")
     template = 'test_messages/test_message'
     context = {
         'title': 'title'
@@ -22,7 +22,7 @@ class TestMessage(TransitionMessage):
 
 
 class AnotherTestMessage(TransitionMessage):
-    subject = pgettext('email', "Test message")
+    subject = pgettext('platform-email', "Test message")
     template = 'test_messages/test_message'
 
     def get_recipients(self):

@@ -5,8 +5,11 @@ from rest_framework.throttling import UserRateThrottle
 from bluebottle.files.views import ImageContentView
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.updates.models import Update, UpdateImage
-from bluebottle.updates.permissions import IsAuthorPermission, ActivityOwnerUpdatePermission, \
-    UpdateRelatedActivityPermission, IsStaffMember
+from bluebottle.updates.permissions import (
+    IsAuthorPermission, ActivityOwnerUpdatePermission,
+    UpdateRelatedActivityPermission, IsStaffMember,
+    CanPostUpdatePermission
+)
 from bluebottle.updates.serializers import UpdateSerializer, UpdateImageListSerializer
 from bluebottle.utils.permissions import TenantConditionalOpenClose, OneOf
 from bluebottle.utils.views import (
@@ -31,10 +34,13 @@ class UpdateThrottle(UserRateThrottle):
 class UpdateList(JsonApiViewMixin, CreateAPIView):
     queryset = Update.objects.all()
     serializer_class = UpdateSerializer
+    related_permission_classes = {
+        'activity': [CanPostUpdatePermission]
+    }
 
     permission_classes = (
         permissions.IsAuthenticated,
-        ActivityOwnerUpdatePermission
+        ActivityOwnerUpdatePermission,
     )
     throttle_classes = [UpdateThrottle]
 
@@ -45,7 +51,8 @@ class UpdateList(JsonApiViewMixin, CreateAPIView):
                 serializer.Meta.model(author=self.request.user, **serializer.validated_data)
             )
 
-        serializer.save(author=self.request.user)
+        serializer.validated_data['author'] = self.request.user
+        super().perform_create(serializer)
 
 
 class UpdateImageList(JsonApiViewMixin, CreateAPIView):

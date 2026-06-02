@@ -12,6 +12,10 @@ from bluebottle.funding.validators import TosAcceptedValidator
 
 
 class Deed(Activity):
+    """
+    A good deed.
+    """
+    include_in_documentation = True
 
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
@@ -124,6 +128,11 @@ class Deed(Activity):
 
 
 class DeedParticipant(Contributor):
+    """
+    A participant in a deed.
+    """
+    include_in_documentation = True
+
     class Meta(object):
         verbose_name = _("Deed participant")
         verbose_name_plural = _("Deed participants")

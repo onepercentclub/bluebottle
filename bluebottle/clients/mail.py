@@ -36,7 +36,10 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
 
         settings = MailPlatformSettings.load()
 
-        if settings.reply_to:
+        reply_to = kwargs.pop('reply_to', None)
+        if reply_to:
+            headers['Reply-To'] = reply_to
+        elif settings.reply_to:
             headers['Reply-To'] = settings.reply_to
 
         if not from_email:

@@ -1,11 +1,10 @@
-import icalendar
 from django.http import HttpResponse
-from django.utils.timezone import utc, now
-from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now
 
 from bluebottle.activities.permissions import (
     ContributionPermission
 )
+from bluebottle.activities.ical import ActivityIcal
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
@@ -107,40 +106,15 @@ class DateActivityIcalView(PrivateFileView):
 
     def get(self, *args, **kwargs):
         instance = super(DateActivityIcalView, self).get_object()
-        calendar = icalendar.Calendar()
         slots = instance.slots.filter(
             status__in=['open', 'full', 'finished'],
         )
         if kwargs.get('user_id'):
             slots = slots.filter(slot_participants__participant__user__id=kwargs['user_id'])
 
-        for slot in slots:
-            event = icalendar.Event()
-            event.add('summary', instance.title)
+        ical = ActivityIcal(slots)
 
-            details = instance.details
-            if slot.is_online and slot.online_meeting_url:
-                details += _('\nJoin: {url}').format(url=slot.online_meeting_url)
-
-            event.add('description', details)
-            event.add('url', instance.get_absolute_url())
-            event.add('dtstart', slot.start.astimezone(utc))
-            event.add('dtend', (slot.start + slot.duration).astimezone(utc))
-            event['uid'] = slot.uid
-
-            organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.owner.email))
-            organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
-
-            event['organizer'] = organizer
-            if slot.location:
-                event['location'] = icalendar.vText(slot.location.formatted_address)
-
-                if slot.location_hint:
-                    event['location'] = f'{event["location"]} ({slot.location_hint})'
-
-            calendar.add_component(event)
-
-        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
+        response = HttpResponse(ical.to_file(), content_type='text/calendar')
         response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
             instance.slug
         )
@@ -160,15 +134,15 @@ class SlotParticipantExportView(ExportView):
     model = DateActivitySlot
 
     def get_instances(self):
-        return self.get_object().slot_participants.all()
+        return self.get_object().participants.all()
 
     def get_fields(self):
         question = self.get_object().activity.review_title
         fields = (
-            ('participant__user__email', 'Email'),
-            ('participant__user__full_name', 'Name'),
+            ('user__email', 'Email'),
+            ('user__full_name', 'Name'),
             ('created', 'Registration Date'),
-            ('calculated_status', 'Status'),
+            ('status', 'Status'),
         )
         if question:
             fields += (

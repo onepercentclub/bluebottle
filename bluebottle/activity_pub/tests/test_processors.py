@@ -1,4 +1,5 @@
 import datetime
+
 from bluebottle.activity_pub.parsers import default_context, processor
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -116,6 +117,33 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
 
         self.assertEqual(result['@type'], ['https://goodup.com/json-ld#CrowdFunding'])
 
+    def test_expand_grant_application(self):
+        data = {
+            '@context': default_context,
+            'id': 'https://example.com/grant-application',
+            'name': 'Grant application title',
+            'summary': 'Some grant application description',
+            'startTime': datetime.date(2026, 1, 1).isoformat(),
+            'endTime': datetime.date(2026, 2, 1).isoformat(),
+            'target': 2500,
+            'targetCurrency': 'eur',
+            'type': 'GrantApplication',
+        }
+        result = self.expand(data)
+        attributes = {
+            '@id',
+            '@type',
+            'https://www.w3.org/ns/activitystreams#name',
+            'https://www.w3.org/ns/activitystreams#summary',
+            'https://www.w3.org/ns/activitystreams#startTime',
+            'https://www.w3.org/ns/activitystreams#endTime',
+            'https://goodup.com/json-ld#target',
+            'https://goodup.com/json-ld#targetCurrency',
+        }
+        self.assertEqual(attributes, set(result.keys()))
+
+        self.assertEqual(result['@type'], ['https://goodup.com/json-ld#GrantApplication'])
+
     def test_expand_date_activity(self):
         data = {
             '@context': default_context,
@@ -169,7 +197,7 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
             '@id',
             'https://www.w3.org/ns/activitystreams#longitude',
             'https://www.w3.org/ns/activitystreams#latitude',
-            'https://goodup.com/json-ld#address',
+            'https://www.w3.org/ns/activitystreams#address',
 
         }
         location = sub_event['https://www.w3.org/ns/activitystreams#location'][0]
@@ -180,13 +208,12 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
 
         address_attributes = {
             '@id',
-            'https://goodup.com/json-ld#postalCode',
-            'https://goodup.com/json-ld#streetAddress',
-            'https://goodup.com/json-ld#locality',
-            'https://goodup.com/json-ld#country',
-
+            'https://schema.org/addressLocality',
+            'https://schema.org/addressCountry',
+            'https://schema.org/postalCode',
+            'https://schema.org/streetAddress'
         }
-        address = location['https://goodup.com/json-ld#address'][0]
+        address = location['https://www.w3.org/ns/activitystreams#address'][0]
         self.assertEqual(
             address_attributes,
             set(address.keys())

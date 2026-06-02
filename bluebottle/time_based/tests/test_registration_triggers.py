@@ -10,6 +10,7 @@ from bluebottle.initiatives.tests.factories import (
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
+    TeamFactory,
     DeadlineActivityFactory,
     DeadlineRegistrationFactory,
     PeriodicActivityFactory,
@@ -458,14 +459,19 @@ class TeamScheduleRegistrationTriggerTestCase(
             user=self.user,
             as_user=self.user,
         )
+        self.team = TeamFactory.create(
+            registration=self.registration,
+            activity=self.activity,
+            user=self.registration.user
+        )
 
     def test_initial(self):
         self.create()
         self.assertEqual(self.registration.status, "accepted")
-        self.assertEqual(self.registration.team.status, "accepted")
-        self.assertEqual(self.registration.team.team_members.get().status, "active")
+        self.assertEqual(self.team.status, "accepted")
+        self.assertEqual(self.team.team_members.get().status, "active")
         self.assertEqual(
-            self.registration.team.team_members.get().participants.get().status,
+            self.team.team_members.get().participants.get().status,
             "accepted",
         )
 
@@ -497,10 +503,10 @@ class TeamScheduleRegistrationTriggerTestCase(
             mail.outbox[1].subject,
             'You have registered your team on "Test"'
         )
-        self.assertEqual(self.registration.team.status, "new")
-        self.assertEqual(self.registration.team.team_members.get().status, "active")
+        self.assertEqual(self.team.status, "new")
+        self.assertEqual(self.team.team_members.get().status, "active")
         self.assertEqual(
-            self.registration.team.team_members.get().participants.get().status, "new"
+            self.team.team_members.get().participants.get().status, "new"
         )
 
     def test_reject(self):
@@ -517,11 +523,13 @@ class TeamScheduleRegistrationTriggerTestCase(
             ),
         )
 
-        self.assertEqual(self.registration.team.status, "rejected")
-        self.assertEqual(self.registration.team.team_members.get().status, "rejected")
+        self.team.refresh_from_db()
+
+        self.assertEqual(self.team.status, "rejected")
+        self.assertEqual(self.team.team_members.get().status, "rejected")
 
         self.assertEqual(
-            self.registration.team.team_members.get().participants.get().status,
+            self.team.team_members.get().participants.get().status,
             "rejected",
         )
 
@@ -536,10 +544,11 @@ class TeamScheduleRegistrationTriggerTestCase(
             ),
         )
 
-        self.assertEqual(self.registration.team.status, "accepted")
-        self.assertEqual(self.registration.team.team_members.get().status, "active")
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.status, "accepted")
+        self.assertEqual(self.team.team_members.get().status, "active")
 
         self.assertEqual(
-            self.registration.team.team_members.get().participants.get().status,
+            self.team.team_members.get().participants.get().status,
             "accepted",
         )

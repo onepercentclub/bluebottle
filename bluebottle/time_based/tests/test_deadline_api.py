@@ -203,12 +203,16 @@ class DeadlineActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
 
     def test_get_with_segments(self):
         segment_type = SegmentTypeFactory.create()
-        segment1 = SegmentFactory.create(segment_type=segment_type)
-        segment1.name = 'Vis'
-        segment1.save()
-        segment2 = SegmentFactory.create(segment_type=segment_type)
-        segment2.name = 'Vlees'
-        segment2.save()
+        segment1 = SegmentFactory.create(
+            segment_type=segment_type,
+            slug='vis',
+            name='Vis'
+        )
+        segment2 = SegmentFactory.create(
+            segment_type=segment_type,
+            slug='vlees',
+            name='Vlees'
+        )
         self.participants[0].user.segments.add(segment1)
         reg_date = now() - timedelta(days=10)
         self.participants[1].user.segments.add(segment1)

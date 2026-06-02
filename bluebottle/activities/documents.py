@@ -345,8 +345,8 @@ class ActivityDocument(Document):
                 'id': instance.location.id,
                 'name': instance.location.formatted_address,
                 'locality': instance.location.locality,
-                'country_code': instance.location.country.alpha2_code,
-                'country': instance.location.country.name,
+                'country_code': instance.location.country.alpha2_code if instance.location.country else None,
+                'country': instance.location.country.name if instance.location.country else None,
                 'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:
@@ -435,10 +435,14 @@ class ActivityDocument(Document):
 
         org = instance.host_organization
         logo_url = None
-        if org.logo and org.logo.file:
+        if (
+            org.logo
+            and org.logo.name
+            and org.logo.storage.exists(org.logo.name)
+        ):
             try:
                 logo_url = tenant_url(org.logo.url)
-            except (ValueError, AttributeError):
+            except (ValueError, AttributeError, FileNotFoundError):
                 logo_url = None
 
         return {

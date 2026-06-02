@@ -1,4 +1,3 @@
-from celery import shared_task
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
@@ -6,6 +5,7 @@ from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl.signals import RealTimeSignalProcessor
 
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.celery import app
 
 
 class TenantCelerySignalProcessor(RealTimeSignalProcessor):
@@ -48,8 +48,8 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
             except ObjectDoesNotExist:
                 related = None
 
-            self.registry_delete_related_task.apply_async(
-                [doc_instance, related, tenant], countdown=2
+            registry_delete_related_task.delay_on_commit(
+                doc_instance, related, tenant
             )
 
     def handle_delete(self, sender, instance, **kwargs):
@@ -58,26 +58,9 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         Given an individual model instance, create a task to delete the object from index.
         """
         if sender in self.models:
-            self.registry_delete_task.apply_async(
-                args=[instance, connection.tenant], countdown=2
+            registry_delete_task.delay_on_commit(
+                instance, connection.tenant
             )
-
-    @shared_task()
-    def registry_delete_task(instance, tenant):
-        """
-        Delete instance in index as a celery task
-        """
-        with LocalTenant(tenant):
-            registry.delete(instance)
-
-    @shared_task()
-    def registry_delete_related_task(doc_instance, related, tenant):
-        """
-        Update related instances index as a celery task.
-        Implementation differs, because the object will not exist any more at this point.
-        """
-        with LocalTenant(tenant):
-            doc_instance.update(related)
 
     def handle_save(self, sender, instance, **kwargs):
         """Handle save with a Celery task.
@@ -93,37 +76,58 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         tenant = connection.tenant
 
         if sender in self.models:
-            self.registry_update_task.apply_async(
-                args=[model_info, tenant], countdown=2
+            registry_update_task.delay_on_commit(
+                model_info, tenant
             )
 
         if sender in self.related_models:
-            self.registry_update_related_task.apply_async(
-                args=[model_info, tenant], countdown=2
+            registry_update_related_task.delay_on_commit(
+                model_info, tenant
             )
 
-    @shared_task()
-    def registry_update_task(model_info, tenant):
-        """Handle the update on the registry as a Celery task."""
-        with LocalTenant(tenant):
-            # Fetch the instance fresh from the database to avoid pickling issues
-            model = apps.get_model(model_info['app_label'], model_info['model_name'])
-            try:
-                instance = model.objects.get(pk=model_info['pk'])
-                registry.update(instance)
-            except model.DoesNotExist:
-                # Instance was deleted between signal and task execution
-                pass
 
-    @shared_task()
-    def registry_update_related_task(model_info, tenant):
-        """Handle the related update on the registry as a Celery task."""
-        with LocalTenant(tenant):
-            # Fetch the instance fresh from the database to avoid pickling issues
-            model = apps.get_model(model_info['app_label'], model_info['model_name'])
-            try:
-                instance = model.objects.get(pk=model_info['pk'])
-                registry.update_related(instance)
-            except model.DoesNotExist:
-                # Instance was deleted between signal and task execution
-                pass
+@app.task
+def registry_delete_task(instance, tenant):
+    """
+    Delete instance in index as a celery task
+    """
+    with LocalTenant(tenant):
+        registry.delete(instance)
+
+
+@app.task
+def registry_delete_related_task(doc_instance, related, tenant):
+    """
+    Update related instances index as a celery task.
+    Implementation differs, because the object will not exist any more at this point.
+    """
+    with LocalTenant(tenant):
+        doc_instance.update(related)
+
+
+@app.task
+def registry_update_task(model_info, tenant):
+    """Handle the update on the registry as a Celery task."""
+    with LocalTenant(tenant):
+        # Fetch the instance fresh from the database to avoid pickling issues
+        model = apps.get_model(model_info['app_label'], model_info['model_name'])
+        try:
+            instance = model.objects.get(pk=model_info['pk'])
+            registry.update(instance)
+        except model.DoesNotExist:
+            # Instance was deleted between signal and task execution
+            pass
+
+
+@app.task
+def registry_update_related_task(model_info, tenant):
+    """Handle the related update on the registry as a Celery task."""
+    with LocalTenant(tenant):
+        # Fetch the instance fresh from the database to avoid pickling issues
+        model = apps.get_model(model_info['app_label'], model_info['model_name'])
+        try:
+            instance = model.objects.get(pk=model_info['pk'])
+            registry.update_related(instance)
+        except model.DoesNotExist:
+            # Instance was deleted between signal and task execution
+            pass

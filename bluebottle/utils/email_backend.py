@@ -1,30 +1,26 @@
 from __future__ import print_function
-from builtins import str
+
 import logging
 import re
+from builtins import str
+
 import dkim
-
 import premailer
-
 from django.conf import settings
 from django.core.mail.backends.smtp import EmailBackend
 from django.db import connection
-from django.utils import translation
-from django.template.loader import get_template
 from django.template import Context
-
+from django.template.loader import get_template
+from django.utils import translation
 from django_tools.middlewares import ThreadLocal
+from tenant_extras.utils import TenantLanguage
 
-from bluebottle.cms.models import SitePlatformSettings
-
+from bluebottle.clients import properties
 from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
-from bluebottle.clients import properties
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.utils.utils import to_text
-
-
-from tenant_extras.utils import TenantLanguage
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +140,7 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
         if bcc:
             args['bcc'] = bcc
         if reply_to:
-            args['reply_to'] = [reply_to]
+            args['reply_to'] = reply_to
 
         # even if it's None
         args['from_email'] = from_email

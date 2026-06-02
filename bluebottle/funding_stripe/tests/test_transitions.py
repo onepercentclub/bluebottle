@@ -8,11 +8,12 @@ from bluebottle.funding_stripe.tests.factories import (
     StripePaymentFactory, StripePayoutAccountFactory, ExternalAccountFactory,
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
 
 
-class StripePaymentTransitionsTestCase(BluebottleTestCase):
+class StripePaymentTransitionsTestCase(FundingStripeTestCase):
     def setUp(self):
+        super(StripePaymentTransitionsTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
@@ -39,7 +40,6 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
         )
 
         self.payment = StripePaymentFactory.create(donation=donation)
-        super(StripePaymentTransitionsTestCase, self).setUp()
 
     def test_refund(self):
         self.payment.states.succeed(save=True)

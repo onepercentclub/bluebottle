@@ -214,7 +214,10 @@ class ResourceOwnerPermission(ResourcePermission):
     }
 
     def has_object_action_permission(self, action, user, obj):
-        return user == obj.owner
+        """
+        Let users create the object or let them interact with it if they own the object
+        """
+        return action == 'POST' or user == obj.owner
 
 
 class RelatedResourceOwnerPermission(ResourceOwnerPermission):

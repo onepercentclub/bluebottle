@@ -2,19 +2,18 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
 )
-from bluebottle.activities.views import RelatedContributorListView
+from bluebottle.activities.views import RelatedContributorListView, ActivityDetailView
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
+    ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     JsonApiViewMixin, ExportView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
     IcalView
 )
@@ -30,7 +29,7 @@ class CollectActivityListView(JsonApiViewMixin, ListCreateAPIView):
     )
 
 
-class CollectActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
+class CollectActivityDetailView(ActivityDetailView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),

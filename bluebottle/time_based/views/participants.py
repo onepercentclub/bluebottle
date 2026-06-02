@@ -240,8 +240,11 @@ class DateRegistrationRelatedParticipantView(
             else:
                 queryset = self.queryset.filter(
                     Q(user=self.request.user) |
+                    Q(activity__owner=self.request.user) |
+                    Q(activity__initiative__owner=self.request.user) |
+                    Q(activity__initiative__activity_managers=self.request.user) |
                     Q(status__in=('accepted', 'succeeded',))
-                ).order_by('-id')
+                ).order_by('-id').distinct()
         else:
             queryset = self.queryset.filter(
                 status__in=('accepted', 'succeeded',)

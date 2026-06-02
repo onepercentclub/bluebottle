@@ -44,7 +44,7 @@ class ParticipantWithdrewConfirmationNotification(TransitionMessage):
     subject = pgettext('platform-email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participant/participant_withdrew_confirmation'
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""

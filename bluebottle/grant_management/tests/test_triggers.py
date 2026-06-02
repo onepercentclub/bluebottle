@@ -24,6 +24,8 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
 
+from contextlib import contextmanager
+
 from django.test.utils import override_settings
 
 import mock
@@ -43,6 +45,7 @@ from bluebottle.grant_management.tests.factories import (
     GrantDonorFactory,
     GrantPaymentFactory, GrantProviderFactory, GrantPayoutFactory
 )
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
     ExternalAccountFactory, StripePaymentProviderFactory
@@ -67,6 +70,28 @@ COUNTRY_SPEC.update(
         )
     }
 )
+
+
+def _stripe_connect_account_stub_for_prefill(account_id="test-account-id"):
+    account = stripe.Account(account_id)
+    account.business_type = "individual"
+    account.business_profile = munch.munchify({
+        "mcc": "8398",
+        "product_description": "Not applicable - test grant account.",
+        "url": "https://goodup.com",
+    })
+    account.email = "grant-test@example.com"
+    account.company = None
+    return account
+
+
+@contextmanager
+def stripe_payout_account_stripe_api_patches(account_id="test-account-id"):
+    stub = _stripe_connect_account_stub_for_prefill(account_id)
+    with mock.patch("stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC), \
+            mock.patch("stripe.Account.retrieve", return_value=stub), \
+            mock.patch("stripe.Account.modify", return_value=stub):
+        yield
 
 
 class GrantApplicationTriggersTestCase(TriggerTestCase):
@@ -255,9 +280,7 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
     def get_bank_account(self):
-        with mock.patch(
-            "stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC
-        ):
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
             payout_account = StripePayoutAccountFactory.create(
                 status="pending", account_id="test-account-id"
             )
@@ -273,7 +296,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
 
         self.assertIsNone(self.application.payouts.first())
 
-        self.application.bank_account.connect_account.states.verify(save=True)
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
+            self.application.bank_account.connect_account.states.verify(save=True)
 
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
@@ -283,7 +307,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
 
     def test_paid_existing_payout_account(self):
         bank_account = self.get_bank_account()
-        bank_account.connect_account.states.verify(save=True)
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
+            bank_account.connect_account.states.verify(save=True)
 
         self.create()
 
@@ -297,10 +322,11 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
 
-class GrantPaymentTriggerTestCase(TriggerTestCase):
+class GrantPaymentTriggerTestCase(FundingStripeMixin, TriggerTestCase):
     factory = GrantPaymentFactory
 
     def setUp(self):
+        super().setUp()
         self.fund = GrantFundFactory.create()
         self.deposit = GrantDepositFactory.create(
             fund=self.fund,
@@ -318,9 +344,7 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
             payout=None
         )
 
-        with mock.patch(
-            "stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC
-        ):
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
             payout_account = StripePayoutAccountFactory.create(
                 status="pending",
                 account_id="test-account-id"
@@ -390,7 +414,7 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
         'support@example.com',
     ]
 )
-class GrantApplicationPayoutAccountTriggersTestCase(TriggerTestCase):
+class GrantApplicationPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
     def setUp(self):
         self.owner = BlueBottleUserFactory.create()
         self.staff_user = BlueBottleUserFactory.create(
@@ -417,7 +441,8 @@ class GrantApplicationPayoutAccountTriggersTestCase(TriggerTestCase):
             self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)
 
     def test_set_verified(self):
-        self.model.states.verify()
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
+            self.model.states.verify()
         with self.execute():
             self.assertNotificationEffect(GrantApplicationPayoutAccountVerified)
             self.assertNoNotificationEffect(FundingPayoutAccountVerified)

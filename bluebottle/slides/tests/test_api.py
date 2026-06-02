@@ -71,8 +71,10 @@ class SlideTestCase(BluebottleTestCase):
             if included['type'] == 'pages/blocks/slides/slides'
         ]
         self.assertEqual(len(slides), 2)
-
-        slide = slides[0]
+        slide = next(
+            item for item in slides
+            if item['attributes']['title'] == self.slide2.title
+        )
         self.assertEqual(slide['attributes']['title'], self.slide2.title)
         self.assertTrue(slide['attributes']['video'].startswith('http://test.localhost/media/banner_slides/sparks'))
         self.assertEqual(slide['attributes']['body'], self.slide2.body)

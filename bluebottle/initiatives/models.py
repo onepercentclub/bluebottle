@@ -72,7 +72,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         verbose_name=_("co-initiators"),
         help_text=_(
             "Co-initiators can create and edit activities for "
-            "this initiative, but cannot edit the initiative itself."
+            "this initiative, and can edit the initiative itself."
         ),
         related_name="activity_managers_%(class)ss",
     )
@@ -362,6 +362,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
         )),
     )
 
+    contact_activity_manager = models.BooleanField(
+        verbose_name=_('Contact activity manager'),
+        help_text=_('Allow users to send messages to activity managers.'),
+        default=True
+    )
+
     terms_of_service = models.TextField(
         _("Terms of Service"),
         blank=True,
@@ -391,6 +397,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
         blank=True,
         help_text=_(
             "Enter the email address that should receive a Bcc (blind carbon copy) of the terms of service."
+        ),
+    )
+
+    restrict_updates = models.BooleanField(
+        _("Restrict posting updates"),
+        default=False,
+        help_text=_(
+            "Restrict posting of updates on the activity wall to only activity managers and staff users"
         ),
     )
 

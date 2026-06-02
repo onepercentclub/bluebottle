@@ -8,8 +8,10 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.urls import path, reverse
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
@@ -569,9 +571,14 @@ class FollowerAdmin(FollowAdmin):
                 name="activity_pub_follower_accept",
             ),
             path(
-                "<path:pk>/publish-activities/",
-                self.admin_site.admin_view(self.publish_activities),
-                name="activity_pub_publish_activities",
+                "<path:pk>/publish-open-activities/",
+                self.admin_site.admin_view(self.publish_open_activities),
+                name="activity_pub_publish_open_activities",
+            ),
+            path(
+                "<path:pk>/publish-succeeded-activities/",
+                self.admin_site.admin_view(self.publish_succeeeded_activities),
+                name="activity_pub_publish_succeeded_activities",
             ),
         ]
         return custom_urls + urls
@@ -615,9 +622,25 @@ class FollowerAdmin(FollowAdmin):
 
         return HttpResponseRedirect(reverse('admin:activity_pub_follower_change', args=(follow.id,)))
 
-    @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_activities.html')
-    def publish_activities(self, request, follow, form):
-        unpublished = follow.unpublished_activities.all()
+    @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_succeeded_activities.html')
+    def publish_succeeeded_activities(self, request, follow, form):
+        unpublished = follow.unpublished_succeeded_activities.all()
+        publish_activities.delay(follow.actor, unpublished, connection.tenant)
+
+        self.message_user(
+            request,
+            _(
+                "Publishing {count} activities. "
+                "This may take a few minutes. You can refresh this page to see the progress.",
+            ).format(count=unpublished.count()),
+            level="success"
+        )
+
+        return HttpResponseRedirect(reverse('admin:activity_pub_follower_change', args=(follow.id,)))
+
+    @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_open_activities.html')
+    def publish_open_activities(self, request, follow, form):
+        unpublished = follow.unpublished_open_activities.all()
         publish_activities.delay(follow.actor, unpublished, connection.tenant)
 
         self.message_user(
@@ -695,12 +718,19 @@ class FollowerAdmin(FollowAdmin):
     accept_follow_requests.short_description = "Accept selected follow requests"
 
     def publish_activities_button(self, obj):
-        url = reverse('admin:activity_pub_publish_activities', args=(obj.id,))
+        publish_open_url = reverse('admin:activity_pub_publish_open_activities', args=(obj.id,))
+        publish_succeeded_url = reverse('admin:activity_pub_publish_succeeded_activities', args=(obj.id,))
 
-        return format_html(
-            "<a href=\"{}\" class=\"button\">Publish all {} unpublished activities</a>",
-            url,
-            obj.unpublished_activities.count()
+        return mark_safe(
+            render_to_string(
+                'admin/activity_pub/follower/publish_activities_button.html',
+                {
+                    'publish_open_url': publish_open_url,
+                    'publish_succeeded_url': publish_succeeded_url,
+                    'open_count': obj.unpublished_open_activities.count(),
+                    'succeeded_count': obj.unpublished_succeeded_activities.count(),
+                },
+            )
         )
 
     publish_activities_button.short_description = _("Publish activities")

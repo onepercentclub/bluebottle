@@ -22,14 +22,13 @@ from django.views.generic.detail import DetailView
 from django.views import View
 from elasticsearch_dsl.utils import AttrList
 from rest_framework import generics
-from rest_framework import views, response
+from rest_framework.exceptions import APIException
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from taggit.models import Tag
 
 from bluebottle.activities.ical import ActivityIcal
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
@@ -44,29 +43,12 @@ from .utils import get_current_language
 mime = magic.Magic(mime=True)
 
 
-class TagList(views.APIView):
-    """ All tags in use on this system """
-
-    def get(self, request, format=None):
-        data = [tag.name for tag in Tag.objects.all()[:20]]
-        return response.Response(data)
-
-
 class LanguageList(generics.ListAPIView):
     serializer_class = LanguageSerializer
     queryset = Language.objects.all()
 
     def get_queryset(self):
         return Language.objects.order_by('language_name').all()
-
-
-class TagSearch(views.APIView):
-    """ Search tags in use on this system """
-
-    def get(self, request, format=None, search=''):
-        data = [tag.name for tag in
-                Tag.objects.filter(name__startswith=search).all()[:20]]
-        return response.Response(data)
 
 
 class ModelTranslationViewMixin():
@@ -386,10 +368,23 @@ class ESPaginator(Paginator):
         bottom = (number - 1) * self.per_page
         top = bottom + self.per_page
 
-        self.result = self.object_list[1][bottom:top].execute()
+        try:
+            self.result = self.object_list[1][bottom:top].execute()
+        except Exception as e:
+            # When index mappings drift (e.g. segments should be nested but isn't),
+            # ES raises a 400 RequestError which would otherwise bubble up as 500.
+            # Provide a clear hint to rebuild indices.
+            msg = str(e)
+            if 'nested object under path [segments] is not of nested type' in msg:
+                raise APIException(
+                    'Search index mapping is out of date (segments is not nested). '
+                    'Rebuild the Elasticsearch indices for this tenant.'
+                )
+            raise
 
         page = self._get_page(self.result, number, self)
-        page.facets = self.result.facets
+        # Some ES queries don't include aggregations/facets (e.g. plain sorted lists).
+        page.facets = getattr(self.result, 'facets', {})
 
         return page
 
@@ -414,7 +409,15 @@ class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
         result = super().get_paginated_response(data)
 
         facets = {}
-        for filter, facet in self.page.facets.to_dict().items():
+        page_facets = getattr(self.page, 'facets', {})
+        if hasattr(page_facets, 'to_dict'):
+            raw_facets = page_facets.to_dict()
+        elif isinstance(page_facets, dict):
+            raw_facets = page_facets
+        else:
+            raw_facets = {}
+
+        for filter, facet in raw_facets.items():
             facets[filter] = []
 
             for key, count, active in facet:

@@ -634,3 +634,67 @@ label.translatable-field:before {
 .field-activity_pub label {
     display: none;
 }
+
+a.button, a.button:hover {
+    text-decoration: none;
+}
+
+.empty-comment {
+    font-style: italic;
+    color: #aaa;
+}
+
+#homepage_form label[for=id_content],
+#page_form label[for=id_body],
+#platformpage_form label[for=id_body] {
+    display: none;
+}
+
+.js-inline-admin-formset {
+    margin: 0 64px;
+}
+
+.js-inline-admin-formset .inline-related {
+    margin: 16px 0;
+    width: auto;
+}
+
+.form-row.categories select {
+    height: 300px;
+}
+
+.js-inline-admin-formset .inline-related h3 .inline-deletelink:before {
+    font-family: 'dashboard' !important;
+    font-size: 10px;
+    margin-right: 8px;
+    color: #ffffff;
+}
+
+
+.js-inline-admin-formset .inline-related h3 {
+    padding: 4px;
+}
+
+.js-inline-admin-formset .inline-related h3 .inline-deletelink {
+    text-decoration: none;
+    font-size: 12px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    padding: 4px 8px;
+    margin: 4px 8px;
+    line-height: 1rem;
+    background-color: #b3000055;
+    transition: background-color 200ms;
+}
+
+.js-inline-admin-formset .inline-related h3 .inline-deletelink:hover {
+    background-color: #b30000
+}
+
+.js-inline-admin-formset .inline-related .form-row {
+    padding: 6px 12px;
+}
+
+.js-inline-admin-formset .inline-related h3 span.delete,
+.js-inline-admin-formset span.delete {
+    display: none;
+}

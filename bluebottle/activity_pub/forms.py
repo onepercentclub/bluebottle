@@ -76,4 +76,4 @@ class AcceptFollowPublishModeForm(forms.Form):
 
 
 class PublishActivitiesForm(forms.Form):
-    title = _('Publish all activities')
+    title = _('Publish activities')

@@ -33,6 +33,7 @@ class CategoryInitiativesInline(TabularInline):
     extra = 0
 
 
+@admin.register(Category)
 class CategoryAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, TranslatableAdmin, AdminImageMixin,
                     NonSortableParentAdmin):
     model = Category
@@ -48,6 +49,3 @@ class CategoryAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin,
         return format_html(
             '<a href="{}?categories__id={}">{} {}</a>',
             url, obj.id, count, _('initiatives'))
-
-
-admin.site.register(Category, CategoryAdmin)

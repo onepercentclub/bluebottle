@@ -9,6 +9,8 @@ RECAPTCHA_PUBLIC_KEY = 'test-public-key'
 import logging
 import warnings
 
+from elasticsearch import ElasticsearchWarning
+
 from .base import *
 
 # Raise exception on naive datetime...
@@ -16,6 +18,12 @@ warnings.filterwarnings(
     'error',
     r"DateTimeField .* received a naive datetime",
     RuntimeWarning, r'django\.db\.models\.fields')
+
+warnings.filterwarnings(
+    'ignore',
+    r'Elasticsearch built-in security features are not enabled\.',
+    ElasticsearchWarning,
+)
 
 CSRF_COOKIE_SECURE = False
 ALLOWED_HOSTS = ['*']
@@ -37,6 +45,9 @@ MERCHANT_ACCOUNTS = [
 # Set up a proper testing email backend
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 COMPRESS_ENABLED = False
+
+# Disable parler translation cache so tests see fresh DB state (avoids duplicate key etc.)
+PARLER_ENABLE_CACHING = False
 
 # Yes, activate the South migrations. Otherwise, we'll never notice if our
 # code screwed up the database synchronization
@@ -172,6 +183,11 @@ except ImportError:
 
 ELASTICSEARCH_DSL_AUTOSYNC = False
 ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'django_elasticsearch_dsl.signals.RealTimeSignalProcessor'
+# Per-worker index prefix for parallel tests so workers don't share ES indices
+ELASTICSEARCH_TEST_INDEX_PREFIX = 'test'
+# Wipe orphaned test-pid* indices before create (avoids 1000-shard cluster limit
+# after many IDE runs). Set False if multiple single-process test runs share one ES.
+ELASTICSEARCH_TEST_WIPE_STALE_PID_INDICES = True
 
 STRIPE = {
     'secret_key': 'test-key',

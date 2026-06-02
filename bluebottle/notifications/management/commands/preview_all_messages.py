@@ -51,6 +51,7 @@ MESSAGE_MODULES = {
     'time_based.participants': 'bluebottle.time_based.messages.participants',
     'time_based.teams': 'bluebottle.time_based.messages.teams',
     'time_based.registrations': 'bluebottle.time_based.messages.registrations',
+    'time_based.activity_manager': 'bluebottle.time_based.messages.activity_manager',
 
     'funding.contributor': 'bluebottle.funding.messages.funding.contributor',
     'funding.activity_manager': 'bluebottle.funding.messages.funding.activity_manager',
@@ -334,6 +335,7 @@ class MockRegistration:
         self.motivation = "I love helping the community!"
         self.participants = DateParticipant.objects.all()
         self.slot = MockSlot(language)
+        self.team = MockTeam(language)
 
     @property
     def owner(self):
@@ -378,7 +380,7 @@ class MockTeam:
         self.pk = 321
         self.name = "Team Awesome"
         self.activity = MockActivity(language)
-        self.owner = MockMember(language)
+        self.user = MockMember(language)
         self.slots = DateActivitySlot.objects.all()
         self.event_data = None
 
@@ -427,6 +429,14 @@ class MockFunding:
         return f"https://example.goodup.com/en/funding/{self.id}/{self.slug}"
 
 
+class MockOrganization:
+    """Mock Organization object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+
+
 class MockPayoutAccount:
     """Mock PayoutAccount object"""
 
@@ -435,6 +445,7 @@ class MockPayoutAccount:
         self.pk = 111
         self.funding = MockFunding(language)
         self.organization = None
+        self.grant_application = MockGrantApplication(language)
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/payout/{self.id}"
@@ -453,6 +464,23 @@ class MockGrantPayout:
         self.amount = Money(3500, 'EUR')
         self.total_amount = Money(3500, 'EUR')
         self.grant = MockGrantDonor(language)
+        self.fund = MockGrantFund(language)
+        self._grants_list = [self.grant]
+
+    @property
+    def grants(self):
+        """Mock queryset-like object that supports .first() and .all()"""
+        class MockGrantsQuerySet:
+            def __init__(self, grants_list):
+                self.grants_list = grants_list
+
+            def first(self):
+                return self.grants_list[0] if self.grants_list else None
+
+            def all(self):
+                return self.grants_list
+
+        return MockGrantsQuerySet(self._grants_list)
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/payout/{self.id}"
@@ -514,14 +542,34 @@ class MockGrantDonor:
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
 
 
+class MockGrantProvider:
+    """Mock Grant Application object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
+
+
 class MockGrantPayment:
     """Mock Grant Application object"""
 
     def __init__(self, language='en'):
         self.id = 111
         self.pk = 111
-        self.payouts = Payout.objects.none()
-        self.total = Money(1700, 'EUR')
+        self._payout = MockGrantPayout(language)
+
+        class MockPayoutsQuerySet:
+            def __init__(self, payout):
+                self._payout = payout
+
+            def all(self):
+                return [self._payout]
+        self.payouts = MockPayoutsQuerySet(self._payout)
+        self.total = Money(3500, 'EUR')
+        self.grant_provider = MockGrantProvider(language)
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
@@ -675,6 +723,10 @@ def get_mock_object_for_message(message_class, language='en'):
                     return slot
                 return MockSlot(language)
 
+            if 'Registration' in class_name or 'registrations' in module_name:
+                from bluebottle.time_based.models import PeriodParticipant
+                return get_real_or_mock_object(PeriodParticipant, MockRegistration, language)
+
             if 'Team' in class_name:
                 if 'Scheduled' in class_name:
                     return MockTeamMember(language)
@@ -683,10 +735,6 @@ def get_mock_object_for_message(message_class, language='en'):
                 if 'Member' in class_name:
                     return MockTeamMember(language)
                 return MockTeam(language)
-
-            if 'Registration' in class_name or 'registrations' in module_name:
-                from bluebottle.time_based.models import PeriodParticipant
-                return get_real_or_mock_object(PeriodParticipant, MockRegistration, language)
 
             # Messages with "Date" likely need DateActivity
             if 'Date' in class_name or 'Reminder' in class_name:

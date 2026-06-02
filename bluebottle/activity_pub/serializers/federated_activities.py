@@ -53,7 +53,7 @@ class ImageSerializer(FederatedObjectSerializer):
         response = requests.get(image.url, timeout=30)
         response.raise_for_status()
 
-        validated_data['file'] = File(BytesIO(response.content), name=validated_data['name'])
+        validated_data['file'] = File(BytesIO(response.content), name=validated_data['name'] or '')
 
         return super().create(validated_data)
 

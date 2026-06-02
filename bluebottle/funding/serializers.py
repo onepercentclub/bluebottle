@@ -872,7 +872,6 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
         model = FundingPlatformSettings
 
         fields = (
-            'allow_anonymous_rewards',
             'anonymous_donations',
             'stripe_publishable_key',
             'public_accounts',

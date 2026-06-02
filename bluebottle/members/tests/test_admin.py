@@ -276,7 +276,8 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             "all_contributions",
             "data_retention_info",
             "grant_applications",
-            "registered_date_activities"
+            "registered_date_activities",
+            "office_manager_info"
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -307,7 +308,8 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             "all_contributions",
             "data_retention_info",
             "grant_applications",
-            "registered_date_activities"
+            "registered_date_activities",
+            "office_manager_info"
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -479,7 +481,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
 
-        self.assertEqual(user_data[9], u'35.00 €')
+        self.assertEqual(user_data[9], u'€35.00')
         self.assertEqual(user_data[10], '47.0')
 
     def test_member_unicode_export(self):

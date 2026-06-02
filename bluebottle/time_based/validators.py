@@ -54,7 +54,7 @@ class PeriodActivityStartDeadlineValidator(Validator):
         return (
             not self.instance.deadline or
             not self.instance.start or
-            self.instance.deadline > self.instance.start
+            self.instance.deadline >= self.instance.start
         )
 
 

@@ -262,7 +262,7 @@ class BaseActivitySerializer(ModelSerializer):
         many=True
     )
 
-    translations = TranslationsSerializer(fields=['description'])
+    translations = TranslationsSerializer(fields=['description', 'title'])
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -633,7 +633,7 @@ class BaseContributorSerializer(ModelSerializer):
                         raise ValidationError(_('Not a valid email address'), code="invalid")
                 else:
                     raise ValidationError(_('User with email address not found'), code="not_found")
-        elif self.context['request'].user.is_authenticated:
+        elif self.context['request'].user.is_authenticated and not self.instance:
             data['user'] = self.context['request'].user
 
             if data['user'].required:
@@ -857,7 +857,10 @@ def bulk_add_participants(activity, emails, send_messages):
             user = Member.objects.filter(email__iexact=email.strip()).first()
             if not user:
                 new = True
-                if settings.closed and not scim_settings.enabled:
+                if (
+                    (settings.closed or settings.confirm_signup) and
+                    not scim_settings.enabled
+                ):
                     email = email.strip()
                     try:
                         user = Member.create_by_email(email)

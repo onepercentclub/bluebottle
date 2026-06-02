@@ -560,6 +560,7 @@ class MockGrantPayment:
         self.id = 111
         self.pk = 111
         self._payout = MockGrantPayout(language)
+
         class MockPayoutsQuerySet:
             def __init__(self, payout):
                 self._payout = payout

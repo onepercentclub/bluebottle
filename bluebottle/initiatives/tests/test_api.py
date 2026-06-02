@@ -773,7 +773,8 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_country(self):
-        matching_country, other_country = CountryFactory.create_batch(2)
+        matching_country = CountryFactory.create(alpha2_code='NL')
+        other_country = CountryFactory.create(alpha2_code='DE')
 
         matching = InitiativeFactory.create_batch(2, status='approved')
         for initiative in matching:
@@ -799,6 +800,16 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 str(other_country.pk): len(other)
             }
         )
+        self.assertFound(matching)
+
+    def test_unknown_filters_are_ignored(self):
+        matching = InitiativeFactory.create_batch(2, status='approved')
+
+        self.search({
+            'distance': '20km',
+            'activity-type': 'grantapplication',
+            'is_online': '1',
+        })
         self.assertFound(matching)
 
     def test_filter_office(self):

@@ -25,11 +25,35 @@ def _wait_for_es_indices():
         pass
 
 
+def _wipe_stale_pid_test_elasticsearch_indices():
+    """
+    Delete indices matching {ELASTICSEARCH_TEST_INDEX_PREFIX}-pid* (orphaned
+    single-process test runs). Prevents hitting cluster.max_shards_per_node
+    after many local/IDE test runs. Does not delete test-w* (parallel workers).
+    """
+    if not getattr(settings, 'ELASTICSEARCH_TEST_WIPE_STALE_PID_INDICES', False):
+        return
+    prefix = getattr(settings, 'ELASTICSEARCH_TEST_INDEX_PREFIX', None)
+    if not prefix:
+        return
+    try:
+        from elasticsearch_dsl import connections
+        es = connections.get_connection()
+        pattern = f'{prefix}-pid*'
+        es.indices.delete(
+            index=pattern,
+            params={'ignore_unavailable': 'true'},
+        )
+    except Exception:
+        pass
+
+
 def _setup_es_indices():
     """
     Create Elasticsearch indices for all tenants. Does not return until indices
     are set up (and refreshed). Tests must not run until this completes.
     """
+    _wipe_stale_pid_test_elasticsearch_indices()
     Tenant = get_tenant_model()
     for tenant in Tenant.objects.exclude(schema_name='public'):
         with LocalTenant(tenant):
@@ -45,6 +69,7 @@ def _init_worker_with_es(
     process_setup=None,
     process_setup_args=None,
     debug_mode=None,
+    used_aliases=None
 ):
     with counter.get_lock():
         counter.value += 1
@@ -69,7 +94,8 @@ def _init_worker_with_es(
         django_test_runner.django.setup()
         django_test_runner.setup_test_environment(debug=debug_mode)
 
-    for alias in django_test_runner.connections:
+    db_aliases = used_aliases or django_test_runner.connections
+    for alias in db_aliases:
         connection = django_test_runner.connections[alias]
         if start_method == "spawn":
             connection.settings_dict.update(initial_settings[alias])

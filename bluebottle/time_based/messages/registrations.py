@@ -3,6 +3,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.activities.messages.base import BaseParticipantNotification
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
@@ -22,7 +23,7 @@ class ManagerRegistrationNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -54,7 +55,7 @@ class ManagerRegistrationRestartedNotification(ManagerRegistrationNotification):
     template = "messages/registrations/manager_registration_restarted"
 
 
-class UserRegistrationNotification(TransitionMessage):
+class UserRegistrationNotification(BaseParticipantNotification):
     context = {
         'title': 'activity.title',
         'applicant_name': 'user.full_name',
@@ -87,16 +88,6 @@ class UserRegistrationNotification(TransitionMessage):
 
         return context
 
-    @property
-    def action_link(self):
-        return self.obj.activity.get_absolute_url()
-
-    action_title = pgettext('platform-email', 'View activity')
-
-    def get_recipients(self):
-        """applicant"""
-        return [self.obj.user]
-
     class Meta:
         abstract = True
 
@@ -116,11 +107,13 @@ class UserTeamRegistrationAcceptedNotification(UserRegistrationNotification):
 class UserRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext('platform-email', 'You have not been selected for the activity "{title}"')
     template = 'messages/registrations/user_rejected'
+    link_to_overview = True
 
 
 class UserRegistrationRemovedNotification(UserRegistrationNotification):
     subject = pgettext('platform-email', 'You have been removed from the activity "{title}"')
     template = 'messages/registrations/user_removed'
+    link_to_overview = True
 
 
 class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
@@ -128,6 +121,7 @@ class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
         "platform-email", 'Your team has not been selected for the activity "{title}"'
     )
     template = "messages/registrations/team_rejected"
+    link_to_overview = True
 
 
 class UserRegistrationStoppedNotification(UserRegistrationNotification):

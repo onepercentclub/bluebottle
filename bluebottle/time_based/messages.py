@@ -421,7 +421,7 @@ class ParticipantCreatedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -445,7 +445,7 @@ class NewParticipantNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -749,7 +749,7 @@ class ParticipantWithdrewNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -764,7 +764,7 @@ class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
     template = 'messages/manager/slot_participant_withdrew'
     context = {
         'title': 'activity.title',
-        'participant_name': 'participant.user.full_name',
+        'participant_name': 'user.full_name',
     }
 
     def get_context(self, recipient):
@@ -776,7 +776,7 @@ class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
     def action_link(self):
         return self.obj.slot.activity.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -791,7 +791,7 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     template = 'messages/manager/slot_participant_registered'
     context = {
         'title': 'activity.title',
-        'participant_name': 'participant.user.full_name',
+        'participant_name': 'user.full_name',
         'answer': 'registration.answer',
         'question': 'activity.review_title'
     }
@@ -821,7 +821,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     template = 'messages/participants/slot_participant_registered'
     context = {
         'title': 'activity.title',
-        'participant_name': 'participant.user.full_name',
+        'participant_name': 'user.full_name',
     }
 
     def attachments(self, recipient=None):
@@ -859,7 +859,7 @@ class ManagerParticipantAddedOwnerNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -882,7 +882,7 @@ class ManagerTeamAddedOwnerNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext("platform-email", "Open your activity")
+    action_title = pgettext("platform-email", "View this activity")
 
     def get_recipients(self):
         """activity owner"""
@@ -907,7 +907,7 @@ class ParticipantRemovedOwnerNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """activity owner"""
@@ -944,4 +944,4 @@ class SlotCancelledNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('platform-email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')

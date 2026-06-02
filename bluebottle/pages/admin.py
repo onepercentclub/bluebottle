@@ -11,17 +11,17 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
-from django.urls import re_path
+from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 from parler.admin import TranslatableAdmin
 
+from bluebottle.cms.admin import CMSNestedPlaceholderFieldAdmin
 from bluebottle.utils.models import Language
 from .models import Page, PageTypeChoices
 from .models import PlatformPage
@@ -67,7 +67,7 @@ class PageTranslateForm(Form):
 
 
 @admin.register(Page)
-class PageAdmin(PlaceholderFieldAdmin):
+class PageAdmin(CMSNestedPlaceholderFieldAdmin):
     model = Page
     list_display = ('title', 'slug', 'online', 'status',
                     'publication_date', 'language')
@@ -117,29 +117,29 @@ class PageAdmin(PlaceholderFieldAdmin):
         base_urls = super(PageAdmin, self).get_urls()
         info = self.model._meta.app_label, self.model._meta.model_name
         urlpatterns = [
-            re_path(
-                r'^(?P<pk>\d+)/preview/$',
+            path(
+                '<int:pk>/preview/',
                 self.admin_site.admin_view(
                     self.preview_canvas
                 ),
                 name="{0}_{1}_preview".format(*info)
             ),
-            re_path(
-                r'^(?P<pk>\d+)/export/$',
+            path(
+                '<int:pk>/export/',
                 self.admin_site.admin_view(
                     self.export_page
                 ),
                 name="{0}_{1}_export".format(*info)
             ),
-            re_path(
-                r'^import/$',
+            path(
+                'import/',
                 self.admin_site.admin_view(
                     self.import_pages
                 ),
                 name="{0}_{1}_import".format(*info)
             ),
-            re_path(
-                r'^(?P<pk>\d+)/translate/$',
+            path(
+                '<int:pk>/translate/',
                 self.admin_site.admin_view(
                     self.translate_page
                 ),
@@ -208,8 +208,9 @@ class PageAdmin(PlaceholderFieldAdmin):
                     kwargs={'pk': obj.pk}
                 ),
             })
-        return super(PageAdmin, self).render_change_form(request, context, add,
-                                                         change, form_url, obj)
+        return super().render_change_form(
+            request, context, add=add, change=change, form_url=form_url, obj=obj
+        )
 
     def save_model(self, request, obj, form, change):
         # Check if slug is reserved for platform pages
@@ -405,7 +406,7 @@ class PageAdmin(PlaceholderFieldAdmin):
 
 
 @admin.register(PlatformPage)
-class PlatformPageAdmin(TranslatableAdmin, PlaceholderFieldAdmin, NonSortableParentAdmin):
+class PlatformPageAdmin(CMSNestedPlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
     model = Page
     readonly_fields = ('slug',)
     list_display = ('title', 'slug')

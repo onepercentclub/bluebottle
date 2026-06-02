@@ -15,6 +15,7 @@ from bluebottle.funding.tests.factories import (
     FundingFactory, DonorFactory, BudgetLineFactory
 )
 from bluebottle.funding_stripe.models import StripePaymentProvider
+from bluebottle.funding_stripe.tests.base import FundingStripeTestCase, patch_stripe_connect_account_api
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentIntentFactory,
     ExternalAccountFactory
@@ -27,7 +28,6 @@ from bluebottle.grant_management.models import GrantPayment
 from bluebottle.grant_management.tests.factories import GrantPaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.funding_stripe.tests.base import FundingStripeTestCase, patch_stripe_connect_account_api
 
 
 class MockEvent(object):
@@ -584,7 +584,7 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
         self.assertEqual(self.payout_account.status, "incomplete")
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
         )
 
     def test_incomplete_open(self):
@@ -601,14 +601,14 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
         self.assertEqual(len(mail.outbox), 3)
 
         self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
         )
 
         self.assertEqual(
-            mail.outbox[1].subject, "Live campaign identity verification failed!"
+            mail.outbox[1].subject, "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
         )
         self.assertEqual(
-            mail.outbox[2].subject, "Live campaign identity verification failed!"
+            mail.outbox[2].subject, "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
         )
 
     def test_incomplete_open_charges_disabled(self):
@@ -651,7 +651,7 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
 
         message = mail.outbox[0]
         self.assertEqual(
-            message.subject, "Action required for your crowdfunding campaign"
+            message.subject, "Action required for your crowdfunding campaign on Test"
         )
         self.assertTrue("/activities/stripe/kyc" in message.body)
 

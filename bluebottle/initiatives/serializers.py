@@ -35,6 +35,7 @@ from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import (
     RichTextField,
     ValidationErrorsField,
@@ -115,8 +116,9 @@ class MemberSerializer(ModelSerializer):
             not user.is_superuser
         ):
             representation['last_name'] = None
-            representation['initials'] = representation['first_name'][0]
-            representation['full_name'] = representation['first_name']
+            first_name = representation.get('first_name') or ''
+            representation['initials'] = first_name[:1]
+            representation['full_name'] = representation.get('first_name')
 
         return representation
 
@@ -227,6 +229,7 @@ class InitiativePreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     activity_count = serializers.SerializerMethodField()
     current_status = serializers.SerializerMethodField()
+    translations = TranslationsSerializer(fields=['title', 'pitch'])
 
     def get_current_status(self, obj):
         state = getattr(ReviewStateMachine, obj.current_status.value)
@@ -264,9 +267,9 @@ class InitiativePreviewSerializer(ModelSerializer):
     class Meta(object):
         model = Initiative
         fields = (
-            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'status', 'activity_count'
+            'id', 'title', 'slug', 'image', 'story', 'pitch', 'theme', 'status', 'activity_count', 'translations'
         )
-        meta_fields = ('current_status',)
+        meta_fields = ('current_status', 'translations')
 
     class JSONAPIMeta(object):
         resource_name = 'initiatives/preview'
@@ -289,6 +292,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     reviewer = ResourceRelatedField(read_only=True)
     promoter = ResourceRelatedField(read_only=True)
     current_status = CurrentStatusField(source='states.current_state')
+    translations = TranslationsSerializer(
+        fields=['title', 'pitch', 'story']
+    )
 
     activities = ActivitiesField()
 
@@ -343,15 +349,11 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         return activities
 
     def get_segments(self, instance):
-        segments = []
-        for activity in self.get_activities(instance):
-            for segment in activity.segments.all():
-                if segment not in segments:
-                    segments.append(segment)
-        return segments
+        activities = self.get_activities(instance)
+        return Segment.objects.filter(activities__in=activities).distinct()
 
     def get_stats(self, obj):
-        return get_stats_for_activities(obj.activities)
+        return get_stats_for_activities(self.get_activities(obj))
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -387,11 +389,12 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
             'organization_contact', 'story', 'video_url', 'image',
             'theme', 'place', 'activities', 'segments',
             'errors', 'required', 'stats', 'is_open', 'status', 'is_global',
+            'translations'
         )
 
         meta_fields = (
             'permissions', 'transitions', 'status', 'created', 'required',
-            'errors', 'stats', 'current_status'
+            'errors', 'stats', 'current_status', 'translations'
         )
 
     class JSONAPIMeta(object):
@@ -553,6 +556,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'initiative_search_filters',
             'activity_search_filters',
             'activity_search_filters',
+            'contact_activity_manager',
             'search_filters_activities',
             'search_filters_initiatives',
             'include_full_activities',
@@ -569,6 +573,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'has_locations',
             'enable_matching_emails',
             'terms_of_service',
+            'restrict_updates',
             'hour_registration',
             'hour_registration_data',
         )

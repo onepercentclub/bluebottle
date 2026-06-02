@@ -197,7 +197,7 @@ class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
     """
     Send a reminder in Q1 to platform user to spend their do-good hours.
     """
-    subject = pgettext('platform-email', "{first_name}, a new year, a new chance to make impact")
+    subject = pgettext('platform-email', "{first_name}, a new year, a new chance to make impact!")
     template = 'messages/matching/reminder-q1'
 
 
@@ -205,7 +205,7 @@ class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
     """
     Send a reminder in Q2 to platform user to spend their do-good hours.
     """
-    subject = pgettext('platform-email', "{first_name}, your impact starts here")
+    subject = pgettext('platform-email', "{first_name}, your impact starts here!")
     template = 'messages/matching/reminder-q2'
 
 
@@ -213,7 +213,7 @@ class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
     """
     Send a reminder in Q3 to platform user to spend their do-good hours.
     """
-    subject = pgettext('platform-email', "{first_name}, there's still time to make your mark this year")
+    subject = pgettext('platform-email', "{first_name}, there's still time to make your mark this year!")
     template = 'messages/matching/reminder-q3'
 
 

@@ -1,6 +1,7 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.activities.ical import ActivityIcal
+from bluebottle.activities.messages.base import BaseParticipantNotification
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
 
@@ -43,21 +44,11 @@ class ManagerTeamWithdrewNotification(ManagerTeamNotification):
     template = "messages/teams/manager_team_withdrew"
 
 
-class UserTeamNotification(TransitionMessage):
+class UserTeamNotification(BaseParticipantNotification):
     context = {
         "title": "activity.title",
         "name": "user.full_name",
     }
-
-    @property
-    def action_link(self):
-        return self.obj.activity.get_absolute_url() + f"?teamId={self.obj.pk}"
-
-    action_title = pgettext("platform-email", "View team")
-
-    def get_recipients(self):
-        """participant"""
-        return [self.obj.user]
 
     class Meta:
         abstract = True
@@ -70,6 +61,7 @@ class UserTeamRemovedNotification(UserTeamNotification):
 
     subject = pgettext("platform-email", 'Your team was removed from the activity "{title}"')
     template = "messages/teams/user_team_removed"
+    link_to_overview = True
 
 
 class UserTeamWithdrewNotification(UserTeamNotification):
@@ -256,4 +248,43 @@ class UserTeamDetailsChangedNotification(TransitionMessage):
 
     def get_recipients(self):
         """participants"""
-        return [p.user for p in self.obj.accepted_participants.all()]
+        captain = self.obj.team.user
+        participants = self.obj.accepted_participants.exclude(user=captain).all()
+        return [p.user for p in participants]
+
+
+class CaptainTeamDetailsChangedNotification(TransitionMessage):
+    """
+    The date/time for your team has been changed.
+    """
+
+    subject = pgettext(
+        "platform-email", 'The date or location for your team has been changed for the activity "{title}"'
+    )
+
+    template = "messages/teams/user_teamslot_changed"
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context["slot"] = get_slot_info(self.obj.team.slots.first())
+        context["name"] = recipient.first_name
+        return context
+
+    context = {
+        "title": "activity.title",
+    }
+
+    def attachments(self, recipient=None):
+        return [ActivityIcal(self.obj).to_attachment()]
+
+    @property
+    def action_link(self):
+        team = self.obj.team
+        activity = team.activity
+        return activity.get_absolute_url() + f"?teamId={team.pk}"
+
+    action_title = pgettext("platform-email", "View team")
+
+    def get_recipients(self):
+        """team captain"""
+        return [self.obj.team.user]

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-27 12:07+0200\n"
-"PO-Revision-Date: 2026-05-27 10:13\n"
+"POT-Creation-Date: 2026-06-01 15:10+0200\n"
+"PO-Revision-Date: 2026-06-02 07:35\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -584,7 +584,7 @@ msgstr "Visszaléptél a(z) „{title}” tevékenységből"
 #: bluebottle/time_based/messages/messages.py:929
 #: bluebottle/time_based/messages/messages.py:966
 #: bluebottle/time_based/messages/participants.py:19
-#: bluebottle/time_based/messages/registrations.py:26
+#: bluebottle/time_based/messages/registrations.py:28
 msgctxt "platform-email"
 msgid "View this activity"
 msgstr "Tekintsd meg ezt a tevékenységet"
@@ -4059,11 +4059,11 @@ msgstr "A(z) „{title}” tevékenységed holnap kezdődik!"
 #: bluebottle/collect/messages.py:67 bluebottle/deeds/messages.py:68
 #: bluebottle/time_based/messages.py:481
 #: bluebottle/time_based/messages/messages.py:487
-#: bluebottle/time_based/messages/registrations.py:158
-#: bluebottle/time_based/messages/registrations.py:168
-#: bluebottle/time_based/messages/registrations.py:178
-#: bluebottle/time_based/messages/registrations.py:204
-#: bluebottle/time_based/messages/registrations.py:214
+#: bluebottle/time_based/messages/registrations.py:160
+#: bluebottle/time_based/messages/registrations.py:170
+#: bluebottle/time_based/messages/registrations.py:180
+#: bluebottle/time_based/messages/registrations.py:206
+#: bluebottle/time_based/messages/registrations.py:216
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have joined the activity \"{title}\""
@@ -10713,12 +10713,12 @@ msgid "Passed"
 msgstr "Történt"
 
 #: bluebottle/time_based/admin.py:1193
-#: bluebottle/time_based/messages/registrations.py:72
+#: bluebottle/time_based/messages/registrations.py:74
 msgid "day"
 msgstr "nap"
 
 #: bluebottle/time_based/admin.py:1194
-#: bluebottle/time_based/messages/registrations.py:74
+#: bluebottle/time_based/messages/registrations.py:76
 msgid "week"
 msgstr "hét"
 
@@ -11051,7 +11051,7 @@ msgstr "Felvettek egy csapatba a(z) „{site_name}” oldalon 🎉"
 
 #: bluebottle/time_based/messages.py:412
 #: bluebottle/time_based/messages/messages.py:415
-#: bluebottle/time_based/messages/registrations.py:42
+#: bluebottle/time_based/messages/registrations.py:44
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have a new participant for your activity \"{title}\" 🎉"
@@ -11081,11 +11081,11 @@ msgstr "Megváltoztattad a(z) „{title}” tevékenységre való jelentkezésed
 
 #: bluebottle/time_based/messages.py:561
 #: bluebottle/time_based/messages/messages.py:567
-#: bluebottle/time_based/messages/registrations.py:153
-#: bluebottle/time_based/messages/registrations.py:163
-#: bluebottle/time_based/messages/registrations.py:173
-#: bluebottle/time_based/messages/registrations.py:183
-#: bluebottle/time_based/messages/registrations.py:209
+#: bluebottle/time_based/messages/registrations.py:155
+#: bluebottle/time_based/messages/registrations.py:165
+#: bluebottle/time_based/messages/registrations.py:175
+#: bluebottle/time_based/messages/registrations.py:185
+#: bluebottle/time_based/messages/registrations.py:211
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have applied to the activity \"{title}\""
@@ -11107,7 +11107,7 @@ msgstr "Kiválasztottak a(z) „{title}” tevékenységre 🎉"
 
 #: bluebottle/time_based/messages.py:656
 #: bluebottle/time_based/messages/messages.py:663
-#: bluebottle/time_based/messages/registrations.py:108
+#: bluebottle/time_based/messages/registrations.py:110
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have not been selected for the activity \"{title}\""
@@ -11222,93 +11222,93 @@ msgctxt "platform-email"
 msgid "You have been added to the activity \"{title}\""
 msgstr "Hozzáadtak a(z) „{title}” tevékenységhez"
 
-#: bluebottle/time_based/messages/registrations.py:37
+#: bluebottle/time_based/messages/registrations.py:39
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have a new application for your activity \"{title}\" 🎉"
 msgstr "Új jelentkezést kaptál a(z) „{title}” tevékenységedre 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:47
+#: bluebottle/time_based/messages/registrations.py:49
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant for your activity \"{title}\" has stopped"
 msgstr "A(z) „{title}” tevékenységed egy résztvevője leállt"
 
-#: bluebottle/time_based/messages/registrations.py:53
+#: bluebottle/time_based/messages/registrations.py:55
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A participant for your activity \"{title}\" has restarted"
 msgstr "A(z) „{title}” tevékenységed egy résztvevője újrakezdett"
 
-#: bluebottle/time_based/messages/registrations.py:76
+#: bluebottle/time_based/messages/registrations.py:78
 msgid "month"
 msgstr "hónap"
 
-#: bluebottle/time_based/messages/registrations.py:96
+#: bluebottle/time_based/messages/registrations.py:98
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have been selected for the activity \"{title}\""
 msgstr "Kiválasztottak a(z) „{title}” tevékenységre"
 
-#: bluebottle/time_based/messages/registrations.py:102
+#: bluebottle/time_based/messages/registrations.py:104
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your team has been selected for the activity \"{title}\""
 msgstr "A csapatodat kiválasztották a(z) „{title}” tevékenységre"
 
-#: bluebottle/time_based/messages/registrations.py:114
+#: bluebottle/time_based/messages/registrations.py:116
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have been removed from the activity \"{title}\""
 msgstr "Eltávolítottak a(z) „{title}” tevékenységből"
 
-#: bluebottle/time_based/messages/registrations.py:121
+#: bluebottle/time_based/messages/registrations.py:123
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your team has not been selected for the activity \"{title}\""
 msgstr "A csapatodat nem választották ki a(z) „{title}” tevékenységre"
 
-#: bluebottle/time_based/messages/registrations.py:129
+#: bluebottle/time_based/messages/registrations.py:131
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your contribution to the activity \"{title}\" has been stopped"
 msgstr "A(z) „{title}” tevékenységhez való hozzájárulásodat leállították"
 
-#: bluebottle/time_based/messages/registrations.py:136
+#: bluebottle/time_based/messages/registrations.py:138
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Your contribution to the activity \"{title}\" has been restarted"
 msgstr "A(z) „{title}” tevékenységhez való hozzájárulásodat újraindították"
 
-#: bluebottle/time_based/messages/registrations.py:144
+#: bluebottle/time_based/messages/registrations.py:146
 msgctxt "platform-email"
 msgid "day"
 msgstr "nap"
 
-#: bluebottle/time_based/messages/registrations.py:146
+#: bluebottle/time_based/messages/registrations.py:148
 msgctxt "platform-email"
 msgid "week"
 msgstr "hét"
 
-#: bluebottle/time_based/messages/registrations.py:148
+#: bluebottle/time_based/messages/registrations.py:150
 msgctxt "platform-email"
 msgid "months"
 msgstr "hónap"
 
-#: bluebottle/time_based/messages/registrations.py:219
+#: bluebottle/time_based/messages/registrations.py:221
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new team has applied to your activity \"{title}\" 🎉"
 msgstr "Egy új csapat jelentkezett a(z) „{title}” tevékenységedre 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:224
+#: bluebottle/time_based/messages/registrations.py:226
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have a new team for your activity \"{title}\" 🎉"
 msgstr "Új csapatod van a(z) „{title}” tevékenységedhez 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:229
-#: bluebottle/time_based/messages/registrations.py:234
+#: bluebottle/time_based/messages/registrations.py:231
+#: bluebottle/time_based/messages/registrations.py:236
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have registered your team on \"{site_name}\""
@@ -13662,15 +13662,17 @@ msgstr "\n"
 "                        Ne feledd regisztrálni az óráidat a tevékenység részletei oldalán található kód vagy URL használatával.\n"
 "                    "
 
-#: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_created.html:4
+#: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_created.html:5
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
 "  <p>%(applicant_name)s has joined your activity \"%(title)s\"!</p>\n"
 "  <p>Give the new participant a warm welcome.</p>\n"
+"    "
 msgstr "\n"
 "  <p>%(applicant_name)s csatlakozott a(z) „%(title)s” tevékenységedhez!</p>\n"
 "  <p>Üdvözöld szívélyesen az új résztvevőt!</p>\n"
+"    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_created_review.html:4
 #, python-format
@@ -14543,3 +14545,4 @@ msgstr[1] "Másodpercek"
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr "Holland"
+

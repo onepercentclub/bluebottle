@@ -31,11 +31,12 @@ class CMSContentPlugin(ContentPlugin):
 
     class Media(object):
         css = {
-            "all": ('admin/css/forms-nested.css', )
+            "all": (
+                "nested_admin/dist/nested_admin.min.css",
+            )
         }
         js = (
-            'admin/js/jquery.init.js',
-            'admin/js/inlines-nested.min.js',
+            "nested_admin/dist/nested_admin.min.js",
             'js/csrf.js',
             'adminsortable/js/jquery-ui-django-admin.min.js',
         )

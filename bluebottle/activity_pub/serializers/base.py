@@ -1,3 +1,4 @@
+from geocoder.api import ip
 import inflection
 from rest_framework import serializers, relations
 
@@ -22,9 +23,6 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
 
         type_iri = None
         if 'Meta' in attrs and hasattr(attrs['Meta'], 'model'):
-            if 'id' not in attrs or not isinstance(attrs['id'], ActivityPubIdField):
-                raise TypeError(f'{name} is missing an IdField')
-
             if 'type' not in attrs or not isinstance(attrs['type'], TypeField):
                 raise TypeError(f'{name} is missing a TypeField')
 
@@ -51,6 +49,8 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
 
 
 class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSerializerMetaclass):
+    id = ActivityPubIdField()
+
     def __init__(self, *args, full=True, include=False, origin=None, **kwargs):
         self.origin = origin
         self.include = include
@@ -165,9 +165,6 @@ class FederatedObjectBaseSerializerMetaclass(serializers.SerializerMetaclass):
 
         type_iri = None
         if 'Meta' in attrs and hasattr(attrs['Meta'], 'model'):
-            if 'id' not in attrs or not isinstance(attrs['id'], FederatedIdField):
-                raise TypeError(f'{name} is missing an IdField')
-
             if 'type' not in attrs or not isinstance(attrs['type'], TypeField):
                 raise TypeError(f'{name} is missing a TypeField')
 
@@ -187,6 +184,7 @@ class FederatedObjectBaseSerializerMetaclass(serializers.SerializerMetaclass):
 class FederatedObjectBaseSerializer(
     serializers.ModelSerializer, metaclass=FederatedObjectBaseSerializerMetaclass
 ):
+    id = FederatedIdField()
     class Meta:
         fields = ('id', 'type')
 
@@ -241,10 +239,13 @@ class FederatedObjectBaseSerializer(
 
         for name, field in self.fields.items():
             if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):
-                if validated_data.get(name, None):
-                    field.initial_data = validated_data[name]
+                if validated_data.get(field.source, None):
+                    try:
+                        field.initial_data = self.initial_data[name]
+                    except:
+                        __import__('ipdb').set_trace()
                     field.instance = getattr(instance, field.source, None)
-                    field.is_valid()
+                    field.is_valid(raise_exception=True)
                     validated_data[field.source] = field.save()
 
         return super().update(instance, validated_data)

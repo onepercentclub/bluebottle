@@ -1,10 +1,8 @@
 from rest_framework import serializers
-
+from django.urls import reverse
 
 class ActivityPubIdField(serializers.CharField):
-    def __init__(self, url_name):
-        self.url_name = url_name
-
+    def __init__(self):
         super().__init__(source='iri', required=False, allow_null=True)
 
     def get_attribute(self, instance):
@@ -16,8 +14,7 @@ class ActivityPubIdField(serializers.CharField):
 
 
 class FederatedIdField(serializers.CharField):
-    def __init__(self, url_name):
-        self.url_name = url_name
+    def __init__(self):
         super().__init__(source='*')
 
     def to_representation(self, value):

@@ -383,6 +383,8 @@ class GrantApplication(Event):
     end_time = models.DateTimeField(null=True)
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
 
+    activity_type = 'grantapplication'
+
     class Meta:
         verbose_name = _("Grant application")
         verbose_name_plural = _("Grant applications")
@@ -964,7 +966,11 @@ class Cancel(Transition):
 class Finish(Transition):
     def transition(self):
         if self.object.adopted:
-            self.object.adopted.states.succeed(save=True)
+            try:
+                self.object.adopted.states.succeed(save=True)
+            except TransitionNotPossible:
+                pass
+
             return True
 
         if self.object.link:

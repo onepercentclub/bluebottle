@@ -818,7 +818,9 @@ class LinkGrantApplicationTestCase(LinkTestCase, BluebottleTestCase):
 
     def test_finish(self):
         self.test_link()
-        self.model.states.succeed(save=True)
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.succeed(save=True)
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
@@ -933,7 +935,7 @@ class TemplateDeadlineActivityTestCase(TemplateTestCase, BluebottleTestCase):
         )
         self.submit()
 
-        publish = self.model.origin.create_set.get()
+        publish = self.model.activity_pub_model.create_set.get()
         Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
@@ -1255,9 +1257,10 @@ class LinkCollectActivityTestCase(LinkTestCase, BluebottleTestCase):
     def test_update_collect_type(self):
         self.test_link()
 
-        new_collect_type = CollectTypeFactory.create()
-        self.model.collect_type = new_collect_type
-        self.model.save()
+        with httmock.HTTMock(image_mock):
+            new_collect_type = CollectTypeFactory.create()
+            self.model.collect_type = new_collect_type
+            self.model.save()
 
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()

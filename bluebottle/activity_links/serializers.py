@@ -121,9 +121,10 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
         if location_data:
             validated_data['location'] = Geolocation.objects.create(**location_data)
 
-        iri = validated_data.pop('id')
-        source = Create.objects.get(object__iri=iri).actor
-        validated_data['host_organization'] = source.adopted
+        iri = validated_data.pop('id', None)
+        if iri:
+            source = Create.objects.get(object__iri=iri).actor
+            validated_data['host_organization'] = source.adopted
 
         result = super().create(validated_data)
 
@@ -191,7 +192,7 @@ class LinkedSlotSerializer(BaseLinkedActivitySerializer):
         model = LinkedDateSlot
         fields = (
             'start_time', 'end_time',
-            'location'
+            'location',
         )
 
 
@@ -218,11 +219,12 @@ class LinkedDateActivitySerializer(BaseLinkedActivitySerializer):
         slots = validated_data.pop('slots', [])
         result = super().update(instance, validated_data)
 
+        instance.slots.all().delete()
         field = self.fields['sub_event']
         for slot in slots:
             slot['activity'] = result
 
-        validated_data[field.source] = field.update(instance.slots.all(), slots)
+        validated_data[field.source] = field.create(slots)
 
         return result
 

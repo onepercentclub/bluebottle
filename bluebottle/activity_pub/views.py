@@ -39,7 +39,7 @@ def create_task(request, tenant):
         serializer = ActivityPubSerializer(
             data=request.data, context={'request': request}
         )
-        print(serializer.initial_data, serializer.initial_data.get('type'))
+        #print(serializer.initial_data, serializer.initial_data.get('type'))
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

@@ -28,15 +28,12 @@ from bluebottle.activity_pub.models import (
     GrantApplication,
 )
 from bluebottle.activity_pub.serializers.base import BaseActivityPubSerializer
-from bluebottle.activity_pub.serializers.fields import (
-    ActivityPubIdField, TypeField,
-)
+from bluebottle.activity_pub.serializers.fields import TypeField
 from bluebottle.activity_pub.serializers.relations import RelatedResourceField
 from bluebottle.activity_pub.utils import is_local
 
 
 class InboxSerializer(BaseActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:inbox')
     type = TypeField('inbox')
 
     class Meta(BaseActivityPubSerializer.Meta):
@@ -44,7 +41,6 @@ class InboxSerializer(BaseActivityPubSerializer):
 
 
 class OutboxSerializer(BaseActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:outbox')
     type = TypeField('outbox')
 
     class Meta(BaseActivityPubSerializer.Meta):
@@ -52,7 +48,6 @@ class OutboxSerializer(BaseActivityPubSerializer):
 
 
 class PublicKeySerializer(BaseActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:public-key')
     type = TypeField('publicKey')
     public_key_pem = serializers.CharField(allow_blank=True)
 
@@ -62,7 +57,6 @@ class PublicKeySerializer(BaseActivityPubSerializer):
 
 
 class PersonSerializer(BaseActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:person')
     type = TypeField('Person')
     inbox = RelatedResourceField(type='inbox', required=False, allow_null=True)
     outbox = RelatedResourceField(type='outbox', required=False, allow_null=True)
@@ -80,7 +74,6 @@ class PersonSerializer(BaseActivityPubSerializer):
 
 
 class ImageSerializer(BaseActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:image')
     type = TypeField('Image')
     url = serializers.URLField()
     name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -91,7 +84,6 @@ class ImageSerializer(BaseActivityPubSerializer):
 
 
 class OrganizationSerializer(BaseActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:organization')
     type = TypeField('Organization')
     inbox = RelatedResourceField(type='inbox', required=False, allow_null=True)
     outbox = RelatedResourceField(type='outbox', required=False, allow_null=True)
@@ -112,7 +104,6 @@ class OrganizationSerializer(BaseActivityPubSerializer):
 
 
 class AddressSerializer(BaseActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:address')
     type = TypeField('Address')
 
     summary = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -132,7 +123,6 @@ class AddressSerializer(BaseActivityPubSerializer):
 
 
 class PlaceSerializer(BaseActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:place')
     type = TypeField('Place')
 
     latitude = serializers.FloatField()
@@ -160,7 +150,6 @@ class BaseEventSerializer(BaseActivityPubSerializer):
 
 
 class GoodDeedSerializer(BaseEventSerializer):
-    id = ActivityPubIdField(url_name='json-ld:good-deed')
     type = TypeField('GoodDeed')
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
@@ -177,7 +166,6 @@ class GoodDeedSerializer(BaseEventSerializer):
 
 
 class CrowdFundingSerializer(BaseEventSerializer):
-    id = ActivityPubIdField(url_name='json-ld:crowd-funding')
     type = TypeField('CrowdFunding')
 
     end_time = serializers.DateTimeField(required=False, allow_null=True)
@@ -201,7 +189,6 @@ class CrowdFundingSerializer(BaseEventSerializer):
 
 
 class GrantApplicationSerializer(BaseEventSerializer):
-    id = ActivityPubIdField(url_name='json-ld:grant-application')
     type = TypeField('GrantApplication')
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
@@ -220,7 +207,6 @@ class GrantApplicationSerializer(BaseEventSerializer):
 
 
 class CollectCampaignSerializer(BaseEventSerializer):
-    id = ActivityPubIdField(url_name='json-ld:collect-campaign')
     type = TypeField('CollectCampaign')
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
@@ -238,7 +224,6 @@ class CollectCampaignSerializer(BaseEventSerializer):
 
 
 class SubEventSerializer(BaseActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:sub-event')
     type = TypeField('subEvent')
 
     name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -264,7 +249,6 @@ class SubEventSerializer(BaseActivityPubSerializer):
 
 
 class DoGoodEventSerializer(BaseEventSerializer):
-    id = ActivityPubIdField(url_name='json-ld:do-good-event')
     type = TypeField('DoGoodEvent')
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
@@ -320,7 +304,6 @@ class BaseActivitySerializer(BaseActivityPubSerializer):
 
 
 class FollowSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:follow')
     type = TypeField('Follow')
     object = RelatedResourceField(type=('Organization', 'Person', ))
     adoption_type = serializers.ChoiceField(
@@ -335,7 +318,6 @@ class FollowSerializer(BaseActivitySerializer):
 
 
 class AcceptSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:accept')
     type = TypeField('Accept')
 
     object = RelatedResourceField(
@@ -350,7 +332,6 @@ class AcceptSerializer(BaseActivitySerializer):
 
 
 class CreateSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:create')
     type = TypeField('Create')
     object = RelatedResourceField(
         type=(
@@ -364,7 +345,6 @@ class CreateSerializer(BaseActivitySerializer):
 
 
 class UpdateSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:update')
     type = TypeField('Update')
     object = RelatedResourceField(
         type=(
@@ -384,7 +364,6 @@ class UpdateSerializer(BaseActivitySerializer):
 
 
 class DeleteSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:delete')
     type = TypeField('Delete')
     object = RelatedResourceField(
         type=(
@@ -398,7 +377,6 @@ class DeleteSerializer(BaseActivitySerializer):
 
 
 class CancelSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:cancel')
     type = TypeField('Cancel')
     object = RelatedResourceField(
         type=(
@@ -412,7 +390,6 @@ class CancelSerializer(BaseActivitySerializer):
 
 
 class StartSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:start')
     type = TypeField('Start')
     object = RelatedResourceField(
         type=(
@@ -426,7 +403,6 @@ class StartSerializer(BaseActivitySerializer):
 
 
 class FinishSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:finish')
     type = TypeField('Finish')
     object = RelatedResourceField(
         type=(
@@ -440,7 +416,6 @@ class FinishSerializer(BaseActivitySerializer):
 
 
 class JoinSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:join')
     type = TypeField('Join')
     object = RelatedResourceField(
         type=(
@@ -454,7 +429,6 @@ class JoinSerializer(BaseActivitySerializer):
 
 
 class LeaveSerializer(BaseActivitySerializer):
-    id = ActivityPubIdField(url_name='json-ld:leave')
     type = TypeField('Leave')
     object = RelatedResourceField(
         type=(

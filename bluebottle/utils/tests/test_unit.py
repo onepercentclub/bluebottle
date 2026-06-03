@@ -194,10 +194,12 @@ class SendMailTestCase(BluebottleTestCase):
     def test_no_template(self, logger):
         send_mail(to=self.user)
         self.assertTrue(logger.error.called)
-        self.assertEqual(
-            logger.error.call_args[0][0],
-            'Exception while rendering email template: None.html, in None'
-        )
+        message = logger.error.call_args[0][0]
+        self.assertIn('None.html', message)
+        self.assertIn("template_name=None", message)
+        self.assertIn('testuser@example.com', message)
+        self.assertIn('called_from=', message)
+        self.assertTrue(logger.error.call_args[1].get('exc_info'))
 
     @mock.patch('bluebottle.utils.email_backend.logger')
     @mock.patch('bluebottle.utils.email_backend.create_message')
@@ -624,6 +626,35 @@ class TestOneOfPermission(BluebottleTestCase):
             self.permission.has_object_action_permission(
                 'GET', self.user, obj=self.initiative
             )
+        )
+
+
+class RelatedResourceOwnerPermissionTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(RelatedResourceOwnerPermissionTestCase, self).setUp()
+        self.permission = RelatedResourceOwnerPermission()
+        self.owner = BlueBottleUserFactory.create()
+        self.other_user = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+
+    def test_has_parent_permission_for_owner(self):
+        self.assertTrue(
+            self.permission.has_parent_permission('GET', self.owner, self.initiative)
+        )
+
+    def test_has_parent_permission_denies_other_user(self):
+        self.assertFalse(
+            self.permission.has_parent_permission('GET', self.other_user, self.initiative)
+        )
+
+    def test_has_object_action_permission_uses_parent_owner(self):
+        child = mock.Mock()
+        child.parent = self.initiative
+        self.assertTrue(
+            self.permission.has_object_action_permission('GET', self.owner, child)
+        )
+        self.assertFalse(
+            self.permission.has_object_action_permission('GET', self.other_user, child)
         )
 
 

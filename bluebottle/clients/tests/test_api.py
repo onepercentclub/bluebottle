@@ -3,6 +3,7 @@ from decimal import Decimal
 import mock
 from django.contrib.auth.models import Group, Permission
 from django.core.files.base import File
+from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django_elasticsearch_dsl.test import ESTestCase
@@ -117,6 +118,7 @@ class ClientSettingsTestCase(APITestCase):
     ELASTICSEARCH_DSL_AUTOSYNC=True,
     ELASTICSEARCH_DSL_AUTO_REFRESH=True
 )
+@tag('elasticsearch')
 class TestDefaultAPI(ESTestCase, BluebottleTestCase):
     """
     Test the default API, open and closed, authenticated or not

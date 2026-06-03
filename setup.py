@@ -112,7 +112,6 @@ install_requires = [
     'qrcode==7.4.2',
     'rave-python==1.0.2',
     'raven==6.1.0',
-    'regex==2025.9.18',
     'requests==2.32.0',
     'requests_http_signature==0.7.1',
     'schwifty==2.1.0',

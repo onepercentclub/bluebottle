@@ -1,0 +1,15 @@
+[run]
+parallel = True
+source = bluebottle
+omit =
+    */migrations/*
+    */tests/*
+    */static/*
+    */bluebottle_dashboard/static/*
+
+[report]
+omit =
+    */migrations/*
+    */tests/*
+    */static/*
+    */bluebottle_dashboard/static/*

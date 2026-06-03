@@ -57,7 +57,7 @@ install_requires = [
     'django-memoize==2.3.1',
     'django-money==3.6.0',
     'django-multiselectfield==1.0.1',
-    'django-nested-inline==0.4.6',
+    'django-nested-admin==4.1.6',
     'django-otp==1.2.0',
     'django-parler==2.3',
     'django-tabular-permissions==2.9.3',

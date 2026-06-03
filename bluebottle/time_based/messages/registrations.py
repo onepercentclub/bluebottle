@@ -17,6 +17,8 @@ class ManagerRegistrationNotification(TransitionMessage):
         'applicant_name': 'user.full_name',
         'team_name': 'team.name',
         'captain_email': 'team.user.email',
+        'question': 'activity.review_title',
+        'answer': 'answer',
     }
 
     @property

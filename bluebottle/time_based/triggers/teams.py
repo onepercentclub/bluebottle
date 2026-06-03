@@ -45,7 +45,12 @@ class TeamTriggers(TriggerManager):
             (user.is_staff or user.is_superuser)
         )
         return (
-            not effect.instance.activity.review or is_admin
+            not effect.instance.activity.review or
+            (
+                hasattr(effect.instance, 'registration') and
+                effect.instance.registration.status == 'accepted'
+            ) or
+            is_admin
         )
 
     triggers = [

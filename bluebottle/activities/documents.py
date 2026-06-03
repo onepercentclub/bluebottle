@@ -373,42 +373,34 @@ class ActivityDocument(Document):
     def prepare_location(self, instance):
         locations = []
         if hasattr(instance, 'location') and instance.location:
+            country = instance.location.country
             locations.append({
                 'id': instance.location.id,
                 'name': instance.location.formatted_address,
                 'locality': instance.location.locality,
-                'country_code': instance.location.country.alpha2_code if instance.location.country else None,
-                'country': instance.location.country.name if instance.location.country else None,
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
                 'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:
+            country = instance.office_location.country
             locations.append({
                 'id': instance.office_location.pk,
                 'name': instance.office_location.name,
                 'locality': instance.office_location.city,
-                'country_code': (
-                    instance.office_location.country.alpha2_code if
-                    instance.office_location.country else None
-                ),
-                'country': (
-                    instance.office_location.country.name if
-                    instance.office_location.country else None
-                ),
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
                 'type': 'office'
             })
         elif instance.initiative and instance.initiative.place:
-            if instance.initiative.place.country:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'country_code': instance.initiative.place.country.alpha2_code,
-                    'country': instance.initiative.place.country.name,
-                    'type': 'impact_location'
-                })
-            else:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'type': 'impact_location'
-                })
+            country = instance.initiative.place.country
+            locations.append({
+                'locality': instance.initiative.place.locality,
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
+                'type': 'impact_location'
+            })
+
         return locations
 
     def prepare_geofeature(self, instance):

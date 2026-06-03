@@ -712,7 +712,7 @@ class Follow(Activity):
         return DoGoodActivity.objects.filter(
             status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
         ).exclude(
-            origin__create__recipients__actor=self.actor,
+            activity_pub_model__create__recipients__actor=self.actor,
         )
 
     @property

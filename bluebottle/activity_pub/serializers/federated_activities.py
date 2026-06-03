@@ -191,12 +191,19 @@ class MemberSerializer(FederatedObjectBaseSerializer):
         )
 
     def create(self, validated_data):
-        return RemoteMember.objects.create(
+        result = RemoteMember.objects.create(
             **dict(
                 (key, value) for key, value in validated_data.items() if
                 key not in ['id', 'type']
             )
         )
+
+        origin = ActivityPubModel.objects.from_iri(validated_data['id'])
+        if origin:
+            origin.adopted = result
+            origin.save()
+
+        return result
 
 
 class OrganizationSerializer(FederatedObjectBaseSerializer):

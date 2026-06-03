@@ -393,7 +393,9 @@ class FollowingAddForm(forms.ModelForm):
                     )
                 })
             try:
-                adapter.follow(self.cleaned_data['platform_url'], self.instance)
+                self.cleaned_data['object'] = adapter.discover(
+                    self.cleaned_data['platform_url']
+                )
             except requests.exceptions.HTTPError:
                 raise ValidationError({
                     'platform_url': _(

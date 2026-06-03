@@ -83,7 +83,7 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
             form['default_owner'] = str(default_owner.id)
         actor = kwargs.get('actor') or self.create_remote_actor()
         with mock.patch(
-            'bluebottle.activity_pub.admin.client.get',
+            'bluebottle.webfinger.client.client.get',
             return_value=self.other_platform_url
         ), mock.patch(
             'bluebottle.activity_pub.adapters.adapter.discover'

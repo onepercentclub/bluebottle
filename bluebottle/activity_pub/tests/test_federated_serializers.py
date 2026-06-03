@@ -21,10 +21,12 @@ from bluebottle.time_based.tests.factories import (
 )
 
 from bluebottle.test.factory_models.organizations import OrganizationFactory as BlueobttoeOrganizationFactory
+from bluebottle.activity_pub.models import Person
 from bluebottle.activity_pub.tests.factories import (
     OrganizationFactory, PersonFactory, GoodDeedFactory, CreateFactory, FollowFactory,
     CrowdFundingFactory, DoGoodEventFactory, SubEventFactory
 )
+from bluebottle.activities.models import RemoteMember
 
 from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.funding.tests.factories import FundingFactory
@@ -114,14 +116,17 @@ class FederatedSerializerTestCase:
         self.instance = federated_serializer.instance
         self.instance.refresh_from_db()
 
-        __import__('ipdb').set_trace()
         self.assertEqual(
             self.instance.origin, self.activity_pub_instance
         )
-
-        self.assertTrue(
-            isinstance(self.instance, self.factory._meta.model)
-        )
+        if isinstance(self.activity_pub_instance, Person):
+            self.assertTrue(
+                isinstance(self.instance, RemoteMember)
+            )
+        else:
+            self.assertTrue(
+                isinstance(self.instance, self.factory._meta.model)
+            )
 
 
 class OrganizationSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):

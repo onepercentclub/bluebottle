@@ -207,7 +207,7 @@ class GeolocationCreateTestCase(GeoTestCase):
 
     def setUp(self):
         super(GeoTestCase, self).setUp()
-        self.country = CountryFactory.create()
+        self.country = Country.objects.first()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 

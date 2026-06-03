@@ -2,6 +2,9 @@ name: Testing
 
 on:
   pull_request:
+  push:
+    branches:
+      - master
 
 concurrency:
   group: tests-${{ github.ref }}
@@ -11,6 +14,9 @@ jobs:
   test:
     name: Run automated tests
     runs-on: Bluebottle
+    permissions:
+      contents: read
+      pull-requests: write
 
     services:
       postgres:
@@ -47,6 +53,9 @@ jobs:
       LC_ALL: en_GB.UTF-8
       VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py311
       PIP_CACHE_DIR: /home/github_actions_runner/.cache/pip
+      PIP_INDEX_URL: https://pypi.org/simple
+      PIP_DEFAULT_TIMEOUT: 120
+      PIP_RETRIES: 10
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
       PG_CLI_IMAGE: postgis/postgis:14-3.3
 
@@ -77,6 +86,8 @@ jobs:
             libreadline-dev \
             libsqlite3-dev \
             libffi-dev \
+            libjpeg-dev \
+            zlib1g-dev \
             liblzma-dev \
             xz-utils \
             tk-dev
@@ -253,15 +264,19 @@ jobs:
           python --version
 
           # Use sane tooling for Python 3.11
-          python -m pip install --upgrade "pip==24.0" "setuptools==69.5.1" wheel
+          python -m pip install --upgrade "pip==25.3" "setuptools==69.5.1" wheel
           python -m pip --version
           python -c "import pkg_resources"
+          PIP_TRUSTED_HOST="pypi.org files.pythonhosted.org github.com"
+          export PIP_TRUSTED_HOST
 
           NEW_SHA="$(python - <<'PY'
           import hashlib
           from pathlib import Path
-          p = Path("setup.py")
-          print(hashlib.sha256(p.read_bytes()).hexdigest())
+          digest = hashlib.sha256()
+          for name in ("setup.py", "requirements-ci-bootstrap.txt"):
+              digest.update(Path(name).read_bytes())
+          print(digest.hexdigest())
           PY
           )"
           STAMP="$VENV_DIR/.deps-setup_py.sha"
@@ -269,16 +284,40 @@ jobs:
 
           if [ "$NEW_SHA" != "$OLD_SHA" ]; then
             echo "Dependency definition changed; installing..."
-            python -m pip install --no-build-isolation --no-use-pep517 -e ".[test]" --trusted-host github.com
+            python -m pip cache purge || true
+            python -m pip install --no-cache-dir \
+              --index-url "$PIP_INDEX_URL" \
+              --trusted-host pypi.org \
+              --trusted-host files.pythonhosted.org \
+              -r requirements-ci-bootstrap.txt
+            python -m pip install --no-cache-dir \
+              --index-url "$PIP_INDEX_URL" \
+              --trusted-host pypi.org \
+              --trusted-host files.pythonhosted.org \
+              --trusted-host github.com \
+              -e ".[test]"
             echo "$NEW_SHA" > "$STAMP"
           else
             echo "setup.py unchanged; skipping dependency install."
           fi
 
-      - name: Run tests (coverage)
+      - name: Run tests with coverage
         shell: bash
         run: |
           set -euxo pipefail
           source "$VENV_DIR/bin/activate"
           python -c "import pkg_resources"
-          python manage.py test --parallel 16 --keepdb --settings bluebottle.settings.runner -v3
+          coverage run --parallel-mode manage.py test --parallel 16 --keepdb --settings bluebottle.settings.runner -v3
+          coverage combine
+          coverage report
+          coverage xml -o coverage.xml
+
+      - name: Upload coverage to Coveralls
+        if: success()
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          format: cobertura
+          file: coverage.xml
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}

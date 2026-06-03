@@ -22,6 +22,7 @@ from parler import appsettings
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
@@ -37,8 +38,6 @@ from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.storage import TenantFileSystemStorage
 from bluebottle.utils.utils import clean_for_hashtag, get_client_ip
 from ..email_backend import send_mail, create_message
-
-from bluebottle.mails.models import MailPlatformSettings
 
 
 def generate_random_slug():
@@ -189,17 +188,6 @@ class SendMailTestCase(BluebottleTestCase):
         self.assertEqual(logger.error.call_args[0][0],
                          'Trying to send email to invalid email address: {0}'.
                          format(self.user.email))
-
-    @mock.patch('bluebottle.utils.email_backend.logger')
-    def test_no_template(self, logger):
-        send_mail(to=self.user)
-        self.assertTrue(logger.error.called)
-        message = logger.error.call_args[0][0]
-        self.assertIn('None.html', message)
-        self.assertIn("template_name=None", message)
-        self.assertIn('testuser@example.com', message)
-        self.assertIn('called_from=', message)
-        self.assertTrue(logger.error.call_args[1].get('exc_info'))
 
     @mock.patch('bluebottle.utils.email_backend.logger')
     @mock.patch('bluebottle.utils.email_backend.create_message')

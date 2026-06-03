@@ -1,7 +1,6 @@
 import logging
 from datetime import date, datetime
 
-from celery import shared_task
 from celery.schedules import crontab
 from dateutil.relativedelta import relativedelta
 from django.db.models import Case, Count, When
@@ -10,6 +9,7 @@ from elasticsearch_dsl.query import (
     Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
 )
 
+from bluebottle.celery import app
 from bluebottle.activities.messages.matching import (
     MatchingActivitiesNotification,
     DoGoodHoursReminderQ1Notification,
@@ -18,7 +18,6 @@ from bluebottle.activities.messages.matching import (
     DoGoodHoursReminderQ2Notification
 )
 from bluebottle.activities.models import Activity, Contributor
-from bluebottle.celery import app
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -243,7 +242,7 @@ def data_retention_contribution_task():
                     team_members.delete()
 
 
-@shared_task(name='bluebottle.activities.tasks.send_activity_message_notification_email')
+@app.task(name='bluebottle.activities.tasks.send_activity_message_notification_email')
 def send_activity_message_notification_email(activity_message_id, tenant):
     from bluebottle.activities.messages.activity_manager import (
         ContactActivityManagerNotification,

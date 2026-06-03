@@ -180,7 +180,8 @@ class MemberPlatformSettingsAdmin(
             {
                 'fields': (
                     'enable_gender', 'enable_birthdate',
-                    'enable_address', 'create_segments'
+                    'enable_address', 'create_segments',
+                    'create_locations'
                 )
             }
         ),

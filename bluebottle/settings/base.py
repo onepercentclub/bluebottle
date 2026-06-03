@@ -231,7 +231,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'bluebottle.auth.password_validation.CustomMinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 8,
+            'min_length': 10,
         }
     },
     {

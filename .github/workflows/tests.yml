@@ -2,6 +2,9 @@ name: Testing
 
 on:
   pull_request:
+  push:
+    branches:
+      - master
 
 concurrency:
   group: tests-${{ github.ref }}
@@ -11,6 +14,9 @@ jobs:
   test:
     name: Run automated tests
     runs-on: Bluebottle
+    permissions:
+      contents: read
+      pull-requests: write
 
     services:
       postgres:
@@ -275,10 +281,23 @@ jobs:
             echo "setup.py unchanged; skipping dependency install."
           fi
 
-      - name: Run tests (coverage)
+      - name: Run tests with coverage
         shell: bash
         run: |
           set -euxo pipefail
           source "$VENV_DIR/bin/activate"
           python -c "import pkg_resources"
-          python manage.py test --parallel 16 --keepdb --settings bluebottle.settings.runner -v3
+          coverage run --parallel-mode manage.py test --parallel 16 --keepdb --settings bluebottle.settings.runner -v3
+          coverage combine
+          coverage report
+          coverage xml -o coverage.xml
+
+      - name: Upload coverage to Coveralls
+        if: success()
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          format: cobertura
+          file: coverage.xml
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}

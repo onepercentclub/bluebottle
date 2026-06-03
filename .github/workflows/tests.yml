@@ -259,7 +259,7 @@ jobs:
           python --version
 
           # Use sane tooling for Python 3.11
-          python -m pip install --upgrade "pip==24.0" "setuptools==69.5.1" wheel
+          python -m pip install --upgrade "pip==24.3.1" "setuptools==69.5.1" wheel
           python -m pip --version
           python -c "import pkg_resources"
 
@@ -275,7 +275,9 @@ jobs:
 
           if [ "$NEW_SHA" != "$OLD_SHA" ]; then
             echo "Dependency definition changed; installing..."
-            python -m pip install --no-build-isolation --no-use-pep517 -e ".[test]" --trusted-host github.com
+            python -m pip cache purge || true
+            python -m pip install --no-cache-dir 'cffi>=1.15.1' 'bcrypt==3.2.0'
+            python -m pip install --no-cache-dir --no-build-isolation -e ".[test]" --trusted-host github.com
             echo "$NEW_SHA" > "$STAMP"
           else
             echo "setup.py unchanged; skipping dependency install."

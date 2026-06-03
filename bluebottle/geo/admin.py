@@ -218,12 +218,10 @@ class GeoFeatureInline(admin.TabularInline):
         return False
 
 
-
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
     class Media(object):
         js = ('geo/js/geolocation_admin_mapbox.js',)
-
 
     formfield_overrides = {
         PointField: {"widget": CustomMapboxPointFieldWidget},

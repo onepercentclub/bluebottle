@@ -788,9 +788,15 @@ class Create(Activity):
         super().save(*args, **kwargs)
 
         if created and self.is_local:
-            if self.object.origin.status in ('open', 'granted', ):
+            if (
+                self.object.origin and
+                self.object.origin.status in ('open', 'granted', )
+            ):
                 Start.objects.create(object=self.object)
-            elif self.object.origin.status == 'succeeded':
+            elif (
+                self.object.origin and
+                self.object.origin.status == 'succeeded'
+            ):
                 Finish.objects.create(object=self.object)
             else:
                 Cancel.objects.create(object=self.object)

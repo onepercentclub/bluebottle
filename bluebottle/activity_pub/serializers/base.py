@@ -1,4 +1,3 @@
-from geocoder.api import ip
 import inflection
 from rest_framework import serializers, relations
 
@@ -185,6 +184,7 @@ class FederatedObjectBaseSerializer(
     serializers.ModelSerializer, metaclass=FederatedObjectBaseSerializerMetaclass
 ):
     id = FederatedIdField()
+
     class Meta:
         fields = ('id', 'type')
 
@@ -220,7 +220,7 @@ class FederatedObjectBaseSerializer(
                     if is_local(field_data['id']):
                         validated_data[field.source] = ActivityPubModel.objects.from_iri(
                             field_data['id']
-                        ).federated_object
+                        ).origin
                     else:
                         field.initial_data = field_data
 
@@ -240,10 +240,7 @@ class FederatedObjectBaseSerializer(
         for name, field in self.fields.items():
             if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):
                 if validated_data.get(field.source, None):
-                    try:
-                        field.initial_data = self.initial_data[name]
-                    except:
-                        __import__('ipdb').set_trace()
+                    field.initial_data = self.initial_data[name]
                     field.instance = getattr(instance, field.source, None)
                     field.is_valid(raise_exception=True)
                     validated_data[field.source] = field.save()

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.urls import reverse
+
 
 class ActivityPubIdField(serializers.CharField):
     def __init__(self):

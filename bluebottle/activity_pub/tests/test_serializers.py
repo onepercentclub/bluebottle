@@ -3,7 +3,9 @@ from urllib.parse import urlparse
 from operator import attrgetter
 from io import BytesIO
 
+import mock
 import httmock
+
 from django.test import RequestFactory
 from django.utils.timezone import get_current_timezone
 from requests import Response
@@ -16,7 +18,7 @@ from bluebottle.activity_pub.models import (
 )
 from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
 from bluebottle.activity_pub.tests.factories import (
-    DoGoodEventFactory, OrganizationFactory, FollowFactory, GoodDeedFactory,
+    DoGoodEventFactory, InboxFactory, OrganizationFactory, FollowFactory, GoodDeedFactory,
     CrowdFundingFactory
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -80,7 +82,7 @@ class JSONLDSerializerTestCase:
     def test_create(self):
         with httmock.HTTMock(*self.mocks):
             serializer = ActivityPubSerializer(data=self.data, context=self.context)
-
+            serializer.is_valid()
             self.assertTrue(serializer.is_valid())
 
         self.instance = serializer.save()
@@ -110,7 +112,10 @@ class JSONLDSerializerTestCase:
             )
             self.assertTrue(serializer.is_valid())
 
-        serializer.save()
+        with mock.patch('bluebottle.activity_pub.tasks.publish_to_recipient.delay'):
+            serializer.save()
+
+        self.instance.refresh_from_db()
         self.check(serializer)
 
 
@@ -169,7 +174,10 @@ class FollowSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
 
     def setUp(self):
         self.actor = OrganizationFactory.create(
-            iri='http://example.com/api/json-ld/actor/32'
+            iri='http://example.com/api/json-ld/actor/32',
+            inbox=InboxFactory.create(
+                iri='http://example.com/api/json-ld/inbox/32'
+            )
         )
 
         self.object = OrganizationFactory.create(
@@ -185,7 +193,7 @@ class FollowSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
             'id': 'http://example.com/api/json-ld/follow/35',
             'actor': self.actor.iri,
             'object': self.object.iri,
-            'adoption_type': 'template',
+            'adoption_type': 'clone',
         }
         super().setUp()
 

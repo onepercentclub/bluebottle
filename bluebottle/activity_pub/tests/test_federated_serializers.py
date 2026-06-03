@@ -74,10 +74,10 @@ class FederatedSerializerTestCase:
         )
         self.assertTrue(activity_pub_serializer.is_valid())
 
-        activity_pub_serializer.save(federated_object=self.instance)
+        activity_pub_serializer.save(origin=self.instance)
         self.activity_pub_instance = activity_pub_serializer.instance
 
-        self.assertEqual(self.instance, self.activity_pub_instance.federated_object)
+        self.assertEqual(self.instance, self.activity_pub_instance.origin)
         self.assertTrue(
             isinstance(self.activity_pub_instance, self.activity_pub_factory._meta.model)
         )
@@ -114,6 +114,7 @@ class FederatedSerializerTestCase:
         self.instance = federated_serializer.instance
         self.instance.refresh_from_db()
 
+        __import__('ipdb').set_trace()
         self.assertEqual(
             self.instance.origin, self.activity_pub_instance
         )

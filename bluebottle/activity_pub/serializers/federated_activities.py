@@ -135,7 +135,6 @@ class CountryField(serializers.CharField):
                 raise exceptions.ValidationError(f'Unknown country code: {result}')
 
 
-
 class AddressIdField(FederatedIdField):
     def to_representation(self, value):
         if hasattr(value, 'origin') and value.origin:
@@ -232,7 +231,7 @@ class LocationSerializer(FederatedObjectBaseSerializer):
         fields = FederatedObjectBaseSerializer.Meta.fields + ('latitude', 'longitude', 'name', 'address',)
 
     def to_internal_value(self, data):
-        internal_value =  super().to_internal_value(data)
+        internal_value = super().to_internal_value(data)
 
         try:
             internal_value['country'] = internal_value['country']['code']
@@ -381,7 +380,7 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
         )
 
     def to_internal_value(self, data):
-        internal_value =  super().to_internal_value(data)
+        internal_value = super().to_internal_value(data)
         if internal_value.get('target'):
             internal_value['target'] = Money(
                 **internal_value['target']

@@ -76,7 +76,7 @@ class FollowTestCase(BluebottleTestCase):
         self.model = FollowFactory.create(actor=None)
 
     def test_actor(self):
-        self.assertEqual(self.model.actor.federated_object, self.settings.organization)
+        self.assertEqual(self.model.actor.origin, self.settings.organization)
 
     def test_recipients(self):
         self.assertEqual(

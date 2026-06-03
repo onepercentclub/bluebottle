@@ -6,32 +6,10 @@ from rest_framework import status
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.mapbox_mocks import MAPBOX_V5_FEATURE
 from bluebottle.test.utils import BluebottleAdminTestCase
 
-mapbox_response = {
-    'id': 'address.8367876655690618',
-    'type': 'Feature',
-    'place_type': ['address'],
-    'relevance': 1,
-    'properties': {
-        'accuracy': 'rooftop',
-        'mapbox_id': 'dXJuOm1ieGFkcjowYzM5NTBjMi0wMjNhLTQxNTUtOTRmOS1kZTFmZDcxOWQwMTY'
-    },
-    'text': 'Brouwersdam Buitenzijde',
-    'place_name': 'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands',
-    'center': [3.851166, 51.762731],
-    'geometry': {'type': 'Point', 'coordinates': [3.851166, 51.762731]},
-    'address': '20',
-    'context': [
-        {'id': 'postcode.8367876655690618', 'text': '3253 MM'},
-        {'id': 'place.12961960', 'mapbox_id': 'dXJuOm1ieHBsYzp4Y2lv',
-         'wikidata': 'Q21060', 'text': 'Ouddorp'},
-        {'id': 'region.25768', 'mapbox_id': 'dXJuOm1ieHBsYzpaS2c',
-         'wikidata': 'Q694', 'short_code': 'NL-ZH', 'text': 'South Holland'},
-        {'id': 'country.8872', 'mapbox_id': 'dXJuOm1ieHBsYzpJcWc',
-         'wikidata': 'Q55', 'short_code': 'nl', 'text': 'Netherlands'}
-    ]
-}
+mapbox_response = MAPBOX_V5_FEATURE
 
 
 @mock.patch(

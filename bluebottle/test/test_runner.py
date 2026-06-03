@@ -12,6 +12,7 @@ from djmoney.contrib.exchange.models import ExchangeBackend, Rate
 from tenant_schemas.utils import get_tenant_model
 
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.test.mapbox_mocks import install_mapbox_mock, uninstall_mapbox_mock
 from bluebottle.test.utils import InitProjectDataMixin
 
 
@@ -117,6 +118,14 @@ class ParallelTestSuiteWithES(ParallelTestSuite):
 
 class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
     parallel_test_suite = ParallelTestSuiteWithES
+
+    def setup_test_environment(self, **kwargs):
+        super(MultiTenantRunner, self).setup_test_environment(**kwargs)
+        install_mapbox_mock()
+
+    def teardown_test_environment(self, **kwargs):
+        uninstall_mapbox_mock()
+        super(MultiTenantRunner, self).teardown_test_environment(**kwargs)
 
     def setup_databases(self, *args, **kwargs):
         self.keepdb = getattr(settings, 'KEEPDB', self.keepdb)

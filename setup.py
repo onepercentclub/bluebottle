@@ -11,7 +11,6 @@ import bluebottle
 def read_file(name):
     return open(os.path.join(os.path.dirname(__file__), name)).read()
 
-
 readme = read_file('README.rst')
 changes = ''
 

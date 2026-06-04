@@ -363,7 +363,6 @@ class StripePayoutAccount(PayoutAccount):
         max_length=100,
         null=True,
         choices=VerificationMethodChoices.choices,
-        default=VerificationMethodChoices.personal,
     )
 
     verified = models.BooleanField(default=False)
@@ -467,7 +466,7 @@ class StripePayoutAccount(PayoutAccount):
                 "mcc": "8398" if self.business_type != BusinessTypeChoices.company else "",
                 "product_description": "Not applicable - raising funds for a do-good project on a GoodUp platform."
             }
-            if self.business_type == BusinessTypeChoices.individual:
+            if not self.business_type or self.business_type == BusinessTypeChoices.individual or self.country == "MX":
                 company = None
             else:
                 company = {"structure": "incorporated_non_profit"}
@@ -476,7 +475,7 @@ class StripePayoutAccount(PayoutAccount):
                 country=self.country,
                 type="custom",
                 settings=self.account_settings,
-                business_type=self.business_type or BusinessTypeChoices.non_profit,
+                business_type=self.business_type,
                 company=company,
                 business_profile=business_profile,
                 capabilities=self.capabilities,

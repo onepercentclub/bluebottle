@@ -72,7 +72,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         verbose_name=_("co-initiators"),
         help_text=_(
             "Co-initiators can create and edit activities for "
-            "this initiative, but cannot edit the initiative itself."
+            "this initiative, and can edit the initiative itself."
         ),
         related_name="activity_managers_%(class)ss",
     )
@@ -362,6 +362,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
         )),
     )
 
+    contact_activity_manager = models.BooleanField(
+        verbose_name=_('Contact activity manager'),
+        help_text=_('Allow users to send messages to activity managers.'),
+        default=True
+    )
+
     terms_of_service = models.TextField(
         _("Terms of Service"),
         blank=True,
@@ -616,6 +622,7 @@ class Theme(SortableTranslatableModel):
     class Meta(object):
         verbose_name = _("theme")
         verbose_name_plural = _("themes")
+        ordering = ['pk']
         permissions = (("api_read_theme", "Can view theme through API"),)
 
     class JSONAPIMeta(object):

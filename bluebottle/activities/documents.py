@@ -345,8 +345,8 @@ class ActivityDocument(Document):
                 'id': instance.location.id,
                 'name': instance.location.formatted_address,
                 'locality': instance.location.locality,
-                'country_code': instance.location.country.alpha2_code,
-                'country': instance.location.country.name,
+                'country_code': instance.location.country.alpha2_code if instance.location.country else None,
+                'country': instance.location.country.name if instance.location.country else None,
                 'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:

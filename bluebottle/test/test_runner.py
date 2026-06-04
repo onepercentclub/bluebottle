@@ -16,6 +16,11 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.test.utils import InitProjectDataMixin
 
 
+def _es_test_setup_enabled():
+    skip = os.environ.get('BLUEBOTTLE_SKIP_ES_TEST_SETUP', '').lower()
+    return skip not in ('1', 'true', 'yes')
+
+
 def _wait_for_es_indices():
     """Wait for Elasticsearch indices to be ready for search (refresh)."""
     try:
@@ -76,6 +81,8 @@ def _setup_es_indices():
     Create Elasticsearch indices for all tenants. Does not return until indices
     are set up (and refreshed). Tests must not run until this completes.
     """
+    if not _es_test_setup_enabled():
+        return
     _wipe_stale_pid_test_elasticsearch_indices()
     Tenant = get_tenant_model()
     for tenant in Tenant.objects.exclude(schema_name='public'):

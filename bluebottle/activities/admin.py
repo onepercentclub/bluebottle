@@ -1071,8 +1071,7 @@ class ActivityAdmin(
             filters = filters + ['team_activity']
         return filters
 
-    list_display = ['__str__', 'created', 'type', 'state_name',
-                    'link', 'highlight']
+    list_display = ['__str__', 'created', 'type', 'state_name', 'highlight']
 
     def location_link(self, obj):
         if not obj.office_location:

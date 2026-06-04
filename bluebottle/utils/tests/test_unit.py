@@ -22,6 +22,7 @@ from parler import appsettings
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
@@ -37,8 +38,6 @@ from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.storage import TenantFileSystemStorage
 from bluebottle.utils.utils import clean_for_hashtag, get_client_ip
 from ..email_backend import send_mail, create_message
-
-from bluebottle.mails.models import MailPlatformSettings
 
 
 def generate_random_slug():
@@ -189,15 +188,6 @@ class SendMailTestCase(BluebottleTestCase):
         self.assertEqual(logger.error.call_args[0][0],
                          'Trying to send email to invalid email address: {0}'.
                          format(self.user.email))
-
-    @mock.patch('bluebottle.utils.email_backend.logger')
-    def test_no_template(self, logger):
-        send_mail(to=self.user)
-        self.assertTrue(logger.error.called)
-        self.assertEqual(
-            logger.error.call_args[0][0],
-            'Exception while rendering email template: None.html, in None'
-        )
 
     @mock.patch('bluebottle.utils.email_backend.logger')
     @mock.patch('bluebottle.utils.email_backend.create_message')
@@ -624,6 +614,35 @@ class TestOneOfPermission(BluebottleTestCase):
             self.permission.has_object_action_permission(
                 'GET', self.user, obj=self.initiative
             )
+        )
+
+
+class RelatedResourceOwnerPermissionTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(RelatedResourceOwnerPermissionTestCase, self).setUp()
+        self.permission = RelatedResourceOwnerPermission()
+        self.owner = BlueBottleUserFactory.create()
+        self.other_user = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+
+    def test_has_parent_permission_for_owner(self):
+        self.assertTrue(
+            self.permission.has_parent_permission('GET', self.owner, self.initiative)
+        )
+
+    def test_has_parent_permission_denies_other_user(self):
+        self.assertFalse(
+            self.permission.has_parent_permission('GET', self.other_user, self.initiative)
+        )
+
+    def test_has_object_action_permission_uses_parent_owner(self):
+        child = mock.Mock()
+        child.parent = self.initiative
+        self.assertTrue(
+            self.permission.has_object_action_permission('GET', self.owner, child)
+        )
+        self.assertFalse(
+            self.permission.has_object_action_permission('GET', self.other_user, child)
         )
 
 

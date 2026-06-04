@@ -7,7 +7,6 @@ import django.core.files.storage
 from django.db import migrations, models
 import django.db.models.deletion
 import django_extensions.db.fields
-import taggit.managers
 
 
 class Migration(migrations.Migration):
@@ -15,7 +14,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('taggit', '0002_auto_20150616_2121'),
         ('geo', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -41,7 +39,6 @@ class Migration(migrations.Migration):
                 ('email', models.EmailField(blank=True, max_length=254)),
                 ('registration', models.FileField(blank=True, null=True, storage=django.core.files.storage.FileSystemStorage(location=b'/Users/ernst/Work/bluebottle/private/media'), upload_to=b'organizations/registrations')),
                 ('country', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='country', to='geo.Country')),
-                ('tags', taggit.managers.TaggableManager(blank=True, help_text='A comma-separated list of tags.', through='taggit.TaggedItem', to='taggit.Tag', verbose_name='tags')),
             ],
             options={
                 'ordering': ['name'],

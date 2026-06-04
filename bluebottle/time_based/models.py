@@ -1,5 +1,6 @@
 import uuid
 from urllib.parse import urlencode
+import datetime
 
 import pytz
 from django.core.validators import MaxValueValidator
@@ -392,7 +393,7 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     def google_calendar_link(self):
         def format_date(date):
             if date:
-                return date.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                return date.astimezone(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 
         details = self.activity.details
         if self.is_online and self.online_meeting_url:
@@ -1169,6 +1170,7 @@ class Skill(TranslatableModel):
         return self.name
 
     class Meta():
+        ordering = ['pk']
         permissions = (
             ('api_read_skill', 'Can view skills through the API'),
         )
@@ -1634,6 +1636,7 @@ class Team(TriggerMixin, models.Model):
     class Meta:
         verbose_name = _("Team")
         verbose_name_plural = _("Teams")
+        ordering = ('-created', 'pk')
         permissions = (
             ("api_read_team", "Can view a team through the API"),
             ("api_add_team", "Can add a team through the API"),
@@ -1936,7 +1939,7 @@ class Slot(models.Model):
     def google_calendar_link(self):
         def format_date(date):
             if date:
-                return date.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+                return date.astimezone(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
         details = self.details
         if self.is_online and self.online_meeting_url:

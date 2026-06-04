@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.time_based.views import (
@@ -10,55 +11,55 @@ from bluebottle.time_based.views import (
 )
 
 urlpatterns = [
-    re_path(
-        r'^$',
+    path(
+        '',
         PeriodicActivityListView.as_view(),
         name='periodic-list'
     ),
-    re_path(
-        r'^/(?P<pk>\d+)$',
+    path(
+        '/<int:pk>',
         PeriodicActivityDetailView.as_view(),
         name='periodic-detail'
     ),
-    re_path(
-        r'^/transitions$',
+    path(
+        '/transitions',
         PeriodicTransitionList.as_view(),
         name='periodic-transition-list'
     ),
 
-    re_path(
-        r'^/(?P<activity_id>\d+)/registrations/$',
+    path(
+        '/<int:activity_id>/registrations/',
         PeriodicRelatedRegistrationList.as_view(),
         name='related-periodic-registrations'
     ),
-    re_path(
-        r'^/registrations/$',
+    path(
+        '/registrations/',
         PeriodicRegistrationList.as_view(),
         name='periodic-registration-list'
     ),
-    re_path(
-        r'^/registrations/transitions$',
+    path(
+        '/registrations/transitions',
         PeriodicRegistrationTransitionList.as_view(),
         name='periodic-registration-transitions'
     ),
-    re_path(
-        r'^/registrations/(?P<pk>\d+)$',
+    path(
+        '/registrations/<int:pk>',
         PeriodicRegistrationDetail.as_view(),
         name='periodic-registration-detail'
     ),
 
-    re_path(
-        r'^/(?P<activity_id>\d+)/participants$',
+    path(
+        '/<int:activity_id>/participants',
         PeriodicRelatedParticipantList.as_view(),
         name='periodic-participants'
     ),
-    re_path(
-        r'^/participants/transitions$',
+    path(
+        '/participants/transitions',
         PeriodicParticipantTransitionList.as_view(),
         name='periodic-participant-transitions'
     ),
-    re_path(
-        r'^/participants/(?P<pk>\d+)$',
+    path(
+        '/participants/<int:pk>',
         PeriodicParticipantDetail.as_view(),
         name='periodic-participant-detail'
     ),

@@ -16,6 +16,11 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.test.utils import InitProjectDataMixin
 
 
+def _es_test_setup_enabled():
+    skip = os.environ.get('BLUEBOTTLE_SKIP_ES_TEST_SETUP', '').lower()
+    return skip not in ('1', 'true', 'yes')
+
+
 def _wait_for_es_indices():
     """Wait for Elasticsearch indices to be ready for search (refresh)."""
     try:
@@ -76,6 +81,8 @@ def _setup_es_indices():
     Create Elasticsearch indices for all tenants. Does not return until indices
     are set up (and refreshed). Tests must not run until this completes.
     """
+    if not _es_test_setup_enabled():
+        return
     _wipe_stale_pid_test_elasticsearch_indices()
     Tenant = get_tenant_model()
     for tenant in Tenant.objects.exclude(schema_name='public'):
@@ -92,6 +99,7 @@ def _init_worker_with_es(
     process_setup=None,
     process_setup_args=None,
     debug_mode=None,
+    used_aliases=None
 ):
     with counter.get_lock():
         counter.value += 1
@@ -116,7 +124,8 @@ def _init_worker_with_es(
         django_test_runner.django.setup()
         django_test_runner.setup_test_environment(debug=debug_mode)
 
-    for alias in django_test_runner.connections:
+    db_aliases = used_aliases or django_test_runner.connections
+    for alias in db_aliases:
         connection = django_test_runner.connections[alias]
         if start_method == "spawn":
             connection.settings_dict.update(initial_settings[alias])

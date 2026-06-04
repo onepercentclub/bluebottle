@@ -107,33 +107,34 @@ class OfficeRegionAdmin(admin.ModelAdmin):
 def region_manager_filter(queryset, user):
 
     model = queryset.model
+    subregions = user.subregion_manager.all()
     if user.is_superuser:
         return queryset
-    elif user.subregion_manager.count():
+    elif subregions.count():
         if model == Initiative:
-            subregion_filter = Q(activities__office_location__subregion__in=user.subregion_manager.all())
-            owner_filter = Q(owner__location__subregion__in=user.subregion_manager.all())
+            subregion_filter = Q(activities__office_location__subregion__in=subregions)
+            owner_filter = Q(owner__location__subregion__in=subregions)
             self_filter = Q(owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif issubclass(model, Activity):
-            subregion_filter = Q(office_location__subregion__in=user.subregion_manager.all())
-            owner_filter = Q(owner__location__subregion__in=user.subregion_manager.all())
+            subregion_filter = Q(office_location__subregion__in=subregions)
+            owner_filter = Q(owner__location__subregion__in=subregions)
             self_filter = Q(owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif model == Member:
-            subregion_filter = Q(location__subregion__in=user.subregion_manager.all())
+            subregion_filter = Q(location__subregion__in=subregions)
             self_filter = Q(id=user.id)
             queryset = queryset.filter(
                 subregion_filter | self_filter
             ).distinct()
         elif issubclass(model, Contribution):
-            subregion_filter = Q(contributor__activity__office_location__subregion__in=user.subregion_manager.all())
-            owner_filter = Q(contributor__activity__owner__location__subregion__in=user.subregion_manager.all())
+            subregion_filter = Q(contributor__activity__office_location__subregion__in=subregions)
+            owner_filter = Q(contributor__activity__owner__location__subregion__in=subregions)
             self_filter = Q(contributor__activity__owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif model == TeamMember:
-            subregion_filter = Q(team__activity__office_location__subregion__in=user.subregion_manager.all())
-            owner_filter = Q(team__activity__owner__location__subregion__in=user.subregion_manager.all())
+            subregion_filter = Q(team__activity__office_location__subregion__in=subregions)
+            owner_filter = Q(team__activity__owner__location__subregion__in=subregions)
             self_filter = Q(team__activity__owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif (
@@ -141,10 +142,57 @@ def region_manager_filter(queryset, user):
             or issubclass(model, Slot)
             or model in [Team, Update, Payout, GrantPayout]
         ):
-            subregion_filter = Q(activity__office_location__subregion__in=user.subregion_manager.all())
-            owner_filter = Q(activity__owner__location__subregion__in=user.subregion_manager.all())
+            subregion_filter = Q(activity__office_location__subregion__in=subregions)
+            owner_filter = Q(activity__owner__location__subregion__in=subregions)
             self_filter = Q(activity__owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
+        else:
+            raise NotImplementedError(f'No region manager filter implemented for {model}')
+    return queryset
+
+
+def office_manager_filter(queryset, user):
+    model = queryset.model
+    offices = user.office_manager.all()
+
+    if user.is_superuser:
+        return queryset
+    elif offices.count():
+        if model == Initiative:
+            office_filter = Q(activities__office_location__in=offices)
+            owner_filter = Q(owner__location__in=offices)
+            self_filter = Q(owner=user)
+            queryset = queryset.filter(office_filter | owner_filter | self_filter).distinct()
+        elif issubclass(model, Activity):
+            office_filter = Q(office_location__in=offices)
+            owner_filter = Q(owner__location__in=offices)
+            self_filter = Q(owner=user)
+            queryset = queryset.filter(office_filter | owner_filter | self_filter).distinct()
+        elif model == Member:
+            office_filter = Q(location__in=offices)
+            self_filter = Q(id=user.id)
+            queryset = queryset.filter(
+                office_filter | self_filter
+            ).distinct()
+        elif issubclass(model, Contribution):
+            office_filter = Q(contributor__activity__office_location__in=offices)
+            owner_filter = Q(contributor__activity__owner__location__in=offices)
+            self_filter = Q(contributor__activity__owner=user)
+            queryset = queryset.filter(office_filter | owner_filter | self_filter).distinct()
+        elif model == TeamMember:
+            office_filter = Q(team__activity__office_location__in=offices)
+            owner_filter = Q(team__activity__owner__location__in=offices)
+            self_filter = Q(team__activity__owner=user)
+            queryset = queryset.filter(office_filter | owner_filter | self_filter).distinct()
+        elif (
+            issubclass(model, Contributor)
+            or issubclass(model, Slot)
+            or model in [Team, Update, Payout, GrantPayout]
+        ):
+            office_filter = Q(activity__office_location__in=offices)
+            owner_filter = Q(activity__owner__location__in=offices)
+            self_filter = Q(activity__owner=user)
+            queryset = queryset.filter(office_filter | owner_filter | self_filter).distinct()
         else:
             raise NotImplementedError(f'No region manager filter implemented for {model}')
     return queryset
@@ -155,4 +203,5 @@ class RegionManagerAdminMixin:
     def get_queryset(self, request):
         queryset = super(RegionManagerAdminMixin, self).get_queryset(request)
         queryset = region_manager_filter(queryset, request.user)
+        queryset = office_manager_filter(queryset, request.user)
         return queryset

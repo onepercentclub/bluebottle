@@ -7,11 +7,14 @@ import dateutil
 from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone, now
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField,
+    ResourceRelatedField,
 )
 from rest_framework_json_api.serializers import (
     ModelSerializer,
@@ -22,7 +25,8 @@ from rest_framework_json_api.serializers import (
 from bluebottle.activities.models import (
     Activity, Contribution, Contributor, ActivityQuestion,
     FileUploadQuestion, SegmentQuestion, TextQuestion, ConfirmationAnswer,
-    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion
+    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion,
+    ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.collect.serializers import (
@@ -1074,3 +1078,40 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
         'segment': 'bluebottle.segments.serializers.SegmentListSerializer',
         'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
     }
+
+
+class ActivityMessageSerializer(ModelSerializer):
+    sender = ResourceRelatedField(
+        read_only=True,
+    )
+    activity = PolymorphicResourceRelatedField(
+        ActivitySerializer,
+        queryset=Activity.objects.all(),
+    )
+
+    class Meta(object):
+        model = ActivityMessage
+        fields = ('message', 'created', 'sender', 'activity')
+
+    class JSONAPIMeta(object):
+        resource_name = 'activity-messages'
+        included_resources = ['sender', 'activity']
+
+    included_serializers = {
+        'sender': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+    }
+
+    def validate_activity(self, activity):
+        if activity.status == 'draft':
+            raise PermissionDenied()
+        return activity
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        activity = attrs.get('activity')
+        if request and activity and activity.owner_id == request.user.pk:
+            raise serializers.ValidationError(
+                {'activity': _('You cannot send a message to yourself as the activity manager.')}
+            )
+        return attrs

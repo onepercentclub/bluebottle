@@ -1,7 +1,7 @@
 import logging
 
 from celery.schedules import crontab
-from celery.task import periodic_task
+from bluebottle.celery import app
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -9,11 +9,7 @@ from bluebottle.clients.utils import LocalTenant
 logger = logging.getLogger('bluebottle')
 
 
-@periodic_task(
-    run_every=(crontab(hour=8, minute=0, day_of_week=1)),
-    name="grant_provider_tasks",
-    ignore_result=True,
-)
+@app.task
 def grant_provider_tasks():
     from bluebottle.grant_management.models import GrantProvider
 
@@ -23,11 +19,7 @@ def grant_provider_tasks():
                 task.execute()
 
 
-@periodic_task(
-    run_every=(crontab(minute=20)),
-    name="check_grant_payment_readiness",
-    ignore_result=True,
-)
+@app.task
 def check_grant_payment_readiness():
     from bluebottle.grant_management.models import GrantPayment
 
@@ -35,3 +27,14 @@ def check_grant_payment_readiness():
         with LocalTenant(tenant, clear_tenant=True):
             for payment in GrantPayment.objects.filter(status='pending'):
                 payment.check_status()
+
+
+app.add_periodic_task(
+    crontab(minute='*/15'),
+    grant_provider_tasks.s()
+)
+
+app.add_periodic_task(
+    crontab(minute='*/20'),
+    check_grant_payment_readiness.s()
+)

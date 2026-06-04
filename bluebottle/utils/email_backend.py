@@ -1,32 +1,65 @@
-from __future__ import print_function
-from builtins import str
+import inspect
 import logging
 import re
+from builtins import str
+
 import dkim
-
 import premailer
-
 from django.conf import settings
 from django.core.mail.backends.smtp import EmailBackend
 from django.db import connection
-from django.utils import translation
-from django.template.loader import get_template
 from django.template import Context
-
+from django.template.loader import get_template
+from django.utils import translation
 from django_tools.middlewares import ThreadLocal
+from tenant_extras.utils import TenantLanguage
 
-from bluebottle.cms.models import SitePlatformSettings
-
+from bluebottle.clients import properties
 from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
-from bluebottle.clients import properties
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.utils.utils import to_text
 
-
-from tenant_extras.utils import TenantLanguage
-
 logger = logging.getLogger(__name__)
+
+
+def _get_send_mail_caller():
+    for frame_info in inspect.stack()[2:]:
+        module_name = frame_info.frame.f_globals.get('__name__', '')
+        if module_name == __name__:
+            continue
+        caller_self = frame_info.frame.f_locals.get('self')
+        if caller_self is not None:
+            location = '{}.{}'.format(
+                caller_self.__class__.__module__,
+                caller_self.__class__.__name__,
+            )
+        else:
+            location = module_name
+        return '{}:{} ({})'.format(
+            location,
+            frame_info.function,
+            frame_info.filename,
+        )
+    return 'unknown'
+
+
+def _log_template_render_error(exception, template_name, subject, to):
+    recipient = getattr(to, 'email', to)
+    error_message = (
+        'Exception while rendering email template: {exception}, '
+        'template_name={template_name!r}, subject={subject!r}, '
+        'recipient={recipient!r}, called_from={caller}'
+    ).format(
+        exception=exception,
+        template_name=template_name,
+        subject=subject,
+        recipient=recipient,
+        caller=_get_send_mail_caller(),
+    )
+    logger.error(error_message, exc_info=True)
+
 
 try:
     import cssutils
@@ -144,7 +177,7 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
         if bcc:
             args['bcc'] = bcc
         if reply_to:
-            args['reply_to'] = [reply_to]
+            args['reply_to'] = reply_to
 
         # even if it's None
         args['from_email'] = from_email
@@ -203,8 +236,7 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
             **kwargs
         )
     except Exception as e:
-        error_message = f"Exception while rendering email template: {e}, in {template_name}"
-        print(error_message)
+        error_message = f"Exception while rendering email for '{subject}' template: {e}, in {template_name}"
         logger.error(error_message)
         return
 

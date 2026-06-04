@@ -30,7 +30,6 @@ def get_translation_response(text, target_language):
         if resp.status_code == 200:
             data = resp.json()["translations"][0]
             detected_source = data["detected_source_language"]
-            print(data)
             if detected_source == target_language.upper():
                 translated = {
                     'value': text,
@@ -89,5 +88,5 @@ def translate_text_cached(text, target_language):
         )
         return translated
     except Exception as e:
-        print(e)
+        logger.warning('Translation failed: %s', e, exc_info=True)
         return None

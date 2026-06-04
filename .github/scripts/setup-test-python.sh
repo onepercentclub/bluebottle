@@ -47,20 +47,26 @@ if [ -z "${OLD_SHA}" ] && [ "${PIP_EXTRA}" = "test" ]; then
 fi
 
 deps_ok() {
-  python -c "import django" 2>/dev/null || return 1
+  python -c "import django, pkg_resources" 2>/dev/null || return 1
   if [ "${PIP_EXTRA}" = "dev" ]; then
     python -c "import flake8" 2>/dev/null || return 1
   fi
   return 0
 }
 
+ensure_runtime_tools() {
+  python -c "import pkg_resources" 2>/dev/null || python -m pip install "setuptools==69.5.1"
+}
+
 if [ "${OLD_SHA}" = "${NEW_SHA}" ] && deps_ok; then
+  ensure_runtime_tools
   echo "${NEW_SHA}" > "${STAMP}"
   echo "Dependencies up to date; skipping pip install."
   exit 0
 fi
 
 if deps_ok && [ -z "${OLD_SHA}" ]; then
+  ensure_runtime_tools
   echo "${NEW_SHA}" > "${STAMP}"
   echo "Venv ready (no stamp yet); skipping pip install."
   exit 0

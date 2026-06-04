@@ -189,7 +189,7 @@ jobs:
           set -euxo pipefail
           source .github/scripts/activate-ci-python.sh
           python manage.py test \
-            --parallel 8 \
+            --parallel 12 \
             --keepdb \
             --exclude-tag=elasticsearch \
             --settings bluebottle.settings.runner \
@@ -377,7 +377,7 @@ jobs:
           set -euxo pipefail
           source .github/scripts/activate-ci-python.sh
           python manage.py test \
-            --parallel 4 \
+            --parallel 8 \
             --keepdb \
             --tag=elasticsearch \
             --settings bluebottle.settings.runner \

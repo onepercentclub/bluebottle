@@ -188,7 +188,7 @@ jobs:
         run: |
           set -euxo pipefail
           source .github/scripts/activate-ci-python.sh
-          coverage run --parallel-mode python manage.py test \
+          coverage run --parallel-mode manage.py test \
             --parallel 16 \
             --keepdb \
             --exclude-tag=elasticsearch \

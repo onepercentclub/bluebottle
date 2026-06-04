@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _apply_to_adopted_if_no_link(event, transition_name):
     """If there is no LinkedActivity for this event, apply transition to adopted activity."""
+    return
     from bluebottle.activity_links.models import LinkedActivity
     if LinkedActivity.objects.filter(event=event).exists():
         return

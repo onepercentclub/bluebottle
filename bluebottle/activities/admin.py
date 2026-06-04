@@ -8,7 +8,8 @@ from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
@@ -38,7 +39,7 @@ from bluebottle.activities.models import (
     FileUploadAnswer,
     FileUploadQuestion,
     Organizer,
-    RemoteContributor,
+    RemoteMember,
     SegmentAnswer,
     SegmentQuestion,
     Team,
@@ -48,7 +49,6 @@ from bluebottle.activities.models import (
     ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
-from bluebottle.activity_pub.admin import adapter
 from bluebottle.activity_pub.forms import SharePublishForm
 from bluebottle.activity_pub.models import Follow as ActivityPubFollow, Recipient
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -91,11 +91,11 @@ from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import get_human_readable_duration
 
 
-@admin.register(RemoteContributor)
-class RemoteContributorAdmin(admin.ModelAdmin):
-    list_display = ['id', 'display_name', 'email', 'sync_id', 'sync_actor']
-    search_fields = ['display_name', 'email', 'sync_id']
-    readonly_fields = ['display_name', 'email', 'sync_id', 'sync_actor']
+@admin.register(RemoteMember)
+class RemoteMemberAdmin(admin.ModelAdmin):
+    list_display = ['id', 'full_name', 'email', ]
+    search_fields = ['full_name', 'email', ]
+    readonly_fields = ['full_name', 'email', ]
 
 
 @admin.register(Contributor)
@@ -151,20 +151,20 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
 class BaseContributorInline(TabularInlinePaginated):
     model = Contributor
     raw_id_fields = ['user']
-    readonly_fields = ['edit', 'created', 'status_label', 'remote_contributor', 'platform']
+    readonly_fields = ['edit', 'created', 'status_label', 'remote_user', 'platform']
     fields = ['edit', 'created', 'user', 'status_label']
     extra = 0
     per_page = 10
     ordering = ['-created']
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('user', 'remote_contributor')
+        return super().get_queryset(request).select_related('user', 'remote_user')
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         try:
             obj.event
-            return list(fields) + ['remote_contributor', 'platform']
+            return list(fields) + ['remote_user', 'platform']
         except Activity.event.RelatedObjectDoesNotExist:
             pass
         except AttributeError:
@@ -176,8 +176,9 @@ class BaseContributorInline(TabularInlinePaginated):
     can_delete = True
 
     def platform(self, obj):
-        if obj.remote_contributor:
-            return obj.remote_contributor.sync_actor
+        if obj.remote_user:
+            __import__('ipdb').set_trace()
+            return obj.remote_user.sync_actor
         return "-"
 
     def has_change_permission(self, request, obj=None):
@@ -486,8 +487,8 @@ class BulkAddMixin(object):
         urls = super(BulkAddMixin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/bulk_add/$',
+            path(
+                '<int:pk>/bulk_add/',
                 self.admin_site.admin_view(self.bulk_add_participants),
                 name='{}_{}_bulk_add'.format(
                     self.model._meta.app_label,
@@ -663,11 +664,9 @@ class ActivityChildAdmin(
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
-        'origin',
-        'activity_pub',
         'event',
-        'host_organization',
-        'synced_contributor_count'
+        'activity_pub',
+        'host_organization'
     ]
 
     office_fields = (
@@ -790,10 +789,9 @@ class ActivityChildAdmin(
             return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
 
     def activity_pub(self, obj):
-
         recipients = []
         try:
-            event = obj.event
+            event = obj.origin
             if event:
                 publishes = event.create_set.all().prefetch_related("recipients__actor")
                 for publish in publishes:
@@ -805,7 +803,7 @@ class ActivityChildAdmin(
                                 "adopted": event.accept_set.filter(actor=actor).exists(),
                             }
                         )
-        except ObjectDoesNotExist:
+        except (ObjectDoesNotExist, AttributeError):
             pass
 
         share_link = None
@@ -831,10 +829,11 @@ class ActivityChildAdmin(
         if not request.user.has_perm("activity.add_activity"):
             raise PermissionDenied
 
-        if not hasattr(activity, 'event'):
-            adapter.create_or_update_event(activity)
+        if not hasattr(activity, 'orgin'):
+            from bluebottle.activity_pub.models import Event
+            Event.sync(activity)
 
-        publish = activity.event.create_set.first()
+        publish = activity.origin.create_set.first()
         new_recipients = form.cleaned_data.get('recipients') or []
         for actor in new_recipients:
             Recipient.objects.get_or_create(actor=actor, activity=publish)
@@ -850,9 +849,8 @@ class ActivityChildAdmin(
 
     def get_activity_pub_fields(self, request, obj=None):
         if obj:
-            if obj.origin:
+            if hasattr(obj, 'origin') and not obj.origin.is_local:
                 return (
-                    'origin',
                     'host_organization',
                     'synced_contributor_count'
                 )
@@ -873,7 +871,7 @@ class ActivityChildAdmin(
             site_settings.share_activities and
             request.user.has_perm("activity_pub.add_event") and (
                 site_settings.is_publishing_activities or
-                (obj and obj.origin)
+                (obj and hasattr(obj, 'origin'))
             )
         ):
             fieldsets.append(
@@ -958,16 +956,16 @@ class ActivityChildAdmin(
         urls = super(ActivityChildAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/send-impact-reminder-message$',
+            path(
+                '<int:pk>/send-impact-reminder-message',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
                     self.model._meta.app_label,
                     self.model._meta.model_name
                 ),
             ),
-            re_path(
-                r'^(?P<pk>\d+)/share_activity$',
+            path(
+                '<int:pk>/share_activity',
                 self.admin_site.admin_view(self.share_activity),
                 name='{}_{}_share_activity'.format(
                     self.model._meta.app_label,
@@ -1044,7 +1042,7 @@ class ActivityAdmin(
         ScheduleActivity,
         RegisteredDateActivity
     )
-    readonly_fields = ['link', 'review_status', 'activity_pub_url']
+    readonly_fields = ['link', 'review_status', 'activity_pub_url', 'origin']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
     def lookup_allowed(self, key, value):

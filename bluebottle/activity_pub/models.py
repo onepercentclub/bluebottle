@@ -1,7 +1,10 @@
 from urllib.parse import urlparse
 
+import inflection
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
 from django.urls import reverse, resolve
@@ -9,16 +12,23 @@ from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
+from bluebottle.activities.models import Activity as DoGoodActivity, Contributor, RemoteMember
+from bluebottle.time_based.models import DateActivitySlot
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
+from bluebottle.files.models import Image as BluebottleImage
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
+
+from bluebottle.activity_pub.tasks import publish_to_recipient
+from bluebottle.activity_pub.utils import is_local, get_platform_actor
+
+from bluebottle.activity_pub.adapters import adapter
 
 
 class ActivityPubManager(PolymorphicManager):
     def from_iri(self, iri):
-        from bluebottle.activity_pub.utils import is_local
-
         if iri:
             if is_local(iri):
                 resolved = resolve(urlparse(iri).path)
@@ -45,9 +55,15 @@ class ActivityPubModel(PolymorphicModel):
         if self.iri:
             return self.iri
         else:
-            model_name = self.__class__.__name__.lower()
+            model_name = self.__class__.__name__
             return connection.tenant.build_absolute_url(
-                reverse(f'json-ld:{model_name}', args=(str(self.pk),))
+                reverse(
+                    'json-ld:resource',
+                    args=(
+                        inflection.dasherize(inflection.underscore(model_name)),
+                        str(self.pk),
+                    )
+                )
             )
 
     class Meta:
@@ -62,93 +78,68 @@ class Actor(ActivityPubModel):
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
-    def follow(self):
-        follow = Follow.objects.filter(object=self).first()
-        return follow
-
-    @property
     def webfinger_uri(self):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
 
-    def __str__(self):
-        try:
-            return self.person.name
-        except Person.DoesNotExist:
-            pass
-        try:
-            return self.organization.name
-        except (Organization.DoesNotExist, AttributeError):
-            pass
-        return self.preferred_username
+    def save(self, *args, **kwargs):
+        if self.is_local:
+            if not self.inbox:
+                self.inbox = Inbox.objects.create()
+            if not self.outbox:
+                self.outbox = Outbox.objects.create()
+            if not self.public_key:
+                self.public_key = PublicKey.objects.create()
 
-
-class PersonManager(ActivityPubManager):
-    def from_model(self, model):
-        if not isinstance(model, Member):
-            raise TypeError("Model should be a member instance")
-
-        try:
-            return model.person
-        except Member.person.RelatedObjectDoesNotExist:
-            inbox = Inbox.objects.create()
-            outbox = Outbox.objects.create()
-
-            public_key = PublicKey.objects.create()
-
-            return Person.objects.create(
-                inbox=inbox,
-                member=model,
-                outbox=outbox,
-                public_key=public_key,
-                name=model.full_name
-            )
+        super().save(*args, **kwargs)
 
 
 class Person(Actor):
     name = models.TextField()
+    given_name = models.TextField(null=True, blank=True)
+    family_name = models.TextField(null=True, blank=True)
+    email = models.TextField(null=True, blank=True)
 
-    member = models.OneToOneField(Member, null=True, on_delete=models.CASCADE)
+    origin = models.OneToOneField(
+        Member,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub_model'
+    )
 
-    objects = PersonManager()
+    adopted = models.OneToOneField(
+        RemoteMember,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
+    )
+
+    @property
+    def follow(self):
+        follow = Follow.objects.filter(object=self).first()
+        return follow
 
     def __str__(self):
-        return self.name
-
-
-class OrganizationManager(ActivityPubManager):
-
-    def from_model(self, model):
-        if not isinstance(model, BluebottleOrganization):
-            raise TypeError("Model should be a organisation instance, not {}".format(type(model)))
-
-        try:
-            return model.activity_pub_organization
-        except BluebottleOrganization.activity_pub_organization.RelatedObjectDoesNotExist:
-            inbox = Inbox.objects.create()
-            outbox = Outbox.objects.create()
-
-            public_key = PublicKey.objects.create()
-            logo_url = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
-
-            return Organization.objects.create(
-                inbox=inbox,
-                organization=model,
-                outbox=outbox,
-                public_key=public_key,
-                name=model.name,
-                icon=Image.objects.create(
-                    url=logo_url,
-                    name=model.logo.name
-                ) if logo_url else None,
-                summary=model.description,
-                preferred_username=model.slug
-            )
+        return self.name or self.prefered_username
 
 
 class Image(ActivityPubModel):
     name = models.CharField(max_length=1000, null=True)
     url = models.URLField(null=True)
+
+    origin = models.OneToOneField(
+        BluebottleImage,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub_model'
+    )
+
+    adopted = models.OneToOneField(
+        BluebottleImage,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
+    )
 
 
 class Organization(Actor):
@@ -159,14 +150,25 @@ class Organization(Actor):
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
     icon = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
 
-    organization = models.OneToOneField(
+    origin = models.OneToOneField(
         BluebottleOrganization,
         null=True,
         on_delete=models.CASCADE,
-        related_name='activity_pub_organization'
+        related_name='activity_pub_model'
     )
 
-    objects = OrganizationManager()
+    adopted = models.OneToOneField(
+        BluebottleOrganization,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
+    )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if not self.is_local and not self.adopted:
+            adapter.adopt(self)
 
     class Meta:
         verbose_name = _("partner")
@@ -234,6 +236,13 @@ class Place(ActivityPubModel):
 
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
 
+    origin = models.OneToOneField(
+        "geo.Geolocation", null=True, on_delete=models.SET_NULL, related_name='activity_pub_model'
+    )
+    adopted = models.OneToOneField(
+        "geo.Geolocation", null=True, on_delete=models.SET_NULL, related_name='origin'
+    )
+
     def __str__(self):
         return self.name or self.id
 
@@ -242,9 +251,20 @@ class Event(ActivityPubModel):
     name = models.CharField(verbose_name=_('Activity title'))
     summary = models.TextField(blank=True, null=True)
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
-    activity = models.OneToOneField(
-        "activities.Activity", null=True, on_delete=models.SET_NULL
+    origin = models.OneToOneField(
+        "activities.Activity", null=True, on_delete=models.SET_NULL, related_name='activity_pub_model'
     )
+    adopted = models.OneToOneField(
+        "activities.Activity", null=True, on_delete=models.SET_NULL, related_name='origin'
+    )
+
+    link = models.OneToOneField(
+        "activity_links.LinkedActivity",
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='origin'
+    )
+
     url = models.URLField(null=True, blank=True)
 
     organization = models.ForeignKey(
@@ -255,6 +275,21 @@ class Event(ActivityPubModel):
         help_text=_('Total contributors from all platforms')
     )
 
+    @classmethod
+    def sync(cls, activity):
+        return adapter.sync(activity)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.is_local:
+            if not self.create_set.exists():
+                Create.objects.create(actor=get_platform_actor(), object=self)
+            else:
+                Update.objects.create(
+                    object=self
+                )
+
     @property
     def source(self):
         create = Create.objects.filter(object=self).first()
@@ -263,18 +298,7 @@ class Event(ActivityPubModel):
 
     @property
     def adopted_activity(self):
-        return self.adopted_activities.first()
-
-    @property
-    def adopted(self):
-        return (
-            self.adopted_activity is not None or
-            self.linked_activity is not None
-        )
-
-    @property
-    def linked_activity(self):
-        return self.linked_activities.first()
+        return self.adopted or self.link
 
     @property
     def adoption_type(self):
@@ -282,18 +306,6 @@ class Event(ActivityPubModel):
 
     def __str__(self):
         return self.name
-
-    @property
-    def pub_url(self):
-        if self.iri:
-            return self.iri
-        else:
-            model_name = self.get_real_instance_class().__name__
-            import re
-            dashed_name = re.sub(r'(?<!^)(?=[A-Z])', '-', model_name).lower()
-            return connection.tenant.build_absolute_url(
-                reverse(f'json-ld:{dashed_name}', args=(str(self.pk),))
-            )
 
     class Meta:
         verbose_name = _("Shared/Received activity")
@@ -320,6 +332,8 @@ class GoodDeed(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
+    activity_type = 'deed'
+
     class Meta:
         verbose_name = _("Deed")
         verbose_name_plural = _("Deeds")
@@ -337,6 +351,8 @@ class CollectCampaign(Event):
         null=True,
     )
 
+    activity_type = 'collectactivity'
+
     class Meta:
         verbose_name = _("Collect campaign")
         verbose_name_plural = _("Collect campaigns")
@@ -353,6 +369,8 @@ class CrowdFunding(Event):
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
 
+    activity_type = 'funding'
+
     class Meta:
         verbose_name = _("Funding")
         verbose_name_plural = _("Funding")
@@ -364,6 +382,8 @@ class GrantApplication(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+
+    activity_type = 'grantapplication'
 
     class Meta:
         verbose_name = _("Grant application")
@@ -469,12 +489,6 @@ class SubEvent(ActivityPubModel):
         on_delete=models.CASCADE,
         related_name='sub_event'
     )
-    slot = models.OneToOneField(
-        'time_based.DateActivitySlot',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
     contributor_count = models.PositiveIntegerField(
         default=0,
         help_text=_('Accepted participants for this slot.'),
@@ -484,6 +498,20 @@ class SubEvent(ActivityPubModel):
         null=True,
         blank=True,
         help_text=_('Per-slot attendee limit (schema.org maximumAttendeeCapacity). Mirrors activity slot.'),
+    )
+
+    origin = models.OneToOneField(
+        DateActivitySlot,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub_model'
+    )
+
+    adopted = models.OneToOneField(
+        DateActivitySlot,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
     )
 
     class Meta:
@@ -524,6 +552,19 @@ class DoGoodEvent(Event):
         help_text=_('Overall attendee limit (schema.org maximumAttendeeCapacity). Mirrors time-based activity.'),
     )
 
+    @property
+    def activity_type(self):
+        if self.slot_mode == 'ScheduledSlotMode':
+            return 'ScheduleActivity'
+        elif self.slot_mode == 'PeriodicSlotMode':
+            return 'PeriodicActivity'
+        elif self.join_mode == 'SelectedJoinMode':
+            return 'RegisteredDateActivity'
+        elif len(self.sub_event.all()) > 0:
+            return 'DateActivity'
+        else:
+            return 'DeadlineActivity'
+
     class Meta(Event.Meta):
         verbose_name = _('Date activity')
         verbose_name_plural = _('Date activities')
@@ -535,7 +576,6 @@ class Activity(ActivityPubModel):
     default_recipients = []
 
     def save(self, *args, **kwargs):
-        from bluebottle.activity_pub.utils import get_platform_actor
         if not getattr(self, 'actor_id', None):
             self.actor = get_platform_actor()
 
@@ -555,6 +595,29 @@ class Recipient(models.Model):
     activity = models.ForeignKey('activity_pub.Activity', on_delete=models.CASCADE, related_name='recipients')
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
     send = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+
+        if created and not self.actor.is_local:
+            publish_to_recipient.delay(self, connection.tenant)
+
+            if isinstance(self.activity, Create):
+                for transition_cls in [Start, Finish, Cancel]:
+                    for transition in transition_cls.objects.filter(
+                        object=self.activity.object
+                    ):
+                        Recipient.objects.get_or_create(
+                            actor=self.actor,
+                            activity=transition
+                        )
+
+    def publish(self):
+        adapter.publish(self.activity, self.actor)
+
+        self.send = True
+        self.save()
 
     class Meta:
         verbose_name = _("Recipient")
@@ -604,6 +667,9 @@ class Follow(Activity):
         verbose_name=_("Publish mode"),
     )
 
+    def follow(self, url, **kwargs):
+        self.object = adapter.discover(url)
+
     @property
     def default_recipients(self):
         return [self.object]
@@ -635,19 +701,7 @@ class Follow(Activity):
             return Event.objects.filter(
                 create__actor=self.object,
             ).filter(
-                adopted_activities__isnull=False
-            )
-        return Accept.objects.filter(
-            actor=self.actor,
-        )
-
-    @property
-    def linked_activities(self):
-        if self.is_local:
-            return Event.objects.filter(
-                create__actor=self.object,
-            ).filter(
-                linked_activities__isnull=False
+                models.Q(link__isnull=False) | models.Q(adopted__isnull=False)
             )
         return Accept.objects.filter(
             actor=self.actor,
@@ -655,37 +709,33 @@ class Follow(Activity):
 
     @property
     def unpublished_activities(self):
-        from bluebottle.activities.models import Activity as DoGoodActivity
         return DoGoodActivity.objects.filter(
             status__in=['open', 'succeeded', 'full', 'partially_funded', 'running'],
         ).exclude(
-            event__create__recipients__actor=self.actor,
+            activity_pub_model__create__recipients__actor=self.actor,
         )
 
     @property
     def unpublished_open_activities(self):
-        from bluebottle.activities.models import Activity as DoGoodActivity
-        return DoGoodActivity.objects.filter(
+        return self.unpublished_activities.filter(
             status__in=['open', 'full', 'running'],
-        ).exclude(
-            event__create__recipients__actor=self.actor,
         )
 
     @property
     def unpublished_succeeded_activities(self):
-        from bluebottle.activities.models import Activity as DoGoodActivity
-        return DoGoodActivity.objects.filter(
+        return self.unpublished_activities.filter(
             status__in=['succeeded', 'partially_funded'],
-        ).exclude(
-            event__create__recipients__actor=self.actor,
         )
 
     def save(self, *args, **kwargs):
-        created = bool(self.pk)
+        created = not bool(self.pk)
+
+        if not hasattr(self, 'actor'):
+            self.actor = get_platform_actor()
 
         super().save(*args, **kwargs)
 
-        if created and self.is_local:
+        if not created:
             Update.objects.create(
                 object=self
             )
@@ -733,10 +783,37 @@ class Accept(Activity):
 class Create(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+
+        if created and self.is_local:
+            if (
+                self.object.origin and
+                self.object.origin.status in ('open', 'granted', )
+            ):
+                Start.objects.create(object=self.object)
+            elif (
+                self.object.origin and
+                self.object.origin.status == 'succeeded'
+            ):
+                Finish.objects.create(object=self.object)
+            else:
+                Cancel.objects.create(object=self.object)
+        elif not self.is_local:
+            follow = Follow.objects.get(object=self.actor)
+
+            if (
+                isinstance(self.object, Event) and
+                self.object.activity_type.lower() in follow.automatic_adoption_activity_types
+            ):
+                if follow.adoption_type == 'sync':
+                    adapter.adopt(self.object)
+                elif follow.adoption_type == 'link':
+                    adapter.link(self.object)
+
     @property
     def followers(self):
-        from bluebottle.activity_pub.utils import get_platform_actor
-
         actor = get_platform_actor()
         followers = Follow.objects.filter(publish_mode='automatic', accept__actor=actor)
         return followers
@@ -748,6 +825,15 @@ class Create(Activity):
 
 class Update(Activity):
     object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+        if created and not self.object.is_local:
+            if hasattr(self.object, 'adopted') and self.object.adopted:
+                adapter.adopt(self.object)
+            elif hasattr(self.object, 'link') and self.object.link:
+                adapter.link(self.object)
 
     @property
     def default_recipients(self):
@@ -769,28 +855,11 @@ class Update(Activity):
 
 
 class Join(Activity):
-    """Sent by a follower when a user joins a synced deed; object is the source GoodDeed."""
-    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+    """Sent by a follower when a user joins an Event"""
+    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveBigIntegerField()
+    object = GenericForeignKey("object_content_type", "object_id")
 
-    # Participant info sent to source for full participant list
-    participant_sync_id = models.CharField(
-        _("Participant sync id"),
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text=_("Stable id to match this participant on Leave."),
-    )
-    participant_name = models.CharField(
-        _("Participant name"),
-        max_length=255,
-        blank=True,
-        null=True,
-    )
-    participant_email = models.EmailField(
-        _("Participant email"),
-        blank=True,
-        null=True,
-    )
     sub_event = models.ForeignKey(
         'activity_pub.SubEvent',
         null=True,
@@ -799,31 +868,39 @@ class Join(Activity):
         related_name='+',
     )
 
+    origin = models.OneToOneField(
+        Contributor,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub_model'
+    )
+
+    adopted = models.OneToOneField(
+        Contributor,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin'
+    )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if not self.is_local and not self.adopted:
+            adapter.adopt(self)
+
     @property
     def default_recipients(self):
-        create = self.object.create_set.first()
-        if create:
-            yield create.actor
+        try:
+            create = self.object.create_set.get()
+        except Exception:
+            create = self.object.parent.create_set.get()
+
+        yield create.actor
 
 
 class Leave(Activity):
     """Sent by a follower when a user leaves a synced deed; object is the source GoodDeed."""
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
-
-    participant_sync_id = models.CharField(
-        _("Participant sync id"),
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text=_("Stable id to match the participant to remove."),
-    )
-    sub_event = models.ForeignKey(
-        'activity_pub.SubEvent',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='+',
-    )
 
     @property
     def default_recipients(self):
@@ -834,6 +911,7 @@ class Leave(Activity):
 
 class Transition(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+    transitioned = models.BooleanField(default=False)
 
     @property
     def default_recipients(self):
@@ -841,24 +919,69 @@ class Transition(Activity):
             for recipient in create.recipients.all():
                 yield recipient.actor
 
-    class Meta:
-        abstract = True
+    def save(self, *args, **kwargs):
+        if not self.is_local and not self.transitioned:
+            if self.transition():
+                self.transition = True
+
+        super().save(*args, **kwargs)
+
+    def transition(self):
+        raise NotImplementedError()
 
 
 class Delete(Transition):
-    pass
+    def transition(self):
+        if self.object.adopted:
+            self.object.adopted.states.cancel(save=True)
+            return True
+
+        if self.object.link:
+            self.object.link.delete()
+            return True
 
 
 class Start(Transition):
-    pass
+    def transition(self):
+        if self.object.adopted:
+            try:
+                self.object.adopted.states.publish(save=True)
+                return True
+            except TransitionNotPossible:
+                pass
+
+        if self.object.link:
+            try:
+                self.object.link.states.start(save=True)
+                return True
+            except TransitionNotPossible:
+                pass
 
 
 class Cancel(Transition):
-    pass
+    def transition(self):
+        if self.object.adopted:
+            self.object.adopted.states.cancel(save=True)
+            return True
+
+        if self.object.link:
+            self.object.link.states.cancel(save=True)
+            return True
 
 
 class Finish(Transition):
-    pass
+    def transition(self):
+        if self.object.adopted:
+            try:
+                self.object.adopted.states.succeed(save=True)
+            except TransitionNotPossible:
+                pass
+
+            return True
+
+        if self.object.link:
+            self.object.link.states.succeed(save=True)
+            return True
 
 
 from bluebottle.activity_pub.signals import *  # noqa

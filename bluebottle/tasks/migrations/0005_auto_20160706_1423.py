@@ -16,10 +16,6 @@ class Migration(migrations.Migration):
             name='task',
             options={'ordering': ['-created']},
         ),
-        migrations.RemoveField(
-            model_name='task',
-            name='tags',
-        ),
         migrations.AddField(
             model_name='task',
             name='type',

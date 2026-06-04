@@ -32,7 +32,7 @@ class Organization(ValidatedModelMixin, models.Model):
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
     )
 
-    origin = models.ForeignKey(
+    origin_old = models.ForeignKey(
         'activity_pub.Organization', null=True, related_name="organizations", on_delete=models.SET_NULL
     )
 

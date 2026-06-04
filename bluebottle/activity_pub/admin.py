@@ -19,7 +19,8 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 
-from bluebottle.activity_pub.adapters import adapter, publish_activities
+from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.tasks import publish_activity
 from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
     Activity,
@@ -136,7 +137,7 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 @admin.register(Person)
 class PersonAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
-    readonly_fields = ('member', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
+    readonly_fields = ('origin', 'adopted', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
 
     def save_formset(self, request, form, formset, change):
         if formset.model == Follow:
@@ -179,7 +180,7 @@ class OrganizationAdmin(ActivityPubModelChildAdmin):
             for form in formset.forms:
                 if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
                     url = form.cleaned_data.get("iri")
-                    adapter.follow(url)
+                    Follow.follow(url)
         else:
             super().save_formset(request, form, formset, change)
 
@@ -289,18 +290,17 @@ class StartAdmin(ActivityAdmin):
 
 @admin.register(Join)
 class JoinAdmin(ActivityAdmin):
-    list_display = ("id", "actor", "object", "participant_sync_id", "participant_name", "participant_email")
+    list_display = ("id", "actor", "object", )
     readonly_fields = (
         'iri', 'actor', 'object', 'pub_url',
-        'participant_sync_id', 'participant_name', 'participant_email',
     )
     inlines = [RecipientInline]
 
 
 @admin.register(Leave)
 class LeaveAdmin(ActivityAdmin):
-    list_display = ("id", "actor", "object", "participant_sync_id")
-    readonly_fields = ('iri', 'actor', 'object', 'pub_url', 'participant_sync_id')
+    list_display = ("id", "actor", "object", )
+    readonly_fields = ('iri', 'actor', 'object', 'pub_url', )
     inlines = [RecipientInline]
 
 
@@ -316,9 +316,9 @@ class AdoptedFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(adopted_activities__isnull=False)
+            return queryset.filter(adopted__isnull=False)
         elif self.value() == 'no':
-            return queryset.filter(adopted_activities__isnull=True)
+            return queryset.filter(adopted__isnull=True)
 
 
 class SourceFilter(admin.SimpleListFilter):
@@ -393,7 +393,9 @@ class FollowingAddForm(forms.ModelForm):
                     )
                 })
             try:
-                adapter.follow(self.cleaned_data['platform_url'], self.instance)
+                self.cleaned_data['object'] = adapter.discover(
+                    self.cleaned_data['platform_url']
+                )
             except requests.exceptions.HTTPError:
                 raise ValidationError({
                     'platform_url': _(
@@ -501,15 +503,33 @@ class FollowingAdmin(FollowAdmin):
     def save_model(self, request, obj, form, change):
         if not change:
             platform_url = form.cleaned_data['platform_url']
-            self.message_user(
-                request,
-                _(
-                    "Follow request sent to %s. "
-                    "Your platforms will be connected when the request is accepted."
+            try:
+                obj.follow(platform_url)
+
+                self.message_user(
+                    request,
+                    _(
+                        "Follow request sent to %s. "
+                        "Your platforms will be connected when the request is accepted."
+                    ) % platform_url,
+                    level="success"
                 )
-                % platform_url,
-                level="success",
-            )
+            except requests.exceptions.HTTPError:
+                self.message_user(
+                    request,
+                    _(
+                        "Could not determine platform information needed for subscribing. "
+                        "Are you sure the url is correct?"
+                    ),
+                    level="error"
+                )
+            except Exception as error:
+                self.message_user(
+                    request,
+                    _("Error creating Follow relationship: %s") % str(error),
+                    level="error"
+                )
+
         super().save_model(request, obj, form, change)
 
     def response_add(self, request, obj, post_url_continue=None):
@@ -585,8 +605,8 @@ class FollowerAdmin(FollowAdmin):
         fields = super().get_fields(request, obj)
         if obj and self.accepted(obj):
             fields += (
-                'publish_mode', "shared_activities", "adopted_activities",
-                "show_adoption_type", "publish_activities_button"
+                'publish_mode', "shared_activities", "adopted", "origin",
+                "short_adoption_type", "publish_activities_button"
             )
         return fields
 
@@ -653,14 +673,15 @@ class FollowerAdmin(FollowAdmin):
     @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_succeeded_activities.html')
     def publish_succeeeded_activities(self, request, follow, form):
         unpublished = follow.unpublished_succeeded_activities.all()
-        publish_activities.delay(follow.actor, unpublished, connection.tenant)
+        for activity in unpublished:
+            publish_activity.delay(follow.actor, activity, connection.tenant)
 
         self.message_user(
             request,
             _(
                 "Publishing {count} activities. "
                 "This may take a few minutes. You can refresh this page to see the progress.",
-            ).format(count=unpublished.count()),
+            ).format(count=len(unpublished)),
             level="success"
         )
 
@@ -669,14 +690,15 @@ class FollowerAdmin(FollowAdmin):
     @admin_form(PublishActivitiesForm, Follow, 'admin/activity_pub/follow/publish_open_activities.html')
     def publish_open_activities(self, request, follow, form):
         unpublished = follow.unpublished_open_activities.all()
-        publish_activities.delay(follow.actor, unpublished, connection.tenant)
+        for activity in unpublished:
+            publish_activity.delay(follow.actor, activity, connection.tenant)
 
         self.message_user(
             request,
             _(
                 "Publishing {count} activities. "
                 "This may take a few minutes. You can refresh this page to see the progress.",
-            ).format(count=unpublished.count()),
+            ).format(count=len(unpublished)),
             level="success"
         )
 
@@ -755,8 +777,8 @@ class FollowerAdmin(FollowAdmin):
                 {
                     'publish_open_url': publish_open_url,
                     'publish_succeeded_url': publish_succeeded_url,
-                    'open_count': obj.unpublished_open_activities.count(),
-                    'succeeded_count': obj.unpublished_succeeded_activities.count(),
+                    'open_count': len(obj.unpublished_open_activities),
+                    'succeeded_count': len(obj.unpublished_succeeded_activities),
                 },
             )
         )
@@ -907,7 +929,7 @@ class EventAdminMixin:
             )
 
         try:
-            activity = adapter.clone(event, request)
+            activity = adapter.adopt(event, owner=request.user)
 
             self.message_user(
                 request,
@@ -1057,12 +1079,13 @@ def adopt_events(modeladmin, request, events):
         follow = event.source.follow
         if follow.adoption_type == 'link':
             adapter.link(event)
+        if event.source.follow.adoption_type == 'link':
+            event.link(owner=request.user)
+
         elif follow.adoption_type == 'clone':
             adapter.clone(event, request)
         elif follow.adoption_type == 'sync':
-            from bluebottle.activity_pub.models import GoodDeed
-            if isinstance(event.get_real_instance(), GoodDeed) and not event.adopted_activity:
-                adapter.adopt(event, request)
+            adapter.adopt(event, request)
     modeladmin.message_user(
         request,
         _('{amount} activities have been adopted.').format(amount=len(events)),

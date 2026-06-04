@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required, permission_required
-from django.urls import re_path
+from django.urls import path
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView
 from jet.dashboard.dashboard import urls
@@ -21,5 +21,5 @@ class PlausibleEmbedView(DetailView):
 
 
 urls.register_urls(
-    [re_path(r"plausible_embed/$", PlausibleEmbedView.as_view(), name="plausible-embed")]
+    [path("plausible_embed/", PlausibleEmbedView.as_view(), name="plausible-embed")]
 )

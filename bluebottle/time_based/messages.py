@@ -764,7 +764,7 @@ class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
     template = 'messages/manager/slot_participant_withdrew'
     context = {
         'title': 'activity.title',
-        'participant_name': 'participant.user.full_name',
+        'participant_name': 'user.full_name',
     }
 
     def get_context(self, recipient):
@@ -791,7 +791,7 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     template = 'messages/manager/slot_participant_registered'
     context = {
         'title': 'activity.title',
-        'participant_name': 'participant.user.full_name',
+        'participant_name': 'user.full_name',
         'answer': 'registration.answer',
         'question': 'activity.review_title'
     }
@@ -821,7 +821,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     template = 'messages/participants/slot_participant_registered'
     context = {
         'title': 'activity.title',
-        'participant_name': 'participant.user.full_name',
+        'participant_name': 'user.full_name',
     }
 
     def attachments(self, recipient=None):

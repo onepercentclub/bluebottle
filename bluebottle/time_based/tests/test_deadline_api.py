@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.activities.models import RemoteContributor
-from bluebottle.activity_pub.tests.factories import DoGoodEventFactory, OrganizationFactory
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -175,12 +175,9 @@ class DeadlineParticipantRelatedListAPITestCase(TimeBasedParticipantRelatedListA
     }
 
     def test_get_remote_contributor_display_name_and_platform(self):
-        platform_actor = OrganizationFactory.create(name='Partner Platform')
         remote_contributor = RemoteContributor.objects.create(
             display_name='Remote Deadline Participant',
             email='remote@example.com',
-            sync_id='deadline-remote-1',
-            sync_actor=platform_actor,
         )
         participant = DeadlineParticipantFactory.create(
             activity=self.activity,
@@ -215,12 +212,9 @@ class DeadlineParticipantDetailAPITestCase(TimeBasedParticipantDetailAPITestCase
     }
 
     def test_get_remote_contributor_display_name_and_platform(self):
-        platform_actor = OrganizationFactory.create(name='Partner Platform')
         remote_contributor = RemoteContributor.objects.create(
             display_name='Remote Deadline Participant',
             email='remote@example.com',
-            sync_id='deadline-remote-2',
-            sync_actor=platform_actor,
         )
         self.participant.user = None
         self.participant.remote_contributor = remote_contributor

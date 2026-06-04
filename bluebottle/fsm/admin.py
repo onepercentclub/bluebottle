@@ -4,7 +4,8 @@ from collections import defaultdict
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -66,7 +67,7 @@ class StateMachineAdminMixin(object):
                                     send_messages=send_messages
                                 )
             rendered_effects = get_effects(effects)
-            
+
             if rendered_effects:
 
                 cancel_link = reverse(
@@ -212,8 +213,8 @@ class StateMachineAdminMixin(object):
     def get_urls(self):
         urls = super(StateMachineAdminMixin, self).get_urls()
         custom_urls = [
-            re_path(
-                r'^(?P<pk>.+)/transition/(?P<field_name>.+)/(?P<transition_name>.+)$',
+            path(
+                '<path:pk>/transition/<path:field_name>/<path:transition_name>',
                 self.admin_site.admin_view(self.transition),
                 name='{}_{}_state_transition'.format(
                     self.model._meta.app_label, self.model._meta.model_name

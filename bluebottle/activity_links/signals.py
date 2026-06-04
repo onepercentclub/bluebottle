@@ -61,15 +61,14 @@ def update(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Start)
 def start(sender, instance, created, **kwargs):
+    return
     try:
-        if not instance.is_local and created:
-            try:
-                link = LinkedActivity.objects.filter(event=instance.object).get()
-                link.states.start(save=True)
-            except LinkedActivity.DoesNotExist:
-                pass  # Adopted-activity fallback is in activities/signals.py
+        if not instance.is_local:
+            link = LinkedActivity.objects.filter(event=instance.object).get()
+            link.states.start(save=True)
     except Exception as e:
-        logger.error(f"Failed to find link event: {str(e)}")
+        logger.error(f"Failed to find link event for start: {str(e)} ({instance.object.iri})")
+        raise
 
 
 @receiver(post_save, sender=Cancel)
@@ -82,7 +81,7 @@ def cancel(sender, instance, created, **kwargs):
             except LinkedActivity.DoesNotExist:
                 pass  # Adopted-activity fallback is in activities/signals.py
     except Exception as e:
-        logger.error(f"Failed to find link event: {str(e)}")
+        logger.error(f"Failed to find link event: {str(e)} ({instance.object.iri})")
 
 
 @receiver(post_save, sender=Delete)

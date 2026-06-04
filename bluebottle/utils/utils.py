@@ -67,7 +67,7 @@ def get_client_ip(request=None):
         request = ThreadLocal.get_current_request()
 
     try:
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.headers.get('x-forwarded-for')
     except AttributeError:
         x_forwarded_for = None
 
@@ -303,7 +303,7 @@ def reverse_signed(name, args):
 
 
 def get_language_from_request(request):
-    return request.META.get('HTTP_X_APPLICATION_LANGUAGE', None)
+    return request.headers.get('x-application-language', None)
 
 
 def _json_object_hook(d):

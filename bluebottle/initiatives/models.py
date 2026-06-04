@@ -394,6 +394,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
+    restrict_updates = models.BooleanField(
+        _("Restrict posting updates"),
+        default=False,
+        help_text=_(
+            "Restrict posting of updates on the activity wall to only activity managers and staff users"
+        ),
+    )
+
     initiative_search_filters = MultiSelectField(
         max_length=1000, choices=INITIATIVE_SEARCH_FILTERS
     )

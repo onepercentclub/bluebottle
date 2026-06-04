@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.geo.views import (
@@ -6,37 +7,37 @@ from bluebottle.geo.views import (
 )
 
 urlpatterns = [
-    re_path(
-        r'^countries/$',
+    path(
+        'countries/',
         CountryList.as_view(),
         name='country-list'
     ),
-    re_path(
-        r'^countries/(?P<pk>\d+)$',
+    path(
+        'countries/<int:pk>',
         CountryDetail.as_view(),
         name='country-detail'
     ),
 
     # Remove this after we deployed json-api office locations
-    re_path(
-        r'^locations/$',
+    path(
+        'locations/',
         LocationList.as_view(),
         name='location-list'
     ),
 
-    re_path(
-        r'^offices/$',
+    path(
+        'offices/',
         OfficeList.as_view(),
         name='office-list'
     ),
-    re_path(
-        r'^offices/(?P<pk>\d+)$',
+    path(
+        'offices/<int:pk>',
         OfficeDetail.as_view(),
         name='office-detail'
     ),
 
-    re_path(
-        r'^geolocations$',
+    path(
+        'geolocations',
         GeolocationList.as_view(),
         name='geolocation-list'
     ),
@@ -47,14 +48,14 @@ urlpatterns = [
         name='place-list'
     ),
 
-    re_path(
-        r'^places/(?P<pk>\d+)$',
+    path(
+        'places/<int:pk>',
         PlaceDetail.as_view(),
         name='place-detail'
     ),
 
-    re_path(
-        r'^countries-list/$',
+    path(
+        'countries-list/',
         NewCountryList.as_view(),
         name='new-country-list'
     ),

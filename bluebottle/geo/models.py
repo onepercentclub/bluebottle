@@ -263,10 +263,6 @@ class Geolocation(models.Model):
 
     position = PointField(null=True)
 
-    origin = models.ForeignKey(
-        'activity_pub.Place', null=True, related_name="locations", on_delete=models.SET_NULL
-    )
-
     @property
     def activity_pub_url(self):
         return None
@@ -314,7 +310,7 @@ class Geolocation(models.Model):
 
     def update_location(self, replace=False):
         data = self.reverse_geocode()
-        if data and data != "No results found.":
+        if data and not isinstance(data, str):
             self.mapbox_id = data['id']
             country = None
             if not self.formatted_address or replace:

@@ -4,6 +4,7 @@ set -euxo pipefail
 PYTHON_VERSION="${PYTHON_VERSION:-3.11.4}"
 PYENV_ROOT="${PYENV_ROOT:-/home/github_actions/.pyenv}"
 VENV_DIR="${VENV_DIR:-/home/github_actions/venvs/bluebottle-py311}"
+PIP_EXTRA="${PIP_EXTRA:-test}"
 
 export PYENV_ROOT
 export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"
@@ -33,11 +34,11 @@ for name in ("setup.py", "requirements-ci-bootstrap.txt"):
 print(digest.hexdigest())
 PY
 )"
-STAMP="${VENV_DIR}/.deps-setup_py.sha"
+STAMP="${VENV_DIR}/.deps-setup_py-${PIP_EXTRA}.sha"
 if [ "$(cat "${STAMP}" 2>/dev/null || true)" != "${NEW_SHA}" ] || ! python -c "import django" 2>/dev/null; then
   python -m pip install --upgrade pip setuptools wheel
   python -m pip install -r requirements-ci-bootstrap.txt
-  python -m pip install -e ".[test]"
+  python -m pip install -e ".[${PIP_EXTRA}]"
   echo "${NEW_SHA}" > "${STAMP}"
 else
   echo "Dependencies up to date; skipping pip install."

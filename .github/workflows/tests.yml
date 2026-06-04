@@ -51,9 +51,11 @@ jobs:
       DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
       LANG: en_GB.UTF-8
       LC_ALL: en_GB.UTF-8
-      PYTHON_VERSION: "3.11.4"
-      PYENV_ROOT: /home/github_actions/.pyenv
-      VENV_DIR: /home/github_actions/venvs/bluebottle-py311
+      VENV_DIR: /home/github_actions_runner/venvs/bluebottle-py311
+      PIP_CACHE_DIR: /home/github_actions_runner/.cache/pip
+      PIP_INDEX_URL: https://pypi.org/simple
+      PIP_DEFAULT_TIMEOUT: 120
+      PIP_RETRIES: 10
       SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
       PG_CLI_IMAGE: postgis/postgis:14-3.3
 
@@ -74,10 +76,21 @@ jobs:
           sudo apt-get install -y \
             locales \
             libxmlsec1-dev \
-            libgdal-dev \
-            swig \
+            libgdal-dev swig \
+            curl \
+            git \
+            build-essential \
+            libssl-dev \
+            zlib1g-dev \
+            libbz2-dev \
+            libreadline-dev \
+            libsqlite3-dev \
+            libffi-dev \
             libjpeg-dev \
-            zlib1g-dev
+            zlib1g-dev \
+            liblzma-dev \
+            xz-utils \
+            tk-dev
           sudo sed -i 's/^# *\(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
           sudo locale-gen
           sudo update-locale LANG=en_GB.UTF-8
@@ -201,23 +214,61 @@ jobs:
           $$;
           SQL
 
-      - name: Set up Python and dependencies
+      - name: Ensure persistent pyenv + venv + deps
         shell: bash
         run: |
           set -euxo pipefail
-          export PYENV_ROOT="${PYENV_ROOT:-$HOME/.pyenv}"
-          export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"
-          eval "$(pyenv init -)"
-          pyenv install -s "${PYTHON_VERSION}"
-          pyenv global "${PYTHON_VERSION}"
-          python --version | grep -F "Python ${PYTHON_VERSION}"
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PATH"
 
-          mkdir -p "$(dirname "$VENV_DIR")"
-          if [ ! -x "$VENV_DIR/bin/python" ] || ! "$VENV_DIR/bin/python" -c "import sys; v=tuple(int(x) for x in '${PYTHON_VERSION}'.split('.')); sys.exit(0 if sys.version_info[:3]==v else 1)"; then
-            rm -rf "$VENV_DIR"
+          if ! command -v pyenv >/dev/null 2>&1; then
+            curl -fsSL https://pyenv.run | bash
+          fi
+
+          export PATH="$PYENV_ROOT/bin:$PATH"
+          eval "$(pyenv init -)"
+          pyenv install -s 3.11.4
+          pyenv global 3.11.4
+          pyenv shell 3.11.4
+          python --version
+
+          # Fallback to HOME-based paths when configured paths are not writable on this runner user.
+          if [ ! -w "$(dirname "$VENV_DIR")" ]; then
+            VENV_DIR="$HOME/venvs/bluebottle-py311"
+          fi
+          if [ ! -w "$(dirname "$PIP_CACHE_DIR")" ]; then
+            PIP_CACHE_DIR="$HOME/.cache/pip"
+          fi
+
+          echo "VENV_DIR=$VENV_DIR" >> "$GITHUB_ENV"
+          echo "PIP_CACHE_DIR=$PIP_CACHE_DIR" >> "$GITHUB_ENV"
+          echo "PYENV_ROOT=$PYENV_ROOT" >> "$GITHUB_ENV"
+
+          mkdir -p "$(dirname "$VENV_DIR")" "$PIP_CACHE_DIR"
+
+          # If venv exists but isn't Python 3.11, delete it
+          if [ -x "$VENV_DIR/bin/python" ]; then
+            VPY="$("$VENV_DIR/bin/python" -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+            if [ "$VPY" != "3.11.4" ]; then
+              echo "Existing venv is Python $VPY; recreating for 3.11"
+              rm -rf "$VENV_DIR"
+            fi
+          fi
+
+          # Create venv with Python 3.11
+          if [ ! -x "$VENV_DIR/bin/python" ]; then
             python -m venv "$VENV_DIR"
           fi
+
           source "$VENV_DIR/bin/activate"
+          python --version
+
+          # Use sane tooling for Python 3.11
+          python -m pip install --upgrade "pip==25.3" "setuptools==69.5.1" wheel
+          python -m pip --version
+          python -c "import pkg_resources"
+          PIP_TRUSTED_HOST="pypi.org files.pythonhosted.org github.com"
+          export PIP_TRUSTED_HOST
 
           NEW_SHA="$(python - <<'PY'
           import hashlib
@@ -229,24 +280,33 @@ jobs:
           PY
           )"
           STAMP="$VENV_DIR/.deps-setup_py.sha"
-          if [ "$(cat "$STAMP" 2>/dev/null || true)" != "$NEW_SHA" ] || ! python -c "import django" 2>/dev/null; then
-            python -m pip install --upgrade pip setuptools wheel
-            python -m pip install -r requirements-ci-bootstrap.txt
-            python -m pip install -e ".[test]"
+          OLD_SHA="$(cat "$STAMP" 2>/dev/null || true)"
+
+          if [ "$NEW_SHA" != "$OLD_SHA" ]; then
+            echo "Dependency definition changed; installing..."
+            python -m pip cache purge || true
+            python -m pip install --no-cache-dir \
+              --index-url "$PIP_INDEX_URL" \
+              --trusted-host pypi.org \
+              --trusted-host files.pythonhosted.org \
+              -r requirements-ci-bootstrap.txt
+            python -m pip install --no-cache-dir \
+              --index-url "$PIP_INDEX_URL" \
+              --trusted-host pypi.org \
+              --trusted-host files.pythonhosted.org \
+              --trusted-host github.com \
+              -e ".[test]"
             echo "$NEW_SHA" > "$STAMP"
           else
-            echo "Dependencies up to date; skipping pip install."
+            echo "setup.py unchanged; skipping dependency install."
           fi
 
       - name: Run tests with coverage
         shell: bash
         run: |
           set -euxo pipefail
-          export PYENV_ROOT="${PYENV_ROOT:-$HOME/.pyenv}"
-          export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"
-          eval "$(pyenv init -)"
-          pyenv shell "${PYTHON_VERSION}"
           source "$VENV_DIR/bin/activate"
+          python -c "import pkg_resources"
           coverage run --parallel-mode manage.py test --parallel 16 --keepdb --settings bluebottle.settings.runner -v3
           coverage combine
           coverage report

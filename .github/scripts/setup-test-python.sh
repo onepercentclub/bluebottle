@@ -33,10 +33,7 @@ source "$VENV_DIR/bin/activate"
 NEW_SHA="$(python - <<'PY'
 import hashlib
 from pathlib import Path
-digest = hashlib.sha256()
-for name in ("setup.py", "requirements-ci-bootstrap.txt"):
-    digest.update(Path(name).read_bytes())
-print(digest.hexdigest())
+print(hashlib.sha256(Path("setup.py").read_bytes()).hexdigest())
 PY
 )"
 STAMP="${VENV_DIR}/.deps-setup_py-${PIP_EXTRA}.sha"
@@ -61,20 +58,12 @@ ensure_runtime_tools() {
 if [ "${OLD_SHA}" = "${NEW_SHA}" ] && deps_ok; then
   ensure_runtime_tools
   echo "${NEW_SHA}" > "${STAMP}"
-  echo "Dependencies up to date; skipping pip install."
-  exit 0
-fi
-
-if deps_ok && [ -z "${OLD_SHA}" ]; then
-  ensure_runtime_tools
-  echo "${NEW_SHA}" > "${STAMP}"
-  echo "Venv ready (no stamp yet); skipping pip install."
+  echo "setup.py unchanged; skipping pip install."
   exit 0
 fi
 
 pip_install() {
   python -m pip install --upgrade "pip==25.3" "setuptools==69.5.1" wheel
-  python -m pip install -r requirements-ci-bootstrap.txt
   python -m pip install -e ".[${PIP_EXTRA}]"
 }
 

@@ -1069,11 +1069,11 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'Password should at least be 8 characters.'
+            'Password should at least be 10 characters.'
         )
 
     def test_common(self):
-        self.data['data']['attributes']['password'] = 'password'
+        self.data['data']['attributes']['password'] = 'password123'
         response = self.client.post(self.url, data=json.dumps(self.data))
         self.assertEqual(response.status_code, 400)
         errors = response.json()['errors']

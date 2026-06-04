@@ -187,11 +187,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          export PYENV_ROOT="${PYENV_ROOT}"
-          export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"
-          eval "$(pyenv init -)"
-          pyenv shell "${PYTHON_VERSION}"
-          source "${VENV_DIR}/bin/activate"
+          source .github/scripts/activate-ci-python.sh
           coverage run --parallel-mode manage.py test \
             --parallel 16 \
             --keepdb \
@@ -392,11 +388,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          export PYENV_ROOT="${PYENV_ROOT}"
-          export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"
-          eval "$(pyenv init -)"
-          pyenv shell "${PYTHON_VERSION}"
-          source "${VENV_DIR}/bin/activate"
+          source .github/scripts/activate-ci-python.sh
           manage.py test \
             --parallel 4 \
             --keepdb \

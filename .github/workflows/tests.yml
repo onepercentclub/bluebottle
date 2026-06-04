@@ -183,30 +183,17 @@ jobs:
       - name: Set up Python and dependencies
         run: bash .github/scripts/setup-test-python.sh
 
-      - name: Run tests with coverage
+      - name: Run tests
         shell: bash
         run: |
           set -euxo pipefail
           source .github/scripts/activate-ci-python.sh
-          coverage run --parallel-mode manage.py test \
-            --parallel 16 \
+          python manage.py test \
+            --parallel 8 \
             --keepdb \
             --exclude-tag=elasticsearch \
             --settings bluebottle.settings.runner \
             -v3
-          coverage combine
-          coverage report
-          coverage xml -o coverage.xml
-
-      - name: Upload coverage to Coveralls
-        if: success()
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          format: cobertura
-          file: coverage.xml
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
   test-elasticsearch:
     name: Tests (Elasticsearch)

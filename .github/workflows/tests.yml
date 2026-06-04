@@ -87,6 +87,9 @@ jobs:
           echo "Postgres did not become ready"
           exit 1
 
+      - name: Set up Python and dependencies
+        run: bash .github/scripts/setup-test-python.sh
+
       - name: Bootstrap database
         run: |
           set -e
@@ -179,9 +182,6 @@ jobs:
           END
           $$;
           SQL
-
-      - name: Set up Python and dependencies
-        run: bash .github/scripts/setup-test-python.sh
 
       - name: Run tests
         shell: bash
@@ -275,6 +275,9 @@ jobs:
           echo "Services did not become ready"
           exit 1
 
+      - name: Set up Python and dependencies
+        run: bash .github/scripts/setup-test-python.sh
+
       - name: Bootstrap database
         run: |
           set -e
@@ -367,9 +370,6 @@ jobs:
           END
           $$;
           SQL
-
-      - name: Set up Python and dependencies
-        run: bash .github/scripts/setup-test-python.sh
 
       - name: Run Elasticsearch tests
         shell: bash

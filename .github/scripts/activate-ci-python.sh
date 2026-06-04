@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+if [ -n "${GITHUB_WORKSPACE:-}" ] && [ -d "${GITHUB_WORKSPACE}" ]; then
+  cd "${GITHUB_WORKSPACE}"
+fi
 export PYENV_ROOT="${PYENV_ROOT:-/home/github_actions/.pyenv}"
 export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"
 eval "$(pyenv init -)"

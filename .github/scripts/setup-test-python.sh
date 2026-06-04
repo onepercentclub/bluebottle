@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euxo pipefail
+if [ -n "${GITHUB_WORKSPACE:-}" ] && [ -d "${GITHUB_WORKSPACE}" ]; then
+  cd "${GITHUB_WORKSPACE}"
+fi
 
 PYTHON_VERSION="${PYTHON_VERSION:-3.11.4}"
 PYENV_ROOT="${PYENV_ROOT:-/home/github_actions/.pyenv}"

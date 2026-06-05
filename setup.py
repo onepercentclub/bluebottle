@@ -25,6 +25,7 @@ install_requires = [
     'Sphinx==4.1.2',
     'SurveyGizmo==1.2.2',
     'addressformatting==1.3.2',
+    'cffi>=1.15.1',
     'bcrypt==3.2.0',
     'beautifulsoup4==4.12.2',
     'celery==5.6.1',
@@ -140,7 +141,8 @@ install_requires = [
 ]
 
 tests_requires = [
-    'coveralls==3.2.0',
+    'coverage==7.6.12',
+    'coveralls==4.1.0',
     'django-nose==1.4.4',
     'django-setuptest==0.2.1',
     'django-slowtests==0.5.1',

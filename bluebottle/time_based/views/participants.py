@@ -60,15 +60,15 @@ class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 
 class DateParticipantList(ParticipantList):
     queryset = DateParticipant.objects.prefetch_related(
-        'user', 'activity', 'slot'
-    )
+        'user', 'activity', 'slot',
+    ).order_by('-created', 'pk')
     serializer_class = DateParticipantSerializer
 
 
 class DeadlineParticipantList(ParticipantList):
     queryset = DeadlineParticipant.objects.prefetch_related(
-        'user', 'activity'
-    )
+        'user', 'activity',
+    ).order_by('-created', 'pk')
     serializer_class = DeadlineParticipantSerializer
 
 
@@ -140,7 +140,9 @@ class RelatedParticipantListView(
             else:
                 queryset = queryset.none()
 
-        return queryset.filter(activity_id=self.kwargs["activity_id"])
+        return queryset.filter(
+            activity_id=self.kwargs["activity_id"],
+        ).order_by('-created', 'pk')
 
 
 class SlotRelatedParticipantListView(
@@ -204,8 +206,8 @@ class SlotRelatedParticipantListView(
 
 class DateRelatedParticipantList(RelatedParticipantListView):
     queryset = DateParticipant.objects.prefetch_related(
-        'user', 'activity'
-    )
+        'user', 'activity',
+    ).order_by('-created', 'pk')
     serializer_class = DateParticipantSerializer
 
 
@@ -260,8 +262,8 @@ class DateRegistrationRelatedParticipantView(
 
 class DeadlineRelatedParticipantList(RelatedParticipantListView):
     queryset = DeadlineParticipant.objects.prefetch_related(
-        'user', 'activity'
-    )
+        'user', 'activity',
+    ).order_by('-created', 'pk')
     serializer_class = DeadlineParticipantSerializer
 
 
@@ -273,7 +275,7 @@ class RegisteredDateRelatedParticipantList(RelatedParticipantListView):
 
 
 class ScheduleRelatedParticipantList(RelatedParticipantListView):
-    queryset = ScheduleParticipant.objects.prefetch_related(
+    queryset = ScheduleParticipant.objects.order_by('-created', 'pk').prefetch_related(
         'user', 'activity'
     )
     serializer_class = ScheduleParticipantSerializer

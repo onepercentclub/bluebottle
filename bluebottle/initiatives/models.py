@@ -639,6 +639,7 @@ class Theme(SortableTranslatableModel):
     class Meta(object):
         verbose_name = _("theme")
         verbose_name_plural = _("themes")
+        ordering = ['pk']
         permissions = (("api_read_theme", "Can view theme through API"),)
 
     class JSONAPIMeta(object):

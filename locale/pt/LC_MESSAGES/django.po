@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-03 11:11+0200\n"
-"PO-Revision-Date: 2026-06-03 09:13\n"
+"PO-Revision-Date: 2026-06-03 12:30\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -13773,6 +13773,7 @@ msgid "\n"
 msgstr "\n"
 "<p>%(applicant_name)s participou da sua atividade \"%(title)s\"!</p>\n"
 "<p>Dê ao novo participante uma recepção calorosa.</p>\n"
+"    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_created_review.html:4
 #, python-format

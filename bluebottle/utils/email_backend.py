@@ -1,5 +1,4 @@
-from __future__ import print_function
-
+import inspect
 import logging
 import re
 from builtins import str
@@ -23,6 +22,44 @@ from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.utils.utils import to_text
 
 logger = logging.getLogger(__name__)
+
+
+def _get_send_mail_caller():
+    for frame_info in inspect.stack()[2:]:
+        module_name = frame_info.frame.f_globals.get('__name__', '')
+        if module_name == __name__:
+            continue
+        caller_self = frame_info.frame.f_locals.get('self')
+        if caller_self is not None:
+            location = '{}.{}'.format(
+                caller_self.__class__.__module__,
+                caller_self.__class__.__name__,
+            )
+        else:
+            location = module_name
+        return '{}:{} ({})'.format(
+            location,
+            frame_info.function,
+            frame_info.filename,
+        )
+    return 'unknown'
+
+
+def _log_template_render_error(exception, template_name, subject, to):
+    recipient = getattr(to, 'email', to)
+    error_message = (
+        'Exception while rendering email template: {exception}, '
+        'template_name={template_name!r}, subject={subject!r}, '
+        'recipient={recipient!r}, called_from={caller}'
+    ).format(
+        exception=exception,
+        template_name=template_name,
+        subject=subject,
+        recipient=recipient,
+        caller=_get_send_mail_caller(),
+    )
+    logger.error(error_message, exc_info=True)
+
 
 try:
     import cssutils
@@ -199,8 +236,7 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
             **kwargs
         )
     except Exception as e:
-        error_message = f"Exception while rendering email template: {e}, in {template_name}"
-        print(error_message)
+        error_message = f"Exception while rendering email for '{subject}' template: {e}, in {template_name}"
         logger.error(error_message)
         return
 

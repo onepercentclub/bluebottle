@@ -820,7 +820,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     def get_registration_fields(self, request, obj):
         fields = super().get_registration_fields(request, obj)
         if obj and obj.registrations.count():
-            fields = ("team_registration_warning",) + fields
+            fields = ["team_registration_warning"] + list(fields)
         return fields
 
     def get_fieldsets(self, request, obj=None):

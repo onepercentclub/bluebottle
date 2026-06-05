@@ -3,7 +3,8 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Accept, Follow, Start, Update, Cancel, Delete, Finish
+    Accept, Follow, Start, Cancel, Delete, Finish, Leave,
+    Event,
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -18,7 +19,7 @@ class CreateEffect(Effect):
     template = 'admin/activity_pub/create_effect.html'
 
     def post_save(self, **kwargs):
-        adapter.create_or_update_event(self.instance)
+        adapter.sync(self.instance)
 
     @property
     def followers(self):
@@ -46,12 +47,9 @@ class PublishAdoptionEffect(Effect):
     template = 'admin/activity_pub/publish_adoption_effect.html'
 
     def post_save(self, **kwargs):
-        if hasattr(self.instance, 'origin'):
-            event = self.instance.origin
-        else:
-            event = self.instance.event
-
+        event = self.instance.origin
         actor = get_platform_actor()
+
         Accept.objects.create(actor=actor, object=event)
 
     @property
@@ -70,14 +68,15 @@ class UpdateEventEffect(Effect):
     template = 'admin/activity_pub/update_event_effect.html'
 
     def post_save(self, **kwargs):
-        adapter.create_or_update_event(self.instance)
-        Update.objects.create(
-            object=self.instance.event
-        )
+        Event.sync(self.instance)
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the changes'))
@@ -88,12 +87,16 @@ class CancelEffect(Effect):
 
     def post_save(self, **kwargs):
         Cancel.objects.create(
-            object=self.instance.event
+            object=self.instance.activity_pub_model
         )
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the cancelation'))
@@ -104,12 +107,16 @@ class StartEffect(Effect):
 
     def post_save(self, **kwargs):
         Start.objects.create(
-            object=self.instance.event
+            object=self.instance.activity_pub_model
         )
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the start of an activity'))
@@ -120,12 +127,16 @@ class FinishEffect(Effect):
 
     def post_save(self, **kwargs):
         Finish.objects.create(
-            object=self.instance.event
+            object=self.instance.activity_pub_model
         )
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the end'))
@@ -136,12 +147,69 @@ class DeletedEffect(Effect):
 
     def post_save(self, **kwargs):
         Delete.objects.create(
-            object=self.instance.event
+            object=self.instance.activity_pub_model
         )
 
     @property
     def is_valid(self):
-        return hasattr(self.instance, 'event') and get_platform_actor() is not None
+        return (
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
+            get_platform_actor() is not None
+        )
 
     def __str__(self):
         return str(_('Notify subscribers of the deletion'))
+
+
+def activity_is_synced(effect):
+    """Contributor's activity has an origin (synced from another platform)."""
+    return getattr(effect.instance.activity, 'origin', None) is not None
+
+
+def contributor_is_local(effect):
+    return effect.instance.remote_user is None
+
+
+def can_send_leave(effect):
+    return activity_is_synced(effect)
+
+
+class SendJoinEffect(Effect):
+    """
+    Send a Join activity to the source platform when a user joins a synced deed.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+    conditions = [activity_is_synced, contributor_is_local]
+
+    def post_save(self, **kwargs):
+        adapter.sync(self.instance)
+
+    @property
+    def is_valid(self):
+        return super().is_valid
+
+    def __str__(self):
+        return str(_('Notify source platform of join'))
+
+
+class SendLeaveEffect(Effect):
+    """
+    Send a Leave activity to the source platform when a user leaves a synced deed.
+    Runs only when the activity is synced (via activity_is_synced condition).
+    """
+    template = 'admin/activity_pub/send_leave_effect.html'
+    conditions = [can_send_leave]
+
+    def post_save(self, **kwargs):
+        Leave.objects.create(
+            actor=self.instance.user.activity_pub_model,
+            object=self.instance.activity.origin,
+        )
+
+    @property
+    def is_valid(self):
+        return super().is_valid
+
+    def __str__(self):
+        return str(_('Notify source platform of leave'))

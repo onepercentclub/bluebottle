@@ -1,0 +1,23 @@
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.celery import app
+
+
+@app.task(
+    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
+    name="bluebottle.activity_pub.tasks.publish_to_recipient"
+)
+def publish_to_recipient(recipient, tenant):
+    with LocalTenant(tenant, clear_tenant=True):
+        recipient.publish()
+
+
+@app.task(
+    autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
+    name="bluebottle.activity_pub.adapters.publish_activities"
+)
+def publish_activity(recipient, activity, tenant):
+    from bluebottle.activity_pub.models import Recipient, Event
+    with LocalTenant(tenant, clear_tenant=True):
+        event = Event.sync(activity)
+        create = event.create_set.first()
+        Recipient.objects.get_or_create(actor=recipient, activity=create)

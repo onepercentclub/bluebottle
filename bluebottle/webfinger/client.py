@@ -10,6 +10,7 @@ class WebFingerClient:
         return response.json()
 
     def get(self, uri, type='application/activity+josn'):
+        __import__('ipdb').set_trace()
         parsed = urlparse(uri)
 
         try:

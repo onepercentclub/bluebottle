@@ -155,7 +155,7 @@ class CreateDateRegistrationEffect(Effect):
         self.instance.registration = self.instance.activity.registrations.filter(user=self.instance.user).first()
 
     def post_save(self, **kwargs):
-        if not self.instance.registration:
+        if not self.instance.registration and self.instance.user:
             self.instance.registration = DateRegistration.objects.create(
                 activity=self.instance.activity,
                 user=self.instance.user,

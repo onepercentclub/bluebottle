@@ -764,5 +764,20 @@ class DateActivitySlotTriggers(TriggerManager):
                 ),
             ]
         ),
+        ModelChangedTrigger(
+            [
+                'title',
+                'capacity',
+                'start',
+                'duration',
+                'is_online',
+                'online_meeting_url',
+                'location_id',
+                'location_hint',
+                'status',
+            ],
+            effects=[
+            ],
+        ),
 
     ]

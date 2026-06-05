@@ -345,9 +345,11 @@ class BaseActivitySerializer(ModelSerializer):
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
     def get_contributor_count(self, instance):
-        return instance.deleted_successful_contributors + instance.contributors.not_instance_of(Organizer).filter(
-            status__in=['accepted', 'succeeded', 'activity_refunded']
-        ).count()
+        return {
+            'total': instance.total_contributor_count,
+            'local': instance.local_contributor_count,
+            'remote': instance.remote_contributor_count,
+        }
 
     def get_team_count(self, instance):
         return instance.old_teams.filter(status__in=['open', 'finished']).count()

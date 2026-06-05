@@ -460,8 +460,11 @@ class SlotParticipantUnFollowActivityEffect(Effect):
 
     @property
     def is_valid(self):
+        reg = getattr(self.instance, 'registration', None)
+        if reg is None:
+            return False
         return (
-            self.instance.registration.participants.filter(
+            reg.participants.filter(
                 status__in=("registered", "succeeded")
             ).count()
             == 1

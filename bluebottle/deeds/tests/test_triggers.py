@@ -15,7 +15,12 @@ from bluebottle.activities.messages.reviewer import (
     ActivityPublishedReviewerNotification,
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
-from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
+from bluebottle.activities.states import (
+    OrganizerStateMachine,
+    EffortContributionStateMachine,
+)
+from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect
+from bluebottle.activity_pub.tests.factories import GoodDeedFactory
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
@@ -70,11 +75,16 @@ class DeedTriggersTestCase(TriggerTestCase):
     def test_approve(self):
         self.defaults['initiative'] = None
         self.create()
+        participant = DeedParticipantFactory.create(activity=self.model, status='failed')
         self.model.states.submit(save=True)
         self.model.states.approve()
 
         with self.execute():
             self.assertNotificationEffect(ActivityApprovedNotification)
+            self.assertTransitionEffect(
+                DeedParticipantStateMachine.accept,
+                participant
+            )
 
     def test_needs_work(self):
         self.defaults['initiative'] = None
@@ -126,6 +136,7 @@ class DeedTriggersTestCase(TriggerTestCase):
     def test_cancel(self):
         self.create()
         self.model.states.publish(save=True)
+        DeedParticipantFactory.create(activity=self.model, status='accepted')
         self.model.states.cancel()
 
         with self.execute():
@@ -134,6 +145,7 @@ class DeedTriggersTestCase(TriggerTestCase):
 
     def test_restored(self):
         self.create()
+        DeedParticipantFactory.create(activity=self.model, status='failed')
         self.model.states.reject(save=True)
         self.model.states.restore()
 
@@ -462,6 +474,15 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantWithdrewNotification)
             self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
+    def test_withdraw_synced_emits_leave_effect(self):
+        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].save(update_fields=['origin'])
+        self.create()
+
+        self.model.states.withdraw()
+        with self.execute():
+            self.assertEffect(SendLeaveEffect)
+
     def test_reapply_no_start_no_end(self):
         self.defaults['activity'].start = None
         self.defaults['activity'].end = None
@@ -514,6 +535,18 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 self.model.contributions.first()
             )
 
+    def test_reapply_synced_emits_join_effect(self):
+        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].save(update_fields=['origin'])
+        self.create()
+        self.model.activity.states.publish(save=True)
+
+        self.model.states.withdraw(save=True)
+        self.model.states.reapply()
+
+        with self.execute():
+            self.assertEffect(SendJoinEffect)
+
     def test_remove(self):
         self.create()
 
@@ -523,6 +556,15 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 EffortContributionStateMachine.fail, self.model.contributions.first()
             )
             self.assertNotificationEffect(ParticipantRemovedNotification)
+
+    def test_remove_synced_emits_leave_effect(self):
+        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].save(update_fields=['origin'])
+        self.create()
+
+        self.model.states.remove()
+        with self.execute():
+            self.assertEffect(SendLeaveEffect)
 
     def test_expire_remove(self):
         self.create()
@@ -590,6 +632,17 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 DeedParticipantStateMachine.succeed
             )
+
+    def test_accept_from_withdrawn_synced_emits_join_effect(self):
+        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].save(update_fields=['origin'])
+        self.create()
+
+        self.model.states.withdraw(save=True)
+        self.model.states.accept()
+
+        with self.execute():
+            self.assertEffect(SendJoinEffect)
 
     def test_accept_expired(self):
         self.defaults['activity'].start = date.today() - timedelta(days=20)

@@ -23,40 +23,19 @@ FROM pg_stat_activity
 WHERE datname = current_setting('bb.test_db_name')
   AND pid <> pg_backend_pid();
 
-DO $$
-BEGIN
-  EXECUTE format('DROP DATABASE IF EXISTS %I', current_setting('bb.test_db_name'));
-END
-$$;
+DROP DATABASE IF EXISTS :"TEST_DB_NAME";
 
-DO $$
-DECLARE
-  db record;
-  prefix text := current_setting('bb.test_db_name');
-BEGIN
-  FOR db IN
-    SELECT datname
-    FROM pg_database
-    WHERE datname LIKE prefix || '\_%' ESCAPE '\'
-  LOOP
-    EXECUTE format(
-      'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = %L AND pid <> pg_backend_pid()',
-      db.datname
-    );
-    EXECUTE format('DROP DATABASE IF EXISTS %I', db.datname);
-  END LOOP;
-END
-$$;
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE datname LIKE current_setting('bb.test_db_name') || '\_%' ESCAPE '\'
+  AND pid <> pg_backend_pid();
 
-DO $$
-BEGIN
-  EXECUTE format(
-    'CREATE DATABASE %I OWNER %I',
-    current_setting('bb.test_db_name'),
-    current_setting('bb.test_db_user')
-  );
-END
-$$;
+SELECT format('DROP DATABASE IF EXISTS %I', datname)
+FROM pg_database
+WHERE datname LIKE current_setting('bb.test_db_name') || '\_%' ESCAPE '\';
+\gexec
+
+CREATE DATABASE :"TEST_DB_NAME" OWNER :"TEST_DB_USER";
 
 \c template1
 

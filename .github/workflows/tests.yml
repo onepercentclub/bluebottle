@@ -117,7 +117,7 @@ jobs:
         ports:
           - 9200/tcp
         options: >-
-          --health-cmd="curl -s http://localhost:9200 >/dev/null || exit 1"
+          --health-cmd="curl -fsS 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' | grep -q '\"timed_out\":false' || exit 1"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=20
@@ -146,9 +146,6 @@ jobs:
           sudo sed -i 's/^# *\(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
           sudo locale-gen
           sudo update-locale LANG=en_GB.UTF-8
-
-      - name: Wait for Elasticsearch
-        run: bash .github/scripts/wait-for-test-services.sh
 
       - name: Set up Python and dependencies
         run: bash .github/scripts/setup-test-python.sh

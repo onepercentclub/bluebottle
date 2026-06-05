@@ -99,6 +99,9 @@ class SegmentType(TranslatableModel, models.Model):
     def __str__(self):
         return self.name
 
+    class Meta(object):
+        ordering = ['pk']
+
     class JSONAPIMeta(object):
         resource_name = 'segment-types'
 
@@ -259,6 +262,7 @@ class Segment(TranslatableModel, models.Model):
         )
 
     class Meta:
+        ordering = ['pk']
         unique_together = (('slug', 'segment_type'), )
 
     class JSONAPIMeta(object):

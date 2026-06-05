@@ -50,7 +50,7 @@ class TeamList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
                 queryset = queryset.filter(user=self.request.user)
             else:
                 queryset = queryset.none()
-        return queryset
+        return queryset.order_by('-created', 'pk')
 
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
     queryset = Team.objects.prefetch_related("activity", "owner", "registration")

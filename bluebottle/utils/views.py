@@ -302,7 +302,9 @@ class TranslatedApiViewMixin(object):
         qs = super(TranslatedApiViewMixin, self).get_queryset().active_translations(
             get_current_language()
         ).distinct('id').order_by('id')
-        qs = qs.order_by(*qs.model._meta.ordering)
+        ordering = qs.model._meta.ordering
+        if ordering:
+            qs = qs.order_by(*ordering)
         return qs
 
 

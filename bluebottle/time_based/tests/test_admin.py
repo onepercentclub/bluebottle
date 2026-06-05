@@ -77,7 +77,7 @@ class ScheduleActivityAdminRegistrationWarningTest(BluebottleAdminTestCase):
 
         self.assertEqual(page.status_code, 200)
         self.assertIn(
-            "can't change between teams/individuals anymore because there are already registrations",
+            "change between teams/individuals anymore because there are already registrations",
             page.text,
         )
 

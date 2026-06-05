@@ -10,9 +10,20 @@ concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
+  LANG: en_GB.UTF-8
+  LC_ALL: en_GB.UTF-8
+  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+  PG_CLI_IMAGE: postgis/postgis:14-3.3
+  TEST_DB_NAME: test_bluebottle_test
+  TEST_DB_USER: testuser
+  TEST_DB_PASSWORD: password
+  POSTGRES_PASSWORD: postgres
+
 jobs:
-  test:
-    name: Run automated tests
+  test-without-elasticsearch:
+    name: Tests (without Elasticsearch)
     runs-on: Bluebottle
     permissions:
       contents: read
@@ -33,29 +44,8 @@ jobs:
           --health-timeout=5s
           --health-retries=10
 
-      elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.22
-        env:
-          discovery.type: single-node
-          xpack.security.enabled: "false"
-          ES_JAVA_OPTS: "-Xms1g -Xmx1g"
-        ports:
-          - 9200/tcp
-        options: >-
-          --health-cmd="curl -s http://localhost:9200 >/dev/null || exit 1"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=20
-
     env:
-      DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
-      LANG: en_GB.UTF-8
-      LC_ALL: en_GB.UTF-8
-      PYTHON_VERSION: "3.11.4"
-      PYENV_ROOT: /home/github_actions/.pyenv
-      VENV_DIR: /home/github_actions/venvs/bluebottle-py311
-      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
-      PG_CLI_IMAGE: postgis/postgis:14-3.3
+      BLUEBOTTLE_SKIP_ES_TEST_SETUP: "1"
 
     steps:
       - name: Checkout
@@ -65,8 +55,6 @@ jobs:
         run: |
           echo "PGHOST=127.0.0.1" >> "$GITHUB_ENV"
           echo "PGPORT=${{ job.services.postgres.ports[5432] }}" >> "$GITHUB_ENV"
-          echo "ESHOST=127.0.0.1" >> "$GITHUB_ENV"
-          echo "ESPORT=${{ job.services.elasticsearch.ports[9200] }}" >> "$GITHUB_ENV"
 
       - name: Install system dependencies (host)
         run: |
@@ -82,24 +70,8 @@ jobs:
           sudo locale-gen
           sudo update-locale LANG=en_GB.UTF-8
 
-      - name: Wait for services
-        run: |
-          pg_run() {
-            docker run --rm -i --network host \
-              -e "PGPASSWORD=${PGPASSWORD:-}" \
-              "$PG_CLI_IMAGE" \
-              "$@"
-          }
-          echo "Waiting for Postgres on $PGHOST:$PGPORT and Elasticsearch on $ESHOST:$ESPORT"
-          for i in {1..60}; do
-            if PGPASSWORD=postgres pg_run pg_isready -h 127.0.0.1 -p "$PGPORT" -U postgres >/dev/null 2>&1 && \
-               curl -fsS "http://$ESHOST:$ESPORT/_cluster/health?wait_for_status=yellow&timeout=5s" | grep -q '"timed_out":false'; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Services did not become ready"
-          exit 1
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python
 
       - name: Bootstrap database
         run: |
@@ -201,63 +173,190 @@ jobs:
           $$;
           SQL
 
-      - name: Set up Python and dependencies
+      - name: Run tests
         shell: bash
         run: |
           set -euxo pipefail
-          export PYENV_ROOT="${PYENV_ROOT:-$HOME/.pyenv}"
-          export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"
-          eval "$(pyenv init -)"
-          pyenv install -s "${PYTHON_VERSION}"
-          pyenv global "${PYTHON_VERSION}"
-          python --version | grep -F "Python ${PYTHON_VERSION}"
+          source "${VENV_DIR}/bin/activate"
+          python manage.py test \
+            --parallel 12 \
+            --keepdb \
+            --exclude-tag=elasticsearch \
+            --settings bluebottle.settings.runner \
+            -v3
 
-          mkdir -p "$(dirname "$VENV_DIR")"
-          if [ ! -x "$VENV_DIR/bin/python" ] || ! "$VENV_DIR/bin/python" -c "import sys; v=tuple(int(x) for x in '${PYTHON_VERSION}'.split('.')); sys.exit(0 if sys.version_info[:3]==v else 1)"; then
-            rm -rf "$VENV_DIR"
-            python -m venv "$VENV_DIR"
-          fi
-          source "$VENV_DIR/bin/activate"
+  test-elasticsearch:
+    name: Tests (Elasticsearch)
+    runs-on: Bluebottle
+    permissions:
+      contents: read
+      pull-requests: write
 
-          NEW_SHA="$(python - <<'PY'
-          import hashlib
-          from pathlib import Path
-          digest = hashlib.sha256()
-          for name in ("setup.py", "requirements-ci-bootstrap.txt"):
-              digest.update(Path(name).read_bytes())
-          print(digest.hexdigest())
-          PY
-          )"
-          STAMP="$VENV_DIR/.deps-setup_py.sha"
-          if [ "$(cat "$STAMP" 2>/dev/null || true)" != "$NEW_SHA" ] || ! python -c "import django" 2>/dev/null; then
-            python -m pip install --upgrade pip setuptools wheel
-            python -m pip install -r requirements-ci-bootstrap.txt
-            python -m pip install -e ".[test]"
-            echo "$NEW_SHA" > "$STAMP"
-          else
-            echo "Dependencies up to date; skipping pip install."
-          fi
-
-      - name: Run tests with coverage
-        shell: bash
-        run: |
-          set -euxo pipefail
-          export PYENV_ROOT="${PYENV_ROOT:-$HOME/.pyenv}"
-          export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"
-          eval "$(pyenv init -)"
-          pyenv shell "${PYTHON_VERSION}"
-          source "$VENV_DIR/bin/activate"
-          coverage run --parallel-mode manage.py test --parallel 16 --keepdb --settings bluebottle.settings.runner -v3
-          coverage combine
-          coverage report
-          coverage xml -o coverage.xml
-
-      - name: Upload coverage to Coveralls
-        if: success()
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          format: cobertura
-          file: coverage.xml
+    services:
+      postgres:
+        image: postgis/postgis:14-3.3
         env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.22
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+        ports:
+          - 9200/tcp
+        options: >-
+          --health-cmd="curl -fsS 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' | grep -q '\"timed_out\":false' || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Export service ports
+        run: |
+          echo "PGHOST=127.0.0.1" >> "$GITHUB_ENV"
+          echo "PGPORT=${{ job.services.postgres.ports[5432] }}" >> "$GITHUB_ENV"
+          echo "ESHOST=127.0.0.1" >> "$GITHUB_ENV"
+          echo "ESPORT=${{ job.services.elasticsearch.ports[9200] }}" >> "$GITHUB_ENV"
+
+      - name: Install system dependencies (host)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            locales \
+            libxmlsec1-dev \
+            libgdal-dev \
+            swig \
+            libjpeg-dev \
+            zlib1g-dev
+          sudo sed -i 's/^# *\(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+          sudo locale-gen
+          sudo update-locale LANG=en_GB.UTF-8
+
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python
+
+      - name: Bootstrap database
+        run: |
+          set -e
+
+          pg_run() {
+            docker run --rm -i --network host \
+              -e "PGPASSWORD=${PGPASSWORD:-}" \
+              -v "$GITHUB_WORKSPACE:/workspace:ro" \
+              "$PG_CLI_IMAGE" \
+              "$@"
+          }
+
+          # Create user if it does not exist
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT FROM pg_catalog.pg_roles WHERE rolname = 'testuser'
+            ) THEN
+              CREATE ROLE testuser LOGIN PASSWORD 'password';
+            END IF;
+          END
+          $$;
+          ALTER ROLE testuser WITH SUPERUSER CREATEDB CREATEROLE;
+          SQL
+
+          # Drop test database if it exists
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          SELECT pg_terminate_backend(pid)
+          FROM pg_stat_activity
+          WHERE datname = 'test_bluebottle_test'
+            AND pid <> pg_backend_pid();
+          DROP DATABASE IF EXISTS test_bluebottle_test;
+          SQL
+
+          # Drop stale parallel clone DBs (test_bluebottle_test_1..N) so keepdb starts clean.
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d postgres <<'SQL'
+          DO $$
+          DECLARE
+            db record;
+          BEGIN
+            FOR db IN
+              SELECT datname
+              FROM pg_database
+              WHERE datname LIKE 'test_bluebottle_test\_%' ESCAPE '\'
+            LOOP
+              EXECUTE format(
+                'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = %L AND pid <> pg_backend_pid()',
+                db.datname
+              );
+              EXECUTE format('DROP DATABASE IF EXISTS %I', db.datname);
+            END LOOP;
+          END
+          $$;
+          SQL
+
+          # Recreate database
+          PGPASSWORD=password pg_run createdb -h 127.0.0.1 -p "$PGPORT" -U testuser test_bluebottle_test
+
+          # Ensure extensions exist in template1 so new DBs inherit them
+          PGPASSWORD=postgres pg_run psql -h 127.0.0.1 -p "$PGPORT" -U postgres -d template1 <<'SQL'
+          CREATE EXTENSION IF NOT EXISTS postgis;
+          CREATE EXTENSION IF NOT EXISTS postgis_topology;
+          CREATE EXTENSION IF NOT EXISTS unaccent;
+          SQL
+
+          # Load test data
+          PGPASSWORD=password pg_run psql -h 127.0.0.1 -p "$PGPORT" -U testuser -d test_bluebottle_test -f /workspace/testdata.sql
+
+          # Sync all serial/identity sequences with current max(id) values after loading fixtures.
+          PGPASSWORD=password pg_run psql -h 127.0.0.1 -p "$PGPORT" -U testuser -d test_bluebottle_test <<'SQL'
+          DO $$
+          DECLARE
+            r record;
+            max_id bigint;
+          BEGIN
+            FOR r IN
+              SELECT
+                n.nspname AS schema_name,
+                c.relname AS table_name,
+                a.attname AS column_name,
+                pg_get_serial_sequence(format('%I.%I', n.nspname, c.relname), a.attname) AS seq_name
+              FROM pg_class c
+              JOIN pg_namespace n ON n.oid = c.relnamespace
+              JOIN pg_attribute a ON a.attrelid = c.oid
+              WHERE c.relkind = 'r'
+                AND n.nspname = 'public'
+                AND a.attnum > 0
+                AND NOT a.attisdropped
+                AND a.attname = 'id'
+            LOOP
+              IF r.seq_name IS NOT NULL THEN
+                EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I', r.column_name, r.schema_name, r.table_name) INTO max_id;
+                EXECUTE format('SELECT setval(%L, %s, true)', r.seq_name, GREATEST(max_id, 1));
+              END IF;
+            END LOOP;
+          END
+          $$;
+          SQL
+
+      - name: Run Elasticsearch tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          source "${VENV_DIR}/bin/activate"
+          python manage.py test \
+            --parallel 8 \
+            --keepdb \
+            --tag=elasticsearch \
+            --settings bluebottle.settings.runner \
+            -v3

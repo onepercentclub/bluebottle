@@ -88,5 +88,5 @@ def translate_text_cached(text, target_language):
         )
         return translated
     except Exception as e:
-        print(e)
+        logger.warning('Translation failed: %s', e, exc_info=True)
         return None

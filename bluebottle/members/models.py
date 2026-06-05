@@ -18,12 +18,16 @@ from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.files.fields import ImageField
-from bluebottle.geo.models import Place
+from bluebottle.geo.models import Place, Location
 from bluebottle.utils.fields import CheckboxField
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..offices.models import OfficeSubRegion
 from ..segments.models import SegmentType, Segment
+
+
+def default_support_groups():
+    return ['Engineering Team', 'Support']
 
 
 class SocialLoginSettings(models.Model):
@@ -150,7 +154,7 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     support_groups = ArrayField(
         models.CharField(),
         verbose_name=_('Support login groups'),
-        default=lambda: ['Engineering Team', 'Support'],
+        default=default_support_groups,
         help_text=_('Groups that can login in using support accounts'),
     )
 
@@ -411,8 +415,16 @@ class Member(BlueBottleBaseUser):
         OfficeSubRegion,
         verbose_name=_("Work location groups managed"),
         help_text=_(
-            "Select one or more groups to filter on. "
-            "The user will only see data related to those selected groups. Leave empty to show all data."
+            "Filter this user's view to one or more location groups. Leave empty to show data from all locations."
+        ),
+        blank=True,
+    )
+
+    office_manager = models.ManyToManyField(
+        Location,
+        verbose_name=_("Work locations managed"),
+        help_text=_(
+            "Filter this user's view to specific work locations. Leave empty to show data from all locations."
         ),
         blank=True,
     )

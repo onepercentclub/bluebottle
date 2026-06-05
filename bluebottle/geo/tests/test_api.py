@@ -252,6 +252,20 @@ class GeolocationCreateTestCase(GeoTestCase):
         )
 
 
+class OfficeListTestCase(GeoTestCase):
+    def setUp(self):
+        super(OfficeListTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.office = LocationFactory.create(name='Amsterdam Office')
+
+    def test_office_list_returns_offices(self):
+        response = self.client.get(reverse('office-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        ids = [item['id'] for item in data]
+        self.assertIn(str(self.office.pk), ids)
+
+
 class JSONAPICountryListTestCase(APITestCase):
 
     def setUp(self):

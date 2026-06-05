@@ -24,6 +24,7 @@ install_requires = [
     'South==1.0.2',
     'Sphinx==4.1.2',
     'SurveyGizmo==1.2.2',
+    'cffi>=1.15.1',
     'bcrypt==3.2.0',
     'beautifulsoup4==4.12.2',
     'celery==5.6.1',
@@ -56,7 +57,7 @@ install_requires = [
     'django-memoize==2.3.1',
     'django-money==3.6.0',
     'django-multiselectfield==1.0.1',
-    'django-nested-inline==0.4.6',
+    'django-nested-admin==4.1.6',
     'django-otp==1.2.0',
     'django-parler==2.3',
     'django-tabular-permissions==2.9.3',
@@ -112,7 +113,6 @@ install_requires = [
     'qrcode==7.4.2',
     'rave-python==1.0.2',
     'raven==6.1.0',
-    'regex==2025.9.18',
     'requests==2.32.0',
     'requests_http_signature==0.7.1',
     'schwifty==2.1.0',
@@ -139,7 +139,8 @@ install_requires = [
 ]
 
 tests_requires = [
-    'coveralls==3.2.0',
+    'coverage==7.6.12',
+    'coveralls==4.1.0',
     'django-nose==1.4.4',
     'django-setuptest==0.2.1',
     'django-slowtests==0.5.1',

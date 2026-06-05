@@ -54,7 +54,7 @@ class LoginTestCase(BluebottleTestCase):
             token, algorithms='HS256', options=dict(verify_signature=False)
         )
 
-        self.assertEquals(list(decoded.keys()), ['username', 'exp', 'orig_iat'])
+        self.assertEqual(list(decoded.keys()), ['username', 'exp', 'orig_iat'])
         self.assertEqual(decoded['username'], self.user.pk)
 
         current_user_response = self.client.get(
@@ -905,7 +905,7 @@ class PasswordSetTest(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertTrue(b'Password should at least be 8 characters.' in response.content)
+        self.assertTrue(b'Password should at least be 10 characters.' in response.content)
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('some-password'))
@@ -1069,11 +1069,11 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'Password should at least be 8 characters.'
+            'Password should at least be 10 characters.'
         )
 
     def test_common(self):
-        self.data['data']['attributes']['password'] = 'password'
+        self.data['data']['attributes']['password'] = 'password123'
         response = self.client.post(self.url, data=json.dumps(self.data))
         self.assertEqual(response.status_code, 400)
         errors = response.json()['errors']
@@ -1454,7 +1454,7 @@ class MemberSignUpAPITestCase(APITestCase):
         error = self.response.json()['errors'][0]
         self.assertEqual(
             error['detail'],
-            'Password should at least be 8 characters.'
+            'Password should at least be 10 characters.'
         )
         self.assertEqual(
             error['source']['pointer'],

@@ -116,8 +116,9 @@ class MemberSerializer(ModelSerializer):
             not user.is_superuser
         ):
             representation['last_name'] = None
-            representation['initials'] = representation['first_name'][0]
-            representation['full_name'] = representation['first_name']
+            first_name = representation.get('first_name') or ''
+            representation['initials'] = first_name[:1]
+            representation['full_name'] = representation.get('first_name')
 
         return representation
 
@@ -555,6 +556,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'initiative_search_filters',
             'activity_search_filters',
             'activity_search_filters',
+            'contact_activity_manager',
             'search_filters_activities',
             'search_filters_initiatives',
             'include_full_activities',

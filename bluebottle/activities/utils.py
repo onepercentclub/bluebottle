@@ -859,7 +859,10 @@ def bulk_add_participants(activity, emails, send_messages):
             user = Member.objects.filter(email__iexact=email.strip()).first()
             if not user:
                 new = True
-                if settings.closed and not scim_settings.enabled:
+                if (
+                    (settings.closed or settings.confirm_signup) and
+                    not scim_settings.enabled
+                ):
                     email = email.strip()
                     try:
                         user = Member.create_by_email(email)

@@ -3,9 +3,11 @@ import json
 import re
 from builtins import str
 from datetime import timedelta
+from unittest import mock
 
 import dateutil
 from django.contrib.auth.models import Permission
+from django.db import connection
 from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
@@ -15,7 +17,7 @@ from django_elasticsearch_dsl.test import ESTestCase
 from pytz import UTC
 from rest_framework import status
 
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, ActivityMessage
 from bluebottle.activity_links.tests.factories import LinkedDeedFactory, LinkedFundingFactory
 from bluebottle.collect.tests.factories import (
     CollectActivityFactory,
@@ -1256,6 +1258,31 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertIn(str(in_region.pk), ids)
         self.assertNotIn(str(out_region.pk), ids)
 
+    def test_filter_reviewing_office_manager(self):
+        managed_location = LocationFactory.create()
+        other_location = LocationFactory.create()
+        in_office = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=managed_location,
+        )
+        out_office = DeadlineActivityFactory.create(
+            status='submitted',
+            office_location=other_location,
+        )
+
+        reviewer = BlueBottleUserFactory.create()
+        reviewer.office_manager.add(managed_location)
+        perm = Permission.objects.filter(codename='api_review_activity').first()
+        if perm:
+            reviewer.user_permissions.add(perm)
+
+        self.search({'reviewing': '1', 'status': 'submitted'}, user=reviewer)
+
+        self.assertFound([in_office], count=1)
+        ids = [a['id'] for a in self.data['data']]
+        self.assertIn(str(in_office.pk), ids)
+        self.assertNotIn(str(out_office.pk), ids)
+
     def test_filter_reviewing_segment_manager(self):
         segment_type = SegmentTypeFactory.create(is_active=True, enable_search=True)
         managed_segment, other_segment = SegmentFactory.create_batch(2, segment_type=segment_type)
@@ -1539,6 +1566,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = DeadlineActivityFactory.create_batch(
             3,
             office_location=LocationFactory.create(country=other_country),
+            status='open',
+        )
+        DeadlineActivityFactory.create_batch(
+            3,
+            location=GeolocationFactory.create(country=None),
             status='open',
         )
 
@@ -2183,3 +2215,99 @@ class ActivityLocationAPITestCase(APITestCase):
         with self.closed_site():
             self.perform_get(user=BlueBottleUserFactory.create())
         self.assertStatus(status.HTTP_200_OK)
+
+
+class ActivityMessageAPITestCase(BluebottleTestCase):
+    def setUp(self):
+        super(ActivityMessageAPITestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.sender = BlueBottleUserFactory.create()
+        self.activity = DeedFactory.create(owner=self.owner, status='open')
+        self.url = reverse('activity-message-list')
+
+    def _payload(self, activity):
+        return {
+            'data': {
+                'type': 'activity-messages',
+                'attributes': {'message': 'Hello manager'},
+                'relationships': {
+                    'activity': {
+                        'data': {
+                            'type': 'activities/deeds',
+                            'id': str(activity.pk),
+                        }
+                    }
+                }
+            }
+        }
+
+    @mock.patch(
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
+    )
+    def test_post_authenticated(self, notify_task_mock):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+            user=self.sender
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ActivityMessage.objects.count(), 1)
+        msg = ActivityMessage.objects.get()
+        self.assertEqual(msg.sender, self.sender)
+        self.assertEqual(msg.activity_id, self.activity.pk)
+        notify_task_mock.assert_called_once_with(msg.pk, connection.tenant)
+
+    @mock.patch(
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
+    )
+    def test_post_rate_limit(self, notify_task_mock):
+        for _ in range(12):
+            response = self.client.post(
+                self.url,
+                data=json.dumps(self._payload(self.activity)),
+                user=self.sender
+            )
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_post_anonymous(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_post_owner_to_self(self):
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ActivityMessage.objects.count(), 0)
+
+    def test_post_draft_activity_forbidden(self):
+        draft = DeedFactory.create(owner=self.owner, status='draft')
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(draft)),
+            user=self.sender
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @mock.patch(
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
+    )
+    def test_post_disabled_by_platform_setting(self, notify_task_mock):
+        settings = InitiativePlatformSettings.load()
+        settings.contact_activity_manager = False
+        settings.save()
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(self._payload(self.activity)),
+            user=self.sender,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(ActivityMessage.objects.count(), 0)
+        notify_task_mock.assert_not_called()

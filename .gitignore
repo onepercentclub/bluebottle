@@ -1,4 +1,5 @@
 *.py[co]
+.python-version
 
 # Ignore engagement analysis excel reports
 *.xlsx

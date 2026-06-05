@@ -14,10 +14,12 @@ env:
   DJANGO_SETTINGS_MODULE: bluebottle.settings.runner
   LANG: en_GB.UTF-8
   LC_ALL: en_GB.UTF-8
-  PYTHON_VERSION: "3.11.4"
-  PYENV_ROOT: /home/github_actions/.pyenv
   SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
   PG_CLI_IMAGE: postgis/postgis:14-3.3
+  TEST_DB_NAME: test_bluebottle_test
+  TEST_DB_USER: testuser
+  TEST_DB_PASSWORD: password
+  POSTGRES_PASSWORD: postgres
 
 jobs:
   test-without-elasticsearch:
@@ -69,16 +71,67 @@ jobs:
           sudo update-locale LANG=en_GB.UTF-8
 
       - name: Set up Python and dependencies
-        run: bash .github/scripts/setup-test-python.sh
+        uses: gabrielfalcao/pyenv-action@v18
+        with:
+          default: "3.11.4"
+          command: |
+            set -euo pipefail
+            PIP_EXTRA="${PIP_EXTRA:-test}"
+            export PIP_DEFAULT_TIMEOUT="${PIP_DEFAULT_TIMEOUT:-120}"
+            export PIP_RETRIES="${PIP_RETRIES:-10}"
+            cd "${GITHUB_WORKSPACE}"
+            VENV_DIR="/home/github_actions/venvs/bluebottle-py311"
+            if [ "${PIP_EXTRA}" != "test" ]; then
+              VENV_DIR="${VENV_DIR}-${PIP_EXTRA}"
+            fi
+            if [ ! -x "${VENV_DIR}/bin/python" ] || ! "${VENV_DIR}/bin/python" -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 11) else 1)'; then
+              rm -rf "${VENV_DIR}"
+              python -m venv "${VENV_DIR}"
+            fi
+            # shellcheck source=/dev/null
+            source "${VENV_DIR}/bin/activate"
+            if python -c "import django, pkg_resources" 2>/dev/null; then
+              echo "venv ${VENV_DIR} ready; skipping pip install."
+            else
+              attempt=1
+              while [ "${attempt}" -le 3 ]; do
+                if python -m pip install --upgrade "pip==25.3" "setuptools==69.5.1" wheel && \
+                   python -m pip install -e ".[${PIP_EXTRA}]"; then
+                  break
+                fi
+                echo "pip install failed (attempt ${attempt}/3)"
+                if [ "${attempt}" -eq 3 ]; then
+                  exit 1
+                fi
+                sleep $((attempt * 15))
+                attempt=$((attempt + 1))
+              done
+            fi
+            echo "VENV_DIR=${VENV_DIR}" >> "${GITHUB_ENV}"
 
       - name: Bootstrap database
-        run: bash .github/scripts/bootstrap-test-database.sh
+        run: |
+          PGPASSWORD="${POSTGRES_PASSWORD}" docker run --rm -i --network host \
+            -e "PGPASSWORD=${POSTGRES_PASSWORD}" \
+            -v "${GITHUB_WORKSPACE}:/workspace:ro" \
+            "${PG_CLI_IMAGE}" \
+            psql \
+              -h "${PGHOST}" \
+              -p "${PGPORT}" \
+              -U postgres \
+              -d postgres \
+              -v "TEST_DB_NAME=${TEST_DB_NAME}" \
+              -v "TEST_DB_USER=${TEST_DB_USER}" \
+              -v "TEST_DB_PASSWORD=${TEST_DB_PASSWORD}" \
+              -v "PGHOST=${PGHOST}" \
+              -v "PGPORT=${PGPORT}" \
+              -f /workspace/.github/sql/bootstrap-test-database.sql
 
       - name: Run tests
         shell: bash
         run: |
           set -euxo pipefail
-          source .github/scripts/activate-ci-python.sh
+          source "${VENV_DIR}/bin/activate"
           python manage.py test \
             --parallel 12 \
             --keepdb \
@@ -148,16 +201,67 @@ jobs:
           sudo update-locale LANG=en_GB.UTF-8
 
       - name: Set up Python and dependencies
-        run: bash .github/scripts/setup-test-python.sh
+        uses: gabrielfalcao/pyenv-action@v18
+        with:
+          default: "3.11.4"
+          command: |
+            set -euo pipefail
+            PIP_EXTRA="${PIP_EXTRA:-test}"
+            export PIP_DEFAULT_TIMEOUT="${PIP_DEFAULT_TIMEOUT:-120}"
+            export PIP_RETRIES="${PIP_RETRIES:-10}"
+            cd "${GITHUB_WORKSPACE}"
+            VENV_DIR="/home/github_actions/venvs/bluebottle-py311"
+            if [ "${PIP_EXTRA}" != "test" ]; then
+              VENV_DIR="${VENV_DIR}-${PIP_EXTRA}"
+            fi
+            if [ ! -x "${VENV_DIR}/bin/python" ] || ! "${VENV_DIR}/bin/python" -c 'import sys; sys.exit(0 if sys.version_info[:2] == (3, 11) else 1)'; then
+              rm -rf "${VENV_DIR}"
+              python -m venv "${VENV_DIR}"
+            fi
+            # shellcheck source=/dev/null
+            source "${VENV_DIR}/bin/activate"
+            if python -c "import django, pkg_resources" 2>/dev/null; then
+              echo "venv ${VENV_DIR} ready; skipping pip install."
+            else
+              attempt=1
+              while [ "${attempt}" -le 3 ]; do
+                if python -m pip install --upgrade "pip==25.3" "setuptools==69.5.1" wheel && \
+                   python -m pip install -e ".[${PIP_EXTRA}]"; then
+                  break
+                fi
+                echo "pip install failed (attempt ${attempt}/3)"
+                if [ "${attempt}" -eq 3 ]; then
+                  exit 1
+                fi
+                sleep $((attempt * 15))
+                attempt=$((attempt + 1))
+              done
+            fi
+            echo "VENV_DIR=${VENV_DIR}" >> "${GITHUB_ENV}"
 
       - name: Bootstrap database
-        run: bash .github/scripts/bootstrap-test-database.sh
+        run: |
+          PGPASSWORD="${POSTGRES_PASSWORD}" docker run --rm -i --network host \
+            -e "PGPASSWORD=${POSTGRES_PASSWORD}" \
+            -v "${GITHUB_WORKSPACE}:/workspace:ro" \
+            "${PG_CLI_IMAGE}" \
+            psql \
+              -h "${PGHOST}" \
+              -p "${PGPORT}" \
+              -U postgres \
+              -d postgres \
+              -v "TEST_DB_NAME=${TEST_DB_NAME}" \
+              -v "TEST_DB_USER=${TEST_DB_USER}" \
+              -v "TEST_DB_PASSWORD=${TEST_DB_PASSWORD}" \
+              -v "PGHOST=${PGHOST}" \
+              -v "PGPORT=${PGPORT}" \
+              -f /workspace/.github/sql/bootstrap-test-database.sql
 
       - name: Run Elasticsearch tests
         shell: bash
         run: |
           set -euxo pipefail
-          source .github/scripts/activate-ci-python.sh
+          source "${VENV_DIR}/bin/activate"
           python manage.py test \
             --parallel 8 \
             --keepdb \

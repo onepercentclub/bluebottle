@@ -1,0 +1,35 @@
+name: Setup Python
+description: Install Python 3.11.4 via pyenv and a persistent project venv
+inputs:
+  pip-extra:
+    description: setuptools extras group for pip install -e
+    required: false
+    default: test
+runs:
+  using: composite
+  steps:
+    - uses: gabrielfalcao/pyenv-action@v18
+      with:
+        default: "3.11.4"
+
+    - shell: bash
+      run: |
+        set -euo pipefail
+        pip_extra="${{ inputs.pip-extra }}"
+        venv_dir="/home/github_actions/venvs/bluebottle-py311"
+        if [ "${pip_extra}" != "test" ]; then
+          venv_dir="${venv_dir}-${pip_extra}"
+        fi
+        cd "${GITHUB_WORKSPACE}"
+        if [ ! -x "${venv_dir}/bin/python" ]; then
+          python -m venv "${venv_dir}"
+        fi
+        # shellcheck source=/dev/null
+        source "${venv_dir}/bin/activate"
+        if python -c "import django" 2>/dev/null && \
+           { [ "${pip_extra}" != "dev" ] || python -c "import flake8" 2>/dev/null; }; then
+          echo "venv ${venv_dir} ready"
+        else
+          pip install -e ".[${pip_extra}]"
+        fi
+        echo "VENV_DIR=${venv_dir}" >> "${GITHUB_ENV}"

@@ -5,7 +5,7 @@ from builtins import str
 from functools import partial
 from operator import attrgetter
 
-from celery import shared_task
+from bluebottle.celery import app
 from django.contrib.admin.options import get_content_type_for_model
 from django.core.cache import cache
 from django.db import connection
@@ -244,7 +244,7 @@ class TransitionMessage(object):
         )
 
 
-@shared_task
+@app.task
 def compose_and_send(message, tenant):
     from bluebottle.clients.utils import LocalTenant
 

@@ -231,7 +231,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'bluebottle.auth.password_validation.CustomMinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 8,
+            'min_length': 10,
         }
     },
     {
@@ -428,7 +428,7 @@ TENANT_APPS = (
     'django.contrib.gis',
     'djmoney',
     'solo',
-    'nested_inline',
+    'nested_admin',
     'tabular_permissions',
     'django.forms',
     'axes',

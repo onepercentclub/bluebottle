@@ -2,7 +2,6 @@ import logging
 from io import BytesIO
 
 import requests
-from celery import shared_task
 from django.conf import settings
 from django.db import connection
 from django.db.models.signals import post_save
@@ -10,6 +9,7 @@ from django.dispatch import receiver
 from django_tools.middlewares.ThreadLocal import get_current_user
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
+from bluebottle.celery import app
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import (
     Organization, Recipient, Follow, Create, Event, Finish, Cancel, Start
@@ -144,7 +144,7 @@ class JSONLDAdapter():
 adapter = JSONLDAdapter()
 
 
-@shared_task(
+@app.task(
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
     name="bluebottle.activity_pub.adapters.publish_activities"
 )
@@ -158,7 +158,7 @@ def publish_activities(recipient, activities, tenant):
             Recipient.objects.get_or_create(actor=recipient, activity=publish)
 
 
-@shared_task(
+@app.task(
     autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5},
     name="bluebottle.activity_pub.adapters.publish_to_recipient"
 )

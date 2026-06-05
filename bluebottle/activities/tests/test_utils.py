@@ -54,6 +54,17 @@ class BulkAddParticipantTestCase(TestCase):
 
         self.assertParticipant(self.emails[0])
 
+    def test_bulk_add_confirm_signup(self):
+        MemberPlatformSettings.objects.create(confirm_signup=True)
+        result = bulk_add_participants(self.activity, self.emails, False)
+
+        self.assertEqual(result, {
+            'added': 1, 'existing': 0, 'failed': 0, 'created': 2
+        })
+
+        for email in self.emails:
+            self.assertParticipant(email)
+
     def test_bulk_add_already_signed_up(self):
         DeedParticipantFactory.create(
             activity=self.activity, user=self.member

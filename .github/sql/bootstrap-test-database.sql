@@ -1,22 +1,6 @@
 \set ON_ERROR_STOP on
 
 SELECT set_config('bb.test_db_name', :'TEST_DB_NAME', false);
-SELECT set_config('bb.test_db_user', :'TEST_DB_USER', false);
-SELECT set_config('bb.test_db_password', :'TEST_DB_PASSWORD', false);
-
-DO $$
-DECLARE
-  role_name text := current_setting('bb.test_db_user');
-  role_password text := current_setting('bb.test_db_password');
-BEGIN
-  IF NOT EXISTS (
-    SELECT FROM pg_catalog.pg_roles WHERE rolname = role_name
-  ) THEN
-    EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', role_name, role_password);
-  END IF;
-  EXECUTE format('ALTER ROLE %I WITH SUPERUSER CREATEDB CREATEROLE', role_name);
-END
-$$;
 
 SELECT pg_terminate_backend(pid)
 FROM pg_stat_activity

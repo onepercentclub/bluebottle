@@ -75,21 +75,33 @@ jobs:
 
       - name: Bootstrap database
         run: |
-          PGPASSWORD="${POSTGRES_PASSWORD}" docker run --rm -i --network host \
-            -e "PGPASSWORD=${POSTGRES_PASSWORD}" \
-            -v "${GITHUB_WORKSPACE}:/workspace:ro" \
-            "${PG_CLI_IMAGE}" \
-            psql \
-              -h "${PGHOST}" \
-              -p "${PGPORT}" \
-              -U postgres \
-              -d postgres \
-              -v "TEST_DB_NAME=${TEST_DB_NAME}" \
-              -v "TEST_DB_USER=${TEST_DB_USER}" \
-              -v "TEST_DB_PASSWORD=${TEST_DB_PASSWORD}" \
-              -v "PGHOST=${PGHOST}" \
-              -v "PGPORT=${PGPORT}" \
-              -f /workspace/.github/sql/bootstrap-test-database.sql
+          set -euo pipefail
+          pg_psql() {
+            PGPASSWORD="${POSTGRES_PASSWORD}" docker run --rm -i --network host \
+              -e "PGPASSWORD=${POSTGRES_PASSWORD}" \
+              -v "${GITHUB_WORKSPACE}:/workspace:ro" \
+              "${PG_CLI_IMAGE}" \
+              psql -h "${PGHOST}" -p "${PGPORT}" -U postgres -d postgres "$@"
+          }
+          pg_psql <<SQL
+          DO \$\$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT FROM pg_catalog.pg_roles WHERE rolname = '${TEST_DB_USER}'
+            ) THEN
+              EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', '${TEST_DB_USER}', '${TEST_DB_PASSWORD}');
+            END IF;
+            EXECUTE format('ALTER ROLE %I WITH SUPERUSER CREATEDB CREATEROLE', '${TEST_DB_USER}');
+          END
+          \$\$;
+          SQL
+          pg_psql \
+            -v "TEST_DB_NAME=${TEST_DB_NAME}" \
+            -v "TEST_DB_USER=${TEST_DB_USER}" \
+            -v "TEST_DB_PASSWORD=${TEST_DB_PASSWORD}" \
+            -v "PGHOST=${PGHOST}" \
+            -v "PGPORT=${PGPORT}" \
+            -f /workspace/.github/sql/bootstrap-test-database.sql
 
       - name: Run tests
         shell: bash
@@ -169,21 +181,33 @@ jobs:
 
       - name: Bootstrap database
         run: |
-          PGPASSWORD="${POSTGRES_PASSWORD}" docker run --rm -i --network host \
-            -e "PGPASSWORD=${POSTGRES_PASSWORD}" \
-            -v "${GITHUB_WORKSPACE}:/workspace:ro" \
-            "${PG_CLI_IMAGE}" \
-            psql \
-              -h "${PGHOST}" \
-              -p "${PGPORT}" \
-              -U postgres \
-              -d postgres \
-              -v "TEST_DB_NAME=${TEST_DB_NAME}" \
-              -v "TEST_DB_USER=${TEST_DB_USER}" \
-              -v "TEST_DB_PASSWORD=${TEST_DB_PASSWORD}" \
-              -v "PGHOST=${PGHOST}" \
-              -v "PGPORT=${PGPORT}" \
-              -f /workspace/.github/sql/bootstrap-test-database.sql
+          set -euo pipefail
+          pg_psql() {
+            PGPASSWORD="${POSTGRES_PASSWORD}" docker run --rm -i --network host \
+              -e "PGPASSWORD=${POSTGRES_PASSWORD}" \
+              -v "${GITHUB_WORKSPACE}:/workspace:ro" \
+              "${PG_CLI_IMAGE}" \
+              psql -h "${PGHOST}" -p "${PGPORT}" -U postgres -d postgres "$@"
+          }
+          pg_psql <<SQL
+          DO \$\$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT FROM pg_catalog.pg_roles WHERE rolname = '${TEST_DB_USER}'
+            ) THEN
+              EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', '${TEST_DB_USER}', '${TEST_DB_PASSWORD}');
+            END IF;
+            EXECUTE format('ALTER ROLE %I WITH SUPERUSER CREATEDB CREATEROLE', '${TEST_DB_USER}');
+          END
+          \$\$;
+          SQL
+          pg_psql \
+            -v "TEST_DB_NAME=${TEST_DB_NAME}" \
+            -v "TEST_DB_USER=${TEST_DB_USER}" \
+            -v "TEST_DB_PASSWORD=${TEST_DB_PASSWORD}" \
+            -v "PGHOST=${PGHOST}" \
+            -v "PGPORT=${PGPORT}" \
+            -f /workspace/.github/sql/bootstrap-test-database.sql
 
       - name: Run Elasticsearch tests
         shell: bash

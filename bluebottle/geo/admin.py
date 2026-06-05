@@ -227,7 +227,7 @@ class GeolocationAdmin(admin.ModelAdmin):
         PointField: {"widget": CustomMapboxPointFieldWidget},
     }
 
-    list_display = ('geolocation_label', 'street', 'locality', 'country', 'mapbox_id')
+    list_display = ('geolocation_label', 'country', 'locality')
 
     @admin.display(description=_('Geolocation'))
     def geolocation_label(self, obj):
@@ -288,10 +288,10 @@ class GeolocationAdmin(admin.ModelAdmin):
                            format_html("".join([str(r) for r in rows])))
 
     fieldsets = (
-        (_('Map'), {'fields': ('position', 'mapbox_id', 'place_name', 'latlong')}),
+        (_('Map'), {'fields': ('position', 'locality', 'mapbox_id', 'place_name', 'latlong')}),
         (_('Info'), {
             'fields': (
-                'locality', 'street', 'street_number', 'postal_code',
+                'street', 'street_number', 'postal_code',
                 'province', 'country', 'formatted_address'
             )
         }),

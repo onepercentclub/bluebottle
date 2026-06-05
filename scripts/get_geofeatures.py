@@ -103,6 +103,7 @@ def run(*args):
                     )
                     continue
 
+                location.features.clear()
                 location.save()
                 if n % 100 == 0 or n == total:
                     print(f'{tenant.schema_name}: save {n}/{total}')

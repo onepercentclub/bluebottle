@@ -143,6 +143,29 @@ def _format_address_fallback(address):
     return ', '.join(parts) or None
 
 
+HIERARCHICAL_PLACE_TYPES = frozenset({
+    'address',
+    'secondary_address',
+    'street',
+    'postcode',
+    'locality',
+    'district',
+    'neighborhood',
+})
+
+
+def _formatted_place_name_is_hierarchical(formatted, address):
+    """Return True when a formatted line includes context beyond the primary label."""
+    if not formatted:
+        return False
+    if ',' in formatted:
+        return True
+    road = address.get('road')
+    if road and formatted != road and road not in formatted:
+        return True
+    return len(formatted) > len(road or '')
+
+
 def format_place_name(place_type, feature, props, language, formatter=None):
     """Build a one-line locale-aware place name for GeoFeature.place_name."""
     context = props.get('context') or feature.get('context') or {}
@@ -157,39 +180,40 @@ def format_place_name(place_type, feature, props, language, formatter=None):
     if not address:
         return None
 
+    fallback = _format_address_fallback(address)
+
     if formatter is None and AddressFormatter is not None:
         formatter = AddressFormatter()
 
+    formatted = None
     if formatter is not None:
         try:
-            formatted = formatter.one_line(address, country=country_code)
-            if formatted and formatted.strip():
-                return formatted.strip()
+            candidate = formatter.one_line(address, country=country_code)
+            if candidate and candidate.strip():
+                formatted = candidate.strip()
         except Exception:
             pass
 
-    return _format_address_fallback(address)
+    if place_type in HIERARCHICAL_PLACE_TYPES:
+        if fallback and not _formatted_place_name_is_hierarchical(formatted, address):
+            return fallback
+        return formatted or fallback
+
+    return formatted or fallback
 
 
 def _resolve_place_name(place_type, feature, props, language, formatter, text_value):
     """Pick GeoFeature.place_name: formatted line, then Mapbox full address, then name."""
     formatted = format_place_name(place_type, feature, props, language, formatter=formatter)
-    if formatted and formatted != text_value:
+    if formatted:
         return formatted
 
-    if place_type in ('address', 'secondary_address'):
-        for key in ('full_address', 'place_formatted'):
-            value = props.get(key)
-            if value:
-                return value
+    for key in ('full_address', 'place_formatted'):
+        value = props.get(key)
+        if value:
+            return value
 
-    return (
-        formatted
-        or props.get('full_address')
-        or feature.get('place_name')
-        or props.get('place_formatted')
-        or text_value
-    )
+    return feature.get('place_name') or text_value
 
 
 def _clear_geo_feature_translation_cache(geo_feature):

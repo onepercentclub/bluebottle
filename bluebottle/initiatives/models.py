@@ -340,6 +340,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     LOCATION_DISPLAY_OPTIONS = (
+        ("location_name", _("Location name")),
         ("address", _("Address")),
         ("neighborhood", _("Neighbourhood")),
         ("place", _("City")),

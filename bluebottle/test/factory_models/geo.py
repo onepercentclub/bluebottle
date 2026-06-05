@@ -68,9 +68,45 @@ class GeolocationFactory(factory.DjangoModelFactory):
     locality = factory.Faker('city')
     position = Point(13.4, 52.5)
     country = factory.SubFactory(CountryFactory)
-    mapbox_id = 'some-mapbox-id'
+    mapbox_id = None
     formatted_address = factory.LazyAttribute(
         lambda o: '{} {} {} {}'.format(
             o.street, o.street_number, o.locality, o.country.name if o.country else ''
         )
     )
+
+    @factory.post_generation
+    def geofeatures(self, create, extracted, **kwargs):
+        if not create or extracted is False:
+            return
+
+        from bluebottle.geo.models import GeoFeature
+        from bluebottle.utils.models import Language
+
+        languages = list(Language.objects.values_list('code', flat=True)) or ['en']
+
+        place_feature, _ = GeoFeature.objects.get_or_create(
+            mapbox_id=f'test-place-{self.pk}',
+            defaults={'place_type': 'place'},
+        )
+        for code in languages:
+            place_feature.set_current_language(code)
+            place_feature.name = self.locality or ''
+            place_feature.save()
+
+        feature_ids = [place_feature.pk]
+        if self.country_id:
+            country_feature, _ = GeoFeature.objects.get_or_create(
+                mapbox_id=f'test-country-{self.country.alpha2_code}',
+                defaults={
+                    'place_type': 'country',
+                    'code': self.country.alpha2_code,
+                },
+            )
+            for code in languages:
+                country_feature.set_current_language(code)
+                country_feature.name = self.country.name
+                country_feature.save()
+            feature_ids.append(country_feature.pk)
+
+        self.features.set(feature_ids)

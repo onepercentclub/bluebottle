@@ -93,11 +93,21 @@ class DateActivityDocument(TimeBasedActivityDocument):
         return locations
 
     def prepare_geofeature(self, instance):
-        geofeatures = super(DateActivityDocument, self).prepare_geofeature(instance)
-        for slot in instance.slots.filter(is_online=False, location__isnull=False).all():
-            for geofeature in slot.location.features.all():
-                geofeatures += get_translated_geofeatures(geofeature)
-        return geofeatures
+        slot_locations = {
+            slot.location_id: slot.location
+            for slot in instance.slots.filter(is_online=False, location__isnull=False)
+        }
+        if slot_locations:
+            geofeatures = []
+            seen = set()
+            for location in slot_locations.values():
+                for geofeature in location.features.all():
+                    if geofeature.pk in seen:
+                        continue
+                    seen.add(geofeature.pk)
+                    geofeatures += get_translated_geofeatures(geofeature)
+            return geofeatures
+        return super(DateActivityDocument, self).prepare_geofeature(instance)
 
     def prepare_start(self, instance):
         return [slot.start for slot in instance.slots.all() if slot.status in ('open', 'full', 'finished', )]

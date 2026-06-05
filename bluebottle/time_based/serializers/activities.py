@@ -641,7 +641,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
                 'country': {
                     'code': slot.location.country.alpha2_code if slot.location.country else None,
                 },
-                'formattedAddress': slot.location.formatted_address if slot.location else None,
+                'formattedAddress': str(slot.location),
             }
 
         user = self.context['request'].user

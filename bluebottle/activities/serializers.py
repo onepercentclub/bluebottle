@@ -384,38 +384,60 @@ class ActivityPreviewSerializer(ModelSerializer):
 
         return obj.type.replace("activity", "")
 
+    def _geofeature_place_names(self, geofeatures):
+        language = get_current_language()
+        names = {
+            feature.name
+            for feature in geofeatures
+            if feature.place_type == 'place' and feature.language == language
+        }
+        if not names:
+            names = {
+                feature.name
+                for feature in geofeatures
+                if feature.place_type == 'place'
+            }
+        return names
+
+    def _format_geofeature_location(self, geofeatures):
+        if not geofeatures:
+            return None
+
+        location_features = InitiativePlatformSettings.load().location_features
+        language = get_current_language()
+        features = [feature for feature in geofeatures if feature.language == language]
+        if not features:
+            features = list(geofeatures)
+
+        parts = []
+        for place_type in location_features:
+            match = next(
+                (feature for feature in features if feature.place_type == place_type),
+                None,
+            )
+            if not match:
+                continue
+            if place_type == 'country':
+                parts.append(match.code or match.name)
+            else:
+                parts.append(match.name)
+
+        return ", ".join(parts) if parts else None
+
     def get_location(self, obj):
-        location = False
+        geofeatures = obj.geofeature or []
+        if not geofeatures:
+            return None
+
         if hasattr(obj, "slots") and obj.slots:
             slots = self.get_filtered_slots(obj, only_upcoming=True)
             if not len(slots):
                 slots = self.get_filtered_slots(obj)
-            if len(set(slot.locality for slot in slots)) == 1:
-                location = slots[0]
+            if len([slot for slot in slots if not slot.is_online]) > 1:
+                if len(self._geofeature_place_names(geofeatures)) > 1:
+                    return None
 
-        if len(obj.geofeature):
-            location_features = InitiativePlatformSettings.load().location_features
-            language = get_current_language()
-            features = [f for f in (obj.geofeature or []) if f.language == language]
-            if not features:
-                features = list(obj.geofeature or [])
-
-            parts = []
-            for place_type in location_features:
-                match = next(
-                    (f for f in features if f.place_type == place_type),
-                    None,
-                )
-                if match:
-                    parts.append(match.name)
-
-            return ", ".join([p for p in parts if p])
-
-        if location:
-            if location.locality:
-                return f"{location.locality}, {location.country_code}"
-            else:
-                return location.country
+        return self._format_geofeature_location(geofeatures)
 
     def get_image(self, obj):
         if obj.image:
@@ -538,10 +560,14 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.is_online
 
     def get_has_multiple_locations(self, obj):
+        if not (hasattr(obj, "slots") and obj.slots):
+            return False
         slots = self.get_filtered_slots(obj, only_upcoming=True)
         if not len(slots):
             slots = self.get_filtered_slots(obj)
-        return len(set(slot.locality for slot in slots)) > 1
+        if len([slot for slot in slots if not slot.is_online]) <= 1:
+            return False
+        return len(self._geofeature_place_names(obj.geofeature or [])) > 1
 
     def get_is_full(self, obj):
         slots = self.get_filtered_slots(obj)

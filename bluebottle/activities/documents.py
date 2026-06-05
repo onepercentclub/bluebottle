@@ -42,6 +42,7 @@ def get_translated_geofeatures(obj):
                 'place_name': obj.place_name,
                 'place_type': obj.place_type,
                 'mapbox_id': obj.mapbox_id,
+                'code': obj.code,
             }
         )
     obj._current_language = current_language
@@ -160,6 +161,7 @@ class ActivityDocument(Document):
             'place_name': fields.KeywordField(),
             'place_type': fields.KeywordField(),
             'language': fields.KeywordField(),
+            'code': fields.KeywordField(),
         }
     )
 
@@ -366,12 +368,14 @@ class ActivityDocument(Document):
             countries += get_translated_list(instance.office_location.country)
         if hasattr(instance, 'place') and instance.place and instance.place.country:
             countries += get_translated_list(instance.place.country)
-        if instance.initiative and instance.initiative.place and instance.initiative.place.country:
-            countries += get_translated_list(instance.initiative.place.country)
+        initiative = getattr(instance, 'initiative', None)
+        if initiative and initiative.place and initiative.place.country:
+            countries += get_translated_list(initiative.place.country)
         return deduplicate(countries)
 
     def prepare_location(self, instance):
         locations = []
+        initiative = getattr(instance, 'initiative', None)
         if hasattr(instance, 'location') and instance.location:
             country = instance.location.country
             locations.append({
@@ -392,10 +396,10 @@ class ActivityDocument(Document):
                 'country': country.name if country else None,
                 'type': 'office'
             })
-        elif instance.initiative and instance.initiative.place:
-            country = instance.initiative.place.country
+        elif initiative and initiative.place:
+            country = initiative.place.country
             locations.append({
-                'locality': instance.initiative.place.locality,
+                'locality': initiative.place.locality,
                 'country_code': country.alpha2_code if country else None,
                 'country': country.name if country else None,
                 'type': 'impact_location'
@@ -409,8 +413,9 @@ class ActivityDocument(Document):
             locations.append(instance.location)
         if hasattr(instance, 'impact_location') and instance.impact_location:
             locations.append(instance.impact_location)
-        if instance.initiative and instance.initiative.place:
-            locations.append(instance.initiative.place)
+        initiative = getattr(instance, 'initiative', None)
+        if initiative and initiative.place:
+            locations.append(initiative.place)
         geofeatures = []
         for location in locations:
             for geofeature in location.features.all():

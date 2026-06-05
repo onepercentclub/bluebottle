@@ -1,6 +1,8 @@
 from django.test import TestCase
 
-from bluebottle.geo.geofeatures import format_place_name
+from unittest import mock
+
+from bluebottle.geo.geofeatures import _resolve_place_name, format_place_name
 
 
 LEIDEN_CONTEXT = {
@@ -78,8 +80,6 @@ class FormatPlaceNameTest(TestCase):
         self.assertEqual(formatted, 'Hansenstraat, Leiden, Netherlands')
 
     def test_place_name_uses_mapbox_full_address_when_formatter_unavailable(self):
-        from bluebottle.geo.geofeatures import _resolve_place_name
-
         props = _ctx_feature('address')['properties']
         feature = _ctx_feature('address')
 
@@ -90,3 +90,23 @@ class FormatPlaceNameTest(TestCase):
         self.assertIn('Leiden', place_name)
         self.assertIn('Netherlands', place_name)
         self.assertNotEqual(place_name, 'Hansenstraat 30')
+
+    def test_postcode_place_name_includes_city_and_country(self):
+        props = _ctx_feature('postcode')['properties']
+        feature = _ctx_feature('postcode')
+
+        formatted = format_place_name('postcode', feature, props, 'en', formatter=None)
+
+        self.assertEqual(formatted, '2316 BJ, Leiden, Netherlands')
+
+    def test_address_place_name_uses_fallback_when_formatter_returns_bare_street(self):
+        props = _ctx_feature('address')['properties']
+        feature = _ctx_feature('address')
+        formatter = mock.Mock()
+        formatter.one_line.return_value = 'Hansenstraat 30'
+
+        formatted = format_place_name('address', feature, props, 'en', formatter=formatter)
+
+        self.assertIn('Leiden', formatted)
+        self.assertIn('Netherlands', formatted)
+        self.assertNotEqual(formatted, 'Hansenstraat 30')

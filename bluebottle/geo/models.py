@@ -321,7 +321,7 @@ class Geolocation(models.Model):
     street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
     street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
     postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
-    locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
+    locality = models.CharField(_('Location name'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
     country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
     mapbox_id = models.CharField(max_length=500, null=True, blank=True)
@@ -335,6 +335,11 @@ class Geolocation(models.Model):
     origin = models.ForeignKey(
         'activity_pub.Place', null=True, related_name="locations", on_delete=models.SET_NULL
     )
+
+    def __str__(self):
+        if self.feature:
+            return self.feature.place_name
+        return self.locality
 
     @property
     def activity_pub_url(self):

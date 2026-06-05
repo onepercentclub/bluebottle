@@ -56,6 +56,21 @@ from bluebottle.time_based.tests.factories import (
 )
 
 
+def geofeature_location_string(geolocation, language='en'):
+    location_features = InitiativePlatformSettings.load().location_features
+    parts = []
+    for place_type in location_features:
+        feature = geolocation.features.filter(place_type=place_type).first()
+        if not feature:
+            continue
+        feature.set_current_language(language)
+        if place_type == 'country':
+            parts.append(feature.code or feature.name)
+        else:
+            parts.append(feature.name)
+    return ', '.join(parts)
+
+
 @override_settings(
     ELASTICSEARCH_DSL_AUTOSYNC=True,
     ELASTICSEARCH_DSL_AUTO_REFRESH=True
@@ -178,7 +193,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['has-multiple-locations'], False)
         location = activity.slots.first().location
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'], geofeature_location_string(location)
         )
 
     def test_date_preview_multiple_slots(self):
@@ -244,7 +259,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['has-multiple-locations'], False)
 
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'], geofeature_location_string(location)
         )
 
     def test_date_preview_multiple_slots_single_open(self):
@@ -260,7 +275,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(
             attributes['location'],
-            f'{open_slot.location.locality}, {open_slot.location.country.alpha2_code}'
+            geofeature_location_string(open_slot.location),
         )
 
         self.assertEqual(dateutil.parser.parse(attributes['start']), open_slot.start)
@@ -294,7 +309,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         location = current_slot.location
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'], geofeature_location_string(location)
         )
 
     def test_date_preview_multiple_slots_succeeded(self):
@@ -385,7 +400,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         location = activity.location
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'], geofeature_location_string(location)
         )
 
         self.assertEqual(attributes['matching-properties']['theme'], False)
@@ -433,7 +448,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         location = activity.initiative.place
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'], geofeature_location_string(location)
         )
 
     def test_collect_preview(self):
@@ -459,7 +474,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         location = activity.location
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'], geofeature_location_string(location)
         )
 
     def test_collect_preview_dutch(self):
@@ -1617,27 +1632,37 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create(alpha2_code='NL')
         other_country = CountryFactory.create(alpha2_code='DE')
 
-        matching = DateActivityFactory.create_batch(
-            2,
-            status='open',
-        )
-        for activity in matching:
+        matching = []
+        for _ in range(2):
+            activity = DateActivityFactory.create(
+                status='open',
+                initiative=InitiativeFactory.create(
+                    place=GeolocationFactory.create(country=matching_country)
+                ),
+                slots=[],
+            )
             DateActivitySlotFactory.create_batch(
                 2,
                 activity=activity,
-                location=GeolocationFactory.create(country=matching_country)
+                location=GeolocationFactory.create(country=matching_country),
             )
+            matching.append(activity)
 
-        other = DateActivityFactory.create_batch(
-            3,
-            status='open',
-        )
-        for activity in other:
+        other = []
+        for _ in range(3):
+            activity = DateActivityFactory.create(
+                status='open',
+                initiative=InitiativeFactory.create(
+                    place=GeolocationFactory.create(country=other_country)
+                ),
+                slots=[],
+            )
             DateActivitySlotFactory.create_batch(
                 2,
                 activity=activity,
-                location=GeolocationFactory.create(country=other_country)
+                location=GeolocationFactory.create(country=other_country),
             )
+            other.append(activity)
 
         self.search({'country': matching_country.pk})
 

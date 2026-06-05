@@ -1,27 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-resolve_ci_python_paths() {
-  PYTHON_VERSION="${PYTHON_VERSION:-3.11.4}"
-  PYENV_ROOT="${PYENV_ROOT:-/home/github_actions/.pyenv}"
-  PIP_EXTRA="${PIP_EXTRA:-test}"
-
-  if [ -z "${VENV_DIR:-}" ]; then
-    local major minor
-    IFS=. read -r major minor _ <<< "${PYTHON_VERSION}"
-    VENV_DIR="/home/github_actions/venvs/bluebottle-py${major}${minor}"
-    if [ "${PIP_EXTRA}" != "test" ]; then
-      VENV_DIR="${VENV_DIR}-${PIP_EXTRA}"
-    fi
-  fi
-
-  export PYTHON_VERSION PYENV_ROOT VENV_DIR PIP_EXTRA
-}
-
-resolve_ci_python_paths
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=ci-python-env.sh
+source "${script_dir}/ci-python-env.sh"
 
 if [ -n "${GITHUB_WORKSPACE:-}" ] && [ -d "${GITHUB_WORKSPACE}" ]; then
   cd "${GITHUB_WORKSPACE}"
+fi
+
+if [ -z "${VENV_DIR:-}" ]; then
+  resolve_ci_python_paths
 fi
 
 export PATH="${PYENV_ROOT}/bin:${PYENV_ROOT}/shims:${PATH}"

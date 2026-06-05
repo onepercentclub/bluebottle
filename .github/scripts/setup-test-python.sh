@@ -1,24 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-resolve_ci_python_paths() {
-  PYTHON_VERSION="${PYTHON_VERSION:-3.11.4}"
-  PYENV_ROOT="${PYENV_ROOT:-/home/github_actions/.pyenv}"
-  PIP_EXTRA="${PIP_EXTRA:-test}"
-
-  if [ -z "${VENV_DIR:-}" ]; then
-    local major minor
-    IFS=. read -r major minor _ <<< "${PYTHON_VERSION}"
-    VENV_DIR="/home/github_actions/venvs/bluebottle-py${major}${minor}"
-    if [ "${PIP_EXTRA}" != "test" ]; then
-      VENV_DIR="${VENV_DIR}-${PIP_EXTRA}"
-    fi
-  fi
-
-  export PYTHON_VERSION PYENV_ROOT VENV_DIR PIP_EXTRA
-}
-
-resolve_ci_python_paths
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=ci-python-env.sh
+source "${script_dir}/ci-python-env.sh"
 
 PIP_DEFAULT_TIMEOUT="${PIP_DEFAULT_TIMEOUT:-120}"
 PIP_RETRIES="${PIP_RETRIES:-10}"
@@ -70,30 +55,6 @@ write_github_env() {
   } >> "${GITHUB_ENV}"
 }
 
-setup_py_sha() {
-  python - <<'PY'
-import hashlib
-from pathlib import Path
-print(hashlib.sha256(Path("setup.py").read_bytes()).hexdigest())
-PY
-}
-
-read_stamp() {
-  local stamp_file="${1}"
-  local legacy_stamp_file="${VENV_DIR}/.deps-setup_py.sha"
-  local stamp=""
-
-  stamp="$(cat "${stamp_file}" 2>/dev/null || true)"
-  if [ -z "${stamp}" ] && [ "${PIP_EXTRA}" = "test" ]; then
-    stamp="$(cat "${legacy_stamp_file}" 2>/dev/null || true)"
-  fi
-  printf '%s' "${stamp}"
-}
-
-write_stamp() {
-  printf '%s\n' "${2}" > "${1}"
-}
-
 venv_has_required_packages() {
   python -c "import django, pkg_resources" 2>/dev/null || return 1
   if [ "${PIP_EXTRA}" = "dev" ]; then
@@ -101,17 +62,12 @@ venv_has_required_packages() {
   fi
 }
 
-ensure_setuptools() {
-  python -c "import pkg_resources" 2>/dev/null || python -m pip install "setuptools==69.5.1"
+venv_is_ready() {
+  ! venv_needs_recreate && venv_has_required_packages
 }
 
-deps_are_current() {
-  local setup_sha="${1}"
-  local stamp_file="${2}"
-  local cached_sha=""
-
-  cached_sha="$(read_stamp "${stamp_file}")"
-  [ "${cached_sha}" = "${setup_sha}" ] && venv_has_required_packages
+ensure_setuptools() {
+  python -c "import pkg_resources" 2>/dev/null || python -m pip install "setuptools==69.5.1"
 }
 
 install_editable_package() {
@@ -120,13 +76,10 @@ install_editable_package() {
 }
 
 install_editable_package_with_retry() {
-  local setup_sha="${1}"
-  local stamp_file="${2}"
   local attempt=1
 
   while [ "${attempt}" -le 3 ]; do
     if install_editable_package; then
-      write_stamp "${stamp_file}" "${setup_sha}"
       return 0
     fi
     echo "pip install failed (attempt ${attempt}/3)"
@@ -139,24 +92,19 @@ install_editable_package_with_retry() {
 }
 
 main() {
-  local setup_sha stamp_file
-
   enter_repo_root
+  resolve_ci_python_paths
   setup_pyenv
   setup_venv
   write_github_env
 
-  setup_sha="$(setup_py_sha)"
-  stamp_file="${VENV_DIR}/.deps-setup_py-${PIP_EXTRA}.sha"
-
-  if deps_are_current "${setup_sha}" "${stamp_file}"; then
+  if venv_is_ready; then
     ensure_setuptools
-    write_stamp "${stamp_file}" "${setup_sha}"
-    echo "setup.py unchanged; skipping pip install."
+    echo "venv ${VENV_DIR} ready; skipping pip install."
     return 0
   fi
 
-  install_editable_package_with_retry "${setup_sha}" "${stamp_file}"
+  install_editable_package_with_retry
 }
 
 main "$@"

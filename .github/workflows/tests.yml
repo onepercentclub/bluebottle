@@ -68,11 +68,11 @@ jobs:
           sudo locale-gen
           sudo update-locale LANG=en_GB.UTF-8
 
-      - name: Bootstrap database
-        run: bash .github/scripts/bootstrap-test-database.sh
-
       - name: Set up Python and dependencies
         run: bash .github/scripts/setup-test-python.sh
+
+      - name: Bootstrap database
+        run: bash .github/scripts/bootstrap-test-database.sh
 
       - name: Run tests
         shell: bash
@@ -150,11 +150,11 @@ jobs:
       - name: Wait for Elasticsearch
         run: bash .github/scripts/wait-for-test-services.sh
 
-      - name: Bootstrap database
-        run: bash .github/scripts/bootstrap-test-database.sh
-
       - name: Set up Python and dependencies
         run: bash .github/scripts/setup-test-python.sh
+
+      - name: Bootstrap database
+        run: bash .github/scripts/bootstrap-test-database.sh
 
       - name: Run Elasticsearch tests
         shell: bash

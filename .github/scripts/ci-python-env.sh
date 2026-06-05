@@ -1,9 +1,5 @@
 setup_py_sha() {
-  python - <<'PY'
-import hashlib
-from pathlib import Path
-print(hashlib.sha256(Path("setup.py").read_bytes()).hexdigest()[:12])
-PY
+  sha256sum setup.py | awk '{print substr($1, 1, 12)}'
 }
 
 resolve_ci_python_paths() {

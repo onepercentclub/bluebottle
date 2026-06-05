@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PYTHON_VERSION="${PYTHON_VERSION:-3.11.4}"
-PYENV_ROOT="${PYENV_ROOT:-/home/github_actions/.pyenv}"
-VENV_DIR="${VENV_DIR:-/home/github_actions/venvs/bluebottle-py311}"
-PIP_EXTRA="${PIP_EXTRA:-test}"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=ci-python-env.sh
+source "${script_dir}/ci-python-env.sh"
+resolve_ci_python_paths
+
 PIP_DEFAULT_TIMEOUT="${PIP_DEFAULT_TIMEOUT:-120}"
 PIP_RETRIES="${PIP_RETRIES:-10}"
 export PIP_DEFAULT_TIMEOUT PIP_RETRIES

@@ -16,7 +16,6 @@ env:
   LC_ALL: en_GB.UTF-8
   PYTHON_VERSION: "3.11.4"
   PYENV_ROOT: /home/github_actions/.pyenv
-  VENV_DIR: /home/github_actions/venvs/bluebottle-py311
   SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
   PG_CLI_IMAGE: postgis/postgis:14-3.3
 
@@ -68,9 +67,6 @@ jobs:
           sudo sed -i 's/^# *\(en_GB.UTF-8 UTF-8\)/\1/' /etc/locale.gen
           sudo locale-gen
           sudo update-locale LANG=en_GB.UTF-8
-
-      - name: Wait for Postgres
-        run: bash .github/scripts/wait-for-test-services.sh
 
       - name: Bootstrap database
         run: bash .github/scripts/bootstrap-test-database.sh
@@ -151,7 +147,7 @@ jobs:
           sudo locale-gen
           sudo update-locale LANG=en_GB.UTF-8
 
-      - name: Wait for services
+      - name: Wait for Elasticsearch
         run: bash .github/scripts/wait-for-test-services.sh
 
       - name: Bootstrap database

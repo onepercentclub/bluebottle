@@ -12,7 +12,6 @@ concurrency:
 env:
   PYTHON_VERSION: "3.11.4"
   PYENV_ROOT: /home/github_actions/.pyenv
-  VENV_DIR: /home/github_actions/venvs/bluebottle-py311-dev
   PIP_EXTRA: dev
   SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
 

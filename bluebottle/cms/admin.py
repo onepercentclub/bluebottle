@@ -10,7 +10,10 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
-from nested_inline.admin import NestedStackedInline
+from fluent_contents.admin.contentitems import BaseContentItemInline
+import nested_admin
+
+from bluebottle.cms.fluent_admin import NestedContentItemFormSet, get_cms_content_item_inlines
 from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
@@ -87,7 +90,46 @@ class SiteLinksAdmin(NonSortableParentAdmin):
     inlines = [LinkGroupInline]
 
 
-class StatInline(NestedStackedInline, SortableStackedInline):
+class CMSNestedContentItemInline(
+    nested_admin.NestedGenericStackedInlineMixin,
+    BaseContentItemInline,
+):
+    """
+    Fluent ContentItem inline (generic FK to the page) that can host nested inlines
+    defined on the ContentPlugin (e.g. steps under a Steps block).
+
+    Keep fluent's inline_container template (not nested_admin's stacked template) so
+    blocks stay in the placeholder editor. nested_admin's template adds a top-level h2
+    per block type, which Jet turns into separate change-form tabs.
+    """
+
+    formset = NestedContentItemFormSet
+    template = 'admin/fluent_contents/contentitem/inline_container.html'
+
+
+class CMSNestedChildInline(nested_admin.NestedStackedInlineMixin, admin.StackedInline):
+    """Nested inline for child models with a normal FK to their ContentItem block."""
+
+    template = 'admin/edit_inline/stacked-nested.html'
+
+
+class CMSNestedPlaceholderFieldAdmin(nested_admin.NestedModelAdminMixin, PlaceholderFieldAdmin):
+    """
+    Enable nested_admin for fluent-contents blocks.
+
+    ContentItem inlines use a generic relation to the page; child inlines (Step, Quote, …)
+    use a normal FK to the block model. ``get_cms_content_item_inlines`` copies plugin.inlines
+    onto the generated ContentItem admin classes.
+    """
+
+    def get_extra_inlines(self):
+        return [self.placeholder_inline] + get_cms_content_item_inlines(
+            plugins=self.get_all_allowed_plugins(),
+            base=CMSNestedContentItemInline,
+        )
+
+
+class StatInline(CMSNestedChildInline, SortableStackedInline):
     model = Stat
     extra = 0
     fields = ('type', 'stat_type', 'definition', 'title', 'value')
@@ -98,17 +140,17 @@ class StatInline(NestedStackedInline, SortableStackedInline):
         return getattr(Statistics, obj.type).__doc__
 
 
-class QuoteInline(NestedStackedInline):
+class QuoteInline(CMSNestedChildInline):
     model = Quote
     extra = 1
 
 
-class PersonInline(NestedStackedInline):
+class PersonInline(CMSNestedChildInline):
     model = Person
     extra = 1
 
 
-class StepInline(NestedStackedInline, SortableStackedInline):
+class StepInline(CMSNestedChildInline, SortableStackedInline):
     model = Step
     extra = 0
     formfield_overrides = {
@@ -116,23 +158,23 @@ class StepInline(NestedStackedInline, SortableStackedInline):
     }
 
 
-class LogoInline(NestedStackedInline, SortableStackedInline):
+class LogoInline(CMSNestedChildInline, SortableStackedInline):
     model = Logo
     extra = 0
 
 
-class ContentLinkInline(NestedStackedInline, SortableStackedInline):
+class ContentLinkInline(CMSNestedChildInline, SortableStackedInline):
     model = ContentLink
     extra = 0
 
 
-class GreetingInline(NestedStackedInline):
+class GreetingInline(CMSNestedChildInline):
     model = Greeting
     extra = 0
 
 
 @admin.register(ResultPage)
-class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
+class ResultPageAdmin(CMSNestedPlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }
@@ -149,7 +191,7 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParen
 
 
 @admin.register(HomePage)
-class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmin, NonSortableParentAdmin):
+class HomePageAdmin(CMSNestedPlaceholderFieldAdmin, TranslatableAdmin, SingletonModelAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }
@@ -159,7 +201,7 @@ class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmi
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
-    readonly_fields = ['terminated_info']
+    readonly_fields = ['terminated_info', 'organization']
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -205,10 +247,18 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
                     )
                 }
             ),
+            (
+                _('GoodUp Connect'),
+                {
+                    'fields': (
+                        'share_activities', 'organization',
+                    )
+                }
+            ),
         )
 
         if obj.terminated:
-            fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info', )
+            fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info',)
 
         return fieldsets
 

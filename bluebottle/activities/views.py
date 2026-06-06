@@ -1,21 +1,21 @@
 import io
+
 import qrcode
 from PIL import Image, UnidentifiedImageError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.core.validators import validate_email
-from django.db.models import Q, F
+from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
 from rest_framework import response, filters
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import (
-    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer, FileUploadAnswer
+    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer,
+    FileUploadAnswer, ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
@@ -30,15 +30,18 @@ from bluebottle.activities.serializers import (
     ContributionSerializer,
     ActivityQuestionSerializer,
     FileUploadAnswerDocumentSerializer,
-    ActivityAnswerSerializer
+    ActivityAnswerSerializer,
+    ActivityMessageSerializer,
 )
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
-from bluebottle.members.models import MemberPlatformSettings, Member
+from bluebottle.initiatives.permissions import ContactActivityManagerPermission
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.models import NotificationPlatformSettings
+from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -201,22 +204,45 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
         )
 
 
-class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPIView):
+class ActivityDetailView(
+    JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView
+):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
-    model = Activity
     lookup_field = 'pk'
+
+    @property
+    def model(self):
+        return self.queryset.model
 
     permission_classes = (
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
-    prefetch_for_includes = {
-        'initiative': ['initiative'],
-        'location': ['location'],
-        'owner': ['owner'],
-        'contributors': ['contributors']
-    }
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        qs = qs.select_related(
+            'owner',
+            'initiative',
+            'theme',
+            'organization',
+            'host_organization',
+            'office_location',
+            'initiative__owner',
+            'initiative__reviewer',
+            'initiative__promoter',
+            'initiative__theme',
+            'initiative__place',
+            'initiative__location',
+            'initiative__image',
+            'initiative__organization',
+            'initiative__organization_contact',
+        ).prefetch_related(
+            'categories',
+            'initiative__categories',
+            'initiative__activity_managers',
+        )
+        return qs
 
 
 class ContributionPagination(JsonApiPagination):
@@ -248,25 +274,16 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
         if upcoming:
             queryset = queryset.filter(
                 Q(start__gte=now())
-                | Q(contributor__deadlineparticipant__status__in=['new'])
-                | Q(contributor__teamscheduleparticipant__slot__status__in=['new'])
-                | Q(contributor__scheduleparticipant__slot__status__in=['new'])
-                | Q(contributor__periodicparticipant__status='new')
-                | Q(contributor__periodicparticipant__slot__status__in=['new', 'running'])
+                | Q(contributor__status__in=['new'])
+                | Q(contributor__participant__slot__status__in=['new', 'running'])
             ).order_by("start")
         else:
             queryset = queryset.filter(
                 start__lte=now(),
             ).exclude(
-                contributor__scheduleparticipant__slot__status__in=['new']
+                contributor__participant__slot__status__in=['new', 'running']
             ).exclude(
-                contributor__deadlineparticipant__status__in=['new']
-            ).exclude(
-                contributor__teamscheduleparticipant__slot__status__in=['new']
-            ).exclude(
-                contributor__periodicparticipant__status='new'
-            ).exclude(
-                contributor__periodicparticipant__slot__status__in=['new', 'running']
+                contributor__status__in=['new']
             ).order_by("-start")
 
         return queryset
@@ -275,48 +292,6 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
 
     pagination_class = ContributionPagination
     permission_classes = (IsAuthenticated,)
-
-
-class ParticipantCreateMixin:
-
-    def perform_create(self, serializer):
-        email = serializer.validated_data.pop('email', None)
-        send_messages = serializer.validated_data.pop('send_messages', True)
-        if email:
-            user = Member.objects.filter(email__iexact=email).first()
-            if not user:
-                try:
-                    validate_email(email)
-                except Exception:
-                    raise ValidationError(_('Not a valid email address'), code="invalid")
-                member_settings = MemberPlatformSettings.load()
-                if member_settings.closed or member_settings.confirm_signup:
-                    try:
-                        user = Member.create_by_email(email.strip())
-                    except Exception:
-                        raise ValidationError(_('Not a valid email address'), code="invalid")
-                else:
-                    raise ValidationError(_('User with email address not found'), code="not_found")
-        else:
-            user = self.request.user
-
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        if not email:
-            if self.request.user.required:
-                raise ValidationError('Required fields', code="required")
-
-        if self.queryset.filter(user=user, **serializer.validated_data).exists():
-            raise ValidationError(_('Already participating'), code="exists")
-
-        serializer.save(user=user, send_messages=send_messages)
 
 
 class ActivityImage(ImageContentView):
@@ -435,7 +410,7 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
-        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+        context['display_member_names'] = MemberPlatformSettings.load().display_member_names
 
         activity = Activity.objects.get(pk=self.kwargs['activity_id'])
         context['owners'] = [activity.owner]
@@ -510,6 +485,28 @@ class ActivityAnswerList(JsonApiViewMixin, CreateAPIView):
             OneOf(ResourcePermission, ActivityOwnerPermission),
         ]
     }
+
+
+class ActivityMessageThrottle(UserRateThrottle):
+    def allow_request(self, request, view):
+        if request.user.is_superuser:
+            return True
+        return super().allow_request(request, view)
+
+
+class ActivityMessageList(JsonApiViewMixin, CreateAPIView):
+    queryset = ActivityMessage.objects.all()
+    serializer_class = ActivityMessageSerializer
+
+    permission_classes = (
+        IsAuthenticated,
+        ContactActivityManagerPermission
+    )
+    throttle_classes = [ActivityMessageThrottle]
+
+    def perform_create(self, serializer):
+        serializer.validated_data['sender'] = self.request.user
+        super().perform_create(serializer)
 
 
 class ActivityAnswerDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

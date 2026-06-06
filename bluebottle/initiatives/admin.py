@@ -106,6 +106,24 @@ class ActivityManagersInline(admin.TabularInline):
     exclude = ("member",)
 
 
+class ArchivedFilter(admin.SimpleListFilter):
+    title = _('Hide archived activities')
+    parameter_name = 'archived'
+
+    def lookups(self, request, model_admin):
+        return [
+            (True, 'Show archived activities'),
+        ]
+
+    def queryset(self, request, queryset):
+        if not self.value():
+            return queryset.exclude(
+                status='archived'
+            )
+        else:
+            return queryset
+
+
 @admin.register(Initiative)
 class InitiativeAdmin(
     PolymorphicInlineSupportMixin,
@@ -130,6 +148,7 @@ class InitiativeAdmin(
     list_display = ["__str__", "created", "owner", "state_name"]
 
     list_filter = [
+        ArchivedFilter,
         InitiativeReviewerFilter,
         ("categories", SortedRelatedFieldListFilter),
         ("theme", SortedRelatedFieldListFilter),
@@ -162,13 +181,19 @@ class InitiativeAdmin(
         ("organization", "Organization"),
         ("owner__full_name", "Owner"),
         ("owner__email", "Owner email"),
-        ("promotor__full_name", "Promotor"),
-        ("promotor__email", "Promotor email"),
+        ("promoter__full_name", "Promoter"),
+        ("promoter__email", "Promoter email"),
         ("reviewer__full_name", "Reviewer"),
         ("reviewer__email", "Reviewer email"),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [export_as_csv_action(fields=export_to_csv_fields), 'archive']
+
+    def archive(self, request, queryset):
+        for initiative in queryset:
+            initiative.states.archive(save=True)
+
+    archive.short_description = _("Archive selected initiatives")
 
     def get_fieldsets(self, request, obj=None):
         detail_fields = [
@@ -183,7 +208,7 @@ class InitiativeAdmin(
         ]
         detail_fields.append("place")
 
-        if InitiativePlatformSettings.objects.get().enable_open_initiatives:
+        if InitiativePlatformSettings.load().enable_open_initiatives:
             detail_fields.append("is_open")
 
         fieldsets = (
@@ -302,7 +327,7 @@ class InitiativePlatformSettingsAdmin(
             },
         ),
         (
-            _("Offices"),
+            _("Work locations"),
             {
                 "fields": (
                     "enable_office_regions",
@@ -312,17 +337,26 @@ class InitiativePlatformSettingsAdmin(
             },
         ),
         (
-            _("Options"),
+            _("Management"),
             {
                 "fields": (
+                    "enable_reviewing",
                     "contact_method",
-                    "require_organization",
+                    "vet_organizations",
                     "enable_impact",
                     "enable_open_initiatives",
                     "enable_participant_exports",
+                )
+            },
+        ),
+        (
+            _("Options"),
+            {
+                "fields": (
+                    "contact_activity_manager",
                     "enable_matching_emails",
                     "include_full_activities",
-                    "enable_reviewing",
+                    "restrict_updates",
                 )
             },
         ),

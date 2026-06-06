@@ -4,12 +4,16 @@ import logging
 
 from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.template import loader
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
+
 from stripe import StripeError
 
 from bluebottle.activities.admin import (
@@ -370,8 +374,8 @@ class GrantProviderAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            re_path(
-                r"^(?P<pk>.+)/create-payments/$",
+            path(
+                "<path:pk>/create-payments/",
                 self.admin_site.admin_view(self.create_payment),
                 name="funding_grantprovider_create_payments",
             ),
@@ -438,13 +442,13 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            re_path(
-                r"^(?P<pk>.+)/generate-payment-link/$",
+            path(
+                "<path:pk>/generate-payment-link/",
                 self.admin_site.admin_view(self.generate_payment_link_view),
                 name="grant_management_grantpayment_generate_payment_link",
             ),
-            re_path(
-                r"^(?P<pk>.+)/check-status/$",
+            path(
+                "<path:pk>/check-status/",
                 self.admin_site.admin_view(self.check_status_view),
                 name="grant_management_grantpayment_check_status",
             ),
@@ -498,7 +502,8 @@ class GrantApplicationAdmin(ActivityChildAdmin):
     list_display = [
         "title",
         "target",
-        "status",
+        "state_name",
+        "submitted"
     ]
 
     def get_list_display(self, request):
@@ -520,6 +525,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         "updated",
         'started',
         "has_deleted_data",
+        "valid",
         "status",
         "states",
     )
@@ -537,7 +543,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
     ]
 
     def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
@@ -546,7 +552,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
             if settings.enable_office_restrictions:
                 if "office_restriction" not in self.office_fields:
                     self.office_fields += ("office_restriction",)
-                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+                fieldsets.append((_("Work location"), {"fields": self.office_fields}))
 
         if request.user.is_superuser:
             fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
@@ -564,6 +570,19 @@ class GrantApplicationAdmin(ActivityChildAdmin):
                 )
             )
         return fieldsets
+
+    def submitted(self, obj):
+        entry = LogEntry.objects.filter(
+            action_flag=9,
+            object_id=obj.pk,
+            content_type=ContentType.objects.get_for_model(obj),
+            change_message="Changed status to submitted"
+        ).order_by(
+            '-action_time'
+        ).first()
+        return entry.action_time
+
+    submitted.short_description = _("Submitted")
 
     export_to_csv_fields = (
         ('title', 'Title'),

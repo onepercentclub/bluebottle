@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
-from django.urls import re_path
+from django.urls import path
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView
 from jet.dashboard.dashboard import urls
@@ -26,15 +26,15 @@ class LookerEmbedView(DetailView):
         hide_filters = []
 
         if not Location.objects.exists():
-            hide_filters.append('Office')
-            hide_filters.append('Office group')
-            hide_filters.append('Office region')
-            hide_filters.append('Member office')
-            hide_filters.append('Member office group')
-            hide_filters.append('Member office region')
-            hide_filters.append('Activity office')
-            hide_filters.append('Activity office group')
-            hide_filters.append('Activity office region')
+            hide_filters.append('Work location')
+            hide_filters.append('Work location group')
+            hide_filters.append('Work location region')
+            hide_filters.append('Member work location')
+            hide_filters.append('Member work location group')
+            hide_filters.append('Member work location region')
+            hide_filters.append('Activity work location')
+            hide_filters.append('Activity work location group')
+            hide_filters.append('Activity work location region')
 
         if not Category.objects.exists():
             hide_filters.append('Category')
@@ -60,8 +60,8 @@ class LookerEmbedView(DetailView):
 
 
 urls.register_urls([
-    re_path(
-        r'looker_embed/(?P<pk>[0-9]+)/$',
+    path(
+        'looker_embed/<int:pk>/',
         LookerEmbedView.as_view(),
         name='looker-embed'
     )

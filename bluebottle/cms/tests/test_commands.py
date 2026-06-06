@@ -1,6 +1,7 @@
 import json
 
 from django.core.management import call_command
+from django.utils.translation import override
 from fluent_contents.plugins.text.models import TextItem
 from fluent_contents.tests.factories import create_content_item, create_placeholder
 
@@ -212,7 +213,8 @@ class PageDumpCommandsTestCase(BluebottleTestCase):
             text='A really engaging text!'
         )
 
-        call_command('dumppages', '-f', 'test_pages.json')
+        with override('en'):
+            call_command('dumppages', '-f', 'test_pages.json')
         with open("test_pages.json", "r") as json_file:
             test_output = json.load(json_file)
         self.assertEqual(test_output, PAGE_DUMP)

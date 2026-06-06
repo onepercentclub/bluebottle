@@ -57,7 +57,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "slug": page.slug,
                 "title": page.title,
                 "language": 'en',
-                "auhtor": page.author.id,
+                "author": page.author.id,
                 "status": "published",
                 "publication_date_0": "2013-07-05",
                 "publication_date_1": "14:13:53",
@@ -112,7 +112,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 '_continue': 'Save and continue editing',
             }
 
-            response = self.client.post(page_admin_url, data)
+            response = self.client.post(page_admin_url, data, format='multipart')
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(page.content.contentitems.count(), 1)
@@ -132,7 +132,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "slug": page.slug,
                 "title": page.title,
                 "language": 'en',
-                "auhtor": page.author.id,
+                "author": page.author.id,
                 "status": "published",
                 "publication_date_0": "2013-07-05",
                 "publication_date_1": "14:13:53",
@@ -187,7 +187,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 '_continue': 'Save and continue editing',
             }
 
-            response = self.client.post(page_admin_url, data)
+            response = self.client.post(page_admin_url, data, format='multipart')
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(page.content.contentitems.count(), 1)
@@ -206,7 +206,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "slug": page.slug,
                 "title": page.title,
                 "language": 'en',
-                "auhtor": page.author.id,
+                "author": page.author.id,
                 "status": "published",
                 "publication_date_0": "2013-07-05",
                 "publication_date_1": "14:13:53",
@@ -261,7 +261,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 '_continue': 'Save and continue editing',
             }
 
-            response = self.client.post(page_admin_url, data)
+            response = self.client.post(page_admin_url, data, format='multipart')
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(page.content.contentitems.count(), 1)
@@ -280,7 +280,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "slug": page.slug,
                 "title": page.title,
                 "language": 'en',
-                "auhtor": page.author.id,
+                "author": page.author.id,
                 "status": "published",
                 "publication_date_0": "2013-07-05",
                 "publication_date_1": "14:13:53",
@@ -330,7 +330,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 '_continue': 'Save and continue editing',
             }
 
-            response = self.client.post(page_admin_url, data)
+            response = self.client.post(page_admin_url, data, format='multipart')
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(

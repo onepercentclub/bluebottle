@@ -19,6 +19,7 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -42,7 +43,7 @@ class DeedsListViewAPITestCase(APITestCase):
 
         self.fields = ['initiative', 'start', 'end', 'title', 'description', 'theme']
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append('deed')
         settings.save()
 
@@ -117,7 +118,7 @@ class DeedsListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_create_disabled_activity_type(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.remove('deed')
         settings.save()
 
@@ -483,6 +484,26 @@ class DeedsDetailViewAPITestCase(APITestCase):
             self.assertEqual(data['data']['meta']['translations']['description']['value'], 'In het Nederlands')
             self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'en')
 
+    def test_meta_translations_in_response_exception(self):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.translate_user_content = True
+        member_settings.save()
+
+        with mock.patch(
+            'bluebottle.translations.utils.get_translation_response',
+            side_effect=Exception('Something went wrong')
+        ):
+            response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content)
+
+        self.assertIn('meta', data['data'])
+
+        self.assertIn('translations', data['data']['meta'])
+
+        self.assertNotIn('description', data['data']['meta']['translations'])
+
     def test_meta_translations_advanced_mock(self):
         from bluebottle.test.factory_models.utils import LanguageFactory
         member_settings = MemberPlatformSettings.load()
@@ -794,6 +815,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertIncluded('activity')
         self.assertIncluded('user')
         self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(self.activity.participants.count(), 1)
 
     def test_create_by_email_staff_no_messages(self):
         mail.outbox = []
@@ -811,11 +833,76 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertIncluded('user')
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_create_by_email_user(self):
+    def test_create_by_email_owner(self):
+        """Deed owner can add a participant by email without having staff rights."""
+        mail.outbox = []
+        # activity.owner is not staff (from DeedFactory default)
         data = self.data
-        data['data']['attributes'] = {'email': self.user.email}
-        self.perform_create(user=self.user, data=data)
-        self.assertStatus(status.HTTP_403_FORBIDDEN)
+        data['data']['attributes'] = {
+            'email': self.user.email,
+            'send_messages': True
+        }
+        self.perform_create(user=self.activity.owner, data=data)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('activity')
+        self.assertIncluded('user')
+        self.assertEqual(self.activity.participants.count(), 1)
+
+    def test_create_by_email_new_user(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+
+        data = self.data
+        data['data']['attributes'] = {
+            'email': 'new@example.com',
+            'send_messages': False
+        }
+        self.perform_create(user=staff, data=data)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_by_email_new_user_closed(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        MemberPlatformSettings.objects.update_or_create(closed=True)
+
+        data = self.data
+        data['data']['attributes'] = {
+            'email': 'new@example.com',
+            'send_messages': False
+        }
+        self.perform_create(user=staff, data=data)
+        self.assertEqual(self.activity.participants.count(), 1)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_by_email_new_user_closed_scim_enabled(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        MemberPlatformSettings.objects.update_or_create(closed=True)
+        SCIMPlatformSettings.objects.update_or_create(enabled=True)
+
+        data = self.data
+        data['data']['attributes'] = {
+            'email': 'new@example.com',
+            'send_messages': False
+        }
+        self.perform_create(user=staff, data=data)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_by_email_new_user_confirm_signup(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+
+        MemberPlatformSettings.objects.update_or_create(closed=True)
+
+        data = self.data
+        data['data']['attributes'] = {
+            'email': 'new@example.com',
+            'send_messages': False
+        }
+        self.perform_create(user=staff, data=data)
+        self.assertEqual(self.activity.participants.count(), 1)
+
+        self.assertStatus(status.HTTP_201_CREATED)
 
 
 class DeedParticipantTransitionListViewAPITestCase(APITestCase):

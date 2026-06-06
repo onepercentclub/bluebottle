@@ -9,9 +9,11 @@
         {% trans "Generate new payment link" %}
     </a>
     {% endif %}
-    <a href="{% url 'admin:grant_management_grantpayment_check_status' original.pk %}" class="default">
-        {% trans "Check status" %}
-    </a>
+    {% if original.status == "pending" %}
+        <a href="{% url 'admin:grant_management_grantpayment_check_status' original.pk %}" class="default">
+            {% trans "Check status" %}
+        </a>
+    {% endif %}
 </li>
 {% endif %}
 {{ block.super }}

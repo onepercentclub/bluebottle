@@ -1,10 +1,10 @@
 from urllib.parse import urljoin
 
-from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from tenant_schemas.models import TenantMixin
+from django.conf import settings
 
 
 @python_2_unicode_compatible
@@ -16,9 +16,6 @@ class Client(TenantMixin):
 
     auto_create_schema = True
 
-    def __str__(self):
-        return self.name
-
     def build_absolute_url(self, path):
         if getattr(settings, 'TESTING', False):
             scheme = 'http'
@@ -28,3 +25,6 @@ class Client(TenantMixin):
             scheme = 'https'
 
         return urljoin(f'{scheme}://{self.domain_url}', path)
+
+    def __str__(self):
+        return self.name

@@ -3,11 +3,11 @@
 
 {% block message %}
 <p>
-    <h3>
-        {% blocktrans context 'email' %}
+    <p>
+        {% blocktrans context 'platform-email' %}
             Thanks for creating a {{ activity_type }} for "{{title}}". Here are the Terms of Service.
         {% endblocktrans %}
-    </h3>
+    </p>
     <div class="info-box">
         {{ terms_of_service }}
     </div>

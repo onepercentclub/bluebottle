@@ -208,7 +208,7 @@ JWT_EXPIRATION_DELTA = datetime.timedelta(days=7)
 # List of paths to ignore for locale redirects
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
                           '/media', '/downloads', '/login-with',
-                          '/surveys', '/token', '/jet')
+                          '/surveys', '/token', '/jet', '/.well-known')
 
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
 
@@ -217,9 +217,6 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
     'django.contrib.auth.hashers.BCryptPasswordHasher',
-    'django.contrib.auth.hashers.SHA1PasswordHasher',
-    'django.contrib.auth.hashers.MD5PasswordHasher',
-    'django.contrib.auth.hashers.CryptPasswordHasher',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -234,7 +231,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'bluebottle.auth.password_validation.CustomMinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 8,
+            'min_length': 10,
         }
     },
     {
@@ -399,6 +396,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
     'bluebottle.scim',
     'bluebottle.updates',
+    'bluebottle.activity_links',
     'bluebottle.translations',
 
     # Custom dashboard
@@ -424,20 +422,22 @@ TENANT_APPS = (
     'django_wysiwyg',
     'django.contrib.humanize',
     'django_tools',
-    'taggit',
 
     'bluebottle.cms',
 
     'django.contrib.gis',
     'djmoney',
     'solo',
-    'nested_inline',
+    'nested_admin',
     'tabular_permissions',
     'django.forms',
     'axes',
     'django_recaptcha',
     'colorfield',
     'django_quill',
+
+    'bluebottle.activity_pub',
+    'bluebottle.webfinger',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -498,10 +498,6 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
-        'sentry': {
-            'level': 'INFO',
-            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
-        },
         'json': {
             'level': 'INFO',
             'class': 'logging.handlers.TimedRotatingFileHandler',
@@ -531,6 +527,10 @@ LOGGING = {
             'handlers': ['console', 'syslog'],
             'propagate': True,
             'level': 'INFO',
+        },
+        "django.security.DisallowedHost": {
+            "handlers": ["null"],
+            "propagate": False,
         },
     }
 }
@@ -605,7 +605,15 @@ EXPOSED_TENANT_PROPERTIES = [
     'readOnlyFields', 'search_options', 'tasks'
 ]
 
-DEFAULT_FILE_STORAGE = 'bluebottle.utils.storage.TenantFileSystemStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": 'bluebottle.utils.storage.TenantFileSystemStorage',
+    },
+
+    "staticfiles": {
+        "BACKEND": 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 PROJECT_PAYOUT_FEES = {
     'beneath_threshold': 1,
@@ -762,7 +770,10 @@ JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True
 
 # Don't show url warnings
-SILENCED_SYSTEM_CHECKS = ['urls.W002', 'django_recaptcha.recaptcha_test_key_error']
+SILENCED_SYSTEM_CHECKS = [
+    'urls.W002', 'django_recaptcha.recaptcha_test_key_error', 'models.E006', 'fields.E304',
+    'fields.E305'
+]
 
 AXES_LOCKOUT_URL = '/admin/locked/'
 AXES_FAILURE_LIMIT = 10
@@ -792,8 +803,9 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 TWO_FACTOR_SMS_GATEWAY = 'two_factor.gateways.twilio.gateway.Twilio'
 
 TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 30
-TWO_FACTOR_REMEMBER_COOKIE_SECURE = False if DEBUG else True
+TWO_FACTOR_REMEMBER_COOKIE_SECURE = True
 TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY = True
+TWO_FACTOR_REMEMBER_COOKIE_PREFIX = '__HOST-remember-two-factor-'
 
 LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale/'),)
 

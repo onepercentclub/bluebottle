@@ -10,6 +10,20 @@ function removeRedundantTabs() {
     });
 }
 
+function removeFluentEditorTabs() {
+  // Content-item and placeholder inlines are managed by fluent-contents, not Jet tabs.
+  var $container = django.jQuery('#content-main > form > div');
+  $container.find('> .inline-contentitem-group, > .inline-placeholder-group').each(function() {
+    django.jQuery(this).attr('class').split(/\s+/).forEach(function(className) {
+      if (className.match(/^inline_\d+$/)) {
+        django.jQuery(
+          '.changeform-tabs-item-link[href="#/tab/' + className + '/"]'
+        ).closest('.changeform-tabs-item').remove();
+      }
+    });
+  });
+}
+
 function addHashToInlinePaginator() {
   // Make sure nested inline paginator links to the same inline tab
   django.jQuery(".paginator a").each(function(index, btn) {
@@ -90,10 +104,12 @@ window.onload = function () {
   if (!django.jQuery && jQuery) {
     django.jQuery = jQuery;
   }
+
   hideRecurringField()
   fixMapboxWidget()
   replaceInlineActivityAddButton();
   removeRedundantTabs();
+  removeFluentEditorTabs();
   addHashToInlinePaginator();
   hideDeleteButton();
   hideInfoBoxLabel();

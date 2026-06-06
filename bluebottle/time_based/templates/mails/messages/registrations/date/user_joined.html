@@ -3,7 +3,7 @@
 
 {% block message %}
   <p>
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
       You joined an activity on <b>{{ site_name }}!</b>
     {% endblocktrans %}
   </p>
@@ -23,7 +23,7 @@
     </p>
     {% if hour_registration %}
         <p>
-            {% blocktrans context 'email' %}
+            {% blocktrans context 'platform-email' %}
                 Make sure to register your hours using the code or URL found on the activity detail page.
             {% endblocktrans %}
         </p>

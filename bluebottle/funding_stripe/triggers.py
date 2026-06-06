@@ -118,6 +118,7 @@ class StripePayoutAccountTriggers(TriggerManager):
         live_statuses = ["open", "on_hold"]
 
         return (
+            effect.instance.pk and
             Funding.objects.filter(bank_account__connect_account=effect.instance)
             .filter(status__in=live_statuses)
             .exists()
@@ -217,7 +218,7 @@ class StripePayoutAccountTriggers(TriggerManager):
                 ),
                 TransitionEffect(
                     StripePayoutAccountStateMachine.disable,
-                    conditions=[payments_are_disabled],
+                    conditions=[payments_are_disabled, has_funding_campaign],
                 ),
             ],
         ),

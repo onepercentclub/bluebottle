@@ -1,5 +1,6 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.activities.messages.base import BaseParticipantNotification
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
@@ -15,7 +16,7 @@ class ManagerParticipantNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext('platform-email', 'View this activity')
 
     def get_recipients(self):
         """manager"""
@@ -29,7 +30,7 @@ class ManagerParticipantRemovedNotification(ManagerParticipantNotification):
     """
     A participant removed notify owner
     """
-    subject = pgettext('email', 'A participant has been removed from your activity "{title}"')
+    subject = pgettext('platform-email', 'A participant has been removed from your activity "{title}"')
     template = 'messages/participants/manager_participant_removed'
 
 
@@ -37,11 +38,11 @@ class ManagerParticipantWithdrewNotification(ManagerParticipantNotification):
     """
     A participant withdrew from your activity
     """
-    subject = pgettext('email', 'A participant has withdrawn from your activity "{title}"')
+    subject = pgettext('platform-email', 'A participant has withdrawn from your activity "{title}"')
     template = 'messages/participants/manager_participant_withdrew'
 
 
-class UserParticipantNotification(TransitionMessage):
+class UserParticipantNotification(BaseParticipantNotification):
     context = {
         'title': 'activity.title',
         'name': 'user.full_name',
@@ -58,16 +59,6 @@ class UserParticipantNotification(TransitionMessage):
         )
         return context
 
-    @property
-    def action_link(self):
-        return self.obj.activity.get_absolute_url()
-
-    action_title = pgettext('email', 'View activity')
-
-    def get_recipients(self):
-        """participant"""
-        return [self.obj.user]
-
     class Meta:
         abstract = True
 
@@ -76,23 +67,24 @@ class UserParticipantRemovedNotification(UserParticipantNotification):
     """
     The participant was removed from the activity
     """
-    subject = pgettext('email', 'You have been removed as participant for the activity "{title}"')
+    subject = pgettext('platform-email', 'You have been removed as participant for the activity "{title}"')
     template = 'messages/participants/user_participant_removed'
+    link_to_overview = True
 
 
 class UserParticipantWithdrewNotification(UserParticipantNotification):
     """
-    The participant was removed from the activity
+    The participant withdrew from the activity
     """
-    subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
+    subject = pgettext('platform-email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participants/user_participant_withdrew'
 
 
 class UserDateParticipantWithdrewNotification(UserParticipantNotification):
     """
-    The participant was removed from the activity
+    The participant withdrew from the activity
     """
-    subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
+    subject = pgettext('platform-email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participants/user_date_participant_withdrew'
 
     def get_context(self, recipient):
@@ -104,9 +96,9 @@ class UserDateParticipantWithdrewNotification(UserParticipantNotification):
 
 class UserScheduledNotification(UserParticipantNotification):
     """
-    The participant was removed from the activity
+    The participant was scheduled from the activity
     """
-    subject = pgettext('email', 'You have been scheduled for the activity "{title}"')
+    subject = pgettext('platform-email', 'You have been scheduled for the activity "{title}"')
     template = 'messages/participants/user_participant_scheduled'
 
     def get_context(self, recipient):
@@ -120,7 +112,7 @@ class RegisteredActivityParticipantAddedNotification(TransitionMessage):
     """
     A participant was added
     """
-    subject = pgettext('email', 'You have been added to the activity "{title}"')
+    subject = pgettext('platform-email', 'You have been added to the activity "{title}"')
     template = 'messages/participants/registered_date_participant_added'
     context = {
         'title': 'activity.title',
@@ -130,7 +122,7 @@ class RegisteredActivityParticipantAddedNotification(TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """participant"""

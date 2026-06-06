@@ -10,10 +10,10 @@
     {% if slot.is_online %}
         {% if slot.online_meeting_url %}
             <a href="{{ slot.online_meeting_url }}">
-                {% trans "Meeting link" %}<br/>
+                {% trans "Meeting link" context "platform-email" %}<br/>
             </a>
         {% else %}
-            {% trans "Anywhere/Online" %}
+            {% trans "Anywhere/Online" context "platform-email" %}
         {% endif %}
     {% else %}
         {{ slot.location }}

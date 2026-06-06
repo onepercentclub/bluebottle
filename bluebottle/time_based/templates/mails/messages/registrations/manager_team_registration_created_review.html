@@ -3,17 +3,17 @@
 
 {% block message %}
   <p>
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
       {{ applicant_name }} has registered their team for your activity "{{ title }}"!
     {% endblocktrans %}
   </p>
   <p>
     <b>
-      {% blocktrans context 'email' %}
+      {% blocktrans context 'platform-email' %}
         Next steps:
       {% endblocktrans %}
     </b>
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
       <ol>
         <li>Go to your activity to review the application and accept or reject them.</li>
         <li>If accepted then contact the team captain {{ applicant_name }} to discuss a specific date, time and location for when they can take part in your activity.</li>
@@ -22,7 +22,7 @@
     {% endblocktrans %}
   </p>
   <p>
-    {% blocktrans context 'email' %}
+    {% blocktrans context 'platform-email' %}
       Team captain contact details:
     {% endblocktrans %}
     <br />

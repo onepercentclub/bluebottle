@@ -96,7 +96,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'is_superuser': False,
             'csrfmiddlewaretoken': csrf
         }
-        response = self.client.post(self.add_member_url, data)
+        response = self.client.post(self.add_member_url, data, format='multipart')
         self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
@@ -118,7 +118,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
-        response = self.client.post(reset_url, {'confirm': True})
+        response = self.client.post(reset_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
@@ -128,7 +128,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         user = BlueBottleUserFactory.create()
         self.client.logout()
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'pk': user.id})
-        response = self.client.post(reset_url, {'confirm': True})
+        response = self.client.post(reset_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 403)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -145,12 +145,15 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(b'Are you sure' in confirm_response.content)
 
-        response = self.client.post(welcome_email_url, {'confirm': True})
+        response = self.client.post(welcome_email_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [user.email])
         self.assertTrue(
-            'Welcome {}'.format(user.first_name) in welcome_email.body
+            'Hi {}'.format(user.first_name) in welcome_email.body
+        )
+        self.assertTrue(
+            "You’re now officially part of the Test" in welcome_email.body
         )
 
     def test_resend_welcome_anonymous(self):
@@ -158,7 +161,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.client.logout()
 
         welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
-        response = self.client.post(welcome_email_url, {'confirm': True})
+        response = self.client.post(welcome_email_url, {'confirm': True}, format='multipart')
         self.assertEqual(response.status_code, 403)
 
 
@@ -273,7 +276,8 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             "all_contributions",
             "data_retention_info",
             "grant_applications",
-            "registered_date_activities"
+            "registered_date_activities",
+            "office_manager_info"
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -304,7 +308,8 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             "all_contributions",
             "data_retention_info",
             "grant_applications",
-            "registered_date_activities"
+            "registered_date_activities",
+            "office_manager_info"
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -476,7 +481,7 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(user_data[7], 'True')
         self.assertEqual(user_data[8], 'True')
 
-        self.assertEqual(user_data[9], u'35.00 €')
+        self.assertEqual(user_data[9], u'€35.00')
         self.assertEqual(user_data[10], '47.0')
 
     def test_member_unicode_export(self):
@@ -518,9 +523,9 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers, [
             'email', 'phone number', 'remote id', 'first name', 'last name',
             'date joined', 'is initiator', 'is supporter', 'is volunteer',
-            'amount donated', 'time spent', 'subscribed to matching projects', 'Drinks', 'Food'])
-        self.assertEqual(user_data[12], 'Bier')
-        self.assertEqual(user_data[13], 'Bitterballen')
+            'amount donated', 'time spent', 'subscribed to matching projects', 'Food', 'Drinks'])
+        self.assertEqual(user_data[12], 'Bitterballen')
+        self.assertEqual(user_data[13], 'Bier')
 
 
 @override_settings(SEND_WELCOME_MAIL=True)
@@ -684,33 +689,16 @@ class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
             args=(self.user.id,)
         )
 
-    def test_initiative_admin(self):
+    def test_set_reviewer_notifications(self):
         self.app.set_user(self.staff_member)
+        self.assertFalse(self.user.submitted_initiative_notifications)
 
-        # Normal user should not have submitted_initiative_notifications checkbox
-        page = self.app.get(self.member_admin_url)
-        self.assertFalse('id_submitted_initiative_notifications' in page.text)
-        form = page.forms[1]
-        form.set('is_staff', True)
-        form.submit()
-
-        # Made user into a staff member
-        # Should have submitted_initiative_notifications checkbox now
         page = self.app.get(self.member_admin_url)
         self.assertTrue('id_submitted_initiative_notifications' in page.text)
+
         form = page.forms[1]
         form.set('submitted_initiative_notifications', True)
         form.submit()
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.submitted_initiative_notifications)
-
-        # Demote user into normal member
-        # Should unset submitted_initiative_notifications boolean
-        page = self.app.get(self.member_admin_url)
-        form = page.forms[1]
-        form.set('is_staff', False)
-        form.submit()
-
-        self.user.refresh_from_db()
-        self.assertFalse(self.user.submitted_initiative_notifications)

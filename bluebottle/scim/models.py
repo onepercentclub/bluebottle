@@ -1,14 +1,16 @@
 from builtins import object
+
 from django.db import models
 from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.scim.utils import SCIMPath
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.models import BasePlatformSettings
-from bluebottle.scim.utils import SCIMPath
 
 
 class SCIMPlatformSettings(BasePlatformSettings):
+    enabled = models.BooleanField(_('Enable SCIM'), default=False)
     bearer_token = models.CharField(_('Bearer Token'), max_length=32)
 
     @property
@@ -35,5 +37,5 @@ class SCIMSegmentSetting(models.Model):
     segment_type = models.ForeignKey(SegmentType, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
-        self.settings = SCIMPlatformSettings.objects.get()
+        self.settings = SCIMPlatformSettings.load()
         return super().save(*args, **kwargs)

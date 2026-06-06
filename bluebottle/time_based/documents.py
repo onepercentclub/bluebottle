@@ -15,6 +15,7 @@ from bluebottle.time_based.models import (
     RegisteredDateActivity,
     RegisteredDateParticipant
 )
+from bluebottle.utils.documents import TextField
 
 SCORE_MAP = {
     'open': 1,
@@ -44,7 +45,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
     slots = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'status': fields.KeywordField(),
-        'title': fields.TextField(),
+        'title': TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
         'locality': fields.KeywordField(attr='location.locality'),
@@ -84,8 +85,8 @@ class DateActivityDocument(TimeBasedActivityDocument):
             {
                 'name': slot.location.formatted_address,
                 'locality': slot.location.locality,
-                'country_code': slot.location.country.alpha2_code,
-                'country': slot.location.country.name
+                'country_code': slot.location.country.alpha2_code if slot.location.country else None,
+                'country': slot.location.country.name if slot.location.country else None
             }
             for slot in instance.slots.all()
             if not slot.is_online and slot.location
@@ -166,6 +167,7 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
             return DeadlineActivity.objects.filter(contributors=related_instance)
 
     def prepare_contribution_duration(self, instance):
+
         if instance.duration:
             return [{
                 'period': 0,
@@ -177,6 +179,13 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
             'value': 0,
             'period': 0,
         }]
+
+    def prepare_country(self, instance):
+        countries = super().prepare_country(instance)
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+
+        return deduplicate(countries)
 
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:
@@ -244,6 +253,13 @@ class PeriodicActivityDocument(RegistrationActivityDocument):
 @activity.doc_type
 class ScheduleActivityDocument(RegistrationActivityDocument):
     participant_class = ScheduleParticipant
+
+    def prepare_country(self, instance):
+        countries = super().prepare_country(instance)
+        if instance.location and instance.location.country:
+            countries += get_translated_list(instance.location.country)
+
+        return deduplicate(countries)
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:

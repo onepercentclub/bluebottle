@@ -14,6 +14,9 @@ from django.utils.translation import ngettext
 
 
 class CustomMinimumLengthValidator(MinimumLengthValidator):
+    def __init__(self, min_length=10):
+        super().__init__(min_length=min_length)
+
     def validate(self, password, user=None):
         if len(password) < self.min_length:
             raise ValidationError(

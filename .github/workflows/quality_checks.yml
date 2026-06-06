@@ -9,71 +9,74 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+env:
+  PIP_EXTRA: dev
+  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+
 jobs:
   translations:
     name: Translations
     runs-on: self-hosted
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
- 
-      - name: Restore cached virtualenv
-        uses: actions/cache/restore@v4
-        with:
-          key: env-${{ hashFiles('setup.py') }}
-          path: env
-
-      - name: Create virtualenv
-        run: virtualenv env
-
-      - name: Install pip dependencies
+      - name: Fix workspace permissions (self-hosted)
         run: |
-          source env/bin/activate
-          pip install -e .[dev]
+          if [ -n "${GITHUB_WORKSPACE}" ] && [ -d "${GITHUB_WORKSPACE}" ]; then
+            sudo chown -R "$(whoami):$(id -gn)" "${GITHUB_WORKSPACE}" || true
+          fi
 
-      - name: Saved cached virtualenv
-        uses: actions/cache/save@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python
         with:
-          key: env-${{ hashFiles('requirements.txt') }}
-          path: env
+          pip-extra: ${{ env.PIP_EXTRA }}
 
       - name: Extract messages
         run: |
-          source env/bin/activate
+          source "${VENV_DIR}/bin/activate"
           python manage.py makemessages --locale=en --ignore=env --settings=bluebottle.settings.testing
 
       - name: Check missing translations
         run: |
-          source env/bin/activate
-          pip install polib
-          python ./locale/check_translations.py --locales=nl  > translation-message.txt
+          source "${VENV_DIR}/bin/activate"
+          python ./locale/check_translations.py --locales=nl --no-fail > translation-message.txt
 
-      - name: Echo 
+      - name: Echo
         run: cat translation-message.txt
 
       - name: Post comment
         uses: mshick/add-pr-comment@v2
-        if: always() 
         with:
           message-path: translation-message.txt
           refresh-message-position: true
+
+      - name: Fail job if translations missing
+        run: |
+          if grep -q 'Missing translations' translation-message.txt; then
+            echo 'Missing translations detected, see PR comment for details.'
+            exit 1
+          fi
 
   lint:
     name: Linting
     runs-on: self-hosted
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Create virtualenv
-        run: virtualenv env
-
-      - name: Install pip dependencies
+      - name: Fix workspace permissions (self-hosted)
         run: |
-          source env/bin/activate
-          pip install -e .[dev]
+          if [ -n "${GITHUB_WORKSPACE}" ] && [ -d "${GITHUB_WORKSPACE}" ]; then
+            sudo chown -R "$(whoami):$(id -gn)" "${GITHUB_WORKSPACE}" || true
+          fi
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python and dependencies
+        uses: ./.github/actions/setup-python
+        with:
+          pip-extra: ${{ env.PIP_EXTRA }}
 
       - name: Lint
         run: |
-          source env/bin/activate
+          source "${VENV_DIR}/bin/activate"
           flake8 .

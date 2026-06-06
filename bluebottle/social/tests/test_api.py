@@ -46,13 +46,14 @@ class SocialTokenAPITestCase(BluebottleTestCase):
 
         settings = MemberPlatformSettings.load()
 
-        self.settings = SocialLoginSettings(
-            secret="test-secret",
-            client_id="test-client-id",
+        self.settings, _create = SocialLoginSettings.objects.update_or_create(
             backend="facebook",
-            settings=settings,
+            defaults={
+                'secret': "test-secret",
+                'client_id': "test-client-id",
+                'settings': settings,
+            }
         )
-        self.settings.save()
 
     @mock.patch(
         "bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request",

@@ -7,7 +7,7 @@ from bluebottle.time_based.effects import LockFilledSlotsEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    CreateTeamEffect, AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
+    AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
@@ -123,7 +123,7 @@ class RegistrationTriggers(TriggerManager):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    'participants',
+                    'unreviewed_participants',
                     RegistrationParticipantStateMachine.accept,
                 ),
                 FollowActivityEffect,
@@ -339,6 +339,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     conditions=[activity_no_spots_left],
                 ),
                 AdjustInitialPeriodicParticipantEffect,
+                RelatedTransitionEffect(
+                    "participants",
+                    PeriodicParticipantStateMachine.accept,
+                ),
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),
@@ -503,7 +507,6 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
-                CreateTeamEffect,
                 NotificationEffect(
                     ManagerTeamRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],
@@ -535,7 +538,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
@@ -556,7 +559,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
@@ -570,7 +573,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.add,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
@@ -584,7 +587,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.reject,
                 ),
                 RelatedTransitionEffect(

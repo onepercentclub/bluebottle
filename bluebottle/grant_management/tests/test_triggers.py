@@ -8,6 +8,7 @@ from bluebottle.activities.messages.activity_manager import (
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.files.tests.factories import ImageFactory
+from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationPayoutAccountMarkedIncomplete,
     GrantApplicationPayoutAccountVerified,
@@ -22,6 +23,8 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
+
+from contextlib import contextmanager
 
 from django.test.utils import override_settings
 
@@ -42,9 +45,10 @@ from bluebottle.grant_management.tests.factories import (
     GrantDonorFactory,
     GrantPaymentFactory, GrantProviderFactory, GrantPayoutFactory
 )
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
-    ExternalAccountFactory
+    ExternalAccountFactory, StripePaymentProviderFactory
 )
 
 from bluebottle.funding.messages.funding.platform_manager import LivePayoutAccountMarkedIncomplete
@@ -68,6 +72,28 @@ COUNTRY_SPEC.update(
 )
 
 
+def _stripe_connect_account_stub_for_prefill(account_id="test-account-id"):
+    account = stripe.Account(account_id)
+    account.business_type = "individual"
+    account.business_profile = munch.munchify({
+        "mcc": "8398",
+        "product_description": "Not applicable - test grant account.",
+        "url": "https://goodup.com",
+    })
+    account.email = "grant-test@example.com"
+    account.company = None
+    return account
+
+
+@contextmanager
+def stripe_payout_account_stripe_api_patches(account_id="test-account-id"):
+    stub = _stripe_connect_account_stub_for_prefill(account_id)
+    with mock.patch("stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC), \
+            mock.patch("stripe.Account.retrieve", return_value=stub), \
+            mock.patch("stripe.Account.modify", return_value=stub):
+        yield
+
+
 class GrantApplicationTriggersTestCase(TriggerTestCase):
     factory = GrantApplicationFactory
 
@@ -77,6 +103,8 @@ class GrantApplicationTriggersTestCase(TriggerTestCase):
             is_staff=True,
             submitted_initiative_notifications=True
         )
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
 
         image = ImageFactory()
 
@@ -252,9 +280,7 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
     def get_bank_account(self):
-        with mock.patch(
-            "stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC
-        ):
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
             payout_account = StripePayoutAccountFactory.create(
                 status="pending", account_id="test-account-id"
             )
@@ -270,7 +296,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
 
         self.assertIsNone(self.application.payouts.first())
 
-        self.application.bank_account.connect_account.states.verify(save=True)
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
+            self.application.bank_account.connect_account.states.verify(save=True)
 
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
@@ -280,7 +307,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
 
     def test_paid_existing_payout_account(self):
         bank_account = self.get_bank_account()
-        bank_account.connect_account.states.verify(save=True)
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
+            bank_account.connect_account.states.verify(save=True)
 
         self.create()
 
@@ -294,10 +322,11 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
 
-class GrantPaymentTriggerTestCase(TriggerTestCase):
+class GrantPaymentTriggerTestCase(FundingStripeMixin, TriggerTestCase):
     factory = GrantPaymentFactory
 
     def setUp(self):
+        super().setUp()
         self.fund = GrantFundFactory.create()
         self.deposit = GrantDepositFactory.create(
             fund=self.fund,
@@ -315,9 +344,7 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
             payout=None
         )
 
-        with mock.patch(
-            "stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC
-        ):
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
             payout_account = StripePayoutAccountFactory.create(
                 status="pending",
                 account_id="test-account-id"
@@ -387,7 +414,7 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
         'support@example.com',
     ]
 )
-class GrantApplicationPayoutAccountTriggersTestCase(TriggerTestCase):
+class GrantApplicationPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
     def setUp(self):
         self.owner = BlueBottleUserFactory.create()
         self.staff_user = BlueBottleUserFactory.create(
@@ -414,7 +441,8 @@ class GrantApplicationPayoutAccountTriggersTestCase(TriggerTestCase):
             self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)
 
     def test_set_verified(self):
-        self.model.states.verify()
+        with stripe_payout_account_stripe_api_patches("test-account-id"):
+            self.model.states.verify()
         with self.execute():
             self.assertNotificationEffect(GrantApplicationPayoutAccountVerified)
             self.assertNoNotificationEffect(FundingPayoutAccountVerified)
@@ -474,3 +502,81 @@ class GrantPaymentTriggersTestCase(TriggerTestCase):
         )
         payment = GrantPayment.objects.first()
         self.assertEqual(payment.status, 'pending')
+
+    @mock.patch("bluebottle.grant_management.models.get_stripe")
+    def test_generate_payment_link_updates_amount_for_new_payouts(self, get_stripe):
+        class DummySession:
+            created = []
+
+            @classmethod
+            def create(cls, **kwargs):
+                cls.created.append(kwargs)
+                return munch.munchify({"id": "cs_test", "url": "https://example.com/pay"})
+
+        class DummyProduct:
+            created = []
+
+            @classmethod
+            def create(cls, **kwargs):
+                data = {"id": f"prod_{len(cls.created)}", **kwargs}
+                cls.created.append(data)
+                return data
+
+        class DummyPrice:
+            created = []
+
+            @classmethod
+            def create(cls, **kwargs):
+                data = {"id": f"price_{len(cls.created)}", **kwargs}
+                cls.created.append(data)
+                return data
+
+        get_stripe.return_value = munch.munchify(
+            {
+                "checkout": munch.munchify({"Session": DummySession}),
+                "Product": DummyProduct,
+                "Price": DummyPrice,
+            }
+        )
+
+        provider = GrantProviderFactory.create()
+        fund = GrantFundFactory.create(grant_provider=provider)
+
+        first_payout = GrantPayoutFactory.create(currency="EUR", status="approved")
+        GrantDonorFactory.create(
+            fund=fund,
+            payout=first_payout,
+            activity=first_payout.activity,
+            amount=Money(100, "EUR"),
+        )
+
+        second_payout = GrantPayoutFactory.create(currency="EUR", status="approved")
+        GrantDonorFactory.create(
+            fund=fund,
+            payout=second_payout,
+            activity=second_payout.activity,
+            amount=Money(150, "EUR"),
+        )
+
+        payment = provider.create_payment()
+
+        extra_payout = GrantPayoutFactory.create(currency="EUR", status="approved")
+        GrantDonorFactory.create(
+            fund=fund,
+            payout=extra_payout,
+            activity=extra_payout.activity,
+            amount=Money(200, "EUR"),
+        )
+        extra_payout.payment = payment
+        extra_payout.save()
+
+        payment.generate_payment_link()
+        payment.refresh_from_db()
+
+        self.assertEqual(payment.total, Money(450, "EUR"))
+        self.assertEqual(len(DummySession.created), 1)
+        self.assertEqual(len(DummySession.created[0]["line_items"]), 3)
+        self.assertEqual(
+            sum(price["unit_amount"] for price in DummyPrice.created),
+            45000,
+        )

@@ -17,7 +17,7 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
     def test_admin_create_organization_without_website(self):
         url = reverse('admin:organizations_organization_changelist')
         page = self.app.get(url)
-        page = page.click('Add partner organization')
+        page = page.click('Add organisation')
         form = page.forms['organization_form']
         form['name'] = 'Dharma Initiative'
         page = form.submit()
@@ -27,7 +27,7 @@ class OrganizationAdminTestCase(BluebottleAdminTestCase):
     def test_admin_create_organization(self):
         url = reverse('admin:organizations_organization_changelist')
         page = self.app.get(url)
-        page = page.click('Add partner organization')
+        page = page.click('Add organisation')
         form = page.forms['organization_form']
         form['name'] = 'Dharma Initiative'
         form['website'] = 'http://dharma.in'

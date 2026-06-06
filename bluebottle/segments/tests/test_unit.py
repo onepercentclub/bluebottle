@@ -47,7 +47,7 @@ class TestSegmentModel(BluebottleTestCase):
 
         self.assertEqual(
             segment.get_absolute_url(),
-            f'http://testserver/en/segments/{segment.id}/{segment.slug}/activities/list'
+            f'http://test.localhost/en/segments/{segment.id}/{segment.slug}/activities/list'
         )
 
 

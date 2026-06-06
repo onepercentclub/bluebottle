@@ -1,7 +1,6 @@
 from django.db.models import Q
 
 from bluebottle.activities.permissions import ContributorPermission, ActivityManagerPermission
-from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
@@ -48,7 +47,7 @@ from bluebottle.utils.views import (
 )
 
 
-class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, CreatePermissionMixin):
+class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 
     permission_classes = (
         OneOf(
@@ -61,15 +60,15 @@ class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, C
 
 class DateParticipantList(ParticipantList):
     queryset = DateParticipant.objects.prefetch_related(
-        'user', 'activity', 'slot'
-    )
+        'user', 'activity', 'slot',
+    ).order_by('-created', 'pk')
     serializer_class = DateParticipantSerializer
 
 
 class DeadlineParticipantList(ParticipantList):
     queryset = DeadlineParticipant.objects.prefetch_related(
-        'user', 'activity'
-    )
+        'user', 'activity',
+    ).order_by('-created', 'pk')
     serializer_class = DeadlineParticipantSerializer
 
 
@@ -141,7 +140,9 @@ class RelatedParticipantListView(
             else:
                 queryset = queryset.none()
 
-        return queryset.filter(activity_id=self.kwargs["activity_id"])
+        return queryset.filter(
+            activity_id=self.kwargs["activity_id"],
+        ).order_by('-created', 'pk')
 
 
 class SlotRelatedParticipantListView(
@@ -205,8 +206,8 @@ class SlotRelatedParticipantListView(
 
 class DateRelatedParticipantList(RelatedParticipantListView):
     queryset = DateParticipant.objects.prefetch_related(
-        'user', 'activity'
-    )
+        'user', 'activity',
+    ).order_by('-created', 'pk')
     serializer_class = DateParticipantSerializer
 
 
@@ -241,8 +242,11 @@ class DateRegistrationRelatedParticipantView(
             else:
                 queryset = self.queryset.filter(
                     Q(user=self.request.user) |
+                    Q(activity__owner=self.request.user) |
+                    Q(activity__initiative__owner=self.request.user) |
+                    Q(activity__initiative__activity_managers=self.request.user) |
                     Q(status__in=('accepted', 'succeeded',))
-                ).order_by('-id')
+                ).order_by('-id').distinct()
         else:
             queryset = self.queryset.filter(
                 status__in=('accepted', 'succeeded',)
@@ -258,8 +262,8 @@ class DateRegistrationRelatedParticipantView(
 
 class DeadlineRelatedParticipantList(RelatedParticipantListView):
     queryset = DeadlineParticipant.objects.prefetch_related(
-        'user', 'activity'
-    )
+        'user', 'activity',
+    ).order_by('-created', 'pk')
     serializer_class = DeadlineParticipantSerializer
 
 
@@ -271,7 +275,7 @@ class RegisteredDateRelatedParticipantList(RelatedParticipantListView):
 
 
 class ScheduleRelatedParticipantList(RelatedParticipantListView):
-    queryset = ScheduleParticipant.objects.prefetch_related(
+    queryset = ScheduleParticipant.objects.order_by('-created', 'pk').prefetch_related(
         'user', 'activity'
     )
     serializer_class = ScheduleParticipantSerializer

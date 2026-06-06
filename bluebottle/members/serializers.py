@@ -25,7 +25,7 @@ from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.time_based.models import Skill
-from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
+from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField, UserPermissionField
 
 BB_USER_MODEL = get_user_model()
 
@@ -226,7 +226,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
             user.is_superuser
         ) and (
             self.hide_last_name and
-            MemberPlatformSettings.objects.get().display_member_names == 'first_name'
+            MemberPlatformSettings.load().display_member_names == 'first_name'
         ):
             del representation['last_name']
             representation['full_name'] = representation['first_name']
@@ -255,12 +255,14 @@ class UserPermissionsSerializer(serializers.Serializer):
     project_list = PermissionField('initiative-list')
     project_manage_list = PermissionField('initiative-list')
     homepage = PermissionField('home-detail')
+    review_activities = UserPermissionField('activities.api_review_activity')
 
     class Meta(object):
         fields = [
             'project_list',
             'project_manage_list',
-            'homepage'
+            'homepage',
+            'review_activities'
         ]
 
 
@@ -510,7 +512,7 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         email = attrs.get('email', '')
         access_code = attrs.get('access_code', '')
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         email_domain = email.split('@')[1]
         email_domains = settings.email_domains
 
@@ -628,7 +630,7 @@ class MemberSignUpSerializer(serializers.ModelSerializer):
         return super(MemberSignUpSerializer, self).errors
 
     def validate(self, data):
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         if settings.confirm_signup:
             raise serializers.ValidationError(
                 {'email': _('Signup requires a confirmation token.')}
@@ -713,7 +715,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(_('Email confirmation mismatch'))
             del data['email_confirmation']
 
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
 
         if settings.confirm_signup:
             raise serializers.ValidationError(
@@ -864,9 +866,17 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
     new_password = PasswordField(
         write_only=True, required=True, max_length=128)
 
-    def save(self):
-        self.instance.set_password(self.validated_data['new_password'])
-        self.instance.save()
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        attrs['password'] = attrs.pop('new_password')
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['password'])
+        instance.save()
+
+        return instance
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
         fields = ('new_password',) + PasswordProtectedMemberSerializer.Meta.fields

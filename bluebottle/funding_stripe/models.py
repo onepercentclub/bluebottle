@@ -77,6 +77,11 @@ class PaymentIntent(models.Model):
 
 
 class StripePayment(Payment):
+    """
+    A payment through stripe, related to a donation to a crowdfunding campaign.
+    """
+    include_in_documentation = True
+
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment', on_delete=models.CASCADE)
 
     provider = 'stripe'
@@ -340,6 +345,11 @@ class VerificationMethodChoices(DjangoChoices):
 
 
 class StripePayoutAccount(PayoutAccount):
+    """
+    Stripe payout account (KYC) for a beneficiary.
+    """
+    include_in_documentation = True
+
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2, null=True)
     business_type = models.CharField(
@@ -353,7 +363,6 @@ class StripePayoutAccount(PayoutAccount):
         max_length=100,
         null=True,
         choices=VerificationMethodChoices.choices,
-        default=VerificationMethodChoices.personal,
     )
 
     verified = models.BooleanField(default=False)
@@ -406,9 +415,14 @@ class StripePayoutAccount(PayoutAccount):
                     )
                 elif not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
                     business_profile.mcc = "8398"  # Default MCC for non-profits and crowdfunding
+                    company = {"structure": "incorporated_non_profit"}
+
+                    if self.country == "MX":
+                        company = {}
+
                     stripe.Account.modify(
                         self.account_id,
-                        company={"structure": "incorporated_non_profit"},
+                        company=company,
                         business_profile=business_profile,
                     )
 
@@ -452,7 +466,7 @@ class StripePayoutAccount(PayoutAccount):
                 "mcc": "8398" if self.business_type != BusinessTypeChoices.company else "",
                 "product_description": "Not applicable - raising funds for a do-good project on a GoodUp platform."
             }
-            if self.business_type == BusinessTypeChoices.individual:
+            if not self.business_type or self.business_type == BusinessTypeChoices.individual or self.country == "MX":
                 company = None
             else:
                 company = {"structure": "incorporated_non_profit"}
@@ -461,7 +475,7 @@ class StripePayoutAccount(PayoutAccount):
                 country=self.country,
                 type="custom",
                 settings=self.account_settings,
-                business_type=self.business_type or BusinessTypeChoices.non_profit,
+                business_type=self.business_type,
                 company=company,
                 business_profile=business_profile,
                 capabilities=self.capabilities,
@@ -633,6 +647,7 @@ class StripePayoutAccount(PayoutAccount):
     class Meta(object):
         verbose_name = _('stripe payout account')
         verbose_name_plural = _('stripe payout accounts')
+        ordering = ('-created',)
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripes'
@@ -643,6 +658,12 @@ class StripePayoutAccount(PayoutAccount):
 
 @python_2_unicode_compatible
 class ExternalAccount(BankAccount):
+    """
+    Bank account (in Stripe) connected to a payout account.
+    """
+
+    include_in_documentation = True
+
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'ba_...'"))
     provider_class = StripePaymentProvider
     currency = models.CharField(max_length=10, null=True, blank=True)

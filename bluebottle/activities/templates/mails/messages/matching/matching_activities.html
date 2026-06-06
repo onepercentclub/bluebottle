@@ -4,8 +4,8 @@
 
 {% block message %}
     <p>
-        {% blocktrans context 'email' %}
-            There are tons of cool activities on {{ site_name }} that are making a positive impact. 
+        {% blocktrans context 'platform-email' %}
+            There are tons of cool activities on {{ site_name }} that are making a positive impact.
 
             We have selected {{ count }} activities that match with your profile. Join us!
         {% endblocktrans %}
@@ -14,9 +14,9 @@
     {% if profile_incomplete%}
         <p class="matching-activities-profile-incomplete">
             <a class="matching-activities-profile-link" href="{% message_url 'member/profile' %}">
-                {% trans "Complete your profile" %}
+                {% trans "Complete your profile" context "platform-email" %}
             </a>
-            {% trans ", so that we can select even more relevant activities for you." %}
+            {% trans ", so that we can select even more relevant activities for you." context "platform-email" %}
         </p>
     {% endif %}
 
@@ -41,7 +41,7 @@
                                             <svg width="21" height="18" viewBox="0 0 14 18" xmlns="http://www.w3.org/2000/svg" class="fill-current"><path d="M7 0C3.578 0 0 2.66 0 7.043c0 4.148 6.222 10.487 6.456 10.722A.704.704 0 0 0 7 18a.704.704 0 0 0 .544-.235C7.778 17.53 14 11.191 14 7.043 14 2.661 10.422 0 7 0zm0 9.391c-1.322 0-2.333-1.017-2.333-2.348 0-1.33 1.01-2.347 2.333-2.347 1.322 0 2.333 1.017 2.333 2.347S8.323 9.391 7 9.391z" fill="#4A4A4A" fill-rule="nonzero"></path></svg>
                                         </span>
 
-                                        <span class="matching-icon-text">{% trans "Online / Remote" %}</span>
+                                        <span class="matching-icon-text">{% trans "Online / Remote" context "platform-email" %}</span>
                                     </small>
                                 {% elif activity.location %}
                                     <small class="matching-item-location--place">
@@ -70,7 +70,7 @@
                                             {% if activity.expertise %}
                                                 {{activity.expertise}}
                                             {% else %}
-                                                {% trans 'No specific skill needed' %}
+                                                {% trans 'No specific skill needed' context "platform-email" %}
                                             {% endif %}
                                         </span>
                                 </small>
@@ -93,6 +93,6 @@
 {% endblock %}
 
 {% block unsubscribe %}
-    {% trans "Don't want to receive this monthly update anymore? Unsubscribe" %}
-    <a href="{{site}}/member/profile"> {% trans "via your profile page." %}
+    {% trans "Don't want to receive this monthly update anymore? Unsubscribe" context "platform-email" %}
+    <a href="{{site}}/member/profile"> {% trans "via your profile page." context "platform-email" %}
 {% endblock %}`

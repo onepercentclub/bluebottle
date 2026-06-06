@@ -7,11 +7,14 @@ import dateutil
 from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone, now
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField,
+    ResourceRelatedField,
 )
 from rest_framework_json_api.serializers import (
     ModelSerializer,
@@ -22,7 +25,8 @@ from rest_framework_json_api.serializers import (
 from bluebottle.activities.models import (
     Activity, Contribution, Contributor, ActivityQuestion,
     FileUploadQuestion, SegmentQuestion, TextQuestion, ConfirmationAnswer,
-    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion
+    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion,
+    ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.collect.serializers import (
@@ -77,6 +81,7 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantSerializer,
     TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
@@ -184,6 +189,9 @@ class ActivityPreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
     initiative = serializers.CharField(source="initiative.title", required=False)
+    host_name = serializers.CharField(source="host_organization.name", required=False)
+    host_logo = serializers.SerializerMethodField()
+
     owner = serializers.SerializerMethodField()
 
     image = serializers.SerializerMethodField()
@@ -218,6 +226,13 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_target = serializers.SerializerMethodField()
     realized = serializers.SerializerMethodField()
 
+    translations = TranslationsSerializer(fields=['title'])
+
+    def get_host_logo(self, obj):
+        if obj.host_organization and obj.host_organization.logo:
+            return obj.host_organization.logo
+        return None
+
     def get_activity(self, obj):
         return {"id": obj.meta["id"], "type": obj.resource_name}
 
@@ -232,7 +247,11 @@ class ActivityPreviewSerializer(ModelSerializer):
                 pass
 
         if model:
-            state = getattr(model._state_machines["states"], obj.current_status.value)
+            try:
+                state = getattr(model._state_machines["states"], obj.current_status.value)
+            except AttributeError:
+                # FIXME
+                return obj.current_status
         else:
             state = obj.current_status
 
@@ -248,7 +267,6 @@ class ActivityPreviewSerializer(ModelSerializer):
             slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[0].start
-
         elif obj.start and len(obj.start) == 1:
             return obj.start[0]
 
@@ -316,12 +334,12 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_contribution_duration(self, obj):
         if hasattr(obj, "contribution_duration"):
             if not obj.contribution_duration:
-                return {}
+                return {"no": "1"}
             if (
                 len(obj.contribution_duration) == 0
                 or obj.contribution_duration[0].period == 0
             ):
-                return {}
+                return {"no": "too"}
             elif len(obj.contribution_duration) == 1:
                 return {
                     "period": obj.contribution_duration[0].period,
@@ -375,8 +393,11 @@ class ActivityPreviewSerializer(ModelSerializer):
             if len(set(slot.locality for slot in slots)) == 1:
                 location = slots[0]
 
-        elif type == "funding":
-            places = [location for location in obj.location if location.type == "place"]
+        elif obj.type == "funding":
+            places = [
+                location for location in obj.location if
+                location.type in ("impact_location", "location")
+            ]
             if places:
                 location = places[0]
         elif len(obj.location):
@@ -387,7 +408,8 @@ class ActivityPreviewSerializer(ModelSerializer):
                 "initiative_office",
                 "impact_location",
             ]
-            location = sorted(obj.location, key=lambda loc: order.index(loc.type))[0]
+
+            location = sorted(obj.location, key=lambda loc: order.index(getattr(loc, 'type', 'location')))[0]
 
         if location:
             if location.locality:
@@ -409,6 +431,14 @@ class ActivityPreviewSerializer(ModelSerializer):
             if obj.image.type == "initiative":
                 url = reverse(
                     "initiative-image",
+                    args=(
+                        obj.image.id,
+                        IMAGE_SIZES["large"],
+                    ),
+                )
+            if obj.image.type == "link":
+                url = reverse(
+                    "activity_links:image",
                     args=(
                         obj.image.id,
                         IMAGE_SIZES["large"],
@@ -522,7 +552,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.status != "open"
 
     def get_owner(self, obj):
-        return obj.owner.full_name
+        return obj.owner.full_name if obj.owner else None
 
     def get_contributor_count(self, obj):
         return obj.contributor_count
@@ -544,6 +574,9 @@ class ActivityPreviewSerializer(ModelSerializer):
             "expertise",
             "initiative",
             "image",
+            "link",
+            "host_name",
+            "host_logo",
             "matching_properties",
             "amount_raised",
             "realized",
@@ -567,10 +600,12 @@ class ActivityPreviewSerializer(ModelSerializer):
             "activity",
             "capacity",
             "contributor_count",
+            "translations"
         )
         meta_fields = (
             "current_status",
             "created",
+            "translations"
         )
 
     class JSONAPIMeta:
@@ -1043,3 +1078,40 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
         'segment': 'bluebottle.segments.serializers.SegmentListSerializer',
         'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
     }
+
+
+class ActivityMessageSerializer(ModelSerializer):
+    sender = ResourceRelatedField(
+        read_only=True,
+    )
+    activity = PolymorphicResourceRelatedField(
+        ActivitySerializer,
+        queryset=Activity.objects.all(),
+    )
+
+    class Meta(object):
+        model = ActivityMessage
+        fields = ('message', 'created', 'sender', 'activity')
+
+    class JSONAPIMeta(object):
+        resource_name = 'activity-messages'
+        included_resources = ['sender', 'activity']
+
+    included_serializers = {
+        'sender': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+    }
+
+    def validate_activity(self, activity):
+        if activity.status == 'draft':
+            raise PermissionDenied()
+        return activity
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        activity = attrs.get('activity')
+        if request and activity and activity.owner_id == request.user.pk:
+            raise serializers.ValidationError(
+                {'activity': _('You cannot send a message to yourself as the activity manager.')}
+            )
+        return attrs

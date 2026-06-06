@@ -1,16 +1,14 @@
 import json
-from datetime import timedelta
 import uuid
-import requests
 from collections import namedtuple
+from datetime import timedelta
 
-
+import requests
 from axes.utils import reset
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
-from bluebottle.files.views import ImageContentView
 from django.http import Http404
 from django.template import loader
 from django.utils import timezone
@@ -26,11 +24,13 @@ from rest_framework_jwt.views import ObtainJSONWebTokenView
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_accounts.permissions import (
-    CurrentUserPermission, IsAuthenticatedOrOpenPermission
+    CurrentUserPermission, IsAuthenticatedOrOpenPermission,
+    SignUpTokenPermission
 )
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.files.views import ImageContentView
 from bluebottle.initiatives.serializers import (
     MemberSerializer, CurrentMemberSerializer, AvatarImageSerializer
 )
@@ -49,12 +49,11 @@ from bluebottle.members.serializers import (
 )
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.permissions import IsCurrentUser
+from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     RetrieveAPIView, JsonApiViewMixin, CreateAPIView, RetrieveUpdateDestroyAPIView
 )
-
 
 USER_MODEL = get_user_model()
 
@@ -185,7 +184,8 @@ class MemberSignUp(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = []
 
     def perform_create(self, serializer):
-        return serializer.save(is_active=True)
+        serializer.validated_data['is_active'] = True
+        super().perform_create(serializer)
 
 
 class PasswordStrengthDetail(JsonApiViewMixin, generics.CreateAPIView):
@@ -234,7 +234,7 @@ class SignUpToken(JsonApiViewMixin, CreateAPIView):
     Request a signup token
 
     """
-    permission_classes = []
+    permission_classes = [SignUpTokenPermission]
 
     queryset = USER_MODEL.objects.all()
     serializer_class = SignUpTokenSerializer
@@ -296,7 +296,7 @@ class UserCreate(generics.CreateAPIView):
         return "Users"
 
     def perform_create(self, serializer):
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         if settings.closed:
             raise PermissionDenied()
         if 'primary_language' not in serializer.validated_data:
@@ -400,7 +400,7 @@ class PasswordProtectedMemberCreateApiView(JsonApiViewMixin, CreateAPIView):
         serializer.instance = user
         user.last_logout = now()
 
-        serializer.save()
+        super().perform_create(serializer)
 
 
 class EmailSetView(PasswordProtectedMemberCreateApiView):

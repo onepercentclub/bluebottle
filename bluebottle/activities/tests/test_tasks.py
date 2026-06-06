@@ -3,6 +3,7 @@ from django.contrib.gis.geos import Point
 from django.core import mail
 from django.test import tag
 from django.test.utils import override_settings
+from django.utils.translation import activate
 from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 
@@ -40,6 +41,7 @@ from bluebottle.time_based.tests.factories import (
 class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super().setUp()
+        activate('en')
         self.settings = InitiativePlatformSettingsFactory.create(enable_matching_emails=True)
 
         self.amsterdam = Point(x=4.8981734, y=52.3790565)

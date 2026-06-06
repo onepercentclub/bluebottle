@@ -23,7 +23,7 @@ from bluebottle.grant_management.models import (
 
 @register(GrantApplication)
 class GrantApplicationStateMachine(ActivityStateMachine):
-    granted = State(_("Granted"), "granted", _("The grant application was approved, now waiting bank details."))
+    granted = State(_("Granted"), "granted", _("The grant application was approved."))
     succeeded = State(
         _("Succeeded"), "succeeded", _("The grant application was approved and has been paid out to the applicant.")
     )
@@ -130,6 +130,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
+            granted,
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted,

@@ -934,11 +934,11 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
 class TeamScheduleParticipantTriggers(ContributorTriggers):
     def has_slot(effect):
         """Has a slot"""
-        return effect.instance.slot.status == "scheduled"
+        return effect.instance.slot and effect.instance.slot.status == "scheduled"
 
     def team_is_accepted(effect):
         """Team is accepted"""
-        return effect.instance.team_member.team.status != "new"
+        return effect.instance.team_member and effect.instance.team_member.team.status != "new"
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
@@ -1168,7 +1168,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         """Review needed"""
         return (
             effect.instance.registration
-            and effect.instance.registration.status == "accepted"
+            and effect.instance.registration.status in ("accepted", )
         )
 
     def registration_is_withdrawn(effect):
@@ -1271,6 +1271,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     conditions=[participant_slot_is_finished]
 
                 ),
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.restore,
+                    conditions=[registration_is_withdrawn]
+                ),
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'slot',
@@ -1278,6 +1283,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     conditions=[participant_slot_will_be_full]
                 ),
                 FollowActivityEffect,
+
             ],
         ),
 
@@ -1369,7 +1375,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,
-                    conditions=[registration_is_accepted]
+                    conditions=[registration_is_withdrawn, review_disabled]
                 ),
                 RelatedTransitionEffect(
                     'registration',

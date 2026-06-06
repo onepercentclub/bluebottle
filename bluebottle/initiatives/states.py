@@ -66,6 +66,16 @@ class ReviewStateMachine(ModelStateMachine):
         ),
     )
 
+    archived = State(
+        _("Archived"),
+        "archived",
+        _(
+            "The initiative is no longer visible in the frontend and hidden "
+            "in the admin. Activities are still available and contributions still "
+            "count in reporting."
+        ),
+    )
+
     def is_complete(self):
         """The initiative is complete"""
         if self.instance.organization and list(self.instance.organization.required):
@@ -209,6 +219,26 @@ class ReviewStateMachine(ModelStateMachine):
             "The status of the initiative is set to 'needs work'. "
             "The initiator can edit and submit the initiative again"
         ),
+        automatic=False,
+        permission=is_staff,
+    )
+
+    archive = Transition(
+        [approved],
+        archived,
+        name=_("Archive"),
+        description=_("The initiative will be archived."),
+        conditions=[],
+        automatic=False,
+        permission=is_staff,
+    )
+
+    unarchive = Transition(
+        [archived],
+        approved,
+        name=_("Unarchive"),
+        description=_("The initiative will be approved again."),
+        conditions=[is_complete, is_valid],
         automatic=False,
         permission=is_staff,
     )

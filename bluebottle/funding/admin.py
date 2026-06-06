@@ -13,7 +13,8 @@ from django.db import connection, models
 from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
 from django.template import loader
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from past.utils import old_div
@@ -184,7 +185,16 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
 
-    detail_fields = ("title", "description", "image", "video_url", "theme", 'categories')
+    detail_fields = (
+        "title",
+        "description",
+        "image",
+        "video_url",
+        "theme",
+        "impact_location",
+        "categories",
+        "organization",
+    )
 
     status_fields = (
         "initiative",
@@ -203,7 +213,6 @@ class FundingAdmin(ActivityChildAdmin):
         'duration',
         'deadline',
         'target',
-        'impact_location',
         'amount_matching',
         'amount_donated',
         'amount_raised',
@@ -212,17 +221,18 @@ class FundingAdmin(ActivityChildAdmin):
     )
 
     def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
             (_("Date & amount"), {"fields": self.campaign_fields}),
+            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
         ]
         if Location.objects.count():
             if settings.enable_office_restrictions:
                 if "office_restriction" not in self.office_fields:
                     self.office_fields += ("office_restriction",)
-                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+                fieldsets.append((_("Work location"), {"fields": self.office_fields}))
 
         if request.user.is_superuser:
             fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
@@ -422,8 +432,8 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     def get_urls(self):
         urls = super(StateMachineAdminMixin, self).get_urls()
         custom_urls = [
-            re_path(
-                r'^(?P<pk>.+)/sync/$',
+            path(
+                '<path:pk>/sync/',
                 self.admin_site.admin_view(self.sync_payment),
                 name='funding_donation_sync',
             )
@@ -478,8 +488,8 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     def get_urls(self):
         urls = super(PaymentChildAdmin, self).get_urls()
         process_urls = [
-            re_path(r'^(?P<pk>\d+)/check/$', self.check_status, name="funding_payment_check"),
-            re_path(r'^(?P<pk>\d+)/refund/$', self.refund, name="funding_payment_refund"),
+            path('<int:pk>/check/', self.check_status, name="funding_payment_check"),
+            path('<int:pk>/refund/', self.refund, name="funding_payment_refund"),
         ]
         return process_urls + urls
 
@@ -632,7 +642,7 @@ class PayoutAccountChildAdmin(PayoutAccountActivityLinkMixin, PolymorphicChildMo
 
     def get_basic_fields(self, request, obj):
         fields = ['owner', 'public', 'partner_organization']
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         if 'funding' in settings.activity_types:
             fields.append('funding_links')
         if 'grantapplication' in settings.activity_types:
@@ -684,7 +694,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
 
     def get_fields(self, request, obj):
         fields = list(super().get_fields(request, obj))
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         if 'funding' in settings.activity_types:
             fields.append('funding_links')
         if 'grantapplication' in settings.activity_types:
@@ -864,7 +874,6 @@ class PayoutAdmin(StateMachineAdmin):
 
 @admin.register(FundingPlatformSettings)
 class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
-
     def get_form(self, request, obj=None, **kwargs):
         kwargs['widgets'] = {
             'matching_name': forms.TextInput(attrs={'placeholder': connection.tenant.name})

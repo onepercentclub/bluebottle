@@ -4,6 +4,9 @@ from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, ContributionTriggers
 from bluebottle.activities.triggers import ContributorTriggers
+from bluebottle.activity_pub.effects import (
+    PublishAdoptionEffect, CreateEffect, UpdateEventEffect, CancelEffect, FinishEffect, StartEffect
+)
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -31,8 +34,7 @@ from bluebottle.funding.messages.funding.contributor import (
 )
 from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import (
-    Funding, Donor, Payment, MoneyContribution,
-)
+    Funding, Donor, Payment, MoneyContribution, FundingPlatformSettings, )
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
     DonationStateMachine,
@@ -94,6 +96,19 @@ def should_review(effect):
     return effect.instance.initiative.status != 'approved'
 
 
+def fixed_target(effect):
+    platform_settings = FundingPlatformSettings.load()
+    return platform_settings.fixed_target
+
+
+def campaign_target_reached(effect):
+    """ the campaign target amount has been reached (100% or more)"""
+    activity = effect.instance.activity
+    if not activity.target:
+        return False
+    return activity.amount_raised >= activity.target
+
+
 @register(Funding)
 class FundingTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
@@ -122,7 +137,9 @@ class FundingTriggers(ActivityTriggers):
                     FundingStateMachine.expire,
                     conditions=[should_finish]
                 ),
-                NotificationEffect(FundingApprovedMessage)
+                NotificationEffect(FundingApprovedMessage),
+                CreateEffect,
+                PublishAdoptionEffect
             ]
         ),
 
@@ -130,7 +147,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                NotificationEffect(FundingCancelledMessage)
+                NotificationEffect(FundingCancelledMessage),
+                CancelEffect,
             ]
         ),
 
@@ -138,7 +156,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.reject,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                NotificationEffect(FundingRejectedMessage)
+                NotificationEffect(FundingRejectedMessage),
+                CancelEffect
             ]
         ),
 
@@ -154,6 +173,7 @@ class FundingTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(FundingExpiredMessage),
+                CancelEffect
             ]
         ),
 
@@ -161,7 +181,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.extend,
             effects=[
                 DeletePayoutsEffect,
-                NotificationEffect(FundingExtendedMessage)
+                NotificationEffect(FundingExtendedMessage),
+                StartEffect,
             ]
         ),
 
@@ -169,7 +190,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.succeed,
             effects=[
                 GeneratePayoutsEffect,
-                NotificationEffect(FundingRealisedOwnerMessage)
+                NotificationEffect(FundingRealisedOwnerMessage),
+                FinishEffect
             ]
         ),
 
@@ -184,7 +206,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.partial,
             effects=[
                 GeneratePayoutsEffect,
-                NotificationEffect(FundingPartiallyFundedMessage)
+                NotificationEffect(FundingPartiallyFundedMessage),
+                FinishEffect
             ]
         ),
 
@@ -259,17 +282,39 @@ class FundingTriggers(ActivityTriggers):
                     conditions=[should_finish, target_reached]
                 ),
                 TransitionEffect(
+                    FundingStateMachine.succeed,
+                    conditions=[fixed_target, target_reached]
+                ),
+                TransitionEffect(
                     FundingStateMachine.partial,
                     conditions=[should_finish, target_not_reached]
                 ),
+            ]
+        ),
+        ModelChangedTrigger(
+            'amount_donated',
+            effects=[
+                TransitionEffect(
+                    FundingStateMachine.succeed,
+                    conditions=[fixed_target, target_reached]
+                ),
+            ]
+        ),
+        ModelChangedTrigger(
+            [
+                'target', 'amount_donated', 'amount_matching', 'amount_pledged',
+                'deadline', 'impact_location'
+            ],
+            effects=[
+                UpdateEventEffect,
             ]
         )
     ]
 
 
-def is_successful(instance):
+def is_successful(effect):
     """donation is successful"""
-    return instance.instance.status == ContributorStateMachine.succeeded
+    return effect.instance.status == ContributorStateMachine.succeeded
 
 
 @register(Donor)

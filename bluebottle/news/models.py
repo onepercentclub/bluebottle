@@ -20,7 +20,7 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 @python_2_unicode_compatible
 class NewsItem(PublishableModel):
     title = models.CharField(_("Title"), max_length=200)
-    slug = models.SlugField(_("Slug"))
+    slug = models.SlugField(_("Slug"), max_length=50)
 
     # Contents
     main_image = ImageField(
@@ -50,6 +50,12 @@ class NewsItem(PublishableModel):
     contentitem_set = ContentItemRelation()
 
     allow_comments = models.BooleanField(_("Allow comments"), default=True)
+
+    def save(self, *args, **kwargs):
+        slug_field = self._meta.get_field('slug')
+        if self.slug and len(self.slug) > slug_field.max_length:
+            self.slug = self.slug[:slug_field.max_length]
+        super(NewsItem, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.title

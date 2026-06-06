@@ -2,8 +2,9 @@
 import logging
 import random
 import string
-from babel.numbers import get_currency_name
 from builtins import object, range
+
+from babel.numbers import get_currency_name
 from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models import SET_NULL, Count
@@ -11,13 +12,12 @@ from django.db.models.aggregates import Sum
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
+from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 from moneyed import Money
+from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
-
-from multiselectfield import MultiSelectField
-from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution, Contributor
 from bluebottle.clients import properties
@@ -533,6 +533,10 @@ class Payout(TriggerMixin, models.Model):
 
 @python_2_unicode_compatible
 class Donor(Contributor):
+    """
+    A donation to a crowdfunding campaign.
+    """
+    include_in_documentation = True
     amount = MoneyField()
     payout_amount = MoneyField()
     client_secret = models.CharField(max_length=32, blank=True, null=True)
@@ -584,6 +588,10 @@ class Donor(Contributor):
 
 @python_2_unicode_compatible
 class MoneyContribution(Contribution):
+    """
+    A donation contribution, for reporting purposes.
+    """
+    include_in_documentation = True
 
     value = MoneyField()
 
@@ -594,6 +602,11 @@ class MoneyContribution(Contribution):
 
 @python_2_unicode_compatible
 class Payment(TriggerMixin, PolymorphicModel):
+    """
+    A payment related to a donation to a crowdfunding campaign.
+    """
+    include_in_documentation = True
+
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
@@ -826,10 +839,6 @@ class FundingPlatformSettings(BasePlatformSettings):
     anonymous_donations = models.BooleanField(
         _('Hide names from all donations'), default=False
     )
-    allow_anonymous_rewards = models.BooleanField(
-        _('Allow guests to donate rewards'), default=True
-    )
-
     public_accounts = models.BooleanField(
         _('Crowdfunding for verified organisations'),
         default=False,
@@ -846,6 +855,14 @@ class FundingPlatformSettings(BasePlatformSettings):
         help_text=_(
             'In the KYC flow do a check to see if bank account number and name match. '
             'This will be done by the Surepay API, and only Dutch IBANs are supported. '
+        )
+    )
+
+    fixed_target = models.BooleanField(
+        _('Limit donations'),
+        default=False,
+        help_text=_(
+            'Automatically stop accepting donations once the target is reached.'
         )
     )
 

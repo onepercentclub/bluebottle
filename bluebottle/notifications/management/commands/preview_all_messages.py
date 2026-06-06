@@ -51,6 +51,7 @@ MESSAGE_MODULES = {
     'time_based.participants': 'bluebottle.time_based.messages.participants',
     'time_based.teams': 'bluebottle.time_based.messages.teams',
     'time_based.registrations': 'bluebottle.time_based.messages.registrations',
+    'time_based.activity_manager': 'bluebottle.time_based.messages.activity_manager',
 
     'funding.contributor': 'bluebottle.funding.messages.funding.contributor',
     'funding.activity_manager': 'bluebottle.funding.messages.funding.activity_manager',
@@ -58,6 +59,7 @@ MESSAGE_MODULES = {
 
     'grant_management.activity_manager': 'bluebottle.grant_management.messages.activity_manager',
     'grant_management.grant_provider': 'bluebottle.grant_management.messages.grant_provider',
+    'grant_management.reviewer': 'bluebottle.grant_management.messages.reviewer',
 
     'initiatives.initiator': 'bluebottle.initiatives.messages.initiator',
     'initiatives.reviewer': 'bluebottle.initiatives.messages.reviewer',
@@ -249,6 +251,23 @@ class MockMember:
         self.favourite_themes = Theme.objects.none()
 
 
+class MockQueryset:
+
+    def __init__(self, elements=None):
+        if not elements:
+            elements = []
+        self.elements = elements
+
+    def first(self):
+        return self.elements[0]
+
+    def last(self):
+        return self.elements[-1]
+
+    def count(self):
+        return len(self.elements)
+
+
 class MockActivity:
     """Mock Activity object"""
 
@@ -316,6 +335,7 @@ class MockRegistration:
         self.motivation = "I love helping the community!"
         self.participants = DateParticipant.objects.all()
         self.slot = MockSlot(language)
+        self.team = MockTeam(language)
 
     @property
     def owner(self):
@@ -360,12 +380,19 @@ class MockTeam:
         self.pk = 321
         self.name = "Team Awesome"
         self.activity = MockActivity(language)
-        self.owner = MockMember(language)
+        self.user = MockMember(language)
         self.slots = DateActivitySlot.objects.all()
         self.event_data = None
 
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/teams/{self.id}"
+
+
+class MockTeamSlot(MockSlot):
+
+    def __init__(self, language='en'):
+        super().__init__(language)
+        self.team = MockTeam(language)
 
 
 class MockTeamMember:
@@ -376,7 +403,9 @@ class MockTeamMember:
         self.pk = 321
         self.user = MockMember(language)
         self.team = MockTeam(language)
+        self.activity = MockActivity(language)
         self.participants = DeedParticipant.objects.none()
+        self.slots = MockQueryset([MockSlot(language)])
 
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/teams/{self.id}"
@@ -397,7 +426,15 @@ class MockFunding:
         self.payouts = Payout.objects.none()
 
     def get_absolute_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/funding/{self.id}/{self.slug}"
+        return f"https://example.goodup.com/en/funding/{self.id}/{self.slug}"
+
+
+class MockOrganization:
+    """Mock Organization object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
 
 
 class MockPayoutAccount:
@@ -407,6 +444,49 @@ class MockPayoutAccount:
         self.id = 111
         self.pk = 111
         self.funding = MockFunding(language)
+        self.organization = None
+        self.grant_application = MockGrantApplication(language)
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/payout/{self.id}"
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/payout/{self.id}"
+
+
+class MockGrantPayout:
+    """Mock GrantPayout object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+        self.activity = MockGrantApplication(language)
+        self.amount = Money(3500, 'EUR')
+        self.total_amount = Money(3500, 'EUR')
+        self.grant = MockGrantDonor(language)
+        self.fund = MockGrantFund(language)
+        self._grants_list = [self.grant]
+
+    @property
+    def grants(self):
+        """Mock queryset-like object that supports .first() and .all()"""
+        class MockGrantsQuerySet:
+            def __init__(self, grants_list):
+                self.grants_list = grants_list
+
+            def first(self):
+                return self.grants_list[0] if self.grants_list else None
+
+            def all(self):
+                return self.grants_list
+
+        return MockGrantsQuerySet(self._grants_list)
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/payout/{self.id}"
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/payout{self.id}"
 
 
 class MockGrantApplication:
@@ -431,17 +511,68 @@ class MockGrantApplication:
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
 
 
+class MockGrantFund:
+    """Mock GrantFund object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+        self.name = "GoodUp Big Fund"
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+
+class MockGrantDonor:
+    """Mock GrantDonor object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+        self.activity = MockGrantApplication(language)
+        self.fund = MockGrantFund(language)
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
+
+
+class MockGrantProvider:
+    """Mock Grant Application object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
+
+
 class MockGrantPayment:
     """Mock Grant Application object"""
 
     def __init__(self, language='en'):
         self.id = 111
         self.pk = 111
-        self.payouts = Payout.objects.none()
-        self.total = Money(1700, 'EUR')
+        self._payout = MockGrantPayout(language)
+
+        class MockPayoutsQuerySet:
+            def __init__(self, payout):
+                self._payout = payout
+
+            def all(self):
+                return [self._payout]
+        self.payouts = MockPayoutsQuerySet(self._payout)
+        self.total = Money(3500, 'EUR')
+        self.grant_provider = MockGrantProvider(language)
 
     def get_admin_url(self):
-        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}"
 
 
 class MockDonation:
@@ -508,7 +639,9 @@ MOCK_OBJECT_MAP = {
     'Update': MockUpdate,
     'Activity': MockActivity,
     'Member': MockMember,
-    'Registration': MockRegistration
+    'Registration': MockRegistration,
+    'GrantPayout': MockGrantPayout,
+
 }
 
 
@@ -532,8 +665,7 @@ def get_mock_object_for_message(message_class, language='en'):
     try:
         # Check module name first for better matching
         if 'Matching' in class_name:
-            from bluebottle.deeds.models import Deed
-            return Deed.objects
+            return MockQueryset([MockActivity(language)])
 
         if 'updates' in module_name:
             from bluebottle.updates.models import Update
@@ -554,10 +686,12 @@ def get_mock_object_for_message(message_class, language='en'):
         if 'GrantPayment' in class_name:
             return MockGrantPayment(language)
 
+        if 'PayoutReady' in class_name:
+            return MockGrantPayout(language)
+
         if 'grant_management' in module_name:
             if 'PayoutAccount' in class_name:
-                from bluebottle.funding_stripe.models import StripePayoutAccount
-                return get_real_or_mock_object(StripePayoutAccount, MockPayoutAccount, language)
+                return MockPayoutAccount(language)
             try:
                 from bluebottle.grant_management.models import GrantApplication
                 grant_app = GrantApplication.objects.filter().first()
@@ -589,22 +723,18 @@ def get_mock_object_for_message(message_class, language='en'):
                     return slot
                 return MockSlot(language)
 
-            if 'Team' in class_name:
-                if 'Scheduled' in class_name:
-                    from bluebottle.time_based.models import TeamMember
-                    return get_real_or_mock_object(TeamMember, MockTeam, language)
-                if 'DetailsChanged' in class_name:
-                    from bluebottle.time_based.models import TeamScheduleSlot
-                    return get_real_or_mock_object(TeamScheduleSlot, MockTeam, language)
-                if 'Member' in class_name:
-                    from bluebottle.time_based.models import TeamMember
-                    return get_real_or_mock_object(TeamMember, MockTeamMember, language)
-                from bluebottle.time_based.models import Team
-                return get_real_or_mock_object(Team, MockTeam, language)
-
             if 'Registration' in class_name or 'registrations' in module_name:
                 from bluebottle.time_based.models import PeriodParticipant
                 return get_real_or_mock_object(PeriodParticipant, MockRegistration, language)
+
+            if 'Team' in class_name:
+                if 'Scheduled' in class_name:
+                    return MockTeamMember(language)
+                if 'DetailsChanged' in class_name:
+                    return MockTeamSlot(language)
+                if 'Member' in class_name:
+                    return MockTeamMember(language)
+                return MockTeam(language)
 
             # Messages with "Date" likely need DateActivity
             if 'Date' in class_name or 'Reminder' in class_name:

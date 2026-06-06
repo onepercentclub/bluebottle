@@ -38,7 +38,7 @@ class SlideTestCase(BluebottleTestCase):
         self.slide4 = DraftSlideFactory.create(author=self.user, language='nl')
         self.homepage_url = reverse('home-detail')
 
-        HomePage.objects.get(pk=1).delete()
+        HomePage.objects.all().delete()
         self.page = HomePageFactory(pk=1)
         placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         SlidesContent.objects.create_for_placeholder(placeholder, language_code='en')
@@ -71,8 +71,10 @@ class SlideTestCase(BluebottleTestCase):
             if included['type'] == 'pages/blocks/slides/slides'
         ]
         self.assertEqual(len(slides), 2)
-
-        slide = slides[0]
+        slide = next(
+            item for item in slides
+            if item['attributes']['title'] == self.slide2.title
+        )
         self.assertEqual(slide['attributes']['title'], self.slide2.title)
-        self.assertTrue(slide['attributes']['video'].startswith('http://testserver/media/banner_slides/sparks'))
+        self.assertTrue(slide['attributes']['video'].startswith('http://test.localhost/media/banner_slides/sparks'))
         self.assertEqual(slide['attributes']['body'], self.slide2.body)

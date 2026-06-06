@@ -2,7 +2,24 @@
 {% load i18n %}
 
 {% block message %}
-    {% blocktrans context 'email' %}
-        Get involved with some good causes before the year ends, there are plenty of activities that need your help!
+    <p>
+    {% blocktrans context 'platform-email' %}
+    As we approach the final months of the year, there’s still time to make impact. Many causes would benefit from your time and skills.
     {% endblocktrans %}
+    </p>
+    <p>
+    {% blocktrans context 'platform-email' %}
+    Ready to end the year on a high note?
+    {% endblocktrans %}
+    </p>
+{% endblock %}
+
+
+{% block end_message %}
+    {{block.super}}
+    <p>
+    {% blocktrans context 'platform-email' %}
+    Your involvement matters. Let's work together to close out the year with meaningful impact.
+    {% endblocktrans %}
+    </p>
 {% endblock %}

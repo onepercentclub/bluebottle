@@ -54,7 +54,7 @@ class LoginTestCase(BluebottleTestCase):
             token, algorithms='HS256', options=dict(verify_signature=False)
         )
 
-        self.assertEquals(list(decoded.keys()), ['username', 'exp', 'orig_iat'])
+        self.assertEqual(list(decoded.keys()), ['username', 'exp', 'orig_iat'])
         self.assertEqual(decoded['username'], self.user.pk)
 
         current_user_response = self.client.get(
@@ -204,7 +204,7 @@ class LoginTestCase(BluebottleTestCase):
                 reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
             )
 
-        mock_response = client.RecaptchaResponse(True, extra_data={'hostname': 'testserver'})
+        mock_response = client.RecaptchaResponse(True, extra_data={'hostname': 'test.localhost'})
 
         with mock.patch.object(client, 'submit', return_value=mock_response):
             json_api_client = JSONAPITestClient()
@@ -237,10 +237,8 @@ class SignUpTokenTestCase(BluebottleTestCase):
     """
 
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
-
+        self.settings = MemberPlatformSettings.load()
         super(SignUpTokenTestCase, self).setUp()
-
         self.client = JSONAPITestClient()
 
     def test_create(self):
@@ -356,11 +354,24 @@ class SignUpTokenTestCase(BluebottleTestCase):
             'Only emails' in response.json()['errors'][0]['detail']
         )
 
+    def test_create_password_login_disabled(self):
+        email = 'test@secondexample.com'
+        self.settings.login_methods = 'SSO'
+        self.settings.closed = True
+        self.settings.save()
+
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(len(mail.outbox), 0)
+
 
 @override_settings(SEND_WELCOME_MAIL=True)
 class CreateUserTestCase(BluebottleTestCase):
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
+        self.settings = MemberPlatformSettings.load()
 
         super(CreateUserTestCase, self).setUp()
 
@@ -493,7 +504,7 @@ class CreateUserTestCase(BluebottleTestCase):
 @override_settings(SEND_WELCOME_MAIL=True)
 class ConfirmSignUpTestCase(BluebottleTestCase):
     def setUp(self):
-        (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
+        self.settings = MemberPlatformSettings.load()
 
         super(ConfirmSignUpTestCase, self).setUp()
         self.email = 'test@example.com'
@@ -894,7 +905,7 @@ class PasswordSetTest(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertTrue(b'Password should at least be 8 characters.' in response.content)
+        self.assertTrue(b'Password should at least be 10 characters.' in response.content)
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('some-password'))
@@ -1058,11 +1069,11 @@ class PasswordStrengthDetailTest(BluebottleTestCase):
         errors = response.json()['errors']
         self.assertEqual(
             errors[0]['detail'],
-            'Password should at least be 8 characters.'
+            'Password should at least be 10 characters.'
         )
 
     def test_common(self):
-        self.data['data']['attributes']['password'] = 'password'
+        self.data['data']['attributes']['password'] = 'password123'
         response = self.client.post(self.url, data=json.dumps(self.data))
         self.assertEqual(response.status_code, 400)
         errors = response.json()['errors']
@@ -1443,7 +1454,7 @@ class MemberSignUpAPITestCase(APITestCase):
         error = self.response.json()['errors'][0]
         self.assertEqual(
             error['detail'],
-            'Password should at least be 8 characters.'
+            'Password should at least be 10 characters.'
         )
         self.assertEqual(
             error['source']['pointer'],

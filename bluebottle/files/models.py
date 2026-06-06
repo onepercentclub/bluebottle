@@ -39,10 +39,11 @@ class File(models.Model):
         'members.Member',
         verbose_name=_('owner'),
         related_name='own_%(class)s',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True
     )
     used = models.BooleanField(_('used'), default=False)
-    name = models.CharField(null=True, blank=True, max_length=50)
+    name = models.CharField(null=True, blank=True, max_length=500)
 
     def save(self, *args, **kwargs):
         if not self.name and self.file.name:
@@ -62,6 +63,9 @@ class File(models.Model):
 
 class Image(File):
     cropbox = models.CharField(max_length=40, blank=True)
+    origin = models.ForeignKey(
+        'activity_pub.Image', null=True, related_name="activities", on_delete=models.SET_NULL
+    )
 
     class JSONAPIMeta(object):
         resource_name = 'images'
@@ -79,6 +83,10 @@ class Image(File):
                 pass
 
         super().save(*args, **kwargs)
+
+    @property
+    def activity_pub_url(self):
+        return None
 
 
 class Document(File):

@@ -1,12 +1,12 @@
-from django.db.utils import ProgrammingError
-
 from builtins import object, str
 
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
+from django.db.utils import ProgrammingError
 from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils.functional import lazy
@@ -30,7 +30,6 @@ from bluebottle.utils.models import (
     ValidatedModelMixin,
 )
 from bluebottle.utils.utils import get_current_host, get_current_language
-from django.core.exceptions import ValidationError
 
 
 @python_2_unicode_compatible
@@ -73,7 +72,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         verbose_name=_("co-initiators"),
         help_text=_(
             "Co-initiators can create and edit activities for "
-            "this initiative, but cannot edit the initiative itself."
+            "this initiative, and can edit the initiative itself."
         ),
         related_name="activity_managers_%(class)ss",
     )
@@ -133,7 +132,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
 
     location = models.ForeignKey(
         "geo.Location",
-        verbose_name=_("office"),
+        verbose_name=_("Work location"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -245,7 +244,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
                 self.slug = "new"
 
         try:
-            if InitiativePlatformSettings.objects.get().require_organization:
+            if InitiativePlatformSettings.load().require_organization:
                 self.has_organization = True
         except InitiativePlatformSettings.DoesNotExist:
             pass
@@ -271,38 +270,46 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         super(Initiative, self).save(**kwargs)
 
 
-ACTIVITY_SEARCH_FILTERS = (
-    ("country", _("Country")),
-    ("date", _("Date")),
-    ("distance", _("Distance")),
-    ("is_online", _("Online / In-person")),
-    ("skill", _("Skill")),
-    ("team_activity", _("Individual / Team")),
-    ("theme", _("Theme")),
-    ("category", _("Category")),
-    ("office", _("Office")),
-    ("office_subregion", _("Office group")),
-    ("office_region", _("Office region")),
-)
+SEARCH_FILTERS = {
+    "country": (_("Country"), _("Select country")),
+    "date": (_("Date"), _('Select a date')),
+    "distance": (_("Distance"), _("Select distance")),
+    "is_online": (_("Online / In-person"), _("Make a choice")),
+    "skill": (_("Skill"), _("Select a skill")),
+    "team_activity": (_("Individual / Team"), _("Make a choice")),
+    "theme": (_("Theme"), _("Select a theme")),
+    "category": (_("Category"), _("Select a category")),
+    "office": (_("Work location"), _("Select work location")),
+    "office_subregion": (_("Work location group"), _("Select a group")),
+    "office_region": (_("Work location region"), _("Select a region")),
+    'open': (_('Open initiatives'), _("Make a choice")),
+    "is_local": (_("Local / From partner"), _("Make a choice")),
 
+}
 
-INITIATIVE_SEARCH_FILTERS = (
-    ('office', _('Office')),
-    ('country', _('Country')),
-    ('theme', _('Theme')),
-    ('category', _('Category')),
-    ('open', _('Open initiatives')),
-    ('office', _('Office')),
-    ('office_subregion', _('Office group')),
-    ('office_region', _('Office region')),
-)
+ACTIVITY_SEARCH_FILTERS = [
+    (k, v[0]) for k, v in SEARCH_FILTERS.items() if k in [
+        "country", "date", "distance", "is_online", "is_local", "skill",
+        "team_activity", "theme", "category", "office", "office_subregion", "office_region"
+    ]
+]
+
+INITIATIVE_SEARCH_FILTERS = [
+    (k, v[0]) for k, v in SEARCH_FILTERS.items() if k in [
+        "office", "country", "theme", "category", "open", "office_subregion", "office_region"
+    ]
+]
 
 
 def get_search_filters(filters):
     try:
         if connection.tenant.schema_name != "public":
             for segment in SegmentType.objects.all():
-                filters = filters + ((f"segment.{segment.slug}", segment.name),)
+                try:
+                    segment_name = segment.name
+                except (ValueError, AttributeError):
+                    segment_name = segment.slug
+                filters = filters + [(f"segment.{segment.slug}", segment_name), ]
         return filters
     except ProgrammingError:
         return []
@@ -346,6 +353,21 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
+    vet_organizations = models.BooleanField(
+        _('Enable due diligence'),
+        default=False,
+        help_text=_((
+            "Allow admins to indicate if due diligence has been completed "
+            "when approving a grant application."
+        )),
+    )
+
+    contact_activity_manager = models.BooleanField(
+        verbose_name=_('Contact activity manager'),
+        help_text=_('Allow users to send messages to activity managers.'),
+        default=True
+    )
+
     terms_of_service = models.TextField(
         _("Terms of Service"),
         blank=True,
@@ -378,6 +400,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
+    restrict_updates = models.BooleanField(
+        _("Restrict posting updates"),
+        default=False,
+        help_text=_(
+            "Restrict posting of updates on the activity wall to only activity managers and staff users"
+        ),
+    )
+
     initiative_search_filters = MultiSelectField(
         max_length=1000, choices=INITIATIVE_SEARCH_FILTERS
     )
@@ -401,17 +431,17 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     enable_office_regions = models.BooleanField(
-        default=False, help_text=_("Allow admins to add (sub)regions to their offices.")
+        default=False, help_text=_("Allow admins to add (sub)regions to their work location.")
     )
 
     enable_office_restrictions = models.BooleanField(
         default=False,
         help_text=_(
-            "Allow activity managers to specify office restrictions on activities."
+            "Allow activity managers to specify work location restrictions on activities."
         ),
     )
     default_office_restriction = models.CharField(
-        _("Default office restriction"),
+        _("Default work location restriction"),
         default=OfficeRestrictionChoices.all,
         choices=OfficeRestrictionChoices.choices,
         blank=True,
@@ -513,11 +543,9 @@ class SearchFilter(SortableMixin, models.Model):
 
     @property
     def placeholder(self):
-        if self.type == "office":
-            return _("Select office")
-        if self.type in ["is_online", "team_activity", "open"]:
-            return _("Make a choice")
-        return _("Select {filter_name}").format(filter_name=self.name.lower())
+        if self.type in SEARCH_FILTERS.keys():
+            return SEARCH_FILTERS[self.type][1]
+        return _("Select {filter_name}").format(filter_name=self.name)
 
     class Meta:
         abstract = True
@@ -594,6 +622,7 @@ class Theme(SortableTranslatableModel):
     class Meta(object):
         verbose_name = _("theme")
         verbose_name_plural = _("themes")
+        ordering = ['pk']
         permissions = (("api_read_theme", "Can view theme through API"),)
 
     class JSONAPIMeta(object):

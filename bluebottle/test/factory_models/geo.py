@@ -92,6 +92,7 @@ class GeolocationFactory(factory.DjangoModelFactory):
         for code in languages:
             place_feature.set_current_language(code)
             place_feature.name = self.locality or ''
+            place_feature.place_name = self.locality or ''
             place_feature.save()
 
         feature_ids = [place_feature.pk]
@@ -106,6 +107,7 @@ class GeolocationFactory(factory.DjangoModelFactory):
             for code in languages:
                 country_feature.set_current_language(code)
                 country_feature.name = self.country.name
+                country_feature.place_name = self.country.name
                 country_feature.save()
             feature_ids.append(country_feature.pk)
 

@@ -61,4 +61,4 @@ class CollectActivityAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue("contributors-0" in page.text)
         self.assertTrue("contributors-1" in page.text)
         self.assertTrue("contributors-2" in page.text)
-        self.assertFalse("contributors-3" in page.text, "Only real contributors shoudl show")
+        self.assertFalse("contributors-3" in page.text, "Only real contributors should show")

@@ -1,5 +1,6 @@
 from bluebottle.funding.documents import FundingDocument
 from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -11,7 +12,11 @@ class FundingDocumentTestCase(BluebottleTestCase):
             locality='Amsterdam',
             formatted_address='Dam 1, Amsterdam',
         )
-        funding = FundingFactory.create(impact_location=impact_location)
+        initiative = InitiativeFactory.create(place=None)
+        funding = FundingFactory.create(
+            impact_location=impact_location,
+            initiative=initiative
+        )
 
         document = FundingDocument()
         locations = document.prepare_location(funding)
@@ -30,7 +35,10 @@ class FundingDocumentTestCase(BluebottleTestCase):
             locality='Amsterdam',
             formatted_address='Dam 1, Amsterdam',
         )
-        funding = FundingFactory.create(impact_location=impact_location)
+        funding = FundingFactory.create(
+            impact_location=impact_location,
+            initiative=InitiativeFactory.create(place=None),
+        )
 
         prepared = FundingDocument().prepare(funding)
 

@@ -166,6 +166,20 @@ def _formatted_place_name_is_hierarchical(formatted, address):
     return len(formatted) > len(road or '')
 
 
+def _fix_postcode_formatter_output(formatted, address):
+    """AddressFormatter often omits the comma between postcode and city."""
+    postcode = address.get('postcode')
+    city = address.get('city')
+    if not postcode or not city or not formatted:
+        return formatted
+    if formatted.startswith(f'{postcode},'):
+        return formatted
+    needle = f'{postcode} {city}'
+    if needle in formatted:
+        return formatted.replace(needle, f'{postcode}, {city}', 1)
+    return formatted
+
+
 def format_place_name(place_type, feature, props, language, formatter=None):
     """Build a one-line locale-aware place name for GeoFeature.place_name."""
     context = props.get('context') or feature.get('context') or {}
@@ -193,6 +207,9 @@ def format_place_name(place_type, feature, props, language, formatter=None):
                 formatted = candidate.strip()
         except Exception:
             pass
+
+    if place_type == 'postcode' and formatted:
+        formatted = _fix_postcode_formatter_output(formatted, address)
 
     if place_type in HIERARCHICAL_PLACE_TYPES:
         if fallback and not _formatted_place_name_is_hierarchical(formatted, address):

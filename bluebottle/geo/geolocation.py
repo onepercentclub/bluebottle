@@ -252,6 +252,43 @@ def normalize_mapbox_id(
 # ---------------------------------------------------------------------------
 
 
+def apply_reverse_geocode_feature(geolocation, feature):
+    """Populate Geolocation address fields from a Mapbox reverse-geocode feature."""
+    if not feature:
+        return
+
+    geolocation.formatted_address = feature.get('place_name')
+    if feature.get('text'):
+        geolocation.street = feature.get('text')
+
+    props = feature.get('properties') or {}
+    house_number = feature.get('address') or props.get('address')
+    if house_number:
+        geolocation.street_number = str(house_number)
+
+    mapbox_id = mapbox_id_from_feature(feature) or feature.get('id')
+    if mapbox_id:
+        geolocation.mapbox_id = mapbox_id
+
+    context = feature.get('context') or []
+    if isinstance(context, list):
+        for item in context:
+            item_id = item.get('id') or ''
+            if item_id.startswith('postcode.'):
+                geolocation.postal_code = item.get('text')
+            elif item_id.startswith('place.'):
+                geolocation.locality = item.get('text')
+            elif item_id.startswith('locality.'):
+                geolocation.locality = geolocation.locality or item.get('text')
+            elif item_id.startswith('region.'):
+                geolocation.province = item.get('text')
+
+        if not geolocation.country_id:
+            country = resolve_country_from_mapbox_context(context)
+            if country:
+                geolocation.country = country
+
+
 def prepare_geolocation_for_save(geolocation) -> Optional[str]:
     """Normalize mapbox_id before persisting.
 
@@ -264,6 +301,13 @@ def prepare_geolocation_for_save(geolocation) -> Optional[str]:
             .values_list('mapbox_id', flat=True)
             .first()
         )
+
+    if (
+        geolocation.position
+        and not geolocation.mapbox_id
+        and not geolocation.formatted_address
+    ):
+        apply_reverse_geocode_feature(geolocation, geolocation.reverse_geocode())
 
     if settings.MAPBOX_API_KEY and geolocation.mapbox_id:
         geolocation.mapbox_id = normalize_mapbox_id(

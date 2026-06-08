@@ -166,7 +166,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'is_online': False,
                 'location': {
                     'locality': slot.location.locality,
-                    'formattedAddress': slot.location.formatted_address,
+                    'formattedAddress': str(slot.location),
                     'country': {
                         'code': slot.location.country.alpha2_code
                     }
@@ -252,7 +252,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'is_online': False,
                 'location': {
                     'locality': location.locality,
-                    'formattedAddress': location.formatted_address,
+                    'formattedAddress': str(location),
                     'country': {
                         'code': location.country.alpha2_code
                     }
@@ -277,7 +277,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'is_online': False,
                 'location': {
                     'locality': location.locality,
-                    'formattedAddress': location.formatted_address,
+                    'formattedAddress': str(location),
                     'country': {
                         'code': location.country.alpha2_code
                     }

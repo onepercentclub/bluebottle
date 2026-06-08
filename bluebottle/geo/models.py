@@ -337,9 +337,16 @@ class Geolocation(models.Model):
     )
 
     def __str__(self):
-        if self.feature:
-            return self.feature.place_name
-        return self.locality
+        feature = self.feature
+        if feature:
+            return (
+                feature.place_name
+                or feature.name
+                or self.formatted_address
+                or self.locality
+                or '-unknown-'
+            )
+        return self.formatted_address or self.locality or '-unknown-'
 
     @property
     def activity_pub_url(self):

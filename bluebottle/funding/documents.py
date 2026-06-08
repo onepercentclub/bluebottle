@@ -88,6 +88,19 @@ class FundingDocument(ActivityDocument):
     def prepare_amount_raised(self, instance):
         return self.prepare_amount(instance.amount_raised)
 
+    def prepare_location(self, instance):
+        if instance.impact_location:
+            country = instance.impact_location.country
+            return [{
+                'id': instance.impact_location.id,
+                'name': instance.impact_location.formatted_address,
+                'locality': instance.impact_location.locality,
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
+                'type': 'location',
+            }]
+        return super().prepare_location(instance)
+
     def prepare_is_online(self, instance):
         if instance.impact_location:
             return False

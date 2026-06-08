@@ -53,13 +53,12 @@ from bluebottle.funding.serializers import (
     FundingSerializer,
     TinyFundingSerializer,
 )
+from bluebottle.geo.location_display import format_location_display, indexed_field
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.grant_management.serializers import (
     GrantSerializer,
     GrantApplicationSerializer
 )
-from bluebottle.geo.location_display import format_location_display, indexed_field
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import (
     DateParticipant,
     PeriodicParticipant,

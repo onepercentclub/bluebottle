@@ -130,12 +130,15 @@ def _format_address_fallback(address):
     else:
         road_part = road or house_number
 
+    state_or_region = address.get('state') or address.get('region')
+    include_state = state_or_region and not address.get('city')
+
     parts = []
     for value in (
         road_part,
         address.get('postcode'),
         address.get('city'),
-        address.get('state') or address.get('region'),
+        state_or_region if include_state else None,
         address.get('country'),
     ):
         if value and (not parts or parts[-1] != value):
@@ -164,6 +167,19 @@ def _formatted_place_name_is_hierarchical(formatted, address):
     if road and formatted != road and road not in formatted:
         return True
     return len(formatted) > len(road or '')
+
+
+def _strip_redundant_state_from_formatted(formatted, address):
+    """Drop province/state when city and country are already shown."""
+    city = address.get('city')
+    state = address.get('state') or address.get('region')
+    country = address.get('country')
+    if not all((formatted, city, state, country)):
+        return formatted
+    redundant = f', {state}, {country}'
+    if redundant in formatted:
+        return formatted.replace(redundant, f', {country}')
+    return formatted
 
 
 def _fix_postcode_formatter_output(formatted, address):
@@ -213,10 +229,12 @@ def format_place_name(place_type, feature, props, language, formatter=None):
 
     if place_type in HIERARCHICAL_PLACE_TYPES:
         if fallback and not _formatted_place_name_is_hierarchical(formatted, address):
-            return fallback
-        return formatted or fallback
+            return _strip_redundant_state_from_formatted(fallback, address)
+        result = formatted or fallback
+        return _strip_redundant_state_from_formatted(result, address)
 
-    return formatted or fallback
+    result = formatted or fallback
+    return _strip_redundant_state_from_formatted(result, address)
 
 
 def _resolve_place_name(place_type, feature, props, language, formatter, text_value):

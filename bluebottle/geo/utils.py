@@ -1,7 +1,13 @@
 """
-Backward-compatible re-exports. Prefer importing from geo.mapbox, geo.geolocation, geo.geofeatures.
+Backward-compatible re-exports. Prefer importing from geo.mapbox, geo.geolocation,
+geo.geofeatures, geo.location_display.
 """
 from bluebottle.geo.geofeatures import collect_geo_features, resolve_geo_feature
+from bluebottle.geo.location_display import (
+    format_geolocation_display,
+    format_location_display,
+    indexed_field,
+)
 from bluebottle.geo.geolocation import (
     extract_house_number_from_address_fields,
     normalize_mapbox_id,
@@ -21,6 +27,9 @@ from bluebottle.geo.mapbox import (
 
 __all__ = [
     'collect_geo_features',
+    'format_geolocation_display',
+    'format_location_display',
+    'indexed_field',
     'coords_from_feature',
     'extract_house_number_from_address_fields',
     'geocode_by_id',

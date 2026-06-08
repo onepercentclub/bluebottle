@@ -422,7 +422,9 @@ class InitiativePlatformSettings(BasePlatformSettings):
         max_length=1000, choices=LOCATION_DISPLAY_OPTIONS,
         default=['place', 'country'],
         help_text=_(
-            "Select the information of the location that is displayed on the activity cards."
+            "Select the information of the location that is displayed on the activity cards. "
+            "Location name uses the geolocation locality field; address uses the geolocation "
+            "formatted address when no address geofeature is available."
         )
     )
 

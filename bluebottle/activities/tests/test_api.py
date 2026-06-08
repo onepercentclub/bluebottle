@@ -57,18 +57,9 @@ from bluebottle.time_based.tests.factories import (
 
 
 def geofeature_location_string(geolocation, language='en'):
-    location_features = InitiativePlatformSettings.load().location_features
-    parts = []
-    for place_type in location_features:
-        feature = geolocation.features.filter(place_type=place_type).first()
-        if not feature:
-            continue
-        feature.set_current_language(language)
-        if place_type == 'country':
-            parts.append(feature.code or feature.name)
-        else:
-            parts.append(feature.name)
-    return ', '.join(parts)
+    from bluebottle.geo.location_display import format_geolocation_display
+
+    return format_geolocation_display(geolocation, language=language)
 
 
 @override_settings(

@@ -776,7 +776,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create(alpha2_code='NL')
         other_country = CountryFactory.create(alpha2_code='DE')
 
-        matching = InitiativeFactory.create_batch(2, status='approved')
+        matching = InitiativeFactory.create_batch(2, status='approved', place=None)
         for initiative in matching:
             DeadlineActivityFactory.create(
                 status='open',
@@ -784,7 +784,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 office_location=LocationFactory.create(country=matching_country)
             )
 
-        other = InitiativeFactory.create_batch(3, status='approved')
+        other = InitiativeFactory.create_batch(3, status='approved', place=None)
         for initiative in other:
             DeadlineActivityFactory.create(
                 status='open',

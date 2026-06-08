@@ -4,6 +4,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.test.client import RequestFactory
 from django.utils.timezone import now
 
+from bluebottle.geo.location_display import format_geolocation_display
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -166,7 +167,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'is_online': False,
                 'location': {
                     'locality': slot.location.locality,
-                    'formattedAddress': str(slot.location),
+                    'formattedAddress': format_geolocation_display(slot.location),
                     'country': {
                         'code': slot.location.country.alpha2_code
                     }
@@ -252,7 +253,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'is_online': False,
                 'location': {
                     'locality': location.locality,
-                    'formattedAddress': str(location),
+                    'formattedAddress': format_geolocation_display(location),
                     'country': {
                         'code': location.country.alpha2_code
                     }
@@ -277,7 +278,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'is_online': False,
                 'location': {
                     'locality': location.locality,
-                    'formattedAddress': str(location),
+                    'formattedAddress': format_geolocation_display(location),
                     'country': {
                         'code': location.country.alpha2_code
                     }

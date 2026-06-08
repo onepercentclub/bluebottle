@@ -13,6 +13,7 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity, Organizer
+from bluebottle.geo.location_display import format_geolocation_display
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -641,7 +642,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
                 'country': {
                     'code': slot.location.country.alpha2_code if slot.location.country else None,
                 },
-                'formattedAddress': str(slot.location),
+                'formattedAddress': format_geolocation_display(slot.location),
             }
 
         user = self.context['request'].user

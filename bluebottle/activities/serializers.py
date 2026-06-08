@@ -58,6 +58,7 @@ from bluebottle.grant_management.serializers import (
     GrantSerializer,
     GrantApplicationSerializer
 )
+from bluebottle.geo.location_display import format_location_display, indexed_field
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import (
     DateParticipant,
@@ -399,34 +400,43 @@ class ActivityPreviewSerializer(ModelSerializer):
             }
         return names
 
-    def _format_geofeature_location(self, geofeatures):
-        if not geofeatures:
-            return None
+    def _primary_location_context(self, obj):
+        if hasattr(obj, 'slots') and obj.slots:
+            slots = self.get_filtered_slots(obj, only_upcoming=True)
+            if not slots:
+                slots = self.get_filtered_slots(obj)
+            offline_slots = [slot for slot in slots if not getattr(slot, 'is_online', False)]
+            if offline_slots:
+                slot = offline_slots[0]
+                return {
+                    'locality': getattr(slot, 'locality', None),
+                    'formatted_address': getattr(slot, 'formatted_address', None),
+                }
 
-        location_features = InitiativePlatformSettings.load().location_features
-        language = get_current_language()
-        features = [feature for feature in geofeatures if feature.language == language]
-        if not features:
-            features = list(geofeatures)
+        locations = getattr(obj, 'location', None) or []
+        if not isinstance(locations, (list, tuple)):
+            locations = [locations]
 
-        parts = []
-        for place_type in location_features:
-            match = next(
-                (feature for feature in features if feature.place_type == place_type),
-                None,
-            )
-            if not match:
-                continue
-            if place_type == 'country':
-                parts.append(match.code or match.name)
-            else:
-                parts.append(match.name)
+        for location in locations:
+            if indexed_field(location, 'type') not in ('office',):
+                return {
+                    'locality': indexed_field(location, 'locality'),
+                    'formatted_address': indexed_field(location, 'name'),
+                }
 
-        return ", ".join(parts) if parts else None
+        if locations:
+            location = locations[0]
+            return {
+                'locality': indexed_field(location, 'locality'),
+                'formatted_address': indexed_field(location, 'name'),
+            }
+
+        return {'locality': None, 'formatted_address': None}
 
     def get_location(self, obj):
         geofeatures = obj.geofeature or []
-        if not geofeatures:
+        location_context = self._primary_location_context(obj)
+        if not geofeatures and not location_context.get('locality') and not location_context.get('formatted_address'):
             return None
 
         if hasattr(obj, "slots") and obj.slots:
@@ -437,7 +447,11 @@ class ActivityPreviewSerializer(ModelSerializer):
                 if len(self._geofeature_place_names(geofeatures)) > 1:
                     return None
 
-        return self._format_geofeature_location(geofeatures)
+        return format_location_display(
+            geofeatures,
+            locality=location_context.get('locality'),
+            formatted_address=location_context.get('formatted_address'),
+        )
 
     def get_image(self, obj):
         if obj.image:

@@ -19,6 +19,7 @@ from bluebottle.cms.models import (
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.pages.models import DocumentItem, ImageTextItem, PlatformPage
 from bluebottle.statistics.tests.factories import ManualStatisticFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -519,6 +520,268 @@ class PageTestCase(BluebottleTestCase):
 
         data = response.json()['data']
         self.assertEqual(data['attributes']['title'], 'Over ons')
+
+
+class PageEditorAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(PageEditorAPITestCase, self).setUp()
+        self.init_projects()
+        self.page = PageFactory.create(language='en', slug='about', title='About us')
+        self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
+        self.editor = BlueBottleUserFactory.create()
+        perm = Permission.objects.filter(codename='api_change_page').first()
+        if perm:
+            self.editor.user_permissions.add(perm)
+        self.text_block = TextItem.objects.create_for_placeholder(
+            self.placeholder,
+            text='<p>Original text</p>'
+        )
+
+    def test_page_list_requires_editor_permission(self):
+        url = reverse('page-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 401)
+
+        response = self.client.get(
+            url,
+            token='JWT {}'.format(self.editor.get_jwt_token()),
+            HTTP_X_APPLICATION_LANGUAGE='en'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()['data']
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['attributes']['title'], 'About us')
+        self.assertTrue(data[0]['meta']['permissions']['PATCH'])
+
+    def test_page_detail_includes_permissions(self):
+        url = reverse('page-detail', args=(self.page.slug,))
+        response = self.client.get(
+            url,
+            token='JWT {}'.format(self.editor.get_jwt_token()),
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['data']['meta']['permissions']['PATCH'])
+        self.assertIn('/admin/pages/page/', response.json()['data']['meta']['admin-url'])
+
+    def test_patch_text_block(self):
+        url = reverse('page-block-detail', args=(self.text_block.pk,))
+        response = self.client.patch(
+            url,
+            json.dumps({
+                'data': {
+                    'type': 'pages/blocks/text',
+                    'id': str(self.text_block.pk),
+                    'attributes': {
+                        'text': '<p>Updated text</p>'
+                    }
+                }
+            }),
+            format=None,
+            content_type='application/vnd.api+json',
+            token='JWT {}'.format(self.editor.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['attributes']['text'],
+            '<p>Updated text</p>'
+        )
+
+    def test_patch_text_block_sanitizes_xss(self):
+        url = reverse('page-block-detail', args=(self.text_block.pk,))
+        response = self.client.patch(
+            url,
+            json.dumps({
+                'data': {
+                    'type': 'pages/blocks/text',
+                    'id': str(self.text_block.pk),
+                    'attributes': {
+                        'text': '<script>alert(1)</script><p>Safe</p>'
+                    }
+                }
+            }),
+            format=None,
+            content_type='application/vnd.api+json',
+            token='JWT {}'.format(self.editor.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('script', response.json()['data']['attributes']['text'])
+        self.assertIn('Safe', response.json()['data']['attributes']['text'])
+
+    def test_patch_image_text_block_returns_block_serializer(self):
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            block = ImageTextItem.objects.create_for_placeholder(
+                self.placeholder,
+                image=image,
+                text='some text',
+                align='left',
+                ratio=6,
+            )
+
+        url = reverse('page-block-detail', args=(block.pk,))
+        response = self.client.patch(
+            url,
+            json.dumps({
+                'data': {
+                    'type': 'pages/blocks/image-text',
+                    'id': str(block.pk),
+                    'attributes': {
+                        'text': '<p>Updated image text</p>',
+                        'align': 'right',
+                        'ratio': 8,
+                    }
+                }
+            }),
+            format=None,
+            content_type='application/vnd.api+json',
+            token='JWT {}'.format(self.editor.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()['data']
+        self.assertEqual(data['attributes']['ratio'], 8)
+        self.assertEqual(data['attributes']['align'], 'right')
+        self.assertIn('/media/', data['attributes']['image']['original'])
+
+    def test_patch_image_text_block_with_uploaded_image(self):
+        block = ImageTextItem.objects.create_for_placeholder(
+            self.placeholder,
+            text='some text',
+            align='left',
+            ratio=6,
+        )
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            uploaded = ImageFactory.create(file=File(f, name='upload.png'))
+        url = reverse('page-block-detail', args=(block.pk,))
+        response = self.client.patch(
+            url,
+            json.dumps({
+                'data': {
+                    'type': 'pages/blocks/image-text',
+                    'id': str(block.pk),
+                    'relationships': {
+                        'image': {
+                            'data': {
+                                'type': 'images',
+                                'id': str(uploaded.pk),
+                            }
+                        }
+                    }
+                }
+            }),
+            format=None,
+            content_type='application/vnd.api+json',
+            token='JWT {}'.format(self.editor.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            '/media/',
+            response.json()['data']['attributes']['image']['original'],
+        )
+
+    def _post_block(self, url, payload, token=None):
+        kwargs = {
+            'format': None,
+            'content_type': 'application/vnd.api+json',
+        }
+        if token:
+            kwargs['token'] = token
+        return self.client.post(url, json.dumps(payload), **kwargs)
+
+    def test_create_text_block(self):
+        url = reverse('page-block-create', args=(self.page.slug,))
+        response = self._post_block(
+            url,
+            {
+                'data': {
+                    'type': 'pages/blocks/text',
+                    'attributes': {
+                        'text': '<p>New block</p>'
+                    }
+                }
+            },
+            token='JWT {}'.format(self.editor.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()['data']
+        self.assertEqual(data['attributes']['text'], '<p>New block</p>')
+
+        page_url = reverse('page-detail', args=(self.page.slug,))
+        page_response = self.client.get(
+            page_url,
+            token='JWT {}'.format(self.editor.get_jwt_token()),
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
+        block_ids = [
+            item['id']
+            for item in page_response.json()['data']['relationships']['blocks']['data']
+        ]
+        self.assertIn(data['id'], block_ids)
+
+    def test_create_image_text_block(self):
+        url = reverse('page-block-create', args=(self.page.slug,))
+        response = self._post_block(
+            url,
+            {
+                'data': {
+                    'type': 'pages/blocks/image-text',
+                    'attributes': {
+                        'text': '<p>Image text block</p>',
+                        'align': 'right',
+                        'ratio': 8,
+                    }
+                }
+            },
+            token='JWT {}'.format(self.editor.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()['data']
+        self.assertEqual(data['attributes']['ratio'], 8)
+        self.assertEqual(data['attributes']['align'], 'right')
+
+    def test_delete_text_block(self):
+        url = reverse('page-block-detail', args=(self.text_block.pk,))
+        response = self.client.delete(
+            url,
+            token='JWT {}'.format(self.editor.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(TextItem.objects.filter(pk=self.text_block.pk).exists())
+
+    def test_create_block_forbidden_for_anonymous(self):
+        self.client.credentials()
+        url = reverse('page-block-create', args=(self.page.slug,))
+        response = self._post_block(
+            url,
+            {
+                'data': {
+                    'type': 'pages/blocks/text',
+                    'attributes': {
+                        'text': '<p>New block</p>'
+                    }
+                }
+            },
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_patch_text_block_forbidden_for_anonymous(self):
+        url = reverse('page-block-detail', args=(self.text_block.pk,))
+        response = self.client.patch(
+            url,
+            json.dumps({
+                'data': {
+                    'type': 'pages/blocks/text',
+                    'id': str(self.text_block.pk),
+                    'attributes': {
+                        'text': '<p>Hacked</p>'
+                    }
+                }
+            }),
+            format=None,
+            content_type='application/vnd.api+json'
+        )
+        self.assertEqual(response.status_code, 401)
 
 
 class PlatformPageTestCase(BluebottleTestCase):

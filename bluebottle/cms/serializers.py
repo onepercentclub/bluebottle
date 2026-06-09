@@ -15,6 +15,9 @@ from rest_framework_json_api.serializers import ModelSerializer, PolymorphicMode
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField
 )
+from bluebottle.cms.page_utils import apply_uploaded_image
+from bluebottle.files.models import Image
+from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.cms.models import (
     HomePage, QuotesContent, Quote, PeopleContent, Person,
     ProjectsMapContent, CategoriesContent, StepsContent,
@@ -435,6 +438,29 @@ class PictureBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/picture'
 
 
+class PictureBlockWriteSerializer(ModelSerializer):
+    image = ResourceRelatedField(queryset=Image.objects.all(), required=False, allow_null=True)
+
+    class Meta(object):
+        model = PictureItem
+        fields = ('align', 'image',)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/picture'
+
+    def update(self, instance, validated_data):
+        uploaded_image = validated_data.pop('image', serializers.empty)
+        if uploaded_image is not serializers.empty:
+            if uploaded_image is None:
+                instance.image.delete(save=False)
+            else:
+                apply_uploaded_image(instance, 'image', uploaded_image)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
 class TextBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = TextItem
@@ -444,6 +470,24 @@ class TextBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/text'
 
         fields = ('id', 'align', 'image', 'block_type',)
+
+
+class TextBlockWriteSerializer(ModelSerializer):
+    text = SafeField(required=False, allow_blank=True)
+
+    class Meta(object):
+        model = TextItem
+        fields = ('text',)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/text'
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.full_clean()
+        instance.save()
+        return instance
 
 
 class ImageTextBlockSerializer(BaseBlockSerializer):
@@ -456,6 +500,33 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image-text'
+
+
+class ImageTextBlockWriteSerializer(ModelSerializer):
+    text = SafeField(required=False, allow_blank=True)
+    image = ResourceRelatedField(queryset=Image.objects.all(), required=False, allow_null=True)
+
+    class Meta(object):
+        model = ImageTextItem
+        fields = ('text', 'image', 'ratio', 'align',)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image-text'
+
+    def update(self, instance, validated_data):
+        uploaded_image = validated_data.pop('image', serializers.empty)
+        if uploaded_image is not serializers.empty:
+            if uploaded_image is None:
+                instance.image.delete(save=False)
+            else:
+                apply_uploaded_image(instance, 'image', uploaded_image)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if instance.image:
+            instance.full_clean()
+            instance.save()
+        return instance
 
 
 class ImageRoundTextBlockSerializer(BaseBlockSerializer):
@@ -672,15 +743,48 @@ class HomeSerializer(BaseCMSSerializer):
         resource_name = 'homepages'
 
 
+BLOCK_WRITE_SERIALIZERS = {
+    'TextItem': TextBlockWriteSerializer,
+    'PictureItem': PictureBlockWriteSerializer,
+    'ImageTextItem': ImageTextBlockWriteSerializer,
+}
+
+
+class PageListSerializer(ModelSerializer):
+    id = serializers.CharField(source='slug', read_only=True)
+    permissions = ResourcePermissionField('page-detail', view_args=('slug',))
+    admin_url = serializers.SerializerMethodField()
+    updated = serializers.DateTimeField(source='modification_date', read_only=True)
+
+    def get_admin_url(self, obj):
+        return obj.get_admin_url()
+
+    class Meta(object):
+        model = Page
+        fields = ('id', 'title', 'slug', 'language', 'status', 'updated')
+        meta_fields = ('permissions', 'admin_url')
+
+    class JSONAPIMeta:
+        resource_name = 'pages'
+
+
 class PageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    permissions = ResourcePermissionField('page-detail', view_args=('slug',))
+    admin_url = serializers.SerializerMethodField()
+
+    def get_admin_url(self, obj):
+        return obj.get_admin_url()
 
     def get_blocks(self, obj):
         return obj.content.contentitems.all()
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page
-        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
+        fields = BaseCMSSerializer.Meta.fields + (
+            'title', 'show_title', 'full_page', 'slug'
+        )
+        meta_fields = ('permissions', 'admin_url')
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'pages'

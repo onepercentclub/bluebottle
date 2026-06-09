@@ -13,7 +13,6 @@ from bluebottle.time_based.effects.teams import (
     CreateTeamMemberSlotParticipantsEffect,
     DeleteTeamMemberSlotParticipantsEffect,
 )
-from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.messages.teams import (
     CaptainTeamMemberJoinedNotification,
     ManagerTeamRemovedNotification,
@@ -27,6 +26,7 @@ from bluebottle.time_based.messages.teams import (
     CaptainTeamMemberRemovedNotification,
     UserTeamMemberRemovedNotification,
 )
+from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.states.participants import (
     TeamScheduleParticipantStateMachine,
 )
@@ -37,19 +37,21 @@ from bluebottle.time_based.states.teams import TeamStateMachine, TeamMemberState
 @register(Team)
 class TeamTriggers(TriggerManager):
     def should_auto_accept(effect):
-        """ Check if the team should be auto accepted """
+        """Check if the team should be auto accepted (runs after registration is created)."""
         user = effect.options.get('user')
         is_admin = (
             user and
             (not hasattr(effect.instance, 'user') or effect.instance.user != user) and
             (user.is_staff or user.is_superuser)
         )
+        registration = (
+            effect.instance.registration
+            if effect.instance.registration_id
+            else None
+        )
         return (
             not effect.instance.activity.review or
-            (
-                hasattr(effect.instance, 'registration') and
-                effect.instance.registration.status == 'accepted'
-            ) or
+            (registration and registration.status == 'accepted') or
             is_admin
         )
 
@@ -61,7 +63,9 @@ class TeamTriggers(TriggerManager):
                 CreateCaptainTeamMemberEffect,
                 CreateTeamRegistrationEffect,
                 TransitionEffect(
-                    TeamStateMachine.accept, conditions=[should_auto_accept]
+                    TeamStateMachine.accept,
+                    conditions=[should_auto_accept],
+                    post_save=True,
                 ),
             ],
         ),

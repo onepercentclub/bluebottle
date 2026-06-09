@@ -11,7 +11,6 @@ from bluebottle.geo.mapbox import (
     coords_from_feature,
     geocode_by_id,
     haversine_km,
-    v6_forward_first_feature,
 )
 from bluebottle.geo.models import Geolocation, PLACE_TYPE_ORDER
 
@@ -57,14 +56,13 @@ def _resolve_mapbox_id_coords_cached(
         feature = geocode_by_id(mapbox_id)
         coords = coords_from_feature(feature)
         if isinstance(feature, dict) and coords:
-            cache[mapbox_id] = (coords[0], coords[1], str(feature.get('place_name') or ''))
-            return cache[mapbox_id]
-
-        feature = v6_forward_first_feature(q=mapbox_id)
-        coords = coords_from_feature(feature)
-        if isinstance(feature, dict) and coords:
             props = feature.get('properties') or {}
-            place_name = str(props.get('full_address') or props.get('name') or '')
+            place_name = str(
+                props.get('full_address')
+                or props.get('name')
+                or feature.get('place_name')
+                or ''
+            )
             cache[mapbox_id] = (coords[0], coords[1], place_name)
             return cache[mapbox_id]
 

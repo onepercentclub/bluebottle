@@ -1,8 +1,6 @@
 from django.test import TestCase
 
-from unittest import mock
-
-from bluebottle.geo.geofeatures import _resolve_place_name, format_place_name
+from bluebottle.geo.geofeatures import place_name
 
 
 LEIDEN_CONTEXT = {
@@ -60,53 +58,39 @@ def _ctx_feature(place_type):
     }
 
 
-class FormatPlaceNameTest(TestCase):
-    def test_address_place_name_includes_city_and_country_without_addressformatting(self):
+class PlaceNameTest(TestCase):
+    def test_address_place_name_includes_city_and_country(self):
         props = _ctx_feature('address')['properties']
         feature = _ctx_feature('address')
 
-        formatted = format_place_name('address', feature, props, 'en', formatter=None)
+        formatted = place_name('address', feature, props, 'en')
 
         self.assertNotEqual(formatted, 'Hansenstraat 30')
         self.assertIn('Leiden', formatted)
         self.assertIn('Netherlands', formatted)
 
-    def test_street_place_name_includes_city_and_country_without_addressformatting(self):
+    def test_street_place_name_includes_city_and_country(self):
         props = _ctx_feature('street')['properties']
         feature = _ctx_feature('street')
 
-        formatted = format_place_name('street', feature, props, 'en', formatter=None)
+        formatted = place_name('street', feature, props, 'en')
 
         self.assertEqual(formatted, 'Hansenstraat, Leiden, Netherlands')
 
-    def test_place_name_uses_mapbox_full_address_when_formatter_unavailable(self):
+    def test_address_place_name_includes_context_beyond_street_label(self):
         props = _ctx_feature('address')['properties']
         feature = _ctx_feature('address')
 
-        place_name = _resolve_place_name(
-            'address', feature, props, 'en', formatter=None, text_value='Hansenstraat 30',
-        )
+        formatted = place_name('address', feature, props, 'en')
 
-        self.assertIn('Leiden', place_name)
-        self.assertIn('Netherlands', place_name)
+        self.assertIn('Leiden', formatted)
+        self.assertIn('Netherlands', formatted)
         self.assertNotEqual(place_name, 'Hansenstraat 30')
 
     def test_postcode_place_name_includes_city_and_country(self):
         props = _ctx_feature('postcode')['properties']
         feature = _ctx_feature('postcode')
 
-        formatted = format_place_name('postcode', feature, props, 'en', formatter=None)
+        formatted = place_name('postcode', feature, props, 'en')
 
         self.assertEqual(formatted, '2316 BJ, Leiden, Netherlands')
-
-    def test_address_place_name_uses_fallback_when_formatter_returns_bare_street(self):
-        props = _ctx_feature('address')['properties']
-        feature = _ctx_feature('address')
-        formatter = mock.Mock()
-        formatter.one_line.return_value = 'Hansenstraat 30'
-
-        formatted = format_place_name('address', feature, props, 'en', formatter=formatter)
-
-        self.assertIn('Leiden', formatted)
-        self.assertIn('Netherlands', formatted)
-        self.assertNotEqual(formatted, 'Hansenstraat 30')

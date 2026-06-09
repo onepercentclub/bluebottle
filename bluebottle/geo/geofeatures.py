@@ -1,152 +1,12 @@
-"""
-GeoFeature collection and upsert logic (Mapbox v6 context hierarchy → GeoFeature rows).
-"""
-from __future__ import annotations
-
-import requests
 from django.conf import settings
 from django.db import IntegrityError
 
-from bluebottle.geo.geolocation import sync_geolocation_country
-from bluebottle.geo.mapbox import V6_FORWARD_URL
-from bluebottle.geo.models import GeoFeature, Geolocation
+from bluebottle.geo.legacy_mapbox import is_legacy_id, upgrade_mapbox_id
+from bluebottle.geo.mapbox import forward_geocode, mapbox_id_from_feature
+from bluebottle.geo.models import Country, GeoFeature, Geolocation
 from bluebottle.utils.models import Language
 
-try:
-    from addressformatting import AddressFormatter
-except ImportError:  # pragma: no cover
-    AddressFormatter = None
-
-
-def _get_ctx_name(ctx, language):
-    """Return a localized name from a Mapbox v6 context object."""
-    translated = (ctx.get('translations') or {}).get(language) or {}
-    return translated.get('name') or ctx.get('name')
-
-
-def _normalize_country_code(code):
-    if not code:
-        return None
-    code = str(code).strip()
-    if '-' in code:
-        code = code.split('-', 1)[0]
-    if len(code) == 2:
-        return code.upper()
-    return code
-
-
-def _build_address_dict(place_type, feature, props, language):
-    """Map a Mapbox feature + context hierarchy to addressformatting field names."""
-    context = props.get('context') or feature.get('context') or {}
-    country_ctx = context.get('country') or {}
-    country_name = _get_ctx_name(country_ctx, language) if country_ctx else None
-    street_name = _get_ctx_name(context.get('street') or {}, language) if context.get('street') else None
-    neighbourhood_name = (
-        _get_ctx_name(context.get('neighborhood') or {}, language) if context.get('neighborhood') else None
-    )
-    district_name = _get_ctx_name(context.get('district') or {}, language) if context.get('district') else None
-    region_name = _get_ctx_name(context.get('region') or {}, language) if context.get('region') else None
-    city_name = _get_ctx_name(context.get('place') or {}, language) if context.get('place') else None
-    postcode_name = _get_ctx_name(context.get('postcode') or {}, language) if context.get('postcode') else None
-
-    translated = (feature.get('translations') or {}).get(language) or {}
-    name = translated.get('name') or feature.get('text') or props.get('name')
-
-    if place_type in ('address', 'secondary_address'):
-        house_number = props.get('address_number') or feature.get('address') or props.get('address')
-        if street_name and house_number and str(house_number) not in str(street_name):
-            road = street_name
-        else:
-            road = name
-            house_number = None
-        return {
-            'house_number': house_number,
-            'road': road,
-            'city': city_name,
-            'postcode': postcode_name,
-            'state': region_name,
-            'country': country_name,
-        }
-    if place_type in ('neighborhood',):
-        return {
-            'road': neighbourhood_name,
-            'city': city_name,
-            'state': region_name,
-            'country': country_name,
-        }
-    if place_type in ('district',):
-        return {
-            'road': district_name,
-            'city': city_name,
-            'state': region_name,
-            'country': country_name,
-        }
-    if place_type in ('locality',):
-        return {
-            'road': name,
-            'city': city_name,
-            'state': region_name,
-            'country': country_name,
-        }
-    if place_type in ('street',):
-        return {
-            'road': name,
-            'city': city_name,
-            'region': region_name,
-            'country': country_name,
-        }
-    if place_type in ('place',):
-        return {
-            'city': name,
-            'state': region_name,
-            'region': region_name,
-            'country': country_name,
-        }
-    if place_type == 'region':
-        return {
-            'state': name,
-            'country': country_name,
-        }
-    if place_type == 'country':
-        return {
-            'country': name,
-        }
-    if place_type == 'postcode':
-        return {
-            'postcode': name,
-            'city': city_name,
-            'state': region_name,
-            'country': country_name,
-        }
-    return {}
-
-
-def _format_address_fallback(address):
-    """Join address parts when addressformatting is unavailable or fails."""
-    road = address.get('road')
-    house_number = address.get('house_number')
-    if road and house_number and str(house_number) not in str(road):
-        road_part = f'{road} {house_number}'.strip()
-    else:
-        road_part = road or house_number
-
-    state_or_region = address.get('state') or address.get('region')
-    include_state = state_or_region and not address.get('city')
-
-    parts = []
-    for value in (
-        road_part,
-        address.get('postcode'),
-        address.get('city'),
-        state_or_region if include_state else None,
-        address.get('country'),
-    ):
-        if value and (not parts or parts[-1] != value):
-            parts.append(str(value))
-    return ', '.join(parts) or None
-
-
-HIERARCHICAL_PLACE_TYPES = frozenset({
+CONTEXT_PLACE_TYPES = (
     'address',
     'secondary_address',
     'street',
@@ -154,330 +14,247 @@ HIERARCHICAL_PLACE_TYPES = frozenset({
     'locality',
     'district',
     'neighborhood',
-})
+    'country',
+)
 
 
-def _formatted_place_name_is_hierarchical(formatted, address):
-    """Return True when a formatted line includes context beyond the primary label."""
-    if not formatted:
-        return False
-    if ',' in formatted:
-        return True
-    road = address.get('road')
-    if road and formatted != road and road not in formatted:
-        return True
-    return len(formatted) > len(road or '')
+def _join_unique(*parts):
+    values = []
+    for part in parts:
+        if part and (not values or values[-1] != part):
+            values.append(str(part))
+    return ', '.join(values) or None
 
 
-def _strip_redundant_state_from_formatted(formatted, address):
-    """Drop province/state when city and country are already shown."""
-    city = address.get('city')
-    state = address.get('state') or address.get('region')
-    country = address.get('country')
-    if not all((formatted, city, state, country)):
-        return formatted
-    redundant = f', {state}, {country}'
-    if redundant in formatted:
-        return formatted.replace(redundant, f', {country}')
-    return formatted
-
-
-def _fix_postcode_formatter_output(formatted, address):
-    """AddressFormatter often omits the comma between postcode and city."""
-    postcode = address.get('postcode')
-    city = address.get('city')
-    if not postcode or not city or not formatted:
-        return formatted
-    if formatted.startswith(f'{postcode},'):
-        return formatted
-    needle = f'{postcode} {city}'
-    if needle in formatted:
-        return formatted.replace(needle, f'{postcode}, {city}', 1)
-    return formatted
-
-
-def format_place_name(place_type, feature, props, language, formatter=None):
-    """Build a one-line locale-aware place name for GeoFeature.place_name."""
+def place_name(place_type, feature, props, language):
     context = props.get('context') or feature.get('context') or {}
-    country_ctx = context.get('country') or {}
-    country_code = _normalize_country_code(
-        country_ctx.get('country_code')
-        or country_ctx.get('short_code')
-        or props.get('short_code')
+
+    def ctx_name(key):
+        entry = context.get(key) or {}
+        translations = entry.get('translations') or {}
+        return (translations.get(language) or {}).get('name') or entry.get('name')
+
+    names = {key: ctx_name(key) for key in context if context.get(key)}
+    translations = feature.get('translations') or {}
+    name = (
+        (translations.get(language) or {}).get('name')
+        or feature.get('text')
+        or props.get('name')
+        or props.get('place_formatted')
+        or props.get('full_address')
     )
 
-    address = {k: v for k, v in _build_address_dict(place_type, feature, props, language).items() if v}
-    if not address:
-        return None
+    if place_type in ('address', 'secondary_address'):
+        house_number = props.get('address_number') or feature.get('address') or props.get('address')
+        street = names.get('street') or name
+        street_line = (
+            f'{street} {house_number}'
+            if house_number and str(house_number) not in str(street)
+            else street
+        )
+        return _join_unique(street_line, names.get('postcode'), names.get('place'), names.get('country'))
 
-    fallback = _format_address_fallback(address)
+    if place_type == 'postcode':
+        return _join_unique(name, names.get('place'), names.get('country'))
 
-    if formatter is None and AddressFormatter is not None:
-        formatter = AddressFormatter()
+    if place_type in ('street', 'locality', 'district', 'neighborhood'):
+        return _join_unique(name, names.get('place'), names.get('country'))
 
-    formatted = None
-    if formatter is not None:
-        try:
-            candidate = formatter.one_line(address, country=country_code)
-            if candidate and candidate.strip():
-                formatted = candidate.strip()
-        except Exception:
-            pass
+    if place_type == 'place':
+        return _join_unique(name, names.get('region'), names.get('country'))
 
-    if place_type == 'postcode' and formatted:
-        formatted = _fix_postcode_formatter_output(formatted, address)
+    if place_type == 'region':
+        return _join_unique(name, names.get('country'))
 
-    if place_type in HIERARCHICAL_PLACE_TYPES:
-        if fallback and not _formatted_place_name_is_hierarchical(formatted, address):
-            return _strip_redundant_state_from_formatted(fallback, address)
-        result = formatted or fallback
-        return _strip_redundant_state_from_formatted(result, address)
-
-    result = formatted or fallback
-    return _strip_redundant_state_from_formatted(result, address)
+    return name or props.get('full_address') or props.get('place_formatted') or feature.get('place_name')
 
 
-def _resolve_place_name(place_type, feature, props, language, formatter, text_value):
-    """Pick GeoFeature.place_name: formatted line, then Mapbox full address, then name."""
-    formatted = format_place_name(place_type, feature, props, language, formatter=formatter)
-    if formatted:
-        return formatted
-
-    for key in ('full_address', 'place_formatted'):
-        value = props.get(key)
-        if value:
-            return value
-
-    return feature.get('place_name') or text_value
-
-
-def _clear_geo_feature_translation_cache(geo_feature):
-    """Clear parler's in-memory translation cache after GeoFeature rows are updated in bulk."""
-    if geo_feature._translations_cache is not None:
-        geo_feature._translations_cache.clear()
+_place_name = place_name
 
 
 def resolve_geo_feature(*, mapbox_id, defaults=None):
-    """Return one GeoFeature for mapbox_id, merging duplicate rows if present.
-
-    Used by collect_geo_features when upserting context hierarchy rows.
-    """
-    defaults = defaults or {}
     matches = list(GeoFeature.objects.filter(mapbox_id=mapbox_id).order_by('pk'))
     if not matches:
-        return GeoFeature.objects.create(mapbox_id=mapbox_id, **defaults), True
+        return GeoFeature.objects.create(mapbox_id=mapbox_id, **(defaults or {})), True
 
     canonical = matches[0]
-    translation_model = canonical._parler_meta.root.model
+    translations = canonical._parler_meta.root.model
+
     for duplicate in matches[1:]:
         for geolocation in Geolocation.objects.filter(features=duplicate):
             geolocation.features.remove(duplicate)
             geolocation.features.add(canonical)
 
-        for trans in translation_model.objects.filter(master_id=duplicate.pk):
-            translation_model.objects.get_or_create(
+        for translation in translations.objects.filter(master_id=duplicate.pk):
+            translations.objects.get_or_create(
                 master_id=canonical.pk,
-                language_code=trans.language_code,
+                language_code=translation.language_code,
                 defaults={
-                    'name': trans.name,
-                    'place_name': trans.place_name,
+                    'name': translation.name,
+                    'place_name': translation.place_name,
                 },
             )
-
         duplicate.delete()
 
-    if len(matches) > 1:
-        canonical = GeoFeature.objects.get(pk=canonical.pk)
-
-    return canonical, False
+    return canonical, not matches
 
 
-def _upsert_geo_feature_translations(geo_feature, language_values):
-    """Create or update parler translation rows (name, place_name) for one GeoFeature."""
+def _feature_name(feature, props, language):
+    translations = feature.get('translations') or {}
+    return (
+        (translations.get(language) or {}).get('name')
+        or feature.get('text')
+        or props.get('name')
+        or props.get('place_formatted')
+        or props.get('full_address')
+    )
+
+
+def _feature_code(props, place_type):
+    if place_type == 'country':
+        return props.get('country_code')
+    return props.get('short_code')
+
+
+def upsert_geofeature(feature, *, place_type, languages):
+    props = feature.get('properties') or {}
+    mapbox_id = feature.get('id') or props.get('mapbox_id')
+    if not mapbox_id:
+        return None
+
+    code = _feature_code(props, place_type)
+    geo_feature, _created = resolve_geo_feature(
+        mapbox_id=mapbox_id,
+        defaults={'code': code, 'place_type': place_type},
+    )
+
+    updates = {}
+    if geo_feature.place_type != place_type:
+        updates['place_type'] = place_type
+    if code and geo_feature.code != code:
+        updates['code'] = code
+    if updates:
+        GeoFeature.objects.filter(pk=geo_feature.pk).update(**updates)
+        for field, value in updates.items():
+            setattr(geo_feature, field, value)
+
     translation_model = geo_feature._parler_meta.root.model
-    for language_code, name, place_name in language_values:
+    for language in languages:
         defaults = {
-            'name': name,
-            'place_name': place_name or name,
+            'name': _feature_name(feature, props, language),
+            'place_name': place_name(place_type, feature, props, language),
         }
+        defaults['place_name'] = defaults['place_name'] or defaults['name']
         try:
             translation_model.objects.update_or_create(
                 master_id=geo_feature.pk,
-                language_code=language_code,
+                language_code=language,
                 defaults=defaults,
             )
         except IntegrityError:
             translation_model.objects.filter(
                 master_id=geo_feature.pk,
-                language_code=language_code,
+                language_code=language,
             ).update(**defaults)
-    _clear_geo_feature_translation_cache(geo_feature)
+
+    cache = getattr(geo_feature, '_translations_cache', None)
+    if cache is not None:
+        cache.clear()
+
+    return geo_feature
 
 
-def _update_geo_feature_fields(geo_feature, **fields):
-    """Bulk-update scalar GeoFeature columns without a full model save."""
-    if not fields:
-        return
-    GeoFeature.objects.filter(pk=geo_feature.pk).update(**fields)
-    for field, value in fields.items():
-        setattr(geo_feature, field, value)
-    _clear_geo_feature_translation_cache(geo_feature)
+def _context_feature(place_type, ctx, context):
+    properties = {'feature_type': place_type, 'context': context}
+    if place_type == 'country':
+        properties['country_code'] = ctx.get('country_code')
+    elif ctx.get('short_code'):
+        properties['short_code'] = ctx.get('short_code')
 
-
-def _feature_props_from_context(ctx, context, selected_props=None):
-    """Build Mapbox-like properties for a context slice, inheriting root feature fields."""
-    selected_props = selected_props or {}
-    props = {
-        'short_code': ctx.get('short_code') or ctx.get('country_code'),
+    return {
+        'id': ctx.get('mapbox_id'),
+        'place_type': [place_type],
+        'text': ctx.get('name'),
+        'translations': ctx.get('translations') or {},
         'context': context,
+        'properties': properties,
     }
-    for key in ('full_address', 'place_formatted', 'address_number', 'address'):
-        value = selected_props.get(key)
-        if value:
-            props[key] = value
-    return props
 
 
-def collect_geo_features(geolocation):
-    """Fetch Mapbox v6 context for a geolocation, upsert GeoFeature rows, and link them.
+def _sync_country(geolocation):
+    country_feature = geolocation.features.filter(place_type='country').first()
+    if not country_feature or not country_feature.code:
+        return None
 
-    Called from sync_geolocation_after_save when mapbox_id is set or changed.
-    Returns the number of GeoFeatures linked to the geolocation.
+    code = str(country_feature.code).strip().upper()[:2]
+    country = Country.objects.filter(alpha2_code__iexact=code).first()
+    if not country:
+        return None
+
+    if geolocation.country_id != country.pk:
+        geolocation.country = country
+        Geolocation.objects.filter(pk=geolocation.pk).update(country_id=country.pk)
+
+    return country
+
+
+def sync_geolocation(geolocation):
     """
-    if not geolocation.mapbox_id:
+    Upgrade legacy mapbox ids, fetch v6 context, upsert GeoFeatures, set country.
+
+    Called from Geolocation.save() and migration scripts.
+    """
+    if not geolocation.mapbox_id or not settings.MAPBOX_API_KEY:
         return 0
 
-    current_place_type = geolocation.mapbox_id.split('.')[0]
+    if is_legacy_id(geolocation.mapbox_id):
+        upgrade_mapbox_id(geolocation)
+
     languages = list(dict.fromkeys(Language.objects.values_list('code', flat=True)))
-    formatter = AddressFormatter() if AddressFormatter else None
-
-    def upsert_feature(feature, force_place_type=None, force_update=False):
-        """Create or update one GeoFeature from a Mapbox feature dict; return (geo_feature, created)."""
-        props = feature.get('properties') or {}
-        mapbox_id = feature.get('id') or props.get('mapbox_id')
-        if not mapbox_id:
-            return None, False
-        place_type = (
-            force_place_type
-            or (feature.get('place_type') or [None])[0]
-            or props.get('feature_type')
-            or current_place_type
-        )
-
-        geo_feature, created = resolve_geo_feature(
-            mapbox_id=mapbox_id,
-            defaults={
-                'code': props.get('short_code'),
-                'place_type': place_type,
-            },
-        )
-        _clear_geo_feature_translation_cache(geo_feature)
-
-        field_updates = {}
-        if geo_feature.place_type != place_type:
-            field_updates['place_type'] = place_type
-        short_code = props.get('short_code')
-        if short_code and geo_feature.code != short_code:
-            field_updates['code'] = short_code
-        _update_geo_feature_fields(geo_feature, **field_updates)
-
-        if created or force_update:
-            translations = feature.get('translations') or {}
-            language_values = []
-            for language in languages:
-                translated = translations.get(language) or {}
-                text_value = (
-                    translated.get('name')
-                    or feature.get('text')
-                    or props.get('name')
-                    or props.get('place_formatted')
-                    or props.get('full_address')
-                )
-                place_name_value = _resolve_place_name(
-                    place_type, feature, props, language, formatter, text_value,
-                )
-                language_values.append((
-                    language,
-                    text_value,
-                    place_name_value or text_value,
-                ))
-            _upsert_geo_feature_translations(geo_feature, language_values)
-
-        return geo_feature, created
-
-    response = requests.get(
-        V6_FORWARD_URL,
-        params={
-            'q': geolocation.mapbox_id,
-            'access_token': settings.MAPBOX_API_KEY,
-            'permanent': 'true',
-            'language': ','.join(languages),
-            'limit': 1,
-        },
-        timeout=30,
+    selected = forward_geocode(
+        q=geolocation.mapbox_id,
+        languages=','.join(languages),
+        permanent=True,
     )
-    response.raise_for_status()
-    features = (response.json() or {}).get('features') or []
-    if not features:
+    if not selected:
         return 0
 
-    selected = features[0]
-    selected_props = selected.get('properties') or {}
-    context = selected_props.get('context') or {}
-    created_or_linked = 0
-    linked_ids = set()
-
-    def link_feature(geo_feature):
-        nonlocal created_or_linked
-        if not geo_feature or geo_feature.pk in linked_ids:
-            return
-        geolocation.features.add(geo_feature)
-        linked_ids.add(geo_feature.pk)
-        created_or_linked += 1
-
+    props = selected.get('properties') or {}
+    context = props.get('context') or {}
+    primary_id = selected.get('id') or props.get('mapbox_id')
     primary_type = (
-        selected_props.get('feature_type')
+        props.get('feature_type')
         or (selected.get('place_type') or [None])[0]
-        or current_place_type
+        or geolocation.mapbox_id.split('.')[0]
     )
-    primary_feature = {
-        **selected,
-        'properties': selected_props,
-        'context': context,
-    }
-    geo_feature, _created = upsert_feature(
-        primary_feature, force_place_type=primary_type, force_update=True,
-    )
-    link_feature(geo_feature)
 
-    primary_id = selected.get('id') or selected_props.get('mapbox_id')
+    selected['context'] = context
+    selected['properties'] = props | {'context': context}
 
-    for place_type in context.keys():
-        ctx = context.get(place_type)
-        if not ctx:
+    geolocation.features.clear()
+    linked = []
+
+    primary = upsert_geofeature(selected, place_type=primary_type, languages=languages)
+    if primary:
+        geolocation.features.add(primary)
+        linked.append(primary)
+
+    for place_type, ctx in context.items():
+        if not ctx or place_type not in CONTEXT_PLACE_TYPES:
             continue
-
-        ctx_id = ctx.get('mapbox_id')
-        if ctx_id and ctx_id == primary_id:
+        if ctx.get('mapbox_id') == primary_id:
             continue
-
-        ctx_feature = {
-            'id': ctx_id,
-            'place_type': [place_type],
-            'text': ctx.get('name'),
-            'place_name': ctx.get('name'),
-            'translations': ctx.get('translations') or {},
-            'context': context,
-            'properties': {
-                **_feature_props_from_context(ctx, context, selected_props),
-                'feature_type': place_type,
-            },
-        }
-        geo_feature, _created = upsert_feature(
-            ctx_feature, force_place_type=place_type, force_update=True,
+        geo_feature = upsert_geofeature(
+            _context_feature(place_type, ctx, context),
+            place_type=place_type,
+            languages=languages,
         )
-        link_feature(geo_feature)
+        if geo_feature:
+            geolocation.features.add(geo_feature)
+            linked.append(geo_feature)
 
-    sync_geolocation_country(geolocation, context=context, mapbox_feature=selected)
+    _sync_country(geolocation)
+    return len(linked)
 
-    return created_or_linked
+
+collect_geo_features = sync_geolocation

@@ -9,7 +9,8 @@ from django.conf import settings
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.geo.geolocation import (
+from bluebottle.geo.geofeatures import sync_geolocation
+from bluebottle.geo.maintenance import (
     backfill_street_number_for_legacy_address_mapbox_ids,
     clear_null_island_positions,
     delete_unreferenced_geolocations,
@@ -74,7 +75,7 @@ def run(*args):
             qs = Geolocation.objects.exclude(mapbox_id__startswith='dXJ').order_by('pk')
             total = qs.count()
             print(
-                f'{tenant.schema_name}: save {total} geolocations (normalize + collect_geo_features)… '
+                f'{tenant.schema_name}: sync {total} geolocations… '
                 f'(mismatch_km={mapbox_mismatch_km})'
             )
 
@@ -103,10 +104,9 @@ def run(*args):
                     )
                     continue
 
-                location.features.clear()
-                location.save()
+                sync_geolocation(location)
                 if n % 100 == 0 or n == total:
-                    print(f'{tenant.schema_name}: save {n}/{total}')
+                    print(f'{tenant.schema_name}: sync {n}/{total}')
 
             n_merged = merge_duplicate_geolocations()
             print(f'{tenant.schema_name}: merged another {n_merged} duplicate source rows')

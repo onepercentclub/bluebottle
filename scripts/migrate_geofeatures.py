@@ -2,8 +2,8 @@ from django.conf import settings
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.geo.geofeatures import sync_geolocation
 from bluebottle.geo.models import Geolocation
-from bluebottle.geo.utils import collect_geo_features
 
 
 def run(*args):
@@ -22,7 +22,7 @@ def run(*args):
             count = 0
             for location in locations.iterator():
                 count += 1
-                migrated = collect_geo_features(location)
+                migrated = sync_geolocation(location)
                 if count % 100 == 0:
                     print(f'{tenant.schema_name}: {count}/{total}')
                 if migrated:

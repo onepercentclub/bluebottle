@@ -4,7 +4,7 @@ from unittest import mock
 
 import requests
 
-from bluebottle.geo.mapbox import V6_FORWARD_URL
+from bluebottle.geo.mapbox import V6_FORWARD_URL, V6_REVERSE_URL
 
 _mapbox_get_patcher = None
 _original_requests_get = requests.get
@@ -123,7 +123,12 @@ def mock_mapbox_requests_get(url, params=None, **kwargs):
         return _original_requests_get(url, params=params, **kwargs)
 
     url = str(url)
-    if V6_FORWARD_URL in url or '/search/geocode/v6/forward' in url:
+    if (
+        V6_FORWARD_URL in url
+        or V6_REVERSE_URL in url
+        or '/search/geocode/v6/forward' in url
+        or '/search/geocode/v6/reverse' in url
+    ):
         return _mock_response({'features': [MAPBOX_V6_FEATURE]})
 
     if '/geocoding/v5/mapbox.places/' in url:

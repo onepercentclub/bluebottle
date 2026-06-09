@@ -339,13 +339,7 @@ class Geolocation(models.Model):
     def __str__(self):
         feature = self.feature
         if feature:
-            return (
-                feature.place_name
-                or feature.name
-                or self.formatted_address
-                or self.locality
-                or '-unknown-'
-            )
+            return feature.place_name or feature.name
         return self.formatted_address or self.locality or '-unknown-'
 
     @property
@@ -365,13 +359,6 @@ class Geolocation(models.Model):
     class JSONAPIMeta(object):
         resource_name = 'geolocations'
 
-    # def __str__(self):
-    #     if self.features.count():
-    #         feature = self.features.all().order_by_type().first()
-    #         if feature and feature.place_name:
-    #             return feature.place_name
-    #     return self.formatted_address or '-unknown-'
-
     @property
     def timezone(self):
         if self.position:
@@ -390,10 +377,30 @@ class Geolocation(models.Model):
         return geocode_by_id(mapbox_id or self.mapbox_id)
 
     def save(self, *args, **kwargs):
-        from bluebottle.geo.geolocation import prepare_geolocation_for_save, sync_geolocation_after_save
+        from django.conf import settings
 
-        creating = not bool(self.pk)
-        old_mapbox_id = prepare_geolocation_for_save(self)
+        from bluebottle.geo.geofeatures import sync_geolocation
+
+        creating = not self.pk
+        old_mapbox_id = None
+        if self.pk:
+            old_mapbox_id = (
+                Geolocation.objects.filter(pk=self.pk)
+                .values_list('mapbox_id', flat=True)
+                .first()
+            )
+
         result = super().save(*args, **kwargs)
-        sync_geolocation_after_save(self, creating=creating, old_mapbox_id=old_mapbox_id)
+
+        if (
+            settings.MAPBOX_API_KEY
+            and self.mapbox_id
+            and (
+                creating
+                or old_mapbox_id != self.mapbox_id
+                or not self.features.exists()
+            )
+        ):
+            sync_geolocation(self)
+
         return result

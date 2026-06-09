@@ -1,7 +1,5 @@
 import json
 from builtins import range
-from unittest import mock
-
 from django.contrib.gis.geos import Point
 from django.urls import reverse
 from django.utils.timezone import now
@@ -10,7 +8,7 @@ from rest_framework import status
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import InitiativeCountrySerializer, PlaceSerializer
-from bluebottle.geo.tests.test_admin import mapbox_response
+from bluebottle.test.mapbox_mocks import MAPBOX_V6_FEATURE
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -211,11 +209,7 @@ class GeolocationCreateTestCase(GeoTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
-    @mock.patch(
-        'bluebottle.geo.models.Geolocation.reverse_geocode',
-        return_value=mapbox_response
-    )
-    def test_api_geolocation_create(self, mock_reverse_geocode):
+    def test_api_geolocation_create(self):
         """
         Ensure post request returns 201.
         """
@@ -224,6 +218,7 @@ class GeolocationCreateTestCase(GeoTestCase):
                 "type": "geolocations",
                 "attributes": {
                     "position": {"latitude": 43.0579025, "longitude": 23.6851594},
+                    "mapbox_id": MAPBOX_V6_FEATURE['id'],
                 },
                 "relationships": {
                     "country": {

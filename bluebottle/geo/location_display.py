@@ -1,18 +1,3 @@
-"""
-Build user-facing location strings from InitiativePlatformSettings.location_features.
-
-Each ``location_features`` value maps to a data source on the indexed geolocation:
-
-- ``location_name`` — ``Geolocation.locality`` (the user-entered location name).
-- ``address`` — address-level ``GeoFeature`` (``place_type`` address/street), else
-  ``Geolocation.formatted_address``.
-- ``neighborhood`` — neighborhood ``GeoFeature`` (``neighborhou`` or ``neighborhood``).
-- ``place`` — city-level ``GeoFeature`` (``place_type`` ``place``).
-- ``region`` — region ``GeoFeature`` (``place_type`` ``region``).
-- ``country`` — country ``GeoFeature`` code or name.
-
-Used by activity preview/list serializers and Elasticsearch-backed location fields.
-"""
 from __future__ import annotations
 
 from bluebottle.initiatives.models import InitiativePlatformSettings

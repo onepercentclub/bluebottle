@@ -37,21 +37,20 @@ from bluebottle.time_based.states.teams import TeamStateMachine, TeamMemberState
 @register(Team)
 class TeamTriggers(TriggerManager):
     def should_auto_accept(effect):
-        """Check if the team should be auto accepted (runs after registration is created)."""
+        """ Check if the team should be auto accepted """
         user = effect.options.get('user')
         is_admin = (
             user and
             (not hasattr(effect.instance, 'user') or effect.instance.user != user) and
             (user.is_staff or user.is_superuser)
         )
-        registration = (
-            effect.instance.registration
-            if effect.instance.registration_id
-            else None
-        )
         return (
             not effect.instance.activity.review or
-            (registration and registration.status == 'accepted') or
+            (
+                hasattr(effect.instance, 'registration') and
+                effect.instance.registration and
+                effect.instance.registration.status == 'accepted'
+            ) or
             is_admin
         )
 
@@ -63,9 +62,7 @@ class TeamTriggers(TriggerManager):
                 CreateCaptainTeamMemberEffect,
                 CreateTeamRegistrationEffect,
                 TransitionEffect(
-                    TeamStateMachine.accept,
-                    conditions=[should_auto_accept],
-                    post_save=True,
+                    TeamStateMachine.accept, conditions=[should_auto_accept]
                 ),
             ],
         ),

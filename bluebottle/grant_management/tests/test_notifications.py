@@ -173,5 +173,19 @@ class GrantPayoutNotificationTestCase(NotificationTestCase):
         self.assertSubject('You have grant payout to approve on Test')
         self.assertBodyContains('Save the whales!')
         self.assertBodyContains('Test Fund')
+        self.assertBodyContains(self.grant_application.owner.full_name)
+        self.assertBodyContains('5000')
         self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('Complete payout')
+
+    def test_payout_ready_for_approval_notification_non_staff_reviewer(self):
+        reviewer = BlueBottleUserFactory.create(
+            submitted_initiative_notifications=True
+        )
+        self.message_class = PayoutReadyForApprovalMessage
+        self.create()
+        self.assertIn(reviewer, self.message.get_recipients())
+        html = self.message.get_content_html(reviewer)
+        self.assertIn('Save the whales!', html)
+        self.assertIn(self.obj.get_admin_url(), html)
+        self.assertNotIn(self.grant_application.get_absolute_url(), html)

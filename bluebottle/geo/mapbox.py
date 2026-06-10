@@ -19,7 +19,8 @@ GEOFEATURE_TYPE_RANK = {
     for rank, feature_type in enumerate(reversed(CONTEXT_TYPES))
 }
 
-HOUSE_NUMBER_PATTERN = re.compile(r'^(\d+[a-zA-Z\-/]*)')
+HOUSE_NUMBER_LEADING_PATTERN = re.compile(r'^(\d+[a-zA-Z\-/]*)')
+HOUSE_NUMBER_BEFORE_COMMA_PATTERN = re.compile(r'\b(\d+[a-zA-Z\-/]*)\s*,')
 
 
 def is_v6_mapbox_id(value):
@@ -30,21 +31,31 @@ def needs_mapbox_id(value):
     return not value or value in ('', 'unknown') or not is_v6_mapbox_id(value)
 
 
+def _housenumber_from_text(value):
+    text = (value or '').strip()
+    if not text:
+        return None
+
+    match = HOUSE_NUMBER_LEADING_PATTERN.search(text)
+    if match:
+        return match.group(1)
+
+    match = HOUSE_NUMBER_BEFORE_COMMA_PATTERN.search(text)
+    if match:
+        return match.group(1)
+
+    return None
+
+
 def extract_housenumber(geolocation):
     if geolocation.street_number:
         return geolocation.street_number
 
-    if geolocation.formatted_address:
-        match = HOUSE_NUMBER_PATTERN.search(geolocation.formatted_address.strip())
-        if match:
-            return match.group(1)
+    housenumber = _housenumber_from_text(geolocation.formatted_address)
+    if housenumber:
+        return housenumber
 
-    if geolocation.street:
-        match = HOUSE_NUMBER_PATTERN.search(geolocation.street.strip())
-        if match:
-            return match.group(1)
-
-    return None
+    return _housenumber_from_text(geolocation.street)
 
 
 def _request(path, params):

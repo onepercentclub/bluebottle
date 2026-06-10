@@ -1,44 +1,49 @@
-version: "3.7"
 services:
   bluebottle:
     build: .
-    working_dir: /source 
+    working_dir: /source
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
-    container_name: bluebottle 
+    container_name: bluebottle
     depends_on:
       elasticsearch:
         condition: service_started
       postgres:
         condition: service_healthy
     ports:
-      - 8000:8000
+      - "8000:8000"
     restart: always
     volumes:
-      - ./:/source 
+      - ./:/source
       - ./docker/bluebottle:/opt/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   elasticsearch:
     container_name: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
     ports:
-      - 9200:9200
+      - "9200:9200"
     restart: always
     mem_limit: 2048m
     volumes:
       - ./docker/elasticsearch:/var/lib/elasticsearch/data
     environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms1024m -Xmx1024m
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms1024m -Xmx1024m"
+
   postgres:
     container_name: postgres
+    image: postgis/postgis:latest
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=reef
-    image: postgis/postgis:latest # postgres + postgis
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: reef
     ports:
-      - 5432:5432
+      - "5432:5432"
     restart: always
     volumes:
       - ./docker/postgres:/var/lib/postgresql/data

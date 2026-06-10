@@ -13,7 +13,6 @@ from bluebottle.time_based.effects.teams import (
     CreateTeamMemberSlotParticipantsEffect,
     DeleteTeamMemberSlotParticipantsEffect,
 )
-from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.messages.teams import (
     CaptainTeamMemberJoinedNotification,
     ManagerTeamRemovedNotification,
@@ -27,6 +26,7 @@ from bluebottle.time_based.messages.teams import (
     CaptainTeamMemberRemovedNotification,
     UserTeamMemberRemovedNotification,
 )
+from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.states.participants import (
     TeamScheduleParticipantStateMachine,
 )
@@ -48,6 +48,7 @@ class TeamTriggers(TriggerManager):
             not effect.instance.activity.review or
             (
                 hasattr(effect.instance, 'registration') and
+                effect.instance.registration and
                 effect.instance.registration.status == 'accepted'
             ) or
             is_admin

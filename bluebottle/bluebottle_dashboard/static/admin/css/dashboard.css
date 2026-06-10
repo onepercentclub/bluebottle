@@ -650,20 +650,20 @@ a.button, a.button:hover {
     display: none;
 }
 
-.js-inline-admin-formset {
+.cp-content .js-inline-admin-formset {
     margin: 0 64px;
 }
 
-.js-inline-admin-formset .inline-related {
+.cp-content .js-inline-admin-formset .inline-related {
     margin: 16px 0;
     width: auto;
 }
 
-.form-row.categories select {
+.cp-content .form-row.categories select {
     height: 300px;
 }
 
-.js-inline-admin-formset .inline-related h3 .inline-deletelink:before {
+.cp-content .js-inline-admin-formset .inline-related h3 .inline-deletelink:before {
     font-family: 'dashboard' !important;
     font-size: 10px;
     margin-right: 8px;

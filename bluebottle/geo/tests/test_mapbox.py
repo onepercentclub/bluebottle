@@ -47,6 +47,39 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         geolocation = Geolocation(formatted_address='Hansenstraat 30, Leiden')
         self.assertEqual(mapbox_utils.extract_housenumber(geolocation), '30')
 
+    def test_geofeature_place_name_hierarchy(self):
+        context = MAPBOX_V6_ADDRESS_FEATURE['properties']['context']
+
+        self.assertEqual(
+            mapbox_utils.geofeature_place_name(
+                'address',
+                'Brouwersdam Buitenzijde 20',
+                context,
+                full_address=MAPBOX_V6_ADDRESS_FEATURE['properties']['full_address'],
+            ),
+            'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands',
+        )
+        self.assertEqual(
+            mapbox_utils.geofeature_place_name('street', 'Brouwersdam Buitenzijde', context),
+            'Brouwersdam Buitenzijde, Ouddorp, Netherlands',
+        )
+        self.assertEqual(
+            mapbox_utils.geofeature_place_name('postcode', '3253 MM', context),
+            '3253 MM, Ouddorp, Netherlands',
+        )
+        self.assertEqual(
+            mapbox_utils.geofeature_place_name('place', 'Ouddorp', context),
+            'Ouddorp, Netherlands',
+        )
+        self.assertEqual(
+            mapbox_utils.geofeature_place_name('region', 'South Holland', context),
+            'South Holland, Netherlands',
+        )
+        self.assertEqual(
+            mapbox_utils.geofeature_place_name('country', 'Netherlands', context),
+            'Netherlands',
+        )
+
     def test_parse_feature(self):
         parsed = mapbox_utils.parse_feature(MAPBOX_V6_ADDRESS_FEATURE)
         self.assertEqual(
@@ -100,6 +133,35 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertEqual(
             address_feature.safe_translation_getter('name', any_language=True),
             MAPBOX_V6_ADDRESS_FEATURE['properties']['name'],
+        )
+        self.assertEqual(
+            GeoFeature.objects.get(
+                mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['context']['postcode']['mapbox_id'],
+            ).place_name,
+            '3253 MM, Ouddorp, Netherlands',
+        )
+        self.assertEqual(
+            GeoFeature.objects.get(
+                mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['context']['place']['mapbox_id'],
+            ).place_name,
+            'Ouddorp, Netherlands',
+        )
+        self.assertEqual(
+            GeoFeature.objects.get(
+                mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['context']['region']['mapbox_id'],
+            ).place_name,
+            'South Holland, Netherlands',
+        )
+        self.assertEqual(
+            GeoFeature.objects.get(
+                mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['context']['country']['mapbox_id'],
+            ).place_name,
+            'Netherlands',
+        )
+        self.assertEqual(geolocation.geofeature.feature_type, 'address')
+        self.assertEqual(
+            str(geolocation),
+            MAPBOX_V6_ADDRESS_FEATURE['properties']['full_address'],
         )
 
     def test_sync_geofeatures_creates_translations_for_new_features(self):

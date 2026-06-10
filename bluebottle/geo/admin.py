@@ -1,8 +1,9 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.gis.db.models import PointField
+from django.db.models import Case, IntegerField, When
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from mapwidgets.settings import mw_settings
@@ -11,10 +12,64 @@ from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.models import Activity
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
+from bluebottle.geo.mapbox import GEOFEATURE_TYPE_RANK
 from bluebottle.geo.models import (
     Location, Country, Place,
     Geolocation, GeoFeature)
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
+
+EXCLUDED_GEOLOCATION_RELATIONS = frozenset({'geofeatures'})
+
+
+def format_geolocation_related_objects(obj):
+    if not obj or not obj.pk:
+        return '-'
+
+    related = []
+    for relation in obj._meta.related_objects:
+        accessor_name = relation.get_accessor_name()
+        if accessor_name in EXCLUDED_GEOLOCATION_RELATIONS:
+            continue
+
+        related_model = relation.related_model
+        if related_model not in admin.site._registry:
+            continue
+
+        count = getattr(obj, accessor_name).count()
+        if count == 0:
+            continue
+
+        meta = related_model._meta
+        related.append({
+            'count': count,
+            'label': str(meta.verbose_name_plural),
+            'url': reverse(
+                'admin:{}_{}_changelist'.format(meta.app_label, meta.model_name)
+            ),
+            'filter_param': '{}__id__exact'.format(relation.field.name),
+        })
+
+    if not related:
+        return '-'
+
+    related.sort(key=lambda item: item['label'].lower())
+    return format_html(
+        '<ul style="margin: 0; padding-left: 1.2em;">{}</ul>',
+        format_html_join(
+            '',
+            '<li><a href="{}?{}={}">{} {}</a></li>',
+            [
+                (
+                    item['url'],
+                    item['filter_param'],
+                    obj.pk,
+                    item['count'],
+                    item['label'],
+                )
+                for item in related
+            ],
+        ),
+    )
 
 
 class CustomMapboxPointFieldWidget(MapboxPointFieldWidget):
@@ -212,9 +267,17 @@ class GeolocationGeoFeatureInline(admin.TabularInline):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
+        type_order = Case(
+            *[
+                When(geofeature__feature_type=feature_type, then=rank)
+                for feature_type, rank in GEOFEATURE_TYPE_RANK.items()
+            ],
+            default=len(GEOFEATURE_TYPE_RANK),
+            output_field=IntegerField(),
+        )
         return queryset.select_related('geofeature').prefetch_related(
             'geofeature__translations'
-        ).order_by('geofeature__feature_type', 'geofeature__id')
+        ).order_by(type_order, 'geofeature__id')
 
     @admin.display(description=_('Type'), ordering='geofeature__feature_type')
     def feature_type(self, obj):
@@ -234,7 +297,7 @@ class GeolocationAdmin(admin.ModelAdmin):
     formfield_overrides = {
         PointField: {"widget": GeolocationMapboxPointFieldWidget},
     }
-    list_display = ('geolocation_label', 'street', 'locality', 'country', 'mapbox_id')
+    list_display = ('geolocation_label', 'street', 'locality', 'country')
 
     @admin.display(description=_('Geolocation'))
     def geolocation_label(self, obj):
@@ -253,3 +316,20 @@ class GeolocationAdmin(admin.ModelAdmin):
             )
         }),
     )
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = self.fieldsets
+        if obj and obj.pk:
+            fieldsets = fieldsets + (
+                (_('Related objects'), {'fields': ('related_objects_display',)}),
+            )
+        return fieldsets
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.pk:
+            return ('related_objects_display',)
+        return ()
+
+    @admin.display(description=_('Related objects'))
+    def related_objects_display(self, obj):
+        return format_geolocation_related_objects(obj)

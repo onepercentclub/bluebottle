@@ -278,6 +278,12 @@ class Geolocation(models.Model):
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
+    location_name = models.CharField(
+        _('Location name'),
+        help_text=_('The name of the location, e.g. the name of the community center.'),
+        max_length=255, blank=True, null=True
+    )
+
     position = PointField(null=True)
 
     geofeatures = models.ManyToManyField(
@@ -297,7 +303,33 @@ class Geolocation(models.Model):
     class JSONAPIMeta(object):
         resource_name = 'geolocations'
 
+    @property
+    def geofeature(self):
+        from bluebottle.geo.mapbox import GEOFEATURE_TYPE_RANK
+
+        if not self.pk:
+            return None
+
+        geofeatures = list(self.geofeatures.all())
+        if not geofeatures:
+            return None
+
+        unknown_rank = len(GEOFEATURE_TYPE_RANK)
+        return min(
+            geofeatures,
+            key=lambda feature: (
+                GEOFEATURE_TYPE_RANK.get(feature.feature_type, unknown_rank),
+                feature.pk,
+            ),
+        )
+
     def __str__(self):
+        geofeature = self.geofeature
+        if geofeature:
+            place_name = geofeature.safe_translation_getter('place_name', any_language=True)
+            if place_name:
+                return place_name
+
         if self.locality and self.country:
             return u"{}, {}".format(self.locality, self.country.name)
         if self.locality:

@@ -10,9 +10,14 @@ from django.utils.translation import get_language
 MAPBOX_GEOCODE_V6_BASE = 'https://api.mapbox.com/search/geocode/v6'
 
 CONTEXT_TYPES = (
-    'country', 'region', 'postcode', 'district', 'place',
-    'locality', 'neighborhood', 'street', 'address',
+    'country', 'region', 'district', 'place',
+    'locality', 'neighborhood', 'postcode', 'street', 'address',
 )
+
+GEOFEATURE_TYPE_RANK = {
+    feature_type: rank
+    for rank, feature_type in enumerate(reversed(CONTEXT_TYPES))
+}
 
 HOUSE_NUMBER_PATTERN = re.compile(r'^(\d+[a-zA-Z\-/]*)')
 
@@ -230,41 +235,116 @@ def resolve_geolocation_feature(geolocation, language=None):
     return None
 
 
-def feature_place_name(properties, feature_type=None):
-    full_address = properties.get('full_address')
-    if full_address:
-        return full_address
+def _localized_context_name(context, feature_type, language=None):
+    context_data = context.get(feature_type) or {}
+    if not context_data:
+        return ''
 
-    name = properties.get('name_preferred') or properties.get('name', '')
-    place_formatted = properties.get('place_formatted')
-    if name and place_formatted:
-        return '{}, {}'.format(name, place_formatted)
-    return name or place_formatted or ''
-
-
-def context_place_name(feature_type, context_data, parent_full_address=None):
-    if feature_type == 'address':
-        return context_data.get('name') or parent_full_address or ''
+    if language:
+        translations = context_data.get('translations') or {}
+        localized = translations.get(language) or {}
+        localized_name = localized.get('name')
+        if localized_name:
+            return localized_name
 
     return context_data.get('name', '')
 
 
+def _city_name(context, language=None, exclude=()):
+    for feature_type in ('place', 'locality'):
+        if feature_type in exclude:
+            continue
+        name = _localized_context_name(context, feature_type, language)
+        if name:
+            return name
+    return ''
+
+
+def _country_name(context, language=None):
+    return _localized_context_name(context, 'country', language)
+
+
+def geofeature_place_name(feature_type, name, context=None, full_address=None, language=None):
+    context = context if isinstance(context, dict) else {}
+    name = (name or '').strip()
+
+    if feature_type == 'address' and full_address:
+        return full_address.strip()
+
+    if not name:
+        return (full_address or '').strip()
+
+    country = _country_name(context, language)
+
+    if feature_type == 'country':
+        return name
+
+    if feature_type == 'region':
+        return ', '.join(part for part in (name, country) if part)
+
+    if feature_type in ('place', 'locality'):
+        return ', '.join(part for part in (name, country) if part)
+
+    city = _city_name(
+        context,
+        language=language,
+        exclude=(feature_type,) if feature_type in ('place', 'locality') else (),
+    )
+    return ', '.join(part for part in (name, city, country) if part)
+
+
+def feature_place_name(properties, feature_type=None):
+    properties = properties or {}
+    context = properties.get('context', {})
+    if not isinstance(context, dict):
+        context = {}
+
+    return geofeature_place_name(
+        feature_type or properties.get('feature_type', ''),
+        properties.get('name_preferred') or properties.get('name', ''),
+        context,
+        full_address=properties.get('full_address'),
+    )
+
+
+def translation_place_name(feature_type, name, context, translation=None, language=None):
+    translation = translation or {}
+    full_address = None
+    if feature_type == 'address':
+        full_address = translation.get('place_name') or translation.get('full_address')
+
+    translated_name = translation.get('name') or name
+    return geofeature_place_name(
+        feature_type,
+        translated_name,
+        context,
+        full_address=full_address,
+        language=language,
+    )
+
+
 def iter_geofeature_data(feature):
     properties = feature.get('properties', {})
+    context = properties.get('context', {})
+    if not isinstance(context, dict):
+        context = {}
+
     primary_type = properties.get('feature_type', '')
-    primary_place_name = feature_place_name(properties, primary_type)
+    primary_name = properties.get('name_preferred') or properties.get('name', '')
 
     yield {
         'mapbox_id': properties.get('mapbox_id'),
         'feature_type': primary_type,
-        'place_name': primary_place_name,
-        'name': properties.get('name_preferred') or properties.get('name', ''),
+        'place_name': geofeature_place_name(
+            primary_type,
+            primary_name,
+            context,
+            full_address=properties.get('full_address'),
+        ),
+        'name': primary_name,
         'translations': properties.get('translations', {}),
+        'context': context,
     }
-
-    context = properties.get('context', {})
-    if not isinstance(context, dict):
-        return
 
     for feature_type in CONTEXT_TYPES:
         context_data = context.get(feature_type)
@@ -274,12 +354,14 @@ def iter_geofeature_data(feature):
         if context_data.get('mapbox_id') == properties.get('mapbox_id'):
             continue
 
+        context_name = context_data.get('name', '')
         yield {
             'mapbox_id': context_data['mapbox_id'],
             'feature_type': feature_type,
-            'place_name': context_place_name(feature_type, context_data, primary_place_name),
-            'name': context_data.get('name', ''),
+            'place_name': geofeature_place_name(feature_type, context_name, context),
+            'name': context_name,
             'translations': context_data.get('translations', {}),
+            'context': context,
         }
 
 
@@ -365,8 +447,9 @@ def sync_geofeatures(geolocation, feature, language=None):
             geofeature.feature_type = feature_type
             geofeature.save(update_fields=['feature_type'])
 
-        place_name = (data.get('place_name') or '')[:5000]
+        context = data.get('context', {})
         name = (data.get('name') or '')[:5000]
+        place_name = (data.get('place_name') or '')[:5000]
         if place_name or name:
             geofeature.set_current_language(language)
             if place_name:
@@ -380,8 +463,14 @@ def sync_geofeatures(geolocation, feature, language=None):
             if not isinstance(translation, dict):
                 continue
 
-            translated_name = translation.get('name', '')[:5000]
-            translated_place_name = translation.get('place_name', '')[:5000]
+            translated_name = (translation.get('name') or name)[:5000]
+            translated_place_name = translation_place_name(
+                feature_type,
+                name,
+                context,
+                translation=translation,
+                language=lang_code,
+            )[:5000]
             if not translated_name and not translated_place_name:
                 continue
 

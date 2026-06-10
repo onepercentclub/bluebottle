@@ -47,16 +47,9 @@ def extract_housenumber(geolocation):
     return None
 
 
-def _get_access_token():
-    token = settings.MAPBOX_API_KEY
-    if not token:
-        raise ValueError('MAPBOX_API_KEY is not configured')
-    return token
-
-
 def _request(path, params):
     params = dict(params)
-    params['access_token'] = _get_access_token()
+    params['access_token'] = settings.MAPBOX_API_KEY
     params['permanent'] = 'true'
     response = requests.get(
         '{}{}'.format(MAPBOX_GEOCODE_V6_BASE, path),

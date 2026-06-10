@@ -297,28 +297,32 @@ class GeolocationAdmin(admin.ModelAdmin):
     formfield_overrides = {
         PointField: {"widget": GeolocationMapboxPointFieldWidget},
     }
-    list_display = ('geolocation_label', 'street', 'locality', 'country')
+    list_display = ('geolocation_label', 'country')
 
     @admin.display(description=_('Geolocation'))
     def geolocation_label(self, obj):
         return str(obj)
 
     list_filter = ('country', )
-    search_fields = ('locality', 'street', 'formatted_address', 'mapbox_id')
+    search_fields = ('mapbox_id', 'location_name', 'geofeatures__translations__name')
     inlines = (GeolocationGeoFeatureInline,)
 
     fieldsets = (
-        (_('Map'), {'fields': ('position', )}),
-        (_('Info'), {
-            'fields': (
-                'locality', 'street', 'street_number', 'postal_code',
-                'province', 'country', 'formatted_address', 'mapbox_id'
-            )
-        }),
+        (_('Location'), {'fields': ('position', 'location_name', 'mapbox_id')}),
     )
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
+        if request.user.is_superuser:
+            fieldsets = fieldsets + (
+                (_('Old info'), {
+                    'fields': (
+                        'locality', 'street', 'street_number', 'postal_code',
+                        'province', 'country', 'formatted_address',
+                    )
+                }),
+            )
+
         if obj and obj.pk:
             fieldsets = fieldsets + (
                 (_('Related objects'), {'fields': ('related_objects_display',)}),

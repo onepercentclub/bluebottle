@@ -44,6 +44,9 @@ class PayoutReadyForApprovalMessage(ReviewerActivityNotification):
     def activity(self):
         return self.obj.activity
 
+    def get_action_link(self, recipient):
+        return self.action_link
+
     @property
     def action_link(self):
         return self.obj.get_admin_url()

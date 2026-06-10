@@ -92,10 +92,59 @@ def get_next_block_sort_order(placeholder):
     return 1
 
 
-def create_page_block(page, resource_type, validated_data, write_serializer_class):
+def resolve_insert_sort_order(placeholder, insert_after=None, insert_before=None):
+    if insert_after and insert_before:
+        raise ValueError('Specify either insertAfter or insertBefore, not both')
+
+    if not insert_after and not insert_before:
+        return get_next_block_sort_order(placeholder)
+
+    items = list(placeholder.contentitems.all().order_by('sort_order', 'pk'))
+
+    if insert_after:
+        anchor_id = int(insert_after)
+        if not any(item.pk == anchor_id for item in items):
+            raise ValueError('Block not found on this page')
+        insert_index = next(
+            index for index, item in enumerate(items) if item.pk == anchor_id
+        ) + 1
+    else:
+        anchor_id = int(insert_before)
+        if not any(item.pk == anchor_id for item in items):
+            raise ValueError('Block not found on this page')
+        insert_index = next(
+            index for index, item in enumerate(items) if item.pk == anchor_id
+        )
+
+    if insert_index >= len(items):
+        return get_next_block_sort_order(placeholder)
+
+    for index, item in enumerate(items):
+        if index < insert_index:
+            new_order = index + 1
+        else:
+            new_order = index + 2
+        if item.sort_order != new_order:
+            ContentItem.objects.filter(pk=item.pk).update(sort_order=new_order)
+
+    return insert_index + 1
+
+
+def create_page_block(
+    page,
+    resource_type,
+    validated_data,
+    write_serializer_class,
+    insert_after=None,
+    insert_before=None,
+):
     model_class = BLOCK_RESOURCE_TYPES[resource_type]
     placeholder = get_or_create_page_placeholder(page)
-    sort_order = get_next_block_sort_order(placeholder)
+    sort_order = resolve_insert_sort_order(
+        placeholder,
+        insert_after=insert_after,
+        insert_before=insert_before,
+    )
     defaults = BLOCK_CREATE_DEFAULTS.get(resource_type, {})
 
     instance = model_class.objects.create_for_placeholder(

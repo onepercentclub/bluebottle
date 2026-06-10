@@ -719,6 +719,45 @@ class PageEditorAPITestCase(BluebottleTestCase):
         ]
         self.assertIn(data['id'], block_ids)
 
+    def test_create_text_block_insert_after(self):
+        second_block = TextItem.objects.create_for_placeholder(
+            self.placeholder,
+            text='<p>Second block</p>'
+        )
+        url = reverse('page-block-create', args=(self.page.slug,))
+        response = self._post_block(
+            url,
+            {
+                'data': {
+                    'type': 'pages/blocks/text',
+                    'attributes': {
+                        'text': '<p>Inserted block</p>'
+                    },
+                    'meta': {
+                        'insert-after': str(self.text_block.pk)
+                    }
+                }
+            },
+            token='JWT {}'.format(self.editor.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 201)
+        new_block_id = response.json()['data']['id']
+
+        page_url = reverse('page-detail', args=(self.page.slug,))
+        page_response = self.client.get(
+            page_url,
+            token='JWT {}'.format(self.editor.get_jwt_token()),
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
+        block_ids = [
+            item['id']
+            for item in page_response.json()['data']['relationships']['blocks']['data']
+        ]
+        self.assertEqual(
+            block_ids,
+            [str(self.text_block.pk), new_block_id, str(second_block.pk)]
+        )
+
     def test_create_image_text_block(self):
         url = reverse('page-block-create', args=(self.page.slug,))
         response = self._post_block(
@@ -829,6 +868,7 @@ class PlatformPageTestCase(BluebottleTestCase):
 
         data = response.json()['data']
 
+        self.assertEqual(data['type'], 'platform-pages')
         self.assertEqual(data['attributes']['title'], self.page.title)
         self.assertEqual(data['attributes']['full-page'], self.page.full_page)
 

@@ -806,7 +806,7 @@ class PlatformPageSerializer(BaseCMSSerializer):
         fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
-        resource_name = 'pages'
+        resource_name = 'platform-pages'
 
 
 class NewsItemSerializer(BaseCMSSerializer):

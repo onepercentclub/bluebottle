@@ -92,12 +92,24 @@ class PageBlockCreate(JsonApiViewMixin, generics.GenericAPIView):
         serializer = write_serializer_class(data=document)
         serializer.is_valid(raise_exception=True)
 
-        instance = create_page_block(
-            page,
-            resource_type,
-            serializer.validated_data,
-            write_serializer_class
-        )
+        meta = document.get('data', {}).get('meta') or {}
+        insert_after = meta.get('insert-after') or meta.get('insertAfter')
+        insert_before = meta.get('insert-before') or meta.get('insertBefore')
+
+        try:
+            instance = create_page_block(
+                page,
+                resource_type,
+                serializer.validated_data,
+                write_serializer_class,
+                insert_after=insert_after,
+                insert_before=insert_before,
+            )
+        except ValueError as error:
+            return Response(
+                {'errors': [{'detail': str(error), 'status': '400'}]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         attributes = document.get('data', {}).get('attributes') or {}
         for field, value in attributes.items():
             if field == 'image' or not hasattr(instance, field):

@@ -52,6 +52,48 @@ class ContentPageAPITestCase(BluebottleTestCase):
         self.assertEqual(data['type'], 'content/blocks/title')
         self.assertEqual(data['attributes']['title-text'], 'Hello')
 
+    def test_button_block_detail_returns_typed_resource(self):
+        block = ContentBlock.objects.create(
+            page=self.page,
+            block_type=ContentBlock.BlockType.button,
+            sort_order=2,
+            button_label='Click me',
+            button_url='https://example.com',
+        )
+        url = reverse('content-block-detail', args=(block.pk,))
+        response = self.client.get(
+            url,
+            token='JWT {}'.format(self.editor.get_jwt_token()),
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()['data']
+        self.assertEqual(data['type'], 'content/blocks/button')
+        self.assertEqual(data['attributes']['button-label'], 'Click me')
+        self.assertEqual(data['attributes']['button-url'], 'https://example.com')
+
+    def test_page_detail_includes_button_block_attributes(self):
+        ContentBlock.objects.create(
+            page=self.page,
+            block_type=ContentBlock.BlockType.button,
+            sort_order=2,
+            button_label='Click me',
+            button_url='https://example.com',
+        )
+        url = reverse('content-page-detail', args=(self.page.slug,))
+        response = self.client.get(
+            url,
+            token='JWT {}'.format(self.editor.get_jwt_token()),
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
+        self.assertEqual(response.status_code, 200)
+        included = response.json().get('included', [])
+        button_blocks = [
+            item for item in included
+            if item['type'] == 'content/blocks/button'
+        ]
+        self.assertEqual(len(button_blocks), 1)
+        self.assertEqual(button_blocks[0]['attributes']['button-label'], 'Click me')
+
     def test_page_list_requires_editor_permission(self):
         url = reverse('content-page-list')
         response = self.client.get(url)
@@ -132,6 +174,35 @@ class ContentPageAPITestCase(BluebottleTestCase):
             self.assertEqual(data['type'], resource_type)
             self.assertIsInstance(data['id'], str)
             self.assertIn('attributes', data)
+
+    def test_patch_button_block_with_local_path(self):
+        block = ContentBlock.objects.create(
+            page=self.page,
+            block_type=ContentBlock.BlockType.button,
+            sort_order=2,
+            button_label='Browse',
+            button_url='https://example.com',
+        )
+        url = reverse('content-block-detail', args=(block.pk,))
+        response = self.client.patch(
+            url,
+            json.dumps({
+                'data': {
+                    'type': 'content/blocks/button',
+                    'id': str(block.pk),
+                    'attributes': {
+                        'button-url': '/activities/list',
+                    }
+                }
+            }),
+            format=None,
+            content_type='application/vnd.api+json',
+            token='JWT {}'.format(self.editor.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()['data']
+        self.assertEqual(data['type'], 'content/blocks/button')
+        self.assertEqual(data['attributes']['button-url'], '/activities/list')
 
     def test_patch_text_block(self):
         url = reverse('content-block-detail', args=(self.text_block.pk,))

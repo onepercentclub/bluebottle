@@ -122,7 +122,7 @@ class ContentBlock(models.Model):
     video_provider = models.CharField(max_length=20, blank=True, default='')
 
     button_label = models.CharField(max_length=200, blank=True, default='')
-    button_url = models.URLField(blank=True, default='')
+    button_url = models.CharField(max_length=500, blank=True, default='')
 
     spacer_size = models.CharField(
         max_length=10,

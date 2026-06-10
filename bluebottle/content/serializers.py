@@ -1,5 +1,6 @@
 from builtins import object
 
+from django.core.validators import URLValidator
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.utils import format_field_names
@@ -89,13 +90,13 @@ class SpacerBlockSerializer(BaseContentBlockSerializer):
 
 
 READ_SERIALIZERS = {
-    ContentBlock.BlockType.title: TitleBlockSerializer,
-    ContentBlock.BlockType.text: TextBlockSerializer,
-    ContentBlock.BlockType.image: ImageBlockSerializer,
-    ContentBlock.BlockType.text_image: TextImageBlockSerializer,
-    ContentBlock.BlockType.video: VideoBlockSerializer,
-    ContentBlock.BlockType.button: ButtonBlockSerializer,
-    ContentBlock.BlockType.spacer: SpacerBlockSerializer,
+    'title': TitleBlockSerializer,
+    'text': TextBlockSerializer,
+    'image': ImageBlockSerializer,
+    'text_image': TextImageBlockSerializer,
+    'video': VideoBlockSerializer,
+    'button': ButtonBlockSerializer,
+    'spacer': SpacerBlockSerializer,
 }
 
 
@@ -229,7 +230,22 @@ class VideoBlockWriteSerializer(ModelSerializer):
         return instance
 
 
+def validate_button_url(value):
+    if not value or value.startswith('/'):
+        return value
+
+    URLValidator()(value)
+    return value
+
+
 class ButtonBlockWriteSerializer(ModelSerializer):
+    button_url = serializers.CharField(
+        allow_blank=True,
+        max_length=500,
+        required=False,
+        validators=[validate_button_url],
+    )
+
     class Meta(object):
         model = ContentBlock
         fields = ('button_label', 'button_url')

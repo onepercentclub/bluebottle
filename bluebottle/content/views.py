@@ -112,6 +112,15 @@ class ContentBlockDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
                 return write_serializer(*args, **kwargs)
         return ContentBlockPolymorphicSerializer(*args, **kwargs)
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        representation = serialize_content_block(
+            instance,
+            context=self.get_serializer_context(),
+        )
+        self.resource_name = False
+        return Response({'data': representation})
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()

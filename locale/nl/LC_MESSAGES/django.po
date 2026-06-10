@@ -1484,7 +1484,6 @@ msgid "\n"
 "        %(message_text)s\n"
 "        <br/>\n"
 "        <br/>\n"
-"        Reply to this email to reply to %(sender_name)s.\n"
 "    "
 msgstr "\n"
 "        Hallo %(recipient_name)s,\n"
@@ -1498,17 +1497,16 @@ msgstr "\n"
 "        %(message_text)s\n"
 "        <br/>\n"
 "        <br/>\n"
-"        Beantwoord deze e-mail om te reageren op %(sender_name)s.\n"
 "    "
 
-#: bluebottle/activities/templates/mails/messages/activity_manager/activity_message_to_manager.html:20
+#: bluebottle/activities/templates/mails/messages/activity_manager/activity_message_to_manager.html:19
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"            Reply to this message to respond to %(sender_name)s\n"
+"            Reply to this email to respond to %(sender_name)s.\n"
 "        "
 msgstr "\n"
-"            Beantwoord dit bericht om te reageren op %(sender_name)s\n"
+"            Beantwoord deze e-mail om te reageren op %(sender_name)s.\n"
 "        "
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_needs_work.html:5

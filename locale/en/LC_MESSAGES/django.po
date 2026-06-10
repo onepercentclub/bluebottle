@@ -1549,16 +1549,15 @@ msgid ""
 "        %(message_text)s\n"
 "        <br/>\n"
 "        <br/>\n"
-"        Reply to this email to reply to %(sender_name)s.\n"
 "    "
 msgstr ""
 
-#: bluebottle/activities/templates/mails/messages/activity_manager/activity_message_to_manager.html:20
+#: bluebottle/activities/templates/mails/messages/activity_manager/activity_message_to_manager.html:19
 #, python-format
 msgctxt "platform-email"
 msgid ""
 "\n"
-"            Reply to this message to respond to %(sender_name)s\n"
+"            Reply to this email to respond to %(sender_name)s.\n"
 "        "
 msgstr ""
 

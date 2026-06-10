@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.relations import RelatedField
 
 from bluebottle.activity_pub.clients import client
 from bluebottle.activity_pub.models import (
@@ -223,6 +224,22 @@ class CollectCampaignSerializer(BaseEventSerializer):
         )
 
 
+class RelatedParentField(RelatedField):
+    def get_queryset(self):
+        # TODO: filter queryset on correct types
+        return DoGoodEvent.objects.all()
+
+    def to_representation(self, value):
+        return value.pub_url
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = {'id': data}
+
+        if not is_local(data['id']):
+            return data['id']
+
+
 class SubEventSerializer(BaseActivityPubSerializer):
     type = TypeField('subEvent')
 
@@ -240,12 +257,19 @@ class SubEventSerializer(BaseActivityPubSerializer):
     contributor_count = serializers.IntegerField(required=False, allow_null=True, default=0)
     capacity = serializers.IntegerField(required=False, allow_null=True)
 
+    parent = RelatedParentField(allow_null=True)
+
     class Meta(BaseEventSerializer.Meta):
         model = SubEvent
         fields = BaseActivityPubSerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode',
-            'contributor_count', 'capacity', 'name'
+            'contributor_count', 'capacity', 'name', 'parent'
         )
+
+    def create(self, validated_data):
+        __import__('ipdb').set_trace()
+
+        return super().create(validated_data)
 
 
 class DoGoodEventSerializer(BaseEventSerializer):

@@ -1,6 +1,6 @@
 from django.template.loader import render_to_string
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from bluebottle.activities.models import (
     Contributor, Organizer, EffortContribution, Activity, Team, Invite

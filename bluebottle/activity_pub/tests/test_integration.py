@@ -552,9 +552,12 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
             self.participant = DeedParticipantFactory.create(activity=self.adopted)
 
         self.synced_participant = self.model.participants.get()
-        self.assertTrue(self.synced_participant.origin)
         self.assertEqual(
             self.participant.user.email, self.synced_participant.remote_user.email
+        )
+
+        self.assertEqual(
+            self.synced_participant.status, 'accepted'
         )
 
     def test_leave(self):
@@ -563,10 +566,20 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
         with LocalTenant(self.other_tenant):
             self.participant.states.withdraw(save=True)
 
-        synced_participant = self.model.participants.get()
-        self.assertTrue(synced_participant.origin)
+        self.synced_participant.refresh_from_db()
         self.assertEqual(
-            self.participant.status, 'withdrawn'
+            self.synced_participant.status, 'rejected'
+        )
+
+    def test_rejoin(self):
+        self.test_leave()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.states.accept(save=True)
+
+        self.synced_participant.refresh_from_db()
+        self.assertEqual(
+            self.synced_participant.status, 'accepted'
         )
 
     def test_update(self):

@@ -207,9 +207,5 @@ class SendLeaveEffect(Effect):
             object=self.instance.activity.origin,
         )
 
-    @property
-    def is_valid(self):
-        return super().is_valid
-
     def __str__(self):
         return str(_('Notify source platform of leave'))

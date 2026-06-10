@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
-from bluebottle.activities.models import Activity as DoGoodActivity, Contributor, RemoteMember
+from bluebottle.activities.models import Activity as DoGoodActivity, RemoteMember
 from bluebottle.time_based.models import DateActivitySlot
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -28,6 +28,10 @@ from bluebottle.activity_pub.adapters import adapter
 
 
 class ActivityPubManager(PolymorphicManager):
+    def get_queryset(self):
+        qs = self.queryset_class(self.model, using=self._db, hints=self._hints)
+        return qs
+
     def from_iri(self, iri):
         if iri:
             if is_local(iri):
@@ -78,6 +82,10 @@ class Actor(ActivityPubModel):
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
+    def follow(self):
+        return Follow.objects.filter(object=self).first()
+
+    @property
     def webfinger_uri(self):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
@@ -120,7 +128,7 @@ class Person(Actor):
         return follow
 
     def __str__(self):
-        return self.name or self.prefered_username
+        return self.name
 
 
 class Image(ActivityPubModel):
@@ -868,24 +876,10 @@ class Join(Activity):
         related_name='+',
     )
 
-    origin = models.OneToOneField(
-        Contributor,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='activity_pub_model'
-    )
-
-    adopted = models.OneToOneField(
-        Contributor,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='origin'
-    )
-
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        if not self.is_local and not self.adopted:
+        if not self.is_local:
             adapter.adopt(self)
 
     @property
@@ -896,17 +890,6 @@ class Join(Activity):
             create = self.object.parent.create_set.get()
 
         yield create.actor
-
-
-class Leave(Activity):
-    """Sent by a follower when a user leaves a synced deed; object is the source GoodDeed."""
-    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
-
-    @property
-    def default_recipients(self):
-        create = self.object.create_set.first()
-        if create:
-            yield create.actor
 
 
 class Transition(Activity):
@@ -922,12 +905,30 @@ class Transition(Activity):
     def save(self, *args, **kwargs):
         if not self.is_local and not self.transitioned:
             if self.transition():
-                self.transition = True
+                self.transitioned = True
 
         super().save(*args, **kwargs)
 
     def transition(self):
         raise NotImplementedError()
+
+
+class Leave(Transition):
+    """Sent by a follower when a user leaves a synced activity; object is the source Event."""
+    @property
+    def default_recipients(self):
+        create = self.object.create_set.first()
+        if create:
+            yield create.actor
+
+    def transition(self):
+        if self.object.is_local:
+            contributor = self.object.origin.contributors.get(
+                remote_user=self.actor.adopted
+            )
+            contributor.states.remove(save=True)
+
+            return True
 
 
 class Delete(Transition):

@@ -48,6 +48,7 @@
                     {% endif %}
                 {% endif %}
             {% endif %}
+            !!!{{adoption_type}}!!!
             {% if adoption_type == 'sync' %}
                 {% if original.adopted_activity %}
                     <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">

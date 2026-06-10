@@ -37,6 +37,7 @@
     "joinMode": "goodup:joinMode",
     "repetitionMode": "goodup:repetitionMode",
     "slotMode": "goodup:slotMode",
+    "parent": "schema:parent",
     "email": "schema:email",
     "address": {
       "@id": "as:address",

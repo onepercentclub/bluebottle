@@ -97,7 +97,7 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
                     validated_data[name] = field.save(validated_data[name])
 
         validated_data.pop('type', None)
-        if self.origin:
+        if self.origin and hasattr(self.Meta.model, 'origin'):
             validated_data['origin'] = self.origin
 
         instance = self.Meta.model.objects.create(**validated_data)
@@ -228,7 +228,7 @@ class FederatedObjectBaseSerializer(
 
         result = super().create(validated_data)
         origin = ActivityPubModel.objects.from_iri(iri)
-        if origin:
+        if origin and hasattr(origin, 'adopted'):
             origin.adopted = result
             origin.save()
 

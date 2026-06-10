@@ -190,6 +190,14 @@ class MemberSerializer(FederatedObjectBaseSerializer):
             'name', 'family_name', 'given_name', 'email', 'summary', 'icon'
         )
 
+    def save(self, *args, **kwargs):
+        try:
+            self.instance = RemoteMember.objects.get(origin__iri=self.validated_data['id'])
+        except RemoteMember.DoesNotExist:
+            pass
+
+        return super().save(*args, **kwargs)
+
     def create(self, validated_data):
         result = RemoteMember.objects.create(
             **dict(
@@ -715,7 +723,7 @@ class JoinSerializer(FederatedObjectBaseSerializer):
     }
 
     def create(self, validated_data):
-        iri = validated_data.pop('id')
+        validated_data.pop('id')
         validated_data.pop('user')
 
         member_serializer = MemberSerializer(data=self.initial_data['actor'])
@@ -729,13 +737,14 @@ class JoinSerializer(FederatedObjectBaseSerializer):
             validated_data['slot'] = validated_data['activity']
             validated_data['activity'] = validated_data['slot'].activity
 
-        self.instance = contributor_model.objects.create(
-            **validated_data
-        )
+        try:
+            self.instance = contributor_model.objects.get(**validated_data)
 
-        origin = ActivityPubModel.objects.from_iri(iri)
-        if origin:
-            origin.adopted = self.instance
-            origin.save()
+            self.instance.states.accept(save=True)
+        except contributor_model.DoesNotExist:
+
+            self.instance = contributor_model.objects.create(
+                **validated_data
+            )
 
         return self.instance

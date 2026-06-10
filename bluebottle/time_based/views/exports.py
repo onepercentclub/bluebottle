@@ -17,6 +17,20 @@ from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import ExportView
 
 
+def add_unique_worksheet(workbook, title):
+    base_title = re.sub(r"[\[\]\\:*?/]", "", str(title)[:31])
+    worksheet_title = base_title or "Sheet"
+    counter = 2
+
+    while True:
+        try:
+            return workbook.add_worksheet(worksheet_title)
+        except Exception:
+            suffix = f" {counter}"
+            worksheet_title = f"{base_title[:31 - len(suffix)]}{suffix}"
+            counter += 1
+
+
 class TimeBasedExportView(ExportView):
     filename = "participants"
     fields = (
@@ -119,9 +133,8 @@ class TeamScheduleParticipantExportView(TimeBasedExportView):
         super().write_data(workbook)
 
         for team in self.get_object().teams.all():
-            title = re.sub("[\[\]\\:*?/]", "", str(team)[:30])
+            worksheet = add_unique_worksheet(workbook, team)
 
-            worksheet = workbook.add_worksheet(title)
             worksheet.set_column(0, 10, 30)
             worksheet.write_row(0, 0, [field[1] for field in self.team_fields])
 

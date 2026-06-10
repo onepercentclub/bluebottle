@@ -427,3 +427,23 @@ class TeamScheduleActivityExportTestCase(
                     "Is captain",
                 ),
             )
+
+    def test_export_teams_with_duplicate_names(self):
+        team_name = "Team Justine Broekhuizen"
+        self.participants[0].name = team_name
+        self.participants[0].save()
+        self.participants[1].name = team_name
+        self.participants[1].save()
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        team_sheet_titles = [sheet.title for sheet in workbook.worksheets[1:]]
+
+        self.assertEqual(len(workbook.worksheets), len(self.participants) + 1)
+        self.assertEqual(
+            len(team_sheet_titles),
+            len({title.lower() for title in team_sheet_titles}),
+        )
+        self.assertIn(team_name, team_sheet_titles)

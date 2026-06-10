@@ -9,7 +9,7 @@ from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.time_based.models import Team
 from bluebottle.time_based.models import TeamMember
-from bluebottle.time_based.permissions import InviteCodePermission, TeamMemberPermission
+from bluebottle.time_based.permissions import TeamMemberPermission, InviteCodePermission
 from bluebottle.time_based.serializers import TeamSerializer, TeamMemberTransitionSerializer
 from bluebottle.time_based.serializers import TeamTransitionSerializer
 from bluebottle.time_based.serializers.teams import TeamMemberSerializer

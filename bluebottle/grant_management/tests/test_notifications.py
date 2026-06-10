@@ -174,7 +174,7 @@ class GrantPayoutNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Save the whales!')
         self.assertBodyContains('Test Fund')
         self.assertBodyContains(self.grant_application.owner.full_name)
-        self.assertBodyContains('5000')
+        self.assertBodyContains('Granted amount')
         self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('Complete payout')
 

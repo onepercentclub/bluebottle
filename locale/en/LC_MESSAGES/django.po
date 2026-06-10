@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-10 11:13+0200\n"
+"POT-Creation-Date: 2026-06-10 20:28+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -224,7 +224,7 @@ msgstr ""
 msgid "Request the activity manager to fill in the impact of this activity."
 msgstr ""
 
-#: bluebottle/activities/admin.py:1059 bluebottle/geo/models.py:178
+#: bluebottle/activities/admin.py:1059 bluebottle/geo/models.py:177
 msgid "work location"
 msgstr ""
 
@@ -2146,7 +2146,7 @@ msgid "Coordinates"
 msgstr ""
 
 #: bluebottle/activity_pub/admin.py:763 bluebottle/activity_pub/admin.py:1106
-#: bluebottle/geo/admin.py:37
+#: bluebottle/geo/admin.py:123 bluebottle/geo/admin.py:311
 msgid "Location"
 msgstr ""
 
@@ -2296,8 +2296,8 @@ msgstr ""
 msgid "Deeds"
 msgstr ""
 
-#: bluebottle/activity_pub/models.py:332 bluebottle/statistics/admin.py:77
-#: bluebottle/statistics/models.py:237
+#: bluebottle/activity_pub/models.py:332 bluebottle/geo/admin.py:282
+#: bluebottle/statistics/admin.py:77 bluebottle/statistics/models.py:237
 msgid "Type"
 msgstr ""
 
@@ -3214,7 +3214,7 @@ msgid ""
 msgstr ""
 
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:47
-#: bluebottle/geo/admin.py:76
+#: bluebottle/geo/admin.py:162
 #: bluebottle/geo/templates/admin/geo/location/change_form.html:6
 #: bluebottle/organizations/templates/admin/merge_preview.html:36
 #: bluebottle/segments/admin.py:61
@@ -3469,7 +3469,7 @@ msgstr ""
 msgid "initiatives"
 msgstr ""
 
-#: bluebottle/categories/models.py:18 bluebottle/geo/models.py:136
+#: bluebottle/categories/models.py:18 bluebottle/geo/models.py:135
 #: bluebottle/impact/models.py:37 bluebottle/initiatives/models.py:98
 #: bluebottle/initiatives/models.py:605 bluebottle/organizations/models.py:23
 #: bluebottle/segments/models.py:27 bluebottle/segments/models.py:126
@@ -3477,7 +3477,7 @@ msgid "slug"
 msgstr ""
 
 #: bluebottle/categories/models.py:21 bluebottle/categories/models.py:113
-#: bluebottle/geo/models.py:162
+#: bluebottle/geo/models.py:161
 msgid "image"
 msgstr ""
 
@@ -3495,20 +3495,20 @@ msgid "Category Logo image"
 msgstr ""
 
 #: bluebottle/categories/models.py:47 bluebottle/collect/models.py:26
-#: bluebottle/geo/models.py:61 bluebottle/geo/models.py:74
-#: bluebottle/geo/models.py:89 bluebottle/geo/models.py:121
-#: bluebottle/geo/models.py:135 bluebottle/impact/models.py:49
-#: bluebottle/initiatives/models.py:609 bluebottle/looker/models.py:13
-#: bluebottle/offices/models.py:9 bluebottle/offices/models.py:25
-#: bluebottle/organizations/models.py:22 bluebottle/organizations/models.py:90
-#: bluebottle/segments/models.py:24 bluebottle/segments/models.py:112
-#: bluebottle/time_based/models.py:1148
+#: bluebottle/geo/models.py:60 bluebottle/geo/models.py:73
+#: bluebottle/geo/models.py:88 bluebottle/geo/models.py:120
+#: bluebottle/geo/models.py:134 bluebottle/geo/models.py:257
+#: bluebottle/impact/models.py:49 bluebottle/initiatives/models.py:609
+#: bluebottle/looker/models.py:13 bluebottle/offices/models.py:9
+#: bluebottle/offices/models.py:25 bluebottle/organizations/models.py:22
+#: bluebottle/organizations/models.py:90 bluebottle/segments/models.py:24
+#: bluebottle/segments/models.py:112 bluebottle/time_based/models.py:1148
 msgid "name"
 msgstr ""
 
 #: bluebottle/categories/models.py:48 bluebottle/categories/models.py:92
 #: bluebottle/funding/models.py:397 bluebottle/funding/models.py:428
-#: bluebottle/geo/models.py:122 bluebottle/geo/models.py:160
+#: bluebottle/geo/models.py:121 bluebottle/geo/models.py:159
 #: bluebottle/initiatives/models.py:610 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:24
 #: bluebottle/time_based/models.py:1149
@@ -3656,8 +3656,7 @@ msgstr ""
 msgid "About"
 msgstr ""
 
-#: bluebottle/cms/models.py:120 bluebottle/geo/admin.py:134
-#: bluebottle/geo/admin.py:186
+#: bluebottle/cms/models.py:120 bluebottle/geo/admin.py:220
 msgid "Info"
 msgstr ""
 
@@ -3782,6 +3781,7 @@ msgstr ""
 
 #: bluebottle/cms/models.py:224 bluebottle/contact/models.py:31
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:4
+#: bluebottle/geo/admin.py:286
 #: bluebottle/organizations/templates/admin/merge_preview.html:11
 #: bluebottle/statistics/models.py:52 bluebottle/statistics/models.py:105
 msgid "Name"
@@ -6934,153 +6934,189 @@ msgstr ""
 msgid "payment for {activity_title} on {tenant_name}"
 msgstr ""
 
-#: bluebottle/geo/admin.py:48
+#: bluebottle/geo/admin.py:134
 msgid "My location ({})"
 msgstr ""
 
-#: bluebottle/geo/admin.py:71 bluebottle/segments/admin.py:56
+#: bluebottle/geo/admin.py:157 bluebottle/segments/admin.py:56
 msgid "Merge with"
 msgstr ""
 
-#: bluebottle/geo/admin.py:72 bluebottle/segments/admin.py:57
+#: bluebottle/geo/admin.py:158 bluebottle/segments/admin.py:57
 msgid "Choose location to merge with"
 msgstr ""
 
-#: bluebottle/geo/admin.py:122 bluebottle/initiatives/models.py:283
+#: bluebottle/geo/admin.py:208 bluebottle/initiatives/models.py:283
 #: bluebottle/offices/models.py:35
 msgid "Work location group"
 msgstr ""
 
-#: bluebottle/geo/admin.py:130 bluebottle/initiatives/models.py:284
+#: bluebottle/geo/admin.py:216 bluebottle/initiatives/models.py:284
 #: bluebottle/offices/models.py:14 bluebottle/offices/models.py:29
 msgid "Work location region"
 msgstr ""
 
-#: bluebottle/geo/admin.py:147 bluebottle/segments/admin.py:130
+#: bluebottle/geo/admin.py:233 bluebottle/segments/admin.py:130
 msgid "SSO"
 msgstr ""
 
-#: bluebottle/geo/admin.py:177
+#: bluebottle/geo/admin.py:260
+msgid "Geo feature"
+msgstr ""
+
+#: bluebottle/geo/admin.py:261
+msgid "Geo features"
+msgstr ""
+
+#: bluebottle/geo/admin.py:290
+msgid "Place name"
+msgstr ""
+
+#: bluebottle/geo/admin.py:302
 msgid "Geolocation"
 msgstr ""
 
-#: bluebottle/geo/admin.py:185 bluebottle/geo/admin.py:198
-msgid "Map"
+#: bluebottle/geo/admin.py:318
+msgid "Old info"
 msgstr ""
 
-#: bluebottle/geo/models.py:36
+#: bluebottle/geo/admin.py:328 bluebottle/geo/admin.py:337
+msgid "Related objects"
+msgstr ""
+
+#: bluebottle/geo/models.py:35
 msgid "numeric code"
 msgstr ""
 
-#: bluebottle/geo/models.py:40
+#: bluebottle/geo/models.py:39
 msgid "ISO 3166-1 or M.49 numeric code"
 msgstr ""
 
-#: bluebottle/geo/models.py:65 bluebottle/geo/models.py:77
+#: bluebottle/geo/models.py:64 bluebottle/geo/models.py:76
 msgid "region"
 msgstr ""
 
-#: bluebottle/geo/models.py:66
+#: bluebottle/geo/models.py:65
 msgid "regions"
 msgstr ""
 
-#: bluebottle/geo/models.py:80 bluebottle/geo/models.py:92
+#: bluebottle/geo/models.py:79 bluebottle/geo/models.py:91
 msgid "sub region"
 msgstr ""
 
-#: bluebottle/geo/models.py:81
+#: bluebottle/geo/models.py:80
 msgid "sub regions"
 msgstr ""
 
-#: bluebottle/geo/models.py:94
+#: bluebottle/geo/models.py:93
 msgid "alpha2 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:96
+#: bluebottle/geo/models.py:95
 msgid "ISO 3166-1 alpha-2 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:97
+#: bluebottle/geo/models.py:96
 msgid "alpha3 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:99
+#: bluebottle/geo/models.py:98
 msgid "ISO 3166-1 alpha-3 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:102
+#: bluebottle/geo/models.py:101
 msgid "ODA recipient"
 msgstr ""
 
-#: bluebottle/geo/models.py:103
+#: bluebottle/geo/models.py:102
 msgid ""
 "Whether a country is a recipient of Official DevelopmentAssistance from the "
 "OECD's Development Assistance Committee."
 msgstr ""
 
-#: bluebottle/geo/models.py:115
+#: bluebottle/geo/models.py:114
 msgid "country"
 msgstr ""
 
-#: bluebottle/geo/models.py:116
+#: bluebottle/geo/models.py:115
 msgid "countries"
 msgstr ""
 
-#: bluebottle/geo/models.py:126 bluebottle/geo/models.py:142
+#: bluebottle/geo/models.py:125 bluebottle/geo/models.py:141
 msgid "location group"
 msgstr ""
 
-#: bluebottle/geo/models.py:127
+#: bluebottle/geo/models.py:126
 msgid "location groups"
 msgstr ""
 
-#: bluebottle/geo/models.py:148
+#: bluebottle/geo/models.py:147
 msgid "work location group"
 msgstr ""
 
-#: bluebottle/geo/models.py:149
+#: bluebottle/geo/models.py:148
 msgid "The organisational group this work location belongs too."
 msgstr ""
 
-#: bluebottle/geo/models.py:153
+#: bluebottle/geo/models.py:152
 msgid "city"
 msgstr ""
 
-#: bluebottle/geo/models.py:156
+#: bluebottle/geo/models.py:155
 msgid "The (geographic) country this work location is located in."
 msgstr ""
 
-#: bluebottle/geo/models.py:163
+#: bluebottle/geo/models.py:162
 msgid "Work location picture"
 msgstr ""
 
-#: bluebottle/geo/models.py:179
+#: bluebottle/geo/models.py:178
 msgid "work locations"
 msgstr ""
 
-#: bluebottle/geo/models.py:210 bluebottle/geo/models.py:254
+#: bluebottle/geo/models.py:209 bluebottle/geo/models.py:271
 msgid "Street Number"
 msgstr ""
 
-#: bluebottle/geo/models.py:211 bluebottle/geo/models.py:255
+#: bluebottle/geo/models.py:210 bluebottle/geo/models.py:272
 msgid "Street"
 msgstr ""
 
-#: bluebottle/geo/models.py:212 bluebottle/geo/models.py:256
+#: bluebottle/geo/models.py:211 bluebottle/geo/models.py:273
 msgid "Postal Code"
 msgstr ""
 
-#: bluebottle/geo/models.py:213 bluebottle/geo/models.py:257
+#: bluebottle/geo/models.py:212 bluebottle/geo/models.py:274
 msgid "Locality"
 msgstr ""
 
-#: bluebottle/geo/models.py:214 bluebottle/geo/models.py:258
+#: bluebottle/geo/models.py:213 bluebottle/geo/models.py:275
 msgid "Province"
 msgstr ""
 
-#: bluebottle/geo/models.py:217 bluebottle/geo/models.py:262
+#: bluebottle/geo/models.py:216 bluebottle/geo/models.py:279
 #: bluebottle/members/models.py:296
 msgid "Address"
+msgstr ""
+
+#: bluebottle/geo/models.py:258
+msgid "place_name"
+msgstr ""
+
+#: bluebottle/geo/models.py:262
+msgid "geo feature"
+msgstr ""
+
+#: bluebottle/geo/models.py:263
+msgid "geo features"
+msgstr ""
+
+#: bluebottle/geo/models.py:282
+msgid "Location name"
+msgstr ""
+
+#: bluebottle/geo/models.py:283
+msgid "The name of the location, e.g. the name of the community center."
 msgstr ""
 
 #: bluebottle/geo/validators.py:7
@@ -7168,7 +7204,7 @@ msgstr ""
 msgid "Successfully checked payment status"
 msgstr ""
 
-#: bluebottle/grant_management/admin.py:585 bluebottle/initiatives/states.py:24
+#: bluebottle/grant_management/admin.py:587 bluebottle/initiatives/states.py:24
 msgid "Submitted"
 msgstr ""
 

@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
+from mapwidgets.settings import mw_settings
 from mapwidgets.widgets import MapboxPointFieldWidget
 from parler.admin import TranslatableAdmin
 
@@ -12,7 +13,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.geo.models import (
     Location, Country, Place,
-    Geolocation)
+    Geolocation, GeoFeature)
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
 
@@ -31,6 +32,36 @@ class CustomMapboxPointFieldWidget(MapboxPointFieldWidget):
                 "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css",
             ],
         )
+
+
+class GeolocationMapboxPointFieldWidget(MapboxPointFieldWidget):
+
+    @property
+    def media(self):
+        minified = not mw_settings.is_dev_mode
+        css_paths = self.get_css_paths(
+            [
+                "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css",
+            ],
+            minified=minified,
+        )
+        base_js = list(
+            self.settings.media.js.minified if minified else self.settings.media.js.dev
+        )
+        js_paths = [
+            "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js",
+        ] + base_js + [
+            "admin/js/geolocation-map-widget.js",
+        ]
+        return forms.Media(css={"all": css_paths}, js=js_paths)
+
+
+@admin.register(GeoFeature)
+class GeoFeatureAdmin(TranslatableAdmin):
+    list_display = ('place_name', 'feature_type', 'mapbox_id', 'name')
+    search_fields = ('mapbox_id', 'place_name', 'translations__name')
+    readonly_fields = ('mapbox_id', 'feature_type', 'place_name')
+    fields = ('mapbox_id', 'feature_type', 'place_name', 'name')
 
 
 class LocationFilter(admin.SimpleListFilter):
@@ -167,12 +198,43 @@ class PlaceInline(admin.ModelAdmin):
     ]
 
 
+class GeolocationGeoFeatureInline(admin.TabularInline):
+    model = Geolocation.geofeatures.through
+    extra = 0
+    can_delete = False
+    verbose_name = _('Geo feature')
+    verbose_name_plural = _('Geo features')
+    fields = ('feature_type', 'name', 'place_name')
+    readonly_fields = ('feature_type', 'name', 'place_name')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related('geofeature').prefetch_related(
+            'geofeature__translations'
+        ).order_by('geofeature__feature_type', 'geofeature__id')
+
+    @admin.display(description=_('Type'), ordering='geofeature__feature_type')
+    def feature_type(self, obj):
+        return obj.geofeature.feature_type or '-'
+
+    @admin.display(description=_('Name'))
+    def name(self, obj):
+        return obj.geofeature.safe_translation_getter('name', any_language=True) or '-'
+
+    @admin.display(description=_('Place name'))
+    def place_name(self, obj):
+        return obj.geofeature.safe_translation_getter('place_name', any_language=True) or '-'
+
+
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": CustomMapboxPointFieldWidget},
+        PointField: {"widget": GeolocationMapboxPointFieldWidget},
     }
-    list_display = ('geolocation_label', 'street', 'locality', 'country')
+    list_display = ('geolocation_label', 'street', 'locality', 'country', 'mapbox_id')
 
     @admin.display(description=_('Geolocation'))
     def geolocation_label(self, obj):
@@ -180,6 +242,7 @@ class GeolocationAdmin(admin.ModelAdmin):
 
     list_filter = ('country', )
     search_fields = ('locality', 'street', 'formatted_address', 'mapbox_id')
+    inlines = (GeolocationGeoFeatureInline,)
 
     fieldsets = (
         (_('Map'), {'fields': ('position', )}),
@@ -188,12 +251,5 @@ class GeolocationAdmin(admin.ModelAdmin):
                 'locality', 'street', 'street_number', 'postal_code',
                 'province', 'country', 'formatted_address', 'mapbox_id'
             )
-        })
+        }),
     )
-
-    def get_fieldsets(self, request, obj):
-        if obj and obj.position:
-            return self.fieldsets
-        return (
-            (_('Map'), {'fields': ('position', )}),
-        )

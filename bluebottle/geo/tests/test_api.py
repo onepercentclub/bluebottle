@@ -10,7 +10,7 @@ from rest_framework import status
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import InitiativeCountrySerializer, PlaceSerializer
-from bluebottle.geo.tests.test_admin import mapbox_response
+from bluebottle.geo.tests.mapbox_fixtures import MAPBOX_V6_ADDRESS_FEATURE as mapbox_response
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

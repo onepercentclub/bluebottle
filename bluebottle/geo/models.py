@@ -1,7 +1,6 @@
 from builtins import object
 
 import geocoder
-import requests
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
@@ -10,7 +9,7 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
-from parler.models import TranslatedFields
+from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 from timezonefinder import TimezoneFinder
 
@@ -250,6 +249,24 @@ class Place(models.Model):
 
 
 @python_2_unicode_compatible
+class GeoFeature(TranslatableModel):
+    mapbox_id = models.CharField(max_length=5000, unique=True)
+    feature_type = models.CharField(max_length=32, blank=True)
+
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=5000, blank=True),
+        place_name=models.CharField(_('place_name'), max_length=5000, blank=True)
+    )
+
+    class Meta(object):
+        verbose_name = _('geo feature')
+        verbose_name_plural = _('geo features')
+
+    def __str__(self):
+        return self.place_name or self.name or self.mapbox_id
+
+
+@python_2_unicode_compatible
 class Geolocation(models.Model):
     street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
     street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
@@ -257,11 +274,15 @@ class Geolocation(models.Model):
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
     country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
-    mapbox_id = models.CharField(max_length=50, null=True, blank=True)
+    mapbox_id = models.CharField(max_length=5000, null=True, blank=True)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
     position = PointField(null=True)
+
+    geofeatures = models.ManyToManyField(
+        'geo.GeoFeature', blank=True, related_name='geolocations'
+    )
 
     origin = models.ForeignKey(
         'activity_pub.Place', null=True, related_name="locations", on_delete=models.SET_NULL
@@ -294,62 +315,57 @@ class Geolocation(models.Model):
             )
         return 'Europe/Amsterdam'
 
-    def reverse_geocode(self):
-        access_token = settings.MAPBOX_API_KEY
-        if not access_token:
+    def reverse_geocode(self, language=None):
+        from bluebottle.geo import mapbox as mapbox_utils
+
+        if not self.position:
             return None
 
-        [lon, lat] = self.position.coords
-        url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{lon},{lat}.json"
-        response = requests.get(url, params={'access_token': access_token})
-
-        if response.status_code == 200:
-            data = response.json()
-            if 'features' in data and len(data['features']) > 0:
-                return data['features'][0]
-            else:
-                return "No results found."
-        else:
-            return f"Error: {response.status_code}, {response.text}"
-
-    def update_location(self, replace=False):
-        data = self.reverse_geocode()
-        if data and data != "No results found.":
-            self.mapbox_id = data['id']
-            country = None
-            if not self.formatted_address or replace:
-                self.formatted_address = data['place_name']
-            if 'context' in data:
-                country = Country.objects.filter(alpha2_code__iexact=data['context'][-1]['short_code']).first()
-            elif 'short_code' in data['properties']:
-                country = Country.objects.filter(alpha2_code__iexact=data['properties']['short_code']).first()
-            if country:
-                self.country = country
-            else:
-                raise ValueError(f"Country not found for {data['context'][-1]['short_code']}")
-            if data['place_type'][0] == 'address':
-                if not self.street or replace:
-                    self.street = data['text']
-                if not self.street_number or replace:
-                    self.street_number = getattr(data, 'address', '')
-
-            if 'context' in data:
-                for context_item in data['context']:
-                    if 'place' in context_item['id']:
-                        if not self.locality or replace:
-                            self.locality = context_item['text']
-                    elif 'postcode' in context_item['id']:
-                        if not self.postal_code or replace:
-                            self.postal_code = context_item['text']
-                    elif 'region' in context_item['id']:
-                        if not self.province or replace:
-                            self.province = context_item['text']
+        return mapbox_utils.reverse_geocode_feature(
+            self.position.x,
+            self.position.y,
+            language=language,
+        )
 
     def save(self, *args, **kwargs):
-        if self.pk:
-            old_instance = Geolocation.objects.filter(pk=self.pk).first()
-            if old_instance and old_instance.position != self.position:
-                self.update_location(replace=True)
-        if self.position and self.mapbox_id in ['unknown', '', None]:
-            self.update_location()
-        return super().save(*args, **kwargs)
+        import requests
+
+        from bluebottle.geo import mapbox as mapbox_utils
+
+        skip_mapbox_sync = kwargs.pop('skip_mapbox_sync', False)
+        language = kwargs.pop('mapbox_language', None)
+        resolved_feature = kwargs.pop('mapbox_feature', None)
+
+        if not skip_mapbox_sync:
+            try:
+                if self.position and mapbox_utils.needs_mapbox_id(self.mapbox_id):
+                    if resolved_feature is None:
+                        resolved_feature = self.reverse_geocode(language=language)
+                    if resolved_feature:
+                        parsed = mapbox_utils.parse_feature(resolved_feature)
+                        mapbox_utils.apply_parsed_feature(self, parsed)
+
+                elif self.mapbox_id and not mapbox_utils.is_v6_mapbox_id(self.mapbox_id):
+                    if resolved_feature is None:
+                        resolved_feature = mapbox_utils.resolve_geolocation_feature(
+                            self, language=language
+                        )
+                    if resolved_feature:
+                        parsed = mapbox_utils.parse_feature(resolved_feature)
+                        mapbox_utils.apply_parsed_feature(self, parsed)
+            except requests.RequestException:
+                pass
+
+        super(Geolocation, self).save(*args, **kwargs)
+
+        if not skip_mapbox_sync and self.mapbox_id and mapbox_utils.is_v6_mapbox_id(self.mapbox_id):
+            try:
+                if resolved_feature is None:
+                    response = mapbox_utils.lookup_by_mapbox_id(
+                        self.mapbox_id, language=language
+                    )
+                    resolved_feature = mapbox_utils._first_feature(response)
+                if resolved_feature:
+                    mapbox_utils.sync_geofeatures(self, resolved_feature, language=language)
+            except requests.RequestException:
+                pass

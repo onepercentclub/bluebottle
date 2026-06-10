@@ -7646,7 +7646,7 @@ msgid "Grant application"
 msgstr "Antrag"
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:23
-#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:17
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:16
 msgctxt "platform-email"
 msgid "Grant fund"
 msgstr "Zuschussfonds"
@@ -7675,23 +7675,21 @@ msgstr "\n"
 msgctxt "platform-email"
 msgid "\n"
 "            The grant application \"%(title)s\" is ready to be paid out.<br>\n"
-"            Please take a moment to review this application and decide if it's right for your platform.<br>\n"
 "            <br>\n"
 "            %(initiator_name)s will be waiting for the payout, so please respond promptly.<br>\n"
 "        "
 msgstr "\n"
 "            Der Zuschussantrag „%(title)s“ ist bereit zur Auszahlung.<br>\n"
-"            Bitte nimm dir einen Moment Zeit, um diesen Antrag zu prüfen und zu entscheiden, ob er für deine Plattform geeignet ist.<br>\n"
 "            <br>\n"
 "            %(initiator_name)s wartet auf die Auszahlung, also antworte bitte umgehend.<br>\n"
 "        "
 
-#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:18
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:17
 msgctxt "platform-email"
 msgid "Grant requester"
 msgstr "Zuschussantragsteller"
 
-#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:19
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:18
 msgctxt "platform-email"
 msgid "Granted amount"
 msgstr "Gewährter Betrag"

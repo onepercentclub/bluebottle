@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-10 11:41+0200\n"
-"PO-Revision-Date: 2026-06-10 09:45\n"
+"POT-Creation-Date: 2026-06-10 11:13+0200\n"
+"PO-Revision-Date: 2026-06-10 09:14\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -7651,7 +7651,7 @@ msgid "Grant application"
 msgstr "Solicitud de subvención"
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:23
-#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:17
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:16
 msgctxt "platform-email"
 msgid "Grant fund"
 msgstr "Fondo de subvención"
@@ -7680,23 +7680,17 @@ msgstr "\n"
 msgctxt "platform-email"
 msgid "\n"
 "            The grant application \"%(title)s\" is ready to be paid out.<br>\n"
-"            Please take a moment to review this application and decide if it's right for your platform.<br>\n"
 "            <br>\n"
 "            %(initiator_name)s will be waiting for the payout, so please respond promptly.<br>\n"
 "        "
-msgstr "\n"
-"            La solicitud de ayuda «%(title)s» está lista para el pago.<br>\n"
-"            Tómate un momento para revisar esta solicitud y decidir si es adecuada para tu plataforma.<br>\n"
-"            <br>\n"
-"            %(initiator_name)s estará esperando el pago, así que respóndele con prontitud.<br>\n"
-"        "
+msgstr ""
 
-#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:18
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:17
 msgctxt "platform-email"
 msgid "Grant requester"
 msgstr "Solicitante de la subvención"
 
-#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:19
+#: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:18
 msgctxt "platform-email"
 msgid "Granted amount"
 msgstr "Monto otorgado"

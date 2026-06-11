@@ -18,6 +18,7 @@ from bluebottle.files.serializers import ImageSerializer, ORIGINAL_SIZE
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.updates.models import Update, UpdateImage
+from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -27,6 +28,7 @@ def no_nested_replies_validator(value):
 
 
 class UpdateSerializer(ModelSerializer):
+    update = RichTextField()
     activity = PolymorphicResourceRelatedField(
         ActivitySerializer,
         queryset=Activity.objects.all(),
@@ -51,7 +53,7 @@ class UpdateSerializer(ModelSerializer):
         polymorphic_serializer=ContributorSerializer
     )
 
-    translations = TranslationsSerializer(fields=['message'])
+    translations = TranslationsSerializer(fields=['message', 'update'])
 
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
 
@@ -72,7 +74,7 @@ class UpdateSerializer(ModelSerializer):
         if self.partial:
             return value
         image_count = self.context['request'].data.get('images', [])
-        if not (value.get('message') or value.get('video_url') or image_count):
+        if not (value.get('update') or value.get('message') or value.get('video_url') or image_count):
             raise ValidationError(
                 _("At least one of 'message', 'images', or 'video_url' must be set.")
             )
@@ -83,6 +85,7 @@ class UpdateSerializer(ModelSerializer):
 
         fields = (
             'message',
+            'update',
             'created',
             'images',
             'author',

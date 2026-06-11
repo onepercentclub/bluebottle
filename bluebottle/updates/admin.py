@@ -1,7 +1,7 @@
-from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django.contrib import admin
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from bluebottle.updates.models import Update, UpdateImage
 
 
@@ -24,7 +24,8 @@ class UpdateAdmin(
     inlines = [UpdateImageInline]
 
     raw_id_fields = ['author', 'parent', 'activity', 'contribution']
-    fields = ['activity', 'created', 'author', 'parent', 'notify', 'video_url', 'message', 'pinned', 'contribution']
+    fields = ['activity', 'created', 'author', 'parent', 'notify', 'video_url', 'update', 'message', 'pinned',
+              'contribution']
 
     list_display = ['created', 'activity', 'message']
     list_filter = (('activity__polymorphic_ctype', admin.RelatedOnlyFieldListFilter),)
@@ -34,7 +35,7 @@ class UpdateInline(TabularInlinePaginated):
     model = Update
     per_page = 8
     extra = 0
-    readonly_fields = ['created', 'author', 'parent', 'message']
+    readonly_fields = ['created', 'author', 'parent', 'message', 'update']
     fields = readonly_fields
 
     show_change_link = True

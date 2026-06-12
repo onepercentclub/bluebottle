@@ -88,6 +88,7 @@ class UpdateSerializer(ModelSerializer):
             'created',
             'images',
             'author',
+            'author_role',
             'activity',
             'parent',
             'replies',

@@ -1,9 +1,8 @@
 from rest_framework import permissions
 from rest_framework.throttling import UserRateThrottle
 
-
-from bluebottle.files.views import ImageContentView
 from bluebottle.files.serializers import ORIGINAL_SIZE
+from bluebottle.files.views import ImageContentView
 from bluebottle.updates.models import Update, UpdateImage
 from bluebottle.updates.permissions import (
     IsAuthorPermission, ActivityOwnerUpdatePermission,

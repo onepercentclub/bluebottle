@@ -18,6 +18,7 @@ from bluebottle.files.serializers import ImageSerializer, ORIGINAL_SIZE
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.updates.models import Update, UpdateImage
+from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -27,6 +28,7 @@ def no_nested_replies_validator(value):
 
 
 class UpdateSerializer(ModelSerializer):
+    message = RichTextField(allow_blank=True, required=False)
     activity = PolymorphicResourceRelatedField(
         ActivitySerializer,
         queryset=Activity.objects.all(),

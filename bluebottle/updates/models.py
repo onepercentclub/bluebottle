@@ -45,8 +45,7 @@ class Update(TriggerMixin, models.Model):
         null=True
     )
 
-    message = models.TextField(_('message'), blank=True, null=True)
-    update = QuillField(_('update'), blank=True, null=True)
+    message = QuillField(_('Message'), blank=True, null=True)
     image = ImageField(blank=True, null=True)
     video_url = models.URLField(max_length=100, blank=True, default='')
 

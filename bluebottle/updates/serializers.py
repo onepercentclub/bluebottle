@@ -28,7 +28,7 @@ def no_nested_replies_validator(value):
 
 
 class UpdateSerializer(ModelSerializer):
-    update = RichTextField(allow_blank=True, required=False)
+    message = RichTextField(allow_blank=True, required=False)
     activity = PolymorphicResourceRelatedField(
         ActivitySerializer,
         queryset=Activity.objects.all(),
@@ -53,7 +53,7 @@ class UpdateSerializer(ModelSerializer):
         polymorphic_serializer=ContributorSerializer
     )
 
-    translations = TranslationsSerializer(fields=['message', 'update'])
+    translations = TranslationsSerializer(fields=['message'])
 
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
 
@@ -74,7 +74,7 @@ class UpdateSerializer(ModelSerializer):
         if self.partial:
             return value
         image_count = self.context['request'].data.get('images', [])
-        if not (value.get('update') or value.get('message') or value.get('video_url') or image_count):
+        if not (value.get('message') or value.get('video_url') or image_count):
             raise ValidationError(
                 _("At least one of 'message', 'images', or 'video_url' must be set.")
             )
@@ -85,7 +85,6 @@ class UpdateSerializer(ModelSerializer):
 
         fields = (
             'message',
-            'update',
             'created',
             'images',
             'author',

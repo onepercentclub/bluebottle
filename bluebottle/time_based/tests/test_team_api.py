@@ -46,11 +46,12 @@ class TeamMemberListAPIViewTestCase(APITestCase):
 
     def setUp(self):
         super().setUp()
+        self.manager = BlueBottleUserFactory.create()
         self.captain = BlueBottleUserFactory.create()
         self.existing_member = BlueBottleUserFactory.create(email='existing.member@example.com')
         self.activity = ScheduleActivityFactory.create(
             team_activity='teams',
-            owner=self.captain
+            owner=self.manager
         )
         self.team = TeamFactory.create(
             user=self.captain,
@@ -163,3 +164,29 @@ class TeamMemberListAPIViewTestCase(APITestCase):
         self.model.refresh_from_db()
         self.assertEqual(self.model.user, self.existing_member)
         self.assertEqual(self.model.team, self.team)
+
+    def test_activity_owner_can_add_team_member(self):
+        data = {
+            'data': {
+                'type': 'contributors/time-based/team-members',
+                'attributes': {
+                    'email': self.existing_member.email
+                },
+                'relationships': {
+                    'team': {
+                        'data': {
+                            'id': str(self.team.pk),
+                            'type': 'contributors/time-based/teams'
+                        }
+                    }
+                }
+            }
+        }
+
+        self.perform_create(user=self.manager, data=data)
+        self.assertStatus(201)
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.user, self.existing_member)
+        self.assertEqual(self.model.team, self.team)
+        self.assertIn(self.manager, self.activity.owners)
+        self.assertNotEqual(self.manager, self.captain)

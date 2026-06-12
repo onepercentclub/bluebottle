@@ -4,6 +4,8 @@ import logging
 
 from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.template import loader
 from django.urls import path
@@ -11,6 +13,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
+
 from stripe import StripeError
 
 from bluebottle.activities.admin import (
@@ -500,6 +503,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         "title",
         "target",
         "state_name",
+        "submitted"
     ]
 
     def get_list_display(self, request):
@@ -566,6 +570,21 @@ class GrantApplicationAdmin(ActivityChildAdmin):
                 )
             )
         return fieldsets
+
+    def submitted(self, obj):
+        entry = LogEntry.objects.filter(
+            action_flag=9,
+            object_id=str(obj.pk),
+            content_type=ContentType.objects.get_for_model(obj),
+            change_message="Changed status to submitted"
+        ).order_by(
+            '-action_time'
+        ).first()
+        if entry:
+            return entry.action_time
+        return None
+
+    submitted.short_description = _("Submitted")
 
     export_to_csv_fields = (
         ('title', 'Title'),

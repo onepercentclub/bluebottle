@@ -236,8 +236,7 @@ class RelatedParentField(RelatedField):
         if isinstance(data, str):
             data = {'id': data}
 
-        if not is_local(data['id']):
-            return data['id']
+        return DoGoodEvent.objects.from_iri(data['id'])
 
 
 class SubEventSerializer(BaseActivityPubSerializer):
@@ -265,11 +264,6 @@ class SubEventSerializer(BaseActivityPubSerializer):
             'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode',
             'contributor_count', 'capacity', 'name', 'parent'
         )
-
-    def create(self, validated_data):
-        __import__('ipdb').set_trace()
-
-        return super().create(validated_data)
 
 
 class DoGoodEventSerializer(BaseEventSerializer):
@@ -318,6 +312,18 @@ class DoGoodEventSerializer(BaseEventSerializer):
             'capacity',
             'sub_event',
         )
+
+    def create(self, validated_data):
+        sub_events = validated_data.pop('sub_event', [])
+        result = super().create(validated_data)
+        field = self.fields['sub_event']
+
+        if sub_events:
+            for sub_event in sub_events:
+                sub_event['parent'] = result
+            sub_events = field.save(sub_events)
+
+        return result
 
 
 class BaseActivitySerializer(BaseActivityPubSerializer):
@@ -447,9 +453,11 @@ class JoinSerializer(BaseActivitySerializer):
             'CollectCampaign', 'DoGoodEvent', 'SubEvent'
         )
     )
+    motivation = serializers.CharField(required=False, allow_null=True)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Join
+        fields = BaseActivitySerializer.Meta.fields + ('motivation', )
 
 
 class LeaveSerializer(BaseActivitySerializer):

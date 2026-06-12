@@ -14,6 +14,7 @@ class CreateParticipantEffect(Effect):
         self.instance.participants.create(
             activity=self.instance.activity,
             user=self.instance.user,
+            remote_user=self.instance.remote_user,
             registration=self.instance,
         )
 

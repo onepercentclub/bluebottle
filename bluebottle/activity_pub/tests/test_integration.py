@@ -24,7 +24,7 @@ from bluebottle.activity_pub.models import (
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.collect.tests.factories import CollectActivityFactory, CollectTypeFactory
+from bluebottle.collect.tests.factories import CollectActivityFactory, CollectTypeFactory, CollectContributorFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
@@ -39,16 +39,21 @@ from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactor
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
-from bluebottle.time_based.models import RegisteredDateActivity
+from bluebottle.time_based.models import PeriodicParticipant, RegisteredDateActivity
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
     DateParticipantFactory,
+    DateRegistrationFactory,
     DeadlineActivityFactory,
+    DeadlineParticipantFactory,
+    DeadlineRegistrationFactory,
+    PeriodicRegistrationFactory,
     RegisteredDateActivityFactory,
     RegisteredDateParticipantFactory,
     PeriodicActivityFactory,
     ScheduleActivityFactory,
+    ScheduleParticipantFactory,
 )
 
 
@@ -413,6 +418,81 @@ class SyncTestCase(ActivityPubTestCase):
         accept = Accept.objects.first()
         self.assertTrue(accept)
 
+    def join(self):
+        self.participant = self.participant_factory.create(activity=self.adopted)
+
+    def test_join(self):
+        self.test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            self.join()
+            self.email = self.participant.user.email
+
+        self.synced_participant = self.participant_factory._meta.model.objects.get()
+
+        self.assertEqual(
+            self.email, self.synced_participant.remote_user.email
+        )
+
+        self.assertEqual(
+            self.synced_participant.status, self.expected_partcipants_status
+        )
+
+    def test_leave(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.states.withdraw(save=True)
+
+        self.synced_participant.refresh_from_db()
+        self.assertEqual(
+            self.synced_participant.status, 'rejected'
+        )
+
+    def test_rejoin(self):
+        self.test_leave()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.states.accept(save=True)
+
+        self.synced_participant.refresh_from_db()
+        self.assertEqual(
+            self.synced_participant.status, self.expected_partcipants_status
+        )
+
+    def test_update(self):
+        super().test_adopt()
+
+        with httmock.HTTMock(image_mock):
+            self.model.title = 'Some new title'
+            self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            self.event.refresh_from_db()
+            self.assertEqual(self.event.name, 'Some new title')
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.adopted.title, 'Some new title')
+
+    def test_succeed(self):
+        super().test_adopt()
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.succeed(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.model.status, 'succeeded')
+
+    def test_cancel(self):
+        super().test_adopt()
+
+        with httmock.HTTMock(image_mock):
+            self.model.states.cancel(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.model.status, 'cancelled')
+
 
 class LinkTestCase(ActivityPubTestCase):
     expected_link_status = 'open'
@@ -534,6 +614,8 @@ class TemplateDeedTestCase(TemplateTestCase, BluebottleTestCase):
 
 class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
     factory = DeedFactory
+    participant_factory = DeedParticipantFactory
+    expected_partcipants_status = 'accepted'
 
     def create(self, **kwargs):
         super().create(
@@ -545,75 +627,117 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
         if 'status' not in kwargs:
             self.submit()
 
+
+class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
+    factory = DeadlineActivityFactory
+    participant_factory = DeadlineParticipantFactory
+    expected_partcipants_status = 'new'
+
+    motivation = 'Some motivation'
+
+    def create(self, **kwargs):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            deadline=(datetime.now() + timedelta(days=20)).date(),
+            **kwargs
+        )
+        self.submit()
+
+    def join(self):
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.adopted,
+            answer=self.motivation,
+        )
+        self.participant = registration.participants.get()
+
     def test_join(self):
-        super().test_adopt()
+        super().test_join()
 
-        with LocalTenant(self.other_tenant):
-            self.participant = DeedParticipantFactory.create(activity=self.adopted)
+        self.assertEqual(self.synced_participant.registration.answer, self.motivation)
 
-        self.synced_participant = self.model.participants.get()
-        self.assertEqual(
-            self.participant.user.email, self.synced_participant.remote_user.email
+
+class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
+    factory = ScheduleActivityFactory
+    participant_factory = ScheduleParticipantFactory
+    expected_partcipants_status = 'new'
+
+    def create(self, **kwargs):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
         )
+        self.submit()
 
-        self.assertEqual(
-            self.synced_participant.status, 'accepted'
-        )
-
-    def test_leave(self):
+    def test_schedule(self):
         self.test_join()
 
-        with LocalTenant(self.other_tenant):
-            self.participant.states.withdraw(save=True)
+        self.synced_participant.slot.start = (datetime.now() + timedelta(days=10)).date()
+        self.synced_participant.slot.duration = timedelta(hours=10)
+        self.synced_participant.slot.localtion = GeolocationFactory.create()
+        self.synced_participsnt.slot.save()
 
-        self.synced_participant.refresh_from_db()
+        with LocalTenant(self.other_tneant):
+            self.participant.refresh_from_db()
+            self.assertEqual(
+                self.synced_participant.slot.start, self.participant.slot.start
+            )
+
+
+class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
+    factory = PeriodicActivityFactory
+    participant_factory = PeriodicRegistrationFactory
+    expected_partcipants_status = 'new'
+
+    def create(self, **kwargs):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None
+        )
+        self.submit()
+
+    def test_join(self):
+        super().test_join()
+
         self.assertEqual(
-            self.synced_participant.status, 'rejected'
+            self.synced_participant.participants.get().slot, self.model.slots.first()
+        )
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assertEqual(
+                self.participant.slot.origin.pub_url, self.model.slots.first().activity_pub_model.pub_url
+            )
+
+    def test_next_slot(self):
+        self.test_join()
+
+        self.model.slots.first().states.finish(save=True)
+
+        self.assertEqual(
+            PeriodicParticipant.objects.count(), 2
         )
 
-    def test_rejoin(self):
-        self.test_leave()
+        with LocalTenant(self.other_tneant):
+            self.assertEqual(
+                PeriodicParticipant.objects.count(), 2
+            )
 
-        with LocalTenant(self.other_tenant):
-            self.participant.states.accept(save=True)
 
-        self.synced_participant.refresh_from_db()
-        self.assertEqual(
-            self.synced_participant.status, 'accepted'
+class SyncCollectActivityTestCase(SyncTestCase, BluebottleTestCase):
+    factory = CollectActivityFactory
+    participant_factory = CollectContributorFactory
+    expected_partcipants_status = 'accepted'
+
+    def create(self, **kwargs):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            location_hint='ring rtop bell',
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date(),
+            collect_type=CollectTypeFactory.create(),
+            organization=None
         )
-
-    def test_update(self):
-        super().test_adopt()
-
-        with httmock.HTTMock(image_mock):
-            self.model.title = 'Some new title'
-            self.model.save()
-
-        with LocalTenant(self.other_tenant):
-            self.event.refresh_from_db()
-            self.assertEqual(self.event.name, 'Some new title')
-            self.adopted.refresh_from_db()
-            self.assertEqual(self.adopted.title, 'Some new title')
-
-    def test_succeed(self):
-        super().test_adopt()
-
-        with httmock.HTTMock(image_mock):
-            self.model.states.succeed(save=True)
-
-        with LocalTenant(self.other_tenant):
-            self.adopted.refresh_from_db()
-            self.assertEqual(self.model.status, 'succeeded')
-
-    def test_cancel(self):
-        super().test_adopt()
-
-        with httmock.HTTMock(image_mock):
-            self.model.states.cancel(save=True)
-
-        with LocalTenant(self.other_tenant):
-            self.adopted.refresh_from_db()
-            self.assertEqual(self.model.status, 'cancelled')
+        self.submit()
 
 
 class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
@@ -1180,6 +1304,7 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
 
 class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = DateActivityFactory
+    motivation = 'I would really like to join'
 
     def create(self, **kwargs):
         super().create(slots=[], organization=None, **kwargs)
@@ -1193,17 +1318,20 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.submit()
 
+    def join(self):
+        registration = DateRegistrationFactory.create(
+            activity=self.adopted,
+            answer=self.motivation
+        )
+        self.participant = DateParticipantFactory.create(
+            activity=self.adopted,
+            slot=self.adopted.slots.first(),
+            registration=registration
+        )
+
     def test_join(self):
-        super().test_adopt()
-
-        with LocalTenant(self.other_tenant):
-            self.participant = DateParticipantFactory.create(
-                activity=self.adopted, slot=self.adopted.slots.first()
-            )
-
-        synced_participant = self.model.participants.get()
-        self.assertTrue(synced_participant.origin)
-        self.assertEqual(self.participant.user.email, synced_participant.remote_user.email)
+        super().test_join()
+        self.assertEqual(self.synced_participant.registration.answer, self.motivation)
 
 
 @override_settings(

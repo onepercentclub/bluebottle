@@ -39,6 +39,7 @@
     "slotMode": "goodup:slotMode",
     "parent": "schema:parent",
     "email": "schema:email",
+    "motivation": "goodup:motivation",
     "address": {
       "@id": "as:address",
       "@type": "@id"

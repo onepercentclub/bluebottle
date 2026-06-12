@@ -19,24 +19,22 @@ from bluebottle.activity_pub.models import (
     EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices,
     RepetitionModeChoices, SlotModeChoices, Create, ActivityPubModel
 )
-from bluebottle.activity_pub.serializers import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
 from bluebottle.activities.models import Contributor, RemoteMember
-from bluebottle.collect.models import CollectActivity, CollectType
-from bluebottle.collect.tests.factories import CollectTypeFactory
+from bluebottle.collect.models import CollectActivity, CollectType, CollectContributor
 from bluebottle.members.models import Member
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
-from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.grant_management.models import GrantApplication
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import (
-    DateActivitySlot, DateParticipant, DeadlineActivity, DateActivity,
-    DeadlineParticipant, RegisteredDateActivity,
-    PeriodicActivity, RegisteredDateParticipant, ScheduleActivity
+    DateActivitySlot, DateParticipant, DateRegistration, DeadlineActivity, DateActivity,
+    DeadlineRegistration, PeriodicRegistration, RegisteredDateActivity,
+    PeriodicActivity, Registration, ScheduleActivity, ScheduleRegistration, ScheduleSlot
 )
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.models import get_default_language
@@ -547,7 +545,23 @@ class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer)
         )
 
 
-class SlotsSerializer(FederatedObjectBaseSerializer):
+class RelatedParentField(RelatedField):
+    def get_queryset(self):
+        # TODO: filter queryset on correct types
+        return DateActivity.objects.all()
+
+    def to_representation(self, value):
+        if hasattr(value, 'activity_pub_model'):
+            return value.activity_pub_model.pub_url
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = {'id': data}
+
+        return ActivityPubModel.objects.from_iri(data['id'])
+
+
+class DateSlotsSerializer(FederatedObjectBaseSerializer):
     type = TypeField('subEvent')
 
     name = serializers.CharField(source='title', required=False, allow_null=True)
@@ -563,6 +577,7 @@ class SlotsSerializer(FederatedObjectBaseSerializer):
     status = serializers.CharField(required=False, allow_null=True)
     location_hint = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     online_meeting_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    parent = RelatedParentField(source='activity')
 
     contributor_count = serializers.IntegerField(
         source='remote_contributor_count',
@@ -583,14 +598,40 @@ class SlotsSerializer(FederatedObjectBaseSerializer):
             'name', 'location', 'start_time', 'end_time',
             'event_attendance_mode', 'duration', 'capacity',
             'status', 'location_hint', 'online_meeting_url',
-            'contributor_count',
+            'parent', 'contributor_count',
+        )
+
+
+class ScheduleSlotsSerializer(FederatedObjectBaseSerializer):
+    type = TypeField('subEvent')
+
+    name = serializers.CharField(source='title', required=False, allow_null=True)
+    start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
+    end_time = serializers.DateTimeField(source='end', read_only=True)
+    location = LocationSerializer(allow_null=True, required=False)
+
+    event_attendance_mode = EventAttendanceModeField(required=False, allow_null=True)
+
+    duration = serializers.DurationField(required=False, allow_null=True)
+
+    capacity = serializers.IntegerField(required=False, allow_null=True)
+    status = serializers.CharField(required=False, allow_null=True)
+    location_hint = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    online_meeting_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = ScheduleSlot
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
+            'name', 'location', 'start_time', 'end_time',
+            'event_attendance_mode', 'duration', 'capacity',
+            'status', 'location_hint', 'online_meeting_url',
         )
 
 
 class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
     type = TypeField('DoGoodEvent')
 
-    sub_event = SlotsSerializer(many=True, source='slots')
+    sub_event = DateSlotsSerializer(many=True, source='slots')
     join_mode = JoinModeField()
     application_deadline = DateField(source='registration_deadline', allow_null=True)
 
@@ -688,10 +729,13 @@ class RelatedActivityField(RelatedField):
         return ActivityPubModel.objects.all()
 
     def to_representation(self, value):
-        if hasattr(self.parent.instance, 'slot'):
+        if hasattr(self.parent.instance, 'slot') and self.parent.instance.slot:
             value = self.parent.instance.slot
 
-        return FederatedObjectSerializer().to_representation(value)
+        if hasattr(value, 'activity_pub_model'):
+            return value.activity_pub_model.pub_url
+        elif hasattr(value, 'origin'):
+            return value.origin.pub_url
 
     def to_internal_value(self, data):
         if isinstance(data, str):
@@ -700,51 +744,72 @@ class RelatedActivityField(RelatedField):
         return ActivityPubModel.objects.from_iri(data['id']).origin
 
 
-class JoinSerializer(FederatedObjectBaseSerializer):
+class RegistrationSerializer(FederatedObjectBaseSerializer):
     type = TypeField('Join')
     actor = MemberSerializer(source='user')
     object = RelatedActivityField(source='activity')
 
     class Meta:
-        model = Contributor
+        model = Registration
         fields = FederatedObjectBaseSerializer.Meta.fields + (
             'actor', 'object',
         )
 
-    participant_model_mapping = {
-        Deed: DeedParticipant,
-        DateActivitySlot: DateParticipant,
-        DeadlineActivity: DeadlineParticipant,
-        ScheduleActivity: ScheduleActivity,
-        RegisteredDateActivity: RegisteredDateParticipant,
-        PeriodicActivity: PeriodicActivity,
-        CollectActivity: CollectTypeFactory,
-        Funding: Donor
-    }
+
+class MotivationField(serializers.CharField):
+    def to_representation(self, value):
+        if hasattr(value, 'registration'):
+            value = value.registration
+
+        if isinstance(value, Registration):
+            return value.answer
+
+    def to_internal_value(self, data):
+        return {'answer': data}
+
+
+class ContributorSerializer(FederatedObjectBaseSerializer):
+    type = TypeField('Join')
+    actor = MemberSerializer(source='user')
+    object = RelatedActivityField(source='activity')
+    motivation = MotivationField(required=False, allow_null=True, source='*')
+
+    class Meta:
+        model = Contributor
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
+            'actor', 'object', 'motivation'
+        )
 
     def create(self, validated_data):
         validated_data.pop('id')
         validated_data.pop('user')
 
-        member_serializer = MemberSerializer(data=self.initial_data['actor'])
-        member_serializer.is_valid(raise_exception=True)
-        validated_data['remote_user'] = member_serializer.save()
+        field = self.fields['actor']
+        field.initial_data = self.initial_data['actor']
+        field.is_valid(raise_exception=True)
+        validated_data['remote_user'] = field.save()
 
-        model_type = type(validated_data['activity'])
-        contributor_model = self.participant_model_mapping[model_type]
-
-        if model_type == DateActivitySlot:
-            validated_data['slot'] = validated_data['activity']
-            validated_data['activity'] = validated_data['slot'].activity
-
-        try:
-            self.instance = contributor_model.objects.get(**validated_data)
-
-            self.instance.states.accept(save=True)
-        except contributor_model.DoesNotExist:
-
-            self.instance = contributor_model.objects.create(
+        if isinstance(validated_data['activity'], Deed):
+            validated_data.pop('answer')
+            return DeedParticipant.objects.create(**validated_data)
+        elif isinstance(validated_data['activity'], CollectActivity):
+            return CollectContributor.objects.create(**validated_data)
+        elif isinstance(validated_data['activity'], DeadlineActivity):
+            registration = DeadlineRegistration.objects.create(**validated_data)
+            return registration.participants.first()
+        elif isinstance(validated_data['activity'], ScheduleActivity):
+            return ScheduleRegistration.objects.create(**validated_data)
+        elif isinstance(validated_data['activity'], PeriodicActivity):
+            return PeriodicRegistration.objects.create(**validated_data)
+        elif isinstance(validated_data['activity'], DateActivitySlot):
+            slot = validated_data.pop('activity')
+            registration = DateRegistration.objects.create(
+                activity=slot.activity,
                 **validated_data
             )
-
-        return self.instance
+            return DateParticipant.objects.create(
+                slot=slot,
+                activity=slot.activity,
+                registration=registration,
+                remote_user=registration.remote_user
+            )

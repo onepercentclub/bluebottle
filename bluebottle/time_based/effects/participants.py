@@ -211,8 +211,12 @@ class CreateScheduleSlotEffect(Effect):
     def without_slot(self):
         return not self.instance.slot_id
 
+    def is_local(self):
+        return not hasattr(self.instance.activity, 'origin')
+
     def post_save(self, **kwargs):
         activity = self.instance.activity
+
         self.instance.slot = ScheduleSlot.objects.create(
             activity=activity,
             is_online=activity.is_online,
@@ -223,4 +227,4 @@ class CreateScheduleSlotEffect(Effect):
         )
         self.instance.save()
 
-    conditions = [without_slot]
+    conditions = [without_slot, is_local]

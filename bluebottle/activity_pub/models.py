@@ -868,6 +868,8 @@ class Join(Activity):
     object_id = models.PositiveBigIntegerField()
     object = GenericForeignKey("object_content_type", "object_id")
 
+    motivation = models.TextField(null=True, blank=True)
+
     sub_event = models.ForeignKey(
         'activity_pub.SubEvent',
         null=True,
@@ -886,7 +888,7 @@ class Join(Activity):
     def default_recipients(self):
         try:
             create = self.object.create_set.get()
-        except Exception:
+        except AttributeError:
             create = self.object.parent.create_set.get()
 
         yield create.actor

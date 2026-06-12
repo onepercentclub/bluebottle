@@ -1191,7 +1191,17 @@ class Registration(TriggerMixin, PolymorphicModel):
     user = models.ForeignKey(
         'members.Member',
         related_name='registrations',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True
+    )
+    remote_user = models.ForeignKey(
+        "activities.RemoteMember",
+        verbose_name=_("Remote member"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="registrations",
+        help_text=_("When set, this registration is a synced participant without a local user."),
     )
 
     status = models.CharField(max_length=40)

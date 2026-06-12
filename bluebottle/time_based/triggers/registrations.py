@@ -1,4 +1,5 @@
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
+from bluebottle.activity_pub.effects import SendJoinEffect
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
@@ -290,6 +291,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(
                     PeriodicUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
+                SendJoinEffect
             ],
         ),
         TransitionTrigger(

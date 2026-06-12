@@ -573,7 +573,6 @@ class ActivitySearch(Search):
         search = super().query(search, query)
         search = search.filter(Term(archived=False))
         if not self.user.is_staff:
-            __import__('ipdb').set_trace()
             segment_filters = [
                 Nested(path="segments", query=(Term(segments__closed=False))),
                 Nested(

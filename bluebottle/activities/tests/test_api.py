@@ -896,7 +896,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(open + closed)
 
         owner = closed[0].owner
-        print('owner')
         self.search({}, user=owner)
         self.assertFound(open + [closed[0]])
 

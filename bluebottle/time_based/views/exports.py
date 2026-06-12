@@ -98,6 +98,15 @@ class ScheduleParticipantExportView(TimeBasedExportView):
     model = ScheduleActivity
     participant_model = ScheduleParticipant
 
+    fields = (
+        ("user__email", "Email"),
+        ("user__full_name", "Name"),
+        ("created", "Registration Date"),
+        ("slot__start", "Start"),
+        ("status", "Status"),
+        ("registration__answer", "Registration answer"),
+    )
+
 
 class TeamScheduleParticipantExportView(TimeBasedExportView):
     model = ScheduleActivity
@@ -105,21 +114,23 @@ class TeamScheduleParticipantExportView(TimeBasedExportView):
         ("user__email", "Captain email"),
         ("user__full_name", "Captain name"),
         ("created", "Registration Date"),
-        ("team__status", "Status"),
-        ("answer", "Registration answer"),
+        ("slots__first__start", "Start"),
+        ("status", "Status"),
+        ("registration__answer", "Registration answer"),
     )
     team_fields = (
         ("user__email", "Email"),
         ("user__full_name", "Name"),
         ("created", "Registration Date"),
+        ("slot__start", "Start"),
         ("status", "Status"),
-        ("is_captain", "Is captain"),
+        ("team_member__is_captain", "Is captain"),
     )
 
     def get_instances(self):
         return (
             self.get_object()
-            .registrations.prefetch_related("user__segments")
+            .teams.prefetch_related("user__segments")
             .select_related("user")
         )
 
@@ -127,7 +138,9 @@ class TeamScheduleParticipantExportView(TimeBasedExportView):
         return [prep_field(self.request, team, field[0]) for field in self.team_fields]
 
     def get_team_data(self, team):
-        return [self.get_team_row(instance) for instance in team.team_members.all()]
+        return [
+            self.get_team_row(instance.participants.first()) for instance in team.team_members.all()
+        ]
 
     def write_data(self, workbook):
         super().write_data(workbook)

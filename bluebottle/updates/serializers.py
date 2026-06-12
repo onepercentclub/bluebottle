@@ -28,7 +28,7 @@ def no_nested_replies_validator(value):
 
 
 class UpdateSerializer(ModelSerializer):
-    update = RichTextField()
+    update = RichTextField(allow_blank=True, required=False)
     activity = PolymorphicResourceRelatedField(
         ActivitySerializer,
         queryset=Activity.objects.all(),

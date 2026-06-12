@@ -3,20 +3,19 @@ from django.urls import reverse
 from rest_framework import status
 
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.updates.models import Update
 from bluebottle.updates.serializers import UpdateSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
 
-from bluebottle.initiatives.models import InitiativePlatformSettings
-
 
 class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message', 'images', 'parent', 'notify', 'pinned', 'video_url']
+    fields = ['activity', 'message', 'update', 'images', 'parent', 'notify', 'pinned', 'video_url']
 
     def setUp(self):
         super().setUp()
@@ -26,6 +25,7 @@ class UpdateListTestCase(APITestCase):
             'parent': self.factory.create(),
             'video_url': '',
             'message': 'Some message',
+            'update': '',
             'notify': False,
             'pinned': False,
         }
@@ -33,7 +33,6 @@ class UpdateListTestCase(APITestCase):
     def test_create(self):
         mail.outbox = []
         self.perform_create(user=self.user)
-
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertIncluded('author', self.user)
         self.assertRelationship('activity', [self.defaults['activity']])

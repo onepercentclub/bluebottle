@@ -72,6 +72,12 @@ class Update(TriggerMixin, models.Model):
 
         super().save(*args, **kwargs)
 
+    @property
+    def has_media(self):
+        if self.images.count() or self.video_url:
+            return True
+        return False
+
     class Meta:
         verbose_name = _('Update')
         ordering = ('-created',)

@@ -55,6 +55,12 @@ class Update(TriggerMixin, models.Model):
     notify = models.BooleanField(_('notify supporters'), default=False)
 
     @property
+    def update_type(self):
+        if self.activity and self.author in self.activity.owners and not self.contribution:
+            return 'activity-update'
+        return 'message'
+
+    @property
     def fake_name(self):
         if self.contribution and getattr(self.contribution, 'name', None):
             return self.contribution.name

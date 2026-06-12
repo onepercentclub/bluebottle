@@ -95,7 +95,8 @@ class UpdateSerializer(ModelSerializer):
             'permissions',
             'contribution',
             'fake_name',
-            'translations'
+            'translations',
+            'update_type'
         )
         meta_fields = (
             'permissions',

@@ -74,7 +74,7 @@ class Update(TriggerMixin, models.Model):
 
     class Meta:
         verbose_name = _('Update')
-        ordering = ('created',)
+        ordering = ('-created',)
 
     class JSONAPIMeta():
         resource_name = 'updates'

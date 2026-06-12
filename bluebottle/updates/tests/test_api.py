@@ -15,7 +15,7 @@ class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message', 'update', 'images', 'parent', 'notify', 'pinned', 'video_url']
+    fields = ['activity', 'message', 'images', 'parent', 'notify', 'pinned', 'video_url']
 
     def setUp(self):
         super().setUp()
@@ -25,7 +25,6 @@ class UpdateListTestCase(APITestCase):
             'parent': self.factory.create(),
             'video_url': '',
             'message': 'Some message',
-            'update': '',
             'notify': False,
             'pinned': False,
         }
@@ -219,7 +218,7 @@ class UpdateDetailView(APITestCase):
     serializer = UpdateSerializer
     factory = UpdateFactory
 
-    fields = ['activity', 'author', 'messsage', 'images', 'parent']
+    fields = ['activity', 'author', 'message', 'images', 'parent']
 
     def setUp(self):
         super().setUp()

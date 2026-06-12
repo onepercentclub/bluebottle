@@ -573,9 +573,10 @@ class ActivitySearch(Search):
         search = super().query(search, query)
         search = search.filter(Term(archived=False))
         if not self.user.is_staff:
-            search = search.filter(
-                ~Nested(path="segments", query=(Term(segments__closed=True)))
-                | Nested(
+            __import__('ipdb').set_trace()
+            segment_filters = [
+                Nested(path="segments", query=(Term(segments__closed=False))),
+                Nested(
                     path="segments",
                     query=(
                         Terms(
@@ -592,7 +593,12 @@ class ActivitySearch(Search):
                         )
                     ),
                 )
-            )
+            ]
+            if self.user.is_authenticated:
+                segment_filters.append(
+                    Term(manager=self.user.pk)
+                )
+            search = search.filter(Bool(should=segment_filters))
 
         if "initiative.id" not in self._filters and "status" not in self._filters:
             search = search.filter(

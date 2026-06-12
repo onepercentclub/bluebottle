@@ -895,6 +895,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.search({}, user=staff_user)
         self.assertFound(open + closed)
 
+        owner = closed[0].owner
+        print('owner')
+        self.search({}, user=owner)
+        self.assertFound(open + [closed[0]])
+
     def test_filter_type(self):
         matching = (
             DateActivityFactory.create_batch(3, status='open') +

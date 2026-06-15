@@ -339,6 +339,17 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("generic", _("Same for all activities")),
     )
 
+    LOCATION_LEVELS = (
+        ("venue_name", _("Venue name")),
+        ("address", _("Address")),
+        ("neighborhood", _("Neighbourhood")),
+        ("locality", _("Locality")),
+        ("place", _("Place")),
+        ("region", _("Region")),
+        ("country", _("Country")),
+        ("country_code", _("Country code")),
+    )
+
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,

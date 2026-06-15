@@ -115,7 +115,7 @@ class GeolocationMapboxPointFieldWidget(MapboxPointFieldWidget):
 class GeoFeatureAdmin(TranslatableAdmin):
     list_display = ('place_name', 'feature_type', 'mapbox_id', 'name')
     search_fields = ('mapbox_id', 'place_name', 'translations__name')
-    readonly_fields = ('mapbox_id', 'feature_type', 'place_name')
+    readonly_fields = ('mapbox_id', 'feature_type', 'name', 'place_name')
     fields = ('mapbox_id', 'feature_type', 'place_name', 'name')
 
 
@@ -304,12 +304,14 @@ class GeolocationAdmin(admin.ModelAdmin):
         return str(obj)
 
     list_filter = ('country', )
-    search_fields = ('mapbox_id', 'location_name', 'geofeatures__translations__name')
+    search_fields = ('mapbox_id', 'geofeatures__translations__name')
     inlines = (GeolocationGeoFeatureInline,)
 
     fieldsets = (
-        (_('Location'), {'fields': ('position', 'location_name', 'mapbox_id')}),
+        (_('Location'), {'fields': ('position', 'place_name', 'mapbox_id')}),
     )
+
+    readonly_fields = ('place_name',)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
@@ -330,9 +332,11 @@ class GeolocationAdmin(admin.ModelAdmin):
         return fieldsets
 
     def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
         if obj and obj.pk:
-            return ('related_objects_display',)
-        return ()
+            fields = fields + ('related_objects_display',)
+            return fields
+        return fields
 
     @admin.display(description=_('Related objects'))
     def related_objects_display(self, obj):

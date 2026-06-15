@@ -24,9 +24,68 @@
 
     function setMapboxId(mapboxId) {
         const field = document.getElementById('id_mapbox_id');
-        if (field && mapboxId) {
-            field.value = mapboxId;
+        if (field) {
+            field.value = mapboxId || '';
         }
+    }
+
+    function getExistingMapboxId() {
+        const field = document.getElementById('id_mapbox_id');
+        return field && field.value ? field.value.trim() : '';
+    }
+
+    function getExistingLocationName() {
+        const field = document.getElementById('id_location_name');
+        return field && field.value ? field.value.trim() : '';
+    }
+
+    function forwardGeocodeByMapboxIdV6(mapboxId, accessToken) {
+        const url = new URL('https://api.mapbox.com/search/geocode/v6/forward');
+        url.searchParams.set('q', mapboxId);
+        url.searchParams.set('permanent', 'true');
+        url.searchParams.set('limit', '1');
+        url.searchParams.set('access_token', accessToken);
+
+        return fetch(url.toString())
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                return preferAddressFeature(data.features || []);
+            });
+    }
+
+    function loadExistingGeolocation(widget) {
+        const latitude = widget.djangoGeoJSONValue.lat;
+        const longitude = widget.djangoGeoJSONValue.lng;
+        const mapboxId = getExistingMapboxId();
+        const locationName = getExistingLocationName();
+
+        function showMarker(displayLatitude, displayLongitude) {
+            widget.addMarkerToMap(displayLatitude, displayLongitude);
+            widget.fitBoundMarker();
+            widget.enableClearBtn();
+            if (widget.addressAutoCompleteInput) {
+                widget.addressAutoCompleteInput.val(locationName);
+            }
+        }
+
+        if (mapboxId) {
+            forwardGeocodeByMapboxIdV6(mapboxId, mapboxgl.accessToken).then(function (feature) {
+                if (feature && feature.geometry && feature.geometry.coordinates) {
+                    const coordinates = feature.geometry.coordinates;
+                    showMarker(coordinates[1], coordinates[0]);
+                    if (widget.addressAutoCompleteInput && !locationName) {
+                        widget.addressAutoCompleteInput.val(featureLabel(feature));
+                    }
+                } else {
+                    showMarker(latitude, longitude);
+                }
+            });
+            return;
+        }
+
+        showMarker(latitude, longitude);
     }
 
     function buildReverseUrl(longitude, latitude, accessToken, types, limit) {
@@ -223,9 +282,7 @@
         $(this.mapElement).data('mwClassObj', this);
 
         if (!$.isEmptyObject(this.djangoGeoJSONValue)) {
-            this.addMarkerToMap(this.djangoGeoJSONValue.lat, this.djangoGeoJSONValue.lng);
-            this.updateDjangoInput();
-            this.fitBoundMarker();
+            loadExistingGeolocation(this);
         }
     };
 

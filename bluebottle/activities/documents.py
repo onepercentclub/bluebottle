@@ -6,6 +6,7 @@ from elasticsearch_dsl.field import DateRange
 from bluebottle.activities.models import Activity
 from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
+from bluebottle.geo.mapbox import get_translated_geofeature_list
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.documents import deduplicate, get_translated_list, get_translated_segments
 from bluebottle.initiatives.models import Initiative, Theme
@@ -160,6 +161,17 @@ class ActivityDocument(Document):
             'city': TextField(),
             'country': TextField(attr='country.name'),
             'country_code': TextField(attr='country.alpha2_code'),
+        }
+    )
+
+    geofeature = fields.NestedField(
+        properties={
+            'id': fields.LongField(),
+            'name': TextField(),
+            'place_name': TextField(),
+            'language': fields.KeywordField(),
+            'country': TextField(),
+            'country_code': TextField(),
         }
     )
 
@@ -340,10 +352,10 @@ class ActivityDocument(Document):
 
     def prepare_location(self, instance):
         locations = []
-        if hasattr(instance, 'location') and instance.location:
+        if hasattr(instance, 'location') and instance.location and instance.location.geofeature:
             locations.append({
                 'id': instance.location.id,
-                'name': instance.location.formatted_address,
+                'name': instance.location.geofeature.name,
                 'locality': instance.location.locality,
                 'country_code': instance.location.country.alpha2_code if instance.location.country else None,
                 'country': instance.location.country.name if instance.location.country else None,
@@ -395,6 +407,23 @@ class ActivityDocument(Document):
     def prepare_theme(self, instance):
         if instance.theme:
             return get_translated_list(instance.theme)
+
+    def prepare_geofeature(self, instance):
+        location = None
+        geofeatures = []
+        if hasattr(instance, 'location') and instance.location:
+            location = instance.location
+        elif hasattr(instance, 'place') and instance.place:
+            location = instance.place
+        elif instance.initiative and instance.initiative.place:
+            location = instance.initiative.place
+
+        if not location or location.geofeatures.count() == 0:
+            return []
+
+        for geofeature in location.geofeatures.all():
+            geofeatures = geofeatures + get_translated_geofeature_list(geofeature)
+        return geofeatures
 
     def prepare_categories(self, instance):
         categories = []

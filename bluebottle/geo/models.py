@@ -278,12 +278,6 @@ class Geolocation(models.Model):
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
-    location_name = models.CharField(
-        _('Location name'),
-        help_text=_('The name of the location, e.g. the name of the community center.'),
-        max_length=255, blank=True, null=True
-    )
-
     position = PointField(null=True)
 
     geofeatures = models.ManyToManyField(
@@ -322,6 +316,12 @@ class Geolocation(models.Model):
                 feature.pk,
             ),
         )
+
+    @property
+    def place_name(self):
+        if self.geofeature:
+            return self.geofeature.place_name
+        return self.formatted_address or self.locality or '-'
 
     def __str__(self):
         geofeature = self.geofeature

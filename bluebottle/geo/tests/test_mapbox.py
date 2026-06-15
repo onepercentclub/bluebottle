@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest import mock
 
 from django.contrib.gis.geos import Point
@@ -6,6 +7,7 @@ from bluebottle.geo import mapbox as mapbox_utils
 from bluebottle.geo.models import GeoFeature, Geolocation
 from bluebottle.geo.tests.mapbox_fixtures import MAPBOX_V6_ADDRESS_FEATURE
 from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -192,6 +194,80 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         geofeature = GeoFeature.objects.get(mapbox_id='dXJuOm1ieGFkcjpuZXdjb3VudHJ5')
         self.assertEqual(geofeature.safe_translation_getter('name', any_language=True), 'Netherlands')
         self.assertEqual(geofeature.safe_translation_getter('place_name', any_language=True), 'Netherlands')
+
+    def test_sync_geofeatures_applies_mapbox_translation_objects(self):
+        LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)
+        LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
+        country = CountryFactory.create(alpha2_code='NL')
+        geolocation = Geolocation.objects.create(
+            position=Point(3.851166, 51.762731),
+            mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
+            country=country,
+        )
+
+        feature = deepcopy(MAPBOX_V6_ADDRESS_FEATURE)
+        context = feature['properties']['context']
+        context['place']['translations'] = {
+            'en': {'language': 'en', 'name': 'Ouddorp'},
+            'nl': {'language': 'nl', 'name': 'Ouddorp'},
+        }
+        context['country']['translations'] = {
+            'en': {'language': 'en', 'name': 'Netherlands'},
+            'nl': {'language': 'nl', 'name': 'Nederland'},
+        }
+
+        mapbox_utils.sync_geofeatures(geolocation, feature, language='en')
+
+        place_feature = GeoFeature.objects.get(
+            mapbox_id=context['place']['mapbox_id'],
+        )
+        place_feature.set_current_language('nl')
+        self.assertEqual(place_feature.name, 'Ouddorp')
+        self.assertEqual(place_feature.place_name, 'Ouddorp, Nederland')
+
+        country_feature = GeoFeature.objects.get(
+            mapbox_id=context['country']['mapbox_id'],
+        )
+        country_feature.set_current_language('nl')
+        self.assertEqual(country_feature.name, 'Nederland')
+
+    @mock.patch('bluebottle.geo.mapbox.forward_v6')
+    def test_lookup_by_mapbox_id_requests_platform_languages(self, mock_forward):
+        LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)
+        LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
+        mock_forward.return_value = {'features': []}
+
+        mapbox_utils.lookup_by_mapbox_id('dXJuOm1ieGFkcjox', language='en')
+
+        self.assertEqual(mock_forward.call_args.kwargs['language'], 'en,nl')
+
+    def test_get_translated_geofeature_list(self):
+        LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)
+        LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
+        country = CountryFactory.create(alpha2_code='NL')
+        geofeature = GeoFeature.objects.create(
+            mapbox_id='dXJuOm1ieGFkcjox',
+            feature_type='place',
+        )
+        geofeature.set_current_language('en')
+        geofeature.name = 'Ouddorp'
+        geofeature.place_name = 'Ouddorp, Netherlands'
+        geofeature.save()
+
+        geofeature.set_current_language('nl')
+        geofeature.name = 'Ouddorp'
+        geofeature.place_name = 'Ouddorp, Nederland'
+        geofeature.save()
+
+        translations = mapbox_utils.get_translated_geofeature_list(geofeature, country=country)
+        languages = {entry['language'] for entry in translations}
+
+        self.assertIn('en', languages)
+        self.assertIn('nl', languages)
+        self.assertEqual(
+            next(entry for entry in translations if entry['language'] == 'nl')['place_name'],
+            'Ouddorp, Nederland',
+        )
 
     @mock.patch(
         'bluebottle.geo.models.Geolocation.reverse_geocode',

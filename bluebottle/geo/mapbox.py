@@ -150,12 +150,13 @@ def reverse_v6(longitude, latitude, types=None, language=None, limit=None):
 
 
 def reverse_geocode_feature(longitude, latitude, language=None):
+    languages = platform_language_param(language)
     try:
         response = reverse_v6(
             longitude,
             latitude,
             types='address',
-            language=language,
+            language=languages,
             limit=1,
         )
         feature = _prefer_address_feature(response)
@@ -165,7 +166,7 @@ def reverse_geocode_feature(longitude, latitude, language=None):
         logger.warning('Mapbox reverse geocode (address) failed: %s', error)
 
     try:
-        response = reverse_v6(longitude, latitude, language=language)
+        response = reverse_v6(longitude, latitude, language=languages)
         return _prefer_address_feature(response)
     except requests.RequestException as error:
         logger.warning('Mapbox reverse geocode failed: %s', error)
@@ -173,7 +174,10 @@ def reverse_geocode_feature(longitude, latitude, language=None):
 
 
 def lookup_by_mapbox_id(mapbox_id, language=None):
-    return forward_v6(query=mapbox_id, language=language)
+    return forward_v6(
+        query=mapbox_id,
+        language=platform_language_param(language),
+    )
 
 
 def resolve_geolocation_feature(geolocation, language=None):
@@ -196,7 +200,7 @@ def resolve_geolocation_feature(geolocation, language=None):
             'region': geolocation.province,
             'country': country_code,
             'types': ['address'],
-            'language': language,
+            'language': platform_language_param(language),
         }
         if address_number:
             params['address_number'] = address_number
@@ -209,7 +213,7 @@ def resolve_geolocation_feature(geolocation, language=None):
             response = forward_v6(
                 query=geolocation.formatted_address,
                 types=['address'],
-                language=language,
+                language=platform_language_param(language),
             )
             feature = _prefer_address_feature(response)
             if feature:
@@ -232,7 +236,7 @@ def resolve_geolocation_feature(geolocation, language=None):
         response = forward_v6(
             query=geolocation.formatted_address,
             types=['address'],
-            language=language,
+            language=platform_language_param(language),
         )
         return _prefer_address_feature(response)
 
@@ -327,7 +331,68 @@ def translation_place_name(feature_type, name, context, translation=None, langua
     )
 
 
-def iter_geofeature_data(feature):
+def platform_language_param(primary_language=None):
+    from bluebottle.utils.models import Language
+
+    if primary_language and ',' in primary_language:
+        return primary_language
+
+    primary_language = (primary_language or get_language() or 'en').split(',')[0]
+    codes = []
+    seen = set()
+
+    if primary_language:
+        codes.append(primary_language)
+        seen.add(primary_language)
+
+    for lang in Language.objects.all().order_by('language_name'):
+        if lang.full_code not in seen:
+            codes.append(lang.full_code)
+            seen.add(lang.full_code)
+
+    if not codes:
+        codes = ['en']
+
+    return ','.join(codes[:20])
+
+
+def platform_language_codes():
+    return platform_language_param().split(',')
+
+
+def get_translated_geofeature_list(geofeature, country=None):
+    from bluebottle.utils.models import Language
+
+    data = []
+    current_language = geofeature._current_language
+    country_language = country._current_language if country else None
+
+    for lang in Language.objects.all():
+        geofeature.set_current_language(lang.full_code)
+        name = geofeature.name
+        place_name = geofeature.place_name
+        if not name and not place_name:
+            continue
+
+        entry = {
+            'id': geofeature.pk,
+            'name': name or '',
+            'place_name': place_name or '',
+            'language': lang.full_code,
+        }
+        if country:
+            country.set_current_language(lang.full_code)
+            entry['country'] = country.name
+            entry['country_code'] = country.alpha2_code
+        data.append(entry)
+
+    geofeature._current_language = current_language
+    if country and country_language is not None:
+        country._current_language = country_language
+    return data
+
+
+def iter_geofeature_data(feature, language=None):
     properties = feature.get('properties', {})
     context = properties.get('context', {})
     if not isinstance(context, dict):
@@ -344,6 +409,7 @@ def iter_geofeature_data(feature):
             primary_name,
             context,
             full_address=properties.get('full_address'),
+            language=language,
         ),
         'name': primary_name,
         'translations': properties.get('translations', {}),
@@ -362,7 +428,9 @@ def iter_geofeature_data(feature):
         yield {
             'mapbox_id': context_data['mapbox_id'],
             'feature_type': feature_type,
-            'place_name': geofeature_place_name(feature_type, context_name, context),
+            'place_name': geofeature_place_name(
+                feature_type, context_name, context, language=language
+            ),
             'name': context_name,
             'translations': context_data.get('translations', {}),
             'context': context,
@@ -428,13 +496,53 @@ def apply_parsed_feature(geolocation, parsed):
             geolocation.country = country
 
 
-def sync_geofeatures(geolocation, feature, language=None):
+def _apply_geofeature_translations(geofeature, data, primary_language):
+    feature_type = data.get('feature_type', '')
+    context = data.get('context', {})
+    name = (data.get('name') or '')[:5000]
+    place_name = (data.get('place_name') or '')[:5000]
+
+    if place_name or name:
+        geofeature.set_current_language(primary_language)
+        if place_name:
+            geofeature.place_name = place_name
+        if name:
+            geofeature.name = name
+        geofeature.save()
+
+    translations = data.get('translations', {})
+    for lang_code, translation in translations.items():
+        if not isinstance(translation, dict):
+            continue
+
+        if lang_code == primary_language:
+            continue
+
+        translated_name = (translation.get('name') or name)[:5000]
+        translated_place_name = translation_place_name(
+            feature_type,
+            name,
+            context,
+            translation=translation,
+            language=lang_code,
+        )[:5000]
+        if not translated_name and not translated_place_name:
+            continue
+
+        geofeature.set_current_language(lang_code)
+        if translated_place_name:
+            geofeature.place_name = translated_place_name
+        if translated_name:
+            geofeature.name = translated_name
+        geofeature.save()
+
+
+def _sync_geofeature_records(geolocation, feature, primary_language):
     from bluebottle.geo.models import GeoFeature
 
-    language = language or get_language() or 'en'
     geofeature_ids = []
 
-    for data in iter_geofeature_data(feature):
+    for data in iter_geofeature_data(feature, language=primary_language):
         mapbox_id = data.get('mapbox_id')
         if not mapbox_id:
             continue
@@ -451,41 +559,19 @@ def sync_geofeatures(geolocation, feature, language=None):
             geofeature.feature_type = feature_type
             geofeature.save(update_fields=['feature_type'])
 
-        context = data.get('context', {})
-        name = (data.get('name') or '')[:5000]
-        place_name = (data.get('place_name') or '')[:5000]
-        if place_name or name:
-            geofeature.set_current_language(language)
-            if place_name:
-                geofeature.place_name = place_name
-            if name:
-                geofeature.name = name
-            geofeature.save()
+        _apply_geofeature_translations(geofeature, data, primary_language)
 
-        translations = data.get('translations', {})
-        for lang_code, translation in translations.items():
-            if not isinstance(translation, dict):
-                continue
+        if geofeature.pk not in geofeature_ids:
+            geofeature_ids.append(geofeature.pk)
 
-            translated_name = (translation.get('name') or name)[:5000]
-            translated_place_name = translation_place_name(
-                feature_type,
-                name,
-                context,
-                translation=translation,
-                language=lang_code,
-            )[:5000]
-            if not translated_name and not translated_place_name:
-                continue
+    return geofeature_ids
 
-            geofeature.set_current_language(lang_code)
-            if translated_place_name:
-                geofeature.place_name = translated_place_name
-            if translated_name:
-                geofeature.name = translated_name
-            geofeature.save()
 
-        geofeature_ids.append(geofeature.pk)
+def sync_geofeatures(geolocation, feature, language=None):
+    primary_language = (language or get_language() or 'en').split(',')[0]
+    geofeature_ids = _sync_geofeature_records(
+        geolocation, feature, primary_language
+    )
 
     if geolocation.pk:
         geolocation.geofeatures.set(geofeature_ids)

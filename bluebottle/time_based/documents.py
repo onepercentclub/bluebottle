@@ -2,6 +2,7 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
+from bluebottle.geo.mapbox import get_translated_geofeature_list
 from bluebottle.time_based.models import (
     DateActivity,
     DeadlineActivity,
@@ -92,6 +93,20 @@ class DateActivityDocument(TimeBasedActivityDocument):
             if not slot.is_online and slot.location
         ]
         return locations
+
+    def prepare_geofeature(self, instance):
+        geofeatures = []
+        locations = []
+        for slot in instance.slots.all():
+            if slot.location:
+                locations += [slot.location]
+
+        locations = list(set((locations)))
+        for location in locations:
+            for geofeature in location.geofeatures.all():
+                geofeatures = geofeatures + get_translated_geofeature_list(geofeature)
+
+        return geofeatures
 
     def prepare_start(self, instance):
         return [slot.start for slot in instance.slots.all() if slot.status in ('open', 'full', 'finished', )]

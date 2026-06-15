@@ -435,7 +435,7 @@ class SyncTestCase(ActivityPubTestCase):
         )
 
         self.assertEqual(
-            self.synced_participant.status, self.expected_partcipants_status
+            self.synced_participant.status, self.expected_participant_status
         )
 
     def test_leave(self):
@@ -446,7 +446,7 @@ class SyncTestCase(ActivityPubTestCase):
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(
-            self.synced_participant.status, 'rejected'
+            self.synced_participant.status, 'removed'
         )
 
     def test_rejoin(self):
@@ -457,7 +457,7 @@ class SyncTestCase(ActivityPubTestCase):
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(
-            self.synced_participant.status, self.expected_partcipants_status
+            self.synced_participant.status, self.expected_participant_status
         )
 
     def test_update(self):
@@ -615,7 +615,7 @@ class TemplateDeedTestCase(TemplateTestCase, BluebottleTestCase):
 class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
     factory = DeedFactory
     participant_factory = DeedParticipantFactory
-    expected_partcipants_status = 'accepted'
+    expected_participant_status = 'accepted'
 
     def create(self, **kwargs):
         super().create(
@@ -631,7 +631,7 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
 class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
     participant_factory = DeadlineParticipantFactory
-    expected_partcipants_status = 'new'
+    expected_participant_status = 'new'
 
     motivation = 'Some motivation'
 
@@ -660,7 +660,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
 class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
     participant_factory = ScheduleParticipantFactory
-    expected_partcipants_status = 'new'
+    expected_participant_status = 'new'
 
     def create(self, **kwargs):
         super().create(
@@ -687,7 +687,7 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory
     participant_factory = PeriodicRegistrationFactory
-    expected_partcipants_status = 'new'
+    expected_participant_status = 'new'
 
     def create(self, **kwargs):
         super().create(
@@ -726,7 +726,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 class SyncCollectActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
     participant_factory = CollectContributorFactory
-    expected_partcipants_status = 'accepted'
+    expected_ = 'accepted'
 
     def create(self, **kwargs):
         super().create(
@@ -1305,6 +1305,8 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
 class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = DateActivityFactory
     motivation = 'I would really like to join'
+    participant_factory = DateParticipantFactory
+    expected_participant_status = 'accepted'
 
     def create(self, **kwargs):
         super().create(slots=[], organization=None, **kwargs)

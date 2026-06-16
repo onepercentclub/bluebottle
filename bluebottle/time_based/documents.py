@@ -49,11 +49,22 @@ class DateActivityDocument(TimeBasedActivityDocument):
         'title': TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
-        'locality': fields.KeywordField(attr='location.locality'),
-        'formatted_address': fields.KeywordField(attr='location.formatted_address'),
+        'locality': fields.KeywordField(),
+        'formatted_address': fields.KeywordField(),
         'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
         'country': fields.KeywordField(attr='location.country.name'),
         'is_online': fields.BooleanField(),
+        'geofeatures': fields.NestedField(properties={
+            'id': fields.LongField(),
+            'name': TextField(),
+            'mapbox_id': fields.KeywordField(),
+            'place_name': TextField(),
+            'language': fields.KeywordField(),
+            'feature_type': fields.KeywordField(),
+            'is_primary': fields.BooleanField(),
+            'country': TextField(),
+            'country_code': TextField(),
+        }),
     })
 
     def get_queryset(self):
@@ -61,7 +72,10 @@ class DateActivityDocument(TimeBasedActivityDocument):
         queryset = queryset.prefetch_related(
             'slots',
             'slots__location',
-            'slots__location__country'
+            'slots__location__country',
+            'slots__location__geofeature',
+            'slots__location__geofeatures',
+            'slots__location__geofeatures__translations',
         )
         return queryset
 
@@ -82,16 +96,17 @@ class DateActivityDocument(TimeBasedActivityDocument):
 
     def prepare_location(self, instance):
         locations = super(DateActivityDocument, self).prepare_location(instance)
-        locations += [
-            {
-                'name': slot.location.geofeature.place_name,
-                'locality': slot.location.geofeature.name,
-                'country_code': slot.location.country.alpha2_code if slot.location.country else None,
-                'country': slot.location.country.name if slot.location.country else None
-            }
-            for slot in instance.slots.all()
-            if not slot.is_online and slot.location
-        ]
+        for slot in instance.slots.all():
+            if slot.is_online or not slot.location:
+                continue
+            primary = slot.location.geofeature
+            country = slot.location.country
+            locations.append({
+                'name': primary.place_name if primary else None,
+                'locality': primary.name if primary else None,
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
+            })
         return locations
 
     def prepare_geofeature(self, instance):
@@ -113,6 +128,50 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 )
 
         return geofeatures
+
+    def prepare_slots(self, instance):
+        slots = []
+        for slot in instance.slots.all():
+            if slot.status in ('draft', 'cancelled'):
+                continue
+
+            geofeatures = []
+            locality = None
+            formatted_address = None
+            country_name = None
+            country_code = None
+
+            if slot.location:
+                country = slot.location.country
+                country_name = country.name if country else None
+                country_code = country.alpha2_code if country else None
+                primary = slot.location.geofeature
+                if primary:
+                    locality = primary.name
+                    formatted_address = primary.place_name
+                primary_id = slot.location.geofeature_id
+                for geofeature in slot.location.geofeatures.all():
+                    geofeatures.extend(get_translated_geofeature_list(
+                        geofeature,
+                        country=country,
+                        is_primary=geofeature.pk == primary_id,
+                    ))
+
+            end = slot.start + slot.duration if slot.start and slot.duration else None
+            slots.append({
+                'id': str(slot.pk),
+                'status': slot.status,
+                'title': slot.title,
+                'start': slot.start,
+                'end': end,
+                'locality': locality,
+                'formatted_address': formatted_address,
+                'country': country_name,
+                'country_code': country_code,
+                'is_online': slot.is_online,
+                'geofeatures': geofeatures,
+            })
+        return slots
 
     def prepare_start(self, instance):
         return [slot.start for slot in instance.slots.all() if slot.status in ('open', 'full', 'finished', )]

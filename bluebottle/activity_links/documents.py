@@ -265,8 +265,8 @@ class LinkedFundingDocument(LinkedActivityDocument):
         if hasattr(instance, 'location') and instance.location:
             locations.append({
                 'id': instance.location.id,
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code if instance.location.country else None,
                 'country': instance.location.country.name if instance.location.country else None,
                 'type': 'location'
@@ -321,8 +321,8 @@ class LinkedGrantApplicationDocument(LinkedActivityDocument):
         if hasattr(instance, 'location') and instance.location:
             locations.append({
                 'id': instance.location.id,
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code if instance.location.country else None,
                 'country': instance.location.country.name if instance.location.country else None,
                 'type': 'location'
@@ -374,8 +374,8 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
         locations = []
         locations += [
             {
-                'name': slot.location.formatted_address,
-                'locality': slot.location.locality,
+                'name': slot.location.geofeature.place_name,
+                'locality': slot.location.geofeature.name,
                 'country_code': slot.location.country.alpha2_code,
                 'country': slot.location.country.name,
                 'type': 'location'
@@ -455,8 +455,8 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
     def prepare_location(self, instance):
         locations = [
             {
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code,
                 'country': instance.location.country.name,
                 'type': 'location'
@@ -531,8 +531,8 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
     def prepare_location(self, instance):
         locations = [
             {
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code,
                 'country': instance.location.country.name,
                 'type': 'location'
@@ -607,8 +607,8 @@ class LinkedPeriodicActivityDocument(LinkedActivityDocument):
     def prepare_location(self, instance):
         locations = [
             {
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code,
                 'country': instance.location.country.name,
                 'type': 'location'

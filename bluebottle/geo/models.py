@@ -280,6 +280,14 @@ class Geolocation(models.Model):
 
     position = PointField(null=True)
 
+    geofeature = models.ForeignKey(
+        'geo.GeoFeature',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='primary_geolocations',
+    )
+
     geofeatures = models.ManyToManyField(
         'geo.GeoFeature', blank=True, related_name='geolocations'
     )
@@ -296,26 +304,6 @@ class Geolocation(models.Model):
 
     class JSONAPIMeta(object):
         resource_name = 'geolocations'
-
-    @property
-    def geofeature(self):
-        from bluebottle.geo.mapbox import GEOFEATURE_TYPE_RANK
-
-        if not self.pk:
-            return None
-
-        geofeatures = list(self.geofeatures.all())
-        if not geofeatures:
-            return None
-
-        unknown_rank = len(GEOFEATURE_TYPE_RANK)
-        return min(
-            geofeatures,
-            key=lambda feature: (
-                GEOFEATURE_TYPE_RANK.get(feature.feature_type, unknown_rank),
-                feature.pk,
-            ),
-        )
 
     @property
     def place_name(self):

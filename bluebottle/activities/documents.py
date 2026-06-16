@@ -170,6 +170,8 @@ class ActivityDocument(Document):
             'name': TextField(),
             'place_name': TextField(),
             'language': fields.KeywordField(),
+            'feature_type': fields.KeywordField(),
+            'is_primary': fields.BooleanField(),
             'country': TextField(),
             'country_code': TextField(),
         }
@@ -355,8 +357,8 @@ class ActivityDocument(Document):
         if hasattr(instance, 'location') and instance.location and instance.location.geofeature:
             locations.append({
                 'id': instance.location.id,
-                'name': instance.location.geofeature.name,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code if instance.location.country else None,
                 'country': instance.location.country.name if instance.location.country else None,
                 'type': 'location'
@@ -376,19 +378,7 @@ class ActivityDocument(Document):
                 ),
                 'type': 'office'
             })
-        elif instance.initiative and instance.initiative.place:
-            if instance.initiative.place.country:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'country_code': instance.initiative.place.country.alpha2_code,
-                    'country': instance.initiative.place.country.name,
-                    'type': 'impact_location'
-                })
-            else:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'type': 'impact_location'
-                })
+
         return locations
 
     def prepare_office_restriction(self, instance):
@@ -413,16 +403,20 @@ class ActivityDocument(Document):
         geofeatures = []
         if hasattr(instance, 'location') and instance.location:
             location = instance.location
-        elif hasattr(instance, 'place') and instance.place:
-            location = instance.place
         elif instance.initiative and instance.initiative.place:
             location = instance.initiative.place
 
         if not location or location.geofeatures.count() == 0:
             return []
 
+        primary_id = location.geofeature_id
+        country = location.country
         for geofeature in location.geofeatures.all():
-            geofeatures = geofeatures + get_translated_geofeature_list(geofeature)
+            geofeatures = geofeatures + get_translated_geofeature_list(
+                geofeature,
+                country=country,
+                is_primary=geofeature.pk == primary_id,
+            )
         return geofeatures
 
     def prepare_categories(self, instance):

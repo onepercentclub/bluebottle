@@ -513,6 +513,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
+    card_location_display = MultiSelectField(
+        max_length=5000,
+        choices=LOCATION_LEVELS,
+        default=['place', 'country_code'],
+    )
+
     @property
     def deeds_enabled(self):
         return "deed" in self.activity_types

@@ -5,6 +5,7 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donor
+from bluebottle.geo.mapbox import get_translated_geofeature_list
 from bluebottle.initiatives.documents import deduplicate, get_translated_list
 
 SCORE_MAP = {
@@ -48,27 +49,29 @@ class FundingDocument(ActivityDocument):
             country = instance.impact_location.country
             locations.append({
                 'id': instance.impact_location.id,
-                'name': instance.impact_location.formatted_address,
-                'locality': instance.impact_location.locality,
+                'name': instance.impact_location.geofeature.place_name,
+                'locality': instance.impact_location.geofeature.name,
                 'country_code': country.alpha2_code if country else None,
                 'country': country.name if country else None,
                 'type': 'location'
             })
-        elif instance.initiative and instance.initiative.place:
-            if instance.initiative.place.country:
-                country = instance.initiative.place.country
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'country_code': country.alpha2_code if country else None,
-                    'country': country.name if country else None,
-                    'type': 'impact_location'
-                })
-            else:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'type': 'impact_location'
-                })
         return locations
+
+    def prepare_geofeature(self, instance):
+        if not instance.impact_location or instance.impact_location.geofeatures.count() == 0:
+            return super().prepare_geofeature(instance)
+
+        geofeatures = []
+        location = instance.impact_location
+        primary_id = location.geofeature_id
+        country = location.country
+        for geofeature in location.geofeatures.all():
+            geofeatures = geofeatures + get_translated_geofeature_list(
+                geofeature,
+                country=country,
+                is_primary=geofeature.pk == primary_id,
+            )
+        return geofeatures
 
     def prepare_position(self, instance):
         positions = []

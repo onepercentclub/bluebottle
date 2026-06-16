@@ -360,7 +360,7 @@ def platform_language_codes():
     return platform_language_param().split(',')
 
 
-def get_translated_geofeature_list(geofeature, country=None):
+def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
     from bluebottle.utils.models import Language
 
     data = []
@@ -379,6 +379,8 @@ def get_translated_geofeature_list(geofeature, country=None):
             'name': name or '',
             'place_name': place_name or '',
             'language': lang.full_code,
+            'feature_type': geofeature.feature_type or '',
+            'is_primary': is_primary,
         }
         if country:
             country.set_current_language(lang.full_code)
@@ -390,6 +392,110 @@ def get_translated_geofeature_list(geofeature, country=None):
     if country and country_language is not None:
         country._current_language = country_language
     return data
+
+
+CARD_LOCATION_FEATURE_TYPES = {
+    'address': 'address',
+    'neighborhood': 'neighborhood',
+    'locality': 'locality',
+    'place': 'place',
+    'region': 'region',
+}
+
+
+def _entries_for_language(entries, language):
+    language_entries = [
+        entry for entry in entries
+        if getattr(entry, 'language', None) == language
+    ]
+    if language_entries:
+        return language_entries
+
+    language_prefix = language.split('-')[0]
+    return [
+        entry for entry in entries
+        if getattr(entry, 'language', '').startswith(language_prefix)
+    ]
+
+
+def _geofeatures_for_language(geofeatures, language):
+    return _entries_for_language(geofeatures, language)
+
+
+def _card_location_level_value(geofeatures, level, countries=None):
+    if level == 'venue_name':
+        primary = next(
+            (geofeature for geofeature in geofeatures if getattr(geofeature, 'is_primary', False)),
+            None,
+        )
+        return getattr(primary, 'name', None) if primary else None
+
+    if level == 'country_code':
+        return next(
+            (
+                getattr(geofeature, 'country_code', None)
+                for geofeature in geofeatures
+                if getattr(geofeature, 'country_code', None)
+            ),
+            None,
+        )
+
+    if level == 'country':
+        country = next(
+            (
+                geofeature for geofeature in geofeatures
+                if getattr(geofeature, 'feature_type', None) == 'country'
+            ),
+            None,
+        )
+        if country:
+            return getattr(country, 'name', None)
+        if countries:
+            return getattr(countries[0], 'name', None)
+        return next(
+            (getattr(geofeature, 'country', None) for geofeature in geofeatures if geofeature.country),
+            None,
+        )
+
+    feature_type = CARD_LOCATION_FEATURE_TYPES.get(level)
+    if not feature_type:
+        return None
+
+    feature = next(
+        (
+            geofeature for geofeature in geofeatures
+            if getattr(geofeature, 'feature_type', None) == feature_type
+        ),
+        None,
+    )
+    return getattr(feature, 'name', None) if feature else None
+
+
+def format_card_location(activity, card_location_display, language):
+    geofeatures = getattr(activity, 'geofeature', None)
+    if not geofeatures or not card_location_display:
+        return None
+
+    if isinstance(card_location_display, str):
+        card_location_display = [
+            level.strip() for level in card_location_display.split(',') if level.strip()
+        ]
+
+    language_geofeatures = _geofeatures_for_language(geofeatures, language)
+    if not language_geofeatures:
+        return None
+
+    countries = _entries_for_language(getattr(activity, 'country', None) or [], language)
+
+    parts = []
+    for level in card_location_display:
+        value = _card_location_level_value(language_geofeatures, level, countries=countries)
+        if not value and level == 'venue_name':
+            value = getattr(activity, 'location_hint', None)
+        if value:
+            parts.append(value)
+
+    return ', '.join(parts) if parts else None
 
 
 def iter_geofeature_data(feature, language=None):
@@ -537,6 +643,15 @@ def _apply_geofeature_translations(geofeature, data, primary_language):
         geofeature.save()
 
 
+def select_primary_geofeature(geolocation):
+    from bluebottle.geo.models import GeoFeature
+
+    if not geolocation.mapbox_id:
+        return None
+
+    return GeoFeature.objects.filter(mapbox_id=geolocation.mapbox_id).first()
+
+
 def _sync_geofeature_records(geolocation, feature, primary_language):
     from bluebottle.geo.models import GeoFeature
 
@@ -568,6 +683,8 @@ def _sync_geofeature_records(geolocation, feature, primary_language):
 
 
 def sync_geofeatures(geolocation, feature, language=None):
+    from bluebottle.geo.models import Geolocation
+
     primary_language = (language or get_language() or 'en').split(',')[0]
     geofeature_ids = _sync_geofeature_records(
         geolocation, feature, primary_language
@@ -575,3 +692,6 @@ def sync_geofeatures(geolocation, feature, language=None):
 
     if geolocation.pk:
         geolocation.geofeatures.set(geofeature_ids)
+        primary_geofeature = select_primary_geofeature(geolocation)
+        Geolocation.objects.filter(pk=geolocation.pk).update(geofeature=primary_geofeature)
+        geolocation.geofeature = primary_geofeature

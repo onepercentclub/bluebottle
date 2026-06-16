@@ -11,7 +11,9 @@ from bluebottle.geo.models import Geolocation
 
 def migrate_geolocation(geolocation, dry_run=False):
     if mapbox_utils.is_v6_mapbox_id(geolocation.mapbox_id):
-        return 'skipped', 'already v6'
+        if geolocation.geofeature_id:
+            return 'skipped', 'already v6'
+        return backfill_primary_geofeature(geolocation, dry_run=dry_run)
 
     feature = mapbox_utils.resolve_geolocation_feature(geolocation)
     if not feature:
@@ -28,7 +30,32 @@ def migrate_geolocation(geolocation, dry_run=False):
         skip_mapbox_sync=False,
         mapbox_feature=feature,
     )
+    geolocation.refresh_from_db()
+    if not geolocation.geofeature_id:
+        return 'failed', 'primary geofeature not set'
     return 'updated', parsed['mapbox_id']
+
+
+def backfill_primary_geofeature(geolocation, dry_run=False):
+    primary = mapbox_utils.select_primary_geofeature(geolocation)
+    if primary:
+        if dry_run:
+            return 'dry-run', 'primary geofeature {}'.format(primary.mapbox_id)
+        Geolocation.objects.filter(pk=geolocation.pk).update(geofeature=primary)
+        return 'updated', 'primary geofeature {}'.format(primary.mapbox_id)
+
+    feature = mapbox_utils.resolve_geolocation_feature(geolocation)
+    if not feature:
+        return 'failed', 'no feature found'
+
+    if dry_run:
+        return 'dry-run', 'sync geofeatures'
+
+    mapbox_utils.sync_geofeatures(geolocation, feature)
+    geolocation.refresh_from_db()
+    if not geolocation.geofeature_id:
+        return 'failed', 'primary geofeature not set'
+    return 'updated', 'synced geofeatures'
 
 
 def _normalize_script_args(args):
@@ -53,8 +80,8 @@ def run(*args):
         description='Migrate Geolocation mapbox_id from v5 to v6',
         epilog=(
             'Examples:\n'
-            '  ./manage.py runscript migrate_mapbox_v5_to_v6 --script-args pggm\n'
-            '  ./manage.py runscript migrate_mapbox_v5_to_v6 --script-args dry-run pggm'
+            '  ./manage.py runscript migrate_mapbox --script-args pggm\n'
+            '  ./manage.py runscript migrate_mapbox --script-args dry-run pggm'
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -88,8 +115,9 @@ def run(*args):
                 Q(mapbox_id__isnull=True) |
                 Q(mapbox_id='') |
                 Q(mapbox_id='unknown')
-            ).exclude(
-                mapbox_id__startswith='dXJu'
+            ).filter(
+                Q(geofeature__isnull=True) |
+                ~Q(mapbox_id__startswith='dXJu')
             )
 
             total = locations.count()

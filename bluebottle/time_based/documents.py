@@ -84,8 +84,8 @@ class DateActivityDocument(TimeBasedActivityDocument):
         locations = super(DateActivityDocument, self).prepare_location(instance)
         locations += [
             {
-                'name': slot.location.formatted_address,
-                'locality': slot.location.locality,
+                'name': slot.location.geofeature.place_name,
+                'locality': slot.location.geofeature.name,
                 'country_code': slot.location.country.alpha2_code if slot.location.country else None,
                 'country': slot.location.country.name if slot.location.country else None
             }
@@ -103,8 +103,14 @@ class DateActivityDocument(TimeBasedActivityDocument):
 
         locations = list(set((locations)))
         for location in locations:
+            primary_id = location.geofeature_id
+            country = location.country
             for geofeature in location.geofeatures.all():
-                geofeatures = geofeatures + get_translated_geofeature_list(geofeature)
+                geofeatures = geofeatures + get_translated_geofeature_list(
+                    geofeature,
+                    country=country,
+                    is_primary=geofeature.pk == primary_id,
+                )
 
         return geofeatures
 

@@ -18,7 +18,7 @@ from bluebottle.geo.models import (
     Geolocation, GeoFeature)
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
-EXCLUDED_GEOLOCATION_RELATIONS = frozenset({'geofeatures'})
+EXCLUDED_GEOLOCATION_RELATIONS = frozenset({'geofeatures', 'geofeature'})
 
 
 def format_geolocation_related_objects(obj):
@@ -304,7 +304,7 @@ class GeolocationAdmin(admin.ModelAdmin):
         return str(obj)
 
     list_filter = ('country', )
-    search_fields = ('mapbox_id', 'geofeatures__translations__name')
+    search_fields = ('mapbox_id', 'geofeatures__translations__name', 'geofeature__translations__name')
     inlines = (GeolocationGeoFeatureInline,)
 
     fieldsets = (

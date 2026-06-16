@@ -72,11 +72,15 @@ def repoint_geolocation_references(source, target, dry_run=False):
 
 def merge_geofeatures(source, target, dry_run=False):
     geofeature_ids = list(source.geofeatures.values_list('pk', flat=True))
-    if not geofeature_ids:
-        return 0
-    if not dry_run:
-        target.geofeatures.add(*geofeature_ids)
-    return len(geofeature_ids)
+    merged = 0
+    if geofeature_ids:
+        merged = len(geofeature_ids)
+        if not dry_run:
+            target.geofeatures.add(*geofeature_ids)
+    if not dry_run and source.geofeature_id and not target.geofeature_id:
+        target.geofeature_id = source.geofeature_id
+        target.save(update_fields=['geofeature_id'])
+    return merged
 
 
 def delete_geolocation(geolocation, dry_run=False):

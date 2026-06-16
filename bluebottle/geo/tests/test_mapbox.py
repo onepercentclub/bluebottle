@@ -120,9 +120,12 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
             country=country,
         )
+        self.assertEqual(geolocation.geofeatures.count(), 0)
+        self.assertIsNone(geolocation.geofeature_id)
 
         mapbox_utils.sync_geofeatures(geolocation, MAPBOX_V6_ADDRESS_FEATURE)
 
+        geolocation.refresh_from_db()
         self.assertGreater(geolocation.geofeatures.count(), 0)
         address_feature = GeoFeature.objects.get(
             mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
@@ -268,6 +271,65 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             next(entry for entry in translations if entry['language'] == 'nl')['place_name'],
             'Ouddorp, Nederland',
         )
+        self.assertEqual(translations[0]['feature_type'], 'place')
+
+    def test_format_card_location(self):
+        geofeatures = [
+            type('GeoFeature', (), {
+                'language': 'en',
+                'name': 'Ouddorp',
+                'place_name': 'Ouddorp, Netherlands',
+                'feature_type': 'place',
+                'is_primary': False,
+                'country': 'Netherlands',
+                'country_code': 'NL',
+            })(),
+            type('GeoFeature', (), {
+                'language': 'en',
+                'name': 'Netherlands',
+                'place_name': 'Netherlands',
+                'feature_type': 'country',
+                'is_primary': False,
+                'country': 'Netherlands',
+                'country_code': 'NL',
+            })(),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, ['place', 'country_code'], 'en'),
+            'Ouddorp, NL',
+        )
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, ['country'], 'en'),
+            'Netherlands',
+        )
+
+    def test_format_card_location_uses_country_fallback(self):
+        activity = type('Activity', (), {
+            'geofeature': [
+                type('GeoFeature', (), {
+                    'language': 'nl',
+                    'name': 'Ouddorp',
+                    'place_name': 'Ouddorp, Nederland',
+                    'feature_type': 'place',
+                    'is_primary': False,
+                    'country': 'Nederland',
+                    'country_code': 'NL',
+                })(),
+            ],
+            'country': [
+                type('Country', (), {
+                    'language': 'nl',
+                    'name': 'Nederland',
+                })(),
+            ],
+        })()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, ['place', 'country'], 'nl'),
+            'Ouddorp, Nederland',
+        )
 
     @mock.patch(
         'bluebottle.geo.models.Geolocation.reverse_geocode',
@@ -291,3 +353,5 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             MAPBOX_V6_ADDRESS_FEATURE['properties']['full_address'],
         )
         self.assertGreater(geolocation.geofeatures.count(), 0)
+        geolocation.refresh_from_db()
+        self.assertEqual(geolocation.geofeature.feature_type, 'address')

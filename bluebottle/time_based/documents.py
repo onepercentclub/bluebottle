@@ -1,7 +1,7 @@
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
+from bluebottle.activities.documents import ActivityDocument, activity, get_translated_country_list
 from bluebottle.geo.mapbox import get_translated_geofeature_list
 from bluebottle.time_based.models import (
     DateActivity,
@@ -209,7 +209,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
         countries = super().prepare_country(instance)
         for slot in instance.slots.all():
             if not slot.is_online and slot.location and slot.location.country:
-                countries += get_translated_list(slot.location.country)
+                countries += get_translated_country_list(slot.location.country)
         return deduplicate(countries)
 
     def prepare_position(self, instance):
@@ -256,7 +256,7 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
         if instance.location and instance.location.country:
-            countries += get_translated_list(instance.location.country)
+            countries += get_translated_country_list(instance.location.country)
 
         return deduplicate(countries)
 
@@ -330,7 +330,7 @@ class ScheduleActivityDocument(RegistrationActivityDocument):
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
         if instance.location and instance.location.country:
-            countries += get_translated_list(instance.location.country)
+            countries += get_translated_country_list(instance.location.country)
 
         return deduplicate(countries)
 

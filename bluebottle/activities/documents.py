@@ -8,7 +8,12 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
 from bluebottle.geo.mapbox import get_translated_geofeature_list
 from bluebottle.geo.models import Location
-from bluebottle.initiatives.documents import deduplicate, get_translated_list, get_translated_segments
+from bluebottle.initiatives.documents import (
+    deduplicate,
+    get_translated_country_list,
+    get_translated_list,
+    get_translated_segments,
+)
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.segments.models import Segment
 from bluebottle.utils.documents import MultiTenantIndex, TextField
@@ -128,6 +133,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'code': fields.KeywordField(),
             'language': fields.KeywordField(),
         }
     )
@@ -345,11 +351,15 @@ class ActivityDocument(Document):
     def prepare_country(self, instance):
         countries = []
         if instance.office_location and instance.office_location.country:
-            countries += get_translated_list(instance.office_location.country)
+            countries += get_translated_country_list(instance.office_location.country)
         if hasattr(instance, 'place') and instance.place and instance.place.country:
-            countries += get_translated_list(instance.place.country)
+            countries += get_translated_country_list(instance.place.country)
         if instance.initiative and instance.initiative.place and instance.initiative.place.country:
-            countries += get_translated_list(instance.initiative.place.country)
+            countries += get_translated_country_list(instance.initiative.place.country)
+        if hasattr(instance, 'location') and instance.location and instance.location.country:
+            countries += get_translated_country_list(instance.location.country)
+        if hasattr(instance, 'impact_location') and instance.impact_location and instance.impact_location.country:
+            countries += get_translated_country_list(instance.impact_location.country)
         return deduplicate(countries)
 
     def prepare_location(self, instance):

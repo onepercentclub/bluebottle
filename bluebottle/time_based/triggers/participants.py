@@ -452,7 +452,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.reject,
             effects=[
-                SendLeaveEffect,
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
                     'contributions',
@@ -1331,7 +1330,6 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.reject,
             effects=[
-                SendLeaveEffect,
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',

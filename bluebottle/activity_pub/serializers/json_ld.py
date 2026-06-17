@@ -14,6 +14,7 @@ from bluebottle.activity_pub.models import (
     Person,
     PublicKey,
     Create,
+    Reject,
     Update,
     Delete,
     Start,
@@ -353,12 +354,23 @@ class AcceptSerializer(BaseActivitySerializer):
     object = RelatedResourceField(
         type=(
             'Follow', 'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
+            'CollectCampaign', 'DoGoodEvent', 'Join'
         )
     )
 
     class Meta(BaseActivitySerializer.Meta):
         model = Accept
+
+
+class RejectSerializer(BaseActivitySerializer):
+    type = TypeField('Reject')
+
+    object = RelatedResourceField(
+        type=('Join', )
+    )
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Reject
 
 
 class CreateSerializer(BaseActivitySerializer):
@@ -458,6 +470,12 @@ class JoinSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Join
         fields = BaseActivitySerializer.Meta.fields + ('motivation', )
+
+    def create(self, validated_data):
+        if 'request' in self.context:
+            validated_data['platform'] = self.context['request'].auth
+
+        return super().create(validated_data)
 
 
 class LeaveSerializer(BaseActivitySerializer):

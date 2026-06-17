@@ -656,6 +656,22 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
 
+    def test_accept_participant(self):
+        self.test_join()
+        self.synced_participant.registration.states.accept(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assertStatus(self.participant, 'succeeded')
+
+    def test_reject_participant(self):
+        self.test_join()
+        self.synced_participant.registration.states.reject(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assertStatus(self.participant, 'rejected')
+
 
 class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
@@ -677,7 +693,7 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_participant.slot.localtion = GeolocationFactory.create()
         self.synced_participsnt.slot.save()
 
-        with LocalTenant(self.other_tneant):
+        with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()
             self.assertEqual(
                 self.synced_participant.slot.start, self.participant.slot.start
@@ -717,7 +733,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             PeriodicParticipant.objects.count(), 2
         )
 
-        with LocalTenant(self.other_tneant):
+        with LocalTenant(self.other_tenant):
             self.assertEqual(
                 PeriodicParticipant.objects.count(), 2
             )

@@ -4,7 +4,6 @@ import inflection
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
-from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
 from django.urls import reverse, resolve
@@ -13,7 +12,7 @@ from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.activities.models import Activity as DoGoodActivity, RemoteMember
-from bluebottle.time_based.models import DateActivitySlot
+from bluebottle.time_based.models import DateActivitySlot, Registration
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
@@ -782,10 +781,40 @@ class Accept(Activity):
     @property
     def default_recipients(self):
         if isinstance(self.object, Follow):
-            return [self.object.actor]
+            yield self.object.actor
         elif isinstance(self.object, Event):
             create = self.object.create_set.first()
-            return [create.actor]
+            yield create.actor
+        elif isinstance(self.object, Join) and self.object.platform:
+            yield self.object.platform
+
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+
+        if created and not self.is_local and isinstance(self.object, Join):
+            registration = Registration.objects.get(
+                user=self.object.actor.origin, activity=self.object.object.adopted
+            )
+            registration.states.accept(save=True)
+
+
+class Reject(Activity):
+    object = models.ForeignKey('activity_pub.ActivityPubModel', on_delete=models.CASCADE)
+
+    @property
+    def default_recipients(self):
+        yield self.object.platform
+
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+
+        if created and not self.is_local and isinstance(self.object, Join):
+            registration = Registration.objects.get(
+                user=self.object.actor.origin, activity=self.object.object.adopted
+            )
+            registration.states.reject(save=True)
 
 
 class Create(Activity):
@@ -864,19 +893,10 @@ class Update(Activity):
 
 class Join(Activity):
     """Sent by a follower when a user joins an Event"""
-    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveBigIntegerField()
-    object = GenericForeignKey("object_content_type", "object_id")
-
+    object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
     motivation = models.TextField(null=True, blank=True)
 
-    sub_event = models.ForeignKey(
-        'activity_pub.SubEvent',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='+',
-    )
+    platform = models.ForeignKey(Organization, null=True, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

@@ -423,39 +423,6 @@ def _geofeatures_for_language(geofeatures, language):
 
 
 def _card_location_level_value(geofeatures, level, countries=None):
-    if level == 'venue_name':
-        primary = next(
-            (geofeature for geofeature in geofeatures if getattr(geofeature, 'is_primary', False)),
-            None,
-        )
-        return getattr(primary, 'name', None) if primary else None
-
-    if level == 'country_code':
-        return next(
-            (
-                getattr(geofeature, 'country_code', None)
-                for geofeature in geofeatures
-                if getattr(geofeature, 'country_code', None)
-            ),
-            None,
-        )
-
-    if level == 'country':
-        country = next(
-            (
-                geofeature for geofeature in geofeatures
-                if getattr(geofeature, 'feature_type', None) == 'country'
-            ),
-            None,
-        )
-        if country:
-            return getattr(country, 'name', None)
-        if countries:
-            return getattr(countries[0], 'name', None)
-        return next(
-            (getattr(geofeature, 'country', None) for geofeature in geofeatures if geofeature.country),
-            None,
-        )
 
     feature_type = CARD_LOCATION_FEATURE_TYPES.get(level)
     if not feature_type:
@@ -486,12 +453,23 @@ def format_card_location(activity, card_location_display, language):
         return None
 
     countries = _entries_for_language(getattr(activity, 'country', None) or [], language)
+    country = countries[0] if len(countries) else None
 
     parts = []
     for level in card_location_display:
-        value = _card_location_level_value(language_geofeatures, level, countries=countries)
-        if not value and level == 'venue_name':
+        if level == 'venue_name':
             value = getattr(activity, 'location_hint', None)
+        elif level == 'country' and country:
+            import ipdb;
+            ipdb.set_trace()
+            value = getattr(activity.location, 'country', None)
+        elif level == 'country_code':
+            if len(parts) > 0:
+                value = getattr(activity.location, 'country_code', None)
+            else:
+                value = getattr(activity.location, 'country', None)
+        else:
+            value = _card_location_level_value(language_geofeatures, level, countries=countries)
         if value:
             parts.append(value)
 

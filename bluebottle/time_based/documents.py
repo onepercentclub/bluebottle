@@ -49,6 +49,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
         'title': TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
+        'location_hint': fields.KeywordField(),
         'locality': fields.KeywordField(),
         'formatted_address': fields.KeywordField(),
         'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
@@ -103,6 +104,8 @@ class DateActivityDocument(TimeBasedActivityDocument):
             country = slot.location.country
             locations.append({
                 'name': primary.place_name if primary else None,
+                'formatted_address': primary.place_name if primary else None,
+                'location_hint': primary.name if primary else None,
                 'locality': primary.name if primary else None,
                 'country_code': country.alpha2_code if country else None,
                 'country': country.name if country else None,
@@ -131,43 +134,33 @@ class DateActivityDocument(TimeBasedActivityDocument):
 
     def prepare_slots(self, instance):
         slots = []
-        for slot in instance.slots.all():
-            if slot.status in ('draft', 'cancelled'):
+        for slot in instance.active_slots.all():
+
+            location = slot.location
+            if not location:
                 continue
 
+            country = location.country
+
             geofeatures = []
-            locality = None
-            formatted_address = None
-            country_name = None
-            country_code = None
+            for geofeature in location.geofeatures.all():
+                geofeatures.extend(get_translated_geofeature_list(
+                    geofeature,
+                    country=country,
+                    is_primary=location.mapbox_id == geofeature.mapbox_id,
+                ))
 
-            if slot.location:
-                country = slot.location.country
-                country_name = country.name if country else None
-                country_code = country.alpha2_code if country else None
-                primary = slot.location.geofeature
-                if primary:
-                    locality = primary.name
-                    formatted_address = primary.place_name
-                primary_id = slot.location.geofeature_id
-                for geofeature in slot.location.geofeatures.all():
-                    geofeatures.extend(get_translated_geofeature_list(
-                        geofeature,
-                        country=country,
-                        is_primary=geofeature.pk == primary_id,
-                    ))
-
-            end = slot.start + slot.duration if slot.start and slot.duration else None
             slots.append({
                 'id': str(slot.pk),
                 'status': slot.status,
                 'title': slot.title,
                 'start': slot.start,
-                'end': end,
-                'locality': locality,
-                'formatted_address': formatted_address,
-                'country': country_name,
-                'country_code': country_code,
+                'end': slot.end,
+                'location_hint': slot.location_hint,
+                'locality': slot.location.geofeature.name,
+                'formatted_address': slot.location.geofeature.place_name,
+                'country': country.name if country else None,
+                'country_code': country.alpha2_code if country else None,
                 'is_online': slot.is_online,
                 'geofeatures': geofeatures,
             })

@@ -78,6 +78,16 @@ class Update(TriggerMixin, models.Model):
             return True
         return False
 
+    @property
+    def author_role(self):
+        if self.author in self.activity.owners:
+            return 'activity-manager'
+        if self.author.is_staff:
+            return 'platform-manager'
+        if self.author.is_superuser:
+            return 'administrator'
+        return ''
+
     class Meta:
         verbose_name = _('Update')
         ordering = ('-created',)

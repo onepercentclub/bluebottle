@@ -18,7 +18,6 @@ from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationPayoutAccountVerified,
     GrantApplicationPayoutAccountMarkedIncomplete
 )
-from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
 from bluebottle.funding_stripe.effects import (
@@ -109,19 +108,23 @@ class StripePayoutAccountTriggers(TriggerManager):
         """has a funding campaign"""
         return effect.instance.funding.count() > 0
 
+    def has_active_funding_campaign(effect):
+        """has a funding campaign that is open or on hold"""
+        live_statuses = ["open", "on_hold"]
+        return (
+            effect.instance.pk and
+            effect.instance.funding.filter(status__in=live_statuses).exists()
+        )
+
     def has_grant_application(effect):
         """has a grant application"""
         return effect.instance.grant_application.count() > 0
 
-    def has_live_campaign(effect):
-        """has connected funding activity that is open"""
-        live_statuses = ["open", "on_hold"]
-
+    def has_granted_grant_application(effect):
+        """has a grant application that is granted"""
         return (
             effect.instance.pk and
-            Funding.objects.filter(bank_account__connect_account=effect.instance)
-            .filter(status__in=live_statuses)
-            .exists()
+            effect.instance.grant_application.filter(status='granted').exists()
         )
 
     def account_verified(self):
@@ -198,23 +201,23 @@ class StripePayoutAccountTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     GrantApplicationPayoutAccountMarkedIncomplete,
-                    conditions=[has_grant_application]
+                    conditions=[has_granted_grant_application]
                 ),
                 NotificationEffect(
                     FundingPayoutAccountMarkedIncomplete,
-                    conditions=[is_not_public, has_funding_campaign],
+                    conditions=[is_not_public, has_active_funding_campaign],
                 ),
                 NotificationEffect(
                     FundingPublicPayoutAccountMarkedIncomplete,
-                    conditions=[is_public, has_funding_campaign],
+                    conditions=[is_public, has_active_funding_campaign],
                 ),
                 NotificationEffect(
                     LivePayoutAccountMarkedIncomplete,
-                    conditions=[has_live_campaign, is_not_public],
+                    conditions=[has_active_funding_campaign, is_not_public],
                 ),
                 NotificationEffect(
                     LivePublicPayoutAccountMarkedIncomplete,
-                    conditions=[has_live_campaign, is_public],
+                    conditions=[has_active_funding_campaign, is_public],
                 ),
                 TransitionEffect(
                     StripePayoutAccountStateMachine.disable,

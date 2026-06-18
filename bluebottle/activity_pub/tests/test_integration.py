@@ -446,14 +446,14 @@ class SyncTestCase(ActivityPubTestCase):
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(
-            self.synced_participant.status, 'removed'
+            self.synced_participant.status, 'withdrawn'
         )
 
     def test_rejoin(self):
         self.test_leave()
 
         with LocalTenant(self.other_tenant):
-            self.participant.states.accept(save=True)
+            self.participant.states.reapply(save=True)
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(
@@ -461,7 +461,7 @@ class SyncTestCase(ActivityPubTestCase):
         )
 
     def test_update(self):
-        super().test_adopt()
+        self.test_adopt()
 
         with httmock.HTTMock(image_mock):
             self.model.title = 'Some new title'
@@ -474,7 +474,7 @@ class SyncTestCase(ActivityPubTestCase):
             self.assertEqual(self.adopted.title, 'Some new title')
 
     def test_succeed(self):
-        super().test_adopt()
+        self.test_adopt()
 
         with httmock.HTTMock(image_mock):
             self.model.states.succeed(save=True)
@@ -484,7 +484,7 @@ class SyncTestCase(ActivityPubTestCase):
             self.assertEqual(self.model.status, 'succeeded')
 
     def test_cancel(self):
-        super().test_adopt()
+        self.test_adopt()
 
         with httmock.HTTMock(image_mock):
             self.model.states.cancel(save=True)

@@ -2,6 +2,7 @@ import datetime
 import logging
 from io import BytesIO
 
+from django.core.exceptions import MultipleObjectsReturned
 import pytz
 import requests
 from django.contrib.gis.geos import Point
@@ -789,14 +790,26 @@ class ContributorSerializer(FederatedObjectBaseSerializer):
         field.is_valid(raise_exception=True)
         validated_data['remote_user'] = field.save()
 
+        try:
+            contributor = Contributor.objects.get(
+                activity=validated_data['activity'],
+                remote_user=validated_data['remote_user']
+            )
+        except (Contributor.DoesNotExist, MultipleObjectsReturned):
+            contributor = None
+
         if isinstance(validated_data['activity'], Deed):
             validated_data.pop('answer')
             return DeedParticipant.objects.create(**validated_data)
         elif isinstance(validated_data['activity'], CollectActivity):
             return CollectContributor.objects.create(**validated_data)
         elif isinstance(validated_data['activity'], DeadlineActivity):
-            registration = DeadlineRegistration.objects.create(**validated_data)
-            return registration.participants.first()
+            if contributor:
+                contributor.states.reapply(save=True)
+                return contributor
+            else:
+                registration = DeadlineRegistration.objects.create(**validated_data)
+                return registration.participants.first()
         elif isinstance(validated_data['activity'], ScheduleActivity):
             return ScheduleRegistration.objects.create(**validated_data)
         elif isinstance(validated_data['activity'], PeriodicActivity):

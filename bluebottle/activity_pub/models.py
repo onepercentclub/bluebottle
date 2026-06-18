@@ -948,7 +948,7 @@ class Leave(Transition):
             contributor = self.object.origin.contributors.get(
                 remote_user=self.actor.adopted
             )
-            contributor.states.remove(save=True)
+            contributor.states.withdraw(save=True)
 
             return True
 

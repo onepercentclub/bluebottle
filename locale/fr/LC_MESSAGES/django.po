@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-10 11:13+0200\n"
-"PO-Revision-Date: 2026-06-10 09:14\n"
+"POT-Creation-Date: 2026-06-15 09:05+0200\n"
+"PO-Revision-Date: 2026-06-15 07:07\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -1489,7 +1489,7 @@ msgstr "\n"
 "        Bonjour %(recipient_name)s,\n"
 "        <br/>\n"
 "        <br/>\n"
-"        %(sender_name)s vous a envoyé un message concernant votre activité « %(title)s ». \n"
+"        %(sender_name)s vous a envoyé un message concernant votre activité « %(title)s ».\n"
 "        <br/>\n"
 "        <br/>\n"
 "        <b>Le message</b>\n"
@@ -7027,7 +7027,7 @@ msgstr "Lien de paiement généré avec succès"
 msgid "Successfully checked payment status"
 msgstr "Statut du paiement vérifié avec succès"
 
-#: bluebottle/grant_management/admin.py:585 bluebottle/initiatives/states.py:24
+#: bluebottle/grant_management/admin.py:587 bluebottle/initiatives/states.py:24
 msgid "Submitted"
 msgstr "Soumis"
 
@@ -10273,7 +10273,7 @@ msgid "segment type overview"
 msgstr "aperçu du type de segment"
 
 #: bluebottle/settings/admin_dashboard.py:12
-msgid "Initiatives & Activity"
+msgid "Initiatives & Activities"
 msgstr "Initiatives et Activités"
 
 #: bluebottle/settings/admin_dashboard.py:54
@@ -10324,7 +10324,7 @@ msgstr "Réglages"
 msgid "Manage Reporting"
 msgstr "Gérer les rapports"
 
-#: bluebottle/settings/local.py:322 bluebottle/settings/testing.py:443
+#: bluebottle/settings/local.py:323 bluebottle/settings/testing.py:443
 #: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
@@ -10359,7 +10359,7 @@ msgstr "Gérer les rapports"
 msgid "English"
 msgstr "Anglais"
 
-#: bluebottle/settings/local.py:323 bluebottle/settings/testing.py:444
+#: bluebottle/settings/local.py:324 bluebottle/settings/testing.py:444
 #: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
 #: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
@@ -10394,31 +10394,31 @@ msgstr "Anglais"
 msgid "Dutch"
 msgstr "Néerlandais"
 
-#: bluebottle/settings/local.py:324 bluebottle/settings/testing.py:445
+#: bluebottle/settings/local.py:325 bluebottle/settings/testing.py:445
 #: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Français"
 
-#: bluebottle/settings/local.py:325 bluebottle/settings/testing.py:446
+#: bluebottle/settings/local.py:326 bluebottle/settings/testing.py:446
 #: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Espagnol"
 
-#: bluebottle/settings/local.py:326 bluebottle/settings/testing.py:447
+#: bluebottle/settings/local.py:327 bluebottle/settings/testing.py:447
 #: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Allemand"
 
-#: bluebottle/settings/local.py:327 bluebottle/settings/testing.py:448
+#: bluebottle/settings/local.py:328 bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugais"
 
-#: bluebottle/settings/local.py:328 bluebottle/settings/testing.py:449
+#: bluebottle/settings/local.py:329 bluebottle/settings/testing.py:449
 #: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Hongrois"
 
-#: bluebottle/settings/local.py:329 bluebottle/settings/testing.py:450
+#: bluebottle/settings/local.py:330 bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Bulgare"
 

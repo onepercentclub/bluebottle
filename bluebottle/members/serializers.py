@@ -256,13 +256,15 @@ class UserPermissionsSerializer(serializers.Serializer):
     project_manage_list = PermissionField('initiative-list')
     homepage = PermissionField('home-detail')
     review_activities = UserPermissionField('activities.api_review_activity')
+    change_pages = UserPermissionField('pages.api_change_page')
 
     class Meta(object):
         fields = [
             'project_list',
             'project_manage_list',
             'homepage',
-            'review_activities'
+            'review_activities',
+            'change_pages',
         ]
 
 

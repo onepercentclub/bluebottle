@@ -1,9 +1,7 @@
-from bluebottle.cms.page_utils import get_page_for_block, is_editable_page_block
-from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.utils.permissions import BasePermission
 
 
-class PageEditorPermission(BasePermission):
+class ContentPageEditorPermission(BasePermission):
     def has_action_permission(self, action, user, model_cls):
         if action in ('GET', 'HEAD', 'OPTIONS'):
             return True
@@ -19,7 +17,7 @@ class PageEditorPermission(BasePermission):
         return False
 
 
-class PageListPermission(BasePermission):
+class ContentPageListPermission(BasePermission):
     def has_action_permission(self, action, user, model_cls):
         return user.is_authenticated and user.has_perm('pages.api_change_page')
 
@@ -27,7 +25,7 @@ class PageListPermission(BasePermission):
         return self.has_action_permission(action, user, obj.__class__)
 
 
-class PageBlockPermission(BasePermission):
+class ContentBlockPermission(BasePermission):
     def has_action_permission(self, action, user, model_cls):
         if action in ('GET', 'HEAD', 'OPTIONS'):
             return True
@@ -42,25 +40,6 @@ class PageBlockPermission(BasePermission):
             return (
                 user.is_authenticated and
                 user.has_perm('pages.api_change_page') and
-                is_editable_page_block(obj) and
-                get_page_for_block(obj) is not None
+                obj.page_id is not None
             )
         return False
-
-
-class PlatformPagePermission(BasePermission):
-
-    def has_permission(self, request, view):
-        page = view.get_object()
-        settings = MemberPlatformSettings.load()
-        if (
-            settings.closed
-            and (not request.user or not request.user.is_authenticated)
-            and page.slug == 'start'
-        ):
-            return False
-
-        return True
-
-    def __repr__(self):
-        return 'PlatformPagePermission'

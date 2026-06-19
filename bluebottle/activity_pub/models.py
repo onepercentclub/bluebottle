@@ -4,7 +4,6 @@ import inflection
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
-from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
 from django.urls import reverse, resolve
@@ -12,8 +11,8 @@ from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
-from bluebottle.activities.models import Activity as DoGoodActivity, Contributor, RemoteMember
-from bluebottle.time_based.models import DateActivitySlot
+from bluebottle.activities.models import Activity as DoGoodActivity, RemoteMember
+from bluebottle.time_based.models import DateActivitySlot, Registration
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
@@ -28,6 +27,10 @@ from bluebottle.activity_pub.adapters import adapter
 
 
 class ActivityPubManager(PolymorphicManager):
+    def get_queryset(self):
+        qs = self.queryset_class(self.model, using=self._db, hints=self._hints)
+        return qs
+
     def from_iri(self, iri):
         if iri:
             if is_local(iri):
@@ -78,6 +81,10 @@ class Actor(ActivityPubModel):
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
+    def follow(self):
+        return Follow.objects.filter(object=self).first()
+
+    @property
     def webfinger_uri(self):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
@@ -120,7 +127,7 @@ class Person(Actor):
         return follow
 
     def __str__(self):
-        return self.name or self.prefered_username
+        return self.name
 
 
 class Image(ActivityPubModel):
@@ -774,10 +781,40 @@ class Accept(Activity):
     @property
     def default_recipients(self):
         if isinstance(self.object, Follow):
-            return [self.object.actor]
+            yield self.object.actor
         elif isinstance(self.object, Event):
             create = self.object.create_set.first()
-            return [create.actor]
+            yield create.actor
+        elif isinstance(self.object, Join) and self.object.platform:
+            yield self.object.platform
+
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+
+        if created and not self.is_local and isinstance(self.object, Join):
+            registration = Registration.objects.get(
+                user=self.object.actor.origin, activity=self.object.object.adopted
+            )
+            registration.states.accept(save=True)
+
+
+class Reject(Activity):
+    object = models.ForeignKey('activity_pub.ActivityPubModel', on_delete=models.CASCADE)
+
+    @property
+    def default_recipients(self):
+        yield self.object.platform
+
+    def save(self, *args, **kwargs):
+        created = not self.pk
+        super().save(*args, **kwargs)
+
+        if created and not self.is_local and isinstance(self.object, Join):
+            registration = Registration.objects.get(
+                user=self.object.actor.origin, activity=self.object.object.adopted
+            )
+            registration.states.reject(save=True)
 
 
 class Create(Activity):
@@ -856,57 +893,25 @@ class Update(Activity):
 
 class Join(Activity):
     """Sent by a follower when a user joins an Event"""
-    object_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveBigIntegerField()
-    object = GenericForeignKey("object_content_type", "object_id")
+    object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
+    motivation = models.TextField(null=True, blank=True)
 
-    sub_event = models.ForeignKey(
-        'activity_pub.SubEvent',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='+',
-    )
-
-    origin = models.OneToOneField(
-        Contributor,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='activity_pub_model'
-    )
-
-    adopted = models.OneToOneField(
-        Contributor,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='origin'
-    )
+    platform = models.ForeignKey(Organization, null=True, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        if not self.is_local and not self.adopted:
+        if not self.is_local:
             adapter.adopt(self)
 
     @property
     def default_recipients(self):
         try:
             create = self.object.create_set.get()
-        except Exception:
+        except AttributeError:
             create = self.object.parent.create_set.get()
 
         yield create.actor
-
-
-class Leave(Activity):
-    """Sent by a follower when a user leaves a synced deed; object is the source GoodDeed."""
-    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
-
-    @property
-    def default_recipients(self):
-        create = self.object.create_set.first()
-        if create:
-            yield create.actor
 
 
 class Transition(Activity):
@@ -922,12 +927,30 @@ class Transition(Activity):
     def save(self, *args, **kwargs):
         if not self.is_local and not self.transitioned:
             if self.transition():
-                self.transition = True
+                self.transitioned = True
 
         super().save(*args, **kwargs)
 
     def transition(self):
         raise NotImplementedError()
+
+
+class Leave(Transition):
+    """Sent by a follower when a user leaves a synced activity; object is the source Event."""
+    @property
+    def default_recipients(self):
+        create = self.object.create_set.first()
+        if create:
+            yield create.actor
+
+    def transition(self):
+        if self.object.is_local:
+            contributor = self.object.origin.contributors.get(
+                remote_user=self.actor.adopted
+            )
+            contributor.states.withdraw(save=True)
+
+            return True
 
 
 class Delete(Transition):

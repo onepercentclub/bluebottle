@@ -614,6 +614,12 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
                 CreateFirstSlotEffect,
             ]
         ),
+        TransitionTrigger(
+            PeriodicActivityStateMachine.approve,
+            effects=[
+                CreateFirstSlotEffect,
+            ]
+        ),
         ModelChangedTrigger(
             ['title', 'description', 'start', 'deadline', 'location', 'duration', 'period'],
             effects=[

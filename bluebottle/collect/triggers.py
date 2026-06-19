@@ -13,7 +13,7 @@ from bluebottle.activities.triggers import (
 )
 
 from bluebottle.activity_pub.effects import (
-    PublishAdoptionEffect, CancelEffect, UpdateEventEffect, FinishEffect
+    PublishAdoptionEffect, CancelEffect, SendJoinEffect, UpdateEventEffect, FinishEffect
 )
 from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
@@ -282,7 +282,7 @@ class CollectContributionTriggers(ContributionTriggers):
 def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
     settings = MemberPlatformSettings.load()
-    return settings.closed or effect.instance.user.is_active
+    return settings.closed or (effect.instance.user and effect.instance.user.is_active)
 
 
 def participant_is_inactive(effect):
@@ -324,6 +324,7 @@ class CollectContributorTriggers(ContributorTriggers):
                     NewParticipantNotification,
                     conditions=[is_user]
                 ),
+                SendJoinEffect
             ]
         ),
         TransitionTrigger(

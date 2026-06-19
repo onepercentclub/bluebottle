@@ -260,6 +260,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 CreateRegistrationEffect,
                 CreateTimeContributionEffect,
                 CreatePreparationTimeContributionEffect,
+                SendJoinEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
                     conditions=[is_not_self],
@@ -274,7 +275,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.accept,
             effects=[
                 FollowActivityEffect,
-                SendJoinEffect,
                 TransitionEffect(DeadlineParticipantStateMachine.succeed),
                 RelatedTransitionEffect(
                     "contributions",
@@ -452,7 +452,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.reject,
             effects=[
-                SendLeaveEffect,
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
                     'contributions',
@@ -640,6 +639,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 CreateScheduleContributionEffect,
                 CreateRegistrationEffect,
                 CreateScheduleSlotEffect,
+                SendJoinEffect,
                 TransitionEffect(
                     ScheduleParticipantStateMachine.add,
                     conditions=[is_not_self],
@@ -1330,7 +1330,6 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.reject,
             effects=[
-                SendLeaveEffect,
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',

@@ -2,6 +2,7 @@ import logging
 from django.db import connection
 from rest_framework import generics, status, response
 
+from bluebottle.activity_pub.utils import is_local
 from bluebottle.celery import app
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
@@ -39,6 +40,14 @@ def create_task(request, tenant):
         serializer = ActivityPubSerializer(
             data=request.data, context={'request': request}
         )
+
+        print('Post to inbox:', request.data['type'])
+        from bluebottle.activity_pub.clients import client
+        from pprint import pprint
+        if not is_local(request.data['object']):
+            pprint(client.fetch(request.data['object']))
+        else:
+            pprint(request.data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

@@ -163,9 +163,9 @@ class BaseContributorInline(TabularInlinePaginated):
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
         try:
-            obj.event
+            obj.activity_pub_model
             return list(fields) + ['remote_user', 'platform']
-        except Activity.event.RelatedObjectDoesNotExist:
+        except Activity.activity_pub_model.RelatedObjectDoesNotExist:
             pass
         except AttributeError:
             pass
@@ -177,7 +177,6 @@ class BaseContributorInline(TabularInlinePaginated):
 
     def platform(self, obj):
         if obj.remote_user:
-            __import__('ipdb').set_trace()
             return obj.remote_user.sync_actor
         return "-"
 
@@ -777,7 +776,7 @@ class ActivityChildAdmin(
     initiative_link.short_description = _('Initiative')
 
     def event(self, obj):
-        if obj.event:
+        if obj.activity_pub_model:
             return format_html(
                 '<a href="{}">{}</a>',
                 reverse('admin:activity_pub_event_change', args=(obj.event.id,)),
@@ -786,12 +785,12 @@ class ActivityChildAdmin(
 
     def event_url(self, obj):
         if obj.event:
-            return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
+            return get_current_host() + reverse("json-ld:resource", args=(obj.event.id, 'event'))
 
     def activity_pub(self, obj):
         recipients = []
         try:
-            event = obj.origin
+            event = obj.activity_pub_model
             if event:
                 publishes = event.create_set.all().prefetch_related("recipients__actor")
                 for publish in publishes:
@@ -833,7 +832,7 @@ class ActivityChildAdmin(
             from bluebottle.activity_pub.models import Event
             Event.sync(activity)
 
-        publish = activity.origin.create_set.first()
+        publish = activity.activity_pub_model.create_set.first()
         new_recipients = form.cleaned_data.get('recipients') or []
         for actor in new_recipients:
             Recipient.objects.get_or_create(actor=actor, activity=publish)

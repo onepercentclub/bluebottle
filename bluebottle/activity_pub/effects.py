@@ -4,7 +4,7 @@ from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Accept, Follow, Start, Cancel, Delete, Finish, Leave,
-    Event,
+    Event, Join, Reject
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -195,8 +195,7 @@ class SendJoinEffect(Effect):
 
 class SendLeaveEffect(Effect):
     """
-    Send a Leave activity to the source platform when a user leaves a synced deed.
-    Runs only when the activity is synced (via activity_is_synced condition).
+    Send a Leave activity to the source platform when a user leaves an activity
     """
     template = 'admin/activity_pub/send_leave_effect.html'
     conditions = [can_send_leave]
@@ -207,9 +206,51 @@ class SendLeaveEffect(Effect):
             object=self.instance.activity.origin,
         )
 
-    @property
-    def is_valid(self):
-        return super().is_valid
-
     def __str__(self):
         return str(_('Notify source platform of leave'))
+
+
+def participant_is_not_local(effect):
+    return effect.instance.remote_user is not None
+
+
+class SendAcceptEffect(Effect):
+    """
+    Send a Accept activity to the consumer platform when a user is rejected.
+    """
+    template = 'admin/activity_pub/send_accept_effect.html'
+    conditions = [participant_is_not_local]
+
+    def post_save(self, **kwargs):
+        join = Join.objects.get(
+            actor=self.instance.remote_user.origin,
+            object=self.instance.activity.activity_pub_model
+        )
+        Accept.objects.create(
+            actor=get_platform_actor(),
+            object=join
+        )
+
+    def __str__(self):
+        return str(_('Notify consumer platform of acceptance'))
+
+
+class SendRejectEffect(Effect):
+    """
+    Send a Reject activity to the consumer platform when a user is rejected.
+    """
+    template = 'admin/activity_pub/send_reject_effect.html'
+    conditions = [participant_is_not_local]
+
+    def post_save(self, **kwargs):
+        join = Join.objects.get(
+            actor=self.instance.remote_user.origin,
+            object=self.instance.activity.activity_pub_model
+        )
+        Reject.objects.create(
+            actor=get_platform_actor(),
+            object=join
+        )
+
+    def __str__(self):
+        return str(_('Notify consumer platform of rejection'))

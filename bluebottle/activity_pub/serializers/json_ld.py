@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.relations import RelatedField
 
 from bluebottle.activity_pub.clients import client
 from bluebottle.activity_pub.models import (
@@ -13,6 +14,7 @@ from bluebottle.activity_pub.models import (
     Person,
     PublicKey,
     Create,
+    Reject,
     Update,
     Delete,
     Start,
@@ -223,6 +225,21 @@ class CollectCampaignSerializer(BaseEventSerializer):
         )
 
 
+class RelatedParentField(RelatedField):
+    def get_queryset(self):
+        # TODO: filter queryset on correct types
+        return DoGoodEvent.objects.all()
+
+    def to_representation(self, value):
+        return value.pub_url
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = {'id': data}
+
+        return DoGoodEvent.objects.from_iri(data['id'])
+
+
 class SubEventSerializer(BaseActivityPubSerializer):
     type = TypeField('subEvent')
 
@@ -240,11 +257,13 @@ class SubEventSerializer(BaseActivityPubSerializer):
     contributor_count = serializers.IntegerField(required=False, allow_null=True, default=0)
     capacity = serializers.IntegerField(required=False, allow_null=True)
 
+    parent = RelatedParentField(allow_null=True)
+
     class Meta(BaseEventSerializer.Meta):
         model = SubEvent
         fields = BaseActivityPubSerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode',
-            'contributor_count', 'capacity', 'name'
+            'contributor_count', 'capacity', 'name', 'parent'
         )
 
 
@@ -295,6 +314,18 @@ class DoGoodEventSerializer(BaseEventSerializer):
             'sub_event',
         )
 
+    def create(self, validated_data):
+        sub_events = validated_data.pop('sub_event', [])
+        result = super().create(validated_data)
+        field = self.fields['sub_event']
+
+        if sub_events:
+            for sub_event in sub_events:
+                sub_event['parent'] = result
+            sub_events = field.save(sub_events)
+
+        return result
+
 
 class BaseActivitySerializer(BaseActivityPubSerializer):
     actor = RelatedResourceField(type=('Organization', 'Person', ))
@@ -323,12 +354,23 @@ class AcceptSerializer(BaseActivitySerializer):
     object = RelatedResourceField(
         type=(
             'Follow', 'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
+            'CollectCampaign', 'DoGoodEvent', 'Join'
         )
     )
 
     class Meta(BaseActivitySerializer.Meta):
         model = Accept
+
+
+class RejectSerializer(BaseActivitySerializer):
+    type = TypeField('Reject')
+
+    object = RelatedResourceField(
+        type=('Join', )
+    )
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Reject
 
 
 class CreateSerializer(BaseActivitySerializer):
@@ -423,9 +465,17 @@ class JoinSerializer(BaseActivitySerializer):
             'CollectCampaign', 'DoGoodEvent', 'SubEvent'
         )
     )
+    motivation = serializers.CharField(required=False, allow_null=True)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Join
+        fields = BaseActivitySerializer.Meta.fields + ('motivation', )
+
+    def create(self, validated_data):
+        if 'request' in self.context:
+            validated_data['platform'] = self.context['request'].auth
+
+        return super().create(validated_data)
 
 
 class LeaveSerializer(BaseActivitySerializer):

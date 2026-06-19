@@ -13,10 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='activity',
-            name='origin',
-        ),
         migrations.AlterField(
             model_name='activity',
             name='office_location',

@@ -442,7 +442,7 @@ class FollowingAdmin(FollowAdmin):
         return obj.shared_activities.count()
 
     def adopted_activities(self, obj):
-        return obj.adopted_activities.count() + obj.linked_activities.count()
+        return obj.adopted_activities.count()
 
     def show_adoption_type(self, obj):
         return obj.short_adoption_type
@@ -577,7 +577,7 @@ class FollowerAdmin(FollowAdmin):
         return obj.shared_activities.count()
 
     def adopted_activities(self, obj):
-        return obj.adopted_activities.count() + obj.linked_activities.count()
+        return obj.adopted_activities.count()
 
     adopted_activities.short_description = _("Adopted activities")
 
@@ -587,7 +587,7 @@ class FollowerAdmin(FollowAdmin):
     platform.short_description = _("Partner")
 
     def get_queryset(self, request):
-        qs = Follow.objects.all()
+        qs = Follower.objects.all()
         platform_actor = get_platform_actor()
         if platform_actor:
             return qs.filter(object=platform_actor)
@@ -605,8 +605,8 @@ class FollowerAdmin(FollowAdmin):
         fields = super().get_fields(request, obj)
         if obj and self.accepted(obj):
             fields += (
-                'publish_mode', "shared_activities", "adopted", "origin",
-                "short_adoption_type", "publish_activities_button"
+                'publish_mode', "shared_activities",
+                "publish_activities_button"
             )
         return fields
 
@@ -724,7 +724,7 @@ class FollowerAdmin(FollowAdmin):
         return True
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return True
 
     def accept_follow_requests(self, request, queryset):
         """Accept selected follow requests"""
@@ -947,7 +947,6 @@ class EventAdminMixin:
             )
 
     def adopt_event(self, request, object_id):
-        """Create a synced local Deed from a remote GoodDeed (adopt). Supports only GoodDeed for now."""
         if not request.user.has_perm("deeds.add_activity"):
             raise PermissionDenied
 
@@ -964,21 +963,14 @@ class EventAdminMixin:
             )
 
         try:
-            deed = adapter.adopt(event, request)
-            from bluebottle.activity_pub.models import Accept
-            from bluebottle.activity_pub.utils import get_platform_actor
-
-            Accept.objects.create(
-                actor=get_platform_actor(),
-                object=event
-            )
+            activity = adapter.adopt(event, owner=request.user)
             self.message_user(
                 request,
-                f'Successfully adopted Deed "{deed.title}".',
+                f'Successfully adopted Deed "{event.title}".',
                 level="success",
             )
             return HttpResponseRedirect(
-                reverse("admin:activities_activity_change", args=[deed.pk])
+                reverse("admin:activities_activity_change", args=[activity.pk])
             )
 
         except Exception as e:

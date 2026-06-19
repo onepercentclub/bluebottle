@@ -5,6 +5,7 @@ from jet.dashboard.dashboard import DefaultAppIndexDashboard
 
 from bluebottle.bluebottle_dashboard.dashboard import CustomAppIndexDashboard
 from bluebottle.bluebottle_dashboard.tests.factories import UserDashboardModuleFactory
+from bluebottle.bluebottle_dashboard.utils import get_menu_items
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.offices.tests.factories import LocationFactory
@@ -123,3 +124,20 @@ class AdminMenuTestCase(BluebottleAdminTestCase):
         self.assertContains(response, 'Work location groups')
         self.assertContains(response, 'Impact types')
         self.assertContains(response, 'All segment types')
+
+    def test_staff_member_sees_initiatives_and_activity_menu(self):
+        self.assertFalse(self.staff_member.is_superuser)
+        self.assertTrue(self.staff_member.has_perm('activities.change_activity'))
+
+        request = RequestFactory().get(self.admin_url)
+        request.user = self.staff_member
+        menu_groups = get_menu_items({'user': self.staff_member, 'request': request})
+        initiatives_menu = next(
+            group for group in menu_groups if group['app_label'] == 'activities'
+        )
+        self.assertTrue(initiatives_menu['has_perms'])
+        self.assertEqual(str(initiatives_menu['label']), 'Initiatives & Activities')
+
+        self.client.force_login(self.staff_member)
+        response = self.client.get(self.admin_url)
+        self.assertContains(response, 'Initiatives & Activities', html=True)

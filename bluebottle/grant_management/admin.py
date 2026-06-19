@@ -574,13 +574,15 @@ class GrantApplicationAdmin(ActivityChildAdmin):
     def submitted(self, obj):
         entry = LogEntry.objects.filter(
             action_flag=9,
-            object_id=obj.pk,
+            object_id=str(obj.pk),
             content_type=ContentType.objects.get_for_model(obj),
             change_message="Changed status to submitted"
         ).order_by(
             '-action_time'
         ).first()
-        return entry.action_time
+        if entry:
+            return entry.action_time
+        return None
 
     submitted.short_description = _("Submitted")
 

@@ -4,7 +4,7 @@
 ################
 # DEPENDENCIES #
 ################
-FROM python:3.8 as deps
+FROM python:3.11 as deps
 
 # Install missing dependencies
 RUN apt-get update
@@ -29,13 +29,13 @@ COPY bluebottle/__init__.py ./bluebottle
 COPY ["README.rst", "setup.py", "./"]
 
 # Install any (missing) requirements
-RUN pip install -e .[env]
+RUN pip install -e .
 
 ################
 #  BLUEBOTTLE  #
 ################
 
-FROM python:3.8
+FROM python:3.11
 
 # Install missing dependencies
 RUN apt-get update

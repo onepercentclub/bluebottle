@@ -73,6 +73,9 @@ jobs:
       - name: Set up Python and dependencies
         uses: ./.github/actions/setup-python
 
+      - name: Set up Python and dependencies
+        run: bash .github/scripts/setup-test-python.sh
+
       - name: Bootstrap database
         run: |
           set -e
@@ -248,6 +251,9 @@ jobs:
 
       - name: Set up Python and dependencies
         uses: ./.github/actions/setup-python
+
+      - name: Set up Python and dependencies
+        run: bash .github/scripts/setup-test-python.sh
 
       - name: Bootstrap database
         run: |

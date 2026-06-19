@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-15 13:26+0200\n"
-"PO-Revision-Date: 2026-06-15 11:27\n"
+"POT-Creation-Date: 2026-06-19 09:54+0200\n"
+"PO-Revision-Date: 2026-06-19 07:55\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -10277,8 +10277,8 @@ msgid "segment type overview"
 msgstr "visão geral do tipo de grupo"
 
 #: bluebottle/settings/admin_dashboard.py:12
-msgid "Initiatives & Activity"
-msgstr "Iniciativas e Atividade"
+msgid "Initiatives & Activities"
+msgstr "Iniciativas e Atividades"
 
 #: bluebottle/settings/admin_dashboard.py:54
 msgid "Time Based"

@@ -57,7 +57,6 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
 
         Given an individual model instance, create a task to delete the object from index.
         """
-        __import__('ipdb').set_trace()
         if sender in self.models:
             registry.delete(instance, raise_on_error=False)
 

@@ -7,11 +7,20 @@ def create_transition_parent(apps, schema_editor):
     Finish = apps.get_model('activity_pub', 'Finish')
     Delete = apps.get_model('activity_pub', 'Delete')
     Cancel = apps.get_model('activity_pub', 'Cancel')
+    Transition = apps.get_model('activity_pub', 'Transition')
 
     for model in [Start, Finish, Delete, Cancel]:
         print(model.objects.all())
         for transition in model.objects.all():
-            __import__('ipdb').set_trace()
+            intermediate = Transition(
+                object_id=transition.object_id,
+                activity_ptr_id=transition.activity_ptr_id,
+                transitioned=transition.transitioned,
+                actor_id=transition.actor_id
+            )
+            intermediate.save()
+            transition.transition_ptr_id = intermediate.pk
+            transition.save()
 
 
 
@@ -22,4 +31,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        operations.RunPython(create_transition_parent, operations.RunPython.noop)
     ]

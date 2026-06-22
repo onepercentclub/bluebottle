@@ -4,7 +4,10 @@ from bluebottle.funding.messages.funding.activity_manager import (
     FundingPayoutAccountMarkedIncomplete,
     FundingPublicPayoutAccountMarkedIncomplete,
 )
-from bluebottle.funding.messages.funding.platform_manager import LivePayoutAccountMarkedIncomplete
+from bluebottle.funding.messages.funding.platform_manager import (
+    LivePayoutAccountMarkedIncomplete,
+    LivePublicPayoutAccountMarkedIncomplete,
+)
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.funding_stripe.tests.base import FundingStripeMixin, save_stripe_payout_account
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, ExternalAccountFactory
@@ -13,11 +16,20 @@ from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
 
-INACTIVE_FUNDING_STATUSES = [
+
+DRAFT_FUNDING_STATUSES = [
     'draft',
     'needs_work',
-    'rejected',
     'submitted',
+]
+
+ACTIVE_FUNDING_STATUSES = [
+    'open',
+    'on_hold',
+]
+
+INACTIVE_FUNDING_STATUSES = [
+    'rejected',
     'succeeded',
     'partially_funded',
     'cancelled',
@@ -65,7 +77,47 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
         save_stripe_payout_account(self.model)
         self.model.states.set_incomplete()
 
-    def test_set_incomplete_inactive_funding_statuses(self):
+    def test_set_incomplete_draft_funding_sends_activity_manager_notification(self):
+        for status in DRAFT_FUNDING_STATUSES:
+            with self.subTest(status=status):
+                self.funding.status = status
+                self.funding.save()
+                self.trigger_set_incomplete()
+                with self.execute():
+                    self.assertNotificationEffect(FundingPayoutAccountMarkedIncomplete)
+                    self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)
+                    self.assertNoNotificationEffect(LivePublicPayoutAccountMarkedIncomplete)
+
+    def test_set_incomplete_active_funding_sends_platform_manager_notification(self):
+        for status in ACTIVE_FUNDING_STATUSES:
+            with self.subTest(status=status):
+                self.funding.status = status
+                self.funding.save()
+                self.trigger_set_incomplete()
+                with self.execute():
+                    self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
+                    self.assertNotificationEffect(
+                        LivePayoutAccountMarkedIncomplete,
+                        recipients=[self.staff_user, self.support_user]
+                    )
+
+    def test_set_incomplete_draft_vs_open_send_different_notifications(self):
+        self.trigger_set_incomplete()
+        with self.execute():
+            self.assertNotificationEffect(FundingPayoutAccountMarkedIncomplete)
+            self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)
+
+        self.funding.status = 'open'
+        self.funding.save()
+        self.trigger_set_incomplete()
+        with self.execute():
+            self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
+            self.assertNotificationEffect(
+                LivePayoutAccountMarkedIncomplete,
+                recipients=[self.staff_user, self.support_user]
+            )
+
+    def test_set_incomplete_inactive_funding_statuses_send_no_notification(self):
         for status in INACTIVE_FUNDING_STATUSES:
             with self.subTest(status=status):
                 self.funding.status = status
@@ -75,37 +127,26 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
                     self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
                     self.assertNoNotificationEffect(FundingPublicPayoutAccountMarkedIncomplete)
                     self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)
+                    self.assertNoNotificationEffect(LivePublicPayoutAccountMarkedIncomplete)
 
-    def test_set_incomplete_open_sends_activity_manager_notification(self):
-        self.funding.status = 'open'
-        self.funding.save()
+    def test_set_incomplete_public_draft_sends_public_activity_manager_notification(self):
+        self.model.public = True
+        save_stripe_payout_account(self.model)
         self.trigger_set_incomplete()
         with self.execute():
-            self.assertNotificationEffect(FundingPayoutAccountMarkedIncomplete)
-            self.assertNotificationEffect(
-                LivePayoutAccountMarkedIncomplete,
-                recipients=[self.staff_user, self.support_user]
-            )
+            self.assertNotificationEffect(FundingPublicPayoutAccountMarkedIncomplete)
+            self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
+            self.assertNoNotificationEffect(LivePublicPayoutAccountMarkedIncomplete)
 
-    def test_set_incomplete_on_hold_sends_activity_manager_notification(self):
-        self.funding.status = 'on_hold'
-        self.funding.save()
-        self.trigger_set_incomplete()
-        with self.execute():
-            self.assertNotificationEffect(FundingPayoutAccountMarkedIncomplete)
-            self.assertNotificationEffect(
-                LivePayoutAccountMarkedIncomplete,
-                recipients=[self.staff_user, self.support_user]
-            )
-
-    def test_set_incomplete_public_open_sends_public_notification(self):
+    def test_set_incomplete_public_open_sends_public_platform_manager_notification(self):
         self.model.public = True
         save_stripe_payout_account(self.model)
         self.funding.status = 'open'
         self.funding.save()
         self.trigger_set_incomplete()
         with self.execute():
-            self.assertNotificationEffect(FundingPublicPayoutAccountMarkedIncomplete)
+            self.assertNotificationEffect(LivePublicPayoutAccountMarkedIncomplete)
+            self.assertNoNotificationEffect(FundingPublicPayoutAccountMarkedIncomplete)
             self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
 
     def test_disable_live(self):
@@ -116,7 +157,7 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
         self.model.states.set_incomplete()
 
         with self.execute():
-            self.assertNotificationEffect(FundingPayoutAccountMarkedIncomplete)
+            self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
             self.assertNotificationEffect(
                 LivePayoutAccountMarkedIncomplete,
                 recipients=[self.staff_user, self.support_user]

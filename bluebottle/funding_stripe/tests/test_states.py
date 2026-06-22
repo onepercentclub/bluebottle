@@ -188,6 +188,12 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
             target=Money(1000, "EUR")
         )
 
+    def open_funding(self):
+        self.funding.initiative.status = "approved"
+        self.funding.initiative.save()
+        self.funding.status = "open"
+        self.funding.save()
+
     def _save_local_payout_from_stripe_state(self):
         with patch("stripe.Account.retrieve", return_value=self.stripe_account), \
                 patch("stripe.Account.modify", return_value=self.stripe_account):
@@ -232,6 +238,15 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         self.simulate_webhook(["individual.verification.document"])
         self.assertEqual(self.account.status, "incomplete")
 
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_needs_verification_open(self):
+        self.test_pending()
+        self.open_funding()
+
+        self.simulate_webhook(["individual.verification.document"])
+        self.assertEqual(self.account.status, "incomplete")
+
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
@@ -243,7 +258,7 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         self.assertEqual(mail.outbox[0].subject, "Your identity has been verified on Test")
 
     def test_needs_verification_pending(self):
-        self.test_needs_verification()
+        self.test_needs_verification_open()
         mail.outbox = []
 
         self.simulate_webhook([], verification_status="verified")
@@ -254,6 +269,7 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
     def test_reject(self):
         self.test_verify()
         mail.outbox = []
+        self.open_funding()
 
         self.simulate_webhook(
             ["individual.verification.document"], verification_status="rejected"
@@ -267,6 +283,7 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
     def test_reject_disable_payments(self):
         self.test_verify()
         mail.outbox = []
+        self.open_funding()
 
         self.simulate_webhook(
             ["individual.verification.document"],

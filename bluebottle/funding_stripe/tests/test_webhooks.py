@@ -582,10 +582,7 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
         self.execute_hook()
 
         self.assertEqual(self.payout_account.status, "incomplete")
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
-        )
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_incomplete_open(self):
         self.verify()
@@ -637,6 +634,7 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
 
     def test_document_rejected(self):
         self.verify()
+        self.approve()
         self.connect_account.individual.verification.details = (
             "this passport smells fishy"
         )

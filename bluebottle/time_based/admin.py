@@ -116,6 +116,10 @@ class TimeBasedAdmin(ActivityChildAdmin):
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['expertise']
 
+    activity_pub_readonly_fields = ActivityChildAdmin.activity_pub_readonly_fields + (
+        'registration_deadline', 'capacity', 'review',
+    )
+
     export_to_csv_fields = (
         ('title', 'Title'),
         ('description', 'Description'),
@@ -227,6 +231,17 @@ class DateActivitySlotInline(TabularInlinePaginated):
         'duration',
         'status_label'
     ]
+
+    activity_pub_readonly_fields = (
+        'start', 'duration',
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj.origin:
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     extra = 0
 
@@ -392,6 +407,17 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
         'location_hint',
         'online_meeting_url'
     )
+
+    activity_pub_readonly_fields = (
+        'start', 'duration', 's_online', 'location', 'location_hint', 'online_meeting_url'
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj.origin:
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     def link(self, obj):
         url = reverse(
@@ -685,6 +711,10 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
+    activity_pub_readonly_fields = TimeBasedAdmin.activity_pub_readonly_fields + (
+        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+    )
+
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     date_fields = [
@@ -739,6 +769,10 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
         'duration',
         'location',
     ]
+
+    activity_pub_readonly_fields = TimeBasedAdmin.activity_pub_readonly_fields + (
+        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+    )
     registration_fields = []
 
     def get_fieldsets(self, request, obj=None):
@@ -814,6 +848,9 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         'location_hint',
         'online_meeting_url',
     ]
+    activity_pub_readonly_fields = TimeBasedAdmin.activity_pub_readonly_fields + (
+        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+    )
 
     registration_fields = ("team_activity", "capacity",) + TimeBasedAdmin.registration_fields
 
@@ -861,6 +898,17 @@ class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     readonly_fields = ("activity", "status")
     fields = readonly_fields + ("start", "end", "duration")
 
+    activity_pub_readonly_fields = (
+        'start', 'end', 'duration',
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj.origin:
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
+
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     def participant_count(self, obj):
@@ -889,6 +937,17 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         "location_hint",
         "online_meeting_url"
     )
+
+    activity_pub_readonly_fields = (
+        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url',
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj.origin:
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     formfield_overrides = {
         models.DurationField: {
@@ -936,6 +995,17 @@ class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
         "location_hint",
         "online_meeting_url"
     )
+
+    activity_pub_readonly_fields = (
+        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url',
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj.origin:
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -1022,6 +1092,10 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         'online_meeting_url',
     ]
 
+    activity_pub_readonly_fields = TimeBasedAdmin.activity_pub_readonly_fields + (
+        'start', 'duration', 'period', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+    )
+
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     def get_fieldsets(self, request, obj=None):
@@ -1105,16 +1179,18 @@ class SlotAdmin(StateMachineAdmin):
 
     activity_link.short_description = _('Activity')
 
-    def get_readonly_fields(self, request, obj=None):
-        fields = super().get_readonly_fields(request, obj)
-        if obj and obj.is_adopted:
-            fields = list(fields) + [
-                'activity', 'is_online', 'location', 'location_hint',
-                'online_meeting_url', 'title', 'capacity', 'start', 'duration',
-                'origin', 'host_organization'
-            ]
+    activity_pub_readonly_fields = (
+        'activity', 'start', 'location', 'location_hint',
+        'online_meeting_url', 'title', 'capacity', 'start', 'duration',
+        'origin', 'host_organization'
+    )
 
-        return fields
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj.origin:
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     def get_form(self, request, obj=None, **kwargs):
         if obj and not obj.is_online and obj.location:

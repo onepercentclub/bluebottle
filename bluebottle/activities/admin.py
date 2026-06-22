@@ -609,6 +609,11 @@ class ActivityChildAdmin(
     inlines = (UpdateInline, ActivityAnswerInline, MessageAdminInline)
     form = ActivityForm
 
+    activity_pub_readonly_fields = (
+        'title', 'description', 'image', 'video_url', 'slug',
+        'next_step_link', 'next_step_title', 'next_step_button_label', 'next_step_description',
+    )
+
     skip_on_duplicate = [Contributor, Follow, Message, Update]
 
     def get_formsets_with_inlines(self, request, obj=None):
@@ -625,6 +630,13 @@ class ActivityChildAdmin(
             ]
 
         return formsets
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj.origin:
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     def lookup_allowed(self, key, value):
         if key in [
@@ -1043,6 +1055,7 @@ class ActivityAdmin(
     )
     readonly_fields = ['link', 'review_status', 'activity_pub_url', 'origin']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
+
 
     def lookup_allowed(self, key, value):
         if key in [

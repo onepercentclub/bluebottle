@@ -45,6 +45,12 @@ class CollectActivityAdmin(ActivityChildAdmin):
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['location']
     readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity']
 
+    activity_pub_readonly_fields = ActivityChildAdmin.activity_pub_readonly_fields + (
+        'start', 'end', 'target',
+        'collect_type', 'location',
+        'location_hint', 'target', 'realized'
+    )
+
     list_display = ActivityChildAdmin.list_display + [
         'start',
         'end',

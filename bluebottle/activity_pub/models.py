@@ -100,6 +100,9 @@ class Actor(ActivityPubModel):
 
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return self.get_real_instance().name
+
 
 class Person(Actor):
     name = models.TextField()

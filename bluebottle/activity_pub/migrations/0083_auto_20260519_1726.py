@@ -31,5 +31,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        operations.RunPython(create_transition_parent, operations.RunPython.noop)
+        migrations.RunPython(create_transition_parent, migrations.RunPython.noop)
     ]

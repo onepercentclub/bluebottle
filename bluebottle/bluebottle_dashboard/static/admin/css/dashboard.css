@@ -664,10 +664,7 @@ a.button, a.button:hover {
 }
 
 .cp-content .js-inline-admin-formset .inline-related h3 .inline-deletelink:before {
-    font-family: 'dashboard' !important;
-    font-size: 10px;
-    margin-right: 8px;
-    color: #ffffff;
+    display: none !important;
 }
 
 
@@ -676,14 +673,7 @@ a.button, a.button:hover {
 }
 
 .js-inline-admin-formset .inline-related h3 .inline-deletelink {
-    text-decoration: none;
-    font-size: 12px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    padding: 4px 8px;
-    margin: 4px 8px;
-    line-height: 1rem;
-    background-color: #b3000055;
-    transition: background-color 200ms;
+    display: none !important;
 }
 
 .js-inline-admin-formset .inline-related h3 .inline-deletelink:hover {
@@ -694,7 +684,6 @@ a.button, a.button:hover {
     padding: 6px 12px;
 }
 
-.js-inline-admin-formset .inline-related h3 span.delete,
 .js-inline-admin-formset span.delete {
     display: none;
 }

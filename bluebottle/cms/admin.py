@@ -122,25 +122,8 @@ class CMSNestedPlaceholderFieldAdmin(nested_admin.NestedModelAdminMixin, Placeho
     onto the generated ContentItem admin classes.
     """
 
-    def get_extra_inlines(self):
-        return [self.placeholder_inline] + get_cms_content_item_inlines(
-            plugins=self.get_all_allowed_plugins(),
-            base=CMSNestedContentItemInline,
-        )
-
-
-class StatInline(CMSNestedChildInline, SortableStackedInline):
-    model = Stat
-    extra = 0
-    fields = ('type', 'stat_type', 'definition', 'title', 'value')
-
-    readonly_fields = ['definition']
-
-    def definition(self, obj):
-        return getattr(Statistics, obj.type).__doc__
-
     def _create_formsets(self, request, obj, change):
-        orig_formsets, orig_inline_instances = super()._create_formsets(
+        orig_formsets, orig_inline_instances = super(nested_admin.NestedModelAdminMixin, self)._create_formsets(
             request, obj, change
         )
 
@@ -299,6 +282,23 @@ class StatInline(CMSNestedChildInline, SortableStackedInline):
                                 )
                             ]
         return formsets, inline_instances
+
+    def get_extra_inlines(self):
+        return [self.placeholder_inline] + get_cms_content_item_inlines(
+            plugins=self.get_all_allowed_plugins(),
+            base=CMSNestedContentItemInline,
+        )
+
+
+class StatInline(CMSNestedChildInline, SortableStackedInline):
+    model = Stat
+    extra = 0
+    fields = ('type', 'stat_type', 'definition', 'title', 'value')
+
+    readonly_fields = ['definition']
+
+    def definition(self, obj):
+        return getattr(Statistics, obj.type).__doc__
 
 
 class QuoteInline(CMSNestedChildInline):

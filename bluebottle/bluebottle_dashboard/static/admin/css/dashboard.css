@@ -694,7 +694,7 @@ a.button, a.button:hover {
     padding: 6px 12px;
 }
 
-.js-inline-admin-formset .inline-related h3 span.delete,
+.cp-formset-item-fields .js-inline-admin-formset .inline-related h3 span.delete,
 .js-inline-admin-formset span.delete {
     display: none;
 }

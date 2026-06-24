@@ -329,10 +329,10 @@ class AdoptTestCase(ActivityPubTestCase):
                     self.adopted.states.submit(save=True)
 
                     self.approve(self.adopted)
-                    accept = Accept.objects.last()
+                    accept = Accept.objects.get(object=self.event)
                     self.assertTrue(accept)
 
-        accept = Accept.objects.first()
+        accept = Accept.objects.get(object__iri__isnull=True)
         self.assertTrue(accept)
 
     def test_adopt_default_owner(self):

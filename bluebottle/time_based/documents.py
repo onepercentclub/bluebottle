@@ -1,7 +1,8 @@
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
+from bluebottle.activities.documents import ActivityDocument, activity, get_translated_country_list
+from bluebottle.geo.mapbox import get_translated_geofeature_list
 from bluebottle.time_based.models import (
     DateActivity,
     DeadlineActivity,
@@ -48,11 +49,23 @@ class DateActivityDocument(TimeBasedActivityDocument):
         'title': TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
-        'locality': fields.KeywordField(attr='location.locality'),
-        'formatted_address': fields.KeywordField(attr='location.formatted_address'),
+        'location_hint': fields.KeywordField(),
+        'locality': fields.KeywordField(),
+        'formatted_address': fields.KeywordField(),
         'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
         'country': fields.KeywordField(attr='location.country.name'),
         'is_online': fields.BooleanField(),
+        'geofeatures': fields.NestedField(properties={
+            'id': fields.LongField(),
+            'name': TextField(),
+            'mapbox_id': fields.KeywordField(),
+            'place_name': TextField(),
+            'language': fields.KeywordField(),
+            'feature_type': fields.KeywordField(),
+            'is_primary': fields.BooleanField(),
+            'country': TextField(),
+            'country_code': TextField(),
+        }),
     })
 
     def get_queryset(self):
@@ -60,7 +73,10 @@ class DateActivityDocument(TimeBasedActivityDocument):
         queryset = queryset.prefetch_related(
             'slots',
             'slots__location',
-            'slots__location__country'
+            'slots__location__country',
+            'slots__location__geofeature',
+            'slots__location__geofeatures',
+            'slots__location__geofeatures__translations',
         )
         return queryset
 
@@ -81,17 +97,75 @@ class DateActivityDocument(TimeBasedActivityDocument):
 
     def prepare_location(self, instance):
         locations = super(DateActivityDocument, self).prepare_location(instance)
-        locations += [
-            {
-                'name': slot.location.formatted_address,
-                'locality': slot.location.locality,
-                'country_code': slot.location.country.alpha2_code if slot.location.country else None,
-                'country': slot.location.country.name if slot.location.country else None
-            }
-            for slot in instance.slots.all()
-            if not slot.is_online and slot.location
-        ]
+        for slot in instance.slots.all():
+            if slot.is_online or not slot.location:
+                continue
+            primary = slot.location.geofeature
+            country = slot.location.country
+            locations.append({
+                'name': primary.place_name if primary else None,
+                'formatted_address': primary.place_name if primary else None,
+                'location_hint': primary.name if primary else None,
+                'locality': primary.name if primary else None,
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
+            })
         return locations
+
+    def prepare_geofeature(self, instance):
+        geofeatures = []
+        locations = []
+        for slot in instance.slots.all():
+            if slot.location:
+                locations += [slot.location]
+
+        locations = list(set((locations)))
+        for location in locations:
+            primary_id = location.geofeature_id
+            country = location.country
+            for geofeature in location.geofeatures.all():
+                geofeatures = geofeatures + get_translated_geofeature_list(
+                    geofeature,
+                    country=country,
+                    is_primary=geofeature.pk == primary_id,
+                )
+
+        return geofeatures
+
+    def prepare_slots(self, instance):
+        slots = []
+        for slot in instance.active_slots.all():
+
+            location = slot.location
+            if not location:
+                continue
+
+            country = location.country
+
+            geofeatures = []
+            for geofeature in location.geofeatures.all():
+                geofeatures.extend(get_translated_geofeature_list(
+                    geofeature,
+                    country=country,
+                    is_primary=location.mapbox_id == geofeature.mapbox_id,
+                ))
+            geofeature = slot.location.geofeature
+
+            slots.append({
+                'id': str(slot.pk),
+                'status': slot.status,
+                'title': slot.title,
+                'start': slot.start,
+                'end': slot.end,
+                'location_hint': slot.location_hint,
+                'locality': geofeature.name if geofeature else None,
+                'formatted_address': geofeature.place_name if geofeature else None,
+                'country': country.name if country else None,
+                'country_code': country.alpha2_code if country else None,
+                'is_online': slot.is_online,
+                'geofeatures': geofeatures,
+            })
+        return slots
 
     def prepare_start(self, instance):
         return [slot.start for slot in instance.slots.all() if slot.status in ('open', 'full', 'finished', )]
@@ -136,7 +210,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
         countries = super().prepare_country(instance)
         for slot in instance.slots.all():
             if not slot.is_online and slot.location and slot.location.country:
-                countries += get_translated_list(slot.location.country)
+                countries += get_translated_country_list(slot.location.country)
         return deduplicate(countries)
 
     def prepare_position(self, instance):
@@ -183,7 +257,7 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
         if instance.location and instance.location.country:
-            countries += get_translated_list(instance.location.country)
+            countries += get_translated_country_list(instance.location.country)
 
         return deduplicate(countries)
 
@@ -257,7 +331,7 @@ class ScheduleActivityDocument(RegistrationActivityDocument):
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
         if instance.location and instance.location.country:
-            countries += get_translated_list(instance.location.country)
+            countries += get_translated_country_list(instance.location.country)
 
         return deduplicate(countries)
 

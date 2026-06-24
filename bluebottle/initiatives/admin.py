@@ -357,6 +357,7 @@ class InitiativePlatformSettingsAdmin(
                     "enable_matching_emails",
                     "include_full_activities",
                     "restrict_updates",
+                    "card_location_display"
                 )
             },
         ),

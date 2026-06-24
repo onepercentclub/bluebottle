@@ -339,6 +339,17 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("generic", _("Same for all activities")),
     )
 
+    LOCATION_LEVELS = (
+        ("venue_name", _("Venue name")),
+        ("address", _("Address")),
+        ("neighborhood", _("Neighbourhood")),
+        ("locality", _("Locality")),
+        ("place", _("Place")),
+        ("region", _("Region")),
+        ("country", _("Country")),
+        ("country_code", _("Country code")),
+    )
+
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
@@ -500,6 +511,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
             "Review initiatives and activities. Activities created within an initiative will not "
             "need to be reviewed. Crowdfunding activities will always need to be reviewed"
         ),
+    )
+
+    card_location_display = MultiSelectField(
+        max_length=5000,
+        choices=LOCATION_LEVELS,
+        default=['place', 'country_code'],
     )
 
     @property

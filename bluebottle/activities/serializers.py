@@ -7,8 +7,8 @@ import dateutil
 from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone, now
+from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -53,11 +53,13 @@ from bluebottle.funding.serializers import (
     FundingSerializer,
     TinyFundingSerializer,
 )
+from bluebottle.geo.mapbox import format_card_location
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.grant_management.serializers import (
     GrantSerializer,
     GrantApplicationSerializer
 )
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import (
     DateParticipant,
     PeriodicParticipant,
@@ -384,14 +386,28 @@ class ActivityPreviewSerializer(ModelSerializer):
         return obj.type.replace("activity", "")
 
     def get_location(self, obj):
-        location = False
+        location = self._get_card_location_entry(obj)
+        if not location:
+            return None
+
+        formatted = format_card_location(
+            obj,
+            InitiativePlatformSettings.load().card_location_display,
+            get_current_language(),
+        )
+        if formatted:
+            return formatted
+
+        return self._format_location_fallback(location)
+
+    def _get_card_location_entry(self, obj):
         if hasattr(obj, "slots") and obj.slots:
             slots = self.get_filtered_slots(obj, only_upcoming=True)
             if not len(slots):
                 slots = self.get_filtered_slots(obj)
 
             if len(set(slot.locality for slot in slots)) == 1:
-                location = slots[0]
+                return slots[0]
 
         elif obj.type == "funding":
             places = [
@@ -399,7 +415,7 @@ class ActivityPreviewSerializer(ModelSerializer):
                 location.type in ("impact_location", "location")
             ]
             if places:
-                location = places[0]
+                return places[0]
         elif len(obj.location):
             order = [
                 "location",
@@ -409,13 +425,18 @@ class ActivityPreviewSerializer(ModelSerializer):
                 "impact_location",
             ]
 
-            location = sorted(obj.location, key=lambda loc: order.index(getattr(loc, 'type', 'location')))[0]
+            return sorted(
+                obj.location,
+                key=lambda loc: order.index(getattr(loc, 'type', 'location')),
+            )[0]
 
-        if location:
-            if location.locality:
-                return f"{location.locality}, {location.country_code}"
-            else:
-                return location.country
+    def _format_location_fallback(self, location):
+        if location.locality:
+            country_code = getattr(location, 'country_code', None)
+            if country_code:
+                return f"{location.locality}, {country_code}"
+            return location.locality
+        return getattr(location, 'country', None)
 
     def get_image(self, obj):
         if obj.image:

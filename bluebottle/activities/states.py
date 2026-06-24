@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activities.forms import ActivityRejectedForm, ActivityAcceptedForm
 from bluebottle.activities.models import EffortContribution, Organizer
 from bluebottle.fsm.state import (
     EmptyState,
@@ -211,6 +212,7 @@ class ActivityStateMachine(ModelStateMachine):
             "not appear on the search page in the frontend. The activity will still "
             "be available in the back office and appear in your reporting."
         ),
+        form=ActivityRejectedForm,
         automatic=False,
         permission=can_approve,
     )
@@ -263,6 +265,7 @@ class ActivityStateMachine(ModelStateMachine):
         ],
         open,
         name=_("Approve"),
+        form=ActivityAcceptedForm,
         automatic=False,
         permission=can_approve,
         description=_(

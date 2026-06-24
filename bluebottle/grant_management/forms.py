@@ -1,12 +1,13 @@
+from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import CharField, ModelChoiceField, Textarea, BooleanField
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from .messages.activity_manager import GrantApplicationNeedsWorkMessage
 from .models import GrantDonor, GrantFund
 from ..utils.fields import MoneyFormField
 from ..utils.forms import TransitionConfirmationForm
-
-from bluebottle.initiatives.models import InitiativePlatformSettings
 
 
 class GrantApplicationApproveForm(TransitionConfirmationForm):
@@ -75,6 +76,47 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         )
 
         return grant_donor
+
+
+class GrantApplicationNeedsWorkForm(TransitionConfirmationForm):
+    title = _('Grant application needs work')
+
+    message = GrantApplicationNeedsWorkMessage
+
+    custom_message = forms.CharField(
+        widget=forms.Textarea,
+        label=_('Custom message'),
+        required=False,
+        help_text=_('You can provide a custom message to the applicant explaining why the request needs work.'),
+    )
+
+    def save(self, **kwargs):
+        """
+        Save the form data and return the custom message if provided.
+        """
+        if self.cleaned_data.get('custom_message'):
+            self.transition.custom_message = self.cleaned_data['custom_message']
+        return None
+
+
+class GrantApplicationRejectedForm(TransitionConfirmationForm):
+    title = _('Grant application rejected')
+
+    custom_message = forms.CharField(
+        widget=forms.Textarea,
+        label=_('Custom message'),
+        required=False,
+        help_text=_(
+            'You can provide a custom message to the applicant explaining why their request was rejected.'),
+    )
+
+    def save(self, **kwargs):
+        """
+        Save the form data and return the custom message if provided.
+        """
+        if self.cleaned_data.get('custom_message'):
+            self.transition.custom_message = self.cleaned_data['custom_message']
+        return None
 
 
 class GrantPayoutApproveForm(TransitionConfirmationForm):

@@ -149,6 +149,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
                     country=country,
                     is_primary=location.mapbox_id == geofeature.mapbox_id,
                 ))
+            geofeature = slot.location.geofeature
 
             slots.append({
                 'id': str(slot.pk),
@@ -157,8 +158,8 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 'start': slot.start,
                 'end': slot.end,
                 'location_hint': slot.location_hint,
-                'locality': slot.location.geofeature.name,
-                'formatted_address': slot.location.geofeature.place_name,
+                'locality': geofeature.name if geofeature else None,
+                'formatted_address': geofeature.place_name if geofeature else None,
                 'country': country.name if country else None,
                 'country_code': country.alpha2_code if country else None,
                 'is_online': slot.is_online,

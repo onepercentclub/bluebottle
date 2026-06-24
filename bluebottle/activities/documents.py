@@ -368,7 +368,7 @@ class ActivityDocument(Document):
             locations.append({
                 'id': instance.location.id,
                 'name': instance.location.geofeature.place_name,
-                'location_hint': instance.location_hint,
+                'location_hint': getattr(instance, 'location_hint', None),
                 'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code if instance.location.country else None,
                 'country': instance.location.country.name if instance.location.country else None,

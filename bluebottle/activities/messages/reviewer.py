@@ -10,7 +10,9 @@ def get_reviewers_for_activity(activity):
     recipients = Member.objects.filter(
         submitted_initiative_notifications=True
     ).filter(
-        Q(
+        Q(is_staff=True)
+        | Q(is_superuser=True)
+        | Q(
             user_permissions__codename='api_review_activity',
             user_permissions__content_type__app_label='activities'
         )

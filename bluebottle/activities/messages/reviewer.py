@@ -4,6 +4,40 @@ from django.utils.translation import pgettext_lazy as pgettext
 from bluebottle.notifications.messages import TransitionMessage
 
 
+def get_reviewers_for_activity(activity):
+    from bluebottle.members.models import Member
+
+    recipients = Member.objects.filter(
+        submitted_initiative_notifications=True
+    ).filter(
+        Q(
+            user_permissions__codename='api_review_activity',
+            user_permissions__content_type__app_label='activities'
+        )
+        | Q(
+            groups__permissions__codename='api_review_activity',
+            groups__permissions__content_type__app_label='activities'
+        )
+    )
+
+    if activity.office_location and activity.office_location.subregion:
+        recipients = recipients.filter(
+            Q(subregion_manager=activity.office_location.subregion)
+            | Q(subregion_manager__isnull=True)
+        )
+    if activity.office_location:
+        recipients = recipients.filter(
+            Q(office_manager=activity.office_location)
+            | Q(office_manager__isnull=True)
+        )
+    if activity.segments.exists():
+        recipients = recipients.filter(
+            Q(segment_manager__in=activity.segments.all())
+            | Q(segment_manager__isnull=True)
+        )
+    return list(recipients.distinct())
+
+
 class ReviewerActivityNotification(TransitionMessage):
     context = {
         "title": "title",
@@ -27,40 +61,7 @@ class ReviewerActivityNotification(TransitionMessage):
 
     def get_recipients(self):
         """reviewers for this activity"""
-        from bluebottle.members.models import Member
-
-        recipients = Member.objects.filter(
-            submitted_initiative_notifications=True
-        ).filter(
-            Q(submitted_initiative_notifications=True)
-            | Q(is_staff=True)
-            | Q(is_superuser=True)
-            | Q(
-                user_permissions__codename='api_review_activity',
-                user_permissions__content_type__app_label='activities'
-            )
-            | Q(
-                groups__permissions__codename='api_review_activity',
-                groups__permissions__content_type__app_label='activities'
-            )
-        ).distinct()
-
-        if self.activity.office_location and self.activity.office_location.subregion:
-            recipients = recipients.filter(
-                Q(subregion_manager=self.activity.office_location.subregion)
-                | Q(subregion_manager__isnull=True)
-            )
-        if self.activity.office_location:
-            recipients = recipients.filter(
-                Q(office_manager=self.activity.office_location)
-                | Q(office_manager__isnull=True)
-            )
-        if self.activity.segments.exists():
-            recipients = recipients.filter(
-                Q(segment_manager__in=self.activity.segments.all())
-                | Q(segment_manager__isnull=True)
-            )
-        return list(recipients)
+        return get_reviewers_for_activity(self.activity)
 
     class Meta:
         abstract = True

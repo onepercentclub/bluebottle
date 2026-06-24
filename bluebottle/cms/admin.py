@@ -122,6 +122,167 @@ class CMSNestedPlaceholderFieldAdmin(nested_admin.NestedModelAdminMixin, Placeho
     onto the generated ContentItem admin classes.
     """
 
+    def _create_formsets(self, request, obj, change):
+        orig_formsets, orig_inline_instances = super(nested_admin.NestedModelAdminMixin, self)._create_formsets(
+            request, obj, change
+        )
+
+        formsets = []
+        inline_instances = []
+        prefixes = {}
+
+        for orig_formset, orig_inline in zip(orig_formsets, orig_inline_instances):
+            if not hasattr(orig_formset, "nesting_depth"):
+                orig_formset.nesting_depth = 1
+
+            formsets.append(orig_formset)
+            inline_instances.append(orig_inline)
+
+            nested_formsets_and_inline_instances = []
+            if hasattr(orig_inline, "child_inline_instances"):
+                for child_inline in orig_inline.child_inline_instances:
+                    nested_formsets_and_inline_instances += [
+                        (orig_formset, inline, orig_inline)
+                        for inline in child_inline.get_inline_instances(request, obj)
+                    ]
+
+            if getattr(orig_inline, "inlines", []):
+                nested_formsets_and_inline_instances += [
+                    (orig_formset, inline, orig_inline)
+                    for inline in orig_inline.get_inline_instances(request, obj)
+                ]
+
+            i = 0
+            while i < len(nested_formsets_and_inline_instances):
+                formset, inline, parent_inline = nested_formsets_and_inline_instances[i]
+                i += 1
+
+                try:
+                    has_add_permission = parent_inline.has_add_permission(request, obj)
+                except TypeError:
+                    # Django before 2.2 didn't require obj kwarg
+                    has_add_permission = parent_inline.has_add_permission(request)
+
+                formset_forms = list(formset.forms)
+
+                if has_add_permission:
+                    formset_forms.append(None)
+
+                for form in formset_forms:
+                    if form is not None:
+                        form.parent_formset = formset
+                        form_prefix = form.prefix
+                        form_obj = form.instance
+                        is_empty_form = False
+                    else:
+                        # This is the only ch<nged line. Use __prefix__ instead of empty for empty forms
+                        form_prefix = formset.add_prefix("__prefix__")
+                        form_obj = None
+                        is_empty_form = True
+                    InlineFormSet = inline.get_formset(request, form_obj)
+
+                    # Check if we're dealing with a polymorphic instance, and if
+                    # so, skip inlines for other child models
+                    if hasattr(form_obj, "get_real_instance"):
+                        if hasattr(InlineFormSet, "fk"):
+                            rel_model = InlineFormSet.fk.remote_field.model
+                            if not isinstance(form_obj, rel_model):
+                                continue
+                        elif not isinstance(form_obj, inline.parent_model):
+                            continue
+
+                    prefix = "{}-{}".format(
+                        form_prefix, InlineFormSet.get_default_prefix()
+                    )
+                    prefixes[prefix] = prefixes.get(prefix, 0) + 1
+                    if prefixes[prefix] != 1:
+                        prefix = "{}-{}".format(prefix, prefixes[prefix])
+
+                    if hasattr(form_obj, "get_real_instance"):
+                        if not isinstance(form_obj, inline.parent_model):
+                            continue
+
+                    formset_params = {
+                        "instance": form_obj,
+                        "prefix": prefix,
+                        "queryset": inline.get_queryset(request),
+                    }
+                    if request.method == "POST" and not is_empty_form:
+                        formset_params.update(
+                            {
+                                "data": request.POST.copy(),
+                                "files": request.FILES,
+                                "save_as_new": "_saveasnew" in request.POST,
+                            }
+                        )
+
+                    nested_formset = InlineFormSet(**formset_params)
+
+                    # We set `is_nested` to True so that we have a way
+                    # to identify this formset as such and skip it if
+                    # there is an error in the POST and we have to create
+                    # inline admin formsets.
+                    nested_formset.is_nested = True
+                    nested_formset.nesting_depth = formset.nesting_depth + 1
+                    nested_formset.parent_form = form
+
+                    def user_deleted_form(request, obj, formset, index):
+                        """Return whether or not the user deleted the form."""
+                        return (
+                            inline.has_delete_permission(request, obj)
+                            and "{}-{}-DELETE".format(formset.prefix, index)
+                            in request.POST
+                        )
+
+                    # Bypass validation of each view-only inline form (since the form's
+                    # data won't be in request.POST), unless the form was deleted.
+                    if not inline.has_change_permission(request, form_obj):
+                        if "-empty-" not in nested_formset.prefix:
+                            for index, initial_form in enumerate(
+                                nested_formset.initial_forms
+                            ):
+                                if user_deleted_form(
+                                    request, form_obj, nested_formset, index
+                                ):
+                                    continue
+                                initial_form._errors = {}
+                                initial_form.cleaned_data = initial_form.initial
+
+                    # If request.method == 'POST', this is an attempted save,
+                    # so we need to include the nested formsets and inline
+                    # instances in the top level lists returned by this method
+                    if form is not None and request.method == "POST":
+                        formsets.append(nested_formset)
+                        inline_instances.append(inline)
+
+                    # nested_obj is a form or an empty formset
+                    nested_obj = form or formset
+
+                    if not hasattr(nested_obj, "nested_formsets"):
+                        nested_obj.nested_formsets = []
+                    if not hasattr(nested_obj, "nested_inlines"):
+                        nested_obj.nested_inlines = []
+
+                    nested_obj.nested_formsets.append(nested_formset)
+                    nested_obj.nested_inlines.append(inline)
+
+                    if hasattr(inline, "get_inline_instances"):
+                        nested_formsets_and_inline_instances += [
+                            (nested_formset, nested_inline, inline)
+                            for nested_inline in inline.get_inline_instances(
+                                request, form_obj
+                            )
+                        ]
+                    if hasattr(inline, "child_inline_instances"):
+                        for nested_child in inline.child_inline_instances:
+                            nested_formsets_and_inline_instances += [
+                                (nested_formset, nested_inline, nested_child)
+                                for nested_inline in nested_child.get_inline_instances(
+                                    request, form_obj
+                                )
+                            ]
+        return formsets, inline_instances
+
     def get_extra_inlines(self):
         return [self.placeholder_inline] + get_cms_content_item_inlines(
             plugins=self.get_all_allowed_plugins(),

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-10 20:28+0200\n"
+"POT-Creation-Date: 2026-06-19 09:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -32,6 +32,11 @@ msgstr ""
 #: bluebottle/time_based/admin.py:958 bluebottle/time_based/admin.py:1035
 #: bluebottle/time_based/admin.py:1036 bluebottle/time_based/admin.py:1380
 msgid "Edit"
+msgstr ""
+
+#: bluebottle/activities/admin.py:168 bluebottle/activities/models.py:402
+#: bluebottle/activities/models.py:500 bluebottle/time_based/admin.py:542
+msgid "Anonymous"
 msgstr ""
 
 #: bluebottle/activities/admin.py:220 bluebottle/activities/admin.py:343
@@ -224,7 +229,7 @@ msgstr ""
 msgid "Request the activity manager to fill in the impact of this activity."
 msgstr ""
 
-#: bluebottle/activities/admin.py:1059 bluebottle/geo/models.py:177
+#: bluebottle/activities/admin.py:1059 bluebottle/geo/models.py:178
 msgid "work location"
 msgstr ""
 
@@ -775,10 +780,6 @@ msgstr ""
 #: bluebottle/activities/models.py:393 bluebottle/activities/models.py:456
 #: bluebottle/funding/models.py:600 bluebottle/time_based/models.py:1128
 msgid "Contributions"
-msgstr ""
-
-#: bluebottle/activities/models.py:402 bluebottle/activities/models.py:500
-msgid "Anonymous"
 msgstr ""
 
 #: bluebottle/activities/models.py:408
@@ -2146,7 +2147,7 @@ msgid "Coordinates"
 msgstr ""
 
 #: bluebottle/activity_pub/admin.py:763 bluebottle/activity_pub/admin.py:1106
-#: bluebottle/geo/admin.py:123 bluebottle/geo/admin.py:311
+#: bluebottle/geo/admin.py:37
 msgid "Location"
 msgstr ""
 
@@ -2296,8 +2297,8 @@ msgstr ""
 msgid "Deeds"
 msgstr ""
 
-#: bluebottle/activity_pub/models.py:332 bluebottle/geo/admin.py:282
-#: bluebottle/statistics/admin.py:77 bluebottle/statistics/models.py:237
+#: bluebottle/activity_pub/models.py:332 bluebottle/statistics/admin.py:77
+#: bluebottle/statistics/models.py:237
 msgid "Type"
 msgstr ""
 
@@ -3214,7 +3215,7 @@ msgid ""
 msgstr ""
 
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:47
-#: bluebottle/geo/admin.py:162
+#: bluebottle/geo/admin.py:76
 #: bluebottle/geo/templates/admin/geo/location/change_form.html:6
 #: bluebottle/organizations/templates/admin/merge_preview.html:36
 #: bluebottle/segments/admin.py:61
@@ -3469,7 +3470,7 @@ msgstr ""
 msgid "initiatives"
 msgstr ""
 
-#: bluebottle/categories/models.py:18 bluebottle/geo/models.py:135
+#: bluebottle/categories/models.py:18 bluebottle/geo/models.py:136
 #: bluebottle/impact/models.py:37 bluebottle/initiatives/models.py:98
 #: bluebottle/initiatives/models.py:605 bluebottle/organizations/models.py:23
 #: bluebottle/segments/models.py:27 bluebottle/segments/models.py:126
@@ -3477,7 +3478,7 @@ msgid "slug"
 msgstr ""
 
 #: bluebottle/categories/models.py:21 bluebottle/categories/models.py:113
-#: bluebottle/geo/models.py:161
+#: bluebottle/geo/models.py:162
 msgid "image"
 msgstr ""
 
@@ -3495,20 +3496,20 @@ msgid "Category Logo image"
 msgstr ""
 
 #: bluebottle/categories/models.py:47 bluebottle/collect/models.py:26
-#: bluebottle/geo/models.py:60 bluebottle/geo/models.py:73
-#: bluebottle/geo/models.py:88 bluebottle/geo/models.py:120
-#: bluebottle/geo/models.py:134 bluebottle/geo/models.py:257
-#: bluebottle/impact/models.py:49 bluebottle/initiatives/models.py:609
-#: bluebottle/looker/models.py:13 bluebottle/offices/models.py:9
-#: bluebottle/offices/models.py:25 bluebottle/organizations/models.py:22
-#: bluebottle/organizations/models.py:90 bluebottle/segments/models.py:24
-#: bluebottle/segments/models.py:112 bluebottle/time_based/models.py:1148
+#: bluebottle/geo/models.py:61 bluebottle/geo/models.py:74
+#: bluebottle/geo/models.py:89 bluebottle/geo/models.py:121
+#: bluebottle/geo/models.py:135 bluebottle/impact/models.py:49
+#: bluebottle/initiatives/models.py:609 bluebottle/looker/models.py:13
+#: bluebottle/offices/models.py:9 bluebottle/offices/models.py:25
+#: bluebottle/organizations/models.py:22 bluebottle/organizations/models.py:90
+#: bluebottle/segments/models.py:24 bluebottle/segments/models.py:112
+#: bluebottle/time_based/models.py:1148
 msgid "name"
 msgstr ""
 
 #: bluebottle/categories/models.py:48 bluebottle/categories/models.py:92
 #: bluebottle/funding/models.py:397 bluebottle/funding/models.py:428
-#: bluebottle/geo/models.py:121 bluebottle/geo/models.py:159
+#: bluebottle/geo/models.py:122 bluebottle/geo/models.py:160
 #: bluebottle/initiatives/models.py:610 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:24
 #: bluebottle/time_based/models.py:1149
@@ -3656,7 +3657,8 @@ msgstr ""
 msgid "About"
 msgstr ""
 
-#: bluebottle/cms/models.py:120 bluebottle/geo/admin.py:220
+#: bluebottle/cms/models.py:120 bluebottle/geo/admin.py:134
+#: bluebottle/geo/admin.py:186
 msgid "Info"
 msgstr ""
 
@@ -3781,7 +3783,6 @@ msgstr ""
 
 #: bluebottle/cms/models.py:224 bluebottle/contact/models.py:31
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:4
-#: bluebottle/geo/admin.py:286
 #: bluebottle/organizations/templates/admin/merge_preview.html:11
 #: bluebottle/statistics/models.py:52 bluebottle/statistics/models.py:105
 msgid "Name"
@@ -6934,189 +6935,153 @@ msgstr ""
 msgid "payment for {activity_title} on {tenant_name}"
 msgstr ""
 
-#: bluebottle/geo/admin.py:134
+#: bluebottle/geo/admin.py:48
 msgid "My location ({})"
 msgstr ""
 
-#: bluebottle/geo/admin.py:157 bluebottle/segments/admin.py:56
+#: bluebottle/geo/admin.py:71 bluebottle/segments/admin.py:56
 msgid "Merge with"
 msgstr ""
 
-#: bluebottle/geo/admin.py:158 bluebottle/segments/admin.py:57
+#: bluebottle/geo/admin.py:72 bluebottle/segments/admin.py:57
 msgid "Choose location to merge with"
 msgstr ""
 
-#: bluebottle/geo/admin.py:208 bluebottle/initiatives/models.py:283
+#: bluebottle/geo/admin.py:122 bluebottle/initiatives/models.py:283
 #: bluebottle/offices/models.py:35
 msgid "Work location group"
 msgstr ""
 
-#: bluebottle/geo/admin.py:216 bluebottle/initiatives/models.py:284
+#: bluebottle/geo/admin.py:130 bluebottle/initiatives/models.py:284
 #: bluebottle/offices/models.py:14 bluebottle/offices/models.py:29
 msgid "Work location region"
 msgstr ""
 
-#: bluebottle/geo/admin.py:233 bluebottle/segments/admin.py:130
+#: bluebottle/geo/admin.py:147 bluebottle/segments/admin.py:130
 msgid "SSO"
 msgstr ""
 
-#: bluebottle/geo/admin.py:260
-msgid "Geo feature"
-msgstr ""
-
-#: bluebottle/geo/admin.py:261
-msgid "Geo features"
-msgstr ""
-
-#: bluebottle/geo/admin.py:290
-msgid "Place name"
-msgstr ""
-
-#: bluebottle/geo/admin.py:302
+#: bluebottle/geo/admin.py:177
 msgid "Geolocation"
 msgstr ""
 
-#: bluebottle/geo/admin.py:318
-msgid "Old info"
+#: bluebottle/geo/admin.py:185 bluebottle/geo/admin.py:198
+msgid "Map"
 msgstr ""
 
-#: bluebottle/geo/admin.py:328 bluebottle/geo/admin.py:337
-msgid "Related objects"
-msgstr ""
-
-#: bluebottle/geo/models.py:35
+#: bluebottle/geo/models.py:36
 msgid "numeric code"
 msgstr ""
 
-#: bluebottle/geo/models.py:39
+#: bluebottle/geo/models.py:40
 msgid "ISO 3166-1 or M.49 numeric code"
 msgstr ""
 
-#: bluebottle/geo/models.py:64 bluebottle/geo/models.py:76
+#: bluebottle/geo/models.py:65 bluebottle/geo/models.py:77
 msgid "region"
 msgstr ""
 
-#: bluebottle/geo/models.py:65
+#: bluebottle/geo/models.py:66
 msgid "regions"
 msgstr ""
 
-#: bluebottle/geo/models.py:79 bluebottle/geo/models.py:91
+#: bluebottle/geo/models.py:80 bluebottle/geo/models.py:92
 msgid "sub region"
 msgstr ""
 
-#: bluebottle/geo/models.py:80
+#: bluebottle/geo/models.py:81
 msgid "sub regions"
 msgstr ""
 
-#: bluebottle/geo/models.py:93
+#: bluebottle/geo/models.py:94
 msgid "alpha2 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:95
+#: bluebottle/geo/models.py:96
 msgid "ISO 3166-1 alpha-2 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:96
+#: bluebottle/geo/models.py:97
 msgid "alpha3 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:98
+#: bluebottle/geo/models.py:99
 msgid "ISO 3166-1 alpha-3 code"
 msgstr ""
 
-#: bluebottle/geo/models.py:101
+#: bluebottle/geo/models.py:102
 msgid "ODA recipient"
 msgstr ""
 
-#: bluebottle/geo/models.py:102
+#: bluebottle/geo/models.py:103
 msgid ""
 "Whether a country is a recipient of Official DevelopmentAssistance from the "
 "OECD's Development Assistance Committee."
 msgstr ""
 
-#: bluebottle/geo/models.py:114
+#: bluebottle/geo/models.py:115
 msgid "country"
 msgstr ""
 
-#: bluebottle/geo/models.py:115
+#: bluebottle/geo/models.py:116
 msgid "countries"
 msgstr ""
 
-#: bluebottle/geo/models.py:125 bluebottle/geo/models.py:141
+#: bluebottle/geo/models.py:126 bluebottle/geo/models.py:142
 msgid "location group"
 msgstr ""
 
-#: bluebottle/geo/models.py:126
+#: bluebottle/geo/models.py:127
 msgid "location groups"
 msgstr ""
 
-#: bluebottle/geo/models.py:147
+#: bluebottle/geo/models.py:148
 msgid "work location group"
 msgstr ""
 
-#: bluebottle/geo/models.py:148
+#: bluebottle/geo/models.py:149
 msgid "The organisational group this work location belongs too."
 msgstr ""
 
-#: bluebottle/geo/models.py:152
+#: bluebottle/geo/models.py:153
 msgid "city"
 msgstr ""
 
-#: bluebottle/geo/models.py:155
+#: bluebottle/geo/models.py:156
 msgid "The (geographic) country this work location is located in."
 msgstr ""
 
-#: bluebottle/geo/models.py:162
+#: bluebottle/geo/models.py:163
 msgid "Work location picture"
 msgstr ""
 
-#: bluebottle/geo/models.py:178
+#: bluebottle/geo/models.py:179
 msgid "work locations"
 msgstr ""
 
-#: bluebottle/geo/models.py:209 bluebottle/geo/models.py:271
+#: bluebottle/geo/models.py:210 bluebottle/geo/models.py:254
 msgid "Street Number"
 msgstr ""
 
-#: bluebottle/geo/models.py:210 bluebottle/geo/models.py:272
+#: bluebottle/geo/models.py:211 bluebottle/geo/models.py:255
 msgid "Street"
 msgstr ""
 
-#: bluebottle/geo/models.py:211 bluebottle/geo/models.py:273
+#: bluebottle/geo/models.py:212 bluebottle/geo/models.py:256
 msgid "Postal Code"
 msgstr ""
 
-#: bluebottle/geo/models.py:212 bluebottle/geo/models.py:274
+#: bluebottle/geo/models.py:213 bluebottle/geo/models.py:257
 msgid "Locality"
 msgstr ""
 
-#: bluebottle/geo/models.py:213 bluebottle/geo/models.py:275
+#: bluebottle/geo/models.py:214 bluebottle/geo/models.py:258
 msgid "Province"
 msgstr ""
 
-#: bluebottle/geo/models.py:216 bluebottle/geo/models.py:279
+#: bluebottle/geo/models.py:217 bluebottle/geo/models.py:262
 #: bluebottle/members/models.py:296
 msgid "Address"
-msgstr ""
-
-#: bluebottle/geo/models.py:258
-msgid "place_name"
-msgstr ""
-
-#: bluebottle/geo/models.py:262
-msgid "geo feature"
-msgstr ""
-
-#: bluebottle/geo/models.py:263
-msgid "geo features"
-msgstr ""
-
-#: bluebottle/geo/models.py:282
-msgid "Location name"
-msgstr ""
-
-#: bluebottle/geo/models.py:283
-msgid "The name of the location, e.g. the name of the community center."
 msgstr ""
 
 #: bluebottle/geo/validators.py:7
@@ -7137,7 +7102,7 @@ msgstr ""
 
 #: bluebottle/grant_management/admin.py:165
 msgid ""
-"The amount you can still use for new grants, pending payments are already "
+"The amount you can still use for new grants, pending payments have not been "
 "deducted."
 msgstr ""
 
@@ -10090,8 +10055,8 @@ msgstr ""
 
 #: bluebottle/pages/admin.py:220
 msgid ""
-"You are trying to create a platform page. Please do so at <a "
-"href=\"{}\">Platform pages</a>."
+"You are trying to create a platform page. Please do so at <a href=\"{}"
+"\">Platform pages</a>."
 msgstr ""
 
 #: bluebottle/pages/admin.py:283
@@ -10314,8 +10279,8 @@ msgid ""
 "If checked, the redirect-from and redirect-to fields will also be processed "
 "using regular expressions when matching incoming requests.<br>Example: "
 "<strong>/projects/.* -> /#!/projects</strong> will redirect everyone "
-"visiting a page starting with /projects/<br>Example: <strong>/projects/(.*) -"
-"> /#!/projects/$1</strong> will turn /projects/myproject into /#!/projects/"
+"visiting a page starting with /projects/<br>Example: <strong>/projects/(.*) "
+"-> /#!/projects/$1</strong> will turn /projects/myproject into /#!/projects/"
 "myproject<br><br>Invalid regular expressions will be ignored."
 msgstr ""
 
@@ -10538,7 +10503,7 @@ msgid "segment type overview"
 msgstr ""
 
 #: bluebottle/settings/admin_dashboard.py:12
-msgid "Initiatives & Activity"
+msgid "Initiatives & Activities"
 msgstr ""
 
 #: bluebottle/settings/admin_dashboard.py:54
@@ -10589,8 +10554,7 @@ msgstr ""
 msgid "Manage Reporting"
 msgstr ""
 
-#: bluebottle/settings/local.py:322 bluebottle/settings/testing.py:443
-#: tenants/accenture/settings.py:30
+#: bluebottle/settings/testing.py:443 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -10603,48 +10567,42 @@ msgstr ""
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
+#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
+#: tenants/maximising-potential/settings.py:27
+#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
 #: tenants/shell-disaster-relief/settings.py:26
-#: tenants/shell-grant-management/settings.py:26
-#: tenants/shell-uk/settings.py:26 tenants/startsomething/settings.py:29
-#: tenants/studentbattle/settings.py:27 tenants/twoscale/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
+#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr ""
 
-#: bluebottle/settings/local.py:323 bluebottle/settings/testing.py:444
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
+#: bluebottle/settings/testing.py:444 tenants/abn/settings.py:26
+#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
-#: tenants/buurtmaaltijden/settings.py:24 tenants/corona/settings.py:25
-#: tenants/crowdfunding-010/settings.py:26
+#: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
 #: tenants/crowdfunding-voornatuur/settings.py:26
 #: tenants/gasunie/settings.py:26 tenants/geef-om-zorg/settings.py:26
 #: tenants/gent/settings.py:25 tenants/goes/settings.py:25
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
 #: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:23
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -10659,31 +10617,28 @@ msgstr ""
 msgid "Dutch"
 msgstr ""
 
-#: bluebottle/settings/local.py:324 bluebottle/settings/testing.py:445
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+#: bluebottle/settings/testing.py:445 tenants/nexteconomy/settings.py:30
+#: tenants/twoscale/settings.py:27
 msgid "French"
 msgstr ""
 
-#: bluebottle/settings/local.py:325 bluebottle/settings/testing.py:446
-#: tenants/mars/settings.py:28
+#: bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr ""
 
-#: bluebottle/settings/local.py:326 bluebottle/settings/testing.py:447
-#: tenants/mars/settings.py:29
+#: bluebottle/settings/testing.py:447
 msgid "German"
 msgstr ""
 
-#: bluebottle/settings/local.py:327 bluebottle/settings/testing.py:448
+#: bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr ""
 
-#: bluebottle/settings/local.py:328 bluebottle/settings/testing.py:449
-#: tenants/mars/settings.py:30
+#: bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr ""
 
-#: bluebottle/settings/local.py:329 bluebottle/settings/testing.py:450
+#: bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr ""
 
@@ -12140,11 +12095,6 @@ msgstr ""
 
 #: bluebottle/time_based/models.py:1980
 msgid "end date and time"
-msgstr ""
-
-#: bluebottle/time_based/models.py:2034
-#, python-brace-format
-msgid "Slot {start}"
 msgstr ""
 
 #: bluebottle/time_based/models.py:2079
@@ -14906,7 +14856,3 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] ""
 msgstr[1] ""
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
-msgstr ""

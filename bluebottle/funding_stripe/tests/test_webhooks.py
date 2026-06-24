@@ -598,17 +598,15 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
 
         self.assertEqual(self.payout_account.status, "incomplete")
 
-        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(len(mail.outbox), 2)
 
         self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
-        )
-
-        self.assertEqual(
-            mail.outbox[1].subject, "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
+            mail.outbox[0].subject,
+            "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
         )
         self.assertEqual(
-            mail.outbox[2].subject, "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
+            mail.outbox[1].subject,
+            "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
         )
 
     def test_incomplete_open_charges_disabled(self):
@@ -654,6 +652,28 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
             message.subject, "Action required for your crowdfunding campaign on Test"
         )
         self.assertTrue("/activities/stripe/kyc" in message.body)
+
+    def test_document_rejected_open(self):
+        self.verify()
+        self.approve()
+        self.connect_account.individual.verification.details = (
+            "this passport smells fishy"
+        )
+        self.connect_account.individual.verification.status = "unverified"
+        self.connect_account.requirements = {
+            "eventually_due": ["individual.document.front"]
+        }
+
+        self.execute_hook()
+
+        self.assertEqual(self.payout_account.status, "incomplete")
+
+        message = mail.outbox[0]
+        self.assertEqual(
+            message.subject,
+            "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
+        )
+        self.assertTrue("/admin/funding/payoutaccount/" in message.body)
 
     def test_payouts_disabled(self):
         self.connect_account.payouts_enabled = False

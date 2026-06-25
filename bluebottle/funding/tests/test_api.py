@@ -582,7 +582,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()
-        self.funding.title = 'This \ is å süper / weird ++ TITŁE $%$%'
+        self.funding.title = 'This \\ is å süper / weird ++ TITŁE $%$%'
         self.funding.save()
         DonorFactory.create(activity=self.funding, amount=Money(20, 'EUR'), status='new')
         DonorFactory.create(activity=self.funding, user=None, amount=Money(35, 'EUR'), status='succeeded')

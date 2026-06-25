@@ -81,6 +81,7 @@ class FSMModelForm(with_metaclass(FSMModelFormMetaClass, forms.ModelForm)):
 
 class TransitionConfirmationForm(forms.Form):
     title = _('Transition')
+    include_custom_message = None
     send_messages = forms.BooleanField(
         initial=True,
         required=False,
@@ -91,18 +92,31 @@ class TransitionConfirmationForm(forms.Form):
 
     @classmethod
     def resolve_message_class(cls):
-        message = getattr(cls, 'message', None)
-        if message:
-            return message
-        get_message_class = getattr(cls, 'get_message_class', None)
-        if get_message_class:
-            return get_message_class()
-        return None
+        message_class = getattr(cls, 'message_class', None)
+        if message_class is None:
+            return None
+        if isinstance(message_class, type):
+            return message_class
+        return message_class()
+
+    @classmethod
+    def use_custom_message(cls):
+        if cls.include_custom_message is False:
+            return False
+        if cls.include_custom_message is True:
+            return True
+        return cls.resolve_message_class() is not None
 
     def __init__(self, *args, **kwargs):
         self.instance = kwargs.pop("instance", None)
         self.transition = kwargs.pop("transition", None)
         super().__init__(*args, **kwargs)
+
+        if self.use_custom_message() and 'custom_message' not in self.fields:
+            self.fields['custom_message'] = CustomMessageFormField(
+                label=_('Message'),
+                required=False,
+            )
 
         message_class = self.resolve_message_class()
         if (
@@ -114,3 +128,8 @@ class TransitionConfirmationForm(forms.Form):
         ):
             message = message_class(self.instance)
             self.fields['custom_message'].initial = message.get_message_block_html()
+
+    def save(self, **kwargs):
+        if self.cleaned_data.get('custom_message'):
+            self.transition.custom_message = self.cleaned_data['custom_message']
+        return None

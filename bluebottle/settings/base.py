@@ -752,7 +752,7 @@ QUILL_CONFIGS = {
         'theme': 'snow',
         'modules': {
             'toolbar': [
-                ['bold', 'italic', 'link'],
+                ['bold', 'italic'],
                 [{'list': 'ordered'}, {'list': 'bullet'}],
             ],
         },

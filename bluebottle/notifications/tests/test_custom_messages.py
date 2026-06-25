@@ -226,7 +226,7 @@ def _notification_messages_for_transition(model, transition):
 
 
 def _form_has_custom_message_field(form_class):
-    return 'custom_message' in form_class.base_fields
+    return form_class.use_custom_message()
 
 
 class TransitionCustomMessageCoverageTestCase(BluebottleTestCase):

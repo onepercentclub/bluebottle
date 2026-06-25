@@ -4,10 +4,14 @@ from django.forms import CharField, ModelChoiceField, Textarea, BooleanField
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from .messages.activity_manager import GrantApplicationNeedsWorkMessage, GrantApplicationApprovedMessage
+from .messages.activity_manager import (
+    GrantApplicationApprovedMessage,
+    GrantApplicationNeedsWorkMessage,
+    GrantApplicationRejectedMessage,
+)
 from .models import GrantDonor, GrantFund
 from ..utils.fields import MoneyFormField
-from ..utils.forms import CustomMessageFormField, TransitionConfirmationForm
+from ..utils.forms import TransitionConfirmationForm
 
 
 class GrantApplicationApproveForm(TransitionConfirmationForm):
@@ -27,14 +31,7 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         required=True,
     )
 
-    custom_message = CustomMessageFormField(
-        label=_('Message'),
-        required=False,
-        help_text=_(
-            'You can customise the message to the applicant telling them their request has been granted and what the next steps are.'),
-    )
-
-    message = GrantApplicationApprovedMessage
+    message_class = GrantApplicationApprovedMessage
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -77,9 +74,7 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         if not self.is_valid():
             raise ValueError("Form must be valid before saving")
 
-        custom_message = self.cleaned_data.get('custom_message')
-        if custom_message:
-            self.transition.custom_message = custom_message
+        super().save()
 
         fund = self.cleaned_data["fund"]
         amount = self.cleaned_data["amount"]
@@ -92,52 +87,19 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
 
 class GrantApplicationNeedsWorkForm(TransitionConfirmationForm):
     title = _('Grant application needs work')
-
-    message = GrantApplicationNeedsWorkMessage
-
-    custom_message = CustomMessageFormField(
-        label=_('Custom message'),
-        required=False,
-        help_text=_('You can provide a custom message to the applicant explaining why the request needs work.'),
-    )
-
-    def save(self, **kwargs):
-        """
-        Save the form data and return the custom message if provided.
-        """
-        if self.cleaned_data.get('custom_message'):
-            self.transition.custom_message = self.cleaned_data['custom_message']
-        return None
+    message_class = GrantApplicationNeedsWorkMessage
 
 
 class GrantApplicationRejectedForm(TransitionConfirmationForm):
     title = _('Grant application rejected')
-
-    custom_message = CustomMessageFormField(
-        label=_('Custom message'),
-        required=False,
-        help_text=_(
-            'You can provide a custom message to the applicant explaining why their request was rejected.'),
-    )
-
-    @staticmethod
-    def get_message_class():
-        from bluebottle.grant_management.messages.activity_manager import GrantApplicationRejectedMessage
-        return GrantApplicationRejectedMessage
-
-    def save(self, **kwargs):
-        """
-        Save the form data and return the custom message if provided.
-        """
-        if self.cleaned_data.get('custom_message'):
-            self.transition.custom_message = self.cleaned_data['custom_message']
-        return None
+    message_class = GrantApplicationRejectedMessage
 
 
 class GrantPayoutApproveForm(TransitionConfirmationForm):
     """
     Form for approving a grant payout with extra check
     """
+    include_custom_message = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -65,12 +65,22 @@ class TransitionConfirmationForm(forms.Form):
         help_text=_('Should messages be send or should we transition without notifying users?')
     )
 
+    @classmethod
+    def resolve_message_class(cls):
+        message = getattr(cls, 'message', None)
+        if message:
+            return message
+        get_message_class = getattr(cls, 'get_message_class', None)
+        if get_message_class:
+            return get_message_class()
+        return None
+
     def __init__(self, *args, **kwargs):
         self.instance = kwargs.pop("instance", None)
         self.transition = kwargs.pop("transition", None)
         super().__init__(*args, **kwargs)
 
-        message_class = getattr(self, 'message', None)
+        message_class = self.resolve_message_class()
         if (
             message_class
             and self.instance

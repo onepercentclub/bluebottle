@@ -4,7 +4,7 @@ from django.forms import CharField, ModelChoiceField, Textarea, BooleanField
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from .messages.activity_manager import GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage
+from .messages.activity_manager import GrantApplicationNeedsWorkMessage, GrantApplicationApprovedMessage
 from .models import GrantDonor, GrantFund
 from ..utils.fields import MoneyFormField
 from ..utils.forms import TransitionConfirmationForm
@@ -26,6 +26,16 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         help_text=_("Enter the grant amount"),
         required=True,
     )
+
+    custom_message = forms.CharField(
+        widget=forms.Textarea,
+        label=_('Message'),
+        required=False,
+        help_text=_(
+            'You can customise the message to the applicant telling them their request has been granted and what the next steps are.'),
+    )
+
+    message = GrantApplicationApprovedMessage
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -68,13 +78,16 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         if not self.is_valid():
             raise ValueError("Form must be valid before saving")
 
+        custom_message = self.cleaned_data.get('custom_message')
+        if custom_message:
+            self.transition.custom_message = custom_message
+
         fund = self.cleaned_data["fund"]
         amount = self.cleaned_data["amount"]
 
         grant_donor = GrantDonor.objects.create(
             activity=self.instance, fund=fund, amount=amount, user=user
         )
-
         return grant_donor
 
 
@@ -102,7 +115,6 @@ class GrantApplicationNeedsWorkForm(TransitionConfirmationForm):
 class GrantApplicationRejectedForm(TransitionConfirmationForm):
     title = _('Grant application rejected')
 
-    message = GrantApplicationRejectedMessage
     custom_message = forms.CharField(
         widget=forms.Textarea,
         label=_('Custom message'),
@@ -110,6 +122,11 @@ class GrantApplicationRejectedForm(TransitionConfirmationForm):
         help_text=_(
             'You can provide a custom message to the applicant explaining why their request was rejected.'),
     )
+
+    @staticmethod
+    def get_message_class():
+        from bluebottle.grant_management.messages.activity_manager import GrantApplicationRejectedMessage
+        return GrantApplicationRejectedMessage
 
     def save(self, **kwargs):
         """

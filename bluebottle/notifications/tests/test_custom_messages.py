@@ -1,14 +1,14 @@
 from datetime import date, timedelta
 
 from django.core import mail
+from moneyed import Money
 
-from bluebottle.activities.forms import ActivityAcceptedForm, ActivityRejectedForm
+from bluebottle.activities.forms import ActivityAcceptedForm, ActivityNeedsWorkForm, ActivityRejectedForm
 from bluebottle.activities.messages.activity_manager import (
     ActivityApprovedNotification,
     ActivityNeedsWorkNotification,
     ActivityRejectedNotification,
 )
-from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.collect.models import CollectActivity
 from bluebottle.collect.tests.factories import CollectActivityFactory
 from bluebottle.deeds.models import Deed
@@ -38,7 +38,11 @@ from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationRejectedMessage,
 )
 from bluebottle.grant_management.models import GrantApplication
-from bluebottle.grant_management.tests.factories import GrantApplicationFactory
+from bluebottle.grant_management.tests.factories import (
+    GrantApplicationFactory,
+    GrantDepositFactory,
+    GrantFundFactory,
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, TriggerTestCase
@@ -230,13 +234,17 @@ class TransitionCustomMessageCoverageTestCase(BluebottleTestCase):
         cases = [
             (Deed, 'approve', ActivityAcceptedForm, ActivityApprovedNotification),
             (Deed, 'reject', ActivityRejectedForm, ActivityRejectedNotification),
+            (Deed, 'request_changes', ActivityNeedsWorkForm, ActivityNeedsWorkNotification),
             (DateActivity, 'approve', ActivityAcceptedForm, ActivityApprovedNotification),
             (DateActivity, 'reject', ActivityRejectedForm, ActivityRejectedNotification),
+            (DateActivity, 'request_changes', ActivityNeedsWorkForm, ActivityNeedsWorkNotification),
             (CollectActivity, 'approve', ActivityAcceptedForm, ActivityApprovedNotification),
             (CollectActivity, 'reject', ActivityRejectedForm, ActivityRejectedNotification),
+            (CollectActivity, 'request_changes', ActivityNeedsWorkForm, ActivityNeedsWorkNotification),
             (Funding, 'approve', FundingAcceptedForm, FundingApprovedMessage),
             (Funding, 'reject', FundingRejectedForm, FundingRejectedMessage),
             (Funding, 'request_changes', FundingNeedsWorkForm, FundingNeedsWorkMessage),
+            (GrantApplication, 'approve', GrantApplicationApproveForm, GrantApplicationApprovedMessage),
             (GrantApplication, 'reject', GrantApplicationRejectedForm, GrantApplicationRejectedMessage),
             (GrantApplication, 'request_changes', GrantApplicationNeedsWorkForm, GrantApplicationNeedsWorkMessage),
         ]
@@ -249,19 +257,8 @@ class TransitionCustomMessageCoverageTestCase(BluebottleTestCase):
                 self.assertIn(message_class, _notification_messages_for_transition(model, transition))
 
     def test_known_custom_message_gaps(self):
-        approve_transition = GrantApplication._state_machines['states'].transitions['approve']
-        request_changes_transition = ActivityStateMachine.request_changes
         accept_transition = DateRegistration._state_machines['states'].transitions['accept']
         reject_transition = DateRegistration._state_machines['states'].transitions['reject']
-
-        self.assertEqual(approve_transition.form, GrantApplicationApproveForm)
-        self.assertFalse(_form_has_custom_message_field(GrantApplicationApproveForm))
-
-        self.assertIsNone(request_changes_transition.form)
-        self.assertIn(
-            ActivityNeedsWorkNotification,
-            _notification_messages_for_transition(DateActivity, request_changes_transition),
-        )
 
         self.assertTrue(_form_has_custom_message_field(RegistrationAcceptForm))
         self.assertTrue(_form_has_custom_message_field(RegistrationRejectForm))
@@ -349,6 +346,44 @@ class CustomMessageIntegrationTestCase(TriggerTestCase):
         messages = self._send_transition_mail('request_changes', submit_first=True)
         self.assertEqual(len(messages), 1)
         self.assertIn(CUSTOM_MESSAGE, messages[0].body)
+
+    def test_grant_approve_custom_message_in_mail(self):
+        fund = GrantFundFactory.create()
+        GrantDepositFactory.create(fund=fund, amount=Money(1500, 'EUR'))
+        self.factory = GrantApplicationFactory
+        self.defaults = {
+            'initiative': None,
+            'owner': self.owner,
+            'title': ACTIVITY_TITLE,
+            'target': Money(500, 'EUR'),
+        }
+        self.create()
+        self.model.states.submit(save=True)
+
+        transition = self.model.states.transitions['approve']
+        form = GrantApplicationApproveForm(
+            data={
+                'fund': str(fund.pk),
+                'amount_0': '500',
+                'amount_1': 'EUR',
+                'custom_message': CUSTOM_MESSAGE,
+                'send_messages': True,
+            },
+            instance=self.model,
+            transition=transition,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+        self.model.states.approve()
+        mail.outbox = []
+        form.save()
+        custom_message = getattr(transition, 'custom_message', None)
+        self.model.execute_triggers(send_messages=True, message=custom_message)
+        self.model.save()
+        messages = [message for message in mail.outbox if self.owner.email in message.to]
+        self.assertEqual(len(messages), 1)
+        self.assertIn(CUSTOM_MESSAGE, messages[0].body)
+        self.assertNotIn('Good news, your grant application', messages[0].body)
 
     def test_collect_reject_custom_message_in_mail(self):
         self.factory = CollectActivityFactory

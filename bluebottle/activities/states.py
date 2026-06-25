@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.forms import ActivityRejectedForm, ActivityAcceptedForm
+from bluebottle.activities.forms import ActivityRejectedForm, ActivityAcceptedForm, ActivityNeedsWorkForm
 from bluebottle.activities.models import EffortContribution, Organizer
 from bluebottle.fsm.state import (
     EmptyState,
@@ -283,6 +283,7 @@ class ActivityStateMachine(ModelStateMachine):
             "Inform the activity manager of the changes required. "
             "The activity manager will then be able to edit and resubmit the activity."
         ),
+        form=ActivityNeedsWorkForm,
         conditions=[],
         automatic=False,
         permission=can_approve,

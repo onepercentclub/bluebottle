@@ -14,6 +14,7 @@ from bluebottle.collect.tests.factories import CollectActivityFactory
 from bluebottle.deeds.models import Deed
 from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.files.tests.factories import ImageFactory
+from bluebottle.fsm.triggers import TransitionTrigger
 from bluebottle.funding.forms import (
     FundingAcceptedForm,
     FundingNeedsWorkForm,
@@ -26,7 +27,6 @@ from bluebottle.funding.messages.funding.activity_manager import (
 )
 from bluebottle.funding.models import Funding
 from bluebottle.funding.tests.factories import FundingFactory
-from bluebottle.fsm.triggers import TransitionTrigger
 from bluebottle.grant_management.forms import (
     GrantApplicationApproveForm,
     GrantApplicationNeedsWorkForm,
@@ -57,7 +57,6 @@ from bluebottle.time_based.tests.factories import (
     DateRegistrationFactory,
 )
 
-
 CUSTOM_MESSAGE = 'Please update the description before we can continue.'
 CUSTOM_MESSAGE_HTML = '<p>Please <strong>update</strong> the description before we can continue.</p>'
 ACTIVITY_TITLE = 'Community garden'
@@ -74,108 +73,108 @@ def _create_test_object(case):
 def _message_cases():
     return [
         {
-          'label': 'date_activity_approved',
-          'factory': DateActivityFactory,
-          'message': ActivityApprovedNotification,
-          'default_snippet': 'Good news, your activity',
-      },
-      {
-          'label': 'date_activity_rejected',
-          'factory': DateActivityFactory,
-          'message': ActivityRejectedNotification,
-          'default_snippet': 'Unfortunately your activity',
-      },
-      {
-          'label': 'date_activity_needs_work',
-          'factory': DateActivityFactory,
-          'message': ActivityNeedsWorkNotification,
-          'default_snippet': 'has been reviewed and needs work',
-      },
-      {
-          'label': 'deed_approved',
-          'factory': DeedFactory,
-          'message': ActivityApprovedNotification,
-          'default_snippet': 'Good news, your activity',
-      },
-      {
-          'label': 'deed_rejected',
-          'factory': DeedFactory,
-          'message': ActivityRejectedNotification,
-          'default_snippet': 'Unfortunately your activity',
-      },
-      {
-          'label': 'deed_needs_work',
-          'factory': DeedFactory,
-          'message': ActivityNeedsWorkNotification,
-          'default_snippet': 'has been reviewed and needs work',
-      },
-      {
-          'label': 'collect_approved',
-          'factory': CollectActivityFactory,
-          'message': ActivityApprovedNotification,
-          'default_snippet': 'Good news, your activity',
-      },
-      {
-          'label': 'collect_rejected',
-          'factory': CollectActivityFactory,
-          'message': ActivityRejectedNotification,
-          'default_snippet': 'Unfortunately your activity',
-      },
-      {
-          'label': 'collect_needs_work',
-          'factory': CollectActivityFactory,
-          'message': ActivityNeedsWorkNotification,
-          'default_snippet': 'has been reviewed and needs work',
-      },
-      {
-          'label': 'funding_approved',
-          'factory': FundingFactory,
-          'message': FundingApprovedMessage,
-          'default_snippet': 'has been approved',
-      },
-      {
-          'label': 'funding_rejected',
-          'factory': FundingFactory,
-          'message': FundingRejectedMessage,
-          'default_snippet': 'Unfortunately your crowdfunding campaign',
-      },
-      {
-          'label': 'funding_needs_work',
-          'factory': FundingFactory,
-          'message': FundingNeedsWorkMessage,
-          'default_snippet': 'needs work',
-      },
-      {
-          'label': 'grant_approved',
-          'factory': GrantApplicationFactory,
-          'message': GrantApplicationApprovedMessage,
-          'default_snippet': 'Good news, your grant application',
-      },
-      {
-          'label': 'grant_rejected',
-          'factory': GrantApplicationFactory,
-          'message': GrantApplicationRejectedMessage,
-          'default_snippet': 'Unfortunately your grant application',
-      },
-      {
-          'label': 'grant_needs_work',
-          'factory': GrantApplicationFactory,
-          'message': GrantApplicationNeedsWorkMessage,
-          'default_snippet': 'needs work',
-      },
-      {
-          'label': 'registration_accepted',
-          'factory': DateRegistrationFactory,
-          'message': UserRegistrationAcceptedNotification,
-          'default_snippet': 'Good news, you have been accepted for the activity',
-      },
-      {
-          'label': 'registration_rejected',
-          'factory': DateRegistrationFactory,
-          'message': UserRegistrationRejectedNotification,
-          'default_snippet': 'you have not been selected for the activity',
-      },
-  ]
+            'label': 'date_activity_approved',
+            'factory': DateActivityFactory,
+            'message': ActivityApprovedNotification,
+            'default_snippet': 'Good news, your activity',
+        },
+        {
+            'label': 'date_activity_rejected',
+            'factory': DateActivityFactory,
+            'message': ActivityRejectedNotification,
+            'default_snippet': 'Unfortunately your activity',
+        },
+        {
+            'label': 'date_activity_needs_work',
+            'factory': DateActivityFactory,
+            'message': ActivityNeedsWorkNotification,
+            'default_snippet': 'has been reviewed and needs work',
+        },
+        {
+            'label': 'deed_approved',
+            'factory': DeedFactory,
+            'message': ActivityApprovedNotification,
+            'default_snippet': 'Good news, your activity',
+        },
+        {
+            'label': 'deed_rejected',
+            'factory': DeedFactory,
+            'message': ActivityRejectedNotification,
+            'default_snippet': 'Unfortunately your activity',
+        },
+        {
+            'label': 'deed_needs_work',
+            'factory': DeedFactory,
+            'message': ActivityNeedsWorkNotification,
+            'default_snippet': 'has been reviewed and needs work',
+        },
+        {
+            'label': 'collect_approved',
+            'factory': CollectActivityFactory,
+            'message': ActivityApprovedNotification,
+            'default_snippet': 'Good news, your activity',
+        },
+        {
+            'label': 'collect_rejected',
+            'factory': CollectActivityFactory,
+            'message': ActivityRejectedNotification,
+            'default_snippet': 'Unfortunately your activity',
+        },
+        {
+            'label': 'collect_needs_work',
+            'factory': CollectActivityFactory,
+            'message': ActivityNeedsWorkNotification,
+            'default_snippet': 'has been reviewed and needs work',
+        },
+        {
+            'label': 'funding_approved',
+            'factory': FundingFactory,
+            'message': FundingApprovedMessage,
+            'default_snippet': 'has been approved',
+        },
+        {
+            'label': 'funding_rejected',
+            'factory': FundingFactory,
+            'message': FundingRejectedMessage,
+            'default_snippet': 'Unfortunately your crowdfunding campaign',
+        },
+        {
+            'label': 'funding_needs_work',
+            'factory': FundingFactory,
+            'message': FundingNeedsWorkMessage,
+            'default_snippet': 'needs work',
+        },
+        {
+            'label': 'grant_approved',
+            'factory': GrantApplicationFactory,
+            'message': GrantApplicationApprovedMessage,
+            'default_snippet': 'Good news, your grant application',
+        },
+        {
+            'label': 'grant_rejected',
+            'factory': GrantApplicationFactory,
+            'message': GrantApplicationRejectedMessage,
+            'default_snippet': 'Unfortunately your grant application',
+        },
+        {
+            'label': 'grant_needs_work',
+            'factory': GrantApplicationFactory,
+            'message': GrantApplicationNeedsWorkMessage,
+            'default_snippet': 'needs work',
+        },
+        {
+            'label': 'registration_accepted',
+            'factory': DateRegistrationFactory,
+            'message': UserRegistrationAcceptedNotification,
+            'default_snippet': 'Good news, you have been accepted for the activity',
+        },
+        {
+            'label': 'registration_rejected',
+            'factory': DateRegistrationFactory,
+            'message': UserRegistrationRejectedNotification,
+            'default_snippet': 'you have not been selected for the activity',
+        }
+    ]
 
 
 def _assert_custom_message_replaces_default(test_case, obj, message_class, default_snippet):

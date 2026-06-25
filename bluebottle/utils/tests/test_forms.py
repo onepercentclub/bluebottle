@@ -1,7 +1,6 @@
 import json
 
 from django.test import SimpleTestCase
-from django_quill.quill import Quill
 from django_quill.widgets import QuillWidget
 
 from bluebottle.utils.forms import CustomMessageFormField

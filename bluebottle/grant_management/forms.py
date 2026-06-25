@@ -1,4 +1,3 @@
-from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import CharField, ModelChoiceField, Textarea, BooleanField
 from django.utils.translation import gettext_lazy as _

@@ -1,14 +1,13 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.utils.forms import TransitionConfirmationForm
+from bluebottle.utils.forms import CustomMessageFormField, TransitionConfirmationForm
 
 
 class RegistrationRejectForm(TransitionConfirmationForm):
     title = _('Reject registration')
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_(
@@ -29,8 +28,7 @@ class RegistrationRejectForm(TransitionConfirmationForm):
 class RegistrationAcceptForm(TransitionConfirmationForm):
     title = _('Accept registration')
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_(

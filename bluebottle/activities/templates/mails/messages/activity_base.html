@@ -11,7 +11,7 @@
                 {% blocktrans context 'platform-email' %}Hi {{ recipient_name }},{% endblocktrans %}
             </p>
             {% if custom_message %}
-                <p>{{ custom_message|linebreaks }}</p>
+                <div>{{ custom_message|safe }}</div>
             {% endif %}
         {% endif %}
         {% if only_message or not custom_message %}

@@ -1,8 +1,30 @@
 from django import forms
 from django.forms.models import ModelFormMetaclass
+from django.template.defaultfilters import linebreaks
 from django.urls import reverse
+from django.utils.html import escape
 from django.utils.translation import gettext_lazy as _
+from django_quill.forms import QuillFormField
+from django_quill.quill import Quill, QuillParseError
 from future.utils import with_metaclass
+
+from bluebottle.utils.utils import clean_html
+
+
+class CustomMessageFormField(QuillFormField):
+
+    def prepare_value(self, value):
+        return value
+
+    def clean(self, value):
+        value = super(QuillFormField, self).clean(value)
+        if not value:
+            return ''
+        try:
+            html = Quill(value).html
+        except QuillParseError:
+            html = linebreaks(escape(value))
+        return clean_html(html or '')
 
 
 class ButtonSelectWidget(forms.Select):
@@ -89,4 +111,4 @@ class TransitionConfirmationForm(forms.Form):
             and 'custom_message' not in self.initial
         ):
             message = message_class(self.instance)
-            self.fields['custom_message'].initial = message.get_message_block_text()
+            self.fields['custom_message'].initial = message.get_message_block_html()

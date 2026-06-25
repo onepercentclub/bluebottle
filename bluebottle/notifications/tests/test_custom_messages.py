@@ -59,6 +59,7 @@ from bluebottle.time_based.tests.factories import (
 
 
 CUSTOM_MESSAGE = 'Please update the description before we can continue.'
+CUSTOM_MESSAGE_HTML = '<p>Please <strong>update</strong> the description before we can continue.</p>'
 ACTIVITY_TITLE = 'Community garden'
 
 
@@ -315,6 +316,18 @@ class CustomMessageIntegrationTestCase(TriggerTestCase):
         messages = self._send_transition_mail('reject')
         self.assertEqual(len(messages), 1)
         self.assertIn(CUSTOM_MESSAGE, messages[0].body)
+        self.assertNotIn('Unfortunately your activity', messages[0].body)
+
+    def test_deed_reject_rich_text_custom_message_in_mail(self):
+        self.create()
+        getattr(self.model.states, 'reject')()
+        mail.outbox = []
+        self.model.execute_triggers(message=CUSTOM_MESSAGE_HTML, send_messages=True)
+        self.model.save()
+        messages = [message for message in mail.outbox if self.owner.email in message.to]
+        self.assertEqual(len(messages), 1)
+        self.assertIn('update', messages[0].body)
+        self.assertIn('<strong>update</strong>', messages[0].alternatives[0][0])
         self.assertNotIn('Unfortunately your activity', messages[0].body)
 
     def test_deed_approve_custom_message_in_mail(self):

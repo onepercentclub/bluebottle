@@ -7,7 +7,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from .messages.activity_manager import GrantApplicationNeedsWorkMessage, GrantApplicationApprovedMessage
 from .models import GrantDonor, GrantFund
 from ..utils.fields import MoneyFormField
-from ..utils.forms import TransitionConfirmationForm
+from ..utils.forms import CustomMessageFormField, TransitionConfirmationForm
 
 
 class GrantApplicationApproveForm(TransitionConfirmationForm):
@@ -27,8 +27,7 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         required=True,
     )
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Message'),
         required=False,
         help_text=_(
@@ -96,8 +95,7 @@ class GrantApplicationNeedsWorkForm(TransitionConfirmationForm):
 
     message = GrantApplicationNeedsWorkMessage
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_('You can provide a custom message to the applicant explaining why the request needs work.'),
@@ -115,8 +113,7 @@ class GrantApplicationNeedsWorkForm(TransitionConfirmationForm):
 class GrantApplicationRejectedForm(TransitionConfirmationForm):
     title = _('Grant application rejected')
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_(

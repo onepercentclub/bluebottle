@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.utils.forms import TransitionConfirmationForm
+from bluebottle.utils.forms import CustomMessageFormField, TransitionConfirmationForm
 
 
 class ImpactReminderConfirmationForm(forms.Form):
@@ -11,8 +11,7 @@ class ImpactReminderConfirmationForm(forms.Form):
 class ActivityRejectedForm(TransitionConfirmationForm):
     title = _('Activity rejected')
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_(
@@ -36,8 +35,7 @@ class ActivityRejectedForm(TransitionConfirmationForm):
 class ActivityAcceptedForm(TransitionConfirmationForm):
     title = _('Activity accepted')
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_(
@@ -61,8 +59,7 @@ class ActivityAcceptedForm(TransitionConfirmationForm):
 class ActivityNeedsWorkForm(TransitionConfirmationForm):
     title = _('Activity needs work')
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_(

@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.utils.forms import TransitionConfirmationForm
+from bluebottle.utils.forms import CustomMessageFormField, TransitionConfirmationForm
 
 
 class RefundConfirmationForm(forms.Form):
@@ -11,8 +11,7 @@ class RefundConfirmationForm(forms.Form):
 class FundingNeedsWorkForm(TransitionConfirmationForm):
     title = _('Funding needs work')
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_('You can provide a custom message to the initiator explaining why the funding needs work.'),
@@ -30,8 +29,7 @@ class FundingNeedsWorkForm(TransitionConfirmationForm):
 class FundingRejectedForm(TransitionConfirmationForm):
     title = _('Activity rejected')
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_(
@@ -50,8 +48,7 @@ class FundingRejectedForm(TransitionConfirmationForm):
 class FundingAcceptedForm(TransitionConfirmationForm):
     title = _('Crowdfunding campaign accepted')
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
+    custom_message = CustomMessageFormField(
         label=_('Custom message'),
         required=False,
         help_text=_(

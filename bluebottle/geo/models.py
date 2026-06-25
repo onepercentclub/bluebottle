@@ -296,7 +296,7 @@ class Geolocation(models.Model):
 
     def reverse_geocode(self):
         access_token = settings.MAPBOX_API_KEY
-        if not access_token:
+        if not access_token or not self.position:
             return None
 
         [lon, lat] = self.position.coords
@@ -307,10 +307,7 @@ class Geolocation(models.Model):
             data = response.json()
             if 'features' in data and len(data['features']) > 0:
                 return data['features'][0]
-            else:
-                return "No results found."
-        else:
-            return f"Error: {response.status_code}, {response.text}"
+        return None
 
     def _country_from_mapbox(self, data):
         short_code = None
@@ -324,36 +321,38 @@ class Geolocation(models.Model):
 
     def update_location(self, replace=False):
         data = self.reverse_geocode()
-        if data and data != "No results found.":
-            self.mapbox_id = data['id']
-            if not self.formatted_address or replace:
-                self.formatted_address = data['place_name']
-            if not self.country_id or replace:
-                country = self._country_from_mapbox(data)
-                if country:
-                    self.country = country
-                elif not self.country_id:
-                    short_code = None
-                    if 'context' in data and data['context']:
-                        short_code = data['context'][-1].get('short_code')
-                    raise ValueError(f"Country not found for {short_code}")
-            if data['place_type'][0] == 'address':
-                if not self.street or replace:
-                    self.street = data['text']
-                if not self.street_number or replace:
-                    self.street_number = data.get('address', '')
+        if not isinstance(data, dict):
+            return
 
-            if 'context' in data:
-                for context_item in data['context']:
-                    if 'place' in context_item['id']:
-                        if not self.locality or replace:
-                            self.locality = context_item['text']
-                    elif 'postcode' in context_item['id']:
-                        if not self.postal_code or replace:
-                            self.postal_code = context_item['text']
-                    elif 'region' in context_item['id']:
-                        if not self.province or replace:
-                            self.province = context_item['text']
+        self.mapbox_id = data['id']
+        if not self.formatted_address or replace:
+            self.formatted_address = data['place_name']
+        if not self.country_id or replace:
+            country = self._country_from_mapbox(data)
+            if country:
+                self.country = country
+            elif not self.country_id:
+                short_code = None
+                if 'context' in data and data['context']:
+                    short_code = data['context'][-1].get('short_code')
+                raise ValueError(f"Country not found for {short_code}")
+        if data['place_type'][0] == 'address':
+            if not self.street or replace:
+                self.street = data['text']
+            if not self.street_number or replace:
+                self.street_number = data.get('address', '')
+
+        if 'context' in data:
+            for context_item in data['context']:
+                if 'place' in context_item['id']:
+                    if not self.locality or replace:
+                        self.locality = context_item['text']
+                elif 'postcode' in context_item['id']:
+                    if not self.postal_code or replace:
+                        self.postal_code = context_item['text']
+                elif 'region' in context_item['id']:
+                    if not self.province or replace:
+                        self.province = context_item['text']
 
     def save(self, *args, **kwargs):
         replace = False
@@ -364,7 +363,6 @@ class Geolocation(models.Model):
         if self.position and (
             replace
             or self.mapbox_id in ['unknown', '', None]
-            or not self.country_id
         ):
             self.update_location(replace=replace)
         return super().save(*args, **kwargs)

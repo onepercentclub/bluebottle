@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
-from bluebottle.funding.forms import FundingNeedsWorkForm, FundingRejectedForm, FundingAcceptedForm
+from bluebottle.funding.forms import FundingNeedsWorkForm, FundingRejectedForm, FundingAcceptedForm, RefundCampaignForm
 from bluebottle.funding.models import (
     Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution,
 )
@@ -259,6 +259,7 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Refund'),
         description=_(
             "The campaign will be refunded and all donations will be returned to the donors."),
+        form=RefundCampaignForm,
         automatic=False,
         permission=ActivityStateMachine.is_staff,
         conditions=[

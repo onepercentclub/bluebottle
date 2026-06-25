@@ -11,19 +11,23 @@ from bluebottle.utils.forms import TransitionConfirmationForm
 
 class RefundConfirmationForm(forms.Form):
     title = _('Refund payment')
-    message = FundingRefundedMessage
 
 
 class FundingNeedsWorkForm(TransitionConfirmationForm):
-    title = _('Funding needs work')
+    title = _('Crowdfunding campaign needs work')
     message_class = FundingNeedsWorkMessage
 
 
 class FundingRejectedForm(TransitionConfirmationForm):
-    title = _('Activity rejected')
+    title = _('Crowdfunding campaign rejected')
     message_class = FundingRejectedMessage
 
 
 class FundingAcceptedForm(TransitionConfirmationForm):
     title = _('Crowdfunding campaign accepted')
     message_class = FundingApprovedMessage
+
+
+class RefundCampaignForm(TransitionConfirmationForm):
+    title = _('Refund crowdfunding campaign')
+    message_class = FundingRefundedMessage

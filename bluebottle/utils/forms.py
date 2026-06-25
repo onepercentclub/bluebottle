@@ -6,6 +6,7 @@ from django.utils.html import escape
 from django.utils.translation import gettext_lazy as _
 from django_quill.forms import QuillFormField
 from django_quill.quill import Quill, QuillParseError
+from django_quill.widgets import QuillWidget
 from future.utils import with_metaclass
 
 from bluebottle.utils.utils import clean_html
@@ -13,8 +14,9 @@ from bluebottle.utils.utils import clean_html
 
 class CustomMessageFormField(QuillFormField):
 
-    def prepare_value(self, value):
-        return value
+    def __init__(self, *args, **kwargs):
+        kwargs['widget'] = QuillWidget(config_name='custom_message')
+        super(QuillFormField, self).__init__(*args, **kwargs)
 
     def clean(self, value):
         value = super(QuillFormField, self).clean(value)

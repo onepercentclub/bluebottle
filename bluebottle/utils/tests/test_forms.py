@@ -2,16 +2,20 @@ import json
 
 from django.test import SimpleTestCase
 from django_quill.quill import Quill
+from django_quill.widgets import QuillWidget
 
-from bluebottle.utils.forms import CustomMessageFormField, html_to_quill_json
+from bluebottle.utils.forms import CustomMessageFormField
 
 
 class CustomMessageFormFieldTestCase(SimpleTestCase):
 
-    def test_html_to_quill_json_wraps_html(self):
-        value = html_to_quill_json('<p>Hello <strong>world</strong></p>')
-        quill = Quill(value)
-        self.assertIn('<strong>world</strong>', quill.html)
+    def test_uses_limited_quill_toolbar_config(self):
+        field = CustomMessageFormField(required=False)
+        self.assertIsInstance(field.widget, QuillWidget)
+        self.assertEqual(field.widget.config['modules']['toolbar'], [
+            ['bold', 'italic'],
+            [{'list': 'ordered'}, {'list': 'bullet'}],
+        ])
 
     def test_clean_returns_sanitized_html_from_quill_json(self):
         field = CustomMessageFormField(required=False)

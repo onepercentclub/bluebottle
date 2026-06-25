@@ -747,7 +747,16 @@ QUILL_CONFIGS = {
                 {"list": 'bullet'},
             ],
         }
-    }
+    },
+    'custom_message': {
+        'theme': 'snow',
+        'modules': {
+            'toolbar': [
+                ['bold', 'italic', 'link'],
+                [{'list': 'ordered'}, {'list': 'bullet'}],
+            ],
+        },
+    },
 }
 
 HOMEPAGE = {}

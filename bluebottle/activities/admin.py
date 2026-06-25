@@ -626,15 +626,10 @@ class ActivityChildAdmin(
 
         return formsets
 
-    activity_pub_readonly_fields = (
-        'title', 'description', 'image', 'video_url', 'slug',
-        'next_step_link', 'next_step_title', 'next_step_button_label', 'next_step_description',
-    )
-
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
-        if obj.origin:
-            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+        if obj:
+            readonly_fields = readonly_fields + obj.readonly_fields
 
         return readonly_fields
 

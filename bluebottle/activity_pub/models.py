@@ -124,6 +124,10 @@ class Person(Actor):
         related_name='origin'
     )
 
+    source = models.ForeignKey(
+        'activity_pub.Organization', null=True, on_delete=models.SET_NULL
+    )
+
     @property
     def follow(self):
         follow = Follow.objects.filter(object=self).first()

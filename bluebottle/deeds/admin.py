@@ -52,9 +52,6 @@ class DeedAdmin(ActivityChildAdmin):
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'team_activity', 'next_step_info', 'contributor_count_display', 'contributor_count'
     ]
-    activity_pub_readonly_fields = ActivityChildAdmin.activity_pub_readonly_fields + (
-        'start', 'end', 'target', 'next_step_link', 'next_step_title', 'next_step_button_label', 'next_step_description'
-    )
     save_as = True
 
     def participant_count(self, obj):

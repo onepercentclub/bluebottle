@@ -116,10 +116,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
 
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['expertise']
 
-    activity_pub_readonly_fields = ActivityChildAdmin.activity_pub_readonly_fields + (
-        'registration_deadline', 'capacity', 'review',
-    )
-
     export_to_csv_fields = (
         ('title', 'Title'),
         ('description', 'Description'),
@@ -231,17 +227,6 @@ class DateActivitySlotInline(TabularInlinePaginated):
         'duration',
         'status_label'
     ]
-
-    activity_pub_readonly_fields = (
-        'start', 'duration',
-    )
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        if obj.origin:
-            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
-
-        return readonly_fields
 
     extra = 0
 
@@ -711,10 +696,6 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
-    activity_pub_readonly_fields = TimeBasedAdmin.activity_pub_readonly_fields + (
-        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
-    )
-
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     date_fields = [
@@ -770,9 +751,6 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
         'location',
     ]
 
-    activity_pub_readonly_fields = TimeBasedAdmin.activity_pub_readonly_fields + (
-        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
-    )
     registration_fields = []
 
     def get_fieldsets(self, request, obj=None):
@@ -848,9 +826,6 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         'location_hint',
         'online_meeting_url',
     ]
-    activity_pub_readonly_fields = TimeBasedAdmin.activity_pub_readonly_fields + (
-        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
-    )
 
     registration_fields = ("team_activity", "capacity",) + TimeBasedAdmin.registration_fields
 
@@ -1091,10 +1066,6 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         'location_hint',
         'online_meeting_url',
     ]
-
-    activity_pub_readonly_fields = TimeBasedAdmin.activity_pub_readonly_fields + (
-        'start', 'duration', 'period', 'is_online', 'location', 'location_hint', 'online_meeting_url'
-    )
 
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 

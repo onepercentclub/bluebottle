@@ -8,7 +8,7 @@ from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django_quill.fields import QuillField
+from bluebottle.utils.fields import QuillField
 from djchoices.choices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
@@ -214,6 +214,19 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         default=False,
         help_text=_("Has the user accepted the terms of service for this activity?")
     )
+
+    @property
+    def is_adopted(self):
+        return hasattr(self, 'origin') and self.origin
+
+    @property
+    def readonly_fields(self):
+        if self.is_adopted:
+            return [
+                'title', 'description', 'image', 'video_url', 'slug',
+                'next_step_link', 'next_step_title', 'next_step_button_label', 'next_step_description',
+            ]
+        return []
 
     @property
     def link(self):
@@ -463,11 +476,6 @@ class Contributor(TriggerMixin, PolymorphicModel):
             return self.user
         else:
             return self.remote_user
-
-    @property
-    def display_name_or_user(self):
-        """Name to display: from user.full_name when set, else remote_contributor.display_name."""
-        self.actual_user.full_name
 
     @property
     def email(self):

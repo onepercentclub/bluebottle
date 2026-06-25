@@ -10,6 +10,9 @@ from rest_framework import status
 
 from bluebottle.activities.tests.factories import TextQuestionFactory, \
     TextAnswerFactory
+from bluebottle.activity_pub.tests.factories import GoodDeedFactory, PersonFactory
+from bluebottle.activity_pub.adapters import adapter
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer,
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
@@ -178,7 +181,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertTransition('delete')
         self.assertMeta(
             'contributor-count',
-            len(self.accepted_participants)
+            {'total': len(self.accepted_participants), 'local': len(self.accepted_participants), 'remote': 0}
         )
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
@@ -320,7 +323,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', False)
         self.assertMeta(
             'contributor-count',
-            len(self.accepted_participants)
+            {'total': len(self.accepted_participants), 'local': len(self.accepted_participants), 'remote': 0}
         )
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
@@ -355,7 +358,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', False)
         self.assertMeta(
             'contributor-count',
-            len(self.accepted_participants)
+            {'total': len(self.accepted_participants), 'local': len(self.accepted_participants), 'remote': 0}
         )
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
@@ -376,6 +379,23 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertAttribute('description', new_description)
+
+    def test_put_synced_readonly(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        GoodDeedFactory.create(
+            adopted=self.model
+        )
+        new_description = 'Test description'
+        old_description = self.model.description.html
+
+        self.perform_update({'description': new_description}, user=self.model.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertAttribute('description', old_description)
 
     def test_put_start_after_end(self):
         self.model.status = 'open'
@@ -646,8 +666,39 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
             )
         )
 
-        for member in self.get_included('user'):
+        included_users = self.get_included('user')
+        self.assertEqual(len(included_users), 10)
+        for member in included_users:
             self.assertIsNotNone(member['attributes']['last-name'])
+
+    def test_get_remote_participant(self):
+        self.activity.contributors.all().delete()
+        for i in range(5):
+            actor = PersonFactory.create()
+            remote_user = adapter.adopt(actor)
+            adapter.adopt(actor.source)
+            DeedParticipantFactory.create(
+                activity=self.activity, status='accepted', user=None, remote_user=remote_user
+            )
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(5)
+
+        self.assertTrue(
+            all(
+                participant['attributes']['status'] in ('accepted', 'withdrawn')
+                for participant in self.response.json()['data']
+            )
+        )
+
+        for member in self.get_included('remote-user'):
+            self.assertIsNotNone(member['attributes']['last-name'])
+            self.assertIsNotNone(member['relationships']['source'])
+
+            organization = self.get_included('source', [member])[0]
+            self.assertTrue(organization['attributes']['name'])
 
     def test_get_staff(self):
         self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))

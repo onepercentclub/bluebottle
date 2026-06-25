@@ -15,6 +15,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField,
     ResourceRelatedField,
+    SerializerMethodResourceRelatedField,
 )
 from rest_framework_json_api.serializers import (
     ModelSerializer,
@@ -24,7 +25,7 @@ from rest_framework_json_api.serializers import (
 
 from bluebottle.activities.models import (
     Activity, Contribution, Contributor, ActivityQuestion,
-    FileUploadQuestion, SegmentQuestion, TextQuestion, ConfirmationAnswer,
+    FileUploadQuestion, RemoteMember, SegmentQuestion, TextQuestion, ConfirmationAnswer,
     ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion,
     ActivityMessage,
 )
@@ -58,6 +59,7 @@ from bluebottle.grant_management.serializers import (
     GrantSerializer,
     GrantApplicationSerializer
 )
+from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import (
     DateParticipant,
     PeriodicParticipant,
@@ -160,6 +162,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
             "contributor_count",
             "deleted_successful_contributors",
             "registration_status",
+            "readonly_fields",
         )
 
     class JSONAPIMeta(object):
@@ -1115,3 +1118,58 @@ class ActivityMessageSerializer(ModelSerializer):
                 {'activity': _('You cannot send a message to yourself as the activity manager.')}
             )
         return attrs
+
+
+class RemoteMemberSerializer(ModelSerializer):
+    initials = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+
+    source = SerializerMethodResourceRelatedField(
+        many=False,
+        read_only=True,
+        model=Organization
+    )
+
+    def get_initials(self, obj):
+        return f'{obj.first_name[0]}{obj.last_name[0]}'
+
+    def get_full_name(self, obj):
+        return f'{obj.first_name} {obj.last_name}'
+
+    def get_source(self, obj):
+
+        if hasattr(obj, 'origin') and obj.origin.source:
+            return obj.origin.source.adopted
+
+    class Meta(object):
+        model = RemoteMember
+        fields = (
+            'id', 'first_name', 'last_name', 'initials',
+            'full_name', 'source'
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'remote_members'
+
+        included_resources = ['source', ]
+
+    included_serializers = {
+        'source': 'bluebottle.organizations.serializers.OrganizationSerializer',
+    }
+
+    def to_representation(self, instance):
+        user = self.context['request'].user
+        representation = super().to_representation(instance)
+
+        if (
+            self.context.get('display_member_names') in ['first_name', 'first_name_strict'] and
+            instance not in self.context.get('owners', []) and
+            not user.is_staff and
+            not user.is_superuser
+        ):
+            representation['last_name'] = None
+            first_name = representation.get('first_name') or ''
+            representation['initials'] = first_name[:1]
+            representation['full_name'] = representation.get('first_name')
+
+        return representation

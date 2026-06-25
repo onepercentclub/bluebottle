@@ -118,6 +118,18 @@ class TimeBasedActivity(Activity):
     activity_type = _('Time-based activity')
 
     @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'capacity', 'registration_deadline', 'review', 'review_title', 'review_description',
+                'review_link', 'preparation',
+            ]
+
+        return readonly_fields
+
+    @property
     def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(
@@ -223,6 +235,15 @@ class DateActivity(TimeBasedActivity):
         HasSlotValidator,
         TosAcceptedValidator
     ]
+
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + ['start', 'duration', ]
+
+        return readonly_fields
 
     @property
     def start(self):
@@ -585,6 +606,17 @@ class RegistrationActivity(TimeBasedActivity):
     )
 
     @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'is_online', 'location', 'location_hint', 'start', 'deadline',
+            ]
+
+        return readonly_fields
+
+    @property
     def duration_human_readable(self):
         if self.duration:
             return get_human_readable_duration(str(self.duration)).lower()
@@ -650,6 +682,17 @@ class DeadlineActivity(RegistrationActivity):
         null=True,
         blank=True,
     )
+
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+            ]
+
+        return readonly_fields
 
     @property
     def required_fields(self):
@@ -741,6 +784,17 @@ class ScheduleActivity(RegistrationActivity):
     )
 
     @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+            ]
+
+        return readonly_fields
+
+    @property
     def accepted_participants(self):
         if self.pk:
             return self.registrations.filter(status__in=["accepted", "succeeded", "scheduled"])
@@ -807,6 +861,17 @@ class PeriodicActivity(RegistrationActivity):
         blank=True,
     )
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
+
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'period', 'duration',
+            ]
+
+        return readonly_fields
 
     @property
     def required_fields(self):
@@ -885,6 +950,17 @@ class RegisteredDateActivity(TimeBasedActivity):
         ),
         null=True, blank=True, on_delete=models.SET_NULL
     )
+
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+            ]
+
+        return readonly_fields
 
     @property
     def end(self):

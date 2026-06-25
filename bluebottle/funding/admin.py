@@ -185,11 +185,6 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
 
-    activity_pub_readonly_fields = ActivityChildAdmin.activity_pub_readonly_fields + (
-        'start', 'deadline', 'target',
-        'duration', 'location', 'impact_location',
-    )
-
     detail_fields = (
         "title",
         "description",

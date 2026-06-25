@@ -173,6 +173,23 @@ class Funding(Activity):
 
     needs_review = True
 
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + [
+                'start', 'deadline', 'target',
+                'duration', 'impact_location',
+            ]
+
+        if self.status not in ('draft', 'needs_work', 'submitted'):
+            readonly_fields = readonly_fields + [
+                'start', 'deadline', 'target'
+            ]
+
+        return readonly_fields
+
     validators = [
         DeadlineValidator,
         DeadlineMaxValidator,

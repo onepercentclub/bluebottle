@@ -480,9 +480,11 @@ class APITestCase(BluebottleTestCase):
             included not in included_types
         )
 
-    def get_included(self, relationship):
+    def get_included(self, relationship, resources=None):
         relations = []
-        for resource in self.response.json()['data']:
+
+        resources = resources or self.response.json()['data']
+        for resource in resources:
             relations.append(resource['relationships'][relationship]['data'])
 
         return [

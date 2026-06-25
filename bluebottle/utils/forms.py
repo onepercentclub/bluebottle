@@ -69,3 +69,14 @@ class TransitionConfirmationForm(forms.Form):
         self.instance = kwargs.pop("instance", None)
         self.transition = kwargs.pop("transition", None)
         super().__init__(*args, **kwargs)
+
+        message_class = getattr(self, 'message', None)
+        if (
+            message_class
+            and self.instance
+            and not self.is_bound
+            and 'custom_message' in self.fields
+            and 'custom_message' not in self.initial
+        ):
+            message = message_class(self.instance)
+            self.fields['custom_message'].initial = message.get_message_block_text()

@@ -3,27 +3,31 @@
 {% load message_url %}
 
 {% block content %}
-    {% blocktrans context 'platform-email' %}
-        <p>Hi {{ recipient_name }},</p>
-    {% endblocktrans %}
-    {% if custom_message %}
-        <p>{{custom_message|linebreaks}}</p>
-    {% else %}
+    {% if not only_message %}
+        {% blocktrans context 'platform-email' %}
+            <p>Hi {{ recipient_name }},</p>
+        {% endblocktrans %}
+        {% if custom_message %}
+            <p>{{custom_message|linebreaks}}</p>
+        {% endif %}
+    {% endif %}
+    {% if only_message or not custom_message %}
         {% block message %}{% endblock %}
     {% endif %}
-    {% block additional %} {% endblock %}
+    {% if not only_message %}
+        {% block additional %} {% endblock %}
 
-    {% if review_link %}
-        <p>
-            {% blocktrans context 'platform-email' %}
-                <a href="{{ review_link }}">Revisit the external link</a> that was shown when you signed up for this activity.
-            {% endblocktrans %}
-        </p>
+        {% if review_link %}
+            <p>
+                {% blocktrans context 'platform-email' %}
+                    <a href="{{ review_link }}">Revisit the external link</a> that was shown when you signed up for this activity.
+                {% endblocktrans %}
+            </p>
+        {% endif %}
     {% endif %}
-
 {% endblock %}
 
 {% block action %}
   <a href="{% message_url action_link %}"
        class="action-email">{{ action_title }}</a>
-{% endblock %}`
+{% endblock %}

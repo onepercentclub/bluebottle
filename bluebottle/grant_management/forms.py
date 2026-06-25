@@ -4,7 +4,7 @@ from django.forms import CharField, ModelChoiceField, Textarea, BooleanField
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from .messages.activity_manager import GrantApplicationNeedsWorkMessage
+from .messages.activity_manager import GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage
 from .models import GrantDonor, GrantFund
 from ..utils.fields import MoneyFormField
 from ..utils.forms import TransitionConfirmationForm
@@ -102,6 +102,7 @@ class GrantApplicationNeedsWorkForm(TransitionConfirmationForm):
 class GrantApplicationRejectedForm(TransitionConfirmationForm):
     title = _('Grant application rejected')
 
+    message = GrantApplicationRejectedMessage
     custom_message = forms.CharField(
         widget=forms.Textarea,
         label=_('Custom message'),

@@ -2,8 +2,8 @@ from django.urls import path
 from django.urls import re_path
 
 from bluebottle.geo.views import (
-    CountryList, CountryDetail, LocationList, GeolocationList, OfficeList, OfficeDetail,
-    PlaceList, PlaceDetail, NewCountryList
+    CountryList, CountryDetail, LocationList, GeolocationList, GeolocationDetail,
+    OfficeList, OfficeDetail, PlaceList, PlaceDetail, NewCountryList
 )
 
 urlpatterns = [
@@ -40,6 +40,11 @@ urlpatterns = [
         'geolocations',
         GeolocationList.as_view(),
         name='geolocation-list'
+    ),
+    path(
+        'geolocations/<int:pk>',
+        GeolocationDetail.as_view(),
+        name='geolocation-detail'
     ),
 
     re_path(

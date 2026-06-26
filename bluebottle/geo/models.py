@@ -373,6 +373,17 @@ class Geolocation(models.Model):
                     if resolved_feature:
                         parsed = mapbox_utils.parse_feature(resolved_feature)
                         mapbox_utils.apply_parsed_feature(self, parsed)
+
+                elif self.mapbox_id and mapbox_utils.is_v6_mapbox_id(self.mapbox_id):
+                    if resolved_feature is None:
+                        response = mapbox_utils.lookup_by_mapbox_id(
+                            self.mapbox_id, language=language
+                        )
+                        resolved_feature = mapbox_utils._first_feature(response)
+                    if resolved_feature:
+                        mapbox_utils.apply_country_from_parsed(
+                            self, mapbox_utils.parse_feature(resolved_feature)
+                        )
             except requests.RequestException:
                 pass
 
@@ -387,5 +398,7 @@ class Geolocation(models.Model):
                     resolved_feature = mapbox_utils._first_feature(response)
                 if resolved_feature:
                     mapbox_utils.sync_geofeatures(self, resolved_feature, language=language)
+                else:
+                    mapbox_utils.apply_country_from_geofeatures(self)
             except requests.RequestException:
                 pass

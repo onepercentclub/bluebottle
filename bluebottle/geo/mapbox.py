@@ -360,7 +360,7 @@ def platform_language_codes():
     return platform_language_param().split(',')
 
 
-def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
+def get_translated_geofeature_list(geofeature, country=None, is_primary=False, geolocation_id=None):
     from bluebottle.utils.models import Language
 
     data = []
@@ -382,6 +382,8 @@ def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
             'feature_type': geofeature.feature_type or '',
             'is_primary': is_primary,
         }
+        if geolocation_id is not None:
+            entry['geolocation_id'] = geolocation_id
         if country:
             country.set_current_language(lang.full_code)
             entry['country'] = country.name
@@ -446,9 +448,252 @@ def _card_location_level_value(geofeatures, level):
     return _entry_value(feature, 'name') if feature else None
 
 
-def format_card_location(activity, card_location_display, language):
+def _card_level_rank(level):
+    if level in ('country', 'country_code'):
+        return GEOFEATURE_TYPE_RANK['country']
+    feature_type = CARD_LOCATION_FEATURE_TYPES.get(level)
+    if feature_type:
+        return GEOFEATURE_TYPE_RANK.get(feature_type, -1)
+    return -1
+
+
+def _group_geofeatures_by_geolocation(geofeatures, language):
+    language_geofeatures = _geofeatures_for_language(geofeatures, language)
+    if not language_geofeatures:
+        return []
+
+    geolocation_ids = {
+        _entry_value(entry, 'geolocation_id')
+        for entry in language_geofeatures
+        if _entry_value(entry, 'geolocation_id') is not None
+    }
+
+    if len(geolocation_ids) <= 1:
+        return [language_geofeatures]
+
+    groups = {}
+    for entry in language_geofeatures:
+        geolocation_id = _entry_value(entry, 'geolocation_id')
+        if geolocation_id is None:
+            continue
+        groups.setdefault(geolocation_id, []).append(entry)
+
+    return list(groups.values())
+
+
+def _card_location_level_value_for_group(group, level, countries):
+    if level == 'country':
+        country_feature = next(
+            (
+                geofeature for geofeature in group
+                if _entry_value(geofeature, 'feature_type') == 'country'
+            ),
+            None,
+        )
+        value = _entry_value(country_feature, 'name')
+        if not value and countries:
+            value = _entry_value(countries[0], 'name')
+        return value
+
+    if level == 'country_code':
+        return next(
+            (
+                _entry_value(geofeature, 'country_code')
+                for geofeature in group
+                if _entry_value(geofeature, 'country_code')
+            ),
+            None,
+        )
+
+    return _card_location_level_value(group, level)
+
+
+COMMON_ANCESTOR_FEATURE_TYPES = (
+    'address', 'neighborhood', 'locality', 'place', 'region', 'country',
+)
+
+
+def _group_feature_identity(group, feature_type):
+    entry = next(
+        (
+            geofeature for geofeature in group
+            if _entry_value(geofeature, 'feature_type') == feature_type
+        ),
+        None,
+    )
+    if not entry:
+        return None
+
+    entry_id = _entry_value(entry, 'id')
+    if entry_id is not None:
+        return ('id', entry_id)
+
+    name = _entry_value(entry, 'name')
+    if name:
+        return ('name', name)
+
+    return None
+
+
+def _most_specific_common_feature_type(groups):
+    for feature_type in COMMON_ANCESTOR_FEATURE_TYPES:
+        identities = [_group_feature_identity(group, feature_type) for group in groups]
+        if all(identities) and len(set(identities)) == 1:
+            return feature_type
+    return None
+
+
+def _build_geofeature_groups(activity, language):
+    slots = getattr(activity, 'slots', None)
+    if slots:
+        slot_groups = []
+        for slot in slots:
+            if getattr(slot, 'is_online', False):
+                continue
+            geofeatures = getattr(slot, 'geofeatures', None)
+            if not geofeatures:
+                continue
+            group = _entries_for_language(geofeatures, language)
+            if group:
+                slot_groups.append(group)
+        if slot_groups:
+            return slot_groups
+
     geofeatures = getattr(activity, 'geofeature', None)
-    if not geofeatures or not card_location_display:
+    if not geofeatures:
+        return []
+
+    return _group_geofeatures_by_geolocation(geofeatures, language)
+
+
+def _shared_card_location_levels(groups, card_location_display, countries):
+    common_feature_type = _most_specific_common_feature_type(groups)
+    if not common_feature_type:
+        return []
+
+    common_rank = GEOFEATURE_TYPE_RANK.get(common_feature_type, -1)
+    shared_levels = []
+    for level in card_location_display:
+        level_rank = _card_level_rank(level)
+        if level_rank < 0 or level_rank > common_rank:
+            continue
+        values = [
+            _card_location_level_value_for_group(group, level, countries)
+            for group in groups
+        ]
+        if all(values) and len(set(values)) == 1:
+            shared_levels.append(level)
+
+    return shared_levels
+
+
+def _format_card_location_parts(groups, card_location_display, countries):
+    if len(groups) > 1:
+        levels = _shared_card_location_levels(groups, card_location_display, countries)
+    else:
+        levels = card_location_display
+
+    parts = []
+    group = groups[0]
+    for level in levels:
+        value = _card_location_level_value_for_group(group, level, countries)
+        if value:
+            parts.append(value)
+
+    return parts
+
+
+def common_geofeature_display(groups, language):
+    if len(groups) <= 1:
+        return None
+
+    common_type = _most_specific_common_feature_type(groups)
+    if not common_type:
+        return None
+
+    entry = next(
+        (
+            geofeature for geofeature in groups[0]
+            if _entry_value(geofeature, 'feature_type') == common_type
+        ),
+        None,
+    )
+    if not entry:
+        return None
+
+    country_code = next(
+        (
+            _entry_value(geofeature, 'country_code')
+            for geofeature in groups[0]
+            if _entry_value(geofeature, 'country_code')
+        ),
+        None,
+    )
+    place_name = _entry_value(entry, 'place_name') or _entry_value(entry, 'name')
+
+    return {
+        'place_name': place_name,
+        'name': _entry_value(entry, 'name'),
+        'country_code': country_code,
+    }
+
+
+def build_geofeature_groups_from_geolocations(geolocations, language):
+    groups = []
+    seen = set()
+
+    for geolocation in geolocations:
+        if not geolocation or geolocation.pk in seen:
+            continue
+        seen.add(geolocation.pk)
+
+        entries = []
+        primary_id = geolocation.geofeature_id
+        country = geolocation.country
+        for geofeature in geolocation.geofeatures.all():
+            entries.extend(get_translated_geofeature_list(
+                geofeature,
+                country=country,
+                is_primary=geofeature.pk == primary_id,
+                geolocation_id=geolocation.pk,
+            ))
+
+        group = _entries_for_language(entries, language)
+        if group:
+            groups.append(group)
+
+    return groups
+
+
+def location_info_location_dict(geolocation, common_display=None):
+    if common_display:
+        return {
+            'locality': common_display.get('name'),
+            'formattedAddress': common_display.get('place_name'),
+            'country': {
+                'code': common_display.get('country_code'),
+            },
+        }
+
+    if not geolocation:
+        return None
+
+    geofeature = geolocation.geofeature
+    place_name = None
+    if geofeature:
+        place_name = geofeature.safe_translation_getter('place_name', any_language=True)
+
+    return {
+        'locality': geolocation.locality,
+        'formattedAddress': place_name or geolocation.formatted_address,
+        'country': {
+            'code': geolocation.country.alpha2_code if geolocation.country else None,
+        },
+    }
+
+
+def format_card_location(activity, card_location_display, language):
+    if not card_location_display:
         return None
 
     if isinstance(card_location_display, str):
@@ -456,42 +701,22 @@ def format_card_location(activity, card_location_display, language):
             level.strip() for level in card_location_display.split(',') if level.strip()
         ]
 
-    language_geofeatures = _geofeatures_for_language(geofeatures, language)
-    if not language_geofeatures:
+    groups = _build_geofeature_groups(activity, language)
+    if not groups:
         return None
 
     countries = _entries_for_language(getattr(activity, 'country', None) or [], language)
-    country = countries[0] if len(countries) else None
-
-    parts = []
-
-    for level in card_location_display:
-        if level == 'venue_name':
-            value = getattr(activity, 'location_hint', None)
-        elif level == 'country':
-            country_feature = next(
-                (
-                    geofeature for geofeature in language_geofeatures
-                    if _entry_value(geofeature, 'feature_type') == 'country'
-                ),
-                None,
-            )
-            value = _entry_value(country_feature, 'name')
-        elif level == 'country_code':
-            value = next(
-                (
-                    _entry_value(geofeature, 'country_code')
-                    for geofeature in language_geofeatures
-                    if _entry_value(geofeature, 'country_code')
-                ),
-                None,
-            )
-        else:
-            value = _card_location_level_value(language_geofeatures, level)
-        if value:
-            parts.append(value)
+    parts = _format_card_location_parts(groups, card_location_display, countries)
 
     return ', '.join(parts) if parts else None
+
+
+def has_multiple_card_locations(activity, card_location_display, language):
+    groups = _build_geofeature_groups(activity, language)
+    if len(groups) <= 1:
+        return False
+
+    return not format_card_location(activity, card_location_display, language)
 
 
 def iter_geofeature_data(feature, language=None):
@@ -571,6 +796,53 @@ def parse_feature(feature):
     }
 
 
+def apply_country_from_parsed(geolocation, parsed):
+    if not parsed:
+        return False
+
+    country_code = parsed.get('country_code')
+    if not country_code:
+        return False
+
+    from bluebottle.geo.models import Country, Geolocation
+
+    country = Country.objects.filter(alpha2_code=country_code).first()
+    if not country:
+        return False
+
+    if geolocation.country_id == country.pk:
+        return False
+
+    geolocation.country = country
+    if geolocation.pk:
+        Geolocation.objects.filter(pk=geolocation.pk).update(country=country)
+    return True
+
+
+def apply_country_from_geofeatures(geolocation):
+    if geolocation.country_id:
+        return False
+
+    country_geofeature = geolocation.geofeatures.filter(feature_type='country').first()
+    if not country_geofeature:
+        return False
+
+    from bluebottle.geo.models import Country, Geolocation
+
+    name = country_geofeature.safe_translation_getter('name', any_language=True)
+    if not name:
+        return False
+
+    country = Country.objects.filter(translations__name__iexact=name).first()
+    if not country:
+        return False
+
+    geolocation.country = country
+    if geolocation.pk:
+        Geolocation.objects.filter(pk=geolocation.pk).update(country=country)
+    return True
+
+
 def apply_parsed_feature(geolocation, parsed):
     if not parsed:
         return
@@ -590,12 +862,7 @@ def apply_parsed_feature(geolocation, parsed):
     if parsed.get('province'):
         geolocation.province = parsed['province'][:255]
 
-    country_code = parsed.get('country_code')
-    if country_code:
-        from bluebottle.geo.models import Country
-        country = Country.objects.filter(alpha2_code=country_code).first()
-        if country:
-            geolocation.country = country
+    apply_country_from_parsed(geolocation, parsed)
 
 
 def _apply_geofeature_translations(geofeature, data, primary_language):
@@ -691,3 +958,6 @@ def sync_geofeatures(geolocation, feature, language=None):
         primary_geofeature = select_primary_geofeature(geolocation)
         Geolocation.objects.filter(pk=geolocation.pk).update(geofeature=primary_geofeature)
         geolocation.geofeature = primary_geofeature
+
+    apply_country_from_parsed(geolocation, parse_feature(feature))
+    apply_country_from_geofeatures(geolocation)

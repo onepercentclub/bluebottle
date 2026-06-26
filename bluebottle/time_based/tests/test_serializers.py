@@ -4,8 +4,9 @@ from django.contrib.auth.models import AnonymousUser
 from django.test.client import RequestFactory
 from django.utils.timezone import now
 
+from bluebottle.geo.models import GeoFeature
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.serializers import DateActivitySerializer
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, \
@@ -229,6 +230,120 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'has_multiple': True,
                 'is_online': False,
                 'location': None,
+                'online_meeting_url': None,
+                'location_hint': None,
+            }
+        )
+
+    def _attach_geofeatures(self, geolocation, address_name, shared_features):
+        address = GeoFeature.objects.create(
+            mapbox_id='address-{}'.format(geolocation.pk),
+            feature_type='address',
+        )
+        address.set_current_language('en')
+        address.name = address_name
+        address.place_name = address_name
+        address.save()
+
+        geolocation.geofeatures.set([address] + list(shared_features))
+        geolocation.geofeature = address
+        geolocation.save(skip_mapbox_sync=True)
+
+    def test_location_info_multiple_locations_same_place(self):
+        country = CountryFactory.create(alpha2_code='NL')
+        shared_place = GeoFeature.objects.create(
+            mapbox_id='place-amsterdam',
+            feature_type='place',
+        )
+        shared_place.set_current_language('en')
+        shared_place.name = 'Amsterdam'
+        shared_place.place_name = 'Amsterdam, Netherlands'
+        shared_place.save()
+
+        shared_country = GeoFeature.objects.create(
+            mapbox_id='country-nl',
+            feature_type='country',
+        )
+        shared_country.set_current_language('en')
+        shared_country.name = 'Netherlands'
+        shared_country.place_name = 'Netherlands'
+        shared_country.save()
+
+        location_one = GeolocationFactory.create(locality='Street 1', country=country)
+        location_two = GeolocationFactory.create(locality='Street 2', country=country)
+        self._attach_geofeatures(location_one, 'Street 1', [shared_place, shared_country])
+        self._attach_geofeatures(location_two, 'Street 2', [shared_place, shared_country])
+
+        DateActivitySlotFactory.create(activity=self.activity, location=location_one)
+        DateActivitySlotFactory.create(activity=self.activity, location=location_two)
+
+        self.assertAttribute(
+            'location_info',
+            {
+                'has_multiple': True,
+                'is_online': False,
+                'location': {
+                    'locality': 'Amsterdam',
+                    'formattedAddress': 'Amsterdam, Netherlands',
+                    'country': {
+                        'code': 'NL',
+                    },
+                },
+                'online_meeting_url': None,
+                'location_hint': None,
+            }
+        )
+
+    def test_location_info_multiple_locations_same_neighborhood(self):
+        country = CountryFactory.create(alpha2_code='NL')
+        shared_neighborhood = GeoFeature.objects.create(
+            mapbox_id='neighborhood-groenoord',
+            feature_type='neighborhood',
+        )
+        shared_neighborhood.set_current_language('en')
+        shared_neighborhood.name = 'Groenoord'
+        shared_neighborhood.place_name = 'Groenoord, Leiden, The Netherlands'
+        shared_neighborhood.save()
+
+        shared_place = GeoFeature.objects.create(
+            mapbox_id='place-leiden',
+            feature_type='place',
+        )
+        shared_place.set_current_language('en')
+        shared_place.name = 'Leiden'
+        shared_place.place_name = 'Leiden, The Netherlands'
+        shared_place.save()
+
+        shared_country = GeoFeature.objects.create(
+            mapbox_id='country-nl',
+            feature_type='country',
+        )
+        shared_country.set_current_language('en')
+        shared_country.name = 'Netherlands'
+        shared_country.place_name = 'Netherlands'
+        shared_country.save()
+
+        location_one = GeolocationFactory.create(locality='Street 1', country=country)
+        location_two = GeolocationFactory.create(locality='Street 2', country=country)
+        shared = [shared_neighborhood, shared_place, shared_country]
+        self._attach_geofeatures(location_one, 'Street 1', shared)
+        self._attach_geofeatures(location_two, 'Street 2', shared)
+
+        DateActivitySlotFactory.create(activity=self.activity, location=location_one)
+        DateActivitySlotFactory.create(activity=self.activity, location=location_two)
+
+        self.assertAttribute(
+            'location_info',
+            {
+                'has_multiple': True,
+                'is_online': False,
+                'location': {
+                    'locality': 'Groenoord',
+                    'formattedAddress': 'Groenoord, Leiden, The Netherlands',
+                    'country': {
+                        'code': 'NL',
+                    },
+                },
                 'online_meeting_url': None,
                 'location_hint': None,
             }

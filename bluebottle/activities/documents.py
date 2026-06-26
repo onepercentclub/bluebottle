@@ -180,6 +180,7 @@ class ActivityDocument(Document):
             'is_primary': fields.BooleanField(),
             'country': TextField(),
             'country_code': TextField(),
+            'geolocation_id': fields.LongField(),
         }
     )
 
@@ -427,6 +428,7 @@ class ActivityDocument(Document):
                 geofeature,
                 country=country,
                 is_primary=geofeature.pk == primary_id,
+                geolocation_id=location.pk,
             )
         return geofeatures
 

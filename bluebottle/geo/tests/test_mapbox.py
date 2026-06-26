@@ -164,10 +164,38 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             'Netherlands',
         )
         self.assertEqual(geolocation.geofeature.feature_type, 'address')
+        self.assertEqual(geolocation.country, country)
         self.assertEqual(
             str(geolocation),
             MAPBOX_V6_ADDRESS_FEATURE['properties']['full_address'],
         )
+
+    def test_sync_geofeatures_sets_country_from_feature(self):
+        country = CountryFactory.create(alpha2_code='NL')
+        geolocation = Geolocation(
+            mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
+            position=Point(3.851166, 51.762731),
+        )
+        geolocation.save(skip_mapbox_sync=True)
+
+        mapbox_utils.sync_geofeatures(geolocation, MAPBOX_V6_ADDRESS_FEATURE)
+
+        geolocation.refresh_from_db()
+        self.assertEqual(geolocation.country, country)
+
+    @mock.patch('bluebottle.geo.mapbox.lookup_by_mapbox_id')
+    def test_geolocation_save_sets_country_from_v6_mapbox_id(self, mock_lookup):
+        country = CountryFactory.create(alpha2_code='NL')
+        mock_lookup.return_value = {'features': [MAPBOX_V6_ADDRESS_FEATURE]}
+        geolocation = Geolocation(
+            mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
+            position=Point(3.851166, 51.762731),
+        )
+        geolocation.save()
+
+        geolocation.refresh_from_db()
+        self.assertEqual(geolocation.country, country)
+        self.assertGreater(geolocation.geofeatures.count(), 0)
 
     def test_sync_geofeatures_creates_translations_for_new_features(self):
         country = CountryFactory.create(alpha2_code='NL')
@@ -329,6 +357,243 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertEqual(
             mapbox_utils.format_card_location(activity, ['place', 'country'], 'nl'),
             'Ouddorp, Nederland',
+        )
+
+    def _geofeature_entry(self, **kwargs):
+        defaults = {
+            'language': 'en',
+            'is_primary': False,
+        }
+        defaults.update(kwargs)
+        return type('GeoFeature', (), defaults)()
+
+    def test_format_card_location_multiple_locations_same_place(self):
+        geofeatures = [
+            self._geofeature_entry(
+                geolocation_id=1,
+                name='Damrak 1',
+                feature_type='address',
+                country_code='NL',
+            ),
+            self._geofeature_entry(
+                geolocation_id=1,
+                name='Amsterdam',
+                feature_type='place',
+                country_code='NL',
+            ),
+            self._geofeature_entry(
+                geolocation_id=1,
+                name='Netherlands',
+                feature_type='country',
+                country_code='NL',
+            ),
+            self._geofeature_entry(
+                geolocation_id=2,
+                name='Damrak 2',
+                feature_type='address',
+                country_code='NL',
+            ),
+            self._geofeature_entry(
+                geolocation_id=2,
+                name='Amsterdam',
+                feature_type='place',
+                country_code='NL',
+            ),
+            self._geofeature_entry(
+                geolocation_id=2,
+                name='Netherlands',
+                feature_type='country',
+                country_code='NL',
+            ),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(
+                activity, ['address', 'place', 'country_code'], 'en'
+            ),
+            'Amsterdam, NL',
+        )
+
+    def test_format_card_location_multiple_locations_same_neighborhood(self):
+        def slot_geofeatures(geolocation_id, address, neighborhood, place):
+            return [
+                self._geofeature_entry(
+                    geolocation_id=geolocation_id,
+                    id=geolocation_id * 10,
+                    name=address,
+                    feature_type='address',
+                    country_code='NL',
+                ),
+                self._geofeature_entry(
+                    geolocation_id=geolocation_id,
+                    id=100,
+                    name=neighborhood,
+                    feature_type='neighborhood',
+                    country_code='NL',
+                ),
+                self._geofeature_entry(
+                    geolocation_id=geolocation_id,
+                    id=200,
+                    name=place,
+                    feature_type='place',
+                    country_code='NL',
+                ),
+                self._geofeature_entry(
+                    geolocation_id=geolocation_id,
+                    id=300,
+                    name='Netherlands',
+                    feature_type='country',
+                    country_code='NL',
+                ),
+            ]
+
+        activity = type('Activity', (), {
+            'slots': [
+                type('Slot', (), {
+                    'is_online': False,
+                    'geofeatures': slot_geofeatures(1, 'Street 1', 'De Pijp', 'Amsterdam'),
+                })(),
+                type('Slot', (), {
+                    'is_online': False,
+                    'geofeatures': slot_geofeatures(2, 'Street 2', 'De Pijp', 'Amsterdam'),
+                })(),
+            ],
+            'geofeature': [],
+            'country': [],
+        })()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(
+                activity, ['place', 'country_code'], 'en'
+            ),
+            'Amsterdam, NL',
+        )
+        self.assertEqual(
+            mapbox_utils.format_card_location(
+                activity, ['neighborhood', 'country_code'], 'en'
+            ),
+            'De Pijp, NL',
+        )
+
+    def test_format_card_location_multiple_locations_different_places(self):
+        geofeatures = [
+            self._geofeature_entry(
+                geolocation_id=1,
+                name='Amsterdam',
+                feature_type='place',
+                country_code='NL',
+            ),
+            self._geofeature_entry(
+                geolocation_id=1,
+                name='Netherlands',
+                feature_type='country',
+                country_code='NL',
+            ),
+            self._geofeature_entry(
+                geolocation_id=2,
+                name='Rotterdam',
+                feature_type='place',
+                country_code='NL',
+            ),
+            self._geofeature_entry(
+                geolocation_id=2,
+                name='Netherlands',
+                feature_type='country',
+                country_code='NL',
+            ),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(
+                activity, ['place', 'country_code'], 'en'
+            ),
+            'NL',
+        )
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, ['place', 'country'], 'en'),
+            'Netherlands',
+        )
+
+    def test_has_multiple_card_locations_same_neighborhood(self):
+        def slot_geofeatures(geolocation_id, address, neighborhood, place):
+            return [
+                self._geofeature_entry(
+                    geolocation_id=geolocation_id,
+                    id=geolocation_id * 10,
+                    name=address,
+                    feature_type='address',
+                    country_code='NL',
+                ),
+                self._geofeature_entry(
+                    geolocation_id=geolocation_id,
+                    id=100,
+                    name=neighborhood,
+                    feature_type='neighborhood',
+                    country_code='NL',
+                ),
+                self._geofeature_entry(
+                    geolocation_id=geolocation_id,
+                    id=200,
+                    name=place,
+                    feature_type='place',
+                    country_code='NL',
+                ),
+            ]
+
+        activity = type('Activity', (), {
+            'slots': [
+                type('Slot', (), {
+                    'is_online': False,
+                    'geofeatures': slot_geofeatures(1, 'Street 1', 'De Pijp', 'Amsterdam'),
+                })(),
+                type('Slot', (), {
+                    'is_online': False,
+                    'geofeatures': slot_geofeatures(2, 'Street 2', 'De Pijp', 'Amsterdam'),
+                })(),
+            ],
+            'geofeature': [],
+            'country': [],
+        })()
+
+        self.assertFalse(
+            mapbox_utils.has_multiple_card_locations(
+                activity, ['place', 'country_code'], 'en'
+            )
+        )
+
+    def test_has_multiple_card_locations_different_places(self):
+        activity = type('Activity', (), {
+            'slots': [
+                type('Slot', (), {
+                    'is_online': False,
+                    'geofeatures': [
+                        self._geofeature_entry(
+                            id=1, name='Amsterdam', feature_type='place', country_code='NL'
+                        ),
+                    ],
+                })(),
+                type('Slot', (), {
+                    'is_online': False,
+                    'geofeatures': [
+                        self._geofeature_entry(
+                            id=2, name='Rotterdam', feature_type='place', country_code='NL'
+                        ),
+                    ],
+                })(),
+            ],
+            'geofeature': [],
+            'country': [],
+        })()
+
+        self.assertFalse(
+            mapbox_utils.has_multiple_card_locations(
+                activity, ['place', 'country_code'], 'en'
+            )
+        )
+        self.assertTrue(
+            mapbox_utils.has_multiple_card_locations(activity, ['place'], 'en')
         )
 
     @mock.patch(

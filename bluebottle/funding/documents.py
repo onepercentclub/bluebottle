@@ -70,6 +70,7 @@ class FundingDocument(ActivityDocument):
                 geofeature,
                 country=country,
                 is_primary=geofeature.pk == primary_id,
+                geolocation_id=location.pk,
             )
         return geofeatures
 

@@ -340,7 +340,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     LOCATION_LEVELS = (
-        ("venue_name", _("Venue name")),
         ("address", _("Address")),
         ("neighborhood", _("Neighbourhood")),
         ("locality", _("Locality")),

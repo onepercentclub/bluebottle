@@ -3,6 +3,7 @@ from datetime import datetime, time
 import dateutil
 from django.db.models import Count, Sum
 from django.db.models.functions import Trunc
+from django.utils.translation import get_language
 from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -16,6 +17,11 @@ from bluebottle.activities.models import Activity, Organizer
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.geo.mapbox import (
+    build_geofeature_groups_from_geolocations,
+    common_geofeature_display,
+    location_info_location_dict,
+)
 from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
@@ -603,17 +609,16 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         slots = self.get_filtered_slots(obj, only_upcoming=True)
         if not slots:
             slots = self.get_filtered_slots(obj, only_upcoming=False)
-        is_online = len(slots) > 0 and len(slots.filter(is_online=True)) == len(slots)
 
-        locations = slots.values_list(
-            'location__locality',
-            'location__country__alpha2_code',
-            'location__formatted_address',
-            'online_meeting_url',
-            'location_hint'
+        slots = slots.select_related(
+            'location', 'location__country', 'location__geofeature',
+        ).prefetch_related(
+            'location__geofeatures', 'location__geofeatures__translations',
         )
 
-        if not len(slots) or not len(locations):
+        is_online = len(slots) > 0 and slots.filter(is_online=True).count() == len(slots)
+
+        if not len(slots):
             return {
                 'has_multiple': False,
                 'is_online': is_online,
@@ -622,8 +627,30 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
                 'location_hint': None,
             }
 
-        has_multiple = len(set(location[:2] for location in locations)) > 1 and not is_online
-        if has_multiple:
+        offline_slots = [slot for slot in slots if not slot.is_online and slot.location]
+        geolocations = []
+        seen_location_ids = set()
+        for slot in offline_slots:
+            if slot.location_id not in seen_location_ids:
+                seen_location_ids.add(slot.location_id)
+                geolocations.append(slot.location)
+
+        location_keys = {
+            (
+                slot.location.locality if slot.location else None,
+                slot.location.country.alpha2_code if slot.location and slot.location.country else None,
+            )
+            for slot in slots
+            if not slot.is_online
+        }
+        has_multiple = len(location_keys) > 1 and not is_online
+
+        common_display = None
+        if has_multiple and len(geolocations) > 1:
+            groups = build_geofeature_groups_from_geolocations(geolocations, get_language())
+            common_display = common_geofeature_display(groups, get_language())
+
+        if has_multiple and not common_display:
             return {
                 'has_multiple': True,
                 'is_online': False,
@@ -631,18 +658,13 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
                 'location': None,
                 'location_hint': None,
             }
+
         slot = slots.first()
 
         if is_online or not slot.location:
             location = None
         else:
-            location = {
-                'locality': slot.location.locality if slot.location else None,
-                'country': {
-                    'code': slot.location.country.alpha2_code if slot.location.country else None,
-                },
-                'formattedAddress': slot.location.formatted_address if slot.location else None,
-            }
+            location = location_info_location_dict(slot.location, common_display)
 
         user = self.context['request'].user
         if (
@@ -654,7 +676,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             meeting_url = None
 
         return {
-            'has_multiple': False,
+            'has_multiple': has_multiple,
             'is_online': is_online,
             'online_meeting_url': meeting_url,
             'location': location,

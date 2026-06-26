@@ -53,7 +53,7 @@ from bluebottle.funding.serializers import (
     FundingSerializer,
     TinyFundingSerializer,
 )
-from bluebottle.geo.mapbox import format_card_location
+from bluebottle.geo.mapbox import format_card_location, has_multiple_card_locations
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.grant_management.serializers import (
     GrantSerializer,
@@ -386,10 +386,6 @@ class ActivityPreviewSerializer(ModelSerializer):
         return obj.type.replace("activity", "")
 
     def get_location(self, obj):
-        location = self._get_card_location_entry(obj)
-        if not location:
-            return None
-
         formatted = format_card_location(
             obj,
             InitiativePlatformSettings.load().card_location_display,
@@ -397,6 +393,10 @@ class ActivityPreviewSerializer(ModelSerializer):
         )
         if formatted:
             return formatted
+
+        location = self._get_card_location_entry(obj)
+        if not location:
+            return None
 
         return self._format_location_fallback(location)
 
@@ -559,6 +559,13 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.is_online
 
     def get_has_multiple_locations(self, obj):
+        card_location_display = InitiativePlatformSettings.load().card_location_display
+        language = get_current_language()
+
+        if getattr(obj, 'geofeature', None) or (hasattr(obj, 'slots') and obj.slots):
+            if not has_multiple_card_locations(obj, card_location_display, language):
+                return False
+
         slots = self.get_filtered_slots(obj, only_upcoming=True)
         if not len(slots):
             slots = self.get_filtered_slots(obj)

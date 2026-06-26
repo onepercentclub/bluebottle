@@ -65,6 +65,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
             'is_primary': fields.BooleanField(),
             'country': TextField(),
             'country_code': TextField(),
+            'geolocation_id': fields.LongField(),
         }),
     })
 
@@ -128,6 +129,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
                     geofeature,
                     country=country,
                     is_primary=geofeature.pk == primary_id,
+                    geolocation_id=location.pk,
                 )
 
         return geofeatures
@@ -148,6 +150,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
                     geofeature,
                     country=country,
                     is_primary=location.mapbox_id == geofeature.mapbox_id,
+                    geolocation_id=location.pk,
                 ))
             geofeature = slot.location.geofeature
 

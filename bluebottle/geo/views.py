@@ -106,6 +106,18 @@ class GeolocationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         return super().perform_create(serializer)
 
 
+class GeolocationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
+    queryset = Geolocation.objects.all()
+    serializer_class = GeolocationSerializer
+    permission_classes = [
+        IsAuthenticatedOrOpenPermission,
+    ]
+
+    prefetch_for_includes = {
+        'country': ['country'],
+    }
+
+
 class PlaceList(JsonApiViewMixin, CreateAPIView):
     queryset = Place.objects.all()
 

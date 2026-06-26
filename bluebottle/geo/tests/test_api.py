@@ -9,7 +9,9 @@ from rest_framework import status
 
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.models import Country, Location
-from bluebottle.geo.serializers import InitiativeCountrySerializer, PlaceSerializer
+from bluebottle.geo.serializers import (
+    GeolocationSerializer, InitiativeCountrySerializer, PlaceSerializer
+)
 from bluebottle.geo.tests.mapbox_fixtures import MAPBOX_V6_ADDRESS_FEATURE as mapbox_response
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -284,6 +286,29 @@ class GeolocationCreateTestCase(GeoTestCase):
         self.assertEqual(response.data['id'], existing.id)
         self.assertEqual(response.data['position']['latitude'], 52.0)
         self.assertEqual(response.data['position']['longitude'], 4.0)
+
+
+class GeolocationDetailTestCase(APITestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        self.serializer = GeolocationSerializer
+        self.country = CountryFactory.create()
+        self.geolocation = GeolocationFactory.create(country=self.country)
+        self.user = BlueBottleUserFactory.create()
+
+        self.url = reverse('geolocation-detail', args=(self.geolocation.pk, ))
+
+    def test_get(self):
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertAttribute('locality', self.geolocation.locality)
+
+    def test_get_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
 class OfficeListTestCase(GeoTestCase):

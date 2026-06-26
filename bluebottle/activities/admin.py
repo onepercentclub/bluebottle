@@ -626,6 +626,13 @@ class ActivityChildAdmin(
 
         return formsets
 
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj:
+            readonly_fields = readonly_fields + obj.readonly_fields
+
+        return readonly_fields
+
     def lookup_allowed(self, key, value):
         if key in [
             'office_location__id__exact',

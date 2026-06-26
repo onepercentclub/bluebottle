@@ -100,6 +100,9 @@ class Actor(ActivityPubModel):
 
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return self.get_real_instance().name
+
 
 class Person(Actor):
     name = models.TextField()
@@ -119,6 +122,10 @@ class Person(Actor):
         null=True,
         on_delete=models.CASCADE,
         related_name='origin'
+    )
+
+    source = models.ForeignKey(
+        'activity_pub.Organization', null=True, on_delete=models.SET_NULL
     )
 
     @property

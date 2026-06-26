@@ -77,6 +77,17 @@ class CollectActivity(Activity):
     realized = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
 
     @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if self.is_adopted:
+            readonly_fields = readonly_fields + [
+                'start', 'duration', 'period', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+            ]
+
+        return readonly_fields
+
+    @property
     def type(self):
         return self.collect_type.translations.name if self.collect_type else None
 

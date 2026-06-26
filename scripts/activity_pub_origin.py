@@ -8,7 +8,7 @@ from bluebottle.files.models import Image
 
 
 def run():
-    for client in Client.objects.filter(schema_name__in=['onepercent', 'goodup_demo']):
+    for client in Client.objects.filter(schema_name__in=['onepercent', 'goodup_demo', 'voor_je_buurt']):
         with LocalTenant(client):
             for model in ActivityPubModel.objects.all():
                 if model.is_local and hasattr(model, 'adopted') and model.adopted:

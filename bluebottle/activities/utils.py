@@ -10,11 +10,12 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from geopy.distance import distance, lonlat
+import inflection
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
-    ResourceRelatedField, SerializerMethodResourceRelatedField,
+    RelatedField, ResourceRelatedField, SerializerMethodResourceRelatedField,
     HyperlinkedRelatedField,
     PolymorphicResourceRelatedField,
 )
@@ -264,6 +265,8 @@ class BaseActivitySerializer(ModelSerializer):
 
     translations = TranslationsSerializer(fields=['description', 'title'])
 
+    readonly_fields = serializers.SerializerMethodField()
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         user = self.context["request"].user
@@ -292,6 +295,21 @@ class BaseActivitySerializer(ModelSerializer):
                 self.fields[key].validators = []
                 self.fields[key].allow_null = True
                 self.fields[key].required = False
+
+        if instance:
+            for field in instance.readonly_fields:
+                try:
+                    self.fields[field].read_only = True
+                except KeyError:
+                    pass
+
+    def get_readonly_fields(self, obj):
+        return [
+            f'relationships.{inflection.camelize(field, False)}' if
+            isinstance(self.fields[field], RelatedField) else
+            f'attributes.{inflection.camelize(field, False)}'
+            for field in obj.readonly_fields
+        ]
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)
@@ -405,6 +423,7 @@ class BaseActivitySerializer(ModelSerializer):
             'team_count',
             'current_status',
             'admin_url',
+            'readonly_fields',
         )
 
     class JSONAPIMeta(object):
@@ -597,17 +616,12 @@ class BaseContributorSerializer(ModelSerializer):
     start = serializers.SerializerMethodField()
     email = serializers.CharField(write_only=True, required=False)
     send_messages = serializers.BooleanField(write_only=True, required=False)
+    remote_user = ResourceRelatedField(read_only=True)
 
     def get_start(self, obj):
         if obj.contributions.exists():
             return obj.contributions.last().start
         return None
-
-    included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
-        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
-    }
 
     allow_multiple = False
 
@@ -656,6 +670,7 @@ class BaseContributorSerializer(ModelSerializer):
         model = Contributor
         fields = (
             'user',
+            'remote_user',
             'activity',
             'status',
             'current_status',
@@ -674,10 +689,19 @@ class BaseContributorSerializer(ModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'user',
+            'remote_user',
             'user.avatar',
             'activity',
         ]
         resource_name = 'contributors'
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'remote_user': 'bluebottle.activities.serializers.ReomteMemberSerializer',
+        'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
+        'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
+    }
 
 
 # This can't be in serializers because of circular imports

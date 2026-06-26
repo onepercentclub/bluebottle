@@ -74,6 +74,10 @@ class PersonSerializer(BaseActivityPubSerializer):
         )
         model = Person
 
+    def create(self, validated_data):
+        validated_data['source'] = self.context['request'].auth
+        return super().create(validated_data)
+
 
 class ImageSerializer(BaseActivityPubSerializer):
     type = TypeField('Image')
@@ -103,6 +107,10 @@ class OrganizationSerializer(BaseActivityPubSerializer):
             'image', 'icon', 'preferred_username'
         )
         model = Organization
+
+    def create(self, validated_data):
+        validated_data['source'] = self.context['request'].auth
+        return super().create(validated_data)
 
 
 class AddressSerializer(BaseActivityPubSerializer):

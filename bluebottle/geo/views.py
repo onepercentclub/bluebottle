@@ -17,6 +17,19 @@ from bluebottle.geo.serializers import (
 from bluebottle.utils.views import TranslatedApiViewMixin, JsonApiViewMixin
 
 
+def reuse_instance_by_mapbox_id(serializer, model):
+    mapbox_id = serializer.validated_data.get('mapbox_id')
+    if not mapbox_id:
+        return False
+
+    existing = model.objects.filter(mapbox_id=mapbox_id).first()
+    if existing:
+        serializer.instance = existing
+        return True
+
+    return False
+
+
 class CountryList(TranslatedApiViewMixin, ListAPIView):
     serializer_class = CountrySerializer
     queryset = Country.objects
@@ -86,6 +99,12 @@ class GeolocationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'country': ['country'],
     }
 
+    def perform_create(self, serializer):
+        if reuse_instance_by_mapbox_id(serializer, Geolocation):
+            return
+
+        return super().perform_create(serializer)
+
 
 class PlaceList(JsonApiViewMixin, CreateAPIView):
     queryset = Place.objects.all()
@@ -96,13 +115,8 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
     ]
 
     def perform_create(self, serializer):
-        try:
-            if 'mapbox_id' in serializer.validated_data:
-                serializer.instance = Place.objects.get(
-                    mapbox_id=serializer.validated_data['mapbox_id'],
-                )
-        except Place.DoesNotExist:
-            pass
+        if reuse_instance_by_mapbox_id(serializer, Place):
+            return
 
         return super().perform_create(serializer)
 

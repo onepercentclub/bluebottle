@@ -251,6 +251,40 @@ class GeolocationCreateTestCase(GeoTestCase):
             'center={latitude},{longitude}'.format(**response.data['position']) in static_map_url
         )
 
+    def test_api_geolocation_create_reuses_existing_mapbox_id(self):
+        mapbox_id = mapbox_response['properties']['mapbox_id']
+        existing = GeolocationFactory.create(
+            mapbox_id=mapbox_id,
+            position=Point(4.0, 52.0),
+            country=self.country,
+        )
+
+        data = {
+            "data": {
+                "type": "geolocations",
+                "attributes": {
+                    "mapbox_id": mapbox_id,
+                    "position": {"latitude": 43.0579025, "longitude": 23.6851594},
+                },
+                "relationships": {
+                    "country": {
+                        "data": {
+                            "type": "countries",
+                            "id": self.country.id
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            reverse('geolocation-list'), json.dumps(data), user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['id'], existing.id)
+        self.assertEqual(response.data['position']['latitude'], 52.0)
+        self.assertEqual(response.data['position']['longitude'], 4.0)
+
 
 class OfficeListTestCase(GeoTestCase):
     def setUp(self):

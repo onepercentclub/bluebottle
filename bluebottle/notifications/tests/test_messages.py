@@ -4,6 +4,8 @@ from django.core import mail
 from django.test import override_settings
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.grant_management.messages.activity_manager import GrantApplicationNeedsWorkMessage
+from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -83,3 +85,24 @@ class MessageTestCase(BluebottleTestCase):
                 self.assertTrue('This is a test message' in message.body)
             if message.to[0] == dutch.email:
                 self.assertEqual(message.subject, 'Test bericht')
+
+    def test_get_message_block_text_excludes_greeting(self):
+        owner = BlueBottleUserFactory.create(primary_language='en')
+        application = GrantApplicationFactory.create(
+            title='Community garden',
+            owner=owner,
+        )
+        message = GrantApplicationNeedsWorkMessage(application)
+
+        block_text = message.get_message_block_text()
+        block_html = message.get_message_block_html()
+        full_text = message.get_content_text(owner)
+
+        self.assertIn('Community garden', block_text)
+        self.assertIn('needs work', block_text)
+        self.assertNotIn('Hi ', block_text)
+        self.assertNotIn('View application', block_text)
+        self.assertNotIn('<!DOCTYPE', block_html)
+        self.assertIn('Hi ', full_text)
+        self.assertIn('needs work', full_text)
+        self.assertIn('View application', full_text)

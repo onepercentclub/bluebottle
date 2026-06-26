@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activities.forms import ActivityCancelledForm
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.state import register, State, Transition, EmptyState
@@ -96,6 +97,7 @@ class DeedStateMachine(ActivityStateMachine):
         description_front_end=_(
             'The activity ends and people can no longer register.'
         ),
+        form=ActivityCancelledForm,
         automatic=False,
     )
 

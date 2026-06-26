@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.funding.messages.funding.activity_manager import (
     FundingApprovedMessage,
     FundingNeedsWorkMessage,
-    FundingRejectedMessage, FundingRefundedMessage,
+    FundingRejectedMessage, FundingRefundedMessage, FundingCancelledMessage,
 )
 from bluebottle.utils.forms import TransitionConfirmationForm
 
@@ -31,3 +31,8 @@ class FundingAcceptedForm(TransitionConfirmationForm):
 class RefundCampaignForm(TransitionConfirmationForm):
     title = _('Refund crowdfunding campaign')
     message_class = FundingRefundedMessage
+
+
+class CancelCampaignForm(TransitionConfirmationForm):
+    title = _('Cancel crowdfunding campaign')
+    message_class = FundingCancelledMessage

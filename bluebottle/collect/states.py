@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activities.forms import ActivityCancelledForm
 from bluebottle.activities.states import (
     ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 )
@@ -86,6 +87,7 @@ class CollectActivityStateMachine(ActivityStateMachine):
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
         ),
+        form=ActivityCancelledForm,
         automatic=False,
     )
 

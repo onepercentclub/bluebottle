@@ -33,3 +33,21 @@ class ActivityNeedsWorkForm(TransitionConfirmationForm):
     def message_class(cls):
         from bluebottle.activities.messages.activity_manager import ActivityNeedsWorkNotification
         return ActivityNeedsWorkNotification
+
+
+class ActivityCancelledForm(TransitionConfirmationForm):
+    title = _('Activity cancelled')
+
+    @classmethod
+    def message_class(cls):
+        from bluebottle.activities.messages.activity_manager import ActivityCancelledNotification
+        return ActivityCancelledNotification
+
+
+class ActivityRestoredForm(TransitionConfirmationForm):
+    title = _('Activity restored')
+
+    @classmethod
+    def message_class(cls):
+        from bluebottle.activities.messages.activity_manager import ActivityRestoredNotification
+        return ActivityRestoredNotification

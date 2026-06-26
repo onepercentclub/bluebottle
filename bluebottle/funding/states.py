@@ -3,7 +3,8 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
-from bluebottle.funding.forms import FundingNeedsWorkForm, FundingRejectedForm, FundingAcceptedForm, RefundCampaignForm
+from bluebottle.funding.forms import FundingNeedsWorkForm, FundingRejectedForm, FundingAcceptedForm, RefundCampaignForm, \
+    CancelCampaignForm
 from bluebottle.funding.models import (
     Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution,
 )
@@ -123,6 +124,7 @@ class FundingStateMachine(ActivityStateMachine):
             'search page in the front end. The campaign will still be available '
             'in the back office and appear in your reporting.'
         ),
+        form=CancelCampaignForm,
         automatic=False,
         permission=ActivityStateMachine.is_owner,
         conditions=[no_donations],

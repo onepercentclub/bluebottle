@@ -114,7 +114,7 @@ class TransitionConfirmationForm(forms.Form):
 
         if self.use_custom_message() and 'custom_message' not in self.fields:
             self.fields['custom_message'] = CustomMessageFormField(
-                label=_('Message'),
+                label=_('Email message'),
                 required=False,
             )
 

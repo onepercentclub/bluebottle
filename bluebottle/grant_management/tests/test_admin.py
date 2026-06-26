@@ -17,6 +17,19 @@ class GrantApplicationAdminTestCase(BluebottleAdminTestCase):
         self.changelist_url = reverse('admin:grant_management_grantapplication_changelist')
         self.client.force_login(self.superuser)
 
+    def test_approve_transition_includes_quill_editor_media(self):
+        application = GrantApplicationFactory.create(status='submitted', initiative=None)
+        approve_url = reverse(
+            'admin:grant_management_grantapplication_state_transition',
+            args=(application.pk, 'states', 'approve'),
+        )
+
+        response = self.client.get(approve_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, 'django-quill-widget')
+        self.assertContains(response, 'quill.min.js')
+
     def test_changelist_renders_without_submit_log_entry(self):
         GrantApplicationFactory.create(status='draft')
 

@@ -58,9 +58,7 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         Given an individual model instance, create a task to delete the object from index.
         """
         if sender in self.models:
-            registry_delete_task.delay_on_commit(
-                instance, connection.tenant
-            )
+            registry.delete(instance, raise_on_error=False)
 
     def handle_save(self, sender, instance, **kwargs):
         """Handle save with a Celery task.
@@ -84,15 +82,6 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
             registry_update_related_task.delay_on_commit(
                 model_info, tenant
             )
-
-
-@app.task
-def registry_delete_task(instance, tenant):
-    """
-    Delete instance in index as a celery task
-    """
-    with LocalTenant(tenant):
-        registry.delete(instance)
 
 
 @app.task

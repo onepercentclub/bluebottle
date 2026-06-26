@@ -7,8 +7,8 @@ import dateutil
 from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone, now
+from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -341,6 +341,11 @@ class ActivityPreviewSerializer(ModelSerializer):
             ):
                 return {"no": "too"}
             elif len(obj.contribution_duration) == 1:
+                return {
+                    "period": obj.contribution_duration[0].period,
+                    "value": obj.contribution_duration[0].value,
+                }
+            elif len(obj.contribution_duration) > 1:
                 return {
                     "period": obj.contribution_duration[0].period,
                     "value": obj.contribution_duration[0].value,

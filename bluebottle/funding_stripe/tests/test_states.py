@@ -1,5 +1,6 @@
 import munch
 import stripe
+from django.conf import settings
 from django.core import mail
 from djmoney.money import Money
 from mock import patch
@@ -119,6 +120,13 @@ class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
 
 class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
 
+    ACTIVITY_INCOMPLETE_SUBJECT = (
+        "Action required for your crowdfunding campaign on Test"
+    )
+    LIVE_INCOMPLETE_SUBJECT = (
+        "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
+    )
+
     def setUp(self):
         super(StripePayoutAccountStateMachineTests, self).setUp()
         account_id = 'some-connect-id'
@@ -188,6 +196,21 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
             target=Money(1000, "EUR")
         )
 
+    def open_funding(self):
+        self.funding.initiative.status = "approved"
+        self.funding.initiative.save()
+        self.funding.status = "open"
+        self.funding.save()
+
+    def assert_activity_incomplete_notifications(self):
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, self.ACTIVITY_INCOMPLETE_SUBJECT)
+
+    def assert_live_incomplete_notifications(self):
+        self.assertEqual(len(mail.outbox), len(settings.SUPPORT_EMAIL_ADDRESSES))
+        for message in mail.outbox:
+            self.assertEqual(message.subject, self.LIVE_INCOMPLETE_SUBJECT)
+
     def _save_local_payout_from_stripe_state(self):
         with patch("stripe.Account.retrieve", return_value=self.stripe_account), \
                 patch("stripe.Account.modify", return_value=self.stripe_account):
@@ -232,10 +255,16 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         self.simulate_webhook(["individual.verification.document"])
         self.assertEqual(self.account.status, "incomplete")
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
-        )
+        self.assert_activity_incomplete_notifications()
+
+    def test_needs_verification_open(self):
+        self.test_pending()
+        self.open_funding()
+
+        self.simulate_webhook(["individual.verification.document"])
+        self.assertEqual(self.account.status, "incomplete")
+
+        self.assert_live_incomplete_notifications()
 
     def test_verify(self):
         self.simulate_webhook([], verification_status="verified")
@@ -243,7 +272,7 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         self.assertEqual(mail.outbox[0].subject, "Your identity has been verified on Test")
 
     def test_needs_verification_pending(self):
-        self.test_needs_verification()
+        self.test_needs_verification_open()
         mail.outbox = []
 
         self.simulate_webhook([], verification_status="verified")
@@ -254,19 +283,19 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
     def test_reject(self):
         self.test_verify()
         mail.outbox = []
+        self.open_funding()
 
         self.simulate_webhook(
             ["individual.verification.document"], verification_status="rejected"
         )
 
         self.assertEqual(self.account.status, "incomplete")
-        self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
-        )
+        self.assert_live_incomplete_notifications()
 
     def test_reject_disable_payments(self):
         self.test_verify()
         mail.outbox = []
+        self.open_funding()
 
         self.simulate_webhook(
             ["individual.verification.document"],
@@ -275,9 +304,7 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         )
 
         self.assertEqual(self.account.status, "disabled")
-        self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign on Test"
-        )
+        self.assert_live_incomplete_notifications()
 
 
 class StripeBankAccountStateMachineTests(FundingStripeTestCase):

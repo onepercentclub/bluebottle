@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-10 11:13+0200\n"
-"PO-Revision-Date: 2026-06-10 09:14\n"
+"POT-Creation-Date: 2026-06-26 09:58+0200\n"
+"PO-Revision-Date: 2026-06-26 08:00\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -18,8 +18,8 @@ msgstr ""
 "X-Crowdin-File-ID: 1998\n"
 
 #: bluebottle/activities/admin.py:130 bluebottle/activities/admin.py:1091
-#: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:229
-#: bluebottle/fsm/admin.py:237 bluebottle/utils/models.py:202
+#: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:230
+#: bluebottle/fsm/admin.py:238 bluebottle/utils/models.py:202
 msgid "status"
 msgstr "estado"
 
@@ -83,7 +83,7 @@ msgstr "Separe las direcciones de correo electrónico por comas, una por línea 
 #: bluebottle/members/templates/admin/members/set_retention_confirmation.html:75
 #: bluebottle/notifications/templates/admin/change_confirmation.html:46
 #: bluebottle/time_based/admin.py:412 bluebottle/time_based/admin.py:1257
-#: bluebottle/utils/forms.py:64
+#: bluebottle/utils/forms.py:89
 msgid "Send messages"
 msgstr "Enviar mensajes"
 
@@ -154,7 +154,7 @@ msgstr "Gestión"
 msgid "Information"
 msgstr "Información"
 
-#: bluebottle/activities/admin.py:855 bluebottle/cms/admin.py:245
+#: bluebottle/activities/admin.py:855 bluebottle/cms/admin.py:406
 #: bluebottle/settings/admin_dashboard.py:165
 msgid "GoodUp Connect"
 msgstr "GoodUp Connect"
@@ -317,9 +317,29 @@ msgstr "En persona"
 msgid "Online/remote"
 msgstr "En línea/remoto"
 
-#: bluebottle/activities/forms.py:6
+#: bluebottle/activities/forms.py:8
 msgid "Send impact reminder message"
 msgstr "Enviar mensaje de recordatorio"
+
+#: bluebottle/activities/forms.py:12
+msgid "Activity rejected"
+msgstr "Actividad rechazada"
+
+#: bluebottle/activities/forms.py:21
+msgid "Activity accepted"
+msgstr "Actividad aceptada"
+
+#: bluebottle/activities/forms.py:30
+msgid "Activity needs work"
+msgstr "Tu actividad necesita un retoque"
+
+#: bluebottle/activities/forms.py:39
+msgid "Activity cancelled"
+msgstr "Actividad cancelada"
+
+#: bluebottle/activities/forms.py:48
+msgid "Activity restored"
+msgstr "Actividad restaurada"
 
 #: bluebottle/activities/messages/activity_manager.py:26
 msgctxt "platform-email"
@@ -859,57 +879,57 @@ msgstr "Mensajes de actividad"
 msgid "Send a reminder whe activities are unpublished for more then 3 days"
 msgstr "Enviar un recordatorio de las actividades no publicadas durante más de 3 días"
 
-#: bluebottle/activities/serializers.py:1115
+#: bluebottle/activities/serializers.py:1120
 msgid "You cannot send a message to yourself as the activity manager."
 msgstr "No puedes enviarte un mensaje a ti mismo como el administrador de la actividad."
 
-#: bluebottle/activities/states.py:16 bluebottle/time_based/states/slots.py:136
+#: bluebottle/activities/states.py:18 bluebottle/time_based/states/slots.py:136
 #: bluebottle/utils/transitions.py:10
 msgid "draft"
 msgstr "fabricación"
 
-#: bluebottle/activities/states.py:19
+#: bluebottle/activities/states.py:21
 msgid "The activity has been created, but not yet completed. An activity manager is still editing the activity."
 msgstr "La actividad ha sido creada, pero aún no se ha completado. Un gestor de actividades todavía está editando la actividad."
 
-#: bluebottle/activities/states.py:23 bluebottle/utils/transitions.py:11
+#: bluebottle/activities/states.py:25 bluebottle/utils/transitions.py:11
 msgid "submitted"
 msgstr "enviado"
 
-#: bluebottle/activities/states.py:25
+#: bluebottle/activities/states.py:27
 msgid "The activity has been submitted and is ready to be reviewed."
 msgstr "La actividad ha sido presentada y está lista para ser revisada."
 
-#: bluebottle/activities/states.py:28 bluebottle/utils/transitions.py:12
+#: bluebottle/activities/states.py:30 bluebottle/utils/transitions.py:12
 msgid "needs work"
 msgstr "necesita trabajo"
 
-#: bluebottle/activities/states.py:31
+#: bluebottle/activities/states.py:33
 msgid "The activity needs changes before it can be approved."
 msgstr "La actividad necesita cambios antes de que pueda ser aprobada."
 
-#: bluebottle/activities/states.py:35 bluebottle/funding/states.py:577
-#: bluebottle/funding/states.py:631 bluebottle/grant_management/states.py:264
-#: bluebottle/grant_management/states.py:318
+#: bluebottle/activities/states.py:37 bluebottle/funding/states.py:584
+#: bluebottle/funding/states.py:638 bluebottle/grant_management/states.py:267
+#: bluebottle/grant_management/states.py:321
 #: bluebottle/time_based/states/teams.py:54
 #: bluebottle/time_based/states/teams.py:241
 msgid "rejected"
 msgstr "rechazado"
 
-#: bluebottle/activities/states.py:38
+#: bluebottle/activities/states.py:40
 msgid "The activity does not fit the programme or does not comply with the rules. The activity does not appear on the platform, but counts in the report. The activity cannot be edited by an activity manager."
 msgstr "La actividad no se ajusta al programa o no cumple las normas. La actividad no aparece en la plataforma, pero cuenta en el informe. La actividad no puede ser editada por un gestor de actividad."
 
-#: bluebottle/activities/states.py:44 bluebottle/bb_accounts/models.py:131
+#: bluebottle/activities/states.py:46 bluebottle/bb_accounts/models.py:131
 msgid "deleted"
 msgstr "eliminar"
 
-#: bluebottle/activities/states.py:47
+#: bluebottle/activities/states.py:49
 msgid "The activity has been removed. The activity does not appear on the platform and does not count in the report. The activity cannot be edited by an activity manager."
 msgstr "La actividad ha sido eliminada. La actividad no aparece en la plataforma y no cuenta en el informe. La actividad no puede ser editada por un gestor de actividades."
 
-#: bluebottle/activities/states.py:53 bluebottle/deeds/states.py:87
-#: bluebottle/funding/states.py:24 bluebottle/grant_management/states.py:390
+#: bluebottle/activities/states.py:55 bluebottle/deeds/states.py:87
+#: bluebottle/funding/states.py:26 bluebottle/grant_management/states.py:393
 #: bluebottle/time_based/states/participants.py:189
 #: bluebottle/time_based/states/participants.py:474
 #: bluebottle/time_based/states/slots.py:166
@@ -919,64 +939,64 @@ msgstr "La actividad ha sido eliminada. La actividad no aparece en la plataforma
 msgid "cancelled"
 msgstr "cancelado"
 
-#: bluebottle/activities/states.py:56
+#: bluebottle/activities/states.py:58
 msgid "The activity is not executed. The activity does not appear on the platform, but counts in the report. The activity cannot be edited by an activity manager."
 msgstr "La actividad ha sido eliminada. La actividad no aparece en la plataforma y no cuenta en el informe. La actividad no puede ser editada por un gestor de actividades."
 
-#: bluebottle/activities/states.py:62
+#: bluebottle/activities/states.py:64
 #: bluebottle/common/templates/widget/widget.html:43
-#: bluebottle/funding/states.py:287
+#: bluebottle/funding/states.py:294
 msgid "expired"
 msgstr "caduca"
 
-#: bluebottle/activities/states.py:65
+#: bluebottle/activities/states.py:67
 msgid "The activity has ended, but did have any contributions . The activity does not appear on the platform, but counts in the report. The activity cannot be edited by an activity manager."
 msgstr "La actividad ha terminado, pero sí tiene cualesquiera contribuciones . La actividad no aparece en la plataforma, pero cuenta en el informe. La actividad no puede ser editada por un gestor de actividad."
 
-#: bluebottle/activities/states.py:69 bluebottle/time_based/states/slots.py:142
+#: bluebottle/activities/states.py:71 bluebottle/time_based/states/slots.py:142
 msgid "open"
 msgstr "abrir"
 
-#: bluebottle/activities/states.py:69
+#: bluebottle/activities/states.py:71
 msgid "The activity is accepting new contributions."
 msgstr "La actividad está aceptando nuevas contribuciones."
 
-#: bluebottle/activities/states.py:71 bluebottle/deeds/states.py:48
-#: bluebottle/funding/states.py:491
+#: bluebottle/activities/states.py:73 bluebottle/deeds/states.py:48
+#: bluebottle/funding/states.py:498
 #: bluebottle/time_based/states/participants.py:453
 msgid "succeeded"
 msgstr "éxito"
 
-#: bluebottle/activities/states.py:71
+#: bluebottle/activities/states.py:73
 msgid "The activity has ended successfully."
 msgstr "La actividad ha finalizado correctamente."
 
-#: bluebottle/activities/states.py:175
+#: bluebottle/activities/states.py:177
 msgid "Create"
 msgstr "Crear"
 
-#: bluebottle/activities/states.py:176
+#: bluebottle/activities/states.py:178
 msgid "The activity will be created."
 msgstr "Se creará la actividad."
 
-#: bluebottle/activities/states.py:185 bluebottle/activities/states.py:198
+#: bluebottle/activities/states.py:187 bluebottle/activities/states.py:200
 msgid "The activity will be submitted for review."
 msgstr "La actividad se enviará a revisión."
 
-#: bluebottle/activities/states.py:187 bluebottle/activities/states.py:200
-#: bluebottle/funding/states.py:84 bluebottle/funding/states.py:663
-#: bluebottle/grant_management/states.py:58
-#: bluebottle/grant_management/states.py:350
+#: bluebottle/activities/states.py:189 bluebottle/activities/states.py:202
+#: bluebottle/funding/states.py:86 bluebottle/funding/states.py:670
+#: bluebottle/grant_management/states.py:59
+#: bluebottle/grant_management/states.py:353
 #: bluebottle/initiatives/states.py:123
 msgid "Submit"
 msgstr "Enviar"
 
-#: bluebottle/activities/states.py:207 bluebottle/funding/states.py:163
-#: bluebottle/funding/states.py:600 bluebottle/funding/states.py:680
-#: bluebottle/funding/states.py:718 bluebottle/funding_stripe/states.py:218
-#: bluebottle/grant_management/states.py:110
-#: bluebottle/grant_management/states.py:287
-#: bluebottle/grant_management/states.py:367
+#: bluebottle/activities/states.py:209 bluebottle/funding/states.py:168
+#: bluebottle/funding/states.py:607 bluebottle/funding/states.py:687
+#: bluebottle/funding/states.py:725 bluebottle/funding_stripe/states.py:218
+#: bluebottle/grant_management/states.py:112
+#: bluebottle/grant_management/states.py:290
+#: bluebottle/grant_management/states.py:370
 #: bluebottle/initiatives/states.py:173
 #: bluebottle/time_based/states/participants.py:107
 #: bluebottle/time_based/states/participants.py:228
@@ -986,57 +1006,57 @@ msgstr "Enviar"
 msgid "Reject"
 msgstr "Rechazar"
 
-#: bluebottle/activities/states.py:209
+#: bluebottle/activities/states.py:211
 msgid "Reject if the activity does not align with your program or guidelines The activity manager will not be able to edit or resubmit it, and it will not appear on the search page in the frontend. The activity will still be available in the back office and appear in your reporting."
 msgstr "Rechazar si la actividad no se alinea con su programa o pautas El gestor de actividades no podrá editarla ni volver a enviarla, y no aparecerá en la página de búsqueda en el front-end. La actividad seguirá estando disponible en el back office y aparecerá en sus informes."
 
-#: bluebottle/activities/states.py:225 bluebottle/initiatives/states.py:132
+#: bluebottle/activities/states.py:228 bluebottle/initiatives/states.py:132
 #: bluebottle/news/templates/admin/blogs/change_form.html:119
 #: bluebottle/slides/templates/admin/banners/change_form.html:130
 msgid "Publish"
 msgstr "Publicar"
 
-#: bluebottle/activities/states.py:226
+#: bluebottle/activities/states.py:229
 msgid "Your activity will be open to contributions."
 msgstr "Su actividad estará abierta a contribuciones."
 
-#: bluebottle/activities/states.py:228
+#: bluebottle/activities/states.py:231
 msgid "published"
 msgstr "publicado"
 
-#: bluebottle/activities/states.py:240
+#: bluebottle/activities/states.py:243
 msgid "Automatically publish activity when initiative is approved"
 msgstr "Publicar actividad automáticamente cuando la iniciativa sea aprobada"
 
-#: bluebottle/activities/states.py:242
+#: bluebottle/activities/states.py:245
 msgid "Auto-publish"
 msgstr "Auto-publicar"
 
-#: bluebottle/activities/states.py:249 bluebottle/activities/states.py:265
-#: bluebottle/funding/states.py:101 bluebottle/funding/states.py:511
-#: bluebottle/grant_management/states.py:72
+#: bluebottle/activities/states.py:252 bluebottle/activities/states.py:268
+#: bluebottle/funding/states.py:103 bluebottle/funding/states.py:518
+#: bluebottle/grant_management/states.py:73
 #: bluebottle/initiatives/states.py:141
 msgid "Approve"
 msgstr "Aprobar"
 
-#: bluebottle/activities/states.py:253
+#: bluebottle/activities/states.py:256
 msgid "The activity will be visible in the frontend and people can apply to the activity."
 msgstr "La actividad será visible en el frontend y la gente puede aplicar a la actividad."
 
-#: bluebottle/activities/states.py:269
+#: bluebottle/activities/states.py:273
 msgid "The activity will be published and visible in the frontend for people to contribute to,"
 msgstr "La actividad se publicará y será visible en el frontend para que la gente contribuya,"
 
-#: bluebottle/activities/states.py:277 bluebottle/funding/states.py:592
-#: bluebottle/grant_management/states.py:279
+#: bluebottle/activities/states.py:281 bluebottle/funding/states.py:599
+#: bluebottle/grant_management/states.py:282
 msgid "Request changes"
 msgstr "Solicitar cambios"
 
-#: bluebottle/activities/states.py:279
+#: bluebottle/activities/states.py:283
 msgid "The activity needs changes before it can be approved. Inform the activity manager of the changes required. The activity manager will then be able to edit and resubmit the activity."
 msgstr "La actividad necesita cambios antes de poder ser aprobada. Informa al gestor de la actividad sobre los cambios requeridos. El gestor de la actividad podrá editar y volver a enviar la actividad."
 
-#: bluebottle/activities/states.py:296
+#: bluebottle/activities/states.py:301
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:49
 #: bluebottle/activities/templates/admin/activities/share_publish.html:53
 #: bluebottle/activity_links/states.py:67
@@ -1044,8 +1064,8 @@ msgstr "La actividad necesita cambios antes de poder ser aprobada. Informa al ge
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_open_activities.html:34
 #: bluebottle/activity_pub/templates/admin/activity_pub/follow/publish_succeeded_activities.html:34
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:49
-#: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
-#: bluebottle/funding/states.py:117 bluebottle/grant_management/states.py:140
+#: bluebottle/collect/states.py:81 bluebottle/deeds/states.py:86
+#: bluebottle/funding/states.py:120 bluebottle/grant_management/states.py:143
 #: bluebottle/initiatives/states.py:191
 #: bluebottle/pages/templates/admin/pages/page/translate.html:41
 #: bluebottle/time_based/states/participants.py:188
@@ -1060,25 +1080,25 @@ msgstr "La actividad necesita cambios antes de poder ser aprobada. Informa al ge
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: bluebottle/activities/states.py:298
+#: bluebottle/activities/states.py:303
 msgid "Cancel if the activity will not be executed. An activity manager will no longer be able edit the activity and it won't show up on the search page in the frontend. The activity will still be visible in the back office and appear in your reporting."
 msgstr "Cancelar si la actividad no será ejecutada. Un gestor de actividades ya no podrá editar la actividad y no aparecerá en la página de búsqueda en el front-end. La actividad seguirá siendo visible en el back office y aparecerá en sus informes."
 
-#: bluebottle/activities/states.py:305
+#: bluebottle/activities/states.py:311
 msgid "The activity ends and people no longer register. All current participants will fail too."
 msgstr "La actividad termina y las personas ya no se registran. Todos los participantes actuales también fallarán."
 
-#: bluebottle/activities/states.py:314
+#: bluebottle/activities/states.py:320
 #: bluebottle/time_based/states/slots.py:103
 #: bluebottle/time_based/states/slots.py:221
 msgid "Auto cancel"
 msgstr "Auto cancelar"
 
-#: bluebottle/activities/states.py:316
+#: bluebottle/activities/states.py:322
 msgid "Cancel the activity automatically, because the initiative is cancelled."
 msgstr "Cancelar la actividad automáticamente, porque la iniciativa está cancelada."
 
-#: bluebottle/activities/states.py:331 bluebottle/initiatives/states.py:217
+#: bluebottle/activities/states.py:337 bluebottle/initiatives/states.py:217
 #: bluebottle/time_based/states/participants.py:198
 #: bluebottle/time_based/states/participants.py:236
 #: bluebottle/time_based/states/participants.py:318
@@ -1089,61 +1109,61 @@ msgstr "Cancelar la actividad automáticamente, porque la iniciativa está cance
 msgid "Restore"
 msgstr "Restaurar"
 
-#: bluebottle/activities/states.py:333
+#: bluebottle/activities/states.py:339
 msgid "The activity status is changed to 'Needs work'. Then you can make changes to the activity and submit it again."
 msgstr "El estado de la actividad se cambia a 'Necesita trabajo'. Luego puedes hacer cambios en la actividad y enviarla de nuevo."
 
-#: bluebottle/activities/states.py:337 bluebottle/deeds/states.py:75
+#: bluebottle/activities/states.py:343 bluebottle/deeds/states.py:75
 msgid "The activity will be set to the status ‘Needs work’. Then you can make changes to the activity and submit it again."
 msgstr "La actividad se establecerá en el estado \"Necesita trabajo\". Luego puede hacer cambios en la actividad y enviarla de nuevo."
 
-#: bluebottle/activities/states.py:352 bluebottle/collect/states.py:57
-#: bluebottle/collect/states.py:64 bluebottle/deeds/states.py:60
+#: bluebottle/activities/states.py:359 bluebottle/collect/states.py:58
+#: bluebottle/collect/states.py:65 bluebottle/deeds/states.py:60
 #: bluebottle/deeds/states.py:70 bluebottle/time_based/states/slots.py:228
 #: bluebottle/time_based/states/states.py:57
 #: bluebottle/time_based/states/states.py:70
 msgid "Reopen"
 msgstr "Reabrir"
 
-#: bluebottle/activities/states.py:354
+#: bluebottle/activities/states.py:361
 msgid "Open the activity again, e.g. when a slot reopens."
 msgstr "Abre la actividad nuevamente, por ejemplo, cuando se reabra un espacio."
 
-#: bluebottle/activities/states.py:362 bluebottle/collect/states.py:34
-#: bluebottle/deeds/states.py:36 bluebottle/funding/states.py:182
-#: bluebottle/funding/states.py:356 bluebottle/time_based/states/states.py:127
+#: bluebottle/activities/states.py:369 bluebottle/collect/states.py:35
+#: bluebottle/deeds/states.py:36 bluebottle/funding/states.py:188
+#: bluebottle/funding/states.py:363 bluebottle/time_based/states/states.py:127
 msgid "Expire"
 msgstr "Caduca"
 
-#: bluebottle/activities/states.py:364 bluebottle/deeds/states.py:38
+#: bluebottle/activities/states.py:371 bluebottle/deeds/states.py:38
 #: bluebottle/time_based/states/states.py:129
 msgid "The activity will be cancelled because no one has signed up for the registration deadline."
 msgstr "La actividad se cancelará porque nadie se ha inscrito en el plazo de registro."
 
-#: bluebottle/activities/states.py:372
+#: bluebottle/activities/states.py:379
 #: bluebottle/bluebottle_dashboard/templates/admin/submit_line.html:7
 #: bluebottle/initiatives/states.py:205 bluebottle/members/models.py:343
 msgid "Delete"
 msgstr "Eliminar"
 
-#: bluebottle/activities/states.py:377
+#: bluebottle/activities/states.py:384
 msgid "Delete the activity if you do not want it to be included in the report. The activity will no longer be visible on the platform, but will still be available in the back office."
 msgstr "Elimina la actividad si no quieres que se incluya en el informe. La actividad ya no será visible en la plataforma, pero estará disponible en el back office."
 
-#: bluebottle/activities/states.py:382
+#: bluebottle/activities/states.py:389
 msgid "Delete the activity. You will not be able to retrieve it afterwards."
 msgstr "Eliminar la actividad. No podrá recuperarla después."
 
-#: bluebottle/activities/states.py:392 bluebottle/activities/states.py:410
-#: bluebottle/activities/states.py:463 bluebottle/activities/states.py:484
-#: bluebottle/collect/states.py:24 bluebottle/collect/states.py:142
+#: bluebottle/activities/states.py:399 bluebottle/activities/states.py:417
+#: bluebottle/activities/states.py:470 bluebottle/activities/states.py:491
+#: bluebottle/collect/states.py:25 bluebottle/collect/states.py:144
 #: bluebottle/deeds/states.py:25 bluebottle/deeds/states.py:47
-#: bluebottle/deeds/states.py:147 bluebottle/funding/states.py:214
-#: bluebottle/funding/states.py:302 bluebottle/funding/states.py:434
-#: bluebottle/funding/states.py:545 bluebottle/funding_stripe/states.py:45
+#: bluebottle/deeds/states.py:147 bluebottle/funding/states.py:220
+#: bluebottle/funding/states.py:309 bluebottle/funding/states.py:441
+#: bluebottle/funding/states.py:552 bluebottle/funding_stripe/states.py:45
 #: bluebottle/funding_stripe/states.py:116
-#: bluebottle/grant_management/states.py:155
-#: bluebottle/grant_management/states.py:184
+#: bluebottle/grant_management/states.py:158
+#: bluebottle/grant_management/states.py:187
 #: bluebottle/time_based/states/participants.py:121
 #: bluebottle/time_based/states/participants.py:249
 #: bluebottle/time_based/states/participants.py:451
@@ -1153,47 +1173,47 @@ msgstr "Eliminar la actividad. No podrá recuperarla después."
 msgid "Succeed"
 msgstr "Éxito"
 
-#: bluebottle/activities/states.py:398 bluebottle/activities/states.py:437
+#: bluebottle/activities/states.py:405 bluebottle/activities/states.py:444
 #: bluebottle/activity_links/states.py:19 bluebottle/contact/models.py:20
-#: bluebottle/funding/states.py:365 bluebottle/grant_management/states.py:174
+#: bluebottle/funding/states.py:372 bluebottle/grant_management/states.py:177
 msgid "New"
 msgstr "Nuevo"
 
-#: bluebottle/activities/states.py:398 bluebottle/activities/states.py:437
+#: bluebottle/activities/states.py:405 bluebottle/activities/states.py:444
 msgid "The user started a contribution"
 msgstr "El usuario comenzó una contribución"
 
-#: bluebottle/activities/states.py:400 bluebottle/activities/states.py:439
+#: bluebottle/activities/states.py:407 bluebottle/activities/states.py:446
 #: bluebottle/activity_links/states.py:31
-#: bluebottle/activity_links/states.py:59 bluebottle/funding/states.py:381
-#: bluebottle/grant_management/states.py:28
-#: bluebottle/grant_management/states.py:177
+#: bluebottle/activity_links/states.py:59 bluebottle/funding/states.py:388
+#: bluebottle/grant_management/states.py:29
+#: bluebottle/grant_management/states.py:180
 #: bluebottle/time_based/states/participants.py:48
 #: bluebottle/time_based/states/teams.py:15
 msgid "Succeeded"
 msgstr "Éxito"
 
-#: bluebottle/activities/states.py:400 bluebottle/activities/states.py:411
-#: bluebottle/activities/states.py:439
+#: bluebottle/activities/states.py:407 bluebottle/activities/states.py:418
+#: bluebottle/activities/states.py:446
 msgid "The contribution was successful."
 msgstr "La contribución fue un éxito."
 
-#: bluebottle/activities/states.py:402 bluebottle/activities/states.py:441
-#: bluebottle/funding/states.py:386 bluebottle/grant_management/states.py:179
+#: bluebottle/activities/states.py:409 bluebottle/activities/states.py:448
+#: bluebottle/funding/states.py:393 bluebottle/grant_management/states.py:182
 msgid "Failed"
 msgstr "Fallo"
 
-#: bluebottle/activities/states.py:402 bluebottle/activities/states.py:441
+#: bluebottle/activities/states.py:409 bluebottle/activities/states.py:448
 msgid "The contribution failed."
 msgstr "La contribución falló."
 
-#: bluebottle/activities/states.py:417 bluebottle/activities/states.py:449
-#: bluebottle/funding/states.py:411 bluebottle/funding/states.py:504
-#: bluebottle/funding/states.py:585 bluebottle/funding/states.py:656
+#: bluebottle/activities/states.py:424 bluebottle/activities/states.py:456
+#: bluebottle/funding/states.py:418 bluebottle/funding/states.py:511
+#: bluebottle/funding/states.py:592 bluebottle/funding/states.py:663
 #: bluebottle/funding_stripe/states.py:208
-#: bluebottle/grant_management/states.py:191
-#: bluebottle/grant_management/states.py:272
-#: bluebottle/grant_management/states.py:343
+#: bluebottle/grant_management/states.py:194
+#: bluebottle/grant_management/states.py:275
+#: bluebottle/grant_management/states.py:346
 #: bluebottle/time_based/states/participants.py:75
 #: bluebottle/time_based/states/participants.py:485
 #: bluebottle/time_based/states/registrations.py:49
@@ -1204,59 +1224,59 @@ msgstr "La contribución falló."
 msgid "Initiate"
 msgstr "Iniciar"
 
-#: bluebottle/activities/states.py:418 bluebottle/activities/states.py:450
-#: bluebottle/collect/states.py:136 bluebottle/deeds/states.py:141
+#: bluebottle/activities/states.py:425 bluebottle/activities/states.py:457
+#: bluebottle/collect/states.py:138 bluebottle/deeds/states.py:141
 msgid "The contribution was created."
 msgstr "La contribución fue un éxito."
 
-#: bluebottle/activities/states.py:424 bluebottle/activities/states.py:456
-#: bluebottle/funding/states.py:322 bluebottle/funding/states.py:442
-#: bluebottle/funding/states.py:553 bluebottle/grant_management/states.py:166
-#: bluebottle/grant_management/states.py:212
+#: bluebottle/activities/states.py:431 bluebottle/activities/states.py:463
+#: bluebottle/funding/states.py:329 bluebottle/funding/states.py:449
+#: bluebottle/funding/states.py:560 bluebottle/grant_management/states.py:169
+#: bluebottle/grant_management/states.py:215
 msgid "Fail"
 msgstr "Fallo"
 
-#: bluebottle/activities/states.py:425 bluebottle/activities/states.py:457
+#: bluebottle/activities/states.py:432 bluebottle/activities/states.py:464
 msgid "The contribution failed. It will not be visible in reports."
 msgstr "La contribución falló, no será visible en los informes."
 
-#: bluebottle/activities/states.py:431 bluebottle/activities/states.py:470
-#: bluebottle/funding/states.py:536 bluebottle/grant_management/states.py:219
+#: bluebottle/activities/states.py:438 bluebottle/activities/states.py:477
+#: bluebottle/funding/states.py:543 bluebottle/grant_management/states.py:222
 #: bluebottle/time_based/states/participants.py:460
 #: bluebottle/time_based/states/slots.py:67
 msgid "Reset"
 msgstr "Reset"
 
-#: bluebottle/activities/states.py:432
+#: bluebottle/activities/states.py:439
 msgid "Reset the contribution to new."
 msgstr "Restablecer la contribución a nueva."
 
-#: bluebottle/activities/states.py:464
+#: bluebottle/activities/states.py:471
 msgid "The contribution succeeded. It will be visible in reports."
 msgstr "La contribución falló, no será visible en los informes."
 
-#: bluebottle/activities/states.py:471
+#: bluebottle/activities/states.py:478
 msgid "The contribution is reset."
 msgstr "La contribución fue un éxito."
 
-#: bluebottle/activities/states.py:485
+#: bluebottle/activities/states.py:492
 msgid "The organizer was successful in setting up the activity."
 msgstr "El organizador tuvo éxito en la puesta en marcha de la actividad."
 
-#: bluebottle/activities/states.py:494
+#: bluebottle/activities/states.py:501
 msgid "fail"
 msgstr "fallar"
 
-#: bluebottle/activities/states.py:495
+#: bluebottle/activities/states.py:502
 msgid "The organizer failed to set up the activity."
 msgstr "El organizador no ha podido configurar la actividad."
 
-#: bluebottle/activities/states.py:504
+#: bluebottle/activities/states.py:511
 #: bluebottle/time_based/states/participants.py:462
 msgid "reset"
 msgstr "reset"
 
-#: bluebottle/activities/states.py:505
+#: bluebottle/activities/states.py:512
 msgid "The organizer is still busy setting up the activity."
 msgstr "El organizador todavía está ocupado configurando la actividad."
 
@@ -1409,7 +1429,7 @@ msgstr "\n"
 "                Asegúrese de que todos los pasos se completen primero.\n"
 "            "
 
-#: bluebottle/activities/templates/mails/messages/activity_base.html:10
+#: bluebottle/activities/templates/mails/messages/activity_base.html:11
 #: bluebottle/activities/templates/mails/messages/matching/reminder-base.html:7
 #, python-format
 msgctxt "platform-email"
@@ -1961,7 +1981,7 @@ msgstr "Las actividades vinculadas canceladas nunca se muestran."
 msgid "The link will be created."
 msgstr "Se creará el enlace."
 
-#: bluebottle/activity_links/states.py:52 bluebottle/funding/states.py:528
+#: bluebottle/activity_links/states.py:52 bluebottle/funding/states.py:535
 #: bluebottle/initiatives/states.py:116 bluebottle/time_based/admin.py:928
 #: bluebottle/time_based/states/slots.py:75
 #: bluebottle/time_based/states/slots.py:261
@@ -3040,7 +3060,7 @@ msgstr "\n"
 "    "
 
 #: bluebottle/bb_projects/migrations/0007_auto_20180319_1536.py:41
-#: bluebottle/funding/states.py:270 bluebottle/funding/states.py:391
+#: bluebottle/funding/states.py:277 bluebottle/funding/states.py:398
 msgid "Refunded"
 msgstr "Reembolsado"
 
@@ -3488,20 +3508,20 @@ msgstr "Editar este grupo"
 msgid "First save to edit this group"
 msgstr "Primero guardar para editar este grupo"
 
-#: bluebottle/cms/admin.py:209
+#: bluebottle/cms/admin.py:370
 msgid "Contact"
 msgstr "Contacto"
 
-#: bluebottle/cms/admin.py:217
+#: bluebottle/cms/admin.py:378
 #: bluebottle/common/templates/widget/widget.html:57
 msgid "Powered by"
 msgstr "Desarrollado por"
 
-#: bluebottle/cms/admin.py:225
+#: bluebottle/cms/admin.py:386
 msgid "Metadata"
 msgstr "Metadatos"
 
-#: bluebottle/cms/admin.py:233
+#: bluebottle/cms/admin.py:394
 msgid "Styling"
 msgstr "Estilo"
 
@@ -4013,8 +4033,8 @@ msgid "Add another %(verbose_name)s"
 msgstr "Añadir otro %(verbose_name)s"
 
 #: bluebottle/cms/templates/admin/edit_inline/stacked-nested.html:88
-#: bluebottle/collect/states.py:191 bluebottle/deeds/states.py:184
-#: bluebottle/grant_management/states.py:471
+#: bluebottle/collect/states.py:193 bluebottle/deeds/states.py:184
+#: bluebottle/grant_management/states.py:474
 #: bluebottle/time_based/states/participants.py:134
 #: bluebottle/time_based/states/participants.py:261
 #: bluebottle/time_based/states/participants.py:378
@@ -4171,31 +4191,31 @@ msgstr "Terminar la actividad cuando la fecha de inicio haya pasado"
 msgid "Send a reminder a day before the activity."
 msgstr "Enviar un recordatorio un día antes de la actividad."
 
-#: bluebottle/collect/states.py:36
+#: bluebottle/collect/states.py:37
 msgid "The activity will be cancelled because no one has signed up."
 msgstr "La actividad se cancelará porque nadie se ha registrado."
 
-#: bluebottle/collect/states.py:45
+#: bluebottle/collect/states.py:46
 msgid "succeed"
 msgstr "éxito"
 
-#: bluebottle/collect/states.py:48
+#: bluebottle/collect/states.py:49
 msgid "Succeed the activity."
 msgstr "Éxito de la actividad."
 
-#: bluebottle/collect/states.py:58 bluebottle/deeds/states.py:61
+#: bluebottle/collect/states.py:59 bluebottle/deeds/states.py:61
 msgid "Reopen the activity."
 msgstr "Reabrir la actividad."
 
-#: bluebottle/collect/states.py:68
+#: bluebottle/collect/states.py:69
 msgid "Manually reopen the activity. This will unset the end date if the date is in the past. People can contribute again."
 msgstr "Vuelva a abrir manualmente la actividad. Esto no establecerá la fecha de finalización si la fecha está en el pasado. La gente puede contribuir de nuevo."
 
-#: bluebottle/collect/states.py:83 bluebottle/deeds/states.py:90
+#: bluebottle/collect/states.py:84 bluebottle/deeds/states.py:90
 msgid "Cancel if the activity will not be executed. An activity manager can no longer edit the activity and it will no longer be visible on the platform. The activity will still be visible in the back office and will continue to count in the reporting."
 msgstr "Cancelar si la actividad no será ejecutada. Un gestor de actividades ya no puede editar la actividad y ya no será visible en la plataforma. La actividad seguirá siendo visible en el back office y continuará contando en los reportes."
 
-#: bluebottle/collect/states.py:96
+#: bluebottle/collect/states.py:98
 #: bluebottle/time_based/states/participants.py:37
 #: bluebottle/time_based/states/registrations.py:29
 #: bluebottle/time_based/states/teams.py:12
@@ -4203,11 +4223,11 @@ msgstr "Cancelar si la actividad no será ejecutada. Un gestor de actividades ya
 msgid "Withdrawn"
 msgstr "Retirado"
 
-#: bluebottle/collect/states.py:98
+#: bluebottle/collect/states.py:100
 msgid "This person has cancelled."
 msgstr "Esta persona ha cancelado."
 
-#: bluebottle/collect/states.py:101 bluebottle/deeds/states.py:111
+#: bluebottle/collect/states.py:103 bluebottle/deeds/states.py:111
 #: bluebottle/time_based/states/participants.py:32
 #: bluebottle/time_based/states/registrations.py:160
 #: bluebottle/time_based/states/teams.py:19
@@ -4215,29 +4235,29 @@ msgstr "Esta persona ha cancelado."
 msgid "Removed"
 msgstr "Eliminado"
 
-#: bluebottle/collect/states.py:103 bluebottle/deeds/states.py:113
+#: bluebottle/collect/states.py:105 bluebottle/deeds/states.py:113
 msgid "This person has been removed from the activity."
 msgstr "Esta persona ha sido eliminada de la actividad."
 
-#: bluebottle/collect/states.py:106 bluebottle/deeds/states.py:116
+#: bluebottle/collect/states.py:108 bluebottle/deeds/states.py:116
 #: bluebottle/time_based/admin.py:1395
 #: bluebottle/time_based/states/participants.py:22
 msgid "Participating"
 msgstr "Participación"
 
-#: bluebottle/collect/states.py:108
+#: bluebottle/collect/states.py:110
 msgid "This person has been signed up for the activity."
 msgstr "Esta persona ha sido inscrita para la actividad."
 
-#: bluebottle/collect/states.py:135 bluebottle/deeds/states.py:140
+#: bluebottle/collect/states.py:137 bluebottle/deeds/states.py:140
 msgid "initiate"
 msgstr "iniciativa"
 
-#: bluebottle/collect/states.py:153
+#: bluebottle/collect/states.py:155
 msgid "Re-Accept"
 msgstr "Volver a aceptar"
 
-#: bluebottle/collect/states.py:161
+#: bluebottle/collect/states.py:163
 #: bluebottle/time_based/states/participants.py:87
 #: bluebottle/time_based/states/participants.py:215
 #: bluebottle/time_based/states/participants.py:351
@@ -4247,7 +4267,7 @@ msgstr "Volver a aceptar"
 msgid "Accept"
 msgstr "Aceptar"
 
-#: bluebottle/collect/states.py:168 bluebottle/deeds/states.py:161
+#: bluebottle/collect/states.py:170 bluebottle/deeds/states.py:161
 #: bluebottle/time_based/states/participants.py:161
 #: bluebottle/time_based/states/participants.py:407
 #: bluebottle/time_based/states/participants.py:496
@@ -4257,21 +4277,21 @@ msgstr "Aceptar"
 msgid "Withdraw"
 msgstr "Retirar"
 
-#: bluebottle/collect/states.py:169
+#: bluebottle/collect/states.py:171
 msgid "Cancel your contribution to this activity."
 msgstr "Cancela tu contribución a esta actividad."
 
-#: bluebottle/collect/states.py:178 bluebottle/deeds/states.py:171
+#: bluebottle/collect/states.py:180 bluebottle/deeds/states.py:171
 #: bluebottle/time_based/states/participants.py:172
 #: bluebottle/time_based/states/participants.py:507
 msgid "Reapply"
 msgstr "Volver a aplicar"
 
-#: bluebottle/collect/states.py:179
+#: bluebottle/collect/states.py:181
 msgid "User re-applies after previously cancelling."
 msgstr "El usuario vuelve a aplicar después de la cancelación previa."
 
-#: bluebottle/collect/states.py:192
+#: bluebottle/collect/states.py:194
 msgid "Remove contributor from the activity."
 msgstr "Eliminar al colaborador de la actividad."
 
@@ -4656,10 +4676,6 @@ msgstr " Sí, estoy seguro"
 msgid "No, take me back"
 msgstr "No, llévame de vuelta"
 
-#: bluebottle/fsm/templates/admin/send_mail_check_box.html:17
-msgid "Unselect to continue without sending notifications"
-msgstr "Desmarcar para continuar sin enviar notificaciones"
-
 #: bluebottle/fsm/templates/admin/transition_effect.html:8
 #, python-format
 msgid "\n"
@@ -4761,7 +4777,7 @@ msgstr "donaciones"
 #: bluebottle/funding/templates/dashboard/grant_applications_ready_for_review.html:14
 #: bluebottle/funding/templates/dashboard/grantpayouts_ready_for_approval.html:14
 #: bluebottle/funding/templates/dashboard/payouts_ready_for_approval.html:14
-#: bluebottle/grant_management/forms.py:24
+#: bluebottle/grant_management/forms.py:28
 #: bluebottle/grant_management/templates/dashboard/grant_payouts_ready_for_approval.html:14
 msgid "Amount"
 msgstr "Cantidad"
@@ -4869,7 +4885,7 @@ msgstr "Establecer fecha límite"
 msgid "Set deadline according to the duration"
 msgstr "Establecer fecha límite de acuerdo a la duración"
 
-#: bluebottle/funding/effects.py:118 bluebottle/funding/forms.py:8
+#: bluebottle/funding/effects.py:118 bluebottle/funding/forms.py:13
 msgid "Refund payment"
 msgstr "Reembolso de pago"
 
@@ -4960,18 +4976,25 @@ msgstr "Donaciones forjadas"
 msgid "Paid donations"
 msgstr "Donaciones pagadas"
 
-#: bluebottle/funding/forms.py:12
-msgid "Funding needs work"
-msgstr "La financiación necesita trabajo"
+#: bluebottle/funding/forms.py:17
+msgid "Crowdfunding campaign needs work"
+msgstr "La campaña de recaudación de fondos necesita un retoque"
 
-#: bluebottle/funding/forms.py:16 bluebottle/time_based/forms.py:12
-#: bluebottle/time_based/forms.py:34
-msgid "Custom message"
-msgstr "Mensaje personalizado"
+#: bluebottle/funding/forms.py:22
+msgid "Crowdfunding campaign rejected"
+msgstr "La campaña de recaudación de fondos fue rechazada"
 
-#: bluebottle/funding/forms.py:18
-msgid "You can provide a custom message to the campaign owner explaining why the funding needs work."
-msgstr "Puedes proporcionar un mensaje personalizado al propietario de la campaña explicando por qué la financiación necesita trabajo."
+#: bluebottle/funding/forms.py:27
+msgid "Crowdfunding campaign accepted"
+msgstr "La campaña de recaudación de fondos fue aceptada"
+
+#: bluebottle/funding/forms.py:32
+msgid "Refund crowdfunding campaign"
+msgstr "Reembolso de la campaña de recaudación de fondos"
+
+#: bluebottle/funding/forms.py:37
+msgid "Cancel crowdfunding campaign"
+msgstr "Cancelar campaña de recaudación de fondos"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:31
 msgctxt "platform-email"
@@ -5115,7 +5138,7 @@ msgid "If you enter a duration, leave the deadline field empty for it to be auto
 msgstr "Si introduce una duración, deje el campo de fecha límite vacío para que se calcule automáticamente."
 
 #: bluebottle/funding/models.py:169 bluebottle/funding/models.py:479
-#: bluebottle/funding/states.py:486 bluebottle/grant_management/models.py:312
+#: bluebottle/funding/states.py:493 bluebottle/grant_management/models.py:312
 #: bluebottle/grant_management/models.py:398
 msgid "started"
 msgstr "iniciado"
@@ -5169,7 +5192,7 @@ msgstr "recaudador de fondos"
 msgid "fundraisers"
 msgstr "recaudadores de fondos"
 
-#: bluebottle/funding/models.py:478 bluebottle/funding/states.py:476
+#: bluebottle/funding/models.py:478 bluebottle/funding/states.py:483
 #: bluebottle/grant_management/models.py:311 bluebottle/utils/transitions.py:13
 msgid "approved"
 msgstr "aprobado"
@@ -5361,280 +5384,280 @@ msgstr "La cantidad no puede exceder {amount} {currency}"
 msgid "Donations cannot exceed the target amount"
 msgstr "Las donaciones no pueden exceder la cantidad objetivo."
 
-#: bluebottle/funding/states.py:14
+#: bluebottle/funding/states.py:16
 msgid "partially funded"
 msgstr "parcialmente financiado"
 
-#: bluebottle/funding/states.py:16
+#: bluebottle/funding/states.py:18
 msgid "The campaign has ended and received donations but didn't reach the target."
 msgstr "La campaña ha terminado y recibido donaciones pero no alcanzó el objetivo."
 
-#: bluebottle/funding/states.py:19
+#: bluebottle/funding/states.py:21
 msgid "refunded"
 msgstr "reembolsado"
 
-#: bluebottle/funding/states.py:21
+#: bluebottle/funding/states.py:23
 msgid "The campaign has ended and all donations have been refunded."
 msgstr "La campaña ha terminado y todas las donaciones han sido reembolsadas."
 
-#: bluebottle/funding/states.py:26
+#: bluebottle/funding/states.py:28
 msgid "The activity has ended without any donations."
 msgstr "La actividad ha terminado sin donaciones."
 
-#: bluebottle/funding/states.py:29
+#: bluebottle/funding/states.py:31
 msgid "on_hold"
 msgstr "en espera"
 
-#: bluebottle/funding/states.py:31
+#: bluebottle/funding/states.py:33
 msgid "The activity is on-hold until KYC is completed"
 msgstr "La actividad está en espera hasta que se complete el KYC"
 
-#: bluebottle/funding/states.py:82
+#: bluebottle/funding/states.py:84
 msgid "Submit the activity for approval."
 msgstr "Enviar la actividad para su aprobación."
 
-#: bluebottle/funding/states.py:102
+#: bluebottle/funding/states.py:104
 msgid "The campaign will be visible in the frontend and people can donate."
 msgstr "La campaña será visible en el frontend y la gente puede donar."
 
-#: bluebottle/funding/states.py:119
+#: bluebottle/funding/states.py:122
 msgid "Cancel if the campaign will not be executed. The activity manager will not be able to edit the campaign and it won't show up on the search page in the front end. The campaign will still be available in the back office and appear in your reporting."
 msgstr "Cancelar si la campaña no será ejecutada. El gestor de actividades no podrá editar la campaña y no aparecerá en la página de búsqueda en el front-end. La campaña seguirá estando disponible en el back office y aparecerá en sus informes."
 
-#: bluebottle/funding/states.py:134 bluebottle/grant_management/states.py:93
+#: bluebottle/funding/states.py:138 bluebottle/grant_management/states.py:94
 #: bluebottle/initiatives/states.py:29 bluebottle/initiatives/states.py:155
 msgid "Needs work"
 msgstr "Necesita trabajo"
 
-#: bluebottle/funding/states.py:136
+#: bluebottle/funding/states.py:140
 msgid "The status of the campaign will be set to 'Needs work'. The activity manager can edit and resubmit the campaign. Don't forget to inform the activity manager of the necessary adjustments."
 msgstr "El estado de la campaña se establecerá en 'Necesita trabajo'. El gestor de actividades puede editar y volver a enviar la campaña. No olvide informar al gestor de actividades de los ajustes necesarios."
 
-#: bluebottle/funding/states.py:149
+#: bluebottle/funding/states.py:154
 msgid "Put on hold"
 msgstr "Poner en espera"
 
-#: bluebottle/funding/states.py:151
+#: bluebottle/funding/states.py:156
 msgid "The campaign will not be able to receive donations"
 msgstr "La campaña no podrá recibir donaciones"
 
-#: bluebottle/funding/states.py:165
+#: bluebottle/funding/states.py:170
 msgid "Reject in case this campaign doesn't fit your program or the rules of the game. The activity manager will not be able to edit the campaign and it won't show up on the search page in the front end. The campaign will still be available in the back office and appear in your reporting."
 msgstr "Rechazar en caso de que esta campaña no se ajuste a su programa o a las reglas del juego. El gestor de actividades no podrá editar la campaña y no aparecerá en la página de búsqueda en el front-end. La campaña seguirá estando disponible en el back office y aparecerá en sus informes."
 
-#: bluebottle/funding/states.py:184
+#: bluebottle/funding/states.py:190
 msgid "The campaign didn't receive any donations before the deadline and is cancelled."
 msgstr "La campaña no recibió donaciones antes de la fecha límite y es cancelada."
 
-#: bluebottle/funding/states.py:198
+#: bluebottle/funding/states.py:204
 msgid "Extend"
 msgstr "Extender"
 
-#: bluebottle/funding/states.py:200
+#: bluebottle/funding/states.py:206
 msgid "The campaign will be extended and can receive more donations."
 msgstr "La campaña se extenderá y podrá recibir más donaciones."
 
-#: bluebottle/funding/states.py:216
+#: bluebottle/funding/states.py:222
 msgid "The campaign ends and received donations can be payed out. Triggered when the deadline passes."
 msgstr "La campaña termina y las donaciones recibidas pueden ser pagadas. Se activa cuando la fecha límite supera."
 
-#: bluebottle/funding/states.py:228
+#: bluebottle/funding/states.py:234
 msgid "Recalculate"
 msgstr "Recalcular"
 
-#: bluebottle/funding/states.py:230
+#: bluebottle/funding/states.py:236
 msgid "The amount of donations received has changed and the payouts will be recalculated."
 msgstr "La cantidad de donaciones recibidas ha cambiado y los pagos serán recalculados."
 
-#: bluebottle/funding/states.py:244
+#: bluebottle/funding/states.py:250
 msgid "Partial"
 msgstr "Parcial"
 
-#: bluebottle/funding/states.py:245
+#: bluebottle/funding/states.py:251
 msgid "The campaign ends but the target isn't reached."
 msgstr "La campaña termina pero el objetivo no se ha alcanzado."
 
-#: bluebottle/funding/states.py:255 bluebottle/funding/states.py:333
-#: bluebottle/funding/states.py:462
+#: bluebottle/funding/states.py:261 bluebottle/funding/states.py:340
+#: bluebottle/funding/states.py:469
 msgid "Refund"
 msgstr "Reembolso"
 
-#: bluebottle/funding/states.py:257
+#: bluebottle/funding/states.py:263
 msgid "The campaign will be refunded and all donations will be returned to the donors."
 msgstr "La campaña será reembolsada y todas las donaciones serán devueltas a los donantes."
 
-#: bluebottle/funding/states.py:272
+#: bluebottle/funding/states.py:279
 msgid "The donation was refunded."
 msgstr "La donación fue reembolsada."
 
-#: bluebottle/funding/states.py:276
+#: bluebottle/funding/states.py:283
 msgid "Activity refunded"
 msgstr "Actividad eliminada"
 
-#: bluebottle/funding/states.py:278
+#: bluebottle/funding/states.py:285
 msgid "The donation was refunded because the activity refunded."
 msgstr "La donación fue reembolsada porque la actividad fue reembolsada."
 
-#: bluebottle/funding/states.py:282 bluebottle/funding/states.py:370
-#: bluebottle/grant_management/states.py:175
-#: bluebottle/grant_management/states.py:435
+#: bluebottle/funding/states.py:289 bluebottle/funding/states.py:377
+#: bluebottle/grant_management/states.py:178
+#: bluebottle/grant_management/states.py:438
 #: bluebottle/time_based/states/participants.py:17
 #: bluebottle/time_based/states/registrations.py:13
 #: bluebottle/time_based/states/teams.py:9
 msgid "Pending"
 msgstr "Pendiente"
 
-#: bluebottle/funding/states.py:284
+#: bluebottle/funding/states.py:291
 msgid "The donation is pending while the payment is still not completed."
 msgstr "La donación está pendiente mientras el pago aún no se ha completado."
 
-#: bluebottle/funding/states.py:303 bluebottle/grant_management/states.py:156
+#: bluebottle/funding/states.py:310 bluebottle/grant_management/states.py:159
 msgid "The donation has been completed"
 msgstr "La donación ha sido completada"
 
-#: bluebottle/funding/states.py:310
+#: bluebottle/funding/states.py:317
 msgid "Set pending"
 msgstr "Fijar pendiente"
 
-#: bluebottle/funding/states.py:311
+#: bluebottle/funding/states.py:318
 msgid "The payment for this donation needs to be completed."
 msgstr "El pago de esta donación debe completarse."
 
-#: bluebottle/funding/states.py:323 bluebottle/grant_management/states.py:167
+#: bluebottle/funding/states.py:330 bluebottle/grant_management/states.py:170
 msgid "The donation failed."
 msgstr "La donación falló."
 
-#: bluebottle/funding/states.py:334
+#: bluebottle/funding/states.py:341
 msgid "Refund this donation."
 msgstr "Reembolsar esta donación."
 
-#: bluebottle/funding/states.py:344
+#: bluebottle/funding/states.py:351
 msgid "Activity refund"
 msgstr "Reembolso de actividad"
 
-#: bluebottle/funding/states.py:346
+#: bluebottle/funding/states.py:353
 msgid "Refund the donation, because the entire activity will be refunded."
 msgstr "Devolver la donación, porque toda la actividad será reembolsada."
 
-#: bluebottle/funding/states.py:357
+#: bluebottle/funding/states.py:364
 msgid "Expire the donation account. This happens when a donation is still 'new' after 10 days"
 msgstr "Expira la cuenta de donación. Esto sucede cuando una donación sigue siendo 'nueva' después de 10 días"
 
-#: bluebottle/funding/states.py:367
+#: bluebottle/funding/states.py:374
 msgid "Payment was started."
 msgstr "El pago fue iniciado."
 
-#: bluebottle/funding/states.py:372
+#: bluebottle/funding/states.py:379
 msgid "Payment is authorised and will probably succeed shortly."
 msgstr "El pago está autorizado y probablemente tendrá éxito en breve."
 
-#: bluebottle/funding/states.py:375
+#: bluebottle/funding/states.py:382
 msgid "Action needed"
 msgstr "Acción necesaria"
 
-#: bluebottle/funding/states.py:377
+#: bluebottle/funding/states.py:384
 msgid "Action is needed to complete the payment."
 msgstr "Es necesario actuar para completar el pago."
 
-#: bluebottle/funding/states.py:383
+#: bluebottle/funding/states.py:390
 msgid "Payment is successful."
 msgstr "Pago exitoso."
 
-#: bluebottle/funding/states.py:388 bluebottle/funding/states.py:443
+#: bluebottle/funding/states.py:395 bluebottle/funding/states.py:450
 msgid "Payment failed."
 msgstr "Pago fallido."
 
-#: bluebottle/funding/states.py:393 bluebottle/funding/states.py:463
+#: bluebottle/funding/states.py:400 bluebottle/funding/states.py:470
 msgid "Payment was refunded."
 msgstr "El pago fue reembolsado."
 
-#: bluebottle/funding/states.py:396
+#: bluebottle/funding/states.py:403
 msgid "refund requested"
 msgstr "reembolso solicitado"
 
-#: bluebottle/funding/states.py:398
+#: bluebottle/funding/states.py:405
 msgid "Platform requested the payment to be refunded. Waiting for payment provider the confirm the refund"
 msgstr "Plataforma solicitó el reembolso del pago. Esperando al proveedor del pago la confirmación del reembolso"
 
-#: bluebottle/funding/states.py:412
+#: bluebottle/funding/states.py:419
 msgid "Payment started."
 msgstr "Pago iniciado."
 
-#: bluebottle/funding/states.py:418
+#: bluebottle/funding/states.py:425
 msgid "Authorise"
 msgstr "Autorizar"
 
-#: bluebottle/funding/states.py:419
+#: bluebottle/funding/states.py:426
 msgid "Payment has been authorised."
 msgstr "El pago ha sido autorizado."
 
-#: bluebottle/funding/states.py:426
+#: bluebottle/funding/states.py:433
 msgid "Require action"
 msgstr "Requerir acción"
 
-#: bluebottle/funding/states.py:427
+#: bluebottle/funding/states.py:434
 msgid "Require action to complete the payment."
 msgstr "Requiere acción para completar el pago."
 
-#: bluebottle/funding/states.py:435
+#: bluebottle/funding/states.py:442
 msgid "Payment has been completed."
 msgstr "El pago se ha completado."
 
-#: bluebottle/funding/states.py:450 bluebottle/funding_pledge/states.py:17
+#: bluebottle/funding/states.py:457 bluebottle/funding_pledge/states.py:17
 msgid "Request refund"
 msgstr "Solicitar reembolso"
 
-#: bluebottle/funding/states.py:451
+#: bluebottle/funding/states.py:458
 msgid "Request to refund the payment."
 msgstr "Solicitud de reembolso del pago."
 
-#: bluebottle/funding/states.py:471 bluebottle/funding/states.py:616
-#: bluebottle/grant_management/states.py:303
+#: bluebottle/funding/states.py:478 bluebottle/funding/states.py:623
+#: bluebottle/grant_management/states.py:306
 msgid "new"
 msgstr "noticias"
 
-#: bluebottle/funding/states.py:473
+#: bluebottle/funding/states.py:480
 msgid "Payout has been created"
 msgstr "Se ha creado el pago"
 
-#: bluebottle/funding/states.py:478
+#: bluebottle/funding/states.py:485
 msgid "Payout has been approved and send to the payout app."
 msgstr "El pago ha sido aprobado y enviar a la aplicación de pago."
 
-#: bluebottle/funding/states.py:481 bluebottle/time_based/states/teams.py:63
+#: bluebottle/funding/states.py:488 bluebottle/time_based/states/teams.py:63
 #: bluebottle/time_based/states/teams.py:72
 msgid "scheduled"
 msgstr "programado"
 
-#: bluebottle/funding/states.py:483
+#: bluebottle/funding/states.py:490
 msgid "Payout has been received by the payout app."
 msgstr "El pago ha sido recibido por la aplicación de pago."
 
-#: bluebottle/funding/states.py:488
+#: bluebottle/funding/states.py:495
 msgid "Payout was started."
 msgstr "El pago fue iniciado."
 
-#: bluebottle/funding/states.py:493
+#: bluebottle/funding/states.py:500
 msgid "Payout was completed successfully."
 msgstr "El pago se completó con éxito."
 
-#: bluebottle/funding/states.py:496
+#: bluebottle/funding/states.py:503
 msgid "failed"
 msgstr "falló"
 
-#: bluebottle/funding/states.py:498
+#: bluebottle/funding/states.py:505
 msgid "Payout failed."
 msgstr "Pago fallido."
 
-#: bluebottle/funding/states.py:505
+#: bluebottle/funding/states.py:512
 msgid "Create the payout"
 msgstr "Crear el pago"
 
-#: bluebottle/funding/states.py:513
+#: bluebottle/funding/states.py:520
 msgid "Approve the payout so it will be scheduled for execution."
 msgstr "Aprobar el pago para que esté programado para su ejecución."
 
-#: bluebottle/funding/states.py:520
+#: bluebottle/funding/states.py:527
 #: bluebottle/time_based/states/participants.py:425
 #: bluebottle/time_based/states/slots.py:59
 #: bluebottle/time_based/states/teams.py:62
@@ -5642,143 +5665,143 @@ msgstr "Aprobar el pago para que esté programado para su ejecución."
 msgid "Schedule"
 msgstr "Programar"
 
-#: bluebottle/funding/states.py:521
+#: bluebottle/funding/states.py:528
 msgid "Schedule payout. Triggered by payout app."
 msgstr "Agendar pago. Activado por la aplicación de pago."
 
-#: bluebottle/funding/states.py:529
+#: bluebottle/funding/states.py:536
 msgid "Start payout. Triggered by payout app."
 msgstr "Comenzar pago. Activado por la aplicación de pago."
 
-#: bluebottle/funding/states.py:537
+#: bluebottle/funding/states.py:544
 msgid "Payout was rejected by the payout app. Adjust information as needed an approve the payout again."
 msgstr "El pago fue rechazado por la aplicación de pago. Ajusta la información según sea necesario para aprobar el pago de nuevo."
 
-#: bluebottle/funding/states.py:546
+#: bluebottle/funding/states.py:553
 msgid "Payout was successful. Triggered by payout app."
 msgstr "El pago fue exitoso. Activado por la aplicación de pago."
 
-#: bluebottle/funding/states.py:554
+#: bluebottle/funding/states.py:561
 msgid "Payout was not successful. Contact support to resolve the issue."
 msgstr "El pago no fue exitoso. Contacte con el soporte técnico para resolver el problema."
 
-#: bluebottle/funding/states.py:562 bluebottle/funding/states.py:626
-#: bluebottle/grant_management/states.py:249
-#: bluebottle/grant_management/states.py:313
+#: bluebottle/funding/states.py:569 bluebottle/funding/states.py:633
+#: bluebottle/grant_management/states.py:252
+#: bluebottle/grant_management/states.py:316
 #: bluebottle/segments/templates/widgets/segment-select.html:5
 msgid "verified"
 msgstr "verificado"
 
-#: bluebottle/funding/states.py:564 bluebottle/grant_management/states.py:251
+#: bluebottle/funding/states.py:571 bluebottle/grant_management/states.py:254
 msgid "Bank account is verified"
 msgstr "Cuenta bancaria verificada"
 
-#: bluebottle/funding/states.py:567 bluebottle/funding/states.py:636
-#: bluebottle/grant_management/states.py:254
-#: bluebottle/grant_management/states.py:323
+#: bluebottle/funding/states.py:574 bluebottle/funding/states.py:643
+#: bluebottle/grant_management/states.py:257
+#: bluebottle/grant_management/states.py:326
 msgid "incomplete"
 msgstr "incompleto"
 
-#: bluebottle/funding/states.py:569 bluebottle/grant_management/states.py:256
+#: bluebottle/funding/states.py:576 bluebottle/grant_management/states.py:259
 msgid "Bank account details are missing or incorrect"
 msgstr "Faltan los datos de la cuenta bancaria o son incorrectos"
 
-#: bluebottle/funding/states.py:572 bluebottle/grant_management/states.py:259
+#: bluebottle/funding/states.py:579 bluebottle/grant_management/states.py:262
 msgid "unverified"
 msgstr "sin verificar"
 
-#: bluebottle/funding/states.py:574 bluebottle/grant_management/states.py:261
+#: bluebottle/funding/states.py:581 bluebottle/grant_management/states.py:264
 msgid "Bank account still needs to be verified"
 msgstr "La cuenta bancaria todavía necesita ser verificada"
 
-#: bluebottle/funding/states.py:579 bluebottle/grant_management/states.py:266
+#: bluebottle/funding/states.py:586 bluebottle/grant_management/states.py:269
 msgid "Bank account is rejected"
 msgstr "Cuenta bancaria rechazada"
 
-#: bluebottle/funding/states.py:586 bluebottle/funding_stripe/states.py:209
-#: bluebottle/grant_management/states.py:273
+#: bluebottle/funding/states.py:593 bluebottle/funding_stripe/states.py:209
+#: bluebottle/grant_management/states.py:276
 msgid "Bank account details are entered."
 msgstr "Se han introducido los datos de la cuenta bancaria."
 
-#: bluebottle/funding/states.py:593 bluebottle/grant_management/states.py:280
+#: bluebottle/funding/states.py:600 bluebottle/grant_management/states.py:283
 msgid "Bank account is missing details"
 msgstr "La cuenta bancaria no tiene detalles"
 
-#: bluebottle/funding/states.py:601 bluebottle/funding_stripe/states.py:219
-#: bluebottle/grant_management/states.py:288
+#: bluebottle/funding/states.py:608 bluebottle/funding_stripe/states.py:219
+#: bluebottle/grant_management/states.py:291
 msgid "Reject bank account"
 msgstr "Rechazar cuenta bancaria"
 
-#: bluebottle/funding/states.py:608 bluebottle/funding/states.py:671
-#: bluebottle/funding/states.py:706 bluebottle/funding_stripe/states.py:178
+#: bluebottle/funding/states.py:615 bluebottle/funding/states.py:678
+#: bluebottle/funding/states.py:713 bluebottle/funding_stripe/states.py:178
 #: bluebottle/funding_stripe/states.py:230
-#: bluebottle/grant_management/states.py:295
-#: bluebottle/grant_management/states.py:358
+#: bluebottle/grant_management/states.py:298
+#: bluebottle/grant_management/states.py:361
 msgid "Verify"
 msgstr "Verificar"
 
-#: bluebottle/funding/states.py:609 bluebottle/funding_stripe/states.py:231
-#: bluebottle/grant_management/states.py:296
+#: bluebottle/funding/states.py:616 bluebottle/funding_stripe/states.py:231
+#: bluebottle/grant_management/states.py:299
 msgid "Verify that the bank account is complete."
 msgstr "Verifique que la cuenta bancaria está completa."
 
-#: bluebottle/funding/states.py:618 bluebottle/grant_management/states.py:305
+#: bluebottle/funding/states.py:625 bluebottle/grant_management/states.py:308
 msgid "Payout account was created."
 msgstr "Cuenta de pago creada."
 
-#: bluebottle/funding/states.py:621 bluebottle/grant_management/states.py:308
-#: bluebottle/grant_management/states.py:384
+#: bluebottle/funding/states.py:628 bluebottle/grant_management/states.py:311
+#: bluebottle/grant_management/states.py:387
 msgid "pending"
 msgstr "pendiente"
 
-#: bluebottle/funding/states.py:623 bluebottle/grant_management/states.py:310
+#: bluebottle/funding/states.py:630 bluebottle/grant_management/states.py:313
 msgid "Payout account is pending verification."
 msgstr "Cuenta de pago pendiente de verificación."
 
-#: bluebottle/funding/states.py:628 bluebottle/grant_management/states.py:315
+#: bluebottle/funding/states.py:635 bluebottle/grant_management/states.py:318
 msgid "Payout account has been verified."
 msgstr "La cuenta de pago ha sido verificada."
 
-#: bluebottle/funding/states.py:633 bluebottle/grant_management/states.py:320
+#: bluebottle/funding/states.py:640 bluebottle/grant_management/states.py:323
 msgid "Payout account was rejected."
 msgstr "La cuenta de pago fue rechazada."
 
-#: bluebottle/funding/states.py:638 bluebottle/grant_management/states.py:325
+#: bluebottle/funding/states.py:645 bluebottle/grant_management/states.py:328
 msgid "Payout account is missing information or documents."
 msgstr "La cuenta de pago no tiene información o documentos."
 
-#: bluebottle/funding/states.py:657 bluebottle/grant_management/states.py:344
+#: bluebottle/funding/states.py:664 bluebottle/grant_management/states.py:347
 msgid "Payout account has been created"
 msgstr "Se ha creado la cuenta de pago"
 
-#: bluebottle/funding/states.py:664 bluebottle/grant_management/states.py:351
+#: bluebottle/funding/states.py:671 bluebottle/grant_management/states.py:354
 msgid "Submit payout account for review."
 msgstr "Enviar cuenta de pago para revisión."
 
-#: bluebottle/funding/states.py:672 bluebottle/funding_stripe/states.py:179
-#: bluebottle/grant_management/states.py:359
+#: bluebottle/funding/states.py:679 bluebottle/funding_stripe/states.py:179
+#: bluebottle/grant_management/states.py:362
 msgid "Verify the payout account."
 msgstr "Verifique la cuenta de pago."
 
-#: bluebottle/funding/states.py:681 bluebottle/grant_management/states.py:368
+#: bluebottle/funding/states.py:688 bluebottle/grant_management/states.py:371
 msgid "Reject the payout account."
 msgstr "Rechazar la cuenta de pago."
 
-#: bluebottle/funding/states.py:688 bluebottle/funding_stripe/states.py:192
-#: bluebottle/grant_management/states.py:375
+#: bluebottle/funding/states.py:695 bluebottle/funding_stripe/states.py:192
+#: bluebottle/grant_management/states.py:378
 msgid "Set incomplete"
 msgstr "Ajuste incompleto"
 
-#: bluebottle/funding/states.py:690 bluebottle/funding_stripe/states.py:194
-#: bluebottle/grant_management/states.py:377
+#: bluebottle/funding/states.py:697 bluebottle/funding_stripe/states.py:194
+#: bluebottle/grant_management/states.py:380
 msgid "Mark the payout account as incomplete. The initiator will have to add more information."
 msgstr "Marcar la cuenta de pago como incompleta. El iniciador tendrá que agregar más información."
 
-#: bluebottle/funding/states.py:707
+#: bluebottle/funding/states.py:714
 msgid "Verify the KYC account. You will hereby confirm that you verified the users identity."
 msgstr "Verifique la cuenta de KYC. Por la presente confirmará que ha verificado la identidad de los usuarios."
 
-#: bluebottle/funding/states.py:719
+#: bluebottle/funding/states.py:726
 msgid "Reject the payout account. The uploaded ID scan will be removed with this step."
 msgstr "Rechazar la cuenta de pago. El escaneo de ID subido se eliminará con este paso."
 
@@ -6964,8 +6987,8 @@ msgid "The total amount of money that has been added to this fund over time."
 msgstr "El monto total de dinero que se ha agregado a este fondo a lo largo del tiempo."
 
 #: bluebottle/grant_management/admin.py:165
-msgid "The amount you can still use for new grants, pending payments are already deducted."
-msgstr "El monto que aún puedes usar para nuevas subvenciones, los pagos pendientes ya están deducidos."
+msgid "The amount you can still use for new grants, pending payments have not been deducted."
+msgstr "El monto que aún puedes usar para nuevas subvenciones, los pagos pendientes no han sido deducidos."
 
 #: bluebottle/grant_management/admin.py:166
 msgid "Amount for approved applications waiting to be paid out."
@@ -6992,7 +7015,7 @@ msgid "Fund balance"
 msgstr "Saldo del fondo"
 
 #: bluebottle/grant_management/admin.py:257
-#: bluebottle/grant_management/forms.py:108
+#: bluebottle/grant_management/forms.py:126
 msgid "Bank details"
 msgstr "Datos bancarios"
 
@@ -7001,7 +7024,7 @@ msgid "Bank account details not available"
 msgstr "Detalles de la cuenta bancaria no disponibles"
 
 #: bluebottle/grant_management/admin.py:275
-#: bluebottle/grant_management/forms.py:117
+#: bluebottle/grant_management/forms.py:135
 msgid "KYC details"
 msgstr "Detalles de KYC"
 
@@ -7029,7 +7052,7 @@ msgstr "Enlace de pago generado con éxito"
 msgid "Successfully checked payment status"
 msgstr "Estado de pago verificado con éxito"
 
-#: bluebottle/grant_management/admin.py:585 bluebottle/initiatives/states.py:24
+#: bluebottle/grant_management/admin.py:587 bluebottle/initiatives/states.py:24
 msgid "Submitted"
 msgstr "Enviado"
 
@@ -7067,51 +7090,59 @@ msgstr "Crear solicitudes de pago de subvenciones"
 msgid "Generate grant payment"
 msgstr "Generar pago de subvención"
 
-#: bluebottle/grant_management/forms.py:18
+#: bluebottle/grant_management/forms.py:22
 msgid "Grant Fund"
 msgstr "Fondo de subvención"
 
-#: bluebottle/grant_management/forms.py:19
+#: bluebottle/grant_management/forms.py:23
 msgid "Select the grant fund for this donation"
 msgstr "Selecciona el fondo de subvención para esta donación"
 
-#: bluebottle/grant_management/forms.py:25
+#: bluebottle/grant_management/forms.py:29
 msgid "Enter the grant amount"
 msgstr "Ingresa el monto de la subvención"
 
-#: bluebottle/grant_management/forms.py:38
+#: bluebottle/grant_management/forms.py:44
 msgid "Due diligence"
 msgstr "Debida diligencia"
 
-#: bluebottle/grant_management/forms.py:39
+#: bluebottle/grant_management/forms.py:45
 msgid "All the required checks have been completed."
 msgstr "Se han completado todas las verificaciones requeridas."
 
-#: bluebottle/grant_management/forms.py:48
+#: bluebottle/grant_management/forms.py:54
 #: bluebottle/grant_management/models.py:603
 #: bluebottle/grant_management/models.py:655
 #: bluebottle/grant_management/models.py:696
 msgid "Currency should match fund currency"
 msgstr "La moneda debe coincidir con la moneda del fondo"
 
-#: bluebottle/grant_management/forms.py:51
+#: bluebottle/grant_management/forms.py:57
 #: bluebottle/grant_management/models.py:658
 msgid "Insufficient funds"
 msgstr "Fondos insuficientes"
 
-#: bluebottle/grant_management/forms.py:60
+#: bluebottle/grant_management/forms.py:66
 msgid "Please verify that all required checks have been completed"
 msgstr "Por favor, verifica que todas las verificaciones requeridas se hayan completado"
 
-#: bluebottle/grant_management/forms.py:109
+#: bluebottle/grant_management/forms.py:88
+msgid "Grant application needs work"
+msgstr "Tu solicitud de ayuda necesita un retoque"
+
+#: bluebottle/grant_management/forms.py:93
+msgid "Grant application rejected"
+msgstr "La solicitud de ayuda fue rechazada"
+
+#: bluebottle/grant_management/forms.py:127
 msgid "Bank account information"
 msgstr "Información de la cuenta bancaria"
 
-#: bluebottle/grant_management/forms.py:118
+#: bluebottle/grant_management/forms.py:136
 msgid "Know Your Customer information"
 msgstr "Información de Conoce a tu Cliente"
 
-#: bluebottle/grant_management/forms.py:188
+#: bluebottle/grant_management/forms.py:206
 msgid "Account details not available"
 msgstr "Detalles de la cuenta no disponibles"
 
@@ -7280,137 +7311,137 @@ msgstr "Subvenciones"
 msgid "Create payment for provider with approved payouts."
 msgstr "Crear pago para el proveedor con pagos aprobados."
 
-#: bluebottle/grant_management/states.py:26
+#: bluebottle/grant_management/states.py:27
 msgid "Granted"
 msgstr "Otorgado"
 
-#: bluebottle/grant_management/states.py:26
+#: bluebottle/grant_management/states.py:27
 msgid "The grant application was approved."
 msgstr "La solicitud de subvención fue aprobada."
 
-#: bluebottle/grant_management/states.py:28
+#: bluebottle/grant_management/states.py:29
 msgid "The grant application was approved and has been paid out to the applicant."
 msgstr "La solicitud de subvención fue aprobada y se ha pagado al solicitante."
 
-#: bluebottle/grant_management/states.py:56
+#: bluebottle/grant_management/states.py:57
 msgid "Submit the grant application for approval."
 msgstr "Enviar la solicitud de subvención para aprobación."
 
-#: bluebottle/grant_management/states.py:74
+#: bluebottle/grant_management/states.py:75
 msgid "Approve this application. In the next step you can change the granted amount and the fund allocation."
 msgstr "Aprueba esta solicitud. En el siguiente paso puedes cambiar el monto concedido y la asignación del fondo."
 
-#: bluebottle/grant_management/states.py:95
+#: bluebottle/grant_management/states.py:96
 msgid "The status of the application will be set to 'Needs work'. The activity manager can edit and resubmit the application. Don't forget to inform the activity manager of the necessary adjustments."
 msgstr "El estado de la solicitud se establecerá en 'Necesita trabajo'. El gerente de actividades puede editar y volver a enviar la solicitud. No olvides informar al gerente de actividades de los ajustes necesarios."
 
-#: bluebottle/grant_management/states.py:112
+#: bluebottle/grant_management/states.py:114
 msgid "Reject in case this application doesn't fit your program or the rules of the game. The activity manager will not be able to edit the application and it won't show up on the search page in the front end. The application will still be available in the back office and appear in your reporting."
 msgstr "Rechazar en caso de que esta solicitud no se ajuste a tu programa o a las reglas del juego. El gerente de actividades no podrá editar la solicitud y no aparecerá en la página de búsqueda en el front-end. La solicitud seguirá estando disponible en el back office y aparecerá en tus informes."
 
-#: bluebottle/grant_management/states.py:126
+#: bluebottle/grant_management/states.py:129
 #: bluebottle/time_based/states/slots.py:191
 msgid "Complete"
 msgstr "Completo"
 
-#: bluebottle/grant_management/states.py:127
+#: bluebottle/grant_management/states.py:130
 msgid "The grant application has been completed and the payout has been made."
 msgstr "La solicitud de subvención se ha completado y el pago se ha realizado."
 
-#: bluebottle/grant_management/states.py:141
+#: bluebottle/grant_management/states.py:144
 msgid "The grant application has been cancelled and it will no longer be up for review."
 msgstr "La solicitud de subvención ha sido cancelada y ya no estará disponible para revisión."
 
-#: bluebottle/grant_management/states.py:174
+#: bluebottle/grant_management/states.py:177
 msgid "The payment was created"
 msgstr "El pago fue creado"
 
-#: bluebottle/grant_management/states.py:175
+#: bluebottle/grant_management/states.py:178
 msgid "The payment waiting for payment."
 msgstr "El pago está esperando."
 
-#: bluebottle/grant_management/states.py:177
+#: bluebottle/grant_management/states.py:180
 msgid "The payment was successful paid."
 msgstr "El pago fue realizado con éxito."
 
-#: bluebottle/grant_management/states.py:179
-#: bluebottle/grant_management/states.py:213
+#: bluebottle/grant_management/states.py:182
+#: bluebottle/grant_management/states.py:216
 msgid "The payment failed."
 msgstr "El pago falló."
 
-#: bluebottle/grant_management/states.py:185
+#: bluebottle/grant_management/states.py:188
 msgid "The payment was successful."
 msgstr "El pago fue exitoso."
 
-#: bluebottle/grant_management/states.py:192
+#: bluebottle/grant_management/states.py:195
 msgid "The payment was created."
 msgstr "El pago fue creado."
 
-#: bluebottle/grant_management/states.py:198
+#: bluebottle/grant_management/states.py:201
 msgid "Prepare"
 msgstr "Preparar"
 
-#: bluebottle/grant_management/states.py:199
+#: bluebottle/grant_management/states.py:202
 msgid "The payment is being prepared for processing."
 msgstr "El pago se está preparando para su procesamiento."
 
-#: bluebottle/grant_management/states.py:205
+#: bluebottle/grant_management/states.py:208
 msgid "Wait"
 msgstr "Esperar"
 
-#: bluebottle/grant_management/states.py:206
+#: bluebottle/grant_management/states.py:209
 msgid "The payment is processing."
 msgstr "El pago está siendo procesado."
 
-#: bluebottle/grant_management/states.py:220
+#: bluebottle/grant_management/states.py:223
 msgid "Reset the payment to new."
 msgstr "Restablecer el pago a nuevo."
 
-#: bluebottle/grant_management/states.py:386
+#: bluebottle/grant_management/states.py:389
 msgid "The deposit is pending"
 msgstr "El depósito está pendiente"
 
-#: bluebottle/grant_management/states.py:392
+#: bluebottle/grant_management/states.py:395
 msgid "The deposit is cancelled"
 msgstr "El depósito está cancelado"
 
-#: bluebottle/grant_management/states.py:396
+#: bluebottle/grant_management/states.py:399
 msgid "final"
 msgstr "final"
 
-#: bluebottle/grant_management/states.py:398
+#: bluebottle/grant_management/states.py:401
 msgid "The deposit is finalised"
 msgstr "El depósito está finalizado"
 
-#: bluebottle/grant_management/states.py:409
+#: bluebottle/grant_management/states.py:412
 msgid "Complete the deposit"
 msgstr "Completar el depósito"
 
-#: bluebottle/grant_management/states.py:411
+#: bluebottle/grant_management/states.py:414
 msgid "complete"
 msgstr "completo"
 
-#: bluebottle/grant_management/states.py:417
+#: bluebottle/grant_management/states.py:420
 msgid "Cancel the deposit"
 msgstr "Cancelar el depósito"
 
-#: bluebottle/grant_management/states.py:418
+#: bluebottle/grant_management/states.py:421
 msgid "cancel"
 msgstr "cancelar"
 
-#: bluebottle/grant_management/states.py:437
+#: bluebottle/grant_management/states.py:440
 msgid "The ledger item is waiting for confirmation"
 msgstr "El ítem del libro mayor está esperando confirmación"
 
-#: bluebottle/grant_management/states.py:441
+#: bluebottle/grant_management/states.py:444
 msgid "Final"
 msgstr "Final"
 
-#: bluebottle/grant_management/states.py:443
+#: bluebottle/grant_management/states.py:446
 msgid "The ledger item is finalised"
 msgstr "El ítem del libro mayor está finalizado"
 
-#: bluebottle/grant_management/states.py:447
+#: bluebottle/grant_management/states.py:450
 #: bluebottle/time_based/states/participants.py:135
 #: bluebottle/time_based/states/participants.py:149
 #: bluebottle/time_based/states/participants.py:262
@@ -7423,19 +7454,19 @@ msgstr "El ítem del libro mayor está finalizado"
 msgid "removed"
 msgstr "eliminado"
 
-#: bluebottle/grant_management/states.py:449
+#: bluebottle/grant_management/states.py:452
 msgid "The ledger item is removed from the ledget"
 msgstr "El ítem del libro mayor ha sido eliminado"
 
-#: bluebottle/grant_management/states.py:461
+#: bluebottle/grant_management/states.py:464
 msgid "Finalise the ledger item."
 msgstr "Finalizar el ítem del libro mayor."
 
-#: bluebottle/grant_management/states.py:463
+#: bluebottle/grant_management/states.py:466
 msgid "Finalise"
 msgstr "Finalizar"
 
-#: bluebottle/grant_management/states.py:469
+#: bluebottle/grant_management/states.py:472
 msgid "Remove the ledger item."
 msgstr "Eliminar el ítem del libro mayor."
 
@@ -7475,31 +7506,36 @@ msgstr "La subvención cambió, el ítem del libro mayor también se actualizar�
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"Good news, your grant application \"%(title)s\" has been approved!\n"
-"<br><br>\n"
-"<b>Here’s what happens next:</b>\n"
-"<ul>\n"
-"    <li>\n"
-"        You’ll need to enter your bank details and verify your identity and/or that of the organisation from the grant application page.\n"
-"    </li>\n"
-"    <li>\n"
-"    Once the verification process is completed successfully, the payout will be processed.\n"
-"    </li>\n"
-"</ul>\n"
-"<br>\n"
+"    <p>\n"
+"        Good news, your grant application \"%(title)s\" has been approved!\n"
+"    </p>\n"
+"    <p>\n"
+"        <b>Here’s what happens next:</b>\n"
+"    </p>\n"
+"    <ul>\n"
+"        <li>\n"
+"            You’ll need to enter your bank details and verify your identity and/or that of the organisation from the\n"
+"            grant application page.\n"
+"        </li>\n"
+"        <li>\n"
+"            Once the verification process is completed successfully, the payout will be processed.\n"
+"        </li>\n"
+"    </ul>\n"
 msgstr "\n"
-"¡Buenas noticias, tu solicitud de ayuda «%(title)s» se ha aprobado!\n"
-"<br><br>\n"
-"<b>Estos son los próximos pasos:</b>\n"
-"<ul>\n"
-"    <li>\n"
-"        Debes especificar tus datos bancarios y verificar tu identidad y/o la de la de tu organización en la página de la solicitud de ayuda.\n"
-"    </li>\n"
-"    <li>\n"
-"    Una vez que el proceso de verificación se haya completado, se procesará el pago.\n"
-"    </li>\n"
-"</ul>\n"
-"<br>\n"
+"    <p>\n"
+"        ¡Buenas noticias, tu solicitud de ayuda «%(title)s» se ha aprobado!\n"
+"    </p>\n"
+"    <p>\n"
+"        <b>Estos son los próximos pasos:</b>\n"
+"    </p>\n"
+"    <ul>\n"
+"        <li>\n"
+"            Debes especificar tus datos bancarios y verificar tu identidad y/o la de tu organización en la página de la solicitud de ayuda.\n"
+"        </li>\n"
+"        <li>\n"
+"            Una vez que el proceso de verificación se haya completado, se procesará el pago.\n"
+"        </li>\n"
+"    </ul>\n"
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_cancelled.html:6
 #, python-format
@@ -7683,7 +7719,11 @@ msgid "\n"
 "            <br>\n"
 "            %(initiator_name)s will be waiting for the payout, so please respond promptly.<br>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            La solicitud de ayuda «%(title)s» está lista para el pago.<br>\n"
+"            <br>\n"
+"            %(initiator_name)s estará esperando el pago, así que respóndele con prontitud.<br>\n"
+"        "
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/payout_ready_for_approval.html:17
 msgctxt "platform-email"
@@ -9706,7 +9746,7 @@ msgstr "\n"
 "        "
 
 #: bluebottle/notifications/templates/admin/change_confirmation.html:47
-#: bluebottle/utils/forms.py:65
+#: bluebottle/utils/forms.py:90
 msgid "Should messages be send or should we transition without notifying users?"
 msgstr "¿Deben enviarse mensajes o debemos pasar sin notificar a los usuarios?"
 
@@ -10269,7 +10309,7 @@ msgid "segment type overview"
 msgstr "resumen del tipo de segmento"
 
 #: bluebottle/settings/admin_dashboard.py:12
-msgid "Initiatives & Activity"
+msgid "Initiatives & Activities"
 msgstr "Iniciativas y actividad"
 
 #: bluebottle/settings/admin_dashboard.py:54
@@ -10320,7 +10360,7 @@ msgstr "Ajustes"
 msgid "Manage Reporting"
 msgstr "Administrar Reporte"
 
-#: bluebottle/settings/local.py:322 bluebottle/settings/testing.py:443
+#: bluebottle/settings/local.py:315 bluebottle/settings/testing.py:443
 #: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
@@ -10332,8 +10372,8 @@ msgstr "Administrar Reporte"
 #: tenants/deloitte-impact-foundation/settings.py:30
 #: tenants/deloitte-uk/settings.py:29 tenants/dll/settings.py:29
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
-#: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
-#: tenants/good-growth-in-action/settings.py:27
+#: tenants/essent/settings.py:27 tenants/ey/settings.py:26
+#: tenants/gasunie/settings.py:27 tenants/good-growth-in-action/settings.py:27
 #: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
@@ -10355,7 +10395,7 @@ msgstr "Administrar Reporte"
 msgid "English"
 msgstr "Inglés"
 
-#: bluebottle/settings/local.py:323 bluebottle/settings/testing.py:444
+#: bluebottle/settings/local.py:316 bluebottle/settings/testing.py:444
 #: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
 #: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
@@ -10390,31 +10430,31 @@ msgstr "Inglés"
 msgid "Dutch"
 msgstr "Neerlandés"
 
-#: bluebottle/settings/local.py:324 bluebottle/settings/testing.py:445
+#: bluebottle/settings/local.py:317 bluebottle/settings/testing.py:445
 #: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Francés"
 
-#: bluebottle/settings/local.py:325 bluebottle/settings/testing.py:446
+#: bluebottle/settings/local.py:318 bluebottle/settings/testing.py:446
 #: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Español"
 
-#: bluebottle/settings/local.py:326 bluebottle/settings/testing.py:447
+#: bluebottle/settings/local.py:319 bluebottle/settings/testing.py:447
 #: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Alemán"
 
-#: bluebottle/settings/local.py:327 bluebottle/settings/testing.py:448
+#: bluebottle/settings/local.py:320 bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugués"
 
-#: bluebottle/settings/local.py:328 bluebottle/settings/testing.py:449
+#: bluebottle/settings/local.py:321 bluebottle/settings/testing.py:449
 #: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Húngaro"
 
-#: bluebottle/settings/local.py:329 bluebottle/settings/testing.py:450
+#: bluebottle/settings/local.py:322 bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Búlgaro"
 
@@ -10949,21 +10989,13 @@ msgstr "Crear participantes para este miembro del equipo"
 msgid "Delete participants for this team member"
 msgstr "Eliminar participantes de este miembro del equipo"
 
-#: bluebottle/time_based/forms.py:8
+#: bluebottle/time_based/forms.py:7
 msgid "Reject registration"
 msgstr "Rechazar registro"
 
-#: bluebottle/time_based/forms.py:15
-msgid "You can provide a custom message for the applicant, this will replace the default rejection message."
-msgstr "Puedes proporcionar un mensaje personalizado para el solicitante, este reemplazará el mensaje de rechazo predeterminado."
-
-#: bluebottle/time_based/forms.py:30
+#: bluebottle/time_based/forms.py:16
 msgid "Accept registration"
 msgstr "Aceptar registro"
-
-#: bluebottle/time_based/forms.py:37
-msgid "You can provide a custom message for the applicant, this will replace the default acceptance message."
-msgstr "Puedes proporcionar un mensaje personalizado para el solicitante, este reemplazará el mensaje de aceptación predeterminado."
 
 #: bluebottle/time_based/messages.py:75
 #: bluebottle/time_based/messages/messages.py:78
@@ -13352,25 +13384,25 @@ msgstr "\n"
 "                Recibirás una notificación por correo electrónico cuando el administrador de la actividad acepte tu solicitud.\n"
 "            "
 
-#: bluebottle/time_based/templates/mails/messages/participant_base.html:6
+#: bluebottle/time_based/templates/mails/messages/participant_base.html:7
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"        <p>Hi %(recipient_name)s,</p>\n"
-"    "
+"            <p>Hi %(recipient_name)s,</p>\n"
+"        "
 msgstr "\n"
-"        <p>Hola, %(recipient_name)s:</p>\n"
-"    "
+"            <p>Hola, %(recipient_name)s:</p>\n"
+"        "
 
-#: bluebottle/time_based/templates/mails/messages/participant_base.html:18
+#: bluebottle/time_based/templates/mails/messages/participant_base.html:22
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"                <a href=\"%(review_link)s\">Revisit the external link</a> that was shown when you signed up for this activity.\n"
-"            "
+"                    <a href=\"%(review_link)s\">Revisit the external link</a> that was shown when you signed up for this activity.\n"
+"                "
 msgstr "\n"
-"                <a href=\"%(review_link)s\">Vuelve a visitar el enlace externo</a> que se mostró cuando te inscribiste en esta actividad.\n"
-"            "
+"                    <a href=\"%(review_link)s\">Vuelve a visitar el enlace externo</a> que se mostró cuando te inscribiste en esta actividad.\n"
+"                "
 
 #: bluebottle/time_based/templates/mails/messages/participant_changed.html:6
 #, python-format
@@ -14408,9 +14440,13 @@ msgctxt "platform-email"
 msgid "View reply"
 msgstr "Ver respuesta"
 
-#: bluebottle/utils/forms.py:59
+#: bluebottle/utils/forms.py:83
 msgid "Transition"
 msgstr "Transición"
+
+#: bluebottle/utils/forms.py:117
+msgid "Email message"
+msgstr "Mensaje de correo electrónico"
 
 #: bluebottle/utils/models.py:206
 msgid "publication date"

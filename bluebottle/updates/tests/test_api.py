@@ -6,16 +6,17 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
-from bluebottle.updates.models import Update
-from bluebottle.updates.serializers import UpdateSerializer
+from bluebottle.updates.models import Update, UpdateDocument
+from bluebottle.updates.serializers import UpdateSerializer, UpdateDocumentListSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
+from bluebottle.files.tests.factories import DocumentFactory
 
 
 class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message', 'images', 'parent', 'notify', 'pinned', 'video_url']
+    fields = ['activity', 'message', 'images', 'documents', 'parent', 'notify', 'pinned', 'video_url']
 
     def setUp(self):
         super().setUp()
@@ -218,7 +219,7 @@ class UpdateDetailView(APITestCase):
     serializer = UpdateSerializer
     factory = UpdateFactory
 
-    fields = ['activity', 'author', 'message', 'images', 'parent']
+    fields = ['activity', 'author', 'message', 'images', 'documents', 'parent']
 
     def setUp(self):
         super().setUp()
@@ -357,3 +358,89 @@ class ActivityUpdateListTestCase(APITestCase):
             self.perform_get(user=BlueBottleUserFactory.create())
 
         self.assertStatus(status.HTTP_200_OK)
+
+
+class UpdateDocumentListTestCase(APITestCase):
+    serializer = UpdateDocumentListSerializer
+
+    def setUp(self):
+        super().setUp()
+        self.update = UpdateFactory.create()
+        self.document = DocumentFactory.create(owner=self.user)
+        self.url = reverse('update-document-list')
+
+    def test_create(self):
+        self.perform_create(
+            user=self.user,
+            data={
+                'relationships': {
+                    'update': {
+                        'data': {
+                            'type': 'updates',
+                            'id': str(self.update.pk)
+                        }
+                    },
+                    'document': {
+                        'data': {
+                            'type': 'documents',
+                            'id': str(self.document.pk)
+                        }
+                    }
+                }
+            }
+        )
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertRelationship('update', [self.update])
+        self.assertRelationship('document', [self.document])
+        self.assertTrue(
+            UpdateDocument.objects.filter(
+                update=self.update,
+                document=self.document
+            ).exists()
+        )
+
+    def test_create_anonymous(self):
+        self.perform_create(
+            data={
+                'relationships': {
+                    'update': {
+                        'data': {
+                            'type': 'updates',
+                            'id': str(self.update.pk)
+                        }
+                    },
+                    'document': {
+                        'data': {
+                            'type': 'documents',
+                            'id': str(self.document.pk)
+                        }
+                    }
+                }
+            }
+        )
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
+class ActivityUpdateListDocumentsTestCase(APITestCase):
+    serializer = UpdateSerializer
+
+    def setUp(self):
+        super().setUp()
+        self.activity = DeedFactory.create()
+        self.update = UpdateFactory.create(activity=self.activity)
+        self.document = DocumentFactory.create()
+        UpdateDocument.objects.create(update=self.update, document=self.document)
+        self.url = reverse('activity-update-list', args=(self.activity.pk,))
+
+    def test_get_includes_documents(self):
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertIncluded('documents', self.update.documents.first())
+        document_data = [
+            item for item in self.response.json()['included']
+            if item['type'] == 'updates/documents'
+        ][0]
+        self.assertIn('link', document_data['attributes'])
+        self.assertIn('filename', document_data['meta'])

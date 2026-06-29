@@ -2,14 +2,16 @@ from rest_framework import permissions
 from rest_framework.throttling import UserRateThrottle
 
 from bluebottle.files.serializers import ORIGINAL_SIZE
-from bluebottle.files.views import ImageContentView
-from bluebottle.updates.models import Update, UpdateImage
+from bluebottle.files.views import FileContentView, ImageContentView
+from bluebottle.updates.models import Update, UpdateDocument, UpdateImage
 from bluebottle.updates.permissions import (
     IsAuthorPermission, ActivityOwnerUpdatePermission,
     UpdateRelatedActivityPermission, IsStaffMember,
     CanPostUpdatePermission
 )
-from bluebottle.updates.serializers import UpdateSerializer, UpdateImageListSerializer
+from bluebottle.updates.serializers import (
+    UpdateSerializer, UpdateImageListSerializer, UpdateDocumentListSerializer
+)
 from bluebottle.utils.permissions import TenantConditionalOpenClose, OneOf
 from bluebottle.utils.views import (
     CreateAPIView, RetrieveUpdateDestroyAPIView, JsonApiViewMixin, ListAPIView
@@ -60,6 +62,12 @@ class UpdateImageList(JsonApiViewMixin, CreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
 
+class UpdateDocumentList(JsonApiViewMixin, CreateAPIView):
+    queryset = UpdateDocument.objects.all()
+    serializer_class = UpdateDocumentListSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+
 class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     queryset = Update.objects.all()
     serializer_class = UpdateSerializer
@@ -91,3 +99,8 @@ class UpdateImageContent(ImageContentView):
 
     queryset = UpdateImage.objects
     field = 'image'
+
+
+class UpdateDocumentContent(FileContentView):
+    queryset = UpdateDocument.objects
+    field = 'document'

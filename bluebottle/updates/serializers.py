@@ -13,11 +13,11 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import ActivitySerializer, ContributorSerializer
-from bluebottle.files.models import Image
+from bluebottle.files.models import Document, Image
 from bluebottle.files.serializers import ImageSerializer, ORIGINAL_SIZE
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.translations.serializers import TranslationsSerializer
-from bluebottle.updates.models import Update, UpdateImage
+from bluebottle.updates.models import Update, UpdateDocument, UpdateImage
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -35,6 +35,10 @@ class UpdateSerializer(ModelSerializer):
         required=False
     )
     images = ResourceRelatedField(
+        many=True,
+        read_only=True
+    )
+    documents = ResourceRelatedField(
         many=True,
         read_only=True
     )
@@ -87,6 +91,7 @@ class UpdateSerializer(ModelSerializer):
             'message',
             'created',
             'images',
+            'documents',
             'author',
             'author_role',
             'activity',
@@ -115,6 +120,7 @@ class UpdateSerializer(ModelSerializer):
             'image',
             'replies',
             'images',
+            'documents',
             'contribution',
             'activity'
         ]
@@ -123,6 +129,7 @@ class UpdateSerializer(ModelSerializer):
         'author.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'author': 'bluebottle.initiatives.serializers.MemberSerializer',
         'images': 'bluebottle.updates.serializers.UpdateImageSerializer',
+        'documents': 'bluebottle.updates.serializers.UpdateDocumentSerializer',
         'replies': 'bluebottle.updates.serializers.UpdateSerializer',
         'contribution': 'bluebottle.activities.serializers.ContributorSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
@@ -153,6 +160,49 @@ class UpdateImageListSerializer(ModelSerializer):
 
     def get_filename(self, instance):
         return os.path.basename(instance.image.file.name)
+
+
+class UpdateDocumentListSerializer(ModelSerializer):
+    document = ResourceRelatedField(queryset=Document.objects.all())
+    update = ResourceRelatedField(queryset=Update.objects.all())
+
+    filename = serializers.SerializerMethodField()
+
+    class JSONAPIMeta(object):
+        resource_name = 'updates/documents'
+
+    class Meta(object):
+        model = UpdateDocument
+        fields = ('id', 'update', 'document', 'filename')
+        meta_fields = ['filename']
+
+    def get_filename(self, instance):
+        if instance.document and instance.document.file:
+            return os.path.basename(instance.document.file.name)
+        return ''
+
+
+class UpdateDocumentSerializer(ModelSerializer):
+    link = serializers.SerializerMethodField()
+    filename = serializers.SerializerMethodField()
+
+    class JSONAPIMeta(object):
+        resource_name = 'updates/documents'
+
+    class Meta(object):
+        model = UpdateDocument
+        fields = ('id', 'link', 'filename')
+        meta_fields = ['filename']
+
+    def get_link(self, obj):
+        if not obj.document:
+            return None
+        return reverse('update-document', args=(obj.pk,))
+
+    def get_filename(self, instance):
+        if instance.document and instance.document.file:
+            return os.path.basename(instance.document.file.name)
+        return ''
 
 
 class UpdateImageSerializer(ImageSerializer):

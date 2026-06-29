@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
 
 from bluebottle.activities.models import Activity
-from bluebottle.files.fields import ImageField
+from bluebottle.files.fields import ImageField, DocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.members.models import Member
 
@@ -74,7 +74,7 @@ class Update(TriggerMixin, models.Model):
 
     @property
     def has_media(self):
-        if self.images.count() or self.video_url:
+        if self.images.count() or self.documents.exists() or self.video_url:
             return True
         return False
 
@@ -111,3 +111,15 @@ class UpdateImage(models.Model):
 
     class JSONAPIMeta():
         resource_name = 'updates/images'
+
+
+class UpdateDocument(models.Model):
+    document = DocumentField(null=True)
+    update = models.ForeignKey(
+        Update,
+        related_name='documents',
+        on_delete=models.CASCADE
+    )
+
+    class JSONAPIMeta():
+        resource_name = 'updates/documents'

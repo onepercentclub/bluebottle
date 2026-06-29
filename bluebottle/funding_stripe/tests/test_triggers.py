@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.test.utils import override_settings
 
 from bluebottle.funding.messages.funding.activity_manager import (
@@ -61,6 +62,7 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
             email='staff@example.com',
             submitted_initiative_notifications=True
         )
+        self.staff_user.groups.add(Group.objects.get(name='Staff'))
         self.support_user = BlueBottleUserFactory.create(email='support@example.com')
         super().setUp()
         self.model = StripePayoutAccountFactory.create(
@@ -98,7 +100,7 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
                     self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
                     self.assertNotificationEffect(
                         LivePayoutAccountMarkedIncomplete,
-                        recipients=[self.staff_user, self.support_user]
+                        recipients=[self.staff_user]
                     )
 
     def test_set_incomplete_draft_vs_open_send_different_notifications(self):
@@ -114,7 +116,7 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
             self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
             self.assertNotificationEffect(
                 LivePayoutAccountMarkedIncomplete,
-                recipients=[self.staff_user, self.support_user]
+                recipients=[self.staff_user]
             )
 
     def test_set_incomplete_inactive_funding_statuses_send_no_notification(self):
@@ -160,7 +162,7 @@ class FundingPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerTestCase):
             self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
             self.assertNotificationEffect(
                 LivePayoutAccountMarkedIncomplete,
-                recipients=[self.staff_user, self.support_user]
+                recipients=[self.staff_user]
             )
 
 

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-29 09:27+0200\n"
-"PO-Revision-Date: 2026-06-29 07:44\n"
+"POT-Creation-Date: 2026-06-30 11:56+0200\n"
+"PO-Revision-Date: 2026-06-30 10:03\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -55,7 +55,7 @@ msgstr "Super administrateur"
 #: bluebottle/activities/admin.py:236 bluebottle/activities/models.py:197
 #: bluebottle/activities/models.py:283 bluebottle/collect/admin.py:98
 #: bluebottle/funding/models.py:352 bluebottle/time_based/admin.py:1075
-#: bluebottle/updates/models.py:23
+#: bluebottle/updates/models.py:28
 msgid "Activity"
 msgstr "Activité"
 
@@ -835,6 +835,7 @@ msgid "Team {name}"
 msgstr "Équipe {name}"
 
 #: bluebottle/activities/models.py:519 bluebottle/activities/models.py:525
+#: bluebottle/updates/models.py:14
 msgid "Everyone"
 msgstr "Tout le monde"
 
@@ -863,7 +864,7 @@ msgid "Form questions"
 msgstr "Questions de formulaire"
 
 #: bluebottle/activities/models.py:577 bluebottle/contact/models.py:33
-#: bluebottle/notifications/models.py:112 bluebottle/updates/models.py:48
+#: bluebottle/notifications/models.py:112 bluebottle/updates/models.py:53
 msgid "Message"
 msgstr "Message"
 
@@ -3491,7 +3492,7 @@ msgstr "blocs de contenu"
 #: bluebottle/clients/models.py:14 bluebottle/files/models.py:26
 #: bluebottle/funding/models.py:687 bluebottle/organizations/models.py:26
 #: bluebottle/organizations/models.py:97 bluebottle/terms/models.py:13
-#: bluebottle/updates/models.py:54
+#: bluebottle/updates/models.py:59
 msgid "created"
 msgstr "créé"
 
@@ -3621,7 +3622,7 @@ msgstr "Personnes impliquées"
 #: bluebottle/time_based/admin.py:204 bluebottle/time_based/admin.py:252
 #: bluebottle/time_based/admin.py:258 bluebottle/time_based/admin.py:264
 #: bluebottle/time_based/admin.py:534 bluebottle/time_based/admin.py:924
-#: bluebottle/time_based/admin.py:1031
+#: bluebottle/time_based/admin.py:1031 bluebottle/updates/models.py:15
 msgid "Participants"
 msgstr "Participants"
 
@@ -9925,7 +9926,8 @@ msgid "Link title"
 msgstr "Titre du lien"
 
 #: bluebottle/pages/models.py:30 bluebottle/pages/models.py:52
-#: bluebottle/pages/models.py:53
+#: bluebottle/pages/models.py:53 bluebottle/updates/admin.py:36
+#: bluebottle/updates/admin.py:56
 msgid "Document"
 msgstr "Document"
 
@@ -14295,58 +14297,62 @@ msgstr "Chaque changement s'appliquera à toutes les langues. À l'exception des
 msgid "Recent wall updates"
 msgstr "Mises à jour récentes du mur"
 
-#: bluebottle/updates/messages.py:26
+#: bluebottle/updates/messages.py:28
 #, python-brace-format
 msgctxt "platform-email"
 msgid "New update from '{title}'"
 msgstr "Nouvelle mise à jour de « {title} »"
 
-#: bluebottle/updates/messages.py:42
+#: bluebottle/updates/messages.py:49
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new message is posted on '{title}'"
 msgstr "Un nouveau message a été publié sur « {title} »"
 
-#: bluebottle/updates/messages.py:54
+#: bluebottle/updates/messages.py:61
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have a reply on '{title}'"
 msgstr "Vous avez reçu une réponse sur « {title} »"
 
-#: bluebottle/updates/models.py:16
+#: bluebottle/updates/models.py:21
 msgid "Author"
 msgstr "Auteur"
 
-#: bluebottle/updates/models.py:31
+#: bluebottle/updates/models.py:36
 msgid "Reply to"
 msgstr "Répondre à"
 
-#: bluebottle/updates/models.py:41
+#: bluebottle/updates/models.py:46
 msgid "Related contribution"
 msgstr "Contribution connexe"
 
-#: bluebottle/updates/models.py:42
+#: bluebottle/updates/models.py:47
 msgid "The contribution this update is related to, e.g. the donation"
 msgstr "La contribution à laquelle cette mise à jour est liée, par exemple le don"
 
-#: bluebottle/updates/models.py:52
+#: bluebottle/updates/models.py:57
 msgid "Pinned"
 msgstr "Épinglé"
 
-#: bluebottle/updates/models.py:56
+#: bluebottle/updates/models.py:61
 msgid "notify supporters"
 msgstr "notifier les supporters"
 
-#: bluebottle/updates/models.py:92
+#: bluebottle/updates/models.py:64
+msgid "Audience"
+msgstr "Public"
+
+#: bluebottle/updates/models.py:104
 msgid "Update"
 msgstr "Mise à jour"
 
-#: bluebottle/updates/models.py:101
+#: bluebottle/updates/models.py:113
 #, python-brace-format
 msgid "Anonymous - {time}"
 msgstr "Anonyme - {time}"
 
-#: bluebottle/updates/serializers.py:79
+#: bluebottle/updates/serializers.py:83
 msgid "At least one of 'message', 'images', or 'video_url' must be set."
 msgstr "Au moins un des champs 'message', 'images' ou 'video_url' doit être défini."
 

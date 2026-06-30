@@ -28,6 +28,7 @@ class UpdateListTestCase(APITestCase):
             'message': 'Some message',
             'notify': False,
             'pinned': False,
+            'audience': AudienceChoices.everyone,
         }
 
     def test_create(self):

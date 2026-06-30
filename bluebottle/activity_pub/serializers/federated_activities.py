@@ -2,7 +2,6 @@ import datetime
 import logging
 from io import BytesIO
 
-from django.core.exceptions import MultipleObjectsReturned
 import pytz
 import requests
 from django.contrib.gis.geos import Point

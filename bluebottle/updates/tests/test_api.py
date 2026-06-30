@@ -503,17 +503,20 @@ class UpdateDocumentListTestCase(APITestCase):
         self.perform_create(
             user=self.user,
             data={
-                'relationships': {
-                    'update': {
-                        'data': {
-                            'type': 'updates',
-                            'id': str(self.update.pk)
-                        }
-                    },
-                    'document': {
-                        'data': {
-                            'type': 'documents',
-                            'id': str(self.document.pk)
+                'data': {
+                    'type': 'updates/documents',
+                    'relationships': {
+                        'update': {
+                            'data': {
+                                'type': 'updates',
+                                'id': str(self.update.pk)
+                            }
+                        },
+                        'document': {
+                            'data': {
+                                'type': 'documents',
+                                'id': str(self.document.pk)
+                            }
                         }
                     }
                 }
@@ -533,17 +536,20 @@ class UpdateDocumentListTestCase(APITestCase):
     def test_create_anonymous(self):
         self.perform_create(
             data={
-                'relationships': {
-                    'update': {
-                        'data': {
-                            'type': 'updates',
-                            'id': str(self.update.pk)
-                        }
-                    },
-                    'document': {
-                        'data': {
-                            'type': 'documents',
-                            'id': str(self.document.pk)
+                'data': {
+                    'type': 'updates/documents',
+                    'relationships': {
+                        'update': {
+                            'data': {
+                                'type': 'updates',
+                                'id': str(self.update.pk)
+                            }
+                        },
+                        'document': {
+                            'data': {
+                                'type': 'documents',
+                                'id': str(self.document.pk)
+                            }
                         }
                     }
                 }

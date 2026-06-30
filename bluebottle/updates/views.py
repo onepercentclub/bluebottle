@@ -1,4 +1,6 @@
 from rest_framework import permissions
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
@@ -14,7 +16,7 @@ from bluebottle.updates.permissions import (
 from bluebottle.updates.serializers import (
     UpdateSerializer, UpdateImageListSerializer, UpdateDocumentListSerializer
 )
-from bluebottle.updates.utils import user_can_view_contributor_updates
+from bluebottle.updates.utils import get_effective_audience, user_can_view_contributor_updates
 from bluebottle.utils.permissions import TenantConditionalOpenClose, OneOf
 from bluebottle.utils.views import (
     CreateAPIView, RetrieveUpdateDestroyAPIView, JsonApiViewMixin, ListAPIView
@@ -79,6 +81,15 @@ class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
         ContributorAudiencePermission,
         OneOf(IsAuthorPermission, UpdateRelatedActivityPermission, IsStaffMember)
     ]
+
+    def check_object_permissions(self, request, obj):
+        if (
+            request.method in SAFE_METHODS
+            and get_effective_audience(obj) == AudienceChoices.contributors
+            and not user_can_view_contributor_updates(request.user, obj.activity)
+        ):
+            raise PermissionDenied()
+        super().check_object_permissions(request, obj)
 
 
 class ActivityUpdateList(JsonApiViewMixin, ListAPIView):

@@ -6,7 +6,7 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
-from bluebottle.updates.models import Update, UpdateDocument
+from bluebottle.updates.models import Update, UpdateDocument, AudienceChoices
 from bluebottle.updates.serializers import UpdateSerializer, UpdateDocumentListSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
 from bluebottle.files.tests.factories import DocumentFactory
@@ -16,7 +16,7 @@ class UpdateListTestCase(APITestCase):
     url = reverse('update-list')
     serializer = UpdateSerializer
     factory = UpdateFactory
-    fields = ['activity', 'message', 'images', 'documents', 'parent', 'notify', 'pinned', 'video_url']
+    fields = ['activity', 'message', 'images', 'documents', 'parent', 'notify', 'pinned', 'video_url', 'audience']
 
     def setUp(self):
         super().setUp()
@@ -139,6 +139,21 @@ class UpdateListTestCase(APITestCase):
 
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
+    def test_create_audience_contributors_owner(self):
+        self.defaults['audience'] = AudienceChoices.contributors
+
+        self.perform_create(user=self.defaults['activity'].owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertAttribute('audience', AudienceChoices.contributors)
+
+    def test_create_audience_contributors_not_owner(self):
+        self.defaults['audience'] = AudienceChoices.contributors
+
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
     def test_create_nested_reply(self):
         self.defaults['parent'].parent = UpdateFactory.create()
         self.defaults['parent'].save()
@@ -248,6 +263,32 @@ class UpdateDetailView(APITestCase):
     def test_get_anonymous(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
+
+    def test_get_contributors_only_anonymous(self):
+        self.model.audience = AudienceChoices.contributors
+        self.model.save()
+
+        self.perform_get()
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_get_contributors_only_participant(self):
+        self.model.audience = AudienceChoices.contributors
+        self.model.save()
+        participant = DeedParticipantFactory.create(activity=self.defaults['activity'])
+
+        self.perform_get(user=participant.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+    def test_get_contributors_only_pending_participant(self):
+        self.model.audience = AudienceChoices.contributors
+        self.model.save()
+        participant = DeedParticipantFactory.create(
+            activity=self.defaults['activity'],
+            status='new',
+        )
+
+        self.perform_get(user=participant.user)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_put(self):
         new_message = 'New message'
@@ -359,6 +400,94 @@ class ActivityUpdateListTestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
 
+    def test_get_hides_contributors_only_for_visitor(self):
+        public_update = self.models[0]
+        contributors_update = UpdateFactory.create(
+            activity=self.activity,
+            audience=AudienceChoices.contributors,
+        )
+
+        self.perform_get()
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.models))
+        ids = [item['id'] for item in self.response.json()['data']]
+        self.assertIn(str(public_update.pk), ids)
+        self.assertNotIn(str(contributors_update.pk), ids)
+
+    def test_get_shows_contributors_only_for_participant(self):
+        contributors_update = UpdateFactory.create(
+            activity=self.activity,
+            audience=AudienceChoices.contributors,
+        )
+        participant = DeedParticipantFactory.create(activity=self.activity)
+
+        self.perform_get(user=participant.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.models) + 1)
+        ids = [item['id'] for item in self.response.json()['data']]
+        self.assertIn(str(contributors_update.pk), ids)
+
+    def test_get_shows_contributors_only_for_owner(self):
+        contributors_update = UpdateFactory.create(
+            activity=self.activity,
+            audience=AudienceChoices.contributors,
+        )
+
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        ids = [item['id'] for item in self.response.json()['data']]
+        self.assertIn(str(contributors_update.pk), ids)
+
+    def test_get_filter_audience_everyone(self):
+        UpdateFactory.create(
+            activity=self.activity,
+            audience=AudienceChoices.contributors,
+        )
+
+        self.perform_get(
+            user=self.activity.owner,
+            query={'filter[audience]': AudienceChoices.everyone},
+        )
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(len(self.models))
+
+    def test_get_filter_audience_contributors(self):
+        contributors_update = UpdateFactory.create(
+            activity=self.activity,
+            audience=AudienceChoices.contributors,
+        )
+
+        self.perform_get(
+            user=self.activity.owner,
+            query={'filter[audience]': AudienceChoices.contributors},
+        )
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(1)
+        self.assertObjectList([contributors_update])
+
+    def test_get_audience_meta_counts(self):
+        UpdateFactory.create(
+            activity=self.activity,
+            audience=AudienceChoices.contributors,
+        )
+
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(
+            self.response.json()['meta']['audience'],
+            {
+                'all': len(self.models) + 1,
+                'everyone': len(self.models),
+                'contributors': 1,
+            }
+        )
+
 
 class UpdateDocumentListTestCase(APITestCase):
     serializer = UpdateDocumentListSerializer
@@ -444,3 +573,29 @@ class ActivityUpdateListDocumentsTestCase(APITestCase):
         ][0]
         self.assertIn('link', document_data['attributes'])
         self.assertIn('filename', document_data['meta'])
+
+
+class UpdateDocumentContentTestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.update = UpdateFactory.create()
+        self.document = DocumentFactory.create(
+            owner=self.user,
+            name='quarterly-report.docx',
+        )
+        self.update_document = UpdateDocument.objects.create(
+            update=self.update,
+            document=self.document,
+        )
+        self.url = reverse(
+            'update-document',
+            args=(self.update_document.pk,)
+        )
+
+    def test_download_uses_original_filename(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(
+            self.response['Content-Disposition'],
+            'attachment; filename="quarterly-report.docx"'
+        )

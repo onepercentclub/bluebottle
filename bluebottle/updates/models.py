@@ -10,6 +10,11 @@ from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.members.models import Member
 
 
+class AudienceChoices(models.TextChoices):
+    everyone = 'everyone', _('Everyone')
+    contributors = 'contributors', _('Participants')
+
+
 class Update(TriggerMixin, models.Model):
     author = models.ForeignKey(
         Member,
@@ -54,6 +59,13 @@ class Update(TriggerMixin, models.Model):
     created = models.DateTimeField(_("created"), default=now)
 
     notify = models.BooleanField(_('notify supporters'), default=False)
+
+    audience = models.CharField(
+        _('Audience'),
+        max_length=20,
+        choices=AudienceChoices.choices,
+        default=AudienceChoices.everyone,
+    )
 
     @property
     def update_type(self):

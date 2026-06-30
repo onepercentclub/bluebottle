@@ -1,4 +1,5 @@
 import mimetypes
+import os
 from random import randrange
 
 import magic
@@ -87,10 +88,16 @@ class PrivateFileList(FileList):
 class FileContentView(RetrieveAPIView):
     permission_classes = []
 
+    def get_download_filename(self, file_record):
+        name = file_record.name or file_record.file.name
+        return os.path.basename(name)
+
     def retrieve(self, *args, **kwargs):
         instance = self.get_object()
-        file = getattr(instance, self.field).file
-        content_type = mimetypes.guess_type(file.name)[0]
+        file_record = getattr(instance, self.field)
+        file = file_record.file
+        content_type = mimetypes.guess_type(file.name)[0] or 'application/octet-stream'
+        filename = self.get_download_filename(file_record)
 
         if settings.DEBUG:
             response = HttpResponse(content=file.read())
@@ -99,6 +106,7 @@ class FileContentView(RetrieveAPIView):
             response['X-Accel-Redirect'] = file.url
 
         response['Content-Type'] = content_type
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
         return response
 

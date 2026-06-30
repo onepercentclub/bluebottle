@@ -70,18 +70,21 @@ class UpdateAdmin(
     inlines = [UpdateImageInline, UpdateDocumentInline]
 
     raw_id_fields = ['author', 'parent', 'activity', 'contribution']
-    fields = ['activity', 'created', 'author', 'parent', 'notify', 'video_url', 'message', 'pinned',
+    fields = ['activity', 'created', 'author', 'parent', 'notify', 'audience', 'video_url', 'message', 'pinned',
               'contribution']
 
-    list_display = ['created', 'activity']
-    list_filter = (('activity__polymorphic_ctype', admin.RelatedOnlyFieldListFilter),)
+    list_display = ['created', 'activity', 'audience']
+    list_filter = (
+        'audience',
+        ('activity__polymorphic_ctype', admin.RelatedOnlyFieldListFilter),
+    )
 
 
 class UpdateInline(TabularInlinePaginated):
     model = Update
     per_page = 8
     extra = 0
-    readonly_fields = ['created', 'author', 'parent', 'message']
+    readonly_fields = ['created', 'author', 'parent', 'message', 'audience']
     fields = readonly_fields
 
     show_change_link = True

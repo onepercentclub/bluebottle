@@ -98,6 +98,7 @@ class UpdateSerializer(ModelSerializer):
             'parent',
             'replies',
             'notify',
+            'audience',
             'video_url',
             'pinned',
             'permissions',

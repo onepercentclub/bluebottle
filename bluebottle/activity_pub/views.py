@@ -44,10 +44,6 @@ def create_task(request, tenant):
         print('Post to inbox:', request.data['type'])
         from bluebottle.activity_pub.clients import client
         from pprint import pprint
-        if not is_local(request.data['object']):
-            pprint(client.fetch(request.data['object']))
-        else:
-            pprint(request.data)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

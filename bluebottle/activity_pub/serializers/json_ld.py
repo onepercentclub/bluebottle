@@ -75,7 +75,9 @@ class PersonSerializer(BaseActivityPubSerializer):
         model = Person
 
     def create(self, validated_data):
-        validated_data['source'] = self.context['request'].auth
+        if 'request' in self.context:
+            validated_data['source'] = self.context['request'].auth
+
         return super().create(validated_data)
 
 
@@ -109,7 +111,8 @@ class OrganizationSerializer(BaseActivityPubSerializer):
         model = Organization
 
     def create(self, validated_data):
-        validated_data['source'] = self.context['request'].auth
+        if 'request' in self.context:
+            validated_data['source'] = self.context['request'].auth
         return super().create(validated_data)
 
 

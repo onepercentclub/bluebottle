@@ -742,6 +742,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
+                SendLeaveEffect
             ],
         ),
         TransitionTrigger(
@@ -779,6 +780,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                SendJoinEffect
             ],
         ),
         TransitionTrigger(

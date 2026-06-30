@@ -781,6 +781,18 @@ class ContributorSerializer(FederatedObjectBaseSerializer):
             'actor', 'object', 'motivation'
         )
 
+    def get_polymorphic_serializer(self, validated_data):
+        serializer_mapping = {
+            'deed': DeedParticipantSerializer,
+            'collectactivity': CollectParticipantSerializer,
+            'deadlineactivity': DeadlineParticipantSerializer,
+            'scheduleactivity': ScheduleParticipantSerializer,
+            'periodicactivity': PeriodicParticipantSerializer,
+            'dateactivityslot': DateParticipantSerializer,
+        }
+
+        return serializer_mapping[validated_data['activity']._meta.model_name]()
+
     def create(self, validated_data):
         validated_data.pop('id')
         validated_data.pop('user')
@@ -790,39 +802,78 @@ class ContributorSerializer(FederatedObjectBaseSerializer):
         field.is_valid(raise_exception=True)
         validated_data['remote_user'] = field.save()
 
-        try:
-            contributor = Contributor.objects.get(
-                activity=validated_data['activity'],
-                remote_user=validated_data['remote_user']
-            )
-        except (Contributor.DoesNotExist, MultipleObjectsReturned):
-            contributor = None
+        polymorphic_serializer = self.get_polymorphic_serializer(validated_data)
+        return polymorphic_serializer.create(validated_data)
 
-        if isinstance(validated_data['activity'], Deed):
-            validated_data.pop('answer')
-            return DeedParticipant.objects.create(**validated_data)
-        elif isinstance(validated_data['activity'], CollectActivity):
-            return CollectContributor.objects.create(**validated_data)
-        elif isinstance(validated_data['activity'], DeadlineActivity):
-            if contributor:
-                contributor.states.reapply(save=True)
-                return contributor
-            else:
-                registration = DeadlineRegistration.objects.create(**validated_data)
-                return registration.participants.first()
-        elif isinstance(validated_data['activity'], ScheduleActivity):
-            return ScheduleRegistration.objects.create(**validated_data)
-        elif isinstance(validated_data['activity'], PeriodicActivity):
-            return PeriodicRegistration.objects.create(**validated_data)
-        elif isinstance(validated_data['activity'], DateActivitySlot):
-            slot = validated_data.pop('activity')
-            registration = DateRegistration.objects.create(
-                activity=slot.activity,
-                **validated_data
-            )
-            return DateParticipant.objects.create(
-                slot=slot,
-                activity=slot.activity,
-                registration=registration,
-                remote_user=registration.remote_user
-            )
+
+class BaseContributorSerializer(FederatedObjectBaseSerializer):
+    def get_contributor(self, validated_data):
+        return self.model.objects.filter(
+            activity=validated_data['activity'],
+            remote_user=validated_data['remote_user'],
+        ).first()
+
+    def create(self, validated_data):
+        contributor = self.get_contributor(validated_data)
+        if contributor:
+            contributor.states.reapply(save=True)
+            return contributor
+        else:
+            return self.model.objects.create(**validated_data)
+
+
+class DeedParticipantSerializer(BaseContributorSerializer):
+    model = DeedParticipant
+
+    def create(self, validated_data):
+        validated_data.pop('answer')
+        return super().create(validated_data)
+
+
+class CollectParticipantSerializer(BaseContributorSerializer):
+    model = CollectContributor
+
+    def create(self, validated_data):
+        validated_data.pop('answer')
+        return super().create(validated_data)
+
+
+class DeadlineParticipantSerializer(BaseContributorSerializer):
+    model = DeadlineRegistration
+
+    def get_contributor(self, validated_data):
+        contributor = super().get_contributor(validated_data)
+        if contributor:
+            return contributor.participants.first()
+
+
+class ScheduleParticipantSerializer(BaseContributorSerializer):
+    model = ScheduleRegistration
+
+    def get_contributor(self, validated_data):
+        contributor = super().get_contributor(validated_data)
+        if contributor:
+            return contributor.participants.first()
+
+
+class PeriodicParticipantSerializer(BaseContributorSerializer):
+    model = PeriodicRegistration
+
+
+class DateParticipantSerializer(BaseContributorSerializer):
+    model = DateParticipant
+
+    def create(self, validated_data):
+        slot = validated_data.pop('activity')
+
+        validated_data['registration'] = DateRegistration.objects.create(
+            activity=slot.activity,
+            **validated_data
+        )
+
+        validated_data['slot'] = slot
+        validated_data['activity'] = slot.activity
+
+        validated_data.pop('answer')
+
+        return super().create(validated_data)

@@ -688,13 +688,16 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_schedule(self):
         self.test_join()
 
-        self.synced_participant.slot.start = (datetime.now() + timedelta(days=10)).date()
+        self.synced_participant.slot.start = (datetime.now(get_current_timezone()) + timedelta(days=10))
         self.synced_participant.slot.duration = timedelta(hours=10)
-        self.synced_participant.slot.localtion = GeolocationFactory.create()
-        self.synced_participsnt.slot.save()
+        self.synced_participant.slot.location = GeolocationFactory.create()
+        self.synced_participant.slot.save()
 
         with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()
+            self.assertEqual(
+                self.synced_participant.status, 'scheduled'
+            )
             self.assertEqual(
                 self.synced_participant.slot.start, self.participant.slot.start
             )
@@ -742,7 +745,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 class SyncCollectActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
     participant_factory = CollectContributorFactory
-    expected_ = 'accepted'
+    expected_participant_status = 'accepted'
 
     def create(self, **kwargs):
         super().create(

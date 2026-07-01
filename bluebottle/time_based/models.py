@@ -2,7 +2,10 @@ import uuid
 from urllib.parse import urlencode
 import datetime
 
+from django.core.exceptions import ObjectDoesNotExist
 import pytz
+
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
@@ -484,6 +487,30 @@ class DateActivitySlot(ActivitySlot):
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
     remote_contributor_count = models.PositiveIntegerField(default=0)
+
+    origins = GenericRelation(
+        'activity_pub.SubEvent',
+        object_id_field="adopted_id",
+        content_type_field="adopted_content_type",
+    )
+    @property
+    def origin(self):
+        try:
+            return self.origins.get()
+        except ObjectDoesNotExist:
+            raise AttributeError('origins')
+
+    activity_pub_models = GenericRelation(
+        'activity_pub.SubEvent',
+        object_id_field="origin_id",
+        content_type_field="origin_content_type",
+    )
+    @property
+    def activity_pub_model(self):
+        try:
+            return self.activity_pub_models.get()
+        except ObjectDoesNotExist:
+            raise AttributeError('activity_pub_model')
 
     @property
     def owners(self):

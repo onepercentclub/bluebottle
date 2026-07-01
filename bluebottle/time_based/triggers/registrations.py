@@ -629,6 +629,7 @@ class DateRegistrationTriggers(RegistrationTriggers):
                         is_user
                     ]
                 ),
+                SendJoinEffect
             ]
         ),
         TransitionTrigger(

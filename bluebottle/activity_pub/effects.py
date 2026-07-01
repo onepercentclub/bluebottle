@@ -4,7 +4,7 @@ from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Accept, Follow, Start, Cancel, Delete, Finish, Leave,
-    Event, Join, Reject
+    Event, Join, Reject, Create, Update
 )
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -193,6 +193,26 @@ class SendJoinEffect(Effect):
         return str(_('Notify source platform of join'))
 
 
+class SendJoinSlotEffect(Effect):
+    """
+    Send a Join activity to the source platform when a user joins a synced deed.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+
+    def post_save(self, **kwargs):
+        Join.objects.create(
+            actor=self.instance.remote_user.origin,
+            object=adapter.sync(self.instance.slot)
+        )
+
+    @property
+    def is_valid(self):
+        return self.instance.remote_user is not None
+
+    def __str__(self):
+        return str(_('Notify source platform of join'))
+
+
 class SendLeaveEffect(Effect):
     """
     Send a Leave activity to the source platform when a user leaves an activity
@@ -216,7 +236,7 @@ def participant_is_not_local(effect):
 
 class SendAcceptEffect(Effect):
     """
-    Send a Accept activity to the consumer platform when a user is rejected.
+    Send a Accept activity to the consumer platform when a user is accepted.
     """
     template = 'admin/activity_pub/send_accept_effect.html'
     conditions = [participant_is_not_local]

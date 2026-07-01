@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 
+from django.contrib.contenttypes.fields import GenericForeignKey
 import inflection
 
 from cryptography.hazmat.primitives import serialization
@@ -514,19 +515,13 @@ class SubEvent(ActivityPubModel):
         help_text=_('Per-slot attendee limit (schema.org maximumAttendeeCapacity). Mirrors activity slot.'),
     )
 
-    origin = models.OneToOneField(
-        DateActivitySlot,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='activity_pub_model'
-    )
+    origin_content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    origin_id = models.PositiveBigIntegerField(null=True)
+    origin = GenericForeignKey("origin_content_type", "origin_id")
 
-    adopted = models.OneToOneField(
-        DateActivitySlot,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='origin'
-    )
+    adopted_content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    adopted_id = models.PositiveBigIntegerField(null=True)
+    adopted = GenericForeignKey("adopted_content_type", "adopted_id")
 
     class Meta:
         verbose_name = _("Sub event")
@@ -803,7 +798,10 @@ class Accept(Activity):
             registration = Registration.objects.get(
                 user=self.object.actor.origin, activity=self.object.object.adopted
             )
-            registration.states.accept(save=True)
+            try:
+                registration.states.accept(save=True)
+            except TransitionNotPossible:
+                pass
 
 
 class Reject(Activity):
@@ -913,12 +911,16 @@ class Join(Activity):
 
     @property
     def default_recipients(self):
+        if not self.actor.is_local:
+            yield self.actor
+
         try:
             create = self.object.create_set.get()
         except AttributeError:
             create = self.object.parent.create_set.get()
 
-        yield create.actor
+        if not create.actor.is_local:
+            yield create.actor
 
 
 class Transition(Activity):

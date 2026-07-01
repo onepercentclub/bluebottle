@@ -690,13 +690,30 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
         self.synced_participant.slot.start = (datetime.now(get_current_timezone()) + timedelta(days=10))
         self.synced_participant.slot.duration = timedelta(hours=10)
-        self.synced_participant.slot.location = GeolocationFactory.create()
+        self.synced_participant.slot.location = GeolocationFactory.create(country=self.country)
         self.synced_participant.slot.save()
 
         with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()
             self.assertEqual(
-                self.synced_participant.status, 'scheduled'
+                self.participant.status, 'scheduled'
+            )
+            self.assertEqual(
+                self.synced_participant.slot.start, self.participant.slot.start
+            )
+
+    def test_reschedule(self):
+        self.test_schedule()
+
+        self.synced_participant.slot.start = (datetime.now(get_current_timezone()) + timedelta(days=20))
+        self.synced_participant.slot.duration = timedelta(hours=10)
+        self.synced_participant.slot.location = GeolocationFactory.create(country=self.country)
+        self.synced_participant.slot.save()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assertEqual(
+                self.participant.status, 'scheduled'
             )
             self.assertEqual(
                 self.synced_participant.slot.start, self.participant.slot.start

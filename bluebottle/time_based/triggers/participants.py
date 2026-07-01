@@ -1,7 +1,7 @@
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
-from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect
+from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
@@ -916,6 +916,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
                 ),
+                SendJoinSlotEffect
             ],
         ),
         TransitionTrigger(

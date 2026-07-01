@@ -732,16 +732,24 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         )
         self.submit()
 
+    def join(self):
+        super().join()
+        self.participant = self.participant.participants.first()
+
     def test_join(self):
         super().test_join()
+        self.synced_participant.states.accept(save=True)
+        slot_url = self.model.slots.first().activity_pub_model.pub_url
 
         self.assertEqual(
             self.synced_participant.participants.get().slot, self.model.slots.first()
         )
+
         with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()
             self.assertEqual(
-                self.participant.slot.origin.pub_url, self.model.slots.first().activity_pub_model.pub_url
+                self.participant.slot.origin.pub_url,
+                slot_url
             )
 
     def test_next_slot(self):

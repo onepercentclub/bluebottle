@@ -229,10 +229,11 @@ class SendJoinSlotEffect(Effect):
     template = 'admin/activity_pub/send_join_effect.html'
 
     def post_save(self, **kwargs):
-        Join.objects.create(
-            actor=self.instance.remote_user.origin,
-            object=adapter.sync(self.instance.slot)
-        )
+        if self.instance.slot:
+            Join.objects.create(
+                actor=self.instance.remote_user.origin,
+                object=adapter.sync(self.instance.slot)
+            )
 
     @property
     def is_valid(self):

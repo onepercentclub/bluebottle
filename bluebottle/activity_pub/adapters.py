@@ -58,7 +58,6 @@ class JSONLDAdapter():
             data=FederatedObjectSerializer(model).data,
             origin=model
         )
-
         serializer.is_valid(raise_exception=True)
         return serializer.save()
 

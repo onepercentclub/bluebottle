@@ -518,6 +518,7 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
                 ),
+                SendJoinSlotEffect
             ],
         ),
         TransitionTrigger(

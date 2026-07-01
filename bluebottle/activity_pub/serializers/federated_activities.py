@@ -35,9 +35,9 @@ from bluebottle.grant_management.models import GrantApplication
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import (
     DateActivitySlot, DateParticipant, DateRegistration, DeadlineActivity, DateActivity,
-    DeadlineRegistration, PeriodicRegistration, RegisteredDateActivity,
+    DeadlineRegistration, PeriodicRegistration, PeriodicSlot, RegisteredDateActivity,
     PeriodicActivity, Registration, ScheduleActivity, ScheduleRegistration, ScheduleSlot,
-    ScheduleParticipant
+    ScheduleParticipant, PeriodicParticipant
 )
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.models import get_default_language
@@ -633,6 +633,29 @@ class ScheduleSlotsSerializer(FederatedObjectBaseSerializer):
         )
 
 
+class PeriodicSlotsSerializer(FederatedObjectBaseSerializer):
+    type = TypeField('subEvent')
+
+    start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
+    end_time = serializers.DateTimeField(source='end', read_only=True)
+
+    duration = serializers.DurationField(required=False, allow_null=True)
+
+    status = serializers.CharField(required=False, allow_null=True)
+
+    parent = RelatedParentField(source='activity')
+
+    class Meta(BaseFederatedActivitySerializer.Meta):
+        model = PeriodicSlot
+        fields = FederatedObjectBaseSerializer.Meta.fields + (
+            'start_time',
+            'end_time',
+            'duration',
+            'status',
+            'parent',
+        )
+
+
 class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
     type = TypeField('DoGoodEvent')
 
@@ -796,10 +819,11 @@ class ContributorSerializer(FederatedObjectBaseSerializer):
             'collectactivity': CollectParticipantSerializer,
             'deadlineactivity': DeadlineParticipantSerializer,
             'scheduleactivity': ScheduleRegistrationSerializer,
-            'periodicactivity': PeriodicParticipantSerializer,
+            'periodicactivity': PeriodicRegistrationSerializer,
             'dateactivityslot': DateParticipantSerializer,
             'dateactivity': DateRegistrationSerializer,
             'scheduleslot': ScheduleParticipantSerializer,
+            'periodicslot': PeriodicParticipantSerializer,
         }
 
         return serializer_mapping[validated_data['activity']._meta.model_name]()
@@ -903,6 +927,35 @@ class ScheduleParticipantSerializer(BaseContributorSerializer):
 
 
 class PeriodicParticipantSerializer(BaseContributorSerializer):
+    model = PeriodicParticipant
+
+    def get_contributor(self, validated_data):
+        return self.model.objects.filter(
+            activity=validated_data['activity'],
+            user=validated_data['user'],
+        ).first()
+
+    def update(self, contributor, validated_data):
+        contributor.slot = validated_data['slot']
+        contributor.save()
+
+    def create(self, validated_data):
+        slot = validated_data.pop('activity')
+
+        validated_data['registration'] = PeriodicRegistration.objects.get(
+            activity=slot.activity,
+            user=validated_data['user']
+        )
+
+        validated_data['slot'] = slot
+        validated_data['activity'] = slot.activity
+
+        validated_data.pop('answer')
+
+        return super().create(validated_data)
+
+
+class PeriodicRegistrationSerializer(BaseContributorSerializer):
     model = PeriodicRegistration
 
 

@@ -919,7 +919,7 @@ class Join(Activity):
 
         try:
             create = self.object.create_set.get()
-        except AttributeError:
+        except (AttributeError, Create.DoesNotExist):
             create = self.object.parent.create_set.get()
 
         if not create.actor.is_local:

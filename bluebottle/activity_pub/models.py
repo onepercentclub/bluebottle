@@ -823,33 +823,32 @@ class Reject(Activity):
 
 
 class Create(Activity):
-    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+    object = models.ForeignKey('activity_pub.ActivityPubModel', on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         created = not self.pk
         super().save(*args, **kwargs)
 
         if created and self.is_local:
-            if (
-                self.object.origin and
-                self.object.origin.status in ('open', 'granted', )
-            ):
-                Start.objects.create(object=self.object)
-            elif (
-                self.object.origin and
-                self.object.origin.status == 'succeeded'
-            ):
-                Finish.objects.create(object=self.object)
-            else:
-                Cancel.objects.create(object=self.object)
+            if self.object.origin:
+                if self.object.origin.status in ('open', 'granted', ):
+                    Start.objects.create(object=self.object)
+                elif self.object.origin.status == 'succeeded':
+                    Finish.objects.create(object=self.object)
+                elif self.object.origin.status in ('cancelled', 'rejected', 'deleted', 'expired'):
+                    Cancel.objects.create(object=self.object)
         elif not self.is_local:
             follow = Follow.objects.get(object=self.actor)
 
             if (
-                isinstance(self.object, Event) and
-                self.object.activity_type.lower() in follow.automatic_adoption_activity_types
+                (
+                    isinstance(self.object, Event) and
+                    self.object.activity_type.lower() in follow.automatic_adoption_activity_types
+                ) or
+                isinstance(self.object, SubEvent)
             ):
                 if follow.adoption_type == 'sync':
+                    __import__('ipdb').set_trace()
                     adapter.adopt(self.object)
                 elif follow.adoption_type == 'link':
                     adapter.link(self.object)
@@ -862,7 +861,10 @@ class Create(Activity):
 
     @property
     def default_recipients(self):
-        return [follower.actor for follower in self.followers]
+        if isinstance(self.object, SubEvent):
+            return [recipient.actor for recipient in self.object.parent.create_set.get().recipients.all()]
+        else:
+            return [follower.actor for follower in self.followers]
 
 
 class Update(Activity):
@@ -913,6 +915,7 @@ class Join(Activity):
     def default_recipients(self):
         if not self.actor.is_local:
             yield self.actor
+            return
 
         try:
             create = self.object.create_set.get()
@@ -924,7 +927,7 @@ class Join(Activity):
 
 
 class Transition(Activity):
-    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+    object = models.ForeignKey('activity_pub.ActivityPubModel', on_delete=models.CASCADE)
     transitioned = models.BooleanField(default=False)
 
     @property

@@ -2039,8 +2039,34 @@ class Slot(models.Model):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
+    origins = GenericRelation(
+        'activity_pub.SubEvent',
+        object_id_field="adopted_id",
+        content_type_field="adopted_content_type",
+    )
+
+    @property
+    def origin(self):
+        try:
+            return self.origins.get()
+        except ObjectDoesNotExist:
+            raise AttributeError('origin')
+
+    activity_pub_models = GenericRelation(
+        'activity_pub.SubEvent',
+        object_id_field="origin_id",
+        content_type_field="origin_content_type",
+    )
+
     class Meta:
         abstract = True
+
+    @property
+    def activity_pub_model(self):
+        try:
+            return self.activity_pub_models.get()
+        except ObjectDoesNotExist:
+            raise AttributeError('activity_pub_model')
 
     @property
     def uid(self):

@@ -1,5 +1,6 @@
 from django.utils.timezone import now
 
+from bluebottle.activity_pub.effects import SyncEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register,
@@ -121,6 +122,10 @@ class ScheduleSlotTriggers(TriggerManager):
                     ScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
                 ),
             ],
+        ),
+        ModelChangedTrigger(
+            ["start", "duration", "location_id", "is_online"],
+            effects=[SyncEffect]
         ),
         ModelChangedTrigger(
             "start",
@@ -715,6 +720,7 @@ class DateActivitySlotTriggers(TriggerManager):
                         has_multiple_slots
                     ]
                 ),
+                SyncEffect
             ]
         ),
         ModelChangedTrigger(

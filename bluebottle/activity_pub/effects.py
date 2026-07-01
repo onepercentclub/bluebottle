@@ -48,16 +48,21 @@ class SyncEffect(Effect):
     template = 'admin/activity_pub/create_effect.html'
 
     def post_save(self, **kwargs):
-        if self.instance.origin:
+        if not hasattr(self.instance, 'activity_pub_model'):
             activity = Create
         else:
             activity = Update
 
         adapter.sync(self.instance)
+
         activity.objects.create(
             actor=get_platform_actor(),
-            object=activity
+            object=self.instance.activity_pub_model
         )
+
+    @property
+    def is_valid(self):
+        return hasattr(self.instance.activity, 'activity_pub_model')
 
     def __str__(self):
         return str(_('Publish activity to followers'))

@@ -39,6 +39,30 @@ class CreateEffect(Effect):
         return str(_('Publish activity to followers'))
 
 
+class SyncEffect(Effect):
+    """
+    Publish the activity to the followers of the actor through GoodUp Connect
+    """
+
+    display = True
+    template = 'admin/activity_pub/create_effect.html'
+
+    def post_save(self, **kwargs):
+        if self.instance.origin:
+            activity = Create
+        else:
+            activity = Update
+
+        adapter.sync(self.instance)
+        activity.objects.create(
+            actor=get_platform_actor(),
+            object=activity
+        )
+
+    def __str__(self):
+        return str(_('Publish activity to followers'))
+
+
 class PublishAdoptionEffect(Effect):
     """
     Announce that the activity has been adopted through GoodUp Connect.

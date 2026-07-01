@@ -493,6 +493,7 @@ class DateActivitySlot(ActivitySlot):
         object_id_field="adopted_id",
         content_type_field="adopted_content_type",
     )
+
     @property
     def origin(self):
         try:
@@ -505,6 +506,7 @@ class DateActivitySlot(ActivitySlot):
         object_id_field="origin_id",
         content_type_field="origin_content_type",
     )
+
     @property
     def activity_pub_model(self):
         try:

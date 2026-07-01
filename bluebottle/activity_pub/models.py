@@ -13,7 +13,7 @@ from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.activities.models import Activity as DoGoodActivity, RemoteMember
-from bluebottle.time_based.models import DateActivitySlot, Registration
+from bluebottle.time_based.models import Registration
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member

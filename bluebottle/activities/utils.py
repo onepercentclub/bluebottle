@@ -15,7 +15,6 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodResourceRelatedField,
-    HyperlinkedRelatedField,
     PolymorphicResourceRelatedField,
 )
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
@@ -25,6 +24,7 @@ from bluebottle.activities.models import (
     ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer,
     ConfirmationAnswer
 )
+from bluebottle.bluebottle_drf2.serializers import RelativeHyperlinkedRelatedField
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -242,7 +242,7 @@ class BaseActivitySerializer(ModelSerializer):
         read_only=True
     )
 
-    updates = HyperlinkedRelatedField(
+    updates = RelativeHyperlinkedRelatedField(
         many=True,
         read_only=True,
         related_link_view_name='activity-update-list',

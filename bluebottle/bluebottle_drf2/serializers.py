@@ -1,5 +1,7 @@
 from random import randrange
 
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.urls import NoReverseMatch
 from future import standard_library
 from rest_framework_json_api.relations import HyperlinkedRelatedField
 
@@ -12,7 +14,6 @@ from urllib.error import URLError
 import urllib.parse
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.template import defaultfilters
 
 from micawber.contrib.mcdjango import providers
@@ -272,3 +273,18 @@ class CustomHyperlinkRelatedSerializer(HyperlinkedRelatedField):
         return {
             'related': self.link
         }
+
+
+class RelativeHyperlinkedRelatedField(HyperlinkedRelatedField):
+    def get_url(self, name, view_name, kwargs, request):
+        if not view_name:
+            return None
+
+        try:
+            return self.reverse(view_name, kwargs=kwargs)
+        except NoReverseMatch:
+            msg = (
+                "Could not resolve URL for hyperlinked relationship using "
+                'view name "%s".'
+            )
+            raise ImproperlyConfigured(msg % view_name)

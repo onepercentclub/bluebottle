@@ -17,7 +17,8 @@ from bluebottle.files.models import Document, Image
 from bluebottle.files.serializers import ImageSerializer, ORIGINAL_SIZE
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.translations.serializers import TranslationsSerializer
-from bluebottle.updates.models import Update, UpdateDocument, UpdateImage
+from bluebottle.updates.models import Update, UpdateDocument, UpdateImage, AudienceChoices
+from bluebottle.updates.utils import user_can_view_contributor_updates
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -135,6 +136,24 @@ class UpdateSerializer(ModelSerializer):
         'contribution': 'bluebottle.activities.serializers.ContributorSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
+
+    def get_root_meta(self, resource, many):
+        meta = {}
+        if many:
+            activity = self.context['view'].get_activity()
+            updates = activity.updates
+            if not user_can_view_contributor_updates(self.context['request'].user, activity):
+                updates = updates.exclude(audience=AudienceChoices.contributors)
+            meta['audience'] = {
+                'all': updates.count(),
+                'everyone': updates.filter(
+                    audience=AudienceChoices.everyone
+                ).count(),
+                'contributors': updates.filter(
+                    audience=AudienceChoices.contributors
+                ).count(),
+            }
+        return meta
 
 
 IMAGE_SIZES = {

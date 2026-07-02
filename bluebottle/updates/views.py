@@ -1,7 +1,6 @@
 from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import SAFE_METHODS
-from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from bluebottle.activities.models import Activity
@@ -95,52 +94,26 @@ class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
 class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose]
     queryset = Update.objects.order_by('-pinned', '-created')
+    serializer_class = UpdateSerializer
 
     def get_activity(self):
         if not hasattr(self, '_activity'):
             self._activity = Activity.objects.get(pk=self.kwargs['activity_pk'])
         return self._activity
 
-    def get_visible_queryset(self):
-        queryset = self.queryset.filter(
-            activity_id=self.kwargs['activity_pk'],
-            parent__isnull=True,
-        )
-        if not user_can_view_contributor_updates(self.request.user, self.get_activity()):
-            queryset = queryset.filter(audience=AudienceChoices.everyone)
-        return queryset
-
     def get_queryset(self):
-        queryset = self.get_visible_queryset()
+        activity = self.get_activity()
+        user = self.request.user
+        queryset = super().get_queryset().filter(activity=activity)
         audience_filter = self.request.query_params.get('filter[audience]')
-        if audience_filter in (AudienceChoices.everyone, AudienceChoices.contributors):
-            queryset = queryset.filter(audience=audience_filter)
+        if user in activity.contributors.all() or user in activity.owners:
+            if audience_filter in (AudienceChoices.everyone, AudienceChoices.contributors):
+                queryset = queryset.filter(audience=audience_filter)
+        else:
+            queryset = queryset.filter(audience=AudienceChoices.everyone)
+
         return queryset
 
-    def list(self, request, *args, **kwargs):
-        visible_queryset = self.get_visible_queryset()
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            response = self.get_paginated_response(serializer.data)
-        else:
-            serializer = self.get_serializer(queryset, many=True)
-            response = Response(serializer.data)
-
-        if user_can_view_contributor_updates(request.user, self.get_activity()):
-            response.data['meta']['audience'] = {
-                'all': visible_queryset.count(),
-                'everyone': visible_queryset.filter(
-                    audience=AudienceChoices.everyone
-                ).count(),
-                'contributors': visible_queryset.filter(
-                    audience=AudienceChoices.contributors
-                ).count(),
-            }
-        return response
-
-    serializer_class = UpdateSerializer
 
 
 class UpdateImageContent(ImageContentView):

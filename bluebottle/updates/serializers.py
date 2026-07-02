@@ -18,7 +18,6 @@ from bluebottle.files.serializers import ImageSerializer, ORIGINAL_SIZE
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.updates.models import Update, UpdateDocument, UpdateImage, AudienceChoices
-from bluebottle.updates.utils import user_can_view_contributor_updates
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -139,19 +138,38 @@ class UpdateSerializer(ModelSerializer):
 
     def get_root_meta(self, resource, many):
         meta = {}
-        if many:
-            activity = self.context['view'].get_activity()
-            updates = activity.updates
-            if not user_can_view_contributor_updates(self.context['request'].user, activity):
-                updates = updates.exclude(audience=AudienceChoices.contributors)
-            meta['audience'] = {
-                'all': updates.count(),
-                'everyone': updates.filter(
-                    audience=AudienceChoices.everyone
-                ).count(),
-                'contributors': updates.filter(
-                    audience=AudienceChoices.contributors
-                ).count(),
+        view = self.context.get('view')
+        if many and hasattr(view, 'get_visible_queryset'):
+            visible = view.get_visible_queryset()
+            audience_filter = self.context['request'].query_params.get(
+                'filter[audience]'
+            )
+
+            def audience_facet(facet_id):
+                if facet_id == 'all':
+                    count = visible.count()
+                else:
+                    count = visible.filter(audience=facet_id).count()
+                active = (
+                    facet_id == audience_filter
+                    if audience_filter in (
+                        AudienceChoices.everyone,
+                        AudienceChoices.contributors,
+                    )
+                    else facet_id == 'all'
+                )
+                return {
+                    'id': facet_id,
+                    'count': count,
+                    'active': active,
+                }
+
+            meta['facets'] = {
+                'audience': [
+                    audience_facet('all'),
+                    audience_facet(AudienceChoices.everyone),
+                    audience_facet(AudienceChoices.contributors),
+                ],
             }
         return meta
 

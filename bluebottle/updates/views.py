@@ -101,17 +101,22 @@ class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
             self._activity = Activity.objects.get(pk=self.kwargs['activity_pk'])
         return self._activity
 
-    def get_queryset(self):
-        activity = self.get_activity()
-        user = self.request.user
-        queryset = super().get_queryset().filter(activity=activity)
-        audience_filter = self.request.query_params.get('filter[audience]')
-        if user in activity.contributors.all() or user in activity.owners:
-            if audience_filter in (AudienceChoices.everyone, AudienceChoices.contributors):
-                queryset = queryset.filter(audience=audience_filter)
-        else:
+    def get_visible_queryset(self):
+        queryset = super().get_queryset().filter(
+            activity=self.get_activity(),
+            parent__isnull=True,
+        )
+        if not user_can_view_contributor_updates(
+            self.request.user, self.get_activity()
+        ):
             queryset = queryset.filter(audience=AudienceChoices.everyone)
+        return queryset
 
+    def get_queryset(self):
+        queryset = self.get_visible_queryset()
+        audience_filter = self.request.query_params.get('filter[audience]')
+        if audience_filter in (AudienceChoices.everyone, AudienceChoices.contributors):
+            queryset = queryset.filter(audience=audience_filter)
         return queryset
 
 

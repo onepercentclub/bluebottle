@@ -471,7 +471,7 @@ class ActivityUpdateListTestCase(APITestCase):
         self.assertTotal(1)
         self.assertObjectList([contributors_update])
 
-    def test_get_audience_meta_counts(self):
+    def test_get_audience_facets(self):
         UpdateFactory.create(
             activity=self.activity,
             audience=AudienceChoices.contributors,
@@ -481,12 +481,50 @@ class ActivityUpdateListTestCase(APITestCase):
 
         self.assertStatus(status.HTTP_200_OK)
         self.assertEqual(
-            self.response.json()['meta']['audience'],
-            {
-                'all': len(self.models) + 1,
-                'everyone': len(self.models),
-                'contributors': 1,
-            }
+            self.response.json()['meta']['facets']['audience'],
+            [
+                {'id': 'all', 'count': len(self.models) + 1, 'active': True},
+                {
+                    'id': AudienceChoices.everyone,
+                    'count': len(self.models),
+                    'active': False,
+                },
+                {
+                    'id': AudienceChoices.contributors,
+                    'count': 1,
+                    'active': False,
+                },
+            ]
+        )
+
+    def test_get_audience_facets_active_filter(self):
+        UpdateFactory.create(
+            activity=self.activity,
+            audience=AudienceChoices.contributors,
+        )
+
+        self.perform_get(
+            user=self.activity.owner,
+            query={'filter[audience]': AudienceChoices.contributors},
+        )
+
+        self.assertStatus(status.HTTP_200_OK)
+        facets = self.response.json()['meta']['facets']['audience']
+        self.assertEqual(
+            facets,
+            [
+                {'id': 'all', 'count': len(self.models) + 1, 'active': False},
+                {
+                    'id': AudienceChoices.everyone,
+                    'count': len(self.models),
+                    'active': False,
+                },
+                {
+                    'id': AudienceChoices.contributors,
+                    'count': 1,
+                    'active': True,
+                },
+            ]
         )
 
 

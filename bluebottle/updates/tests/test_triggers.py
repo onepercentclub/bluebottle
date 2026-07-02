@@ -1,6 +1,7 @@
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.updates.messages import OwnerNotification, FollowersNotification, ParentNotification
+from bluebottle.updates.models import AudienceChoices
 from bluebottle.updates.tests.factories import UpdateFactory
 
 
@@ -28,6 +29,26 @@ class DeedTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertNotificationEffect(
                 FollowersNotification, [participant.user for participant in participants]
+            )
+            self.assertNoNotificationEffect(OwnerNotification)
+
+    def test_create_notify_contributors_only(self):
+        active_participant = DeedParticipantFactory.create(
+            activity=self.defaults['activity'],
+            status='accepted',
+        )
+        DeedParticipantFactory.create(
+            activity=self.defaults['activity'],
+            status='new',
+        )
+        self.defaults['author'] = self.defaults['activity'].owner
+        self.defaults['notify'] = True
+        self.defaults['audience'] = AudienceChoices.contributors
+        self.create()
+
+        with self.execute():
+            self.assertNotificationEffect(
+                FollowersNotification, [active_participant.user]
             )
             self.assertNoNotificationEffect(OwnerNotification)
 

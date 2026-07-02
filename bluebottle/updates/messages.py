@@ -1,6 +1,8 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.updates.models import AudienceChoices
+from bluebottle.updates.utils import get_active_contributor_users
 
 
 class UpdateMessage(TransitionMessage):
@@ -29,10 +31,15 @@ class FollowersNotification(UpdateMessage):
     def get_recipients(self):
         """followers of the activity"""
         activity = self.obj.activity
+        exclude = (self.obj.author, self.obj.activity.owner)
+
+        if self.obj.audience == AudienceChoices.contributors:
+            return get_active_contributor_users(activity, exclude=exclude)
+
         follows = activity.followers.filter(
             user__campaign_notifications=True
         ).exclude(
-            user__in=(self.obj.author, self.obj.activity.owner)
+            user__in=exclude
         )
 
         return list({follow.user for follow in follows})

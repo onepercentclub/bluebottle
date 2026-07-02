@@ -1,15 +1,21 @@
 from rest_framework import permissions
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.throttling import UserRateThrottle
 
+from bluebottle.activities.models import Activity
 from bluebottle.files.serializers import ORIGINAL_SIZE
-from bluebottle.files.views import ImageContentView
-from bluebottle.updates.models import Update, UpdateImage
+from bluebottle.files.views import FileContentView, ImageContentView
+from bluebottle.updates.models import Update, UpdateDocument, UpdateImage, AudienceChoices
 from bluebottle.updates.permissions import (
     IsAuthorPermission, ActivityOwnerUpdatePermission,
     UpdateRelatedActivityPermission, IsStaffMember,
-    CanPostUpdatePermission
+    CanPostUpdatePermission, ContributorAudiencePermission,
 )
-from bluebottle.updates.serializers import UpdateSerializer, UpdateImageListSerializer
+from bluebottle.updates.serializers import (
+    UpdateSerializer, UpdateImageListSerializer, UpdateDocumentListSerializer
+)
+from bluebottle.updates.utils import get_effective_audience, user_can_view_contributor_updates
 from bluebottle.utils.permissions import TenantConditionalOpenClose, OneOf
 from bluebottle.utils.views import (
     CreateAPIView, RetrieveUpdateDestroyAPIView, JsonApiViewMixin, ListAPIView
@@ -60,25 +66,58 @@ class UpdateImageList(JsonApiViewMixin, CreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
 
 
+class UpdateDocumentList(JsonApiViewMixin, CreateAPIView):
+    queryset = UpdateDocument.objects.all()
+    serializer_class = UpdateDocumentListSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+
 class UpdateDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     queryset = Update.objects.all()
     serializer_class = UpdateSerializer
 
     permission_classes = [
+        ContributorAudiencePermission,
         OneOf(IsAuthorPermission, UpdateRelatedActivityPermission, IsStaffMember)
     ]
+
+    def check_object_permissions(self, request, obj):
+        if (
+            request.method in SAFE_METHODS
+            and get_effective_audience(obj) == AudienceChoices.contributors
+            and not user_can_view_contributor_updates(request.user, obj.activity)
+        ):
+            raise PermissionDenied()
+        super().check_object_permissions(request, obj)
 
 
 class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
     permission_classes = [TenantConditionalOpenClose]
     queryset = Update.objects.order_by('-pinned', '-created')
+    serializer_class = UpdateSerializer
+
+    def get_activity(self):
+        if not hasattr(self, '_activity'):
+            self._activity = Activity.objects.get(pk=self.kwargs['activity_pk'])
+        return self._activity
+
+    def get_visible_queryset(self):
+        queryset = super().get_queryset().filter(
+            activity=self.get_activity(),
+            parent__isnull=True,
+        )
+        if not user_can_view_contributor_updates(
+            self.request.user, self.get_activity()
+        ):
+            queryset = queryset.filter(audience=AudienceChoices.everyone)
+        return queryset
 
     def get_queryset(self):
-        return super().get_queryset().filter(
-            activity_id=self.kwargs['activity_pk']
-        ).filter(parent__isnull=True)
-
-    serializer_class = UpdateSerializer
+        queryset = self.get_visible_queryset()
+        audience_filter = self.request.query_params.get('filter[audience]')
+        if audience_filter in (AudienceChoices.everyone, AudienceChoices.contributors):
+            queryset = queryset.filter(audience=audience_filter)
+        return queryset
 
 
 class UpdateImageContent(ImageContentView):
@@ -91,3 +130,8 @@ class UpdateImageContent(ImageContentView):
 
     queryset = UpdateImage.objects
     field = 'image'
+
+
+class UpdateDocumentContent(FileContentView):
+    queryset = UpdateDocument.objects
+    field = 'document'

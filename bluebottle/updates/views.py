@@ -120,7 +120,6 @@ class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
         return queryset
 
 
-
 class UpdateImageContent(ImageContentView):
     allowed_sizes = {
         'small': '150x150',

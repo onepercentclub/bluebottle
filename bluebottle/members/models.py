@@ -76,10 +76,11 @@ class SingleSignOnProvider(models.Model):
         max_length=255,
         default='token_auth.auth.saml.SAMLAuthentication',
     )
+
     strict = models.BooleanField(_('Strict mode'), default=False)
     debug = models.BooleanField(_('Debug mode'), default=False)
     admin_login = models.BooleanField(
-        _('Allow admin login via SSO'),
+        _('Admin login'),
         default=True,
         help_text=_('When enabled, staff can log in to the admin via SSO.'),
     )

@@ -42,7 +42,9 @@ from bluebottle.members.forms import (
     SendPasswordResetMailConfirmationForm,
     SendWelcomeMailConfirmationForm,
 )
+from bluebottle.members.models import Member, SocialLoginSettings, UserSegment
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
+from bluebottle.members.models import SingleSignOnAssertionMapping, SingleSignOnProvider
 from bluebottle.notifications.models import Message
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
 from bluebottle.segments.filters import MemberSegmentAdminMixin
@@ -62,8 +64,6 @@ from bluebottle.utils.admin import (
 )
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-from bluebottle.members.models import Member, SocialLoginSettings, UserSegment
-from bluebottle.members.models import SingleSignOnAssertionMapping, SingleSignOnProvider
 from ..grant_management.models import GrantApplication
 from ..offices.admin import RegionManagerAdminMixin
 from ..offices.models import OfficeSubRegion
@@ -134,14 +134,29 @@ class SingleSignOnProviderInline(admin.StackedInline):
     extra = 0
     max_num = 1
     can_delete = False
+
+    def idp_info(self, obj):
+        return admin_info_box(
+            _(
+                'Service Provider',
+            ),
+        )
+
+    def sp_info(self, obj):
+        return admin_info_box(
+            _(
+                'Identity Provider',
+            ),
+        )
+
+    readonly_fields = ('idp_info', 'sp_info',)
+
     fields = (
-        ('backend', 'strict', 'debug'),
-        ('admin_login', 'provision'),
-        ('idp_entity_id', 'idp_sso_url', 'idp_sls_url'),
-        'idp_x509cert',
-        ('sp_entity_id', 'sp_name_id_format'),
-        ('sp_acs_url', 'sp_sls_url'),
-        ('sp_x509cert', 'sp_private_key'),
+        'backend', 'strict', 'debug', 'admin_login', 'provision',
+        'idp_info', 'idp_entity_id', 'idp_sso_url',
+        'idp_sls_url', 'idp_x509cert',
+        'sp_info', 'sp_entity_id', 'sp_name_id_format',
+        'sp_acs_url', 'sp_sls_url', 'sp_x509cert', 'sp_private_key',
         ('requested_authn_context', 'requested_authn_context_comparison'),
         ('authn_requests_signed', 'want_assertions_signed'),
         'security_overrides',
@@ -160,6 +175,22 @@ class SingleSignOnAssertionMappingInline(admin.TabularInline):
 class SingleSignOnProviderAdmin(admin.ModelAdmin):
     inlines = [SingleSignOnAssertionMappingInline]
     fields = SingleSignOnProviderInline.fields
+
+    def idp_info(self, obj):
+        return admin_info_box(
+            _(
+                'Service Provider',
+            ),
+        )
+
+    def sp_info(self, obj):
+        return admin_info_box(
+            _(
+                'Identity Provider',
+            ),
+        )
+
+    readonly_fields = ('idp_info', 'sp_info',)
 
 
 @admin.register(MemberPlatformSettings)

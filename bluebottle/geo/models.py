@@ -292,7 +292,7 @@ class Geolocation(models.Model):
 
     def reverse_geocode(self):
         access_token = settings.MAPBOX_API_KEY
-        if not access_token:
+        if not access_token or not self.position:
             return None
 
         [lon, lat] = self.position.coords
@@ -303,49 +303,62 @@ class Geolocation(models.Model):
             data = response.json()
             if 'features' in data and len(data['features']) > 0:
                 return data['features'][0]
-            else:
-                return "No results found."
-        else:
-            return f"Error: {response.status_code}, {response.text}"
+        return None
+
+    def _country_from_mapbox(self, data):
+        short_code = None
+        if 'context' in data and data['context']:
+            short_code = data['context'][-1].get('short_code')
+        elif 'short_code' in data.get('properties', {}):
+            short_code = data['properties']['short_code']
+        if short_code:
+            return Country.objects.filter(alpha2_code__iexact=short_code).first()
+        return None
 
     def update_location(self, replace=False):
         data = self.reverse_geocode()
-        if data and not isinstance(data, str):
-            self.mapbox_id = data['id']
-            country = None
-            if not self.formatted_address or replace:
-                self.formatted_address = data['place_name']
-            if 'context' in data:
-                country = Country.objects.filter(alpha2_code__iexact=data['context'][-1]['short_code']).first()
-            elif 'short_code' in data['properties']:
-                country = Country.objects.filter(alpha2_code__iexact=data['properties']['short_code']).first()
+        if not isinstance(data, dict):
+            return
+
+        self.mapbox_id = data['id']
+        if not self.formatted_address or replace:
+            self.formatted_address = data['place_name']
+        if not self.country_id or replace:
+            country = self._country_from_mapbox(data)
             if country:
                 self.country = country
-            else:
-                raise ValueError(f"Country not found for {data['context'][-1]['short_code']}")
-            if data['place_type'][0] == 'address':
-                if not self.street or replace:
-                    self.street = data['text']
-                if not self.street_number or replace:
-                    self.street_number = getattr(data, 'address', '')
+            elif not self.country_id:
+                short_code = None
+                if 'context' in data and data['context']:
+                    short_code = data['context'][-1].get('short_code')
+                raise ValueError(f"Country not found for {short_code}")
+        if data['place_type'][0] == 'address':
+            if not self.street or replace:
+                self.street = data['text']
+            if not self.street_number or replace:
+                self.street_number = data.get('address', '')
 
-            if 'context' in data:
-                for context_item in data['context']:
-                    if 'place' in context_item['id']:
-                        if not self.locality or replace:
-                            self.locality = context_item['text']
-                    elif 'postcode' in context_item['id']:
-                        if not self.postal_code or replace:
-                            self.postal_code = context_item['text']
-                    elif 'region' in context_item['id']:
-                        if not self.province or replace:
-                            self.province = context_item['text']
+        if 'context' in data:
+            for context_item in data['context']:
+                if 'place' in context_item['id']:
+                    if not self.locality or replace:
+                        self.locality = context_item['text']
+                elif 'postcode' in context_item['id']:
+                    if not self.postal_code or replace:
+                        self.postal_code = context_item['text']
+                elif 'region' in context_item['id']:
+                    if not self.province or replace:
+                        self.province = context_item['text']
 
     def save(self, *args, **kwargs):
+        replace = False
         if self.pk:
             old_instance = Geolocation.objects.filter(pk=self.pk).first()
             if old_instance and old_instance.position != self.position:
-                self.update_location(replace=True)
-        if self.position and self.mapbox_id in ['unknown', '', None]:
-            self.update_location()
+                replace = True
+        if self.position and (
+            replace
+            or self.mapbox_id in ['unknown', '', None]
+        ):
+            self.update_location(replace=replace)
         return super().save(*args, **kwargs)

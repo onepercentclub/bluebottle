@@ -198,6 +198,7 @@ class StateMachineAdminMixin(object):
             transition=transition,
             action_text=action_text,
             form=form,
+            media=self.media + form.media,
             has_notifications=any(
                 isinstance(effect, BaseNotificationEffect) for effect in effects
             ),

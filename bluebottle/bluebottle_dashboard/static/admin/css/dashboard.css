@@ -209,12 +209,12 @@ label + div {
     padding-left: 50px;
 }
 
-.js-inline-admin-formset.nested-inline {
+.cp-content .js-inline-admin-formset.nested-inline {
     display: inline-block;
     margin-left: 60px;
 }
 
-.js-inline-admin-formset fieldset {
+.cp-content .js-inline-admin-formset fieldset {
     padding: 4px
 }
 
@@ -650,11 +650,11 @@ a.button, a.button:hover {
     display: none;
 }
 
-.js-inline-admin-formset {
+.cp-content .js-inline-admin-formset {
     margin: 0 64px;
 }
 
-.js-inline-admin-formset .inline-related {
+.cp-content .js-inline-admin-formset .inline-related {
     margin: 16px 0;
     width: auto;
 }
@@ -663,11 +663,8 @@ a.button, a.button:hover {
     height: 300px;
 }
 
-.js-inline-admin-formset .inline-related h3 .inline-deletelink:before {
-    font-family: 'dashboard' !important;
-    font-size: 10px;
-    margin-right: 8px;
-    color: #ffffff;
+.cp-content .js-inline-admin-formset .inline-related h3 .inline-deletelink:before {
+    display: none !important;
 }
 
 
@@ -676,14 +673,7 @@ a.button, a.button:hover {
 }
 
 .js-inline-admin-formset .inline-related h3 .inline-deletelink {
-    text-decoration: none;
-    font-size: 12px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    padding: 4px 8px;
-    margin: 4px 8px;
-    line-height: 1rem;
-    background-color: #b3000055;
-    transition: background-color 200ms;
+    display: none !important;
 }
 
 .js-inline-admin-formset .inline-related h3 .inline-deletelink:hover {
@@ -694,7 +684,6 @@ a.button, a.button:hover {
     padding: 6px 12px;
 }
 
-.js-inline-admin-formset .inline-related h3 span.delete,
 .js-inline-admin-formset span.delete {
     display: none;
 }

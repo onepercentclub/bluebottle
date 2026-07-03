@@ -9,7 +9,8 @@ from bluebottle.fsm.state import (
     register,
 )
 from bluebottle.funding.states import PayoutStateMachine
-from bluebottle.grant_management.forms import GrantApplicationApproveForm, GrantPayoutApproveForm
+from bluebottle.grant_management.forms import GrantApplicationApproveForm, GrantPayoutApproveForm, \
+    GrantApplicationRejectedForm, GrantApplicationNeedsWorkForm
 from bluebottle.grant_management.models import (
     GrantApplication,
     GrantDeposit,
@@ -96,6 +97,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
             "can edit and resubmit the application. Don't forget to inform the activity "
             "manager of the necessary adjustments."
         ),
+        form=GrantApplicationNeedsWorkForm,
         automatic=False,
         permission=can_approve
     )
@@ -114,6 +116,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
             "on the search page in the front end. The application will still be available in the "
             "back office and appear in your reporting."
         ),
+        form=GrantApplicationRejectedForm,
         automatic=False,
         permission=ActivityStateMachine.is_staff,
     )

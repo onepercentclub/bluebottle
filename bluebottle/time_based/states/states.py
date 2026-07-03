@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-
+from bluebottle.activities.forms import ActivityCancelledForm
 from bluebottle.activities.states import (
     ActivityStateMachine, ContributionStateMachine,
 )
@@ -112,6 +112,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
             'The activity will not be executed. Any contributions will be cancelled too.'
         ),
         passed_label=_('cancelled'),
+        form=ActivityCancelledForm,
         automatic=False,
         permission=ActivityStateMachine.is_owner,
     )

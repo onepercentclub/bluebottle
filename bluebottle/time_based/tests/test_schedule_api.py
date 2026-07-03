@@ -1,14 +1,15 @@
-import icalendar
 from datetime import date, timedelta
 from io import BytesIO
 
+import icalendar
 from django.urls import reverse
+from django.utils.timezone import now
 from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
     ScheduleActivitySerializer,
@@ -379,6 +380,25 @@ class ScheduleActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
         'deadline': date.today() + timedelta(days=20),
     }
 
+    def test_get(self):
+        for participant in self.participants:
+            participant.slot.start = now() + timedelta(days=10)
+            participant.slot.save()
+
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        self.assertEqual(len(workbook.worksheets), 1)
+
+        sheet = workbook.get_active_sheet()
+
+        self.assertEqual(
+            tuple(sheet.values)[0],
+            ('Email', 'Name', 'Registration Date', 'Start', 'Status', 'Registration answer',)
+        )
+
 
 class TeamScheduleActivityExportTestCase(
     TimeBasedActivityAPIExportTestCase, APITestCase
@@ -394,6 +414,11 @@ class TeamScheduleActivityExportTestCase(
     }
 
     def test_get(self):
+        for team in self.participants:
+            slot = team.slots.first()
+            slot.start = now() + timedelta(days=10)
+            slot.save()
+
         self.perform_get(user=self.activity.owner)
 
         self.assertStatus(status.HTTP_200_OK)
@@ -411,6 +436,7 @@ class TeamScheduleActivityExportTestCase(
                 "Captain email",
                 "Captain name",
                 "Registration Date",
+                "Start",
                 "Status",
                 "Registration answer",
             ),
@@ -423,7 +449,28 @@ class TeamScheduleActivityExportTestCase(
                     "Email",
                     "Name",
                     "Registration Date",
+                    "Start",
                     "Status",
                     "Is captain",
                 ),
             )
+
+    def test_export_teams_with_duplicate_names(self):
+        team_name = "Team Justine Broekhuizen"
+        self.participants[0].name = team_name
+        self.participants[0].save()
+        self.participants[1].name = team_name
+        self.participants[1].save()
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        team_sheet_titles = [sheet.title for sheet in workbook.worksheets[1:]]
+
+        self.assertEqual(len(workbook.worksheets), len(self.participants) + 1)
+        self.assertEqual(
+            len(team_sheet_titles),
+            len({title.lower() for title in team_sheet_titles}),
+        )
+        self.assertIn(team_name, team_sheet_titles)

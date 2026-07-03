@@ -41,6 +41,11 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
         for bit in bits:
             obj = getattr(obj, bit, None)
+            if callable(obj):
+                try:
+                    obj = obj()
+                except TypeError:
+                    pass
 
             if obj is None:
                 return ""

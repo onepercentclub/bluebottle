@@ -5,7 +5,6 @@ from builtins import str
 from functools import partial
 from operator import attrgetter
 
-from bluebottle.celery import app
 from django.contrib.admin.options import get_content_type_for_model
 from django.core.cache import cache
 from django.db import connection
@@ -14,6 +13,7 @@ from django.utils import translation as django_translation
 from django.utils.html import format_html
 from future.utils import python_2_unicode_compatible
 
+from bluebottle.celery import app
 from bluebottle.clients import properties
 from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.notifications.models import Message, MessageTemplate
@@ -93,7 +93,6 @@ class TransitionMessage(object):
         return to_text.handle(self.generic_content_html)
 
     def get_content_html(self, recipient, obj=None):
-        # Force language activation for template rendering
         django_translation.activate(recipient.primary_language)
         context = self.get_context(recipient)
         if obj:
@@ -103,6 +102,43 @@ class TransitionMessage(object):
 
     def get_content_text(self, recipient):
         return to_text.handle(self.get_content_html(recipient))
+
+    def get_first_recipient(self):
+        recipients = list(filter(None, self.get_recipients()))
+        return recipients[0] if recipients else None
+
+    def get_message_block_html(self, recipient=None):
+        if recipient is None:
+            recipient = self.get_first_recipient()
+
+        if recipient:
+            with translation.override(recipient.primary_language):
+                django_translation.activate(recipient.primary_language)
+                context = self.get_context(recipient)
+                custom_template = self.get_message_template()
+                if custom_template:
+                    custom_template.set_current_language(recipient.primary_language)
+                    try:
+                        return str(format_html(custom_template.body_html.html, **context))
+                    except custom_template.DoesNotExist:
+                        pass
+                return self._render_message_block_html(context)
+
+        return self._render_message_block_html(self.get_generic_context())
+
+    def get_message_block_text(self, recipient=None):
+        if recipient is None:
+            recipient = self.get_first_recipient()
+        return to_text.handle(self.get_message_block_html(recipient)).strip()
+
+    def get_default_custom_message(self, recipient=None):
+        return self.get_message_block_text(recipient)
+
+    def _render_message_block_html(self, context):
+        context = dict(context)
+        context['only_message'] = True
+        template = loader.get_template("mails/{}.html".format(self.template))
+        return template.render(context)
 
     def attachments(self, recipients):
         pass

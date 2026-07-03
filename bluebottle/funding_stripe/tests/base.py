@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 
 import mock
+import munch
+import stripe
 
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -8,6 +10,52 @@ _STRIPE_GUARD_MSG = (
     "Unexpected Stripe API request in tests (network disabled). "
     "Patch stripe.* calls or use factories from bluebottle.funding_stripe.tests.factories."
 )
+
+
+COUNTRY_SPEC = stripe.CountrySpec('NL')
+COUNTRY_SPEC.update(
+    {
+        "supported_bank_account_currencies": ['EUR'],
+        "verification_fields": munch.munchify(
+            {
+                "individual": munch.munchify(
+                    {
+                        "additional": ["individual.verification.document"],
+                        "minimum": ["individual.first_name"],
+                    }
+                )
+            }
+        )
+    }
+)
+
+
+def _stripe_connect_account_stub_for_prefill(account_id="test-account-id"):
+    account = stripe.Account(account_id)
+    account.business_type = "individual"
+    account.business_profile = munch.munchify({
+        "mcc": "8398",
+        "product_description": "Not applicable - test account.",
+        "url": "https://goodup.com",
+    })
+    account.email = "stripe-test@example.com"
+    account.company = None
+    return account
+
+
+@contextmanager
+def stripe_payout_account_stripe_api_patches(account_id="test-account-id"):
+    stub = _stripe_connect_account_stub_for_prefill(account_id)
+    with mock.patch("stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC), \
+            mock.patch("stripe.Account.retrieve", return_value=stub), \
+            mock.patch("stripe.Account.modify", return_value=stub):
+        yield
+
+
+def save_stripe_payout_account(payout_account):
+    account_id = payout_account.account_id or "test-account-id"
+    with stripe_payout_account_stripe_api_patches(account_id):
+        payout_account.save()
 
 
 def _stripe_guard_denied(*args, **kwargs):

@@ -3,6 +3,10 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
+from bluebottle.funding.forms import (
+    FundingNeedsWorkForm, FundingRejectedForm, FundingAcceptedForm, RefundCampaignForm,
+    CancelCampaignForm
+)
 from bluebottle.funding.models import (
     Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution,
 )
@@ -100,6 +104,7 @@ class FundingStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         name=_('Approve'),
         description=_('The campaign will be visible in the frontend and people can donate.'),
+        form=FundingAcceptedForm,
         automatic=False,
         permission=ActivityStateMachine.can_approve,
         conditions=[
@@ -121,6 +126,7 @@ class FundingStateMachine(ActivityStateMachine):
             'search page in the front end. The campaign will still be available '
             'in the back office and appear in your reporting.'
         ),
+        form=CancelCampaignForm,
         automatic=False,
         permission=ActivityStateMachine.is_owner,
         conditions=[no_donations],
@@ -137,6 +143,7 @@ class FundingStateMachine(ActivityStateMachine):
             "can edit and resubmit the campaign. Don't forget to inform the activity "
             "manager of the necessary adjustments."
         ),
+        form=FundingNeedsWorkForm,
         automatic=False,
         permission=ActivityStateMachine.can_approve
     )
@@ -167,6 +174,7 @@ class FundingStateMachine(ActivityStateMachine):
             "on the search page in the front end. The campaign will still be available in the "
             "back office and appear in your reporting."
         ),
+        form=FundingRejectedForm,
         automatic=False,
         conditions=[
             no_donations
@@ -255,6 +263,7 @@ class FundingStateMachine(ActivityStateMachine):
         name=_('Refund'),
         description=_(
             "The campaign will be refunded and all donations will be returned to the donors."),
+        form=RefundCampaignForm,
         automatic=False,
         permission=ActivityStateMachine.is_staff,
         conditions=[

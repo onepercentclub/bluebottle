@@ -24,13 +24,10 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
 
-from contextlib import contextmanager
-
 from django.test.utils import override_settings
 
 import mock
 import munch
-import stripe
 
 from bluebottle.funding.messages.funding.activity_manager import (
     FundingPayoutAccountMarkedIncomplete,
@@ -45,53 +42,17 @@ from bluebottle.grant_management.tests.factories import (
     GrantDonorFactory,
     GrantPaymentFactory, GrantProviderFactory, GrantPayoutFactory
 )
-from bluebottle.funding_stripe.tests.base import FundingStripeMixin
+from bluebottle.funding_stripe.tests.base import (
+    FundingStripeMixin,
+    save_stripe_payout_account,
+    stripe_payout_account_stripe_api_patches,
+)
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
     ExternalAccountFactory, StripePaymentProviderFactory
 )
 
 from bluebottle.funding.messages.funding.platform_manager import LivePayoutAccountMarkedIncomplete
-
-
-COUNTRY_SPEC = stripe.CountrySpec('NL')
-COUNTRY_SPEC.update(
-    {
-        "supported_bank_account_currencies": ['EUR'],
-        "verification_fields": munch.munchify(
-            {
-                "individual": munch.munchify(
-                    {
-                        "additional": ["individual.verification.document"],
-                        "minimum": ["individual.first_name"],
-                    }
-                )
-            }
-        )
-    }
-)
-
-
-def _stripe_connect_account_stub_for_prefill(account_id="test-account-id"):
-    account = stripe.Account(account_id)
-    account.business_type = "individual"
-    account.business_profile = munch.munchify({
-        "mcc": "8398",
-        "product_description": "Not applicable - test grant account.",
-        "url": "https://goodup.com",
-    })
-    account.email = "grant-test@example.com"
-    account.company = None
-    return account
-
-
-@contextmanager
-def stripe_payout_account_stripe_api_patches(account_id="test-account-id"):
-    stub = _stripe_connect_account_stub_for_prefill(account_id)
-    with mock.patch("stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC), \
-            mock.patch("stripe.Account.retrieve", return_value=stub), \
-            mock.patch("stripe.Account.modify", return_value=stub):
-        yield
 
 
 class GrantApplicationTriggersTestCase(TriggerTestCase):
@@ -433,12 +394,26 @@ class GrantApplicationPayoutAccountTriggersTestCase(FundingStripeMixin, TriggerT
             bank_account=self.bank_account
         )
 
-    def test_set_incomplete_draft(self):
+    def _trigger_set_incomplete(self):
+        self.model.status = 'verified'
+        save_stripe_payout_account(self.model)
         self.model.states.set_incomplete()
+
+    def test_set_incomplete_draft(self):
+        self.grant_application.status = 'granted'
+        self.grant_application.save()
+        self._trigger_set_incomplete()
         with self.execute():
             self.assertNotificationEffect(GrantApplicationPayoutAccountMarkedIncomplete)
             self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
             self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)
+
+    def test_set_incomplete_succeeded(self):
+        self.grant_application.status = 'succeeded'
+        self.grant_application.save()
+        self._trigger_set_incomplete()
+        with self.execute():
+            self.assertNoNotificationEffect(GrantApplicationPayoutAccountMarkedIncomplete)
 
     def test_set_verified(self):
         with stripe_payout_account_stripe_api_patches("test-account-id"):

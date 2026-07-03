@@ -138,28 +138,29 @@ class SingleSignOnProviderInline(admin.StackedInline):
     def idp_info(self, obj):
         return admin_info_box(
             _(
-                'Service Provider',
+                'Identity Provider - The SSO service of the customer',
             ),
         )
 
     def sp_info(self, obj):
         return admin_info_box(
             _(
-                'Identity Provider',
+                'Service Provider - This platform',
             ),
         )
 
     readonly_fields = ('idp_info', 'sp_info',)
 
     fields = (
-        'backend', 'strict', 'debug', 'admin_login', 'provision',
+        'strict', 'debug', 'admin_login', 'provision',
+        'requested_authn_context',
+        'authn_requests_signed',
+        'want_assertions_signed',
+
         'idp_info', 'idp_entity_id', 'idp_sso_url',
         'idp_sls_url', 'idp_x509cert',
-        'sp_info', 'sp_entity_id', 'sp_name_id_format',
+        'sp_info', 'sp_entity_id',
         'sp_acs_url', 'sp_sls_url', 'sp_x509cert', 'sp_private_key',
-        ('requested_authn_context', 'requested_authn_context_comparison'),
-        ('authn_requests_signed', 'want_assertions_signed'),
-        'security_overrides',
     )
 
 
@@ -179,14 +180,14 @@ class SingleSignOnProviderAdmin(admin.ModelAdmin):
     def idp_info(self, obj):
         return admin_info_box(
             _(
-                'Service Provider',
+                'Identity Provider - The SSO service of the customer',
             ),
         )
 
     def sp_info(self, obj):
         return admin_info_box(
             _(
-                'Identity Provider',
+                'Service Provider - This platform',
             ),
         )
 

@@ -71,12 +71,6 @@ class SingleSignOnProvider(models.Model):
         related_name='sso_providers',
     )
 
-    backend = models.CharField(
-        _('Authentication backend'),
-        max_length=255,
-        default='token_auth.auth.saml.SAMLAuthentication',
-    )
-
     strict = models.BooleanField(_('Strict mode'), default=False)
     debug = models.BooleanField(_('Debug mode'), default=False)
     admin_login = models.BooleanField(
@@ -106,17 +100,10 @@ class SingleSignOnProvider(models.Model):
     )
 
     sp_entity_id = models.CharField(_('SP entity ID'), max_length=500, blank=True)
-    sp_name_id_format = models.CharField(
-        _('SP NameID format'),
-        max_length=255,
-        choices=SAML_NAME_ID_FORMATS,
-        default='urn:oasis:names:tc:SAML:2.0:nameid-format:string',
-    )
     sp_acs_url = models.URLField(
         _('SP assertion consumer URL'),
         max_length=500,
         blank=True,
-        help_text=_('Typically https://your-domain/token/login/'),
     )
     sp_acs_binding = models.CharField(
         _('SP ACS binding'),
@@ -127,7 +114,6 @@ class SingleSignOnProvider(models.Model):
         _('SP single logout URL'),
         max_length=500,
         blank=True,
-        help_text=_('Typically https://your-domain/token/logout/'),
     )
     sp_sls_binding = models.CharField(
         _('SP SLO binding'),
@@ -142,19 +128,8 @@ class SingleSignOnProvider(models.Model):
         default=False,
         help_text=_('Disable for most Azure AD / Entra ID integrations.'),
     )
-    requested_authn_context_comparison = models.CharField(
-        _('Requested authentication context comparison'),
-        max_length=50,
-        blank=True,
-    )
     authn_requests_signed = models.BooleanField(_('Sign authentication requests'), default=False)
     want_assertions_signed = models.BooleanField(_('Require signed assertions'), default=False)
-    security_overrides = models.JSONField(
-        _('Security overrides'),
-        blank=True,
-        null=True,
-        help_text=_('Optional JSON for uncommon python-saml security settings.'),
-    )
 
     class Meta(object):
         verbose_name = _('Single sign-on provider')
@@ -204,14 +179,10 @@ class SingleSignOnProvider(models.Model):
         security = dict(self.security_overrides or {})
         if 'requestedAuthnContext' not in security:
             security['requestedAuthnContext'] = self.requested_authn_context
-        if self.requested_authn_context_comparison:
-            security['requestedAuthnContextComparison'] = self.requested_authn_context_comparison
         if self.authn_requests_signed:
             security['authnRequestsSigned'] = True
         if self.want_assertions_signed:
             security['wantAssertionsSigned'] = True
-        if security:
-            settings['security'] = security
 
         if self.sp_x509cert:
             settings['sp']['x509cert'] = self.sp_x509cert
@@ -231,9 +202,6 @@ class SingleSignOnProvider(models.Model):
     @classmethod
     def from_token_auth_settings(cls, platform_settings, token_auth_settings):
         provider, _created = cls.objects.get_or_create(settings=platform_settings)
-        provider.backend = token_auth_settings.get(
-            'backend', 'token_auth.auth.saml.SAMLAuthentication'
-        )
         provider.strict = token_auth_settings.get('strict', False)
         provider.debug = token_auth_settings.get('debug', False)
         provider.admin_login = token_auth_settings.get('admin_login', True)

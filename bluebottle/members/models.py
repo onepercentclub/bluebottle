@@ -50,6 +50,325 @@ class SocialLoginSettings(models.Model):
         verbose_name = _('Social login settings')
 
 
+SAML_BINDING_HTTP_POST = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+SAML_BINDING_HTTP_REDIRECT = 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+
+SAML_NAME_ID_FORMATS = (
+    ('urn:oasis:names:tc:SAML:2.0:nameid-format:string', _('String')),
+    ('urn:oasis:names:tc:SAML:2.0:nameid-format:persistent', _('Persistent')),
+    ('urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified', _('Unspecified')),
+    ('urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress', _('Email address')),
+)
+
+
+class SingleSignOnProvider(models.Model):
+    """
+    SAML SSO configuration for a tenant. Replaces TOKEN_AUTH in tenant settings.py.
+    """
+    settings = models.ForeignKey(
+        'members.MemberPlatformSettings',
+        on_delete=models.CASCADE,
+        related_name='sso_providers',
+    )
+
+    backend = models.CharField(
+        _('Authentication backend'),
+        max_length=255,
+        default='token_auth.auth.saml.SAMLAuthentication',
+    )
+    strict = models.BooleanField(_('Strict mode'), default=False)
+    debug = models.BooleanField(_('Debug mode'), default=False)
+    admin_login = models.BooleanField(
+        _('Allow admin login via SSO'),
+        default=True,
+        help_text=_('When enabled, staff can log in to the admin via SSO.'),
+    )
+    provision = models.BooleanField(
+        _('Auto-provision users'),
+        default=True,
+        help_text=_('Automatically create member accounts on first SSO login.'),
+    )
+
+    idp_entity_id = models.CharField(_('IdP entity ID'), max_length=500, blank=True)
+    idp_x509cert = models.TextField(_('IdP x509 certificate'), blank=True)
+    idp_sso_url = models.URLField(_('IdP single sign-on URL'), max_length=500, blank=True)
+    idp_sso_binding = models.CharField(
+        _('IdP SSO binding'),
+        max_length=255,
+        default=SAML_BINDING_HTTP_REDIRECT,
+    )
+    idp_sls_url = models.URLField(_('IdP single logout URL'), max_length=500, blank=True)
+    idp_sls_binding = models.CharField(
+        _('IdP SLO binding'),
+        max_length=255,
+        default=SAML_BINDING_HTTP_REDIRECT,
+    )
+
+    sp_entity_id = models.CharField(_('SP entity ID'), max_length=500, blank=True)
+    sp_name_id_format = models.CharField(
+        _('SP NameID format'),
+        max_length=255,
+        choices=SAML_NAME_ID_FORMATS,
+        default='urn:oasis:names:tc:SAML:2.0:nameid-format:string',
+    )
+    sp_acs_url = models.URLField(
+        _('SP assertion consumer URL'),
+        max_length=500,
+        blank=True,
+        help_text=_('Typically https://your-domain/token/login/'),
+    )
+    sp_acs_binding = models.CharField(
+        _('SP ACS binding'),
+        max_length=255,
+        default=SAML_BINDING_HTTP_POST,
+    )
+    sp_sls_url = models.URLField(
+        _('SP single logout URL'),
+        max_length=500,
+        blank=True,
+        help_text=_('Typically https://your-domain/token/logout/'),
+    )
+    sp_sls_binding = models.CharField(
+        _('SP SLO binding'),
+        max_length=255,
+        default=SAML_BINDING_HTTP_REDIRECT,
+    )
+    sp_x509cert = models.TextField(_('SP x509 certificate'), blank=True)
+    sp_private_key = models.TextField(_('SP private key'), blank=True)
+
+    requested_authn_context = models.BooleanField(
+        _('Request authentication context'),
+        default=False,
+        help_text=_('Disable for most Azure AD / Entra ID integrations.'),
+    )
+    requested_authn_context_comparison = models.CharField(
+        _('Requested authentication context comparison'),
+        max_length=50,
+        blank=True,
+    )
+    authn_requests_signed = models.BooleanField(_('Sign authentication requests'), default=False)
+    want_assertions_signed = models.BooleanField(_('Require signed assertions'), default=False)
+    security_overrides = models.JSONField(
+        _('Security overrides'),
+        blank=True,
+        null=True,
+        help_text=_('Optional JSON for uncommon python-saml security settings.'),
+    )
+
+    class Meta(object):
+        verbose_name = _('Single sign-on provider')
+        verbose_name_plural = _('Single sign-on providers')
+
+    @property
+    def is_configured(self):
+        return bool(self.idp_entity_id and self.idp_sso_url and self.sp_entity_id and self.sp_acs_url)
+
+    def to_token_auth_settings(self):
+        settings = {
+            'backend': self.backend,
+            'strict': self.strict,
+            'debug': self.debug,
+            'assertion_mapping': self.get_assertion_mapping(),
+            'idp': {
+                'entityId': self.idp_entity_id,
+                'singleSignOnService': {
+                    'url': self.idp_sso_url,
+                    'binding': self.idp_sso_binding,
+                },
+                'singleLogoutService': {
+                    'url': self.idp_sls_url,
+                    'binding': self.idp_sls_binding,
+                },
+                'x509cert': self.idp_x509cert,
+            },
+            'sp': {
+                'entityId': self.sp_entity_id,
+                'NameIDFormat': self.sp_name_id_format,
+                'assertionConsumerService': {
+                    'url': self.sp_acs_url,
+                    'binding': self.sp_acs_binding,
+                },
+                'singleLogoutService': {
+                    'url': self.sp_sls_url,
+                    'binding': self.sp_sls_binding,
+                },
+            },
+        }
+
+        if self.admin_login:
+            settings['admin_login'] = True
+        if not self.provision:
+            settings['provision'] = False
+
+        security = dict(self.security_overrides or {})
+        if 'requestedAuthnContext' not in security:
+            security['requestedAuthnContext'] = self.requested_authn_context
+        if self.requested_authn_context_comparison:
+            security['requestedAuthnContextComparison'] = self.requested_authn_context_comparison
+        if self.authn_requests_signed:
+            security['authnRequestsSigned'] = True
+        if self.want_assertions_signed:
+            security['wantAssertionsSigned'] = True
+        if security:
+            settings['security'] = security
+
+        if self.sp_x509cert:
+            settings['sp']['x509cert'] = self.sp_x509cert
+        if self.sp_private_key:
+            settings['sp']['privateKey'] = self.sp_private_key
+
+        return settings
+
+    def get_assertion_mapping(self):
+        mapping = {}
+        for assertion_mapping in self.assertion_mappings.all():
+            key = assertion_mapping.get_mapping_key()
+            if key:
+                mapping[key] = assertion_mapping.assertion
+        return mapping
+
+    @classmethod
+    def from_token_auth_settings(cls, platform_settings, token_auth_settings):
+        provider, _created = cls.objects.get_or_create(settings=platform_settings)
+        provider.backend = token_auth_settings.get(
+            'backend', 'token_auth.auth.saml.SAMLAuthentication'
+        )
+        provider.strict = token_auth_settings.get('strict', False)
+        provider.debug = token_auth_settings.get('debug', False)
+        provider.admin_login = token_auth_settings.get('admin_login', True)
+        provider.provision = token_auth_settings.get('provision', True)
+
+        idp = token_auth_settings.get('idp', {})
+        provider.idp_entity_id = idp.get('entityId', '')
+        provider.idp_x509cert = idp.get('x509cert', '')
+        provider.idp_sso_url = idp.get('singleSignOnService', {}).get('url', '')
+        provider.idp_sso_binding = idp.get(
+            'singleSignOnService', {}
+        ).get('binding', SAML_BINDING_HTTP_REDIRECT)
+        provider.idp_sls_url = idp.get('singleLogoutService', {}).get('url', '')
+        provider.idp_sls_binding = idp.get(
+            'singleLogoutService', {}
+        ).get('binding', SAML_BINDING_HTTP_REDIRECT)
+
+        sp = token_auth_settings.get('sp', {})
+        provider.sp_entity_id = sp.get('entityId', '')
+        provider.sp_name_id_format = sp.get(
+            'NameIDFormat', 'urn:oasis:names:tc:SAML:2.0:nameid-format:string'
+        )
+        provider.sp_acs_url = sp.get('assertionConsumerService', {}).get('url', '')
+        provider.sp_acs_binding = sp.get(
+            'assertionConsumerService', {}
+        ).get('binding', SAML_BINDING_HTTP_POST)
+        provider.sp_sls_url = sp.get('singleLogoutService', {}).get('url', '')
+        provider.sp_sls_binding = sp.get(
+            'singleLogoutService', {}
+        ).get('binding', SAML_BINDING_HTTP_REDIRECT)
+        provider.sp_x509cert = sp.get('x509cert', '')
+        provider.sp_private_key = sp.get('privateKey', '')
+
+        security = token_auth_settings.get('security', {})
+        requested_authn_context = security.get('requestedAuthnContext', False)
+        if isinstance(requested_authn_context, bool):
+            provider.requested_authn_context = requested_authn_context
+            provider.security_overrides = None
+        else:
+            provider.requested_authn_context = False
+            provider.security_overrides = security
+
+        provider.requested_authn_context_comparison = security.get(
+            'requestedAuthnContextComparison', ''
+        )
+        provider.authn_requests_signed = security.get('authnRequestsSigned', False)
+        provider.want_assertions_signed = security.get('wantAssertionsSigned', False)
+        provider.save()
+
+        provider.assertion_mappings.all().delete()
+        for key, assertion in token_auth_settings.get('assertion_mapping', {}).items():
+            mapping_type, segment_type, segment_slug = SingleSignOnAssertionMapping.parse_mapping_key(
+                key
+            )
+            if not mapping_type:
+                continue
+            SingleSignOnAssertionMapping.objects.create(
+                provider=provider,
+                mapping_type=mapping_type,
+                segment_type=segment_type,
+                segment_slug=segment_slug,
+                assertion=assertion,
+            )
+
+        return provider
+
+
+class SingleSignOnAssertionMapping(models.Model):
+    MAPPING_TYPES = (
+        ('email', _('Email')),
+        ('first_name', _('First name')),
+        ('last_name', _('Last name')),
+        ('remote_id', _('Remote ID')),
+        ('location_name', _('Location name')),
+        ('location_slug', _('Location slug')),
+        ('segment', _('Segment')),
+    )
+
+    MAPPING_TYPE_KEYS = {
+        'email': 'email',
+        'first_name': 'first_name',
+        'last_name': 'last_name',
+        'remote_id': 'remote_id',
+        'location_name': 'location.name',
+        'location_slug': 'location.slug',
+    }
+
+    provider = models.ForeignKey(
+        SingleSignOnProvider,
+        on_delete=models.CASCADE,
+        related_name='assertion_mappings',
+    )
+    mapping_type = models.CharField(_('Member field'), max_length=50, choices=MAPPING_TYPES)
+    segment_type = models.ForeignKey(
+        SegmentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text=_('Required for segment mappings.'),
+    )
+    segment_slug = models.CharField(
+        _('Segment type slug'),
+        max_length=100,
+        blank=True,
+        help_text=_('Used when the segment type is not linked yet.'),
+    )
+    assertion = models.CharField(_('SAML assertion'), max_length=500)
+
+    class Meta(object):
+        verbose_name = _('SSO assertion mapping')
+        verbose_name_plural = _('SSO assertion mappings')
+        unique_together = (('provider', 'mapping_type', 'segment_type', 'segment_slug'),)
+
+    def get_mapping_key(self):
+        if self.mapping_type == 'segment':
+            slug = self.segment_type.slug if self.segment_type else self.segment_slug
+            return 'segment.{}'.format(slug) if slug else None
+        return self.MAPPING_TYPE_KEYS.get(self.mapping_type)
+
+    @classmethod
+    def parse_mapping_key(cls, key):
+        if key in cls.MAPPING_TYPE_KEYS.values():
+            mapping_type = next(
+                mapping_type for mapping_type, value in cls.MAPPING_TYPE_KEYS.items()
+                if value == key
+            )
+            return mapping_type, None, ''
+
+        if key.startswith('segment.'):
+            slug = key.replace('segment.', '', 1)
+            segment_type = SegmentType.objects.filter(slug=slug).first()
+            return 'segment', segment_type, slug if not segment_type else ''
+
+        return None, None, ''
+
+
 class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     LOGIN_METHODS = (
         ('SSO', _('Company SSO')),

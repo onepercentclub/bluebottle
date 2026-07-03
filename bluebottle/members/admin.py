@@ -62,7 +62,8 @@ from bluebottle.utils.admin import (
 )
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-from .models import Member, SocialLoginSettings, UserSegment
+from bluebottle.members.models import Member, SocialLoginSettings, UserSegment
+from bluebottle.members.models import SingleSignOnAssertionMapping, SingleSignOnProvider
 from ..grant_management.models import GrantApplication
 from ..offices.admin import RegionManagerAdminMixin
 from ..offices.models import OfficeSubRegion
@@ -128,12 +129,45 @@ class SocialLoginSettingsInline(admin.TabularInline):
     model = SocialLoginSettings
 
 
+class SingleSignOnProviderInline(admin.StackedInline):
+    model = SingleSignOnProvider
+    extra = 0
+    max_num = 1
+    can_delete = False
+    fields = (
+        ('backend', 'strict', 'debug'),
+        ('admin_login', 'provision'),
+        ('idp_entity_id', 'idp_sso_url', 'idp_sls_url'),
+        'idp_x509cert',
+        ('sp_entity_id', 'sp_name_id_format'),
+        ('sp_acs_url', 'sp_sls_url'),
+        ('sp_x509cert', 'sp_private_key'),
+        ('requested_authn_context', 'requested_authn_context_comparison'),
+        ('authn_requests_signed', 'want_assertions_signed'),
+        'security_overrides',
+    )
+
+
+class SingleSignOnAssertionMappingInline(admin.TabularInline):
+    model = SingleSignOnAssertionMapping
+    extra = 1
+    fields = ('mapping_type', 'segment_type', 'segment_slug', 'assertion')
+    verbose_name = _('SSO assertion mapping')
+    verbose_name_plural = _('SSO assertion mappings')
+
+
+@admin.register(SingleSignOnProvider)
+class SingleSignOnProviderAdmin(admin.ModelAdmin):
+    inlines = [SingleSignOnAssertionMappingInline]
+    fields = SingleSignOnProviderInline.fields
+
+
 @admin.register(MemberPlatformSettings)
 class MemberPlatformSettingsAdmin(
     DynamicArrayMixin, TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin,
     NonSortableParentAdmin,
 ):
-    inlines = [SocialLoginSettingsInline]
+    inlines = [SocialLoginSettingsInline, SingleSignOnProviderInline]
 
     def reminder_info(self, obj):
         return admin_info_box(

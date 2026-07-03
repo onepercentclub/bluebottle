@@ -5,6 +5,13 @@ from django.core.exceptions import ImproperlyConfigured
 
 
 def get_settings():
+    from bluebottle.members.sso import get_token_auth_settings
+
+    try:
+        return get_token_auth_settings()
+    except ImproperlyConfigured:
+        pass
+
     properties_path = getattr(settings,
                               'TOKEN_AUTH_SETTINGS',
                               'django.conf.settings')

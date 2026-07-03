@@ -16,6 +16,7 @@ from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.clients import properties
+from bluebottle.members.sso import get_token_auth_settings
 from bluebottle.files.serializers import ImageField
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import OldPlaceSerializer
@@ -920,7 +921,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
 
     def get_read_only_fields(self, obj):
         try:
-            return properties.TOKEN_AUTH['assertion_mapping'].keys()
+            return get_token_auth_settings()['assertion_mapping'].keys()
         except (AttributeError, IndexError):
             return []
 

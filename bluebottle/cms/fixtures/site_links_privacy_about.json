@@ -1,0 +1,29 @@
+[
+  {
+    "language": "en",
+    "has_copyright": true,
+    "groups": [
+      {
+        "title": "Info",
+        "name": "info",
+        "group_order": 1,
+        "links": [
+          {
+            "title": "Privacy",
+            "link": "/pages/privacy",
+            "open_in_new_tab": false,
+            "highlight": false,
+            "link_order": 1
+          },
+          {
+            "title": "About Birdr",
+            "link": "/pages/about",
+            "open_in_new_tab": false,
+            "highlight": false,
+            "link_order": 2
+          }
+        ]
+      }
+    ]
+  }
+]

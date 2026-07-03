@@ -45,6 +45,10 @@ class TenantProperties(local):
         Search (in that specific order) tenant properties and settings.
         Raise AttributeError if not found.
         """
+        if k == 'TOKEN_AUTH':
+            from bluebottle.members.sso import get_token_auth_settings
+            return get_token_auth_settings(self.tenant_properties)
+
         try:
             return self.tenant_properties[k]
         except (AttributeError, KeyError):

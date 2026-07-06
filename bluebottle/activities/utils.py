@@ -308,6 +308,16 @@ class BaseActivitySerializer(ModelSerializer):
         elif obj.initiative and obj.initiative.organization:
             return obj.initiative.organization
 
+    def validate(self, data):
+        settings = InitiativePlatformSettings.load()
+
+        if data['office_restriction'] and data['office_restriction'] not in settings.available_office_restrictions:
+            raise ValidationError({
+                'office_restriction': f'{data["office_restriction"]} is not a valid value',
+            })
+
+        return data
+
     matching_properties = MatchingPropertiesField()
 
     errors = ValidationErrorsField()

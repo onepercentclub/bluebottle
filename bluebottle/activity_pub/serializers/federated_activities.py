@@ -267,12 +267,12 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
     summary = RichTextField(source='description', allow_blank=True, allow_null=True)
     image = ImageSerializer(required=False, allow_null=True)
     organization = OrganizationSerializer(required=False, allow_null=True)
-    contributor_count = serializers.IntegerField(
-        source='synced_contributor_count',
-        required=False,
-        allow_null=True,
-    )
     url = serializers.SerializerMethodField()
+
+    contributor_count = serializers.SerializerMethodField(required=False, allow_null=True)
+
+    def get_contributor_count(self, obj):
+        return obj.participants.count()
 
     def get_url(self, obj):
         return connection.tenant.build_absolute_url(
@@ -300,7 +300,6 @@ class FederatedDeedSerializer(BaseFederatedActivitySerializer):
 
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='end', allow_null=True)
-    contributor_count = serializers.IntegerField(allow_null=True, read_only=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Deed

@@ -526,6 +526,14 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
                 ),
             ],
         ),
+
+        ModelChangedTrigger(
+            ['title', 'description', 'start', 'deadline', 'location', 'duration', ],
+            effects=[
+                UpdateEventEffect,
+            ]
+        ),
+
         TransitionTrigger(
             RegistrationActivityStateMachine.approve,
             effects=[
@@ -567,6 +575,13 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
                     ScheduleSlotStateMachine.cancel
                 ),
             ],
+        ),
+
+        ModelChangedTrigger(
+            ['title', 'description', 'start', 'end', 'location', 'duration', ],
+            effects=[
+                UpdateEventEffect,
+            ]
         ),
 
         TransitionTrigger(

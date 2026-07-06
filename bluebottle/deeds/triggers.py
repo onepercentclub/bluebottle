@@ -17,7 +17,7 @@ from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
 from bluebottle.activity_pub.effects import (
-    PublishAdoptionEffect, CancelEffect, StartEffect, UpdateEventEffect, FinishEffect,
+    PublishAdoptionEffect, CancelEffect, StartEffect, SyncRelatedEvent, UpdateEventEffect, FinishEffect,
     SendJoinEffect, SendLeaveEffect
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
@@ -357,6 +357,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 ),
                 FollowActivityEffect,
                 SendJoinEffect,
+                SyncRelatedEvent
             ]
         ),
         TransitionTrigger(

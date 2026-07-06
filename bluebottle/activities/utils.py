@@ -225,7 +225,6 @@ class BaseActivitySerializer(ModelSerializer):
     categories = ResourceRelatedField(many=True, read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
-    contributor_count = serializers.SerializerMethodField()
     team_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
     goals = ResourceRelatedField(required=False, many=True, read_only=True)
@@ -362,13 +361,6 @@ class BaseActivitySerializer(ModelSerializer):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
-    def get_contributor_count(self, instance):
-        return {
-            'total': instance.total_contributor_count,
-            'local': instance.local_contributor_count,
-            'remote': instance.remote_contributor_count,
-        }
-
     def get_team_count(self, instance):
         return instance.old_teams.filter(status__in=['open', 'finished']).count()
 
@@ -419,7 +411,6 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
             'matching_properties',
             'deleted_successful_contributors',
-            'contributor_count',
             'team_count',
             'current_status',
             'admin_url',

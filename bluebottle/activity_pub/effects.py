@@ -39,6 +39,30 @@ class CreateEffect(Effect):
         return str(_('Publish activity to followers'))
 
 
+class SyncRelatedEvent(Effect):
+    """
+    Publish the related activity to the followers of the actor through GoodUp Connect
+    """
+
+    display = True
+    template = 'admin/activity_pub/create_effect.html'
+
+    def post_save(self, **kwargs):
+        event = adapter.sync(self.instance.activity)
+
+        Update.objects.create(
+            actor=get_platform_actor(),
+            object=event
+        )
+
+    @property
+    def is_valid(self):
+        return hasattr(self.instance.activity, 'activity_pub_model')
+
+    def __str__(self):
+        return str(_('Publish activity to followers'))
+
+
 class SyncEffect(Effect):
     """
     Publish the activity to the followers of the actor through GoodUp Connect
@@ -62,7 +86,7 @@ class SyncEffect(Effect):
 
     @property
     def is_valid(self):
-        return hasattr(self.instance.activity, 'activity_pub_model')
+        return hasattr(self.instance, 'activity_pub_model')
 
     def __str__(self):
         return str(_('Publish activity to followers'))
@@ -97,7 +121,12 @@ class UpdateEventEffect(Effect):
     template = 'admin/activity_pub/update_event_effect.html'
 
     def post_save(self, **kwargs):
-        Event.sync(self.instance)
+        event = Event.sync(self.instance)
+
+        Update.objects.create(
+            actor=get_platform_actor(),
+            object=event
+        )
 
     @property
     def is_valid(self):

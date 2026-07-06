@@ -247,28 +247,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def succeeded_contributor_count(self):
-        raise NotImplementedError
-
-    @property
-    def local_contributor_count(self):
-        contributors = getattr(self, "contributors", None)
-        if contributors is None:
-            return 0
-        return contributors.not_instance_of(Organizer).filter(
-            status__in=self.LOCAL_CONTRIBUTOR_STATUSES
-        ).count()
-
-    @property
-    def remote_contributor_count(self):
-        synced_total = self.synced_contributor_count or 0
-        return max(0, synced_total - self.local_contributor_count)
-
-    @property
-    def total_contributor_count(self):
-        synced_total = self.synced_contributor_count or 0
-        if synced_total:
-            return synced_total
-        return self.local_contributor_count
+        return self.donations.filter(status='succeeded').count()
 
     @property
     def activity_date(self):

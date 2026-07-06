@@ -297,10 +297,6 @@ class Funding(Activity):
             return Donor.objects.none()
 
     @property
-    def succeeded_contributor_count(self):
-        return self.donations.filter(status='succeeded').count()
-
-    @property
     def genuine_amount_donated(self):
         """
         The sum of all contributors (donations) without pledges converted to the targets currency

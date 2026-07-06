@@ -221,12 +221,12 @@ class ActivityPubTestCase:
         self.test_accept()
 
         self.follow.publish_mode = 'automatic'
-        self.follow.save(update_fields=['publish_mode'])
+        self.follow.save()
 
         with LocalTenant(self.other_tenant):
             Event.objects.all().delete()
 
-        activity = DeedFactory.create(status='submitted')
+        activity = self.factory.create(status='submitted')
         activity.states.approve(save=True)
 
         publish = activity.activity_pub_model.create_set.first()
@@ -427,6 +427,8 @@ class SyncTestCase(ActivityPubTestCase):
         with LocalTenant(self.other_tenant):
             self.join()
             self.email = self.participant.user.email
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 1)
 
         self.synced_participant = self.participant_factory._meta.model.objects.get()
 

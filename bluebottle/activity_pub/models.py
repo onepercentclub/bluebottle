@@ -300,10 +300,6 @@ class Event(ActivityPubModel):
         if self.is_local:
             if not self.create_set.exists():
                 Create.objects.create(actor=get_platform_actor(), object=self)
-            else:
-                Update.objects.create(
-                    object=self
-                )
 
     @property
     def source(self):
@@ -848,7 +844,6 @@ class Create(Activity):
                 isinstance(self.object, SubEvent)
             ):
                 if follow.adoption_type == 'sync':
-                    __import__('ipdb').set_trace()
                     adapter.adopt(self.object)
                 elif follow.adoption_type == 'link':
                     adapter.link(self.object)

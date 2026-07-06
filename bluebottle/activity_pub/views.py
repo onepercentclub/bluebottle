@@ -40,7 +40,7 @@ def create_task(request, tenant):
             data=request.data, context={'request': request}
         )
 
-        print('Post to inbox:', request.data['type'])
+        print('Post to inbox:', request.data['type'], request.data['object'])
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

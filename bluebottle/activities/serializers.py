@@ -347,6 +347,11 @@ class ActivityPreviewSerializer(ModelSerializer):
                     "period": obj.contribution_duration[0].period,
                     "value": obj.contribution_duration[0].value,
                 }
+            elif len(obj.contribution_duration) > 1:
+                return {
+                    "period": obj.contribution_duration[0].period,
+                    "value": obj.contribution_duration[0].value,
+                }
 
     def get_collect_type(self, obj):
         try:

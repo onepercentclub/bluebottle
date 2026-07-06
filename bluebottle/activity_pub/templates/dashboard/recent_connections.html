@@ -1,0 +1,16 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for connection in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <a href="{{ connection.url }}">{{ connection.name }}</a>
+        <br>
+        <span>{{ connection.role }}</span>
+    </li>
+    {% empty %}
+    <li>{% trans "No connections" %}</li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

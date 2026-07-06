@@ -1,14 +1,13 @@
-from bluebottle.clients.models import Client
-from bluebottle.clients.utils import LocalTenant
-
 from bluebottle.activities.models import Activity
 from bluebottle.activity_pub.models import ActivityPubModel
-from bluebottle.organizations.models import Organization
+from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.files.models import Image
+from bluebottle.organizations.models import Organization
 
 
 def run():
-    for client in Client.objects.filter(schema_name__in=['onepercent', 'goodup_demo', 'voor_je_buurt']):
+    for client in Client.objects.all():
         with LocalTenant(client):
             for model in ActivityPubModel.objects.all():
                 if model.is_local and hasattr(model, 'adopted') and model.adopted:

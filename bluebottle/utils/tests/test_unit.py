@@ -9,6 +9,7 @@ import mock
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Permission
+from django.core.cache import cache
 from django.core.exceptions import SuspiciousFileOperation, ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -29,7 +30,7 @@ from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.models import DateActivity
 from bluebottle.utils.fields import RestrictedImageFormField
-from bluebottle.utils.models import Language, get_current_language
+from bluebottle.utils.models import Language, get_current_language, get_languages, clear_language_cache
 from bluebottle.utils.permissions import (
     ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
     OneOf
@@ -441,6 +442,36 @@ class TestTenantAwareParlerAppsettings(BluebottleTestCase):
     def test_create_unknown(self):
         with self.assertRaisesMessage(ValidationError, 'Unknown language code: du'):
             LanguageFactory.create(code='du', default=True, language_name='Unknown')
+
+
+class TestTenantLanguageCacheIsolation(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+        Language.objects.all().delete()
+
+    def test_get_languages_cached_per_tenant(self):
+        from unittest.mock import patch
+
+        clear_language_cache()
+
+        LanguageFactory.create(code='en', default=True, language_name='English')
+        with patch('bluebottle.utils.models._tenant_schema_name', return_value='tenant_a'):
+            tenant_a_langs = [lang.full_code for lang in get_languages()]
+
+        Language.objects.all().delete()
+        LanguageFactory.create(code='nl', default=True, language_name='Dutch')
+        LanguageFactory.create(code='es', language_name='Spanish')
+
+        with patch('bluebottle.utils.models._tenant_schema_name', return_value='tenant_b'):
+            tenant_b_langs = [lang.full_code for lang in get_languages()]
+
+        with patch('bluebottle.utils.models._tenant_schema_name', return_value='tenant_a'):
+            tenant_a_langs_again = [lang.full_code for lang in get_languages()]
+
+        self.assertEqual(tenant_a_langs, ['en'])
+        self.assertEqual(tenant_b_langs, ['nl', 'es'])
+        self.assertEqual(tenant_a_langs_again, ['en'])
 
 
 class TestResourcePermission(BluebottleTestCase):

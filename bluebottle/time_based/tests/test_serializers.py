@@ -4,6 +4,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.test.client import RequestFactory
 from django.utils.timezone import now
 
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -27,6 +29,21 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
         data = serializer.to_representation(instance=self.activity)
 
         self.assertEqual(data[attr], value)
+
+    def test_adopted_activity_readonly_fields(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        request = self.request_factory.get('/')
+        request.user = AnonymousUser()
+        request.query_params = {}
+        serializer = DateActivitySerializer(context={'request': request})
+        data = serializer.to_representation(instance=self.activity)
+
+        self.assertIn('attributes.title', data['readonly_fields'])
 
     def test_date_info_no_slots(self):
         self.assertAttribute('date_info', {

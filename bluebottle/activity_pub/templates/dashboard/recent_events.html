@@ -1,0 +1,20 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for event in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <a href="{{ event.admin_url }}">{{ event.name }}</a>
+        <br>
+        <span>{{ event.type_label }}</span>
+        {% if event.source %}
+        <br>
+        <span>{% trans "Partner" %}: {{ event.source }}</span>
+        {% endif %}
+    </li>
+    {% empty %}
+    <li>{% trans "No activities" %}</li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

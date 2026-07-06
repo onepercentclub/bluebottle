@@ -2,6 +2,7 @@ import logging
 from builtins import object
 from itertools import groupby
 
+import inflection
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -10,7 +11,6 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from geopy.distance import distance, lonlat
-import inflection
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
@@ -266,6 +266,17 @@ class BaseActivitySerializer(ModelSerializer):
 
     readonly_fields = serializers.SerializerMethodField()
 
+    contributor_count = serializers.SerializerMethodField()
+
+    def get_contributor_count(self, obj):
+        if obj.origin:
+            return {
+                'total': obj.origin.contributor_count,
+                'remote': obj.origin.contributor_count,
+                'local': obj.active_contributors.count(),
+
+            }
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         user = self.context["request"].user
@@ -303,12 +314,16 @@ class BaseActivitySerializer(ModelSerializer):
                     pass
 
     def get_readonly_fields(self, obj):
-        return [
-            f'relationships.{inflection.camelize(field, False)}' if
-            isinstance(self.fields[field], RelatedField) else
-            f'attributes.{inflection.camelize(field, False)}'
-            for field in obj.readonly_fields
-        ]
+        result = []
+        for field in obj.readonly_fields:
+            if field not in self.fields:
+                continue
+            result.append(
+                f'relationships.{inflection.camelize(field, False)}' if
+                isinstance(self.fields[field], RelatedField) else
+                f'attributes.{inflection.camelize(field, False)}'
+            )
+        return result
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)
@@ -399,6 +414,7 @@ class BaseActivitySerializer(ModelSerializer):
             'theme',
             'answers',
             'tos_accepted',
+            'contributor_count'
         )
 
         meta_fields = (
@@ -415,6 +431,7 @@ class BaseActivitySerializer(ModelSerializer):
             'current_status',
             'admin_url',
             'readonly_fields',
+            'contributor_count'
         )
 
     class JSONAPIMeta(object):
@@ -689,7 +706,7 @@ class BaseContributorSerializer(ModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'remote_user': 'bluebottle.activities.serializers.ReomteMemberSerializer',
+        'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
         'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }

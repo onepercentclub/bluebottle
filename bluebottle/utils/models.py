@@ -7,14 +7,13 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db import models, ProgrammingError, OperationalError
+from django.db import connection, models, ProgrammingError, OperationalError
 from django.db.models.manager import Manager
 from django.utils.timezone import now
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
-from memoize import memoize
 from parler.models import TranslatableModel
 from solo.models import SingletonModel
 
@@ -26,7 +25,17 @@ from bluebottle.utils.managers import (
 TIMEOUT = 5 * 60
 
 
-@memoize(timeout=TIMEOUT)
+def _tenant_schema_name():
+    return getattr(getattr(connection, 'tenant', None), 'schema_name', 'public')
+
+
+def clear_language_cache():
+    schema = _tenant_schema_name()
+    cache.delete(f'tenant_languages_{schema}')
+    cache.delete(f'tenant_default_language_{schema}')
+    cache.delete(f'LANGUAGE_CHOICES_{schema}')
+
+
 def get_languages():
     """
     Return the configured languages for the current tenant.
@@ -36,9 +45,15 @@ def get_languages():
     migrations touched translatable models.  Fall back to settings.LANGUAGES so
     we always expose at least one language definition.
     """
+    cache_key = f'tenant_languages_{_tenant_schema_name()}'
+    languages = cache.get(cache_key)
+    if languages is not None:
+        return languages
+
     try:
         languages = list(Language.objects.all())
         if languages:
+            cache.set(cache_key, languages, TIMEOUT)
             return languages
     except (ProgrammingError, OperationalError):
         # Database table might not be ready yet (e.g. during migrate_schemas)
@@ -67,22 +82,29 @@ def get_languages():
     return languages
 
 
-@memoize(timeout=TIMEOUT)
 def get_default_language():
+    cache_key = f'tenant_default_language_{_tenant_schema_name()}'
+    language = cache.get(cache_key)
+    if language is not None:
+        return language
+
     try:
-        return Language.objects.filter(default=True).first().full_code
+        language = Language.objects.filter(default=True).first().full_code
     except (AttributeError, ProgrammingError):
-        return 'en'
+        language = 'en'
+
+    cache.set(cache_key, language, TIMEOUT)
+    return language
 
 
 def get_language_choices():
     try:
-        cache_key = 'LANGUAGE_CHOICES'
+        cache_key = f'LANGUAGE_CHOICES_{_tenant_schema_name()}'
         result = cache.get(cache_key)
 
         if not result:
             result = [(lang.full_code, lang.language_name) for lang in Language.objects.all()]
-            cache.set(cache_key, result)
+            cache.set(cache_key, result, TIMEOUT)
     except (ProgrammingError, OperationalError, AttributeError):
         result = [('en', 'English')]
 
@@ -123,6 +145,11 @@ class Language(models.Model):
         if self.code and self.code not in (code for (code, _) in settings.LANGUAGES):
             raise ValidationError(f'Unknown language code: {self.code}')
         super().save(*args, **kwargs)
+        clear_language_cache()
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        clear_language_cache()
 
     @property
     def full_code(self):

@@ -40,8 +40,6 @@ def create_task(request, tenant):
             data=request.data, context={'request': request}
         )
 
-        print('Post to inbox:', request.data['type'])
-
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -57,6 +55,9 @@ class PickableRequest:
 class InboxView(generics.CreateAPIView, JSONLDView):
     queryset = Inbox.objects.all()
     permission_classes = [InboxPermission]
+
+    def get_queryset(self):
+        return Inbox.objects.filter(pk=self.kwargs['pk'])
 
     def get_serializer_context(self):
         return {'request': PickableRequest(self.request)}

@@ -77,6 +77,20 @@ class ActivityPubPermissionTestCase(PermissionTestCase):
             self.permission.has_permission(request)
         )
 
+    def test_platform_actor_get_closed_platform(self):
+        MemberPlatformSettings.objects.create(closed=True)
+        platform_actor = OrganizationFactory.create()
+
+        with mock.patch(
+            'bluebottle.activity_pub.permissions.get_platform_actor',
+            return_value=platform_actor,
+        ):
+            request = self.authenticate(self.request_factory.get(path='/'), platform_actor)
+
+            self.assertTrue(
+                self.permission.has_permission(request)
+            )
+
 
 class InboxPermissionTestCase(PermissionTestCase):
     permission_class = InboxPermission

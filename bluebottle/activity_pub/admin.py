@@ -20,7 +20,6 @@ from polymorphic.admin import (
 )
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.tasks import publish_activity
 from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
     Activity,
@@ -41,6 +40,7 @@ from bluebottle.activity_pub.models import (
     Finish, Join, Leave, Update, Start,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
+from bluebottle.activity_pub.tasks import publish_activity
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import admin_form
 from bluebottle.members.models import Member

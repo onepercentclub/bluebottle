@@ -22,7 +22,9 @@ from bluebottle.files.models import Image as BluebottleImage
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
 
 from bluebottle.activity_pub.tasks import publish_to_recipient
-from bluebottle.activity_pub.utils import is_local, get_platform_actor
+from bluebottle.activity_pub.utils import (
+    is_local, get_platform_actor, normalize_resource_url, resolve_local_resource,
+)
 
 from bluebottle.activity_pub.adapters import adapter
 
@@ -35,10 +37,13 @@ class ActivityPubManager(PolymorphicManager):
     def from_iri(self, iri):
         if iri:
             if is_local(iri):
-                resolved = resolve(urlparse(iri).path)
-                return self.filter(pk=resolved.kwargs['pk']).first()
-            else:
-                return self.filter(iri=iri).first()
+                return resolve_local_resource(iri)
+            instance = self.filter(iri=iri).first()
+            if instance:
+                return instance
+            normalized_iri = normalize_resource_url(iri)
+            if normalized_iri != iri:
+                return self.filter(iri=normalized_iri).first()
 
 
 class ActivityPubModel(PolymorphicModel):
@@ -740,6 +745,7 @@ class Follow(Activity):
         created = not bool(self.pk)
 
         if not hasattr(self, 'actor'):
+            from bluebottle.activity_pub.utils import get_platform_actor
             self.actor = get_platform_actor()
 
         super().save(*args, **kwargs)

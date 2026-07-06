@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.serializers import ActivityPubSerializer, FederatedObjectSerializer
 from bluebottle.activity_pub.clients import client
-from bluebottle.activity_pub.utils import is_local
+from bluebottle.activity_pub.utils import is_local, resource_type_from_url
 
 
 class ManyResourceRelatedField(ManyRelatedField):
@@ -57,29 +57,51 @@ class RelatedResourceField(RelatedField):
             full=False, include=self.include
         ).to_representation(value)
 
+    def _ensure_type(self, data):
+        if 'type' in data or 'id' not in data:
+            return data
+
+        if isinstance(self.type, str):
+            return dict(type=self.type, **data)
+
+        if isinstance(self.type, (tuple, list)):
+            resource_type = resource_type_from_url(data['id'], self.type)
+            if resource_type:
+                return dict(type=resource_type, **data)
+
+        return data
+
     def to_internal_value(self, data):
         if isinstance(data, str):
             data = {'id': data}
 
-        if 'type' not in data and isinstance(self.type, str):
-            data = dict(type=self.type, **data)
+        data = self._ensure_type(data)
 
         serializer = ActivityPubSerializer()
 
         try:
             return serializer.to_internal_value(data)
         except ValidationError as e:
-            if 'id' in data:
-                instance = ActivityPubModel.objects.from_iri(data['id'])
-
-                if instance:
-                    local_data = ActivityPubSerializer(instance=instance).data
-                    return serializer.to_internal_value(local_data)
-                elif not is_local(data['id']):
-                    fetched_data = client.fetch(data['id'])
-                    return serializer.to_internal_value(fetched_data)
-            else:
+            if 'id' not in data:
                 raise e
+
+            instance = ActivityPubModel.objects.from_iri(data['id'])
+
+            if instance:
+                local_data = ActivityPubSerializer(instance=instance).data
+                return serializer.to_internal_value(local_data)
+
+            from bluebottle.activity_pub.utils import get_local_resource_data
+
+            local_data = get_local_resource_data(data['id'])
+            if local_data:
+                return serializer.to_internal_value(local_data)
+
+            if not is_local(data['id']):
+                fetched_data = client.fetch(data['id'])
+                return serializer.to_internal_value(fetched_data)
+
+            raise e
 
     def get_related_origin(self):
         try:

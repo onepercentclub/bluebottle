@@ -204,6 +204,24 @@ class FollowSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
     def update(self):
         self.data['object'] = self.next_object.iri
 
+    def test_follow_without_actor_object_types(self):
+        data = {
+            'type': 'Follow',
+            'id': 'http://example.com/api/json-ld/follow/36',
+            'actor': 'http://example.com/api/json-ld/organization/32',
+            'object': 'http://example.com/api/json-ld/organization/33',
+            'adoption_type': 'clone',
+        }
+
+        with mock.patch(
+            'bluebottle.activity_pub.serializers.relations.client.fetch',
+            side_effect=lambda url: ActivityPubSerializer(
+                instance=OrganizationFactory.create(iri=url)
+            ).data
+        ):
+            serializer = ActivityPubSerializer(data=data)
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+
 
 class DoGoodEventSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
     factory = DoGoodEventFactory

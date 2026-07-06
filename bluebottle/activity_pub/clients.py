@@ -49,6 +49,12 @@ class JSONLDClient:
         return self.do_request('post', url, data=rendered_data, auth=auth)
 
     def fetch(self, url):
+        from bluebottle.activity_pub.utils import get_local_resource_data
+
+        local_data = get_local_resource_data(url)
+        if local_data:
+            return local_data
+
         auth = self.get_auth(get_platform_actor())
         return self.get(url, auth=auth)
 

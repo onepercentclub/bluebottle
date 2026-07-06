@@ -1,8 +1,9 @@
 import re
+
 from rest_framework import generics, renderers, serializers, exceptions
 
-from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
+from bluebottle.cms.models import SitePlatformSettings
 
 
 class WebFingerRenderer(renderers.JSONRenderer):

@@ -463,9 +463,7 @@ def format_card_location(activity, card_location_display, language):
     parts = []
 
     for level in card_location_display:
-        if level == 'venue_name':
-            value = getattr(activity, 'location_hint', None)
-        elif level == 'country':
+        if level == 'country':
             country_feature = next(
                 (
                     geofeature for geofeature in language_geofeatures

@@ -47,6 +47,7 @@ class SettingsView(views.APIView):
                         'closed': member_settings['closed'],
                         'background': member_settings['background'],
                         'login_methods': member_settings['login_methods'],
+                        'sso_login_methods': member_settings.get('sso_login_methods', []),
                         'session_only': member_settings['session_only'],
                         'email_domains': member_settings['email_domains'],
                         'confirm_signup': member_settings['confirm_signup'],

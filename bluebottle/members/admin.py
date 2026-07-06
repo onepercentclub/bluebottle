@@ -132,8 +132,6 @@ class SocialLoginSettingsInline(admin.TabularInline):
 class SingleSignOnProviderInline(admin.StackedInline):
     model = SingleSignOnProvider
     extra = 0
-    max_num = 1
-    can_delete = False
 
     def idp_info(self, obj):
         return admin_info_box(
@@ -152,6 +150,7 @@ class SingleSignOnProviderInline(admin.StackedInline):
     readonly_fields = ('idp_info', 'sp_info',)
 
     fields = (
+        'name',
         'strict', 'debug', 'admin_login', 'provision',
         'requested_authn_context',
         'authn_requests_signed',

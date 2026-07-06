@@ -1,8 +1,19 @@
+from urllib.parse import urlparse
+
 from django.db import migrations, connection
 
 from bluebottle.clients import properties
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
+
+
+def idp_domain_name(idp_sso_url, idp_entity_id):
+    for value in (idp_sso_url, idp_entity_id):
+        if value and value.startswith('http'):
+            netloc = urlparse(value).netloc
+            if netloc:
+                return netloc
+    return idp_entity_id or ''
 
 
 def import_sso_settings(apps, schema_editor):
@@ -22,9 +33,6 @@ def import_sso_settings(apps, schema_editor):
             settings=platform_settings
         )
 
-        provider.backend = token_auth_settings.get(
-            'backend', 'token_auth.auth.saml.SAMLAuthentication'
-        )
         provider.strict = token_auth_settings.get('strict', False)
         provider.debug = token_auth_settings.get('debug', False)
         provider.admin_login = token_auth_settings.get('admin_login', True)
@@ -44,9 +52,6 @@ def import_sso_settings(apps, schema_editor):
 
         sp = token_auth_settings.get('sp', {})
         provider.sp_entity_id = sp.get('entityId', '')
-        provider.sp_name_id_format = sp.get(
-            'NameIDFormat', 'urn:oasis:names:tc:SAML:2.0:nameid-format:string'
-        )
         provider.sp_acs_url = sp.get('assertionConsumerService', {}).get('url', '')
         provider.sp_acs_binding = sp.get(
             'assertionConsumerService', {}
@@ -62,16 +67,15 @@ def import_sso_settings(apps, schema_editor):
         requested_authn_context = security.get('requestedAuthnContext', False)
         if isinstance(requested_authn_context, bool):
             provider.requested_authn_context = requested_authn_context
-            provider.security_overrides = None
         else:
             provider.requested_authn_context = False
-            provider.security_overrides = security
 
-        provider.requested_authn_context_comparison = security.get(
-            'requestedAuthnContextComparison', ''
-        )
         provider.authn_requests_signed = security.get('authnRequestsSigned', False)
         provider.want_assertions_signed = security.get('wantAssertionsSigned', False)
+
+        if not provider.name:
+            provider.name = idp_domain_name(provider.idp_sso_url, provider.idp_entity_id)
+
         provider.save()
 
         provider.assertion_mappings.all().delete()
@@ -110,7 +114,7 @@ def import_sso_settings(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('members', '0108_singlesignonprovider_singlesignonassertionmapping'),
+        ('members', '0109_alter_member_gender_alter_member_office_manager_and_more'),
     ]
 
     operations = [

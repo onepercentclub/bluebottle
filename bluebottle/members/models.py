@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from builtins import object
 from datetime import timedelta, datetime
+from urllib.parse import urlparse
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -69,6 +70,13 @@ class SingleSignOnProvider(models.Model):
         'members.MemberPlatformSettings',
         on_delete=models.CASCADE,
         related_name='sso_providers',
+    )
+
+    name = models.CharField(
+        _('Name'),
+        max_length=255,
+        blank=True,
+        help_text=_('Display name for this SSO provider. Defaults to the IdP domain.'),
     )
 
     strict = models.BooleanField(_('Strict mode'), default=False)
@@ -139,9 +147,26 @@ class SingleSignOnProvider(models.Model):
     def is_configured(self):
         return bool(self.idp_entity_id and self.idp_sso_url and self.sp_entity_id and self.sp_acs_url)
 
+    def idp_domain_name(self):
+        for value in (self.idp_sso_url, self.idp_entity_id):
+            if value and value.startswith('http'):
+                netloc = urlparse(value).netloc
+                if netloc:
+                    return netloc
+        return self.idp_entity_id or ''
+
+    @property
+    def display_name(self):
+        return self.name or self.idp_domain_name() or 'SSO'
+
+    def save(self, *args, **kwargs):
+        if not self.name:
+            self.name = self.idp_domain_name()
+        super(SingleSignOnProvider, self).save(*args, **kwargs)
+
     def to_token_auth_settings(self):
         settings = {
-            'backend': self.backend,
+            'backend': 'token_auth.auth.saml.SAMLAuthentication',
             'strict': self.strict,
             'debug': self.debug,
             'assertion_mapping': self.get_assertion_mapping(),
@@ -159,7 +184,7 @@ class SingleSignOnProvider(models.Model):
             },
             'sp': {
                 'entityId': self.sp_entity_id,
-                'NameIDFormat': self.sp_name_id_format,
+                'NameIDFormat': 'urn:oasis:names:tc:SAML:2.0:nameid-format:string',
                 'assertionConsumerService': {
                     'url': self.sp_acs_url,
                     'binding': self.sp_acs_binding,
@@ -176,13 +201,14 @@ class SingleSignOnProvider(models.Model):
         if not self.provision:
             settings['provision'] = False
 
-        security = dict(self.security_overrides or {})
-        if 'requestedAuthnContext' not in security:
-            security['requestedAuthnContext'] = self.requested_authn_context
+        security = {
+            'requestedAuthnContext': self.requested_authn_context,
+        }
         if self.authn_requests_signed:
             security['authnRequestsSigned'] = True
         if self.want_assertions_signed:
             security['wantAssertionsSigned'] = True
+        settings['security'] = security
 
         if self.sp_x509cert:
             settings['sp']['x509cert'] = self.sp_x509cert
@@ -221,9 +247,6 @@ class SingleSignOnProvider(models.Model):
 
         sp = token_auth_settings.get('sp', {})
         provider.sp_entity_id = sp.get('entityId', '')
-        provider.sp_name_id_format = sp.get(
-            'NameIDFormat', 'urn:oasis:names:tc:SAML:2.0:nameid-format:string'
-        )
         provider.sp_acs_url = sp.get('assertionConsumerService', {}).get('url', '')
         provider.sp_acs_binding = sp.get(
             'assertionConsumerService', {}
@@ -239,14 +262,9 @@ class SingleSignOnProvider(models.Model):
         requested_authn_context = security.get('requestedAuthnContext', False)
         if isinstance(requested_authn_context, bool):
             provider.requested_authn_context = requested_authn_context
-            provider.security_overrides = None
         else:
             provider.requested_authn_context = False
-            provider.security_overrides = security
 
-        provider.requested_authn_context_comparison = security.get(
-            'requestedAuthnContextComparison', ''
-        )
         provider.authn_requests_signed = security.get('authnRequestsSigned', False)
         provider.want_assertions_signed = security.get('wantAssertionsSigned', False)
         provider.save()

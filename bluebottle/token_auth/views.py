@@ -6,20 +6,67 @@ import django_otp
 
 from django.conf import settings
 from django.contrib.auth import login
+from django.core.exceptions import ImproperlyConfigured
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect, HttpResponse
 from rest_framework.exceptions import PermissionDenied
 from django.template import loader
 from django.views.generic.base import View, TemplateView
 
 from bluebottle.clients import properties
+from bluebottle.members.sso import get_configured_sso_providers, get_sso_provider
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.models import SAMLDevice
 from bluebottle.utils.utils import get_client_ip
 
 
+SSO_PROVIDER_SESSION_KEY = 'sso_provider_id'
+
+
 def get_auth(request, settings, saml_request=None):
     return SAMLAuthentication(request, settings, saml_request=saml_request)
+
+
+def get_saml_settings_for_redirect(request):
+    provider_id = request.GET.get('provider')
+    providers = get_configured_sso_providers()
+
+    if provider_id:
+        provider = get_sso_provider(provider_id)
+        request.session[SSO_PROVIDER_SESSION_KEY] = str(provider.pk)
+        return provider.to_token_auth_settings()
+
+    if len(providers) == 1:
+        request.session[SSO_PROVIDER_SESSION_KEY] = str(providers[0].pk)
+        return providers[0].to_token_auth_settings()
+
+    if len(providers) > 1:
+        return None
+
+    try:
+        return properties.TOKEN_AUTH
+    except AttributeError:
+        return None
+
+
+def get_saml_settings_for_request(request):
+    provider_id = request.GET.get('provider') or request.session.get(SSO_PROVIDER_SESSION_KEY)
+    if provider_id:
+        try:
+            provider = get_sso_provider(provider_id)
+            if provider:
+                return provider.to_token_auth_settings()
+        except ImproperlyConfigured:
+            pass
+
+    providers = get_configured_sso_providers()
+    if len(providers) == 1:
+        return providers[0].to_token_auth_settings()
+
+    try:
+        return properties.TOKEN_AUTH
+    except AttributeError:
+        raise ImproperlyConfigured('Missing SSO configuration')
 
 
 class TokenRedirectView(View):
@@ -35,7 +82,9 @@ class TokenRedirectView(View):
         if client_ip == settings.VPN_CLIENT_IP or client_ip == '127.0.0.1':
             saml_settings = settings.SUPPORT_TOKEN_AUTH
         else:
-            saml_settings = properties.TOKEN_AUTH
+            saml_settings = get_saml_settings_for_redirect(request)
+            if not saml_settings:
+                return HttpResponseRedirect('/token/error?message=SSO+provider+required')
 
         auth = get_auth(request, settings=saml_settings, **kwargs)
         sso_url = auth.sso_url(target_url=request.build_absolute_uri(request.GET.get('url')))
@@ -84,9 +133,14 @@ class SAMLLoginView(View):
 
 
 class UserSAMLLoginView(SAMLLoginView):
-    @property
-    def settings(self):
-        return properties.TOKEN_AUTH
+    def get_auth(self, request):
+        return get_auth(request, get_saml_settings_for_request(request))
+
+    def post(self, request):
+        response = super(UserSAMLLoginView, self).post(request)
+        if SSO_PROVIDER_SESSION_KEY in request.session:
+            del request.session[SSO_PROVIDER_SESSION_KEY]
+        return response
 
 
 class SupportSAMLLoginView(SAMLLoginView):
@@ -134,7 +188,7 @@ class TokenLogoutView(TemplateView):
     template_name = 'token/token-logout.tpl'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
+        auth = get_auth(request, settings=get_saml_settings_for_request(request), **kwargs)
         url = auth.process_logout()
         if url:
             return HttpResponseRedirect(url)
@@ -158,6 +212,6 @@ class MetadataView(View):
     """
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
+        auth = get_auth(request, settings=get_saml_settings_for_request(request), **kwargs)
         metadata = auth.get_metadata()
         return HttpResponse(content=metadata, content_type='text/xml')

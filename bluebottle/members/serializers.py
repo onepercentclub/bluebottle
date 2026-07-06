@@ -6,6 +6,7 @@ from axes.handlers.proxy import AxesProxyHandler
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model, password_validation, authenticate
+from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
@@ -918,17 +919,25 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     background = SorlImageField('1408x1080', crop='center')
     read_only_fields = serializers.SerializerMethodField()
     social_login_methods = serializers.SerializerMethodField()
+    sso_login_methods = serializers.SerializerMethodField()
 
     def get_read_only_fields(self, obj):
         try:
             return get_token_auth_settings()['assertion_mapping'].keys()
-        except (AttributeError, IndexError):
+        except (AttributeError, IndexError, ImproperlyConfigured):
             return []
 
     def get_social_login_methods(self, obj):
         return [
             {'key': method.client_id, 'backend': method.backend}
             for method in obj.social_login_methods.all()
+        ]
+
+    def get_sso_login_methods(self, obj):
+        return [
+            {'id': str(provider.pk), 'name': provider.display_name}
+            for provider in obj.sso_providers.all()
+            if provider.is_configured
         ]
 
     class Meta(object):
@@ -967,6 +976,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'read_only_fields',
             'translate_user_content',
             'social_login_methods',
+            'sso_login_methods',
             'explicit_terms'
         )
 

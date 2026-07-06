@@ -460,9 +460,6 @@ def format_card_location(activity, card_location_display, language):
     if not language_geofeatures:
         return None
 
-    countries = _entries_for_language(getattr(activity, 'country', None) or [], language)
-    country = countries[0] if len(countries) else None
-
     parts = []
 
     for level in card_location_display:

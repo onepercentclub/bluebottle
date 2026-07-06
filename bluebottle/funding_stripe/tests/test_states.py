@@ -1,10 +1,11 @@
 import munch
 import stripe
-from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core import mail
 from djmoney.money import Money
 from mock import patch
 
+from bluebottle.activities.messages.reviewer import get_reviewers_for_activity
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
 from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
@@ -195,6 +196,10 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
             bank_account=self.bank_account,
             target=Money(1000, "EUR")
         )
+        self.reviewer = BlueBottleUserFactory.create(
+            submitted_initiative_notifications=True,
+        )
+        self.reviewer.groups.add(Group.objects.get(name='Staff'))
 
     def open_funding(self):
         self.funding.initiative.status = "approved"
@@ -207,7 +212,8 @@ class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
         self.assertEqual(mail.outbox[0].subject, self.ACTIVITY_INCOMPLETE_SUBJECT)
 
     def assert_live_incomplete_notifications(self):
-        self.assertEqual(len(mail.outbox), len(settings.SUPPORT_EMAIL_ADDRESSES))
+        recipients = get_reviewers_for_activity(self.funding)
+        self.assertEqual(len(mail.outbox), len(recipients))
         for message in mail.outbox:
             self.assertEqual(message.subject, self.LIVE_INCOMPLETE_SUBJECT)
 

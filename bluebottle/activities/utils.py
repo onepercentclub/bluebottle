@@ -311,7 +311,7 @@ class BaseActivitySerializer(ModelSerializer):
     def validate(self, data):
         settings = InitiativePlatformSettings.load()
 
-        if data['office_restriction'] and data['office_restriction'] not in settings.available_office_restrictions:
+        if 'office_restriction' in data and data['office_restriction'] not in settings.available_office_restrictions:
             raise ValidationError({
                 'office_restriction': f'{data["office_restriction"]} is not a valid value',
             })

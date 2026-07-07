@@ -359,6 +359,7 @@ class InitiativePlatformSettingsAdmin(
                     "enable_office_restrictions",
                     "available_office_restrictions",
                     "default_office_restriction",
+                    "allow_disable_office_filter",
                 )
             },
         ),

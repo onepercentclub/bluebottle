@@ -318,16 +318,12 @@ class BaseActivitySerializer(ModelSerializer):
                     pass
 
     def get_readonly_fields(self, obj):
-        result = []
-        for field in obj.readonly_fields:
-            if field not in self.fields:
-                continue
-            result.append(
-                f'relationships.{inflection.camelize(field, False)}' if
-                isinstance(self.fields[field], RelatedField) else
-                f'attributes.{inflection.camelize(field, False)}'
-            )
-        return result
+        return [
+            f'relationships.{inflection.camelize(field, False)}' if
+            isinstance(self.fields[field], RelatedField) else
+            f'attributes.{inflection.camelize(field, False)}'
+            for field in obj.readonly_fields if field in self.fields
+        ]
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)

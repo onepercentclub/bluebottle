@@ -79,22 +79,22 @@ class Migration(migrations.Migration):
         migrations.RenameField(
             model_name='event',
             old_name='federated_object',
-            new_name='adopted',
+            new_name='origin',
         ),
         migrations.RenameField(
             model_name='image',
             old_name='federated_object',
-            new_name='adopted',
+            new_name='origin',
         ),
         migrations.RenameField(
             model_name='join',
             old_name='federated_object',
-            new_name='adopted',
+            new_name='origin',
         ),
         migrations.RenameField(
             model_name='organization',
             old_name='federated_object',
-            new_name='adopted',
+            new_name='origin',
         ),
         migrations.RemoveField(
             model_name='person',
@@ -102,23 +102,23 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='event',
-            name='origin',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity_pub_model', to='activities.activity'),
+            name='adopted',
+            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='origin', to='activities.activity'),
         ),
         migrations.AddField(
             model_name='image',
-            name='origin',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activity_pub_model', to='files.image'),
+            name='adopted',
+            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='origin', to='files.image'),
         ),
         migrations.AddField(
             model_name='join',
-            name='origin',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activity_pub_model', to='activities.contributor'),
+            name='adopted',
+            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='origin', to='activities.contributor'),
         ),
         migrations.AddField(
             model_name='organization',
-            name='origin',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activity_pub_model', to='organizations.organization'),
+            name='adopted',
+            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='origin', to='organizations.organization'),
         ),
         migrations.AddField(
             model_name='person',

@@ -528,7 +528,7 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
         ),
 
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'deadline', 'location', 'duration', ],
+            ['title', 'description', 'start', 'deadline', 'location', 'duration', 'image'],
             effects=[
                 UpdateEventEffect,
             ]
@@ -578,7 +578,7 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
         ),
 
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'end', 'location', 'duration', ],
+            ['title', 'description', 'start', 'end', 'location', 'duration', 'image'],
             effects=[
                 UpdateEventEffect,
             ]
@@ -636,7 +636,7 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
             ]
         ),
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'deadline', 'location', 'duration', 'period'],
+            ['title', 'description', 'start', 'deadline', 'location', 'duration', 'period', 'image'],
             effects=[
                 UpdateEventEffect,
             ]
@@ -796,7 +796,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             ]
         ),
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'location', 'duration'],
+            ['title', 'description', 'start', 'location', 'duration', 'image'],
             effects=[
                 UpdateEventEffect,
             ]

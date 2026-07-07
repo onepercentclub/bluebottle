@@ -437,10 +437,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     enable_office_regions = models.BooleanField(
+        _('Enable work location regions'),
         default=False, help_text=_("Allow admins to add (sub)regions to their work location.")
     )
 
     enable_office_restrictions = models.BooleanField(
+        _('Enable work location restrictions'),
         default=False,
         help_text=_(
             "Allow activity managers to specify work location restrictions on activities."
@@ -452,6 +454,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
             max_length=200,
             choices=OfficeRestrictionChoices.choices
         ),
+        verbose_name=_('Available work location restrictions'),
         default=get_office_restriction_values
     )
 

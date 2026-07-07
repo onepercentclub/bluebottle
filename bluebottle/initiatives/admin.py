@@ -309,7 +309,9 @@ class InitiativeSearchFilterInline(SortableTabularInline):
 
 class InitiativePlatformSettingsForm(forms.ModelForm):
     available_office_restrictions = forms.MultipleChoiceField(
-        choices=OfficeRestrictionChoices.choices, widget=forms.CheckboxSelectMultiple()
+        choices=OfficeRestrictionChoices.choices,
+        widget=forms.CheckboxSelectMultiple(),
+        label=_('Available work location restrictions')
     )
 
     def clean(self):

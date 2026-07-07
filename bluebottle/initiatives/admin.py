@@ -316,7 +316,8 @@ class InitiativePlatformSettingsForm(forms.ModelForm):
         cleaned_data = super().clean()
 
         if (
-            cleaned_data['default_office_restriction'] and
+            'default_office_restriction' in cleaned_data and
+            'available_office_restrictions' in cleaned_data and
             cleaned_data['default_office_restriction'] not in cleaned_data['available_office_restrictions']
         ):
             raise ValidationError({

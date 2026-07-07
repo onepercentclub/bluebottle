@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 import inflection
 
@@ -5,7 +7,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection, transaction
-from django.urls import reverse
+from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
@@ -20,13 +22,7 @@ from bluebottle.files.models import Image as BluebottleImage
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
 
 from bluebottle.activity_pub.tasks import publish_to_recipient
-from bluebottle.activity_pub.utils import (
-    get_local_resource_data,
-    get_platform_actor,
-    is_local,
-    normalize_resource_url,
-    resolve_local_resource,
-)
+from bluebottle.activity_pub.utils import is_local, get_platform_actor
 
 from bluebottle.activity_pub.adapters import adapter
 
@@ -37,24 +33,12 @@ class ActivityPubManager(PolymorphicManager):
         return qs
 
     def from_iri(self, iri):
-        if not iri:
-            return None
-
-        normalized_iri = normalize_resource_url(iri)
-        for candidate in (iri, normalized_iri):
-            if not candidate:
-                continue
-            instance = self.non_polymorphic().filter(iri=candidate).first()
-            if instance:
-                from bluebottle.activity_pub.utils import safe_get_real_instance
-                resolved = safe_get_real_instance(instance)
-                if resolved:
-                    return resolved
-
-        if is_local(iri):
-            return resolve_local_resource(iri)
-
-        return None
+        if iri:
+            if is_local(iri):
+                resolved = resolve(urlparse(iri).path)
+                return self.filter(pk=resolved.kwargs['pk']).first()
+            else:
+                return self.filter(iri=iri).first()
 
 
 class ActivityPubModel(PolymorphicModel):
@@ -99,8 +83,7 @@ class Actor(ActivityPubModel):
 
     @property
     def follow(self):
-        from bluebottle.activity_pub.utils import get_follow_for_actor
-        return get_follow_for_actor(self)
+        return Follow.objects.filter(object=self).first()
 
     @property
     def webfinger_uri(self):
@@ -148,8 +131,8 @@ class Person(Actor):
 
     @property
     def follow(self):
-        from bluebottle.activity_pub.utils import get_follow_for_actor
-        return get_follow_for_actor(self)
+        follow = Follow.objects.filter(object=self).first()
+        return follow
 
     def __str__(self):
         return self.name
@@ -312,22 +295,17 @@ class Event(ActivityPubModel):
         return adapter.sync(activity)
 
     def save(self, *args, **kwargs):
-        from bluebottle.activity_pub.utils import get_create_for_object
-
         super().save(*args, **kwargs)
 
         if self.is_local:
-            if not get_create_for_object(self):
+            if not self.create_set.exists():
                 Create.objects.create(actor=get_platform_actor(), object=self)
 
     @property
     def source(self):
-        from bluebottle.activity_pub.models import Actor
-        from bluebottle.activity_pub.utils import get_create_for_object
-
-        create = get_create_for_object(self)
-        if create and create.actor_id:
-            return Actor.objects.non_polymorphic().filter(pk=create.actor_id).first()
+        create = Create.objects.filter(object=self).first()
+        if create:
+            return create.actor
 
     @property
     def adopted_activity(self):
@@ -335,15 +313,7 @@ class Event(ActivityPubModel):
 
     @property
     def adoption_type(self):
-        from bluebottle.activity_pub.utils import get_create_for_object, get_follow_for_actor
-
-        create = get_create_for_object(self)
-        if not create or not create.actor_id:
-            return None
-
-        follow = get_follow_for_actor(create.actor_id)
-        if follow:
-            return follow.short_adoption_type
+        return self.create_set.get().actor.follow.short_adoption_type
 
     def __str__(self):
         return self.name
@@ -899,21 +869,13 @@ class Update(Activity):
         created = not self.pk
         super().save(*args, **kwargs)
         if created and not self.object.is_local:
-            object_id = self.object_id
+            event = self.object
 
             def adopt_when_committed():
-                from bluebottle.activity_pub.utils import safe_get_real_instance
-
-                obj = ActivityPubModel.objects.non_polymorphic().filter(pk=object_id).first()
-                if not obj:
-                    return
-
-                obj = safe_get_real_instance(obj) or obj
-
-                if hasattr(obj, 'adopted') and obj.adopted:
-                    adapter.adopt(obj)
-                elif hasattr(obj, 'link') and obj.link:
-                    adapter.link(obj)
+                if hasattr(event, 'adopted') and event.adopted:
+                    adapter.adopt(event)
+                elif hasattr(event, 'link') and event.link:
+                    adapter.link(event)
 
             transaction.on_commit(adopt_when_committed)
 

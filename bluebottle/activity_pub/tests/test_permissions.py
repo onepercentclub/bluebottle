@@ -3,8 +3,6 @@ from django.test import RequestFactory
 import mock
 
 from bluebottle.activity_pub.views import ActivityPubPermission, InboxPermission
-from bluebottle.activity_pub.utils import get_platform_actor
-from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -74,20 +72,6 @@ class ActivityPubPermissionTestCase(PermissionTestCase):
             FollowFactory.create(object=self.actor)
 
         request = self.authenticate(self.request_factory.get(path='/'), self.actor)
-
-        self.assertTrue(
-            self.permission.has_permission(request)
-        )
-
-    def test_platform_actor_get_closed_platform(self):
-        MemberPlatformSettings.objects.create(closed=True)
-
-        site_settings = SitePlatformSettings.load()
-        site_settings.share_activities = ['supplier', 'consumer']
-        site_settings.save()
-
-        platform_actor = get_platform_actor()
-        request = self.authenticate(self.request_factory.get(path='/'), platform_actor)
 
         self.assertTrue(
             self.permission.has_permission(request)

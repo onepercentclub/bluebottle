@@ -269,17 +269,13 @@ class BaseActivitySerializer(ModelSerializer):
     contributor_count = serializers.SerializerMethodField()
 
     def get_contributor_count(self, obj):
-        if obj.is_adopted:
+        if obj.origin:
             return {
                 'total': obj.origin.contributor_count,
                 'remote': obj.origin.contributor_count,
                 'local': obj.active_contributors.count(),
+
             }
-        return {
-            'total': obj.active_contributors.count(),
-            'remote': 0,
-            'local': obj.active_contributors.count(),
-        }
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

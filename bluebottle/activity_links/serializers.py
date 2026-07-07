@@ -13,7 +13,6 @@ from bluebottle.activity_links.models import (
     LinkedScheduleActivity, LinkedGrantApplication
 )
 from bluebottle.activity_pub.models import Create, ActivityPubModel, Image as ActivityPubImage
-from bluebottle.activity_pub.utils import resolve_activity_pub_image_url
 from bluebottle.files.models import Image
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer
@@ -26,14 +25,9 @@ class LinkedActivityImageSerializer(serializers.ModelSerializer):
     name = serializers.CharField(allow_null=True, allow_blank=True, required=False)
 
     def create(self, validated_data):
-        image_url = resolve_activity_pub_image_url(
-            validated_data['id'],
-            validated_data,
-        )
-        if not image_url:
-            return None
+        image = ActivityPubImage.objects.from_iri(validated_data['id'])
 
-        response = requests.get(image_url, timeout=30)
+        response = requests.get(image.url, timeout=30)
         response.raise_for_status()
 
         file = File(BytesIO(response.content), name=validated_data['name'])
@@ -44,14 +38,9 @@ class LinkedActivityImageSerializer(serializers.ModelSerializer):
         })
 
     def update(self, instance, validated_data):
-        image_url = resolve_activity_pub_image_url(
-            validated_data['id'],
-            validated_data,
-        )
-        if not image_url:
-            return instance
+        image = ActivityPubImage.objects.from_iri(validated_data['id'])
 
-        response = requests.get(image_url, timeout=30)
+        response = requests.get(image.url, timeout=30)
         response.raise_for_status()
 
         file = File(BytesIO(response.content), name=validated_data['name'])

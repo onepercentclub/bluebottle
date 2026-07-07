@@ -5,39 +5,7 @@ from rest_framework.exceptions import ValidationError
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.serializers import ActivityPubSerializer, FederatedObjectSerializer
 from bluebottle.activity_pub.clients import client
-from bluebottle.activity_pub.utils import (
-    find_activity_pub_instance,
-    get_local_resource_data,
-    is_local,
-    resource_type_from_url,
-)
-
-
-def enrich_resource_value(value):
-    if not isinstance(value, dict):
-        return value
-
-    if value.get('url'):
-        return value
-
-    resource_iri = value.get('iri') or value.get('id')
-    if not resource_iri:
-        return value
-
-    instance = ActivityPubModel.objects.from_iri(resource_iri)
-    if instance and getattr(instance, 'url', None):
-        return {**value, 'url': instance.url}
-
-    local_data = get_local_resource_data(resource_iri)
-    if isinstance(local_data, dict) and local_data.get('url'):
-        return {**value, 'url': local_data['url']}
-
-    if not is_local(resource_iri):
-        fetched = client.fetch(resource_iri)
-        if isinstance(fetched, dict) and fetched.get('url'):
-            return {**value, 'url': fetched['url']}
-
-    return value
+from bluebottle.activity_pub.utils import is_local
 
 
 class ManyResourceRelatedField(ManyRelatedField):
@@ -50,9 +18,6 @@ class ManyResourceRelatedField(ManyRelatedField):
 
     def get_related_origin(self):
         origin = self.parent.origin
-        if origin and getattr(origin, 'iri', None):
-            return []
-
         if origin:
             serializer = FederatedObjectSerializer()._get_serializer_from_model_or_instance(
                 origin
@@ -92,69 +57,32 @@ class RelatedResourceField(RelatedField):
             full=False, include=self.include
         ).to_representation(value)
 
-    def _ensure_type(self, data):
-        if 'type' in data or 'id' not in data:
-            return data
-
-        if isinstance(self.type, str):
-            return dict(type=self.type, **data)
-
-        if isinstance(self.type, (tuple, list)):
-            resource_type = resource_type_from_url(data['id'], self.type)
-            if resource_type:
-                return dict(type=resource_type, **data)
-
-        return data
-
     def to_internal_value(self, data):
         if isinstance(data, str):
             data = {'id': data}
 
-        data = self._ensure_type(data)
+        if 'type' not in data and isinstance(self.type, str):
+            data = dict(type=self.type, **data)
 
         serializer = ActivityPubSerializer()
 
         try:
             return serializer.to_internal_value(data)
         except ValidationError as e:
-            if 'id' not in data:
+            if 'id' in data:
+                instance = ActivityPubModel.objects.from_iri(data['id'])
+
+                if instance:
+                    local_data = ActivityPubSerializer(instance=instance).data
+                    return serializer.to_internal_value(local_data)
+                elif not is_local(data['id']):
+                    fetched_data = client.fetch(data['id'])
+                    return serializer.to_internal_value(fetched_data)
+            else:
                 raise e
 
-            instance = ActivityPubModel.objects.from_iri(data['id'])
-
-            if instance:
-                local_data = ActivityPubSerializer(instance=instance).data
-                return serializer.to_internal_value(local_data)
-
-            local_data = get_local_resource_data(data['id'])
-            if local_data:
-                return serializer.to_internal_value(local_data)
-
-            if not is_local(data['id']):
-                fetched_data = client.fetch(data['id'])
-                return serializer.to_internal_value(fetched_data)
-
-            raise e
-
-    def _parent_is_remote(self, data=None):
-        parent_instance = getattr(self.parent, 'instance', None)
-        if parent_instance and getattr(parent_instance, 'iri', None):
-            return True
-
-        for source in (
-            getattr(self.parent, '_validated_data', None),
-            getattr(self.parent, 'initial_data', None),
-        ):
-            if isinstance(source, dict) and (source.get('iri') or source.get('id')):
-                return True
-
-        return False
-
-    def get_related_origin(self, value=None):
+    def get_related_origin(self):
         try:
-            if self._parent_is_remote(value):
-                return None
-
             origin = self.parent.origin
             if origin:
                 serializer = FederatedObjectSerializer()._get_serializer_from_model_or_instance(
@@ -172,15 +100,14 @@ class RelatedResourceField(RelatedField):
 
     def save(self, value, origin=None):
         if value is not None:
-            value = enrich_resource_value(value)
-
-            resource_iri = value.get('iri') or value.get('id')
-            instance = find_activity_pub_instance(resource_iri) if resource_iri else None
-
             serializer = ActivityPubSerializer(
-                instance=instance,
-                origin=origin or self.get_related_origin(value)
+                data=value,
+                origin=origin or self.get_related_origin()
             )
+
+            if 'iri' in value:
+                model_class = serializer.resource_type_model_mapping[value['type']]
+                serializer.instance = model_class.objects.from_iri(value['iri'])
 
             serializer._validated_data = value
             serializer._errors = []

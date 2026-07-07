@@ -12,7 +12,6 @@ from bluebottle.activity_pub.models import Event
 from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, FederatedObjectSerializer
 )
-from bluebottle.activity_pub.serializers.federated_activities import MemberSerializer
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -178,15 +177,6 @@ class PersonSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
         self.assertEqual(
             self.instance.full_name, self.activity_pub_instance.name
         )
-
-    def test_remote_member_from_bare_person_iri(self):
-        person = PersonFactory.create(given_name=None, family_name=None, name='Jane Volunteer')
-        serializer = MemberSerializer(data=person.pub_url)
-        self.assertTrue(serializer.is_valid(), serializer.errors)
-        remote = serializer.save()
-        self.assertEqual(remote.first_name, 'Jane Volunteer')
-        self.assertEqual(remote.last_name, '')
-        self.assertTrue(isinstance(remote, RemoteMember))
 
 
 class GoodDeedSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):

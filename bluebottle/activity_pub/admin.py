@@ -20,6 +20,7 @@ from polymorphic.admin import (
 )
 
 from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.tasks import publish_activity
 from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
     Activity,
@@ -40,13 +41,6 @@ from bluebottle.activity_pub.models import (
     Finish, Join, Leave, Update, Start,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
-from bluebottle.activity_pub.tasks import publish_activity
-from bluebottle.activity_pub.utils import (
-    activity_pub_type_name,
-    activity_pub_verbose_type,
-    get_create_for_object,
-    safe_get_real_instance,
-)
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import admin_form
 from bluebottle.members.models import Member
@@ -86,9 +80,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
     )
 
     def type(self, obj):
-        return activity_pub_type_name(obj)
-
-    type.short_description = _('Type')
+        return obj.get_real_instance_class().__name__ if obj.get_real_instance_class() else '-'
 
     list_display = ("id", "type", "iri")
     readonly_fields = ('iri', 'actor', 'pub_url')
@@ -867,13 +859,7 @@ class EventAdminMixin:
     inlines = []
 
     def source(self, obj):
-        try:
-            source = obj.source
-            if source:
-                return source
-        except Exception:
-            pass
-        return '-'
+        return obj.source
     source.short_description = _("Partner")
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
@@ -902,7 +888,7 @@ class EventAdminMixin:
             '<img src="{}" style="max-height: 300px; max-width: 600px;" />', obj.image.url
         )
 
-    display_image.short_description = _("Imaage")
+    display_image.short_description = _("Image")
 
     def get_urls(self):
         urls = super().get_urls()
@@ -1043,9 +1029,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     list_filter = [AdoptedFilter, SourceFilter, PolymorphicChildModelFilter]
 
     def type(self, obj):
-        return activity_pub_verbose_type(obj)
-
-    type.short_description = _('Type')
+        return obj.get_real_instance_class()._meta.verbose_name if obj.get_real_instance_class() else '-'
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -1053,10 +1037,8 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     list_display = ("name", "type", "source", "adopted")
 
     def name_link(self, obj):
-        real_instance = safe_get_real_instance(obj)
-        if not real_instance:
-            return obj.name
-
+        """Generate the name as a link to the polymorphic child admin."""
+        real_instance = obj.get_real_instance()
         model_name = real_instance._meta.model_name
         app_label = real_instance._meta.app_label
         change_url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.pk])
@@ -1073,10 +1055,8 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
     list_display_links = ("name_link",)
 
     def shared(self, obj):
-        create = get_create_for_object(obj)
-        if not create:
-            return 0
-        return create.recipients.filter(send=True).count()
+        publish = Create.objects.filter(object=obj).first()
+        return publish.recipients.filter(send=True).count()
 
     def adopted(self, obj):
         return Accept.objects.filter(object=obj).count()
@@ -1113,22 +1093,8 @@ class ReceivedActivityAdmin(EventPolymorphicAdmin):
     actions = [adopt_events]
 
     def source(self, obj):
-        try:
-            source = obj.source
-            if source:
-                return str(source)
-        except Exception:
-            pass
-        return '-'
+        return obj.source
     source.short_description = _('Partner')
-
-    def adoption_type(self, obj):
-        try:
-            return obj.adoption_type or '-'
-        except Exception:
-            return '-'
-
-    adoption_type.short_description = _('Adoption type')
 
     def get_queryset(self, request):
         return Event.objects.filter(iri__isnull=False)

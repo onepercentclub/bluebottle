@@ -398,9 +398,8 @@ class RemoteMember(models.Model):
             return f'{self.first_name} {self.last_name}'
         elif self.first_name:
             return self.first_name
-        elif self.last_name:
+        elif self.lsat_name:
             return self.last_name
-        return "-"
 
     def __str__(self):
         return self.full_name or self.email

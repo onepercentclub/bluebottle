@@ -568,6 +568,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_office_restrictions',
             'available_office_restrictions',
             'default_office_restriction',
+            "allow_disable_office_filter",
             'enable_multiple_dates',
             'enable_participant_exports',
             'enable_open_initiatives',

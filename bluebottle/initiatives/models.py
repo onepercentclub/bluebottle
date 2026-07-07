@@ -464,6 +464,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
         max_length=100,
     )
 
+    allow_disable_office_filter = models.BooleanField(
+        _("Allow members to see all activities"),
+        default=True,
+        help_text=_(
+            "Members can choose to view activities outside their work location"
+        ),
+    )
+
     enable_multiple_dates = models.BooleanField(
         default=False, help_text=_("Enable date activities to have multiple slots.")
     )

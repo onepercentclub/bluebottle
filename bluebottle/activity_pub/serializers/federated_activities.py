@@ -72,7 +72,7 @@ class ImageSerializer(FederatedObjectBaseSerializer):
 
     def update(self, instance, validated_data):
         if self.instance.origin.iri != validated_data['id']:
-            return super().create(validated_data)
+            return self.create(validated_data)
         else:
             super().update(instance, validated_data)
 

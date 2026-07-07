@@ -230,6 +230,12 @@ class OrganizationSerializer(FederatedObjectBaseSerializer):
             'name', 'summary', 'icon', 'preferred_username'
         )
 
+    def to_internal_value(self, data):
+        result = super().to_internal_value(data)
+        if result.get('description') is None:
+            result['description'] = ''
+        return result
+
 
 class LocationSerializer(FederatedObjectBaseSerializer):
     type = TypeField('Place')

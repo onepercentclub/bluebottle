@@ -147,6 +147,16 @@ class OrganizationSerializerTestCase(FederatedSerializerTestCase, BluebottleTest
             self.instance.name, self.activity_pub_instance.name
         )
 
+    def test_adopt_organization_without_summary(self):
+        activity_pub_org = OrganizationFactory.create(
+            iri='http://remote.example.com/api/json-ld/organization/5',
+            name='dll.localhost',
+            summary=None,
+        )
+
+        self.assertIsNotNone(activity_pub_org.adopted)
+        self.assertEqual(activity_pub_org.adopted.description, '')
+
 
 class PersonSerializerTestCase(FederatedSerializerTestCase, BluebottleTestCase):
     factory = BlueBottleUserFactory

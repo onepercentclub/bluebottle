@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
 
 from django.db import connection
+from django.urls import resolve, Resolver404
 import inflection
 
 from bluebottle.cms.models import SitePlatformSettings
@@ -31,6 +32,64 @@ def camelize(data, initial=True):
 
 def is_local(url):
     return urlparse(url).hostname == connection.tenant.domain_url
+
+
+def iri_from_data(data):
+    if isinstance(data, str):
+        return data
+    if isinstance(data, dict):
+        return data.get('id') or data.get('iri')
+    return None
+
+
+def type_slug_from_iri(iri):
+    if not iri:
+        return None
+    parts = [part for part in urlparse(iri).path.strip('/').split('/') if part]
+    if 'json-ld' in parts:
+        index = parts.index('json-ld')
+        if len(parts) > index + 1:
+            return parts[index + 1]
+    return None
+
+
+def type_from_iri(iri):
+    if not iri:
+        return None
+    type_slug = None
+    try:
+        type_slug = resolve(urlparse(iri).path).kwargs['type']
+    except (Resolver404, KeyError, TypeError, ValueError):
+        type_slug = type_slug_from_iri(iri)
+    if type_slug:
+        return inflection.camelize(type_slug.replace('-', '_'), False)
+    return None
+
+
+def resource_type_from_iri(iri, allowed_types=None):
+    from bluebottle.activity_pub.models import ActivityPubModel
+
+    instance = ActivityPubModel.objects.from_iri(iri)
+    if instance:
+        try:
+            type_name = instance.get_real_instance().__class__.__name__
+            if not allowed_types or type_name in allowed_types:
+                return type_name
+        except Exception:
+            pass
+
+    resource_type = type_from_iri(iri)
+    if resource_type == 'Actor' and allowed_types:
+        if 'Organization' in allowed_types:
+            return 'Organization'
+        if 'Person' in allowed_types:
+            return 'Person'
+
+    if resource_type and (not allowed_types or resource_type in allowed_types):
+        return resource_type
+    if allowed_types:
+        return allowed_types[0]
+    return resource_type
 
 
 def get_platform_actor():

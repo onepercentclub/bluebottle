@@ -475,6 +475,24 @@ class SyncTestCase(ActivityPubTestCase):
             self.adopted.refresh_from_db()
             self.assertEqual(self.adopted.title, 'Some new title')
 
+    def test_update_image(self):
+        self.test_adopt()
+
+        with httmock.HTTMock(image_mock):
+            self.model.image = ImageFactory.create()
+            self.model.save()
+
+        image_iri = self.model.image.activity_pub_model.pub_url
+
+        with LocalTenant(self.other_tenant):
+            self.event.refresh_from_db()
+            self.assertEqual(self.event.image.iri, image_iri)
+            self.adopted.refresh_from_db()
+            self.assertEqual(
+                self.adopted.image.origin.iri,
+                image_iri
+            )
+
     def test_succeed(self):
         self.test_adopt()
 

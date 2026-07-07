@@ -216,6 +216,13 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     @property
+    def active_contributors(self):
+
+        return self.contributors.exclude(
+            instance_of=Organizer
+        ).filter(status__in=['new', 'succeeded'])
+
+    @property
     def is_adopted(self):
         return hasattr(self, 'origin') and self.origin
 
@@ -391,8 +398,9 @@ class RemoteMember(models.Model):
             return f'{self.first_name} {self.last_name}'
         elif self.first_name:
             return self.first_name
-        elif self.lsat_name:
+        elif self.last_name:
             return self.last_name
+        return '-'
 
     def __str__(self):
         return self.full_name or self.email

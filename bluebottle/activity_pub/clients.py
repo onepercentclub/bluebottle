@@ -6,7 +6,7 @@ from requests_http_signature import HTTPSignatureAuth, algorithms
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.utils import get_platform_actor, is_local
+from bluebottle.activity_pub.utils import get_local_resource_data, get_platform_actor, is_local
 
 
 class JSONLDClient:
@@ -49,6 +49,10 @@ class JSONLDClient:
         return self.do_request('post', url, data=rendered_data, auth=auth)
 
     def fetch(self, url):
+        local_data = get_local_resource_data(url)
+        if local_data:
+            return local_data
+
         auth = self.get_auth(get_platform_actor())
         return self.get(url, auth=auth)
 

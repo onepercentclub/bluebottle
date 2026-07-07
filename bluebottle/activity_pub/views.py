@@ -1,8 +1,8 @@
 import logging
+
 from django.db import connection
 from rest_framework import generics, status, response
 
-from bluebottle.celery import app
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     ActivityPubModel, Inbox
@@ -11,8 +11,8 @@ from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import InboxPermission, ActivityPubPermission
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
+from bluebottle.celery import app
 from bluebottle.clients.utils import LocalTenant
-
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +39,6 @@ def create_task(request, tenant):
         serializer = ActivityPubSerializer(
             data=request.data, context={'request': request}
         )
-
-        print('Post to inbox:', request.data['type'], request.data['object'])
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

@@ -6,19 +6,27 @@ from jet.dashboard.dashboard import DefaultAppIndexDashboard
 from jet.dashboard.modules import DashboardModule
 
 from bluebottle.activity_pub.models import Event
+from bluebottle.activity_pub.utils import activity_pub_verbose_type, safe_get_real_instance
 from bluebottle.cms.models import SitePlatformSettings
 
 
 def prepare_events(events):
     for event in events:
-        real_instance = event.get_real_instance()
-        model_name = real_instance._meta.model_name
-        app_label = real_instance._meta.app_label
-        event.admin_url = reverse(
-            f'admin:{app_label}_{model_name}_change',
-            args=[event.pk],
-        )
-        event.type_label = real_instance._meta.verbose_name
+        real_instance = safe_get_real_instance(event)
+        if real_instance:
+            model_name = real_instance._meta.model_name
+            app_label = real_instance._meta.app_label
+            event.admin_url = reverse(
+                f'admin:{app_label}_{model_name}_change',
+                args=[event.pk],
+            )
+            event.type_label = real_instance._meta.verbose_name
+        else:
+            event.admin_url = reverse(
+                'admin:activity_pub_event_change',
+                args=[event.pk],
+            )
+            event.type_label = activity_pub_verbose_type(event)
     return events
 
 

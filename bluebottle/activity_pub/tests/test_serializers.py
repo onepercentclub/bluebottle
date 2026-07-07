@@ -13,14 +13,14 @@ from requests import Response
 from bluebottle.cms.models import SitePlatformSettings
 
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import (
-    ActivityPubModel, Inbox, Outbox, PublicKey
-)
+from bluebottle.activity_pub.models import ActivityPubModel, Inbox, Outbox, PublicKey, GoodDeed
 from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
 from bluebottle.activity_pub.tests.factories import (
     DoGoodEventFactory, InboxFactory, OrganizationFactory, FollowFactory, GoodDeedFactory,
-    CrowdFundingFactory
+    CrowdFundingFactory, PersonFactory
 )
+from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -204,6 +204,52 @@ class FollowSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
     def update(self):
         self.data['object'] = self.next_object.iri
 
+    def test_follow_without_actor_object_types(self):
+        data = {
+            'type': 'Follow',
+            'id': 'http://example.com/api/json-ld/follow/36',
+            'actor': 'http://example.com/api/json-ld/organization/32',
+            'object': 'http://example.com/api/json-ld/organization/33',
+            'adoption_type': 'clone',
+        }
+
+        with mock.patch(
+            'bluebottle.activity_pub.serializers.relations.client.fetch',
+            side_effect=lambda url: ActivityPubSerializer(
+                instance=OrganizationFactory.create(iri=url)
+            ).data
+        ):
+            serializer = ActivityPubSerializer(data=data)
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+
+
+class JoinDeserializerTestCase(BluebottleTestCase):
+    def setUp(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+        super().setUp()
+
+    def test_join_without_actor_type_cross_tenant(self):
+        other_tenant = Client.objects.get(schema_name='test2')
+
+        with LocalTenant(other_tenant):
+            person = PersonFactory.create()
+            person_url = person.pub_url
+
+        event = DoGoodEventFactory.create()
+        data = {
+            'type': 'Join',
+            'id': 'http://example.com/api/json-ld/join/1',
+            'actor': person_url,
+            'object': event.pub_url,
+        }
+
+        with mock.patch('bluebottle.activity_pub.serializers.relations.client.fetch') as fetch_mock:
+            serializer = ActivityPubSerializer(data=data)
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+            fetch_mock.assert_not_called()
+
 
 class DoGoodEventSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCase):
     factory = DoGoodEventFactory
@@ -299,6 +345,61 @@ class GoodDeedSerializerTest(JSONLDSerializerTestCase, BluebottleTestCase):
     def update(self):
         self.data['name'] = 'Some name'
 
+    def test_update_existing_local_iri(self):
+        existing = GoodDeedFactory.create()
+        existing.iri = existing.pub_url
+        existing.save()
+
+        self.data['id'] = existing.iri
+        self.data['name'] = 'Updated deed name'
+        update_data = {
+            'type': 'Update',
+            'id': 'http://example.com/api/json-ld/update/99',
+            'actor': self.data['organization']['id'],
+            'object': self.data,
+        }
+
+        with httmock.HTTMock(*self.mocks):
+            with mock.patch('bluebottle.activity_pub.tasks.publish_to_recipient.delay'):
+                serializer = ActivityPubSerializer(data=update_data, context=self.context)
+                self.assertTrue(serializer.is_valid(), serializer.errors)
+                serializer.save()
+
+        existing.refresh_from_db()
+        self.assertEqual(existing.name, 'Updated deed name')
+        self.assertEqual(GoodDeed.objects.filter(iri=existing.iri).count(), 1)
+
+    def test_update_activity_idempotent_for_remote_iri(self):
+        from bluebottle.activity_pub.models import Update
+
+        existing = GoodDeedFactory.create()
+        existing.iri = existing.pub_url
+        existing.save()
+
+        self.data['id'] = existing.iri
+        self.data['name'] = 'Updated deed name'
+        remote_update_iri = 'http://other.example.com/api/json-ld/update/327'
+        update_data = {
+            'type': 'Update',
+            'id': remote_update_iri,
+            'actor': self.data['organization']['id'],
+            'object': self.data,
+        }
+
+        with httmock.HTTMock(*self.mocks):
+            with mock.patch('bluebottle.activity_pub.tasks.publish_to_recipient.delay'):
+                serializer = ActivityPubSerializer(data=update_data, context=self.context)
+                self.assertTrue(serializer.is_valid(), serializer.errors)
+                serializer.save()
+
+                serializer = ActivityPubSerializer(data=update_data, context=self.context)
+                self.assertTrue(serializer.is_valid(), serializer.errors)
+                serializer.save()
+
+        existing.refresh_from_db()
+        self.assertEqual(existing.name, 'Updated deed name')
+        self.assertEqual(Update.objects.filter(iri=remote_update_iri).count(), 1)
+
 
 class CrowdFundingSerializerTest(JSONLDSerializerTestCase, BluebottleTestCase):
     factory = CrowdFundingFactory
@@ -348,3 +449,26 @@ class CrowdFundingSerializerTest(JSONLDSerializerTestCase, BluebottleTestCase):
 
     def update(self):
         self.data['name'] = 'Some name'
+
+
+class LinkActivityPubAdoptedTest(BluebottleTestCase):
+    def test_skips_when_another_image_already_links_same_file(self):
+        from bluebottle.activity_pub.tests.factories import ImageFactory as ActivityPubImageFactory
+        from bluebottle.activity_pub.utils import link_activity_pub_adopted
+        from bluebottle.files.tests.factories import ImageFactory
+
+        adopted = ImageFactory.create()
+        first = ActivityPubImageFactory.create(url='http://example.com/image/1')
+        second = ActivityPubImageFactory.create(url='http://example.com/image/2')
+        first.iri = 'http://example.com/api/json-ld/image/1'
+        first.save()
+        second.iri = 'http://example.com/api/json-ld/image/2'
+        second.save()
+
+        first.adopted = adopted
+        first.save()
+
+        link_activity_pub_adopted(second.iri, adopted)
+
+        second.refresh_from_db()
+        self.assertIsNone(second.adopted_id)

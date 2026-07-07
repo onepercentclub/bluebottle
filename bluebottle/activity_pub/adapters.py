@@ -22,8 +22,6 @@ class JSONLDAdapter():
         client.post(actor.inbox.iri, data=data)
 
     def adopt(self, instance, **kwargs):
-        from bluebottle.activity_pub.models import Transition
-
         serializer = FederatedObjectSerializer(
             data=ActivityPubSerializer(instance=instance).data
         )
@@ -36,7 +34,9 @@ class JSONLDAdapter():
 
         try:
             # Re-run all transitions that might have happened before the model was adopted
-            for transition in Transition.objects.filter(object=instance):
+            from bluebottle.activity_pub.utils import get_transitions_for_object
+
+            for transition in get_transitions_for_object(instance):
                 transition.save()
         except ValueError:
             pass

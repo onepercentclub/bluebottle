@@ -40,11 +40,15 @@ class ActivityPubSerializer(PolymorphicSerializer):
         return serializer.to_representation(instance)
 
     def save(self, *args, **kwargs):
-        iri = self.validated_data.get('iri', None)
+        iri = self.validated_data.get('iri') or self.validated_data.get('id')
 
-        if iri:
+        if iri and not self.instance:
             from bluebottle.activity_pub.models import ActivityPubModel
-            self.instance = ActivityPubModel.objects.from_iri(iri)
+            from bluebottle.activity_pub.utils import find_activity_pub_instance
+
+            instance = find_activity_pub_instance(iri)
+            if instance:
+                self.instance = instance
 
         return super().save(*args, **kwargs)
 

@@ -1,4 +1,5 @@
 import inflection
+from django.db import IntegrityError
 from rest_framework import serializers, relations
 
 from bluebottle.activity_pub.models import ActivityPubModel
@@ -6,7 +7,13 @@ from bluebottle.activity_pub.processor import default_context, expand_iri
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, ActivityPubIdField, TypeField
 from bluebottle.activity_pub.serializers import ActivityPubSerializer, FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.relations import RelatedResourceField, ManyResourceRelatedField
-from bluebottle.activity_pub.utils import is_local
+from bluebottle.activity_pub.utils import (
+    find_activity_pub_instance,
+    get_local_resource_data,
+    is_local,
+    link_activity_pub_adopted,
+    normalize_resource_url,
+)
 
 
 class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
@@ -73,21 +80,65 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
                 return representation['id']
 
     def save(self, **kwargs):
-        iri = self.validated_data.get('id', None)
+        iri = self.validated_data.get('iri') or self.validated_data.get('id')
 
-        if iri:
-            self.instance = self.Meta.model.objects.from_iri(iri)
+        if iri and not self.instance:
+            instance = find_activity_pub_instance(iri)
+            if instance:
+                self.instance = instance
 
         return super().save(**kwargs)
 
+    def _is_remote_resource(self, instance=None, validated_data=None):
+        if instance and getattr(instance, 'iri', None):
+            return True
+        if validated_data:
+            resource_iri = validated_data.get('iri') or validated_data.get('id')
+            if resource_iri and not is_local(resource_iri):
+                return True
+        return False
+
+    def _clear_invalid_origin(self, instance):
+        if not hasattr(instance, 'origin_id') or not instance.origin_id:
+            return
+
+        field = instance._meta.get_field('origin')
+        if not field.related_model.objects.filter(pk=instance.origin_id).exists():
+            instance.origin_id = None
+
+    def _maybe_set_origin(self, validated_data, instance=None):
+        if not self.origin or not hasattr(self.Meta.model, 'origin'):
+            return
+
+        if self._is_remote_resource(instance=instance, validated_data=validated_data):
+            return
+
+        field = self.Meta.model._meta.get_field('origin')
+        if not field.related_model.objects.filter(pk=self.origin.pk).exists():
+            return
+
+        validated_data['origin'] = self.origin
+
+    def _instance_for_iri(self, iri):
+        return find_activity_pub_instance(iri)
+
+    def _sanitize_create_data(self, validated_data, iri):
+        validated_data.pop('type', None)
+        validated_data.pop('id', None)
+        validated_data.pop('pk', None)
+
+        if iri:
+            validated_data['iri'] = normalize_resource_url(iri)
+
+        return validated_data
+
     def create(self, validated_data):
-        iri = validated_data.get('iri')
+        iri = validated_data.get('iri') or validated_data.get('id')
         many_related = {}
 
-        if iri and not is_local(iri):
-            instance = self.Meta.model.objects.filter(iri=iri).first()
-            if instance:
-                return self.update(instance, validated_data)
+        instance = self._instance_for_iri(iri)
+        if instance:
+            return self.update(instance, validated_data)
 
         for name, field in self.fields.items():
             if name in validated_data:
@@ -96,11 +147,22 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
                 if isinstance(field, RelatedResourceField):
                     validated_data[name] = field.save(validated_data[name])
 
-        validated_data.pop('type', None)
-        if self.origin and hasattr(self.Meta.model, 'origin'):
-            validated_data['origin'] = self.origin
+        self._maybe_set_origin(validated_data)
+        self._sanitize_create_data(validated_data, iri)
 
-        instance = self.Meta.model.objects.create(**validated_data)
+        try:
+            if iri:
+                instance, _ = self.Meta.model.objects.update_or_create(
+                    iri=validated_data['iri'],
+                    defaults=validated_data,
+                )
+            else:
+                instance = self.Meta.model.objects.create(**validated_data)
+        except IntegrityError:
+            instance = self._instance_for_iri(iri)
+            if instance:
+                return self.update(instance, validated_data)
+            raise
 
         for field, related in many_related.items():
             getattr(instance, field).set(related)
@@ -133,6 +195,9 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
                     validated_data[name] = field.save(validated_data[name])
 
         validated_data.pop('type', None)
+        if self._is_remote_resource(instance=instance, validated_data=validated_data):
+            validated_data.pop('origin', None)
+        self._clear_invalid_origin(instance)
         instance = super().update(instance, validated_data)
 
         for field, related in many_related.items():
@@ -206,31 +271,100 @@ class FederatedObjectBaseSerializer(
 
         return super().to_internal_value(data)
 
+    def _nested_field_data(self, name, field, validated_data):
+        field_data = validated_data.get(field.source)
+        if field_data is None and isinstance(self.initial_data, dict):
+            field_data = self.initial_data.get(name)
+        return field_data
+
+    def _nested_field_has_substance(self, field_data):
+        if not isinstance(field_data, dict):
+            return bool(field_data)
+
+        return bool(set(field_data.keys()) - {'id', 'iri', 'type', '@context'})
+
+    def _enrich_nested_field_data(self, field_data):
+        from bluebottle.activity_pub.clients import client
+
+        if not isinstance(field_data, dict):
+            return field_data
+
+        if self._nested_field_has_substance(field_data):
+            return field_data
+
+        resource_iri = field_data.get('id') or field_data.get('iri')
+        if not resource_iri:
+            return field_data
+
+        activity_pub_instance = ActivityPubModel.objects.from_iri(resource_iri)
+        if activity_pub_instance:
+            return ActivityPubSerializer(instance=activity_pub_instance).data
+
+        local_data = get_local_resource_data(resource_iri)
+        if local_data:
+            return local_data
+
+        if not is_local(resource_iri):
+            fetched = client.fetch(resource_iri)
+            if isinstance(fetched, dict):
+                return fetched
+
+        return field_data
+
+    def _process_nested_field(self, field, name, field_data, instance=None):
+        from bluebottle.activity_pub.serializers.federated_activities import ImageSerializer
+
+        if not field_data:
+            return getattr(instance, field.source, None) if instance else None
+
+        field_data = self._enrich_nested_field_data(field_data)
+
+        activity_pub_instance = ActivityPubModel.objects.from_iri(field_data.get('id'))
+        if (
+            instance is None and
+            activity_pub_instance and
+            is_local(field_data.get('id'))
+        ):
+            local_origin = getattr(activity_pub_instance, 'origin', None)
+            if local_origin:
+                return local_origin
+
+            adopted_file = getattr(activity_pub_instance, 'adopted', None)
+            if adopted_file and adopted_file.file:
+                return adopted_file
+
+        existing = getattr(instance, field.source, None) if instance else None
+        if (
+            instance is not None and
+            not isinstance(field, ImageSerializer) and
+            not self._nested_field_has_substance(field_data) and
+            existing
+        ):
+            return existing
+
+        field.initial_data = field_data
+        field.instance = existing
+
+        if isinstance(field, ImageSerializer) or instance is not None:
+            field.is_valid(raise_exception=True)
+            return field.save()
+
+        return field.create(field_data)
+
     def create(self, validated_data):
         iri = validated_data.pop('id', None)
 
-        for field in self.fields.values():
+        for name, field in self.fields.items():
             if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):
-                if (
-                    field.source != '*' and
-                    field.source in validated_data and
-                    validated_data[field.source]
-                ):
-                    field_data = validated_data[field.source]
-                    if is_local(field_data['id']):
-                        validated_data[field.source] = ActivityPubModel.objects.from_iri(
-                            field_data['id']
-                        ).origin
-                    else:
-                        field.initial_data = field_data
-
-                        validated_data[field.source] = field.create(field_data)
+                field_data = self._nested_field_data(name, field, validated_data)
+                if field_data:
+                    validated_data[field.source] = self._process_nested_field(
+                        field, name, field_data
+                    )
 
         result = super().create(validated_data)
-        origin = ActivityPubModel.objects.from_iri(iri)
-        if origin and hasattr(origin, 'adopted'):
-            origin.adopted = result
-            origin.save()
+        if iri:
+            link_activity_pub_adopted(iri, result)
 
         return result
 
@@ -239,10 +373,10 @@ class FederatedObjectBaseSerializer(
 
         for name, field in self.fields.items():
             if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):
-                if validated_data.get(field.source, None):
-                    field.initial_data = self.initial_data[name]
-                    field.instance = getattr(instance, field.source, None)
-                    field.is_valid(raise_exception=True)
-                    validated_data[field.source] = field.save()
+                field_data = self._nested_field_data(name, field, validated_data)
+                if field_data:
+                    validated_data[field.source] = self._process_nested_field(
+                        field, name, field_data, instance=instance
+                    )
 
         return super().update(instance, validated_data)

@@ -17,13 +17,14 @@ from rest_framework.relations import RelatedField
 
 from bluebottle.activity_pub.models import (
     EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices,
-    RepetitionModeChoices, SlotModeChoices, Create, ActivityPubModel, SubEvent
+    RepetitionModeChoices, SlotModeChoices, ActivityPubModel, Person, SubEvent
 )
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
+from bluebottle.activity_pub.serializers import ActivityPubSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activities.models import Contributor, RemoteMember
-from bluebottle.activity_pub.utils import is_local
+from bluebottle.activity_pub.utils import is_local, link_activity_pub_adopted, resolve_activity_pub_image_url
 from bluebottle.collect.models import CollectActivity, CollectType, CollectContributor
 from bluebottle.members.models import Member
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -57,18 +58,58 @@ class ImageSerializer(FederatedObjectBaseSerializer):
             reverse('activity-image', args=(instance.activity_set.first().pk, ORIGINAL_SIZE))
         )
 
-    def create(self, validated_data):
+    def _enrich_image_data(self, validated_data):
+        image_id = validated_data.get('id')
+        if not image_id or validated_data.get('url'):
+            return validated_data
+
+        activity_pub_image = ActivityPubImage.objects.from_iri(image_id)
+        if activity_pub_image and activity_pub_image.url:
+            return {**validated_data, 'url': activity_pub_image.url}
+
+        return validated_data
+
+    def _save_adopted_image(self, validated_data, instance=None):
         if not validated_data:
-            return None
+            return instance
 
-        image = ActivityPubImage.objects.from_iri(validated_data['id'])
+        validated_data = self._enrich_image_data(validated_data)
+        image_id = validated_data.get('id')
+        image_url = resolve_activity_pub_image_url(image_id, validated_data)
+        if not image_url:
+            logger.warning(
+                "Skipping image adopt: no URL for %s",
+                image_id,
+            )
+            return instance
 
-        response = requests.get(image.url, timeout=30)
+        response = requests.get(image_url, timeout=30)
         response.raise_for_status()
 
-        validated_data['file'] = File(BytesIO(response.content), name=validated_data['name'] or '')
+        file = File(
+            BytesIO(response.content),
+            name=validated_data.get('name') or (instance.name if instance else '') or '',
+        )
 
-        return super().create(validated_data)
+        if instance:
+            instance.file = file
+            if validated_data.get('name'):
+                instance.name = validated_data['name']
+            instance.save()
+            result = instance
+        else:
+            validated_data['file'] = file
+            result = super().create(validated_data)
+
+        link_activity_pub_adopted(image_id, result)
+
+        return result
+
+    def create(self, validated_data):
+        return self._save_adopted_image(validated_data)
+
+    def update(self, instance, validated_data):
+        return self._save_adopted_image(validated_data, instance=instance)
 
     class Meta:
         model = Image
@@ -83,12 +124,14 @@ class ImageField(serializers.Field):
             return None
         try:
             image = ActivityPubImage.objects.from_iri(data)
-            image_url = image.url
+            image_url = resolve_activity_pub_image_url(data)
+            if not image_url:
+                return None
 
             response = requests.get(image_url, timeout=30)
             response.raise_for_status()
 
-            return File(BytesIO(response.content), name=image.name or 'file')
+            return File(BytesIO(response.content), name=image.name if image else 'file')
         except requests.exceptions.HTTPError as e:
             # If image is not found (404), log and return None since logo is an optional field
             if e.response.status_code == 404:
@@ -188,6 +231,45 @@ class MemberSerializer(FederatedObjectBaseSerializer):
             'name', 'family_name', 'given_name', 'email', 'summary', 'icon'
         )
 
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            instance = ActivityPubModel.objects.from_iri(data)
+            if instance:
+                data = ActivityPubSerializer(instance=instance).data
+            else:
+                data = {'id': data}
+
+        if isinstance(data, dict) and data.get('name'):
+            if not data.get('given_name') and not data.get('family_name'):
+                data = {**data, 'given_name': data['name']}
+
+        return super().to_internal_value(data)
+
+    def _remote_member_data(self, validated_data):
+        person_iri = validated_data.get('id')
+        data = {}
+
+        for key, value in validated_data.items():
+            if key in ('id', 'type'):
+                continue
+            if key in ('first_name', 'last_name') and value is None:
+                value = ''
+            data[key] = value
+
+        if not data.get('first_name') and not data.get('last_name') and person_iri:
+            person = ActivityPubModel.objects.from_iri(person_iri)
+            if isinstance(person, Person):
+                if person.given_name:
+                    data['first_name'] = person.given_name
+                if person.family_name:
+                    data['last_name'] = person.family_name
+                if not data.get('first_name') and not data.get('last_name') and person.name:
+                    data['first_name'] = person.name
+                if not data.get('email') and person.email:
+                    data['email'] = person.email
+
+        return data
+
     def save(self, *args, **kwargs):
         try:
             self.instance = RemoteMember.objects.get(origin__iri=self.validated_data['id'])
@@ -197,12 +279,7 @@ class MemberSerializer(FederatedObjectBaseSerializer):
         return super().save(*args, **kwargs)
 
     def create(self, validated_data):
-        result = RemoteMember.objects.create(
-            **dict(
-                (key, value) for key, value in validated_data.items() if
-                key not in ['id', 'type']
-            )
-        )
+        result = RemoteMember.objects.create(**self._remote_member_data(validated_data))
 
         origin = ActivityPubModel.objects.from_iri(validated_data['id'])
         if origin:
@@ -233,11 +310,11 @@ class OrganizationSerializer(FederatedObjectBaseSerializer):
 
 class LocationSerializer(FederatedObjectBaseSerializer):
     type = TypeField('Place')
-    latitude = serializers.FloatField(source='position.x', allow_null=True)
-    longitude = serializers.FloatField(source='position.y', allow_null=True)
-    name = serializers.CharField(source='formatted_address', allow_null=True)
+    latitude = serializers.FloatField(source='position.x', allow_null=True, required=False)
+    longitude = serializers.FloatField(source='position.y', allow_null=True, required=False)
+    name = serializers.CharField(source='formatted_address', allow_null=True, required=False)
 
-    address = AddressSerializer(source='*', allow_null=True)
+    address = AddressSerializer(source='*', allow_null=True, required=False)
 
     class Meta:
         model = Geolocation
@@ -280,12 +357,24 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
         )
 
     def create(self, validated_data):
-        source = Create.objects.get(object__iri=validated_data['id']).actor
-        follow = source.follow_set.get()
-        if follow.default_owner:
-            validated_data['owner'] = follow.default_owner
+        from bluebottle.activity_pub.models import ActivityPubModel, Organization
+        from bluebottle.activity_pub.utils import get_create_for_object, get_follow_for_actor
 
-        validated_data['host_organization'] = source.adopted
+        activity_pub_object = ActivityPubModel.objects.non_polymorphic().filter(
+            iri=validated_data['id']
+        ).first()
+        create = get_create_for_object(activity_pub_object) if activity_pub_object else None
+
+        if create and create.actor_id:
+            follow = get_follow_for_actor(create.actor_id)
+            if follow and follow.default_owner_id:
+                validated_data['owner'] = follow.default_owner
+
+            organization = Organization.objects.non_polymorphic().filter(
+                pk=create.actor_id
+            ).first()
+            if organization and organization.adopted_id:
+                validated_data['host_organization'] = organization.adopted
 
         return super().create(validated_data)
 

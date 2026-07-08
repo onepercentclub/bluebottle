@@ -21,6 +21,7 @@ from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event,
     Recipient, RepetitionModeChoices
 )
+from bluebottle.activity_pub.tasks import publish_to_recipient
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
@@ -135,6 +136,17 @@ def image_mock(url, request):
 
 
 class ActivityPubTestCase:
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.delay_on_commit = publish_to_recipient.delay_on_commit
+        publish_to_recipient.delay_on_commit = publish_to_recipient.delay
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        publish_to_recipient.delay_on_commit = cls.delay_on_commit
+
     def setUp(self):
         super().setUp()
 
@@ -146,6 +158,8 @@ class ActivityPubTestCase:
             site_settings.save()
 
         self.country = CountryFactory.create()
+
+        publish_to_recipient.delay_on_commit = publish_to_recipient.delay
 
         with LocalTenant(self.other_tenant):
             CountryFactory.create(

@@ -213,7 +213,7 @@ class ActivityAdmin(ActivityPubModelChildAdmin):
         try:
             from bluebottle.activity_pub.adapters import publish_to_recipient
             tenant = connection.tenant
-            publish_to_recipient.delay(recipient, tenant)
+            publish_to_recipient.delay_on_commit(recipient, tenant)
             self.message_user(
                 request,
                 _('Republish task queued for recipient {actor}.').format(actor=recipient.actor),
@@ -674,7 +674,7 @@ class FollowerAdmin(FollowAdmin):
     def publish_succeeeded_activities(self, request, follow, form):
         unpublished = follow.unpublished_succeeded_activities.all()
         for activity in unpublished:
-            publish_activity.delay(follow.actor, activity, connection.tenant)
+            publish_activity.delay_on_commit(follow.actor, activity, connection.tenant)
 
         self.message_user(
             request,
@@ -691,7 +691,7 @@ class FollowerAdmin(FollowAdmin):
     def publish_open_activities(self, request, follow, form):
         unpublished = follow.unpublished_open_activities.all()
         for activity in unpublished:
-            publish_activity.delay(follow.actor, activity, connection.tenant)
+            publish_activity.delay_on_commit(follow.actor, activity, connection.tenant)
 
         self.message_user(
             request,

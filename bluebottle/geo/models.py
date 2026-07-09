@@ -218,7 +218,7 @@ class Place(models.Model):
 
     position = PointField(null=True)
 
-    mapbox_id = models.CharField(max_length=50, null=True)
+    mapbox_id = models.CharField(max_length=500, null=True)
 
     def save(self, *args, **kwargs):
         if self.locality and self.country and not self.position:
@@ -257,7 +257,7 @@ class Geolocation(models.Model):
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
     country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
-    mapbox_id = models.CharField(max_length=50, null=True, blank=True)
+    mapbox_id = models.CharField(max_length=500, null=True, blank=True)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 

@@ -274,7 +274,7 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
         if upcoming:
             queryset = queryset.filter(
                 Q(start__gte=now())
-                | Q(contributor__status__in=['new'])
+                | Q(contributor__status__in=['new', 'accepted'])
                 | Q(contributor__participant__slot__status__in=['new', 'running'])
             ).order_by("start")
         else:
@@ -283,7 +283,7 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
             ).exclude(
                 contributor__participant__slot__status__in=['new', 'running']
             ).exclude(
-                contributor__status__in=['new']
+                contributor__status__in=['new', 'accepted']
             ).order_by("-start")
 
         return queryset

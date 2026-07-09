@@ -9,8 +9,6 @@ class UpdateMessage(TransitionMessage):
     class Meta:
         abstract = True
 
-    delay = 60
-
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()
@@ -36,13 +34,10 @@ class FollowersNotification(UpdateMessage):
         if self.obj.audience == AudienceChoices.contributors:
             return get_active_contributor_users(activity, exclude=exclude)
 
-        follows = activity.followers.filter(
-            user__campaign_notifications=True
-        ).exclude(
-            user__in=exclude
-        )
+        follows = activity.followers.filter(user__campaign_notifications=True).exclude(user__in=exclude)
 
-        return list({follow.user for follow in follows})
+        recipients = [follow.user for follow in follows]
+        return recipients
 
 
 class OwnerNotification(UpdateMessage):

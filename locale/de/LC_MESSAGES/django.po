@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-07 14:02+0200\n"
-"PO-Revision-Date: 2026-07-07 12:03\n"
+"POT-Creation-Date: 2026-07-07 16:28+0200\n"
+"PO-Revision-Date: 2026-07-07 14:29\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -150,7 +150,7 @@ msgstr "Aktivität teilen"
 
 #: bluebottle/activities/admin.py:843 bluebottle/funding/admin.py:226
 #: bluebottle/grant_management/admin.py:548 bluebottle/initiatives/admin.py:220
-#: bluebottle/initiatives/admin.py:367
+#: bluebottle/initiatives/admin.py:369
 msgid "Management"
 msgstr "Management"
 
@@ -3101,7 +3101,7 @@ msgid "Users"
 msgstr "Benutzer"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
-#: bluebottle/initiatives/admin.py:432 bluebottle/initiatives/models.py:176
+#: bluebottle/initiatives/admin.py:434 bluebottle/initiatives/models.py:176
 #: bluebottle/members/admin.py:224 bluebottle/members/admin.py:844
 msgid "Initiatives"
 msgstr "Initiativen"
@@ -3396,7 +3396,7 @@ msgstr "initiativen"
 
 #: bluebottle/categories/models.py:18 bluebottle/geo/models.py:136
 #: bluebottle/impact/models.py:37 bluebottle/initiatives/models.py:100
-#: bluebottle/initiatives/models.py:628 bluebottle/organizations/models.py:23
+#: bluebottle/initiatives/models.py:631 bluebottle/organizations/models.py:23
 #: bluebottle/segments/models.py:27 bluebottle/segments/models.py:126
 msgid "slug"
 msgstr "slug"
@@ -3423,7 +3423,7 @@ msgstr "Kategorie-Logobild"
 #: bluebottle/geo/models.py:61 bluebottle/geo/models.py:74
 #: bluebottle/geo/models.py:89 bluebottle/geo/models.py:121
 #: bluebottle/geo/models.py:135 bluebottle/impact/models.py:49
-#: bluebottle/initiatives/models.py:632 bluebottle/looker/models.py:13
+#: bluebottle/initiatives/models.py:635 bluebottle/looker/models.py:13
 #: bluebottle/offices/models.py:9 bluebottle/offices/models.py:25
 #: bluebottle/organizations/models.py:22 bluebottle/organizations/models.py:90
 #: bluebottle/segments/models.py:24 bluebottle/segments/models.py:112
@@ -3434,7 +3434,7 @@ msgstr "name"
 #: bluebottle/categories/models.py:48 bluebottle/categories/models.py:92
 #: bluebottle/funding/models.py:397 bluebottle/funding/models.py:428
 #: bluebottle/geo/models.py:122 bluebottle/geo/models.py:160
-#: bluebottle/initiatives/models.py:633 bluebottle/offices/models.py:10
+#: bluebottle/initiatives/models.py:636 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:24
 #: bluebottle/time_based/models.py:1149
 msgid "description"
@@ -4094,7 +4094,7 @@ msgid "You have joined the activity \"{title}\""
 msgstr "Du bist der Aktivität „{title}“ beigetreten"
 
 #: bluebottle/collect/models.py:19 bluebottle/funding_stripe/states.py:157
-#: bluebottle/initiatives/models.py:629 bluebottle/time_based/models.py:1145
+#: bluebottle/initiatives/models.py:632 bluebottle/time_based/models.py:1145
 msgid "disabled"
 msgstr "deaktiviert"
 
@@ -7905,29 +7905,33 @@ msgstr "Organisation"
 msgid "Steps to complete initiative"
 msgstr "Schritte zum Abschluss der Initiative"
 
-#: bluebottle/initiatives/admin.py:340
+#: bluebottle/initiatives/admin.py:314 bluebottle/initiatives/models.py:457
+msgid "Available work location restrictions"
+msgstr "Verfügbare Einschränkungen des Arbeitsortes"
+
+#: bluebottle/initiatives/admin.py:342
 #, python-brace-format
 msgid "When writing a custom Terms of Service for email, you can include placeholder such as {partner_organization}, {contact_email} from the message templates."
 msgstr "Wenn Sie eine benutzerdefinierte Nutzungsbedingungen für E-Mails schreiben, können Sie Platzhalter wie {partner_organization}, {contact_email} aus den Nachrichtentemplates verwenden."
 
-#: bluebottle/initiatives/admin.py:346
+#: bluebottle/initiatives/admin.py:348
 msgid "Activity types"
 msgstr "Aktivitätstypen"
 
-#: bluebottle/initiatives/admin.py:355
+#: bluebottle/initiatives/admin.py:357
 #: bluebottle/settings/admin_dashboard.py:229
 msgid "Work locations"
 msgstr "Arbeitsstandorte"
 
-#: bluebottle/initiatives/admin.py:380
+#: bluebottle/initiatives/admin.py:382
 msgid "Options"
 msgstr "Optionen"
 
-#: bluebottle/initiatives/admin.py:391 bluebottle/pages/models.py:300
+#: bluebottle/initiatives/admin.py:393 bluebottle/pages/models.py:300
 msgid "Terms of service"
 msgstr "Nutzungsbedingungen"
 
-#: bluebottle/initiatives/admin.py:403 bluebottle/initiatives/models.py:502
+#: bluebottle/initiatives/admin.py:405 bluebottle/initiatives/models.py:505
 #: bluebottle/time_based/models.py:112
 msgid "Hour registration"
 msgstr "Stundenregistrierung"
@@ -8263,79 +8267,87 @@ msgid "Allow activity managers to indicate the impact they make."
 msgstr "Erlauben Sie den Aktivitätsmanagern den Einfluss anzuzeigen, den sie bewirken."
 
 #: bluebottle/initiatives/models.py:440
+msgid "Enable work location regions"
+msgstr "Arbeitsstandorte aktivieren"
+
+#: bluebottle/initiatives/models.py:441
 msgid "Allow admins to add (sub)regions to their work location."
 msgstr "Administratoren erlauben, (Unter-)Regionen zu ihrem Arbeitsstandort hinzuzufügen."
 
-#: bluebottle/initiatives/models.py:446
+#: bluebottle/initiatives/models.py:445
+msgid "Enable work location restrictions"
+msgstr "Einschränkungen des Arbeitsortes aktivieren"
+
+#: bluebottle/initiatives/models.py:448
 msgid "Allow activity managers to specify work location restrictions on activities."
 msgstr "Aktivitätsmanager können Arbeitsstandortbeschränkungen für Aktivitäten festlegen."
 
-#: bluebottle/initiatives/models.py:459
+#: bluebottle/initiatives/models.py:462
 msgid "Default work location restriction"
 msgstr "Standard-Arbeitsstandortbeschränkung"
 
-#: bluebottle/initiatives/models.py:468
+#: bluebottle/initiatives/models.py:471
 msgid "Allow members to see all activities"
 msgstr "Mitglieder können alle Aktivitäten sehen"
 
-#: bluebottle/initiatives/models.py:471
+#: bluebottle/initiatives/models.py:474
 msgid "Members can choose to view activities outside their work location"
 msgstr "Mitglieder können Aktivitäten außerhalb ihres Arbeitsortes auswählen"
 
-#: bluebottle/initiatives/models.py:476
+#: bluebottle/initiatives/models.py:479
 msgid "Enable date activities to have multiple slots."
 msgstr "Aktivieren Sie Datumsaktivitäten für mehrere Slots."
 
-#: bluebottle/initiatives/models.py:481
+#: bluebottle/initiatives/models.py:484
 msgid "Allow admins to open up initiatives for any user to add activities."
 msgstr "Administratoren erlauben Initiativen für jeden Benutzer zu eröffnen, Aktivitäten hinzuzufügen."
 
-#: bluebottle/initiatives/models.py:487
+#: bluebottle/initiatives/models.py:490
 msgid "Add a link to activities so managers can download a contributor list."
 msgstr "Fügen Sie einen Link zu Aktivitäten hinzu, damit Manager eine Beitragsliste herunterladen können."
 
-#: bluebottle/initiatives/models.py:491
+#: bluebottle/initiatives/models.py:494
 msgid "Enable matching"
 msgstr "Treffer aktivieren"
 
-#: bluebottle/initiatives/models.py:506
+#: bluebottle/initiatives/models.py:509
 msgid "Hour registration only applies to time-based activity types."
 msgstr "Die Stundenregistrierung gilt nur für zeitbasierte Aktivitätstypen."
 
-#: bluebottle/initiatives/models.py:510
+#: bluebottle/initiatives/models.py:513
 msgid "Code / URL"
 msgstr "Code / URL"
 
-#: bluebottle/initiatives/models.py:514
+#: bluebottle/initiatives/models.py:517
 msgid "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, this code or link will be used for every activity and can’t be changed."
 msgstr "Feld leer lassen, wenn 'einmalig pro Aktivität' ausgewählt wurde. Wenn Sie 'gilt für alle Aktivitäten' ausgewählt haben, wird dieser Code oder Link für jede Aktivität verwendet und kann nicht geändert werden."
 
-#: bluebottle/initiatives/models.py:520
+#: bluebottle/initiatives/models.py:523
 msgid "Enable reviewing"
 msgstr "Rezension aktivieren"
 
-#: bluebottle/initiatives/models.py:523
+#: bluebottle/initiatives/models.py:526
 msgid "Review initiatives and activities. Activities created within an initiative will not need to be reviewed. Crowdfunding activities will always need to be reviewed"
 msgstr "Überprüfen von Initiativen und Aktivitäten. Aktivitäten, die im Rahmen einer Initiative erstellt wurden, müssen nicht überprüft werden. Crowdfunding Aktivitäten müssen immer überprüft werden"
 
-#: bluebottle/initiatives/models.py:545 bluebottle/initiatives/models.py:546
+#: bluebottle/initiatives/models.py:548 bluebottle/initiatives/models.py:549
 msgid "Activity & initiative settings"
 msgstr "Aktivitäts- und Initiativeneinstellungen"
 
-#: bluebottle/initiatives/models.py:552
+#: bluebottle/initiatives/models.py:555
 msgid "Hour registration data is required when 'generic' hour registration is selected."
 msgstr "Stundenregistrierungsdaten sind erforderlich, wenn 'generische' Stundenregistrierung ausgewählt wurde."
 
-#: bluebottle/initiatives/models.py:571
+#: bluebottle/initiatives/models.py:574
 #, python-brace-format
 msgid "Select {filter_name}"
 msgstr "{filter_name} auswählen"
 
-#: bluebottle/initiatives/models.py:646
+#: bluebottle/initiatives/models.py:649
 msgid "theme"
 msgstr "Thema"
 
-#: bluebottle/initiatives/models.py:647
+#: bluebottle/initiatives/models.py:650
 msgid "themes"
 msgstr "themen"
 

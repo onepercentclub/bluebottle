@@ -12,12 +12,12 @@ def _tenant_schema_name():
     return getattr(getattr(connection, 'tenant', None), 'schema_name', 'public')
 
 
-def _tenant_cache_name(fname, *args, **kwargs):
-    return f'{fname}_{_tenant_schema_name()}'
+def _tenant_cache_name(function_name, *args, **kwargs):
+    return f'{function_name}_{_tenant_schema_name()}'
 
 
 @memoize(timeout=TIMEOUT, make_name=_tenant_cache_name)
-def _parler_languages():
+def get_parler_languages():
     languages = get_languages()
 
     return add_default_language_settings({
@@ -31,7 +31,7 @@ def _parler_languages():
 
 def parler_getattr(name):
     if name == 'PARLER_LANGUAGES':
-        return _parler_languages()
+        return get_parler_languages()
 
     if name == 'PARLER_DEFAULT_LANGUAGE_CODE':
         return get_default_language()
@@ -40,7 +40,7 @@ def parler_getattr(name):
 
 
 def clear_parler_cache():
-    delete_memoized(_parler_languages)
+    delete_memoized(get_parler_languages)
 
 
 parler.appsettings.__getattr__ = parler_getattr

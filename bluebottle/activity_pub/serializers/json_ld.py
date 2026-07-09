@@ -251,8 +251,6 @@ class RelatedParentField(RelatedField):
         event = DoGoodEvent.objects.from_iri(data['id'])
         if event:
             return event
-        elif not is_local(data['id']):
-            __import__('ipdb').set_trace()
 
 
 class SubEventSerializer(BaseActivityPubSerializer):

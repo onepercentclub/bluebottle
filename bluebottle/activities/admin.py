@@ -858,7 +858,6 @@ class ActivityChildAdmin(
             if hasattr(obj, 'origin') and not obj.origin.is_local:
                 return (
                     'host_organization',
-                    'synced_contributor_count'
                 )
             else:
                 return (

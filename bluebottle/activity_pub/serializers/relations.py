@@ -64,7 +64,7 @@ class RelatedResourceField(RelatedField):
         if 'type' not in data and isinstance(self.type, str):
             data = dict(type=self.type, **data)
 
-        serializer = ActivityPubSerializer()
+        serializer = ActivityPubSerializer(context=self.context)
 
         try:
             return serializer.to_internal_value(data)
@@ -73,7 +73,7 @@ class RelatedResourceField(RelatedField):
                 instance = ActivityPubModel.objects.from_iri(data['id'])
 
                 if instance:
-                    local_data = ActivityPubSerializer(instance=instance).data
+                    local_data = ActivityPubSerializer(instance=instance, context=self.context).data
                     return serializer.to_internal_value(local_data)
                 elif not is_local(data['id']):
                     fetched_data = client.fetch(data['id'])
@@ -85,7 +85,7 @@ class RelatedResourceField(RelatedField):
         try:
             origin = self.parent.origin
             if origin:
-                serializer = FederatedObjectSerializer()._get_serializer_from_model_or_instance(
+                serializer = FederatedObjectSerializer(context=self.context)._get_serializer_from_model_or_instance(
                     origin
                 )
                 source = serializer.fields[self.source].source
@@ -102,7 +102,8 @@ class RelatedResourceField(RelatedField):
         if value is not None:
             serializer = ActivityPubSerializer(
                 data=value,
-                origin=origin or self.get_related_origin()
+                origin=origin or self.get_related_origin(),
+                context=self.context
             )
 
             if 'iri' in value:

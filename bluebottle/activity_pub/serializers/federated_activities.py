@@ -22,8 +22,8 @@ from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
-from bluebottle.grant_management.models import GrantApplication
 from bluebottle.geo.models import Country, Geolocation
+from bluebottle.grant_management.models import GrantApplication
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
     PeriodicActivity, ScheduleActivity
@@ -298,8 +298,8 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     end_time = serializers.DateTimeField(source='deadline')
     target = serializers.DecimalField(source='target.amount', decimal_places=2, max_digits=10)
     target_currency = serializers.CharField(source='target.currency')
-    donated = serializers.DecimalField(source='amount_donated.amount', decimal_places=2, max_digits=10)
-    donated_currency = serializers.CharField(source='amount_donated.currency')
+    donated = serializers.DecimalField(source='amount_raised.amount', decimal_places=2, max_digits=10)
+    donated_currency = serializers.CharField(source='amount_raised.currency')
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Funding

@@ -4,17 +4,21 @@ from django.db import connection
 from memoize import memoize as original_memoize
 
 
-def get_tenant_cache_name(fname):
+def get_tenant_cache_name(function_name):
     try:
         tenant_name = connection.tenant.schema_name
     except AttributeError:
         tenant_name = 'public'
-    return f'{fname}_{tenant_name}'
+    return f'{function_name}_{tenant_name}'
 
 
 def memoize(timeout=3600, make_name=None):
-    name_fn = get_tenant_cache_name if make_name is None else make_name
-    memoizer = original_memoize(timeout=timeout, make_name=name_fn)
+    def tenant_aware_make_name(fname):
+        if make_name is not None:
+            fname = make_name(fname)
+        return get_tenant_cache_name(fname)
+
+    memoizer = original_memoize(timeout=timeout, make_name=tenant_aware_make_name)
 
     def decorator(function):
         memoized = memoizer(function)

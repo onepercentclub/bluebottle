@@ -11,7 +11,7 @@ class UpdateMessage(TransitionMessage):
 
     @property
     def action_link(self):
-        return self.obj.activity.get_absolute_url()
+        return self.obj.activity.get_absolute_url() + '#posts'
 
     context = {
         'title': 'activity.title',

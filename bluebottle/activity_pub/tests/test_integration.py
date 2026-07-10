@@ -445,6 +445,8 @@ class SyncTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             self.participant.states.withdraw(save=True)
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 0)
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(
@@ -456,6 +458,9 @@ class SyncTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             self.participant.states.reapply(save=True)
+
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 1)
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(

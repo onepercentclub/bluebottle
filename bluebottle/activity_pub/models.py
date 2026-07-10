@@ -606,7 +606,7 @@ class Recipient(models.Model):
         super().save(*args, **kwargs)
 
         if created and not self.actor.is_local:
-            publish_to_recipient.delay(self, connection.tenant)
+            publish_to_recipient.delay_on_commit(self, connection.tenant)
 
             if isinstance(self.activity, Create):
                 for transition_cls in [Start, Finish, Cancel]:

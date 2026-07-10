@@ -112,7 +112,7 @@ class JSONLDSerializerTestCase:
             )
             self.assertTrue(serializer.is_valid())
 
-        with mock.patch('bluebottle.activity_pub.tasks.publish_to_recipient.delay'):
+        with mock.patch('bluebottle.activity_pub.tasks.publish_to_recipient.delay_on_commit'):
             serializer.save()
 
         self.instance.refresh_from_db()

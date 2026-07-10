@@ -2,6 +2,7 @@ import logging
 from builtins import object
 from itertools import groupby
 
+import inflection
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -10,7 +11,6 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from geopy.distance import distance, lonlat
-import inflection
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
@@ -323,7 +323,7 @@ class BaseActivitySerializer(ModelSerializer):
             f'relationships.{inflection.camelize(field, False)}' if
             isinstance(self.fields[field], RelatedField) else
             f'attributes.{inflection.camelize(field, False)}'
-            for field in obj.readonly_fields
+            for field in obj.readonly_fields if field in self.fields
         ]
 
     def get_segments(self, obj):

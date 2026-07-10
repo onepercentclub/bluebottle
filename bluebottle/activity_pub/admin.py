@@ -966,7 +966,7 @@ class EventAdminMixin:
             activity = adapter.adopt(event, owner=request.user)
             self.message_user(
                 request,
-                f'Successfully adopted Deed "{event.title}".',
+                f'Successfully adopted activity "{event.name}".',
                 level="success",
             )
             return HttpResponseRedirect(
@@ -1077,7 +1077,7 @@ def adopt_events(modeladmin, request, events):
         elif follow.adoption_type == 'clone':
             adapter.clone(event, request)
         elif follow.adoption_type == 'sync':
-            adapter.adopt(event, request)
+            adapter.adopt(event, owner=request.user)
     modeladmin.message_user(
         request,
         _('{amount} activities have been adopted.').format(amount=len(events)),

@@ -27,7 +27,7 @@ class JSONLDAdapter():
         serializer = FederatedObjectSerializer(
             data=ActivityPubSerializer(instance=instance).data
         )
-        if hasattr(instance, 'adopted'):
+        if getattr(instance, 'adopted', None):
             serializer.instance = instance.adopted
 
         serializer.is_valid(raise_exception=True)

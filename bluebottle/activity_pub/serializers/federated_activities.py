@@ -70,6 +70,12 @@ class ImageSerializer(FederatedObjectBaseSerializer):
 
         return super().create(validated_data)
 
+    def update(self, instance, validated_data):
+        if self.instance.origin.iri != validated_data['id']:
+            return self.create(validated_data)
+        else:
+            super().update(instance, validated_data)
+
     class Meta:
         model = Image
         fields = FederatedObjectBaseSerializer.Meta.fields + (

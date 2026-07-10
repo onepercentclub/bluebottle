@@ -4,12 +4,14 @@ from builtins import object
 import mock
 import munch
 import stripe
+from django.contrib.auth.models import Group
 from django.core import mail
 from django.urls import reverse
 from moneyed import Money
 from munch import munchify
 from rest_framework import status
 
+from bluebottle.activities.messages.reviewer import get_reviewers_for_activity
 from bluebottle.funding.models import Donor
 from bluebottle.funding.tests.factories import (
     FundingFactory, DonorFactory, BudgetLineFactory
@@ -513,6 +515,20 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
             )
         )
 
+        self.reviewer = BlueBottleUserFactory.create(
+            submitted_initiative_notifications=True,
+        )
+        self.reviewer.groups.add(Group.objects.get(name='Staff'))
+
+    def assert_live_incomplete_notifications(self):
+        recipients = get_reviewers_for_activity(self.funding)
+        self.assertEqual(len(mail.outbox), len(recipients))
+        for message in mail.outbox:
+            self.assertEqual(
+                message.subject,
+                "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
+            )
+
     def load_connect_account_fixture(self, filename):
         fixture_path = f"bluebottle/funding_stripe/tests/files/{filename}"
         with open(fixture_path) as hook_file:
@@ -598,16 +614,7 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
 
         self.assertEqual(self.payout_account.status, "incomplete")
 
-        self.assertEqual(len(mail.outbox), 2)
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
-        )
+        self.assert_live_incomplete_notifications()
 
     def test_incomplete_open_charges_disabled(self):
         self.verify()
@@ -668,12 +675,8 @@ class StripeConnectWebhookTestCase(FundingStripeTestCase):
 
         self.assertEqual(self.payout_account.status, "incomplete")
 
-        message = mail.outbox[0]
-        self.assertEqual(
-            message.subject,
-            "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
-        )
-        self.assertTrue("/admin/funding/payoutaccount/" in message.body)
+        self.assert_live_incomplete_notifications()
+        self.assertTrue("/admin/funding/payoutaccount/" in mail.outbox[0].body)
 
     def test_payouts_disabled(self):
         self.connect_account.payouts_enabled = False

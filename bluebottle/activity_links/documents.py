@@ -44,6 +44,9 @@ class LinkedActivityDocument(ActivityDocument):
     def prepare_is_online(self, instance):
         return True
 
+    def prepare_platform(self, instance):
+        return instance.host_organization.name
+
     def prepare_is_upcoming(self, instance):
         return instance.slots.filter(start__gte=now()).exists()
 

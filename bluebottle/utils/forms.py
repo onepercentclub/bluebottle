@@ -116,6 +116,7 @@ class TransitionConfirmationForm(forms.Form):
             self.fields['custom_message'] = CustomMessageFormField(
                 label=_('Email message'),
                 required=False,
+                help_text=_('Edit the message text only. The greeting and link are added automatically.')
             )
 
         message_class = self.resolve_message_class()

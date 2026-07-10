@@ -153,6 +153,19 @@ class OrganizationSerializerTestCase(JSONLDSerializerTestCase, BluebottleTestCas
 
         self.test_create()
 
+    def test_create_with_request_auth(self):
+        source_org = OrganizationFactory.create()
+        request = RequestFactory().get('/')
+        request.auth = source_org
+        with httmock.HTTMock(*self.mocks):
+            serializer = ActivityPubSerializer(
+                data=self.data,
+                context={'request': request},
+            )
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+            organization = serializer.save()
+        self.assertEqual(organization.name, self.data['name'])
+
 
 def mock_resource(model):
     @httmock.urlmatch(method="GET", path=urlparse(model.iri).path)

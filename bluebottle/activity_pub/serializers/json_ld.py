@@ -110,11 +110,6 @@ class OrganizationSerializer(BaseActivityPubSerializer):
         )
         model = Organization
 
-    def create(self, validated_data):
-        if 'request' in self.context:
-            validated_data['source'] = self.context['request'].auth
-        return super().create(validated_data)
-
 
 class AddressSerializer(BaseActivityPubSerializer):
     type = TypeField('Address')

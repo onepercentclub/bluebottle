@@ -598,7 +598,7 @@ class Activity(ActivityPubModel):
 
 class Recipient(models.Model):
     activity = models.ForeignKey('activity_pub.Activity', on_delete=models.CASCADE, related_name='recipients')
-    actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
+    actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='recipients')
     send = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):

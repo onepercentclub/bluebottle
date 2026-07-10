@@ -147,6 +147,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         "initiative.place": "bluebottle.geo.serializers.GeolocationSerializer",
         "initiative.organization": "bluebottle.organizations.serializers.OrganizationSerializer",
         "initiative.organization_contact": "bluebottle.organizations.serializers.OrganizationContactSerializer",
+        "source": "bluebottle.organizations.serializers.OrganizationContactSerializer",
     }
 
     class Meta(object):
@@ -180,6 +181,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
             "initiative.promoter",
             "initiative.organization",
             "initiative.organization_contact",
+            "source",
         ]
 
 
@@ -1142,7 +1144,6 @@ class RemoteMemberSerializer(ModelSerializer):
         return f'{obj.first_name} {obj.last_name}'
 
     def get_source(self, obj):
-
         if hasattr(obj, 'origin') and obj.origin.source:
             return obj.origin.source.adopted
 
@@ -1154,7 +1155,7 @@ class RemoteMemberSerializer(ModelSerializer):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'remote_members'
+        resource_name = 'remote-members'
 
         included_resources = ['source', ]
 

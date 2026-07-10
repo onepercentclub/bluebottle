@@ -263,6 +263,12 @@ class BaseActivitySerializer(ModelSerializer):
     )
 
     translations = TranslationsSerializer(fields=['description', 'title'])
+    contributor_count = serializers.SerializerMethodField()
+    source = SerializerMethodResourceRelatedField(
+        many=False,
+        read_only=True,
+        model=Organization
+    )
 
     readonly_fields = serializers.SerializerMethodField()
 
@@ -301,6 +307,16 @@ class BaseActivitySerializer(ModelSerializer):
                     self.fields[field].read_only = True
                 except KeyError:
                     pass
+
+    def get_contributor_count(self, obj):
+        if hasattr(obj, 'origin'):
+            return obj.origin.contributor_count
+        else:
+            return obj.participants.count()
+
+    def get_source(self, obj):
+        if hasattr(obj, 'origin') and obj.origin.source:
+            return obj.origin.source.adopted
 
     def get_readonly_fields(self, obj):
         return [
@@ -355,6 +371,7 @@ class BaseActivitySerializer(ModelSerializer):
         'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
         'answers.file': 'bluebottle.files.serializers.DocumentSerializer',
         'answers.question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+        'source': 'bluebottle.organizations.serializers.OrganizationSerializer',
     }
 
     def get_is_follower(self, instance):
@@ -399,6 +416,7 @@ class BaseActivitySerializer(ModelSerializer):
             'theme',
             'answers',
             'tos_accepted',
+            'source',
         )
 
         meta_fields = (
@@ -415,6 +433,7 @@ class BaseActivitySerializer(ModelSerializer):
             'current_status',
             'admin_url',
             'readonly_fields',
+            'contributor_count',
         )
 
     class JSONAPIMeta(object):
@@ -444,7 +463,8 @@ class BaseActivitySerializer(ModelSerializer):
             'answers',
             'answers.segment',
             'answers.file',
-            'answers.question'
+            'answers.question',
+            'source'
         ]
 
 
@@ -492,7 +512,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'stats',
             'goals',
             'team_activity',
-            'current_status'
+            'current_status',
         )
 
         meta_fields = (
@@ -500,7 +520,8 @@ class BaseActivityListSerializer(ModelSerializer):
             'created',
             'updated',
             'matching_properties',
-            'current_status'
+            'current_status',
+            'contributor_count'
         )
 
     class JSONAPIMeta(object):

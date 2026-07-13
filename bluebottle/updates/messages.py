@@ -9,6 +9,8 @@ class UpdateMessage(TransitionMessage):
     class Meta:
         abstract = True
 
+    delay = 10
+
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url() + '#posts'

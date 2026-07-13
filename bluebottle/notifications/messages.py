@@ -280,12 +280,15 @@ class TransitionMessage(object):
         )
 
 
-@app.task
+@app.task(acks_late=True)
 def compose_and_send(message, tenant):
     from bluebottle.clients.utils import LocalTenant
 
     with LocalTenant(tenant, clear_tenant=True):
         try:
+            if getattr(message, 'obj', None) and getattr(message.obj, 'id', None):
+                message.obj.refresh_from_db()
             message.compose_and_send()
-        except Exception as e:
-            logger.error(e)
+        except Exception:
+            logger.exception('Failed to send notification %s', message)
+            raise

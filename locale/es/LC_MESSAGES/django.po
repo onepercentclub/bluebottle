@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-09 16:03+0200\n"
-"PO-Revision-Date: 2026-07-09 14:18\n"
+"POT-Creation-Date: 2026-07-13 15:01+0200\n"
+"PO-Revision-Date: 2026-07-13 13:02\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -55,7 +55,7 @@ msgstr "Súper administrador"
 #: bluebottle/activities/admin.py:236 bluebottle/activities/models.py:197
 #: bluebottle/activities/models.py:283 bluebottle/collect/admin.py:98
 #: bluebottle/funding/models.py:352 bluebottle/time_based/admin.py:1075
-#: bluebottle/updates/models.py:22
+#: bluebottle/updates/models.py:28
 msgid "Activity"
 msgstr "Actividad"
 
@@ -589,7 +589,7 @@ msgid "You have withdrawn from the activity \"{title}\""
 msgstr "Se te ha retirado de la actividad «{title}»"
 
 #: bluebottle/activities/messages/participant.py:47
-#: bluebottle/activities/messages/reviewer.py:22
+#: bluebottle/activities/messages/reviewer.py:58
 #: bluebottle/collect/messages.py:56 bluebottle/deeds/messages.py:57
 #: bluebottle/time_based/messages.py:424 bluebottle/time_based/messages.py:448
 #: bluebottle/time_based/messages.py:752 bluebottle/time_based/messages.py:779
@@ -609,13 +609,13 @@ msgctxt "platform-email"
 msgid "View this activity"
 msgstr "Ver esta actividad"
 
-#: bluebottle/activities/messages/reviewer.py:71
+#: bluebottle/activities/messages/reviewer.py:74
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new activity is ready to be reviewed on {site_name}"
 msgstr "Una nueva actividad está lista para ser revisada en {site_name}"
 
-#: bluebottle/activities/messages/reviewer.py:77
+#: bluebottle/activities/messages/reviewer.py:80
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new activity has been published on {site_name}"
@@ -835,6 +835,7 @@ msgid "Team {name}"
 msgstr "Equipo {name}"
 
 #: bluebottle/activities/models.py:519 bluebottle/activities/models.py:525
+#: bluebottle/updates/models.py:14
 msgid "Everyone"
 msgstr "Todos"
 
@@ -863,7 +864,7 @@ msgid "Form questions"
 msgstr "Preguntas del formulario"
 
 #: bluebottle/activities/models.py:577 bluebottle/contact/models.py:33
-#: bluebottle/notifications/models.py:112
+#: bluebottle/notifications/models.py:112 bluebottle/updates/models.py:53
 msgid "Message"
 msgstr "Mensaje"
 
@@ -3492,7 +3493,7 @@ msgstr "bloques de contenido"
 #: bluebottle/clients/models.py:14 bluebottle/files/models.py:26
 #: bluebottle/funding/models.py:687 bluebottle/organizations/models.py:26
 #: bluebottle/organizations/models.py:97 bluebottle/terms/models.py:13
-#: bluebottle/updates/models.py:53
+#: bluebottle/updates/models.py:59
 msgid "created"
 msgstr "creado"
 
@@ -3622,7 +3623,7 @@ msgstr "Personas involucradas"
 #: bluebottle/time_based/admin.py:204 bluebottle/time_based/admin.py:252
 #: bluebottle/time_based/admin.py:258 bluebottle/time_based/admin.py:264
 #: bluebottle/time_based/admin.py:534 bluebottle/time_based/admin.py:924
-#: bluebottle/time_based/admin.py:1031
+#: bluebottle/time_based/admin.py:1031 bluebottle/updates/models.py:15
 msgid "Participants"
 msgstr "Participantes"
 
@@ -5094,13 +5095,13 @@ msgctxt "platform-email"
 msgid "Your donation for the campaign \"{title}\" will be refunded"
 msgstr "Tu donación para la campaña «{title}» se reembolsará"
 
-#: bluebottle/funding/messages/funding/platform_manager.py:13
+#: bluebottle/funding/messages/funding/platform_manager.py:14
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Failed identity verification for a running crowdfunding campaign on {site_name} ⚠️"
 msgstr "Verificación de identidad fallida para una campaña de recaudación de fondos activa en {site_name} ⚠️"
 
-#: bluebottle/funding/messages/funding/platform_manager.py:36
+#: bluebottle/funding/messages/funding/platform_manager.py:49
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Incomplete payout account for a running crowdfunding campaign on {site_name} ⚠️"
@@ -8475,6 +8476,7 @@ msgid "Reviewer:"
 msgstr "Revisador:"
 
 #: bluebottle/initiatives/templates/mails/messages/initiative_base.html:6
+#: bluebottle/updates/templates/mails/messages/update_base.html:5
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
@@ -9944,7 +9946,8 @@ msgid "Link title"
 msgstr "Título del enlace"
 
 #: bluebottle/pages/models.py:30 bluebottle/pages/models.py:52
-#: bluebottle/pages/models.py:53
+#: bluebottle/pages/models.py:53 bluebottle/updates/admin.py:36
+#: bluebottle/updates/admin.py:56
 msgid "Document"
 msgstr "Documento"
 
@@ -10380,38 +10383,38 @@ msgstr "Ajustes"
 msgid "Manage Reporting"
 msgstr "Administrar Reporte"
 
-#: bluebottle/settings/local.py:336 bluebottle/settings/testing.py:443
+#: bluebottle/settings/local.py:338 bluebottle/settings/testing.py:443
 #: tenants/rhi-magnesia/settings.py:25 tenants/rhi-magnesita/settings.py:25
 #: tenants/shell-grant-management/settings.py:26
 msgid "English"
 msgstr "Inglés"
 
-#: bluebottle/settings/local.py:337 bluebottle/settings/testing.py:444
+#: bluebottle/settings/local.py:339 bluebottle/settings/testing.py:444
 #: tenants/essent/settings.py:26 tenants/shell-grant-management/settings.py:25
 msgid "Dutch"
 msgstr "Neerlandés"
 
-#: bluebottle/settings/local.py:338 bluebottle/settings/testing.py:445
+#: bluebottle/settings/local.py:340 bluebottle/settings/testing.py:445
 msgid "French"
 msgstr "Francés"
 
-#: bluebottle/settings/local.py:339 bluebottle/settings/testing.py:446
+#: bluebottle/settings/local.py:341 bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr "Español"
 
-#: bluebottle/settings/local.py:340 bluebottle/settings/testing.py:447
+#: bluebottle/settings/local.py:342 bluebottle/settings/testing.py:447
 msgid "German"
 msgstr "Alemán"
 
-#: bluebottle/settings/local.py:341 bluebottle/settings/testing.py:448
+#: bluebottle/settings/local.py:343 bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugués"
 
-#: bluebottle/settings/local.py:342 bluebottle/settings/testing.py:449
+#: bluebottle/settings/local.py:344 bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr "Húngaro"
 
-#: bluebottle/settings/local.py:343 bluebottle/settings/testing.py:450
+#: bluebottle/settings/local.py:345 bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Búlgaro"
 
@@ -14253,90 +14256,100 @@ msgstr "Cada cambio se aplicará a todos los idiomas. Excepto para los campos qu
 msgid "Recent wall updates"
 msgstr "Actualizaciones recientes del muro"
 
-#: bluebottle/updates/messages.py:21
+#: bluebottle/updates/messages.py:28
 #, python-brace-format
 msgctxt "platform-email"
 msgid "New update from '{title}'"
 msgstr "Nueva actualización de «{title}»"
 
-#: bluebottle/updates/messages.py:37
+#: bluebottle/updates/messages.py:46
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new message is posted on '{title}'"
 msgstr "Se ha publicado un nuevo mensaje en «{title}»"
 
-#: bluebottle/updates/messages.py:49
+#: bluebottle/updates/messages.py:58
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have a reply on '{title}'"
 msgstr "Tienes una respuesta en «{title}»"
 
-#: bluebottle/updates/models.py:15
+#: bluebottle/updates/models.py:21
 msgid "Author"
 msgstr "Autor"
 
-#: bluebottle/updates/models.py:30
+#: bluebottle/updates/models.py:36
 msgid "Reply to"
 msgstr "Responder a"
 
-#: bluebottle/updates/models.py:40
+#: bluebottle/updates/models.py:46
 msgid "Related contribution"
 msgstr "Contribución relacionada"
 
-#: bluebottle/updates/models.py:41
+#: bluebottle/updates/models.py:47
 msgid "The contribution this update is related to, e.g. the donation"
 msgstr "La contribución a la que se relaciona esta actualización, por ejemplo, la donación"
 
-#: bluebottle/updates/models.py:47
-msgid "message"
-msgstr "mensaje"
-
-#: bluebottle/updates/models.py:51
+#: bluebottle/updates/models.py:57
 msgid "Pinned"
 msgstr "Fijado"
 
-#: bluebottle/updates/models.py:55
+#: bluebottle/updates/models.py:61
 msgid "notify supporters"
 msgstr "notificar seguidores"
 
-#: bluebottle/updates/models.py:69
+#: bluebottle/updates/models.py:64
+msgid "Audience"
+msgstr ""
+
+#: bluebottle/updates/models.py:104
 msgid "Update"
 msgstr "Actualizar"
 
-#: bluebottle/updates/models.py:78
+#: bluebottle/updates/models.py:113
 #, python-brace-format
 msgid "Anonymous - {time}"
 msgstr "Anónimo - {time}"
 
-#: bluebottle/updates/serializers.py:77
+#: bluebottle/updates/serializers.py:83
 msgid "At least one of 'message', 'images', or 'video_url' must be set."
 msgstr "Debe establecerse al menos uno de 'mensaje', 'imágenes', o 'video_url'."
 
-#: bluebottle/updates/templates/mails/messages/update_followers.html:5
+#: bluebottle/updates/templates/mails/messages/update_base.html:16
+msgctxt "platform-email"
+msgid "View update"
+msgstr ""
+
+#: bluebottle/updates/templates/mails/messages/update_base.html:18
+msgctxt "platform-email"
+msgid "View comment"
+msgstr ""
+
+#: bluebottle/updates/templates/mails/messages/update_followers.html:6
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"        Hi %(recipient_name)s,\n"
-"        <br><br>\n"
-"        %(author)s posted an update to %(title)s:\n"
-"        <br>\n"
-"        '%(text)s'\n\n"
-"    "
-msgstr "\n"
-"        Hola, %(recipient_name)s:\n"
-"        <br><br>\n"
-"        %(author)s publicó una actualización sobre %(title)s:\n"
-"        <br>\n"
-"        '%(text)s'\n\n"
-"    "
+"            %(author)s posted an update to %(title)s:\n"
+"        "
+msgstr ""
 
-#: bluebottle/updates/templates/mails/messages/update_followers.html:17
-#: bluebottle/updates/templates/mails/messages/update_owner.html:15
+#: bluebottle/updates/templates/mails/messages/update_followers.html:10
+#, python-format
 msgctxt "platform-email"
-msgid "View message"
-msgstr "Ver mensaje"
+msgid "\n"
+"            %(author)s posted a comment to %(title)s:\n"
+"        "
+msgstr ""
 
 #: bluebottle/updates/templates/mails/messages/update_followers.html:21
+#: bluebottle/updates/templates/mails/messages/update_owner.html:15
+msgctxt "platform-email"
+msgid "\n"
+"            This post includes media or files, view them in the full post.\n"
+"        "
+msgstr ""
+
+#: bluebottle/updates/templates/mails/messages/update_followers.html:30
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
@@ -14366,36 +14379,17 @@ msgstr "\n"
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"        Hi %(recipient_name)s,\n"
-"        <br/>\n"
-"        <br/>\n"
 "        %(author)s posted a comment to '%(title)s'.\n"
 "    "
-msgstr "\n"
-"        Hola, %(recipient_name)s:\n"
-"        <br/>\n"
-"        <br/>\n"
-"        %(author)s publicó un comentario en '%(title)s'.\n"
-"    "
+msgstr ""
 
 #: bluebottle/updates/templates/mails/messages/update_parent.html:5
 #, python-format
 msgctxt "platform-email"
 msgid "\n"
-"        Hi %(recipient_name)s,\n"
-"        <br><br>\n"
 "        %(author)s replied to your message on '%(title)s'.\n"
 "    "
-msgstr "\n"
-"        Hola, %(recipient_name)s:\n"
-"        <br><br>\n"
-"        %(author)s ha respondido a tu mensaje en '%(title)s'.\n"
-"    "
-
-#: bluebottle/updates/templates/mails/messages/update_parent.html:14
-msgctxt "platform-email"
-msgid "View reply"
-msgstr "Ver respuesta"
+msgstr ""
 
 #: bluebottle/utils/forms.py:83
 msgid "Transition"

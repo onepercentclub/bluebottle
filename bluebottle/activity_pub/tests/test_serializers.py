@@ -1,11 +1,16 @@
+from decimal import Decimal
 from io import BytesIO
 
 import mock
 from django.test import RequestFactory
+from djmoney.money import Money
 from requests import Response
 
 from bluebottle.activity_pub.models import GoodDeed, CrowdFunding, GrantApplication
-from bluebottle.activity_pub.serializers.federated_activities import FederatedDateActivitySerializer
+from bluebottle.activity_pub.serializers.federated_activities import (
+    FederatedDateActivitySerializer,
+    FederatedFundingSerializer,
+)
 from bluebottle.activity_pub.serializers.json_ld import (
     DoGoodEventSerializer, GoodDeedSerializer, CrowdFundingSerializer, GrantApplicationSerializer
 )
@@ -16,6 +21,7 @@ from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
 
 
@@ -189,6 +195,54 @@ class DoGoodEventSerializerTestCase(BluebottleTestCase):
 
         self.assertIn('url', data)
         self.assertIsNone(data['url'])
+
+
+class FederatedFundingSerializerTestCase(BluebottleTestCase):
+    def setUp(self):
+        SitePlatformSettings.objects.create(
+            share_activities=['supplier', 'consumer']
+        )
+
+    @property
+    def context(self):
+        request = RequestFactory().get('/')
+        request.user = BlueBottleUserFactory.create()
+        return {'request': request}
+
+    def test_donated_includes_matching_amount(self):
+        funding = FundingFactory.create(
+            target=Money(1000, 'EUR'),
+            amount_donated=Money(90, 'EUR'),
+            amount_matching=Money(30, 'EUR'),
+        )
+
+        data = FederatedFundingSerializer(instance=funding, context=self.context).data
+
+        self.assertEqual(Decimal(data['donated']), Decimal('120.00'))
+        self.assertEqual(data['donated_currency'], 'EUR')
+
+    def test_donated_includes_matching_amount_in_activity_pub_payload(self):
+        funding = FundingFactory.create(
+            target=Money(1000, 'EUR'),
+            amount_donated=Money(90, 'EUR'),
+            amount_matching=Money(30, 'EUR'),
+        )
+
+        federated_data = FederatedFundingSerializer(
+            instance=funding,
+            context=self.context,
+        ).data
+        activity_pub_serializer = CrowdFundingSerializer(
+            data=federated_data,
+            context=self.context,
+        )
+
+        self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
+
+        crowd_funding = activity_pub_serializer.save()
+
+        self.assertEqual(crowd_funding.donated, Decimal('120.00'))
+        self.assertEqual(crowd_funding.donated_currency, 'EUR')
 
 
 class GoodDeedSerializerTest(BluebottleTestCase):

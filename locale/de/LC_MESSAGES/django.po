@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-30 11:56+0200\n"
-"PO-Revision-Date: 2026-06-30 10:03\n"
+"POT-Creation-Date: 2026-07-13 15:01+0200\n"
+"PO-Revision-Date: 2026-07-13 13:02\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -589,7 +589,7 @@ msgid "You have withdrawn from the activity \"{title}\""
 msgstr "Du hast dich von der Aktivität „{title}“ zurückgezogen"
 
 #: bluebottle/activities/messages/participant.py:47
-#: bluebottle/activities/messages/reviewer.py:22
+#: bluebottle/activities/messages/reviewer.py:58
 #: bluebottle/collect/messages.py:56 bluebottle/deeds/messages.py:57
 #: bluebottle/time_based/messages.py:424 bluebottle/time_based/messages.py:448
 #: bluebottle/time_based/messages.py:752 bluebottle/time_based/messages.py:779
@@ -609,13 +609,13 @@ msgctxt "platform-email"
 msgid "View this activity"
 msgstr "Diese Aktivität anzeigen"
 
-#: bluebottle/activities/messages/reviewer.py:71
+#: bluebottle/activities/messages/reviewer.py:74
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new activity is ready to be reviewed on {site_name}"
 msgstr "Eine neue Aktivität kann auf {site_name} überprüft werden"
 
-#: bluebottle/activities/messages/reviewer.py:77
+#: bluebottle/activities/messages/reviewer.py:80
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new activity has been published on {site_name}"
@@ -5092,13 +5092,13 @@ msgctxt "platform-email"
 msgid "Your donation for the campaign \"{title}\" will be refunded"
 msgstr "Deine Spende für die Kampagne „{title}“ wird zurückerstattet"
 
-#: bluebottle/funding/messages/funding/platform_manager.py:13
+#: bluebottle/funding/messages/funding/platform_manager.py:14
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Failed identity verification for a running crowdfunding campaign on {site_name} ⚠️"
 msgstr "Fehlgeschlagene Identitätsüberprüfung für eine laufende Crowdfunding-Kampagne auf {site_name} ⚠️"
 
-#: bluebottle/funding/messages/funding/platform_manager.py:36
+#: bluebottle/funding/messages/funding/platform_manager.py:49
 #, python-brace-format
 msgctxt "platform-email"
 msgid "Incomplete payout account for a running crowdfunding campaign on {site_name} ⚠️"
@@ -10382,97 +10382,38 @@ msgstr "Einstellungen"
 msgid "Manage Reporting"
 msgstr "Berichte verwalten"
 
-#: bluebottle/settings/local.py:326 bluebottle/settings/testing.py:443
-#: tenants/accenture/settings.py:30
-#: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
-#: tenants/bedrijven-voor-amsterdam/settings.py:27
-#: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
-#: tenants/boost-your-business/settings.py:26
-#: tenants/bright-future-afghanistan/settings.py:26
-#: tenants/bugaboo/settings.py:26 tenants/close-the-gap/settings.py:26
-#: tenants/corona/settings.py:26
-#: tenants/deloitte-impact-foundation/settings.py:30
-#: tenants/deloitte-uk/settings.py:29 tenants/dll/settings.py:29
-#: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
-#: tenants/essent/settings.py:27 tenants/ey/settings.py:26
-#: tenants/gasunie/settings.py:27 tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
-#: tenants/innovating-justice/settings.py:25
-#: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
-#: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
-#: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
-#: tenants/shell-disaster-relief/settings.py:26
+#: bluebottle/settings/local.py:338 bluebottle/settings/testing.py:443
+#: tenants/rhi-magnesia/settings.py:25 tenants/rhi-magnesita/settings.py:25
 #: tenants/shell-grant-management/settings.py:26
 msgid "English"
 msgstr "Englisch"
 
-#: bluebottle/settings/local.py:327 bluebottle/settings/testing.py:444
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/aed-actie/settings.py:24 tenants/almelo/settings.py:25
-#: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
-#: tenants/bedrijven-voor-amsterdam/settings.py:26
-#: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
-#: tenants/buurtmaaltijden/settings.py:24 tenants/corona/settings.py:25
-#: tenants/crowdfunding-010/settings.py:26
-#: tenants/crowdfunding-voornatuur/settings.py:26
-#: tenants/gasunie/settings.py:26 tenants/geef-om-zorg/settings.py:26
-#: tenants/gent/settings.py:25 tenants/goes/settings.py:25
-#: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
-#: tenants/join-rabo-foundation/settings.py:26
-#: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
-#: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:23
-#: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
-#: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
-#: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
-#: tenants/tilburg/settings.py:25 tenants/transavia/settings.py:26
-#: tenants/utrecht/settings.py:25 tenants/venlo/settings.py:23
-#: tenants/voor-apeldoorn/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:23
-#: tenants/voor-je-buurt/settings.py:26 tenants/voor-je-stadsie/settings.py:26
-#: tenants/voor-leeuwarden/settings.py:26
-#: tenants/voor-overijssel/settings.py:25 tenants/west-friesland/settings.py:25
-#: tenants/zaanstad/settings.py:25
+#: bluebottle/settings/local.py:339 bluebottle/settings/testing.py:444
+#: tenants/essent/settings.py:26 tenants/shell-grant-management/settings.py:25
 msgid "Dutch"
 msgstr "Niederländisch"
 
-#: bluebottle/settings/local.py:328 bluebottle/settings/testing.py:445
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+#: bluebottle/settings/local.py:340 bluebottle/settings/testing.py:445
 msgid "French"
 msgstr "Französisch"
 
-#: bluebottle/settings/local.py:329 bluebottle/settings/testing.py:446
-#: tenants/mars/settings.py:28
+#: bluebottle/settings/local.py:341 bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr "Spanisch"
 
-#: bluebottle/settings/local.py:330 bluebottle/settings/testing.py:447
-#: tenants/mars/settings.py:29
+#: bluebottle/settings/local.py:342 bluebottle/settings/testing.py:447
 msgid "German"
 msgstr "Deutsch"
 
-#: bluebottle/settings/local.py:331 bluebottle/settings/testing.py:448
+#: bluebottle/settings/local.py:343 bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugiesisch"
 
-#: bluebottle/settings/local.py:332 bluebottle/settings/testing.py:449
-#: tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:344 bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr "Ungarisch"
 
-#: bluebottle/settings/local.py:333 bluebottle/settings/testing.py:450
+#: bluebottle/settings/local.py:345 bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Bulgarisch"
 
@@ -14320,13 +14261,13 @@ msgctxt "platform-email"
 msgid "New update from '{title}'"
 msgstr "Neues Update von ‚{title}‘"
 
-#: bluebottle/updates/messages.py:49
+#: bluebottle/updates/messages.py:46
 #, python-brace-format
 msgctxt "platform-email"
 msgid "A new message is posted on '{title}'"
 msgstr "Eine neue Nachricht wird auf ‚{title}‘ gepostet"
 
-#: bluebottle/updates/messages.py:61
+#: bluebottle/updates/messages.py:58
 #, python-brace-format
 msgctxt "platform-email"
 msgid "You have a reply on '{title}'"
@@ -14358,7 +14299,7 @@ msgstr "Unterstützer benachrichtigen"
 
 #: bluebottle/updates/models.py:64
 msgid "Audience"
-msgstr "Zielgruppe"
+msgstr ""
 
 #: bluebottle/updates/models.py:104
 msgid "Update"
@@ -14376,12 +14317,12 @@ msgstr "Mindestens eine von 'message', 'images' oder 'video_url' muss gesetzt se
 #: bluebottle/updates/templates/mails/messages/update_base.html:16
 msgctxt "platform-email"
 msgid "View update"
-msgstr "Update ansehen"
+msgstr ""
 
 #: bluebottle/updates/templates/mails/messages/update_base.html:18
 msgctxt "platform-email"
 msgid "View comment"
-msgstr "Kommentar anzeigen"
+msgstr ""
 
 #: bluebottle/updates/templates/mails/messages/update_followers.html:6
 #, python-format
@@ -14389,9 +14330,7 @@ msgctxt "platform-email"
 msgid "\n"
 "            %(author)s posted an update to %(title)s:\n"
 "        "
-msgstr "\n"
-"            %(author)s hat ein Update zu %(title)s gepostet:\n"
-"        "
+msgstr ""
 
 #: bluebottle/updates/templates/mails/messages/update_followers.html:10
 #, python-format
@@ -14399,9 +14338,7 @@ msgctxt "platform-email"
 msgid "\n"
 "            %(author)s posted a comment to %(title)s:\n"
 "        "
-msgstr "\n"
-"            %(author)s hat einen Kommentar zu %(title)s gepostet:\n"
-"        "
+msgstr ""
 
 #: bluebottle/updates/templates/mails/messages/update_followers.html:21
 #: bluebottle/updates/templates/mails/messages/update_owner.html:15
@@ -14409,9 +14346,7 @@ msgctxt "platform-email"
 msgid "\n"
 "            This post includes media or files, view them in the full post.\n"
 "        "
-msgstr "\n"
-"            Dieser Beitrag enthält Medien oder Dateien, die im vollständigen Beitrag angezeigt werden können.\n"
-"        "
+msgstr ""
 
 #: bluebottle/updates/templates/mails/messages/update_followers.html:30
 #, python-format
@@ -14445,9 +14380,7 @@ msgctxt "platform-email"
 msgid "\n"
 "        %(author)s posted a comment to '%(title)s'.\n"
 "    "
-msgstr "\n"
-"        %(author)s hat einen Kommentar zu '%(title)s' gepostet.\n"
-"    "
+msgstr ""
 
 #: bluebottle/updates/templates/mails/messages/update_parent.html:5
 #, python-format
@@ -14455,9 +14388,7 @@ msgctxt "platform-email"
 msgid "\n"
 "        %(author)s replied to your message on '%(title)s'.\n"
 "    "
-msgstr "\n"
-"        %(author)s hat auf deine Nachricht zu '%(title)s' geantwortet.\n"
-"    "
+msgstr ""
 
 #: bluebottle/utils/forms.py:83
 msgid "Transition"
@@ -14609,3 +14540,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Zweiter"
 msgstr[1] "Sekunden"
+

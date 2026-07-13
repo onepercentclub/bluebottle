@@ -312,7 +312,7 @@ def contributor_is_active(effect):
 def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
     settings = MemberPlatformSettings.load()
-    return (not settings.closed) and effect.instance.actual_user.is_active
+    return (not settings.closed) and effect.instance.user and effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
@@ -380,6 +380,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 UnFollowActivityEffect,
                 # Notify source platform of leave for synced deeds
                 SendLeaveEffect,
+                SyncRelatedEvent
             ]
         ),
 
@@ -412,6 +413,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[activity_is_finished, activity_expired]
                 ),
                 SendJoinEffect,
+                SyncRelatedEvent
             ]
         ),
         TransitionTrigger(
@@ -430,6 +432,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 UnFollowActivityEffect,
                 # Notify source platform of leave for synced deeds
                 SendLeaveEffect,
+                SyncRelatedEvent
             ]
         ),
 
@@ -443,6 +446,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 ),
                 FollowActivityEffect,
                 SendJoinEffect,
+                SyncRelatedEvent
             ]
         ),
 

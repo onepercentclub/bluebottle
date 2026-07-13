@@ -5,6 +5,7 @@ from bluebottle.fsm.triggers import (
     TriggerManager, register, ModelChangedTrigger
 )
 
+
 @register(Organization)
 class OrganizationTriggers(TriggerManager):
     triggers = [

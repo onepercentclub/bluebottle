@@ -966,7 +966,7 @@ class EventAdminMixin:
             activity = adapter.adopt(event, owner=request.user)
             self.message_user(
                 request,
-                f'Successfully adopted Deed "{event.title}".',
+                f'Successfully adopted activity "{event.name}".',
                 level="success",
             )
             return HttpResponseRedirect(

@@ -1,15 +1,15 @@
-from bluebottle.organizations.models import Organization
+from bluebottle.members.models import Member
 
 from bluebottle.activity_pub.effects import SyncEffect
 from bluebottle.fsm.triggers import (
     TriggerManager, register, ModelChangedTrigger
 )
 
-@register(Organization)
-class OrganizationTriggers(TriggerManager):
+@register(Member)
+class MemberTriggers(TriggerManager):
     triggers = [
         ModelChangedTrigger(
-            ['name', 'description', 'logo', 'website'],
+            ['first_name', 'last_name', 'email'],
             effects=[SyncEffect]
         ),
     ]

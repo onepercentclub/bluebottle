@@ -710,7 +710,7 @@ class BaseContributorSerializer(ModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'remote_user': 'bluebottle.activities.serializers.ReomteMemberSerializer',
+        'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
         'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }

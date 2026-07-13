@@ -40,10 +40,13 @@ def create_task(request, tenant):
             data=request.data, context={'request': request}
         )
 
-        print('Post to inbox:', request.data['type'], request.data['object'])
+        print('Post to inbox:', request.data['type'], request.data['object'], request.headers['Host'])
 
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        try:
+            serializer.save()
+        except TypeError as e:
+            print(f'Exception while saving to inbox: {e}')
 
 
 class PickableRequest:

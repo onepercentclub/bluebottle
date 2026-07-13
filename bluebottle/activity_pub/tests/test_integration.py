@@ -406,6 +406,23 @@ class SyncTestCase(ActivityPubTestCase):
         self.assertTrue(self.follow)
         self.assertTrue(self.follow.actor.adopted)
 
+    def test_sync_organization(self):
+        self.test_follow()
+
+        with LocalTenant(self.other_tenant):
+            site_settings = SitePlatformSettings.load()
+            organization = site_settings.organization
+
+            with httmock.HTTMock(image_mock):
+                organization.name = 'New name'
+                organization.save()
+
+        actor = self.follow.actor
+        actor.refresh_from_db()
+        self.assertEqual(
+            actor.adopted.name, 'New name'
+        )
+
     def test_adopt(self):
         self.test_publish()
 
@@ -454,11 +471,25 @@ class SyncTestCase(ActivityPubTestCase):
             self.synced_participant.status, self.expected_participant_status
         )
 
+    def test_update_participant(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            user = self.participant.user
+            user.first_name = 'New first name'
+            user.save()
+
+        remote_user = self.synced_participant.remote_user
+        remote_user.refresh_from_db()
+        self.assertEqual(remote_user.first_name, 'New first name')
+
     def test_leave(self):
         self.test_join()
 
         with LocalTenant(self.other_tenant):
             self.participant.states.withdraw(save=True)
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 0)
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(
@@ -470,6 +501,9 @@ class SyncTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             self.participant.states.reapply(save=True)
+
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 1)
 
         self.synced_participant.refresh_from_db()
         self.assertEqual(

@@ -278,19 +278,14 @@ class TransitionMessage(object):
 
         compose_and_send.apply_async(
             [self, connection.tenant],
-            kwargs={'delay': self.delay},
+            countdown=self.delay,
             task_id=self.task_id,
         )
 
 
 @app.task
-def compose_and_send(message, tenant, delay=0):
-    import time
-
+def compose_and_send(message, tenant):
     from bluebottle.clients.utils import LocalTenant
-
-    if delay:
-        time.sleep(delay)
 
     with LocalTenant(tenant, clear_tenant=True):
         try:

@@ -100,13 +100,14 @@ class DateActivityDocument(TimeBasedActivityDocument):
         for slot in instance.slots.all():
             if slot.is_online or not slot.location:
                 continue
-            primary = slot.location.geofeature
-            country = slot.location.country
+            geolocation = slot.location
+            primary = geolocation.geofeature
+            country = geolocation.country
             locations.append({
-                'name': primary.place_name if primary else None,
-                'formatted_address': primary.place_name if primary else None,
+                'name': primary.place_name if primary else geolocation.formatted_address,
+                'formatted_address': primary.place_name if primary else geolocation.formatted_address,
                 'location_hint': primary.name if primary else None,
-                'locality': primary.name if primary else None,
+                'locality': primary.name if primary else geolocation.locality,
                 'country_code': country.alpha2_code if country else None,
                 'country': country.name if country else None,
             })
@@ -158,8 +159,8 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 'start': slot.start,
                 'end': slot.end,
                 'location_hint': slot.location_hint,
-                'locality': geofeature.name if geofeature else None,
-                'formatted_address': geofeature.place_name if geofeature else None,
+                'locality': geofeature.name if geofeature else location.locality,
+                'formatted_address': geofeature.place_name if geofeature else location.formatted_address,
                 'country': country.name if country else None,
                 'country_code': country.alpha2_code if country else None,
                 'is_online': slot.is_online,

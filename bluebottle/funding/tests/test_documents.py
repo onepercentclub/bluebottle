@@ -5,8 +5,13 @@ from bluebottle.test.utils import BluebottleTestCase
 
 
 class FundingDocumentTestCase(BluebottleTestCase):
+    def create_geolocation(self, **kwargs):
+        geolocation = GeolocationFactory.build(**kwargs)
+        geolocation.save(skip_mapbox_sync=True)
+        return geolocation
+
     def test_prepare_location_impact_location_without_country(self):
-        impact_location = GeolocationFactory.create(
+        impact_location = self.create_geolocation(
             country=None,
             locality='Amsterdam',
             formatted_address='Dam 1, Amsterdam',
@@ -25,7 +30,7 @@ class FundingDocumentTestCase(BluebottleTestCase):
         self.assertEqual(locations[0]['type'], 'location')
 
     def test_prepare_indexing_impact_location_without_country(self):
-        impact_location = GeolocationFactory.create(
+        impact_location = self.create_geolocation(
             country=None,
             locality='Amsterdam',
             formatted_address='Dam 1, Amsterdam',

@@ -395,10 +395,14 @@ class ActivityPreviewSerializer(ModelSerializer):
         if not location:
             return None
 
+        geofeatures = getattr(location, 'geofeatures', None)
+        if geofeatures is None:
+            geofeatures = getattr(obj, 'geofeature', None)
         formatted = format_card_location(
             obj,
             InitiativePlatformSettings.load().card_location_display,
             get_current_language(),
+            geofeatures=geofeatures,
         )
         if formatted:
             return formatted

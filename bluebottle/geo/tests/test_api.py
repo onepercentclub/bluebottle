@@ -73,20 +73,25 @@ class UsedCountryListTestCase(GeoTestCase):
     Endpoint: /api/geo/used_countries
     """
 
+    def create_geolocation(self, **kwargs):
+        geolocation = GeolocationFactory.build(**kwargs)
+        geolocation.save(skip_mapbox_sync=True)
+        return geolocation
+
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
 
         belgium = Country.objects.get(alpha2_code="BE")
-        location_be = GeolocationFactory.create(country=belgium)
+        location_be = self.create_geolocation(country=belgium)
 
         bulgaria = Country.objects.get(alpha2_code="BG")
-        location_bg = GeolocationFactory.create(country=bulgaria)
+        location_bg = self.create_geolocation(country=bulgaria)
 
         germany = Country.objects.get(alpha2_code="DE")
-        location_de = GeolocationFactory.create(country=germany)
+        location_de = self.create_geolocation(country=germany)
 
         turkey = Country.objects.get(alpha2_code="TR")
-        location_tr = GeolocationFactory.create(country=turkey)
+        location_tr = self.create_geolocation(country=turkey)
 
         initiative = InitiativeFactory.create(
             status='approved',
@@ -100,7 +105,8 @@ class UsedCountryListTestCase(GeoTestCase):
         )
         DateActivitySlotFactory.create(
             activity=activity,
-            location=location_be
+            location=location_be,
+            status='open',
         )
 
         activity = DateActivityFactory.create(
@@ -110,7 +116,8 @@ class UsedCountryListTestCase(GeoTestCase):
         )
         DateActivitySlotFactory.create(
             activity=activity,
-            location=location_bg
+            location=location_bg,
+            status='full',
         )
 
         DeadlineActivityFactory.create(

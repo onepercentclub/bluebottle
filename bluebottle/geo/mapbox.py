@@ -446,8 +446,9 @@ def _card_location_level_value(geofeatures, level):
     return _entry_value(feature, 'name') if feature else None
 
 
-def format_card_location(activity, card_location_display, language):
-    geofeatures = getattr(activity, 'geofeature', None)
+def format_card_location(activity, card_location_display, language, geofeatures=None):
+    if geofeatures is None:
+        geofeatures = getattr(activity, 'geofeature', None)
     if not geofeatures or not card_location_display:
         return None
 
@@ -472,6 +473,20 @@ def format_card_location(activity, card_location_display, language):
                 None,
             )
             value = _entry_value(country_feature, 'name')
+            if not value:
+                value = next(
+                    (
+                        _entry_value(geofeature, 'country')
+                        for geofeature in language_geofeatures
+                        if _entry_value(geofeature, 'country')
+                    ),
+                    None,
+                )
+            if not value:
+                countries = getattr(activity, 'country', None) or []
+                language_countries = _entries_for_language(countries, language)
+                if language_countries:
+                    value = _entry_value(language_countries[0], 'name')
         elif level == 'country_code':
             value = next(
                 (

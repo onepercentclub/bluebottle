@@ -188,8 +188,18 @@ class GeolocationSerializer(ModelSerializer):
     position = PointSerializer()
     static_map_url = StaticMapsField(source='position')
     timezone = serializers.ReadOnlyField()
-    formatted_address = serializers.ReadOnlyField(source='geofeature.place_name')
-    locality = serializers.ReadOnlyField(source='geofeature.name')
+    formatted_address = serializers.SerializerMethodField()
+    locality = serializers.SerializerMethodField()
+
+    def get_formatted_address(self, obj):
+        if obj.geofeature:
+            return obj.geofeature.place_name
+        return obj.formatted_address
+
+    def get_locality(self, obj):
+        if obj.geofeature:
+            return obj.geofeature.name
+        return obj.locality
 
     included_serializers = {
         'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer'

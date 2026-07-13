@@ -46,11 +46,17 @@ class FundingDocument(ActivityDocument):
     def prepare_location(self, instance):
         locations = []
         if hasattr(instance, 'impact_location') and instance.impact_location:
-            country = instance.impact_location.country
+            impact_location = instance.impact_location
+            country = impact_location.country
+            geofeature = impact_location.geofeature
             locations.append({
-                'id': instance.impact_location.id,
-                'name': instance.impact_location.geofeature.place_name,
-                'locality': instance.impact_location.geofeature.name,
+                'id': impact_location.id,
+                'name': (
+                    geofeature.place_name if geofeature else impact_location.formatted_address
+                ),
+                'locality': (
+                    geofeature.name if geofeature else impact_location.locality
+                ),
                 'country_code': country.alpha2_code if country else None,
                 'country': country.name if country else None,
                 'type': 'location'

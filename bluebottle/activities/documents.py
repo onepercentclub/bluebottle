@@ -364,14 +364,16 @@ class ActivityDocument(Document):
 
     def prepare_location(self, instance):
         locations = []
-        if hasattr(instance, 'location') and instance.location and instance.location.geofeature:
+        if hasattr(instance, 'location') and instance.location:
+            geolocation = instance.location
+            primary = geolocation.geofeature
             locations.append({
-                'id': instance.location.id,
-                'name': instance.location.geofeature.place_name,
+                'id': geolocation.id,
+                'name': primary.place_name if primary else geolocation.formatted_address,
                 'location_hint': getattr(instance, 'location_hint', None),
-                'locality': instance.location.geofeature.name,
-                'country_code': instance.location.country.alpha2_code if instance.location.country else None,
-                'country': instance.location.country.name if instance.location.country else None,
+                'locality': primary.name if primary else geolocation.locality,
+                'country_code': geolocation.country.alpha2_code if geolocation.country else None,
+                'country': geolocation.country.name if geolocation.country else None,
                 'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:

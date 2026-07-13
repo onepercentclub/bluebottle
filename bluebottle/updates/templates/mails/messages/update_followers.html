@@ -1,21 +1,30 @@
-{% extends "base.mail.html" %}
+{% extends "mails/messages/update_base.html" %}
 {% load i18n %}
 
-{% block content %}
-    {% blocktrans with text=obj.message|truncatechars:250 context 'platform-email' %}
-        Hi {{ recipient_name }},
-        <br><br>
-        {{ author }} posted an update to {{ title }}:
-        <br>
-        '{{ text }}'
-
-    {% endblocktrans %}
+{% block message %}
+    {% if update_type == 'activity-update' %}
+        {% blocktrans context 'platform-email' %}
+            {{ author }} posted an update to {{ title }}:
+        {% endblocktrans %}
+    {% else %}
+        {% blocktrans context 'platform-email' %}
+            {{ author }} posted a comment to {{ title }}:
+        {% endblocktrans %}
+    {% endif %}
+    <br/><br/>
+    <div class="message-box">
+        {{ message|safe }}
+    </div>
+    {% if has_media %}
+        <br/>
+        <span class="subtle-text">
+        {% blocktrans context 'platform-email' %}
+            This post includes media or files, view them in the full post.
+        {% endblocktrans %}
+        </span>
+    {% endif %}
 {% endblock %}
 
-{% block action %}
-    <a href="{{ action_link }}"
-       class="action-email">{% blocktrans context 'platform-email' %}View message{% endblocktrans %}</a>
-{% endblock %}`
 
 {% block end_message %}
     {% blocktrans with title=obj.content_object.title context 'platform-email' %}

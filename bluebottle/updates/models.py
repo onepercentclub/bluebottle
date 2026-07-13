@@ -86,7 +86,7 @@ class Update(TriggerMixin, models.Model):
 
     @property
     def has_media(self):
-        if self.images.count() or self.documents.exists() or self.video_url:
+        if self.images.exists() or self.documents.exists() or self.video_url:
             return True
         return False
 

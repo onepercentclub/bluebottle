@@ -252,8 +252,6 @@ class TransitionMessage(object):
         return []
 
     def compose_and_send(self, **base_context):
-        if self.obj.pk:
-            self.obj.refresh_from_db()
         for message in self.get_messages(**base_context):
             context = self.get_context(message.recipient, **base_context)
             reply_to = self.reply_to
@@ -268,32 +266,29 @@ class TransitionMessage(object):
         return cache.get(self.task_id)
 
     def send_delayed(self):
-        from django.conf import settings
-
         cache.set(self.task_id, True, self.delay)
 
-        if getattr(settings, 'TESTING', False):
+        from django.conf import settings
+        if getattr(settings, 'TESTING', False) or getattr(settings, 'CELERY_ALWAYS_EAGER', False):
             compose_and_send(self, connection.tenant)
             return
 
         compose_and_send.apply_async(
             [self, connection.tenant],
             countdown=self.delay,
-            task_id=self.task_id,
+            task_id=self.task_id
         )
 
 
-@app.task
+@app.task(acks_late=True)
 def compose_and_send(message, tenant):
     from bluebottle.clients.utils import LocalTenant
 
     with LocalTenant(tenant, clear_tenant=True):
         try:
+            if getattr(message, 'obj', None) and getattr(message.obj, 'id', None):
+                message.obj.refresh_from_db()
             message.compose_and_send()
         except Exception:
-            logger.exception(
-                'Error sending delayed notification %s for %s',
-                message.__class__.__name__,
-                getattr(message.obj, 'pk', message.obj),
-            )
+            logger.exception('Failed to send notification %s', message)
             raise

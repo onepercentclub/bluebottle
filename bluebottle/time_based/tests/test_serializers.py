@@ -4,8 +4,9 @@ from django.contrib.auth.models import AnonymousUser
 from django.test.client import RequestFactory
 from django.utils.timezone import now
 
+from bluebottle.geo.models import GeoFeature
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory, CountryFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.serializers import DateActivitySerializer
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, \
@@ -18,6 +19,33 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
 
         self.serializer = DateActivitySerializer()
         self.request_factory = RequestFactory()
+
+    def _geolocation_with_geofeatures(self, formatted_address, feature_names):
+        geolocation = GeolocationFactory.create(
+            formatted_address=formatted_address,
+            street=feature_names.get('street'),
+            postal_code=feature_names.get('postcode'),
+            locality=feature_names.get('place'),
+            country=CountryFactory.create(alpha2_code='NL', name='Netherlands'),
+        )
+        geofeatures = []
+        for index, (feature_type, name) in enumerate(feature_names.items()):
+            geofeature, _created = GeoFeature.objects.get_or_create(
+                mapbox_id='test-{}-{}-{}'.format(feature_type, name, index),
+                defaults={'feature_type': feature_type},
+            )
+            geofeature.set_current_language('en')
+            geofeature.name = name
+            geofeature.place_name = name
+            geofeature.save()
+            geofeatures.append(geofeature)
+
+        geolocation.geofeatures.set(geofeatures)
+        if geofeatures:
+            geolocation.geofeature = geofeatures[0]
+            geolocation.save()
+
+        return geolocation
 
     def assertAttribute(self, attr, value, params=None, user=None):
         request = self.request_factory.get('/', params or None)
@@ -229,6 +257,50 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'has_multiple': True,
                 'is_online': False,
                 'location': None,
+                'online_meeting_url': None,
+                'location_hint': None,
+            }
+        )
+
+    def test_location_info_multiple_locations_same_street(self):
+        shared_features = {
+            'street': 'Louis Armstronglaan',
+            'postcode': '3543 EB',
+            'place': 'Utrecht',
+            'country': 'Netherlands',
+        }
+        location_a = self._geolocation_with_geofeatures(
+            'Louis Armstronglaan 780, 3543 EB Utrecht, Netherlands',
+            {
+                'address': 'Louis Armstronglaan 780, 3543 EB Utrecht, Netherlands',
+                **shared_features,
+            },
+        )
+        location_b = self._geolocation_with_geofeatures(
+            'Louis Armstronglaan 800, 3543 EB Utrecht, Netherlands',
+            {
+                'address': 'Louis Armstronglaan 800, 3543 EB Utrecht, Netherlands',
+                **shared_features,
+            },
+        )
+
+        DateActivitySlotFactory.create(activity=self.activity, location=location_a)
+        DateActivitySlotFactory.create(activity=self.activity, location=location_b)
+
+        self.assertAttribute(
+            'location_info',
+            {
+                'has_multiple': True,
+                'is_online': False,
+                'location': {
+                    'locality': location_a.locality,
+                    'formattedAddress': (
+                        'Louis Armstronglaan, 3543 EB Utrecht, Netherlands'
+                    ),
+                    'country': {
+                        'code': location_a.country.alpha2_code,
+                    },
+                },
                 'online_meeting_url': None,
                 'location_hint': None,
             }

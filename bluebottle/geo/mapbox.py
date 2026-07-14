@@ -14,6 +14,17 @@ CONTEXT_TYPES = (
     'locality', 'neighborhood', 'postcode', 'street', 'address',
 )
 
+FORMATTED_ADDRESS_HIERARCHY = (
+    'address',
+    'street',
+    'postcode',
+    'neighborhood',
+    'locality',
+    'place',
+    'region',
+    'country',
+)
+
 GEOFEATURE_TYPE_RANK = {
     feature_type: rank
     for rank, feature_type in enumerate(reversed(CONTEXT_TYPES))
@@ -618,6 +629,280 @@ def _format_card_location_from_parts(mode, parts):
         return _country_for_card(country, country_code, abbreviate=False)
 
     return None
+
+
+CARD_LOCATION_COMMON_LEVEL_CHECKS = {
+    'neighbourhood': (
+        ('neighborhood',),
+        ('city',),
+        ('region',),
+        ('country',),
+    ),
+    'neighbourhood_city': (
+        ('neighborhood', 'city'),
+        ('city',),
+        ('neighborhood',),
+        ('region',),
+        ('country',),
+    ),
+    'city': (
+        ('city',),
+        ('region',),
+        ('country',),
+    ),
+    'city_region': (
+        ('city', 'region'),
+        ('region',),
+        ('country',),
+    ),
+    'city_country': (
+        ('city', 'country'),
+        ('region', 'country'),
+        ('country',),
+    ),
+}
+
+
+def _common_parts_for_keys(all_parts, keys):
+    if not all_parts:
+        return None
+
+    merged = {
+        'neighborhood': None,
+        'city': None,
+        'region': None,
+        'country': None,
+        'country_code': None,
+    }
+
+    for key in keys:
+        if key == 'country':
+            country_keys = [
+                part.get('country_code') or part.get('country')
+                for part in all_parts
+            ]
+            if any(not value for value in country_keys):
+                return None
+            if len(set(country_keys)) != 1:
+                return None
+            merged['country'] = all_parts[0].get('country')
+            merged['country_code'] = all_parts[0].get('country_code')
+        else:
+            values = [part.get(key) for part in all_parts]
+            if any(not value for value in values):
+                return None
+            if len(set(values)) != 1:
+                return None
+            merged[key] = values[0]
+
+    return merged
+
+
+def format_common_card_location(activity, card_location_display, language, location_parts):
+    mode = _normalize_card_location_mode(card_location_display)
+    if not mode or mode not in CARD_LOCATION_MODES:
+        return None
+
+    if not location_parts:
+        return None
+
+    if mode == 'neighbourhood_city':
+        return _format_multi_neighbourhood_city(mode, location_parts)
+
+    if mode == 'city_country':
+        return _format_multi_city_country(mode, location_parts)
+
+    level_checks = CARD_LOCATION_COMMON_LEVEL_CHECKS.get(mode, ())
+
+    for keys in level_checks:
+        common_parts = _common_parts_for_keys(location_parts, keys)
+        if not common_parts:
+            continue
+
+        formatted = _format_card_location_from_parts(mode, common_parts)
+        if formatted:
+            return formatted
+
+    return None
+
+
+def _format_multi_neighbourhood_city(mode, location_parts):
+    common_neighborhood_city = _common_parts_for_keys(
+        location_parts, ('neighborhood', 'city')
+    )
+    if common_neighborhood_city:
+        return _format_card_location_from_parts(mode, common_neighborhood_city)
+
+    common_city = _common_parts_for_keys(location_parts, ('city',))
+    if common_city:
+        return _format_card_location_from_parts(mode, common_city)
+
+    for keys in (('region',), ('country',)):
+        common_parts = _common_parts_for_keys(location_parts, keys)
+        if common_parts:
+            formatted = _format_card_location_from_parts(mode, common_parts)
+            if formatted:
+                return formatted
+
+    return None
+
+
+def _format_multi_city_country(mode, location_parts):
+    common_city_country = _common_parts_for_keys(location_parts, ('city', 'country'))
+    if common_city_country:
+        return _format_card_location_from_parts(mode, common_city_country)
+
+    common_region_country = _common_parts_for_keys(location_parts, ('region', 'country'))
+    if common_region_country:
+        return _format_card_location_from_parts(mode, common_region_country)
+
+    common_country = _common_parts_for_keys(location_parts, ('country',))
+    if common_country:
+        return _format_card_location_from_parts(mode, common_country)
+
+    return None
+
+
+def card_location_parts_from_geofeatures(activity, geofeatures, language):
+    if not geofeatures:
+        return None
+
+    language_geofeatures = _geofeatures_for_language(geofeatures, language)
+    if not language_geofeatures:
+        return None
+
+    return _get_card_location_parts(activity, language_geofeatures, language)
+
+
+def card_location_parts_from_entry(entry):
+    country = getattr(entry, 'country', None)
+    country_name = None
+    country_code = getattr(entry, 'country_code', None)
+    if country is not None:
+        country_name = getattr(country, 'name', country)
+        if not country_code:
+            country_code = getattr(country, 'alpha2_code', None)
+
+    return {
+        'neighborhood': None,
+        'city': getattr(entry, 'locality', None),
+        'region': None,
+        'country': country_name,
+        'country_code': country_code,
+    }
+
+
+def _geofeature_entry_name(entry):
+    if isinstance(entry, dict):
+        return entry.get('name') or entry.get('place_name')
+    return getattr(entry, 'name', None) or getattr(entry, 'place_name', None)
+
+
+def geofeature_names_from_entries(geofeatures, language):
+    names = {}
+    language_entries = _entries_for_language(geofeatures, language)
+
+    for entry in language_entries:
+        feature_type = _entry_value(entry, 'feature_type')
+        name = _geofeature_entry_name(entry)
+        if feature_type and name:
+            names[feature_type] = name
+
+    return names
+
+
+def geolocation_fallback_names(geolocation):
+    names = {}
+    if geolocation.formatted_address:
+        names['address'] = geolocation.formatted_address
+    if geolocation.street:
+        names['street'] = geolocation.street
+    if geolocation.postal_code:
+        names['postcode'] = geolocation.postal_code
+    if geolocation.locality:
+        names['place'] = geolocation.locality
+    if geolocation.country:
+        names['country'] = geolocation.country.name
+    return names
+
+
+def geofeature_names_for_geolocation(geolocation, language):
+    names = {}
+
+    for geofeature in geolocation.geofeatures.all():
+        geofeature.set_current_language(language)
+        feature_type = geofeature.feature_type
+        if not feature_type:
+            continue
+        name = geofeature.name or geofeature.place_name
+        if name:
+            names[feature_type] = name
+
+    for key, value in geolocation_fallback_names(geolocation).items():
+        names.setdefault(key, value)
+
+    return names
+
+
+def collect_shared_geofeature_names(name_maps):
+    if len(name_maps) < 2:
+        return {}
+
+    shared = {}
+    for feature_type in FORMATTED_ADDRESS_HIERARCHY:
+        values = [name_map.get(feature_type) for name_map in name_maps]
+        if any(not value for value in values) or len(set(values)) != 1:
+            continue
+        shared[feature_type] = values[0]
+
+    return shared
+
+
+def format_shared_geofeature_address(shared):
+    if not shared:
+        return None
+
+    if shared.get('address'):
+        return shared['address']
+
+    parts = []
+    if shared.get('street'):
+        parts.append(shared['street'])
+
+    city = shared.get('place') or shared.get('locality')
+    city_line = ' '.join(
+        part for part in (shared.get('postcode'), city) if part
+    )
+    if city_line:
+        parts.append(city_line)
+    elif city:
+        parts.append(city)
+
+    if shared.get('region') and not city:
+        parts.append(shared['region'])
+
+    if shared.get('country'):
+        parts.append(shared['country'])
+
+    return ', '.join(parts) if parts else None
+
+
+def common_formatted_address_for_geolocations(geolocations, language=None):
+    language = (language or get_language() or 'en').split(',')[0]
+    name_maps = [
+        geofeature_names_for_geolocation(geolocation, language)
+        for geolocation in geolocations
+    ]
+    return format_shared_geofeature_address(collect_shared_geofeature_names(name_maps))
+
+
+def common_formatted_address_from_geofeatures(geofeature_groups, language=None):
+    language = (language or get_language() or 'en').split(',')[0]
+    name_maps = [
+        geofeature_names_from_entries(geofeatures, language)
+        for geofeatures in geofeature_groups
+    ]
+    return format_shared_geofeature_address(collect_shared_geofeature_names(name_maps))
 
 
 def format_card_location(activity, card_location_display, language, geofeatures=None):

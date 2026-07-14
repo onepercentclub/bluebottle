@@ -1,5 +1,4 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
-
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import ValidationError
@@ -314,6 +313,12 @@ class InitiativePlatformSettingsForm(forms.ModelForm):
         label=_('Available work location restrictions')
     )
 
+    card_location_display = forms.ChoiceField(
+        choices=InitiativePlatformSettings.ActivityCardLocationChoices.choices,
+        widget=forms.RadioSelect,
+        label=_('Activity card location'),
+    )
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -386,7 +391,7 @@ class InitiativePlatformSettingsAdmin(
                     "enable_matching_emails",
                     "include_full_activities",
                     "restrict_updates",
-                    "card_location_display"
+                    "card_location_display",
                 )
             },
         ),

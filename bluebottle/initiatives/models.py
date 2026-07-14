@@ -2,6 +2,7 @@ from builtins import object, str
 
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models import Max
@@ -29,9 +30,7 @@ from bluebottle.utils.models import (
     SortableTranslatableModel,
     ValidatedModelMixin,
 )
-
 from bluebottle.utils.utils import get_current_host, get_current_language
-from django.contrib.postgres.fields import ArrayField
 
 
 @python_2_unicode_compatible
@@ -345,16 +344,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("generic", _("Same for all activities")),
     )
 
-    LOCATION_LEVELS = (
-        ("venue_name", _("Venue name")),
-        ("address", _("Address")),
-        ("neighborhood", _("Neighbourhood")),
-        ("locality", _("Locality")),
-        ("place", _("Place")),
-        ("region", _("Region")),
-        ("country", _("Country")),
-        ("country_code", _("Country code")),
-    )
+    class ActivityCardLocationChoices(models.TextChoices):
+        NEIGHBOURHOOD = 'neighbourhood', _('Neighbourhood')
+        NEIGHBOURHOOD_CITY = 'neighbourhood_city', _('Neighbourhood + city')
+        CITY = 'city', _('City')
+        CITY_REGION = 'city_region', _('City + region')
+        CITY_COUNTRY = 'city_country', _('City + country')
 
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
@@ -539,10 +534,15 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
-    card_location_display = MultiSelectField(
-        max_length=5000,
-        choices=LOCATION_LEVELS,
-        default=['place', 'country_code'],
+    card_location_display = models.CharField(
+        _('Activity card location'),
+        max_length=32,
+        choices=ActivityCardLocationChoices.choices,
+        default=ActivityCardLocationChoices.CITY_COUNTRY,
+        help_text=_(
+            'Choose how locations appear on activity cards. '
+            'Activity detail pages always show the full location.'
+        ),
     )
 
     @property

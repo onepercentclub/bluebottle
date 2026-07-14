@@ -53,7 +53,7 @@ from bluebottle.funding.serializers import (
     FundingSerializer,
     TinyFundingSerializer,
 )
-from bluebottle.geo.mapbox import format_card_location
+from bluebottle.geo.mapbox import format_card_location, format_card_location_from_values
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.grant_management.serializers import (
     GrantSerializer,
@@ -395,19 +395,25 @@ class ActivityPreviewSerializer(ModelSerializer):
         if not location:
             return None
 
-        geofeatures = getattr(location, 'geofeatures', None)
-        if geofeatures is None:
-            geofeatures = getattr(obj, 'geofeature', None)
+        mode = InitiativePlatformSettings.load().card_location_display
+        language = get_current_language()
+        geofeatures = self._card_geofeatures(obj, location)
         formatted = format_card_location(
             obj,
-            InitiativePlatformSettings.load().card_location_display,
-            get_current_language(),
+            mode,
+            language,
             geofeatures=geofeatures,
         )
         if formatted:
             return formatted
 
-        return self._format_location_fallback(location)
+        return self._format_location_fallback(location, obj)
+
+    def _card_geofeatures(self, obj, location):
+        geofeatures = getattr(location, 'geofeatures', None)
+        if geofeatures:
+            return geofeatures
+        return getattr(obj, 'geofeature', None)
 
     def _get_card_location_entry(self, obj):
         if hasattr(obj, "slots") and obj.slots:
@@ -439,13 +445,45 @@ class ActivityPreviewSerializer(ModelSerializer):
                 key=lambda loc: order.index(getattr(loc, 'type', 'location')),
             )[0]
 
-    def _format_location_fallback(self, location):
-        if location.locality:
-            country_code = getattr(location, 'country_code', None)
-            if country_code:
-                return f"{location.locality}, {country_code}"
-            return location.locality
-        return getattr(location, 'country', None)
+    def _format_location_fallback(self, location, obj):
+        mode = InitiativePlatformSettings.load().card_location_display
+        language = get_current_language()
+        geofeatures = getattr(obj, 'geofeature', None)
+        if geofeatures:
+            formatted = format_card_location(
+                obj,
+                mode,
+                language,
+                geofeatures=geofeatures,
+            )
+            if formatted:
+                return formatted
+
+        country = getattr(location, 'country', None)
+        country_name = None
+        country_code = getattr(location, 'country_code', None)
+        if country is not None:
+            country_name = getattr(country, 'name', country)
+            if not country_code:
+                country_code = getattr(country, 'alpha2_code', None)
+
+        city = self._card_location_city(location, obj)
+
+        return format_card_location_from_values(
+            mode,
+            city=city,
+            country=country_name,
+            country_code=country_code,
+        )
+
+    def _card_location_city(self, location, obj):
+        location_id = getattr(location, 'location_id', None)
+        if location_id and getattr(obj, 'location', None):
+            for entry in obj.location:
+                if getattr(entry, 'id', None) == location_id:
+                    return getattr(entry, 'locality', None)
+
+        return getattr(location, 'locality', None)
 
     def get_image(self, obj):
         if obj.image:

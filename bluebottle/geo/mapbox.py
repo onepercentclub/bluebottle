@@ -446,62 +446,196 @@ def _card_location_level_value(geofeatures, level):
     return _entry_value(feature, 'name') if feature else None
 
 
-def format_card_location(activity, card_location_display, language, geofeatures=None):
-    if geofeatures is None:
-        geofeatures = getattr(activity, 'geofeature', None)
-    if not geofeatures or not card_location_display:
+CARD_LOCATION_MODES = frozenset({
+    'neighbourhood',
+    'neighbourhood_city',
+    'city',
+    'city_region',
+    'city_country',
+})
+
+
+def _normalize_card_location_mode(card_location_display):
+    if not card_location_display:
+        return None
+    if isinstance(card_location_display, (list, tuple)):
+        return 'city_country'
+    if isinstance(card_location_display, str) and ',' in card_location_display:
+        return 'city_country'
+    return card_location_display
+
+
+def _first_present(*values):
+    for value in values:
+        if value:
+            return value
+    return None
+
+
+def _join_parts(*values):
+    parts = [value for value in values if value]
+    return ', '.join(parts) if parts else None
+
+
+def _country_for_card(full_name, code, abbreviate=False):
+    if abbreviate:
+        return code or full_name
+    return full_name or code
+
+
+def _get_card_location_country_name(geofeatures, activity, language):
+    country_feature = next(
+        (
+            geofeature for geofeature in geofeatures
+            if _entry_value(geofeature, 'feature_type') == 'country'
+        ),
+        None,
+    )
+    value = _entry_value(country_feature, 'name')
+    if not value:
+        value = next(
+            (
+                _entry_value(geofeature, 'country')
+                for geofeature in geofeatures
+                if _entry_value(geofeature, 'country')
+            ),
+            None,
+        )
+    if not value:
+        countries = getattr(activity, 'country', None) or []
+        language_countries = _entries_for_language(countries, language)
+        if language_countries:
+            value = _entry_value(language_countries[0], 'name')
+    return value
+
+
+def _get_card_location_country_code(geofeatures):
+    return next(
+        (
+            _entry_value(geofeature, 'country_code')
+            for geofeature in geofeatures
+            if _entry_value(geofeature, 'country_code')
+        ),
+        None,
+    )
+
+
+def _get_card_location_parts(activity, language_geofeatures, language):
+    city = _first_present(
+        _card_location_level_value(language_geofeatures, 'place'),
+        _card_location_level_value(language_geofeatures, 'locality'),
+    )
+    return {
+        'neighborhood': _card_location_level_value(language_geofeatures, 'neighborhood'),
+        'city': city,
+        'region': _card_location_level_value(language_geofeatures, 'region'),
+        'country': _get_card_location_country_name(activity, language_geofeatures, language),
+        'country_code': _get_card_location_country_code(language_geofeatures),
+    }
+
+
+def format_card_location_from_values(
+    mode,
+    *,
+    neighborhood=None,
+    city=None,
+    region=None,
+    country=None,
+    country_code=None,
+):
+    mode = _normalize_card_location_mode(mode)
+    if not mode or mode not in CARD_LOCATION_MODES:
         return None
 
-    if isinstance(card_location_display, str):
-        card_location_display = [
-            level.strip() for level in card_location_display.split(',') if level.strip()
-        ]
+    parts = {
+        'neighborhood': neighborhood,
+        'city': city,
+        'region': region,
+        'country': country,
+        'country_code': country_code,
+    }
+    return _format_card_location_from_parts(mode, parts)
+
+
+def _format_card_location_from_parts(mode, parts):
+    country = parts.get('country')
+    country_code = parts.get('country_code')
+
+    if mode == 'neighbourhood':
+        return _first_present(
+            parts.get('neighborhood'),
+            parts.get('city'),
+            parts.get('region'),
+            country,
+            country_code,
+        )
+
+    if mode == 'neighbourhood_city':
+        neighborhood = parts.get('neighborhood')
+        city = parts.get('city')
+        if neighborhood and city:
+            return _join_parts(neighborhood, city)
+        if city:
+            return city
+        if neighborhood:
+            return neighborhood
+        return _first_present(
+            parts.get('region'),
+            _country_for_card(country, country_code, abbreviate=False),
+            country_code,
+        )
+
+    if mode == 'city':
+        return _first_present(
+            parts.get('city'),
+            parts.get('region'),
+            country,
+            country_code,
+        )
+
+    if mode == 'city_region':
+        city = parts.get('city')
+        region = parts.get('region')
+        if city and region:
+            return _join_parts(city, region)
+        if region:
+            return region
+        return _country_for_card(country, country_code, abbreviate=False)
+
+    if mode == 'city_country':
+        city = parts.get('city')
+        region = parts.get('region')
+        if city and (country or country_code):
+            return _join_parts(
+                city,
+                _country_for_card(country, country_code, abbreviate=True),
+            )
+        if region and (country or country_code):
+            return _join_parts(
+                region,
+                _country_for_card(country, country_code, abbreviate=True),
+            )
+        return _country_for_card(country, country_code, abbreviate=False)
+
+    return None
+
+
+def format_card_location(activity, card_location_display, language, geofeatures=None):
+    mode = _normalize_card_location_mode(card_location_display)
+    if not mode or mode not in CARD_LOCATION_MODES:
+        return None
+
+    if geofeatures is None:
+        geofeatures = getattr(activity, 'geofeature', None)
+    if not geofeatures:
+        return None
 
     language_geofeatures = _geofeatures_for_language(geofeatures, language)
     if not language_geofeatures:
         return None
 
-    parts = []
-
-    for level in card_location_display:
-        if level == 'country':
-            country_feature = next(
-                (
-                    geofeature for geofeature in language_geofeatures
-                    if _entry_value(geofeature, 'feature_type') == 'country'
-                ),
-                None,
-            )
-            value = _entry_value(country_feature, 'name')
-            if not value:
-                value = next(
-                    (
-                        _entry_value(geofeature, 'country')
-                        for geofeature in language_geofeatures
-                        if _entry_value(geofeature, 'country')
-                    ),
-                    None,
-                )
-            if not value:
-                countries = getattr(activity, 'country', None) or []
-                language_countries = _entries_for_language(countries, language)
-                if language_countries:
-                    value = _entry_value(language_countries[0], 'name')
-        elif level == 'country_code':
-            value = next(
-                (
-                    _entry_value(geofeature, 'country_code')
-                    for geofeature in language_geofeatures
-                    if _entry_value(geofeature, 'country_code')
-                ),
-                None,
-            )
-        else:
-            value = _card_location_level_value(language_geofeatures, level)
-        if value:
-            parts.append(value)
-
-    return ', '.join(parts) if parts else None
+    parts = _get_card_location_parts(activity, language_geofeatures, language)
+    return _format_card_location_from_parts(mode, parts)
 
 
 def iter_geofeature_data(feature, language=None):

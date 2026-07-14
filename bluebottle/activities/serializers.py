@@ -1,7 +1,6 @@
 import hashlib
 from builtins import object
 from collections import namedtuple
-from datetime import datetime
 
 import dateutil
 from django.apps import apps
@@ -53,13 +52,15 @@ from bluebottle.funding.serializers import (
     FundingSerializer,
     TinyFundingSerializer,
 )
-from bluebottle.geo.mapbox import format_card_location, format_card_location_from_values
+from bluebottle.activities.preview_serializers import (
+    ActivityPreviewLocationSerializer,
+    ActivityPreviewSlotSelection,
+)
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.grant_management.serializers import (
     GrantSerializer,
     GrantApplicationSerializer
 )
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import (
     DateParticipant,
     PeriodicParticipant,
@@ -391,99 +392,9 @@ class ActivityPreviewSerializer(ModelSerializer):
         return obj.type.replace("activity", "")
 
     def get_location(self, obj):
-        location = self._get_card_location_entry(obj)
-        if not location:
-            return None
-
-        mode = InitiativePlatformSettings.load().card_location_display
-        language = get_current_language()
-        geofeatures = self._card_geofeatures(obj, location)
-        formatted = format_card_location(
-            obj,
-            mode,
-            language,
-            geofeatures=geofeatures,
-        )
-        if formatted:
-            return formatted
-
-        return self._format_location_fallback(location, obj)
-
-    def _card_geofeatures(self, obj, location):
-        geofeatures = getattr(location, 'geofeatures', None)
-        if geofeatures:
-            return geofeatures
-        return getattr(obj, 'geofeature', None)
-
-    def _get_card_location_entry(self, obj):
-        if hasattr(obj, "slots") and obj.slots:
-            slots = self.get_filtered_slots(obj, only_upcoming=True)
-            if not len(slots):
-                slots = self.get_filtered_slots(obj)
-
-            if len(set(slot.locality for slot in slots)) == 1:
-                return slots[0]
-
-        elif obj.type == "funding":
-            places = [
-                location for location in obj.location if
-                location.type in ("impact_location", "location")
-            ]
-            if places:
-                return places[0]
-        elif len(obj.location):
-            order = [
-                "location",
-                "office",
-                "place",
-                "initiative_office",
-                "impact_location",
-            ]
-
-            return sorted(
-                obj.location,
-                key=lambda loc: order.index(getattr(loc, 'type', 'location')),
-            )[0]
-
-    def _format_location_fallback(self, location, obj):
-        mode = InitiativePlatformSettings.load().card_location_display
-        language = get_current_language()
-        geofeatures = getattr(obj, 'geofeature', None)
-        if geofeatures:
-            formatted = format_card_location(
-                obj,
-                mode,
-                language,
-                geofeatures=geofeatures,
-            )
-            if formatted:
-                return formatted
-
-        country = getattr(location, 'country', None)
-        country_name = None
-        country_code = getattr(location, 'country_code', None)
-        if country is not None:
-            country_name = getattr(country, 'name', country)
-            if not country_code:
-                country_code = getattr(country, 'alpha2_code', None)
-
-        city = self._card_location_city(location, obj)
-
-        return format_card_location_from_values(
-            mode,
-            city=city,
-            country=country_name,
-            country_code=country_code,
-        )
-
-    def _card_location_city(self, location, obj):
-        location_id = getattr(location, 'location_id', None)
-        if location_id and getattr(obj, 'location', None):
-            for entry in obj.location:
-                if getattr(entry, 'id', None) == location_id:
-                    return getattr(entry, 'locality', None)
-
-        return getattr(location, 'locality', None)
+        return ActivityPreviewLocationSerializer(
+            context=self.context,
+        ).to_representation(obj)
 
     def get_image(self, obj):
         if obj.image:
@@ -562,38 +473,9 @@ class ActivityPreviewSerializer(ModelSerializer):
         return matching
 
     def get_filtered_slots(self, obj, only_upcoming=False):
-        tz = get_current_timezone()
-
-        try:
-            start, end = (
-                dateutil.parser.parse(date).astimezone(tz)
-                for date in self.context["request"].GET.get("filter[date]").split(",")
-            )
-        except (ValueError, AttributeError):
-            start = None
-            end = None
-
-        if hasattr(obj, "slots") and obj.slots:
-            return [
-                slot
-                for slot in obj.slots
-                if (
-                    slot.status not in ["draft", "cancelled"]
-                    and (
-                        not only_upcoming
-                        or datetime.fromisoformat(slot.start) >= now()
-                    )
-                    and (
-                        not start
-                        or dateutil.parser.parse(slot.start).date() >= start.date()
-                    )
-                    and (
-                        not end or dateutil.parser.parse(slot.end).date() <= end.date()
-                    )
-                )
-            ]
-        else:
-            return []
+        return ActivityPreviewSlotSelection(
+            obj, self.context['request']
+        ).visible(only_upcoming=only_upcoming)
 
     def get_slot_count(self, obj):
         if hasattr(obj, "slots") and obj.slots:
@@ -606,10 +488,12 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.is_online
 
     def get_has_multiple_locations(self, obj):
-        slots = self.get_filtered_slots(obj, only_upcoming=True)
-        if not len(slots):
-            slots = self.get_filtered_slots(obj)
-        return len(set(slot.locality for slot in slots)) > 1
+        if not getattr(obj, 'slots', None):
+            return False
+        slots = ActivityPreviewSlotSelection(
+            obj, self.context['request']
+        ).for_card()
+        return len({slot.locality for slot in slots}) > 1
 
     def get_is_full(self, obj):
         slots = self.get_filtered_slots(obj)

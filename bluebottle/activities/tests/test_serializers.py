@@ -1,6 +1,11 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+from bluebottle.activities.preview_serializers import (
+    ActivityPreviewLocationSerializer,
+    ActivityPreviewSlottedLocationSerializer,
+    ActivityPreviewSlotSelection,
+)
 from bluebottle.activities.serializers import ActivityPreviewSerializer
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
@@ -20,7 +25,9 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
             'start': '2026-08-01T10:00:00+00:00',
             'end': '2026-08-01T12:00:00+00:00',
             'locality': 'Brouwersdam Buitenzijde 20',
-            'formatted_address': 'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands',
+            'formatted_address': (
+                'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands'
+            ),
             'country': 'Netherlands',
             'country_code': 'NL',
             'is_online': False,
@@ -71,20 +78,48 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
         defaults.update(kwargs)
         return SimpleNamespace(**defaults)
 
-    def _serializer(self):
-        return ActivityPreviewSerializer(
-            context={'request': MagicMock(GET={})},
-        )
+    def _context(self):
+        return {'request': MagicMock(GET={})}
 
-    def test_slot_with_empty_geofeatures_uses_activity_geofeatures(self):
-        serializer = self._serializer()
+    def test_slotted_location_uses_activity_geofeatures(self):
+        location = ActivityPreviewLocationSerializer(
+            context=self._context(),
+        ).to_representation(self._activity())
+
+        self.assertEqual(location, 'Ouddorp, NL')
+
+    def test_slotted_location_fallback_uses_indexed_city_not_address(self):
+        activity = self._activity(geofeature=[])
+        location = ActivityPreviewSlottedLocationSerializer(
+            context=self._context(),
+        ).to_representation(activity)
+
+        self.assertEqual(location, 'Ouddorp, NL')
+
+    def test_multiple_slot_localities_return_none(self):
+        activity = self._activity(slots=[
+            self._slot(locality='Amsterdam'),
+            self._slot(locality='Rotterdam'),
+        ])
+        location = ActivityPreviewLocationSerializer(
+            context=self._context(),
+        ).to_representation(activity)
+
+        self.assertIsNone(location)
+
+    def test_preview_serializer_delegates_to_location_serializer(self):
+        serializer = ActivityPreviewSerializer(context=self._context())
         location = serializer.get_location(self._activity())
 
         self.assertEqual(location, 'Ouddorp, NL')
 
-    def test_slot_fallback_uses_location_entry_city_not_address(self):
-        serializer = self._serializer()
-        activity = self._activity(geofeature=[])
-        location = serializer.get_location(activity)
+    def test_slot_selection_for_card(self):
+        activity = self._activity(slots=[
+            self._slot(locality='Amsterdam'),
+            self._slot(locality='Rotterdam'),
+        ])
+        slots = ActivityPreviewSlotSelection(
+            activity, MagicMock(GET={})
+        ).for_card()
 
-        self.assertEqual(location, 'Ouddorp, NL')
+        self.assertEqual(len({slot.locality for slot in slots}), 2)

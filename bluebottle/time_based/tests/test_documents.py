@@ -54,7 +54,7 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
 
         self.assertEqual(geofeatures, [])
 
-    def test_prepare_slots_omits_nested_geofeatures(self):
+    def test_prepare_slots_includes_per_slot_geofeatures(self):
         location = self.create_geolocation(locality='Leiden')
         activity = DateActivityFactory.create(slots=[])
         slot = DateActivitySlotFactory.create(

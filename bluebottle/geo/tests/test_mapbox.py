@@ -511,6 +511,205 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             'Scheveningen, The Hague',
         )
 
+    def test_format_common_card_location_same_country(self):
+        activity = type('Activity', (), {'country': []})()
+        amsterdam = [
+            self._card_location_geofeature('place', 'Amsterdam', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        rotterdam = [
+            self._card_location_geofeature('place', 'Rotterdam', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_parts = [
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, amsterdam, 'en'
+            ),
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, rotterdam, 'en'
+            ),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.format_common_card_location(
+                activity, 'city_country', 'en', location_parts
+            ),
+            'NL',
+        )
+
+    def test_format_common_card_location_same_region(self):
+        activity = type('Activity', (), {'country': []})()
+        the_hague = self._full_hierarchy_geofeatures()
+        delft = [
+            self._card_location_geofeature('place', 'Delft', 'en'),
+            self._card_location_geofeature('region', 'South Holland', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_parts = [
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, the_hague, 'en'
+            ),
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, delft, 'en'
+            ),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.format_common_card_location(
+                activity, 'city_country', 'en', location_parts
+            ),
+            'South Holland, NL',
+        )
+
+    def test_format_multi_neighbourhood_city_different_neighborhoods_same_city(self):
+        activity = type('Activity', (), {'country': []})()
+        scheveningen = [
+            self._card_location_geofeature('neighborhood', 'Scheveningen', 'en'),
+            self._card_location_geofeature('place', 'The Hague', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        centrum = [
+            self._card_location_geofeature('neighborhood', 'Centrum', 'en'),
+            self._card_location_geofeature('place', 'The Hague', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_parts = [
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, scheveningen, 'en'
+            ),
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, centrum, 'en'
+            ),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.format_common_card_location(
+                activity, 'neighbourhood_city', 'en', location_parts
+            ),
+            'The Hague',
+        )
+
+    def test_format_multi_neighbourhood_city_same_neighborhood_and_city(self):
+        activity = type('Activity', (), {'country': []})()
+        location_a = [
+            self._card_location_geofeature('neighborhood', 'Scheveningen', 'en'),
+            self._card_location_geofeature('place', 'The Hague', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_b = [
+            self._card_location_geofeature('neighborhood', 'Scheveningen', 'en'),
+            self._card_location_geofeature('place', 'The Hague', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_parts = [
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, location_a, 'en'
+            ),
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, location_b, 'en'
+            ),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.format_common_card_location(
+                activity, 'neighbourhood_city', 'en', location_parts
+            ),
+            'Scheveningen, The Hague',
+        )
+
+    def test_format_multi_city_country_different_cities_same_region(self):
+        activity = type('Activity', (), {'country': []})()
+        amsterdam = [
+            self._card_location_geofeature('place', 'Amsterdam', 'en'),
+            self._card_location_geofeature('region', 'North Holland', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        haarlem = [
+            self._card_location_geofeature('place', 'Haarlem', 'en'),
+            self._card_location_geofeature('region', 'North Holland', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_parts = [
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, amsterdam, 'en'
+            ),
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, haarlem, 'en'
+            ),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.format_common_card_location(
+                activity, 'city_country', 'en', location_parts
+            ),
+            'North Holland, NL',
+        )
+
+    def test_format_common_card_location_no_common_feature(self):
+        activity = type('Activity', (), {'country': []})()
+        nl = [
+            self._card_location_geofeature('place', 'Amsterdam', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        de = [
+            self._card_location_geofeature('place', 'Berlin', 'en'),
+            self._card_location_geofeature('country', 'Germany', 'en', country_code='DE'),
+        ]
+        location_parts = [
+            mapbox_utils.card_location_parts_from_geofeatures(activity, nl, 'en'),
+            mapbox_utils.card_location_parts_from_geofeatures(activity, de, 'en'),
+        ]
+
+        self.assertIsNone(
+            mapbox_utils.format_common_card_location(
+                activity, 'city_country', 'en', location_parts
+            )
+        )
+
+    def test_common_formatted_address_same_street_different_numbers(self):
+        location_a = [
+            self._card_location_geofeature(
+                'address', 'Louis Armstronglaan 780, 3543 EB Utrecht, Netherlands', 'en'
+            ),
+            self._card_location_geofeature('street', 'Louis Armstronglaan', 'en'),
+            self._card_location_geofeature('postcode', '3543 EB', 'en'),
+            self._card_location_geofeature('place', 'Utrecht', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_b = [
+            self._card_location_geofeature(
+                'address', 'Louis Armstronglaan 800, 3543 EB Utrecht, Netherlands', 'en'
+            ),
+            self._card_location_geofeature('street', 'Louis Armstronglaan', 'en'),
+            self._card_location_geofeature('postcode', '3543 EB', 'en'),
+            self._card_location_geofeature('place', 'Utrecht', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.common_formatted_address_from_geofeatures(
+                [location_a, location_b], 'en'
+            ),
+            'Louis Armstronglaan, 3543 EB Utrecht, Netherlands',
+        )
+
+    def test_common_formatted_address_same_country_different_cities(self):
+        amsterdam = [
+            self._card_location_geofeature('place', 'Amsterdam', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        rotterdam = [
+            self._card_location_geofeature('place', 'Rotterdam', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.common_formatted_address_from_geofeatures(
+                [amsterdam, rotterdam], 'en'
+            ),
+            'Netherlands',
+        )
+
     @mock.patch(
         'bluebottle.geo.models.Geolocation.reverse_geocode',
         return_value=MAPBOX_V6_ADDRESS_FEATURE,

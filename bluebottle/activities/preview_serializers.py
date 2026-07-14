@@ -4,7 +4,13 @@ import dateutil
 from django.utils.timezone import get_current_timezone, now
 from rest_framework import serializers
 
-from bluebottle.geo.mapbox import format_card_location, format_card_location_from_values
+from bluebottle.geo.mapbox import (
+    card_location_parts_from_entry,
+    card_location_parts_from_geofeatures,
+    format_card_location,
+    format_card_location_from_values,
+    format_common_card_location,
+)
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.utils import get_current_language
 
@@ -65,6 +71,14 @@ class ActivityPreviewSlotSelection:
             return upcoming
         return self.visible(only_upcoming=False)
 
+    def distinct_location_ids(self, slots=None):
+        slots = slots if slots is not None else self.for_card()
+        return {
+            slot.location_id
+            for slot in slots
+            if getattr(slot, 'location_id', None)
+        }
+
 
 class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
 
@@ -73,19 +87,52 @@ class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
             activity, self.context['request']
         ).for_card()
 
-        if len({slot.locality for slot in slots}) > 1:
-            return None
-
         if not slots:
             return None
 
-        slot = slots[0]
+        selection = ActivityPreviewSlotSelection(activity, self.context['request'])
+        if len(selection.distinct_location_ids(slots)) <= 1:
+            return self._single_location(activity, slots[0])
+
+        return self._multiple_locations(activity, slots)
+
+    def _location_entry(self, activity, location_id):
+        if not location_id or not getattr(activity, 'location', None):
+            return None
+
+        for entry in activity.location:
+            if getattr(entry, 'id', None) == location_id:
+                return entry
+
+    def _geofeatures_for_slot(self, slot, activity):
+        geofeatures = getattr(slot, 'geofeatures', None) or []
+        if geofeatures:
+            return geofeatures
+
+        entry = self._location_entry(activity, getattr(slot, 'location_id', None))
+        if entry:
+            entry_geofeatures = getattr(entry, 'geofeatures', None) or []
+            if entry_geofeatures:
+                return entry_geofeatures
+
+        return getattr(activity, 'geofeature', None) or []
+
+    def _parts_for_slot(self, activity, slot, language):
+        geofeatures = self._geofeatures_for_slot(slot, activity)
+        parts = card_location_parts_from_geofeatures(activity, geofeatures, language)
+        if parts:
+            return parts
+
+        entry = self._location_entry(activity, getattr(slot, 'location_id', None))
+        if entry:
+            return card_location_parts_from_entry(entry)
+
+        return card_location_parts_from_entry(slot)
+
+    def _single_location(self, activity, slot):
         mode = InitiativePlatformSettings.load().card_location_display
         language = get_current_language()
-
-        slot_geofeatures = getattr(slot, 'geofeatures', None)
-        activity_geofeatures = getattr(activity, 'geofeature', None)
-        geofeatures = slot_geofeatures or activity_geofeatures
+        geofeatures = self._geofeatures_for_slot(slot, activity)
 
         formatted = format_card_location(
             activity,
@@ -96,37 +143,36 @@ class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
         if formatted:
             return formatted
 
-        if activity_geofeatures:
-            formatted = format_card_location(
-                activity,
-                mode,
-                language,
-                geofeatures=activity_geofeatures,
-            )
-            if formatted:
-                return formatted
-
-        country = getattr(slot, 'country', None)
-        country_name = None
-        country_code = getattr(slot, 'country_code', None)
-        if country is not None:
-            country_name = getattr(country, 'name', country)
-            if not country_code:
-                country_code = getattr(country, 'alpha2_code', None)
-
-        city = getattr(slot, 'locality', None)
-        location_id = getattr(slot, 'location_id', None)
-        if location_id and getattr(activity, 'location', None):
-            for entry in activity.location:
-                if getattr(entry, 'id', None) == location_id:
-                    city = getattr(entry, 'locality', city)
-                    break
-
+        parts = self._parts_for_slot(activity, slot, language)
         return format_card_location_from_values(
             mode,
-            city=city,
-            country=country_name,
-            country_code=country_code,
+            city=parts.get('city'),
+            region=parts.get('region'),
+            neighborhood=parts.get('neighborhood'),
+            country=parts.get('country'),
+            country_code=parts.get('country_code'),
+        )
+
+    def _multiple_locations(self, activity, slots):
+        mode = InitiativePlatformSettings.load().card_location_display
+        language = get_current_language()
+
+        seen = {}
+        for slot in slots:
+            location_id = getattr(slot, 'location_id', None)
+            if location_id and location_id not in seen:
+                seen[location_id] = slot
+
+        location_parts = [
+            self._parts_for_slot(activity, slot, language)
+            for slot in seen.values()
+        ]
+
+        return format_common_card_location(
+            activity,
+            mode,
+            language,
+            location_parts,
         )
 
 
@@ -195,3 +241,16 @@ class ActivityPreviewLocationSerializer(serializers.Serializer):
         return ActivityPreviewSingleLocationSerializer(
             context=self.context,
         ).to_representation(activity)
+
+    def has_multiple_unresolved_locations(self, activity):
+        if not getattr(activity, 'slots', None):
+            return False
+
+        selection = ActivityPreviewSlotSelection(
+            activity, self.context['request']
+        )
+        slots = selection.for_card()
+        if len(selection.distinct_location_ids(slots)) <= 1:
+            return False
+
+        return self.to_representation(activity) is None

@@ -109,6 +109,7 @@ def slot_location_entry(geolocation, location_hint=None):
         'country_code': country.alpha2_code if country else None,
         'country': country.name if country else None,
         'type': 'location',
+        'geofeatures': geofeatures_for_geolocation(geolocation),
     }
 
 
@@ -208,7 +209,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 'country_code': country.alpha2_code if country else None,
                 'is_online': slot.is_online,
                 'location_id': location.id,
-                'geofeatures': [],
+                'geofeatures': geofeatures_for_geolocation(location),
             })
         return slots
 

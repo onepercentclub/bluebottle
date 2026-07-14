@@ -488,12 +488,9 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.is_online
 
     def get_has_multiple_locations(self, obj):
-        if not getattr(obj, 'slots', None):
-            return False
-        slots = ActivityPreviewSlotSelection(
-            obj, self.context['request']
-        ).for_card()
-        return len({slot.locality for slot in slots}) > 1
+        return ActivityPreviewLocationSerializer(
+            context=self.context,
+        ).has_multiple_unresolved_locations(obj)
 
     def get_is_full(self, obj):
         slots = self.get_filtered_slots(obj)

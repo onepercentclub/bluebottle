@@ -434,7 +434,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.generate_username()
-        super(BlueBottleBaseUser, self).save(force_insert, force_update, using, update_fields)
+        super().save(force_insert, force_update, using, update_fields)
 
 
 @receiver(post_save)

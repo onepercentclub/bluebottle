@@ -889,6 +889,14 @@ class Update(Activity):
                 for create in parent.create_set.all():
                     for recipient in create.recipients.all():
                         yield recipient.actor
+
+        elif isinstance(self.object, Organization):
+            for follow in self.object.activities.instance_of(Follow):
+                yield follow.object
+        elif isinstance(self.object, Person):
+            for join in self.object.activities.all().instance_of(Join):
+                for recipient in join.recipients.all():
+                    yield recipient.actor
         else:
             raise TypeError(f'Cannot create Update for {self.object}')
 

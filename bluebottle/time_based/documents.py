@@ -36,6 +36,82 @@ def deduplicate(items):
     return [dict(s) for s in set(frozenset(d.items()) for d in items)]
 
 
+def unique_slot_geolocations(slots):
+    seen = {}
+    for slot in slots:
+        if slot.is_online or not slot.location_id:
+            continue
+        if slot.location_id not in seen:
+            seen[slot.location_id] = slot.location
+    return list(seen.values())
+
+
+def deduplicate_locations(locations):
+    seen = {}
+    for location in locations:
+        location_id = location.get('id')
+        if location_id is not None:
+            key = ('id', location_id)
+        else:
+            key = (
+                'address',
+                location.get('name'),
+                location.get('locality'),
+                location.get('country_code'),
+                location.get('type'),
+            )
+        if key not in seen:
+            seen[key] = location
+    return list(seen.values())
+
+
+def deduplicate_positions(positions):
+    seen = {}
+    for position in positions:
+        key = (position.get('lat'), position.get('lon'))
+        if key not in seen:
+            seen[key] = position
+    return list(seen.values())
+
+
+def geofeatures_for_geolocation(geolocation):
+    geofeatures = []
+    primary_id = geolocation.geofeature_id
+    country = geolocation.country
+    for geofeature in geolocation.geofeatures.all():
+        geofeatures.extend(get_translated_geofeature_list(
+            geofeature,
+            country=country,
+            is_primary=geofeature.pk == primary_id,
+        ))
+    return geofeatures
+
+
+def city_from_geolocation(geolocation):
+    primary = geolocation.geofeature
+    if primary and primary.feature_type in ('place', 'locality'):
+        return primary.name
+    for geofeature in geolocation.geofeatures.all():
+        if geofeature.feature_type in ('place', 'locality'):
+            return geofeature.name
+    return geolocation.locality
+
+
+def slot_location_entry(geolocation, location_hint=None):
+    primary = geolocation.geofeature
+    country = geolocation.country
+    return {
+        'id': geolocation.id,
+        'name': primary.place_name if primary else geolocation.formatted_address,
+        'formatted_address': primary.place_name if primary else geolocation.formatted_address,
+        'location_hint': location_hint,
+        'locality': city_from_geolocation(geolocation),
+        'country_code': country.alpha2_code if country else None,
+        'country': country.name if country else None,
+        'type': 'location',
+    }
+
+
 @registry.register_document
 @activity.document
 class DateActivityDocument(TimeBasedActivityDocument):
@@ -55,6 +131,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
         'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
         'country': fields.KeywordField(attr='location.country.name'),
         'is_online': fields.BooleanField(),
+        'location_id': fields.LongField(),
         'geofeatures': fields.NestedField(properties={
             'id': fields.LongField(),
             'name': TextField(),
@@ -97,61 +174,24 @@ class DateActivityDocument(TimeBasedActivityDocument):
 
     def prepare_location(self, instance):
         locations = super(DateActivityDocument, self).prepare_location(instance)
-        for slot in instance.slots.all():
-            if slot.is_online or not slot.location:
-                continue
-            geolocation = slot.location
-            primary = geolocation.geofeature
-            country = geolocation.country
-            locations.append({
-                'name': primary.place_name if primary else geolocation.formatted_address,
-                'formatted_address': primary.place_name if primary else geolocation.formatted_address,
-                'location_hint': primary.name if primary else None,
-                'locality': primary.name if primary else geolocation.locality,
-                'country_code': country.alpha2_code if country else None,
-                'country': country.name if country else None,
-            })
-        return locations
+        for geolocation in unique_slot_geolocations(instance.slots.all()):
+            locations.append(slot_location_entry(geolocation))
+        return deduplicate_locations(locations)
 
     def prepare_geofeature(self, instance):
         geofeatures = []
-        locations = []
-        for slot in instance.slots.all():
-            if slot.location:
-                locations += [slot.location]
-
-        locations = list(set((locations)))
-        for location in locations:
-            primary_id = location.geofeature_id
-            country = location.country
-            for geofeature in location.geofeatures.all():
-                geofeatures = geofeatures + get_translated_geofeature_list(
-                    geofeature,
-                    country=country,
-                    is_primary=geofeature.pk == primary_id,
-                )
-
-        return geofeatures
+        for geolocation in unique_slot_geolocations(instance.slots.all()):
+            geofeatures.extend(geofeatures_for_geolocation(geolocation))
+        return deduplicate(geofeatures)
 
     def prepare_slots(self, instance):
         slots = []
         for slot in instance.active_slots.all():
-
             location = slot.location
             if not location:
                 continue
 
             country = location.country
-
-            geofeatures = []
-            for geofeature in location.geofeatures.all():
-                geofeatures.extend(get_translated_geofeature_list(
-                    geofeature,
-                    country=country,
-                    is_primary=location.mapbox_id == geofeature.mapbox_id,
-                ))
-            geofeature = slot.location.geofeature
-
             slots.append({
                 'id': str(slot.pk),
                 'status': slot.status,
@@ -159,12 +199,16 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 'start': slot.start,
                 'end': slot.end,
                 'location_hint': slot.location_hint,
-                'locality': geofeature.name if geofeature else location.locality,
-                'formatted_address': geofeature.place_name if geofeature else location.formatted_address,
+                'locality': city_from_geolocation(location),
+                'formatted_address': (
+                    location.geofeature.place_name
+                    if location.geofeature else location.formatted_address
+                ),
                 'country': country.name if country else None,
                 'country_code': country.alpha2_code if country else None,
                 'is_online': slot.is_online,
-                'geofeatures': geofeatures,
+                'location_id': location.id,
+                'geofeatures': [],
             })
         return slots
 
@@ -209,17 +253,18 @@ class DateActivityDocument(TimeBasedActivityDocument):
 
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
-        for slot in instance.slots.all():
-            if not slot.is_online and slot.location and slot.location.country:
-                countries += get_translated_country_list(slot.location.country)
+        for geolocation in unique_slot_geolocations(instance.slots.all()):
+            if geolocation.country:
+                countries += get_translated_country_list(geolocation.country)
         return deduplicate(countries)
 
     def prepare_position(self, instance):
-        return [
-            {'lat': slot.location.position.y, 'lon': slot.location.position.x}
-            for slot in instance.slots.all()
-            if not slot.is_online and slot.location and slot.location.position
+        positions = [
+            {'lat': geolocation.position.y, 'lon': geolocation.position.x}
+            for geolocation in unique_slot_geolocations(instance.slots.all())
+            if geolocation.position
         ]
+        return deduplicate_positions(positions)
 
     def prepare_is_online(self, instance):
         return any(slot.is_online for slot in instance.slots.all())

@@ -273,26 +273,43 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         )
         self.assertEqual(translations[0]['feature_type'], 'place')
 
-    def test_format_card_location(self):
+    def _card_location_geofeature(self, feature_type, name, language='en', **extra):
+        defaults = {
+            'language': language,
+            'name': name,
+            'place_name': name,
+            'feature_type': feature_type,
+            'is_primary': False,
+            'country': 'Netherlands',
+            'country_code': 'NL',
+        }
+        defaults.update(extra)
+        return type('GeoFeature', (), defaults)()
+
+    def _full_hierarchy_geofeatures(self, language='en'):
+        return [
+            self._card_location_geofeature('neighborhood', 'Scheveningen', language),
+            self._card_location_geofeature('place', 'The Hague', language),
+            self._card_location_geofeature('region', 'South Holland', language),
+            self._card_location_geofeature('country', 'Netherlands', language),
+        ]
+
+    def test_format_card_location_city_country(self):
         geofeatures = [
-            type('GeoFeature', (), {
-                'language': 'en',
-                'name': 'Ouddorp',
-                'place_name': 'Ouddorp, Netherlands',
-                'feature_type': 'place',
-                'is_primary': False,
-                'country': 'Netherlands',
-                'country_code': 'NL',
-            })(),
-            type('GeoFeature', (), {
-                'language': 'en',
-                'name': 'Netherlands',
-                'place_name': 'Netherlands',
-                'feature_type': 'country',
-                'is_primary': False,
-                'country': 'Netherlands',
-                'country_code': 'NL',
-            })(),
+            self._card_location_geofeature('place', 'Ouddorp', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'city_country', 'en'),
+            'Ouddorp, NL',
+        )
+
+    def test_format_card_location_city_country_legacy_multiselect(self):
+        geofeatures = [
+            self._card_location_geofeature('place', 'Ouddorp', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
         ]
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
@@ -300,23 +317,27 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             mapbox_utils.format_card_location(activity, ['place', 'country_code'], 'en'),
             'Ouddorp, NL',
         )
+
+    def test_format_card_location_country_only(self):
+        geofeatures = [
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, ['country'], 'en'),
+            mapbox_utils.format_card_location(activity, 'city_country', 'en'),
             'Netherlands',
         )
 
     def test_format_card_location_uses_country_fallback(self):
         activity = type('Activity', (), {
             'geofeature': [
-                type('GeoFeature', (), {
-                    'language': 'nl',
-                    'name': 'Ouddorp',
-                    'place_name': 'Ouddorp, Nederland',
-                    'feature_type': 'place',
-                    'is_primary': False,
-                    'country': 'Nederland',
-                    'country_code': 'NL',
-                })(),
+                self._card_location_geofeature(
+                    'place',
+                    'Ouddorp',
+                    'nl',
+                    country='Nederland',
+                ),
             ],
             'country': [
                 type('Country', (), {
@@ -327,8 +348,167 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         })()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, ['place', 'country'], 'nl'),
-            'Ouddorp, Nederland',
+            mapbox_utils.format_card_location(activity, 'city_country', 'nl'),
+            'Ouddorp, NL',
+        )
+
+    def test_format_card_location_neighbourhood_mode(self):
+        activity = type('Activity', (), {
+            'geofeature': self._full_hierarchy_geofeatures(),
+            'country': [],
+        })()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'neighbourhood', 'en'),
+            'Scheveningen',
+        )
+
+    def test_format_card_location_neighbourhood_fallback_to_city(self):
+        geofeatures = [
+            self._card_location_geofeature('place', 'The Hague', 'en'),
+            self._card_location_geofeature('region', 'South Holland', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'neighbourhood', 'en'),
+            'The Hague',
+        )
+
+    def test_format_card_location_neighbourhood_city_mode(self):
+        activity = type('Activity', (), {
+            'geofeature': self._full_hierarchy_geofeatures(),
+            'country': [],
+        })()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'neighbourhood_city', 'en'),
+            'Scheveningen, The Hague',
+        )
+
+    def test_format_card_location_neighbourhood_city_city_only(self):
+        geofeatures = [
+            self._card_location_geofeature('place', 'The Hague', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'neighbourhood_city', 'en'),
+            'The Hague',
+        )
+
+    def test_format_card_location_neighbourhood_city_region_fallback(self):
+        geofeatures = [
+            self._card_location_geofeature('region', 'South Holland', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'neighbourhood_city', 'en'),
+            'South Holland',
+        )
+
+    def test_format_card_location_city_mode(self):
+        activity = type('Activity', (), {
+            'geofeature': self._full_hierarchy_geofeatures(),
+            'country': [],
+        })()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'city', 'en'),
+            'The Hague',
+        )
+
+    def test_format_card_location_city_fallback_to_region(self):
+        geofeatures = [
+            self._card_location_geofeature('region', 'South Holland', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'city', 'en'),
+            'South Holland',
+        )
+
+    def test_format_card_location_city_region_mode(self):
+        activity = type('Activity', (), {
+            'geofeature': self._full_hierarchy_geofeatures(),
+            'country': [],
+        })()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'city_region', 'en'),
+            'The Hague, South Holland',
+        )
+
+    def test_format_card_location_city_region_region_only(self):
+        geofeatures = [
+            self._card_location_geofeature('region', 'South Holland', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'city_region', 'en'),
+            'South Holland',
+        )
+
+    def test_format_card_location_city_region_country_fallback(self):
+        geofeatures = [
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'city_region', 'en'),
+            'Netherlands',
+        )
+
+    def test_format_card_location_city_country_region_and_country(self):
+        geofeatures = [
+            self._card_location_geofeature('region', 'South Holland', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'city_country', 'en'),
+            'South Holland, NL',
+        )
+
+    def test_format_card_location_city_uses_locality_fallback(self):
+        geofeatures = [
+            self._card_location_geofeature('locality', 'Ouddorp', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
+
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'city', 'en'),
+            'Ouddorp',
+        )
+
+    def test_format_card_location_from_values(self):
+        self.assertEqual(
+            mapbox_utils.format_card_location_from_values(
+                'city_country',
+                city='Ouddorp',
+                country='Netherlands',
+                country_code='NL',
+            ),
+            'Ouddorp, NL',
+        )
+        self.assertEqual(
+            mapbox_utils.format_card_location_from_values(
+                'neighbourhood_city',
+                neighborhood='Scheveningen',
+                city='The Hague',
+            ),
+            'Scheveningen, The Hague',
         )
 
     @mock.patch(

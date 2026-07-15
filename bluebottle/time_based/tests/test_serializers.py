@@ -5,6 +5,7 @@ from django.test.client import RequestFactory
 from django.utils.timezone import now
 
 from bluebottle.geo.models import GeoFeature
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, CountryFactory
 from bluebottle.test.utils import BluebottleTestCase

@@ -1,7 +1,3 @@
-from datetime import timedelta
-
-from django.utils.timezone import now
-
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.documents import (

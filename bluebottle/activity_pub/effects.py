@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Accept, Follow, Start, Cancel, Delete, Finish, Leave,
+    Accept, Follow, Lock, Start, Cancel, Delete, Finish, Leave,
     Event, Join, Reject, Create, Update
 )
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -198,6 +198,26 @@ class FinishEffect(Effect):
 
     def __str__(self):
         return str(_('Notify subscribers of the end'))
+
+
+class LockEffect(Effect):
+    template = 'admin/activity_pub/lock_effect.html'
+
+    def post_save(self, **kwargs):
+        Lock.objects.create(
+            object=self.instance.activity_pub_model
+        )
+
+    @property
+    def is_valid(self):
+        return (
+            hasattr(self.instance, 'activity_pub_model') and
+            self.instance.activity_pub_model.is_local and
+            get_platform_actor() is not None
+        )
+
+    def __str__(self):
+        return str(_('Notify subscribers of the lock'))
 
 
 class DeletedEffect(Effect):

@@ -549,7 +549,7 @@ class SyncTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             self.adopted.refresh_from_db()
-            self.assertEqual(self.model.status, 'succeeded')
+            self.assertStatus(self.adopted, 'succeeded')
 
     def test_cancel(self):
         self.test_adopt()
@@ -559,7 +559,7 @@ class SyncTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             self.adopted.refresh_from_db()
-            self.assertEqual(self.model.status, 'cancelled')
+            self.assertStatus(self.adopted, 'cancelled')
 
 
 class LinkTestCase(ActivityPubTestCase):
@@ -711,6 +711,14 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
             **kwargs
         )
         self.submit()
+
+    def test_lock(self):
+        self.test_adopt()
+        self.model.states.lock(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'full')
 
     def join(self):
         registration = DeadlineRegistrationFactory.create(

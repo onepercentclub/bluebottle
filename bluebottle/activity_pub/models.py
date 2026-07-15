@@ -1028,4 +1028,11 @@ class Finish(Transition):
             return True
 
 
+class Lock(Transition):
+    def transition(self):
+        if self.object.adopted:
+            self.object.adopted.states.lock(save=True)
+            return True
+
+
 from bluebottle.activity_pub.signals import *  # noqa

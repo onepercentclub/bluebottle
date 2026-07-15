@@ -306,6 +306,52 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             }
         )
 
+    def test_location_info_multiple_locations_same_region(self):
+        settings = InitiativePlatformSettings.load()
+        settings.card_location_display = 'city_country'
+        settings.save()
+
+        location_a = self._geolocation_with_geofeatures(
+            'Damrak 1, Amsterdam, Netherlands',
+            {
+                'address': 'Damrak 1, Amsterdam, Netherlands',
+                'street': 'Damrak',
+                'place': 'Amsterdam',
+                'region': 'North Holland',
+                'country': 'Netherlands',
+            },
+        )
+        location_b = self._geolocation_with_geofeatures(
+            'Grote Markt 1, Haarlem, Netherlands',
+            {
+                'address': 'Grote Markt 1, Haarlem, Netherlands',
+                'street': 'Grote Markt',
+                'place': 'Haarlem',
+                'region': 'North Holland',
+                'country': 'Netherlands',
+            },
+        )
+
+        DateActivitySlotFactory.create(activity=self.activity, location=location_a)
+        DateActivitySlotFactory.create(activity=self.activity, location=location_b)
+
+        self.assertAttribute(
+            'location_info',
+            {
+                'has_multiple': True,
+                'is_online': False,
+                'location': {
+                    'locality': location_a.locality,
+                    'formattedAddress': 'North Holland, NL',
+                    'country': {
+                        'code': location_a.country.alpha2_code,
+                    },
+                },
+                'online_meeting_url': None,
+                'location_hint': None,
+            }
+        )
+
     def test_location_info_multiple_slots_single_location(self):
         location = GeolocationFactory.create()
 

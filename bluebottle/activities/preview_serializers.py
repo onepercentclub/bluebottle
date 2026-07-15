@@ -149,6 +149,7 @@ class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
             city=parts.get('city'),
             region=parts.get('region'),
             neighborhood=parts.get('neighborhood'),
+            locality=parts.get('locality'),
             country=parts.get('country'),
             country_code=parts.get('country_code'),
         )

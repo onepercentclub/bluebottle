@@ -561,6 +561,66 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             'South Holland, NL',
         )
 
+    def test_format_multi_neighbourhood_city_different_neighborhoods_same_locality_and_city(self):
+        activity = type('Activity', (), {'country': []})()
+        location_a = [
+            self._card_location_geofeature('neighborhood', 'Scheveningen', 'en'),
+            self._card_location_geofeature('locality', 'The Hague', 'en'),
+            self._card_location_geofeature('place', 'The Hague', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_b = [
+            self._card_location_geofeature('neighborhood', 'Centrum', 'en'),
+            self._card_location_geofeature('locality', 'The Hague', 'en'),
+            self._card_location_geofeature('place', 'The Hague', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_parts = [
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, location_a, 'en'
+            ),
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, location_b, 'en'
+            ),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.format_common_card_location(
+                activity, 'neighbourhood_city', 'en', location_parts
+            ),
+            'The Hague',
+        )
+
+    def test_format_multi_neighbourhood_city_different_neighborhoods_distinct_locality_city(self):
+        activity = type('Activity', (), {'country': []})()
+        location_a = [
+            self._card_location_geofeature('neighborhood', 'Centrum', 'en'),
+            self._card_location_geofeature('locality', 'Utrecht-Centrum', 'en'),
+            self._card_location_geofeature('place', 'Utrecht', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_b = [
+            self._card_location_geofeature('neighborhood', 'Lombok', 'en'),
+            self._card_location_geofeature('locality', 'Utrecht-Centrum', 'en'),
+            self._card_location_geofeature('place', 'Utrecht', 'en'),
+            self._card_location_geofeature('country', 'Netherlands', 'en'),
+        ]
+        location_parts = [
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, location_a, 'en'
+            ),
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, location_b, 'en'
+            ),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.format_common_card_location(
+                activity, 'neighbourhood_city', 'en', location_parts
+            ),
+            'Utrecht-Centrum, Utrecht',
+        )
+
     def test_format_multi_neighbourhood_city_different_neighborhoods_same_city(self):
         activity = type('Activity', (), {'country': []})()
         scheveningen = [

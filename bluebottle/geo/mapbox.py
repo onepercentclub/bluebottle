@@ -532,15 +532,17 @@ def _get_card_location_country_code(geofeatures):
 
 
 def _get_card_location_parts(activity, language_geofeatures, language):
-    city = _first_present(
-        _card_location_level_value(language_geofeatures, 'place'),
-        _card_location_level_value(language_geofeatures, 'locality'),
-    )
+    place = _card_location_level_value(language_geofeatures, 'place')
+    locality = _card_location_level_value(language_geofeatures, 'locality')
+    city = _first_present(place, locality)
     return {
         'neighborhood': _card_location_level_value(language_geofeatures, 'neighborhood'),
+        'locality': locality,
         'city': city,
         'region': _card_location_level_value(language_geofeatures, 'region'),
-        'country': _get_card_location_country_name(activity, language_geofeatures, language),
+        'country': _get_card_location_country_name(
+            language_geofeatures, activity, language
+        ),
         'country_code': _get_card_location_country_code(language_geofeatures),
     }
 
@@ -549,6 +551,7 @@ def format_card_location_from_values(
     mode,
     *,
     neighborhood=None,
+    locality=None,
     city=None,
     region=None,
     country=None,
@@ -560,6 +563,7 @@ def format_card_location_from_values(
 
     parts = {
         'neighborhood': neighborhood,
+        'locality': locality,
         'city': city,
         'region': region,
         'country': country,
@@ -583,11 +587,16 @@ def _format_card_location_from_parts(mode, parts):
 
     if mode == 'neighbourhood_city':
         neighborhood = parts.get('neighborhood')
+        locality = parts.get('locality')
         city = parts.get('city')
         if neighborhood and city:
             return _join_parts(neighborhood, city)
+        if locality and city and locality != city:
+            return _join_parts(locality, city)
         if city:
             return city
+        if locality:
+            return locality
         if neighborhood:
             return neighborhood
         return _first_present(
@@ -634,14 +643,15 @@ def _format_card_location_from_parts(mode, parts):
 CARD_LOCATION_COMMON_LEVEL_CHECKS = {
     'neighbourhood': (
         ('neighborhood',),
+        ('locality',),
         ('city',),
         ('region',),
         ('country',),
     ),
     'neighbourhood_city': (
         ('neighborhood', 'city'),
+        ('locality', 'city'),
         ('city',),
-        ('neighborhood',),
         ('region',),
         ('country',),
     ),
@@ -669,6 +679,7 @@ def _common_parts_for_keys(all_parts, keys):
 
     merged = {
         'neighborhood': None,
+        'locality': None,
         'city': None,
         'region': None,
         'country': None,
@@ -733,6 +744,10 @@ def _format_multi_neighbourhood_city(mode, location_parts):
     if common_neighborhood_city:
         return _format_card_location_from_parts(mode, common_neighborhood_city)
 
+    common_locality_city = _common_parts_for_keys(location_parts, ('locality', 'city'))
+    if common_locality_city:
+        return _format_card_location_from_parts(mode, common_locality_city)
+
     common_city = _common_parts_for_keys(location_parts, ('city',))
     if common_city:
         return _format_card_location_from_parts(mode, common_city)
@@ -785,11 +800,82 @@ def card_location_parts_from_entry(entry):
 
     return {
         'neighborhood': None,
+        'locality': getattr(entry, 'locality', None),
         'city': getattr(entry, 'locality', None),
         'region': None,
         'country': country_name,
         'country_code': country_code,
     }
+
+
+def geofeatures_for_geolocation(geolocation):
+    geofeatures = []
+    primary_id = geolocation.geofeature_id
+    country = geolocation.country
+    for geofeature in geolocation.geofeatures.all():
+        geofeatures.extend(get_translated_geofeature_list(
+            geofeature,
+            country=country,
+            is_primary=geofeature.pk == primary_id,
+        ))
+    return geofeatures
+
+
+def card_location_parts_for_geolocation(geolocation, language, activity=None):
+    activity = activity or type('Activity', (), {'country': []})()
+    geofeatures = geofeatures_for_geolocation(geolocation)
+    parts = card_location_parts_from_geofeatures(activity, geofeatures, language)
+    if parts:
+        return parts
+
+    country = geolocation.country
+    return {
+        'neighborhood': None,
+        'locality': geolocation.locality,
+        'city': geolocation.locality,
+        'region': geolocation.province,
+        'country': country.name if country else None,
+        'country_code': country.alpha2_code if country else None,
+    }
+
+
+def format_multi_location_display(activity, card_location_display, language, geolocations):
+    location_parts = [
+        card_location_parts_for_geolocation(geolocation, language, activity)
+        for geolocation in geolocations
+    ]
+    return format_common_card_location(
+        activity,
+        card_location_display,
+        language,
+        location_parts,
+    )
+
+
+def has_common_physical_address(geolocations, language):
+    language = (language or get_language() or 'en').split(',')[0]
+    name_maps = [
+        geofeature_names_for_geolocation(geolocation, language)
+        for geolocation in geolocations
+    ]
+    shared = collect_shared_geofeature_names(name_maps)
+    return 'address' in shared or 'street' in shared
+
+
+def format_multi_location_label(activity, card_location_display, language, geolocations):
+    language = (language or get_language() or 'en').split(',')[0]
+    street_address = common_formatted_address_for_geolocations(geolocations, language)
+    card_address = format_multi_location_display(
+        activity,
+        card_location_display,
+        language,
+        geolocations,
+    )
+
+    if street_address and has_common_physical_address(geolocations, language):
+        return street_address
+
+    return card_address or street_address
 
 
 def _geofeature_entry_name(entry):

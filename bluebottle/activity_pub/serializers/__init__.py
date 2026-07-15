@@ -3,8 +3,8 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 
 
 from bluebottle.time_based.models import (
-    DeadlineActivity, PeriodicActivity, RegisteredDateActivity, ScheduleActivity,
-    DateActivity
+    DeadlineActivity, PeriodicActivity, PeriodicSlot, RegisteredDateActivity, ScheduleActivity,
+    DateActivity, ScheduleSlot, DateActivitySlot
 )
 
 
@@ -78,6 +78,9 @@ class FederatedObjectSerializer(PolymorphicSerializer):
         self.resource_type_model_mapping['RegisteredDateActivity'] = RegisteredDateActivity
         self.resource_type_model_mapping['DateActivity'] = DateActivity
         self.resource_type_model_mapping['DeadlineActivity'] = DeadlineActivity
+        self.resource_type_model_mapping['ScheduleSlot'] = ScheduleSlot
+        self.resource_type_model_mapping['PeriodicSlot'] = PeriodicSlot
+        self.resource_type_model_mapping['DateActivitySlot'] = DateActivitySlot
 
     def _get_resource_type_from_mapping(self, mapping):
         resource_type = super()._get_resource_type_from_mapping(mapping)
@@ -92,6 +95,19 @@ class FederatedObjectSerializer(PolymorphicSerializer):
                 return 'DateActivity'
             else:
                 return 'DeadlineActivity'
+
+        if resource_type == 'subEvent':
+            from bluebottle.activity_pub.models import ActivityPubModel
+            parent = ActivityPubModel.objects.from_iri(mapping['parent'])
+
+            slot_type_mapping = {
+                'ScheduleActivity': 'ScheduleSlot',
+                'PeriodicActivity': 'PeriodicSlot',
+                'DateActivity': 'DateActivitySlot',
+            }
+
+            if parent:
+                return slot_type_mapping[parent.activity_type]
 
         return resource_type
 

@@ -578,7 +578,7 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
         ),
 
         ModelChangedTrigger(
-            ['title', 'description', 'start', 'end', 'location', 'duration', 'image'],
+            ['title', 'description', 'start', 'location', 'duration', 'image', 'is_online'],
             effects=[
                 UpdateEventEffect,
             ]

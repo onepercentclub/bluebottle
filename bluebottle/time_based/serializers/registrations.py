@@ -50,6 +50,8 @@ class RegistrationSerializer(ModelSerializer):
         permissions=[ParticipantDocumentPermission]
     )
 
+    remote_user = ResourceRelatedField(read_only=True)
+
     class Meta(BaseContributorSerializer.Meta):
         model = Registration
         fields = [
@@ -61,6 +63,7 @@ class RegistrationSerializer(ModelSerializer):
             "document",
             "answer",
             "participants",
+            "remote_user",
         ]
         meta_fields = (
             'permissions', 'current_status', 'transitions'
@@ -74,10 +77,19 @@ class RegistrationSerializer(ModelSerializer):
         ]
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        included_resources = ['user', 'document', 'activity', 'participants']
+        included_resources = [
+            'user',
+            "remote_user",
+            "remote_user.source",
+            'document',
+            'activity',
+            'participants'
+        ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
+        'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
     }
 
     def to_representation(self, instance):
@@ -162,7 +174,6 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/schedule-registrations'
-        included_resources = ['user', 'document', 'activity']
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers.serializers,

@@ -399,7 +399,7 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
-        if obj.origin:
+        if hasattr(obj, 'origin'):
             readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
 
         return readonly_fields
@@ -919,7 +919,7 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
-        if obj.origin:
+        if hasattr(obj, 'origin'):
             readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
 
         return readonly_fields
@@ -977,7 +977,7 @@ class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
-        if obj.origin:
+        if hasattr(obj, 'origin'):
             readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
 
         return readonly_fields
@@ -1158,7 +1158,7 @@ class SlotAdmin(StateMachineAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
-        if obj.origin:
+        if hasattr(obj, 'origin'):
             readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
 
         return readonly_fields

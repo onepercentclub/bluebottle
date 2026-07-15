@@ -37,6 +37,8 @@ class ParticipantSerializer(BaseContributorSerializer):
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         included_resources = [
             "user",
+            "remote_user",
+            "remote_user.source",
             "registration",
             "activity",
             "contributions"
@@ -47,6 +49,8 @@ class ParticipantSerializer(BaseContributorSerializer):
         **{
             'activity': 'bluebottle.time_based.serializers.RegisteredDateActivitySerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+            'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
+            'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
         }
     )
 

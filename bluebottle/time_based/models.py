@@ -127,7 +127,7 @@ class TimeBasedActivity(Activity):
         if hasattr(self, 'origin') and self.origin:
             readonly_fields = readonly_fields + [
                 'capacity', 'registration_deadline', 'review', 'review_title', 'review_description',
-                'review_link', 'preparation',
+                'review_link',
             ]
 
         return readonly_fields
@@ -818,7 +818,7 @@ class ScheduleActivity(RegistrationActivity):
 
         if hasattr(self, 'origin') and self.origin:
             readonly_fields = readonly_fields + [
-                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+                'start', 'duration', 'is_online', 'location', 'location_hint',
             ]
 
         return readonly_fields
@@ -827,6 +827,13 @@ class ScheduleActivity(RegistrationActivity):
     def accepted_participants(self):
         if self.pk:
             return self.registrations.filter(status__in=["accepted", "succeeded", "scheduled"])
+        else:
+            return ScheduleRegistration.objects.none()
+
+    @property
+    def active_participants(self):
+        if self.pk:
+            return self.registrations.filter(status__in=["new", "accepted", "succeeded", "scheduled"])
         else:
             return ScheduleRegistration.objects.none()
 

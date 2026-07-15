@@ -748,6 +748,10 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
     def get_slot_mode(self, obj):
         return SlotModeChoices.scheduled
 
+    def get_contributor_count(self, obj):
+        print(list(part.status for part in obj.active_participants.all()))
+        return obj.active_participants.count()
+
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = ScheduleActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (

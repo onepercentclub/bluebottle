@@ -1,6 +1,6 @@
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activity_pub.effects import (
-    SendJoinEffect, SendAcceptEffect, SendLeaveEffect, SendRejectEffect, SyncRelatedEvent
+    SendJoinEffect, SendAcceptEffect, SendRejectEffect, SyncRelatedEvent
 )
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -182,7 +182,6 @@ class RegistrationTriggers(TriggerManager):
                     RegistrationParticipantStateMachine.withdraw,
                 ),
                 UnFollowActivityEffect,
-                SendLeaveEffect
             ]
         ),
     ]

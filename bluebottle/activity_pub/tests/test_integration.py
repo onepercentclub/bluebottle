@@ -487,6 +487,7 @@ class SyncTestCase(ActivityPubTestCase):
         self.test_join()
 
         with LocalTenant(self.other_tenant):
+            print('Leaving!!!!!!!!!!!!!!!!!!!!!!!!!!')
             self.participant.states.withdraw(save=True)
             self.adopted.origin.refresh_from_db()
             self.assertEqual(self.adopted.origin.contributor_count, 0)

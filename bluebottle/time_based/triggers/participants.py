@@ -1,7 +1,7 @@
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
-from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect
+from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect, SyncRelatedEvent
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
@@ -34,7 +34,8 @@ from bluebottle.time_based.messages import (
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
+    PeriodicParticipant, ScheduleParticipant,
+    TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
 )
 from bluebottle.time_based.messages.participants import (
     ManagerParticipantRemovedNotification,
@@ -56,6 +57,7 @@ from bluebottle.time_based.states import (
     RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine,
     RegistrationStateMachine
 )
+from bluebottle.time_based.states.registrations import ScheduleRegistrationStateMachine
 
 
 def activity_is_expired(effect):
@@ -357,6 +359,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.withdraw,
             effects=[
                 SendLeaveEffect,
+                SyncRelatedEvent,
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,
@@ -423,6 +426,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.remove,
             effects=[
                 SendLeaveEffect,
+                SyncRelatedEvent,
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,
@@ -641,6 +645,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 CreateRegistrationEffect,
                 CreateScheduleSlotEffect,
                 SendJoinEffect,
+                SyncRelatedEvent,
                 TransitionEffect(
                     ScheduleParticipantStateMachine.add,
                     conditions=[is_not_self],
@@ -743,7 +748,12 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
-                SendLeaveEffect
+                RelatedTransitionEffect(
+                    "registration",
+                    ScheduleRegistrationStateMachine.withdraw,
+                ),
+                SendLeaveEffect,
+                SyncRelatedEvent
             ],
         ),
         TransitionTrigger(
@@ -781,7 +791,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                SendJoinEffect
+                SendJoinEffect,
+                SyncRelatedEvent
             ],
         ),
         TransitionTrigger(
@@ -917,7 +928,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
                 ),
-                SendJoinSlotEffect
+                SendJoinSlotEffect,
+                SyncRelatedEvent
             ],
         ),
         TransitionTrigger(
@@ -1262,6 +1274,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             DateParticipantStateMachine.remove,
             effects=[
                 SendLeaveEffect,
+                SyncRelatedEvent,
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
@@ -1352,6 +1365,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             DateParticipantStateMachine.withdraw,
             effects=[
                 SendLeaveEffect,
+                SyncRelatedEvent,
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',

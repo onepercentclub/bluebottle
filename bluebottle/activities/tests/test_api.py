@@ -249,6 +249,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             attributes['location'],
             card_location_for_geolocation(location, 'en'),
         )
+
+    def test_date_preview_multiple_slots_single_open(self):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create(activity=activity, status='draft', is_online=None)
         open_slot = DateActivitySlotFactory.create(activity=activity)
@@ -466,6 +468,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             attributes['location'],
             card_location_for_geolocation(location, 'en'),
         )
+
+    def test_collect_preview_dutch(self):
         activity = CollectActivityFactory.create(status='open')
         theme = activity.theme
         # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups).
@@ -1621,30 +1625,28 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        matching_country = CountryFactory.create(alpha2_code='NL')
-        other_country = CountryFactory.create(alpha2_code='DE')
+        matching_country = CountryFactory.create()
+        other_country = CountryFactory.create()
 
-        matching = DateActivityFactory.create_batch(
-            2,
-            status='open',
-        )
-        for activity in matching:
+        matching = []
+        for _ in range(2):
+            activity = DateActivityFactory.create(slots=[], status='open')
             DateActivitySlotFactory.create_batch(
                 2,
                 activity=activity,
-                location=GeolocationFactory.create(country=matching_country)
+                location=GeolocationFactory.create(country=matching_country),
             )
+            matching.append(activity)
 
-        other = DateActivityFactory.create_batch(
-            3,
-            status='open',
-        )
-        for activity in other:
+        other = []
+        for _ in range(3):
+            activity = DateActivityFactory.create(slots=[], status='open')
             DateActivitySlotFactory.create_batch(
                 2,
                 activity=activity,
-                location=GeolocationFactory.create(country=other_country)
+                location=GeolocationFactory.create(country=other_country),
             )
+            other.append(activity)
 
         self.search({'country': matching_country.pk})
 

@@ -437,6 +437,12 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         },
     )
 
+    def get_contributor_count(self, obj):
+        if hasattr(obj, 'origin'):
+            return obj.origin.contributor_count
+        else:
+            return obj.registrations.filter(status__in=['accepted', 'succeeded']).count()
+
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodicActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (

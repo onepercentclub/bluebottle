@@ -1,6 +1,6 @@
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activity_pub.effects import (
-    SendJoinEffect, SendAcceptEffect, SendRejectEffect, SyncRelatedEvent
+    SendJoinEffect, SendAcceptEffect, SendLeaveEffect, SendRejectEffect, SyncRelatedEvent
 )
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -379,6 +379,8 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                SendJoinEffect,
+                SyncRelatedEvent
             ],
         ),
         TransitionTrigger(
@@ -391,6 +393,8 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
+                SendLeaveEffect,
+                SyncRelatedEvent
             ],
         ),
 
@@ -410,6 +414,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                 ),
             ],
         ),
+
     ]
 
 

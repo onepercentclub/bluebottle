@@ -363,6 +363,7 @@ class CreatePeriodicParticipantsEffect(Effect):
         ):
             PeriodicParticipant.objects.create(
                 user=registration.user,
+                remote_user=registration.remote_user,
                 slot=self.instance,
                 activity=self.instance.activity,
                 registration=registration,

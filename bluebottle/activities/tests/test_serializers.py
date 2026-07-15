@@ -83,13 +83,13 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
 
         self.assertEqual(location, 'Ouddorp, NL')
 
-    def test_slotted_location_fallback_uses_indexed_city_not_address(self):
+    def test_slotted_location_without_geofeatures_returns_none(self):
         activity = self._activity(geofeature=[])
         location = ActivityPreviewSlottedLocationSerializer(
             context=self._context(),
         ).to_representation(activity)
 
-        self.assertEqual(location, 'Ouddorp, NL')
+        self.assertIsNone(location)
 
     def test_multiple_slot_locations_use_common_country(self):
         activity = self._activity(
@@ -135,7 +135,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
             context=self._context(),
         ).to_representation(activity)
 
-        self.assertEqual(location, 'NL')
+        self.assertEqual(location, 'Netherlands')
 
     def test_neighbourhood_city_multiple_locations_uses_locality_city(self):
         settings = InitiativePlatformSettings.load()
@@ -298,7 +298,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
         )
         serializer = ActivityPreviewSerializer(context=self._context())
 
-        self.assertEqual(serializer.get_location(activity), 'NL')
+        self.assertEqual(serializer.get_location(activity), 'Netherlands')
         self.assertFalse(serializer.get_has_multiple_locations(activity))
 
     def test_slot_selection_distinct_location_ids(self):

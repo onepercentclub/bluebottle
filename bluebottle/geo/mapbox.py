@@ -379,6 +379,9 @@ def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
     country_language = country._current_language if country else None
 
     for lang in Language.objects.all():
+        if not geofeature.has_translation(lang.full_code):
+            continue
+
         geofeature.set_current_language(lang.full_code)
         name = geofeature.name
         place_name = geofeature.place_name
@@ -393,7 +396,7 @@ def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
             'feature_type': geofeature.feature_type or '',
             'is_primary': is_primary,
         }
-        if country:
+        if country and country.has_translation(lang.full_code):
             country.set_current_language(lang.full_code)
             entry['country'] = country.name
             entry['country_code'] = country.alpha2_code
@@ -504,6 +507,8 @@ def _get_card_location_country_name(geofeatures, activity, language):
     )
     value = _entry_value(country_feature, 'name')
     if not value:
+        value = _entry_value(country_feature, 'place_name')
+    if not value:
         value = next(
             (
                 _entry_value(geofeature, 'country')
@@ -521,6 +526,17 @@ def _get_card_location_country_name(geofeatures, activity, language):
 
 
 def _get_card_location_country_code(geofeatures):
+    country_feature = next(
+        (
+            geofeature for geofeature in geofeatures
+            if _entry_value(geofeature, 'feature_type') == 'country'
+        ),
+        None,
+    )
+    value = _entry_value(country_feature, 'country_code')
+    if value:
+        return value
+
     return next(
         (
             _entry_value(geofeature, 'country_code')
@@ -773,7 +789,11 @@ def _format_multi_city_country(mode, location_parts):
 
     common_country = _common_parts_for_keys(location_parts, ('country',))
     if common_country:
-        return _format_card_location_from_parts(mode, common_country)
+        return _country_for_card(
+            common_country.get('country'),
+            common_country.get('country_code'),
+            abbreviate=False,
+        )
 
     return None
 
@@ -821,22 +841,54 @@ def geofeatures_for_geolocation(geolocation):
     return geofeatures
 
 
+def locality_from_geolocation(geolocation):
+    if not geolocation:
+        return None
+
+    primary = geolocation.geofeature
+    if primary and primary.feature_type in ('place', 'locality'):
+        return primary.name
+
+    for geofeature in geolocation.geofeatures.all():
+        if geofeature.feature_type in ('place', 'locality'):
+            return geofeature.name
+
+    return None
+
+
+def formatted_address_from_geolocation(geolocation):
+    if not geolocation:
+        return None
+
+    for geofeature in geolocation.geofeatures.all():
+        if geofeature.feature_type == 'address':
+            return geofeature.place_name or geofeature.name
+
+    primary = geolocation.geofeature
+    if primary:
+        return primary.place_name or primary.name
+
+    return None
+
+
+def card_location_for_geolocation(geolocation, language=None, activity=None):
+    language = (language or get_language() or 'en').split(',')[0]
+    activity = activity or type('Activity', (), {'country': []})()
+    from bluebottle.initiatives.models import InitiativePlatformSettings
+
+    mode = InitiativePlatformSettings.load().card_location_display
+    return format_card_location(
+        activity,
+        mode,
+        language,
+        geofeatures=geofeatures_for_geolocation(geolocation),
+    )
+
+
 def card_location_parts_for_geolocation(geolocation, language, activity=None):
     activity = activity or type('Activity', (), {'country': []})()
     geofeatures = geofeatures_for_geolocation(geolocation)
-    parts = card_location_parts_from_geofeatures(activity, geofeatures, language)
-    if parts:
-        return parts
-
-    country = geolocation.country
-    return {
-        'neighborhood': None,
-        'locality': geolocation.locality,
-        'city': geolocation.locality,
-        'region': geolocation.province,
-        'country': country.name if country else None,
-        'country_code': country.alpha2_code if country else None,
-    }
+    return card_location_parts_from_geofeatures(activity, geofeatures, language)
 
 
 def format_multi_location_display(activity, card_location_display, language, geolocations):
@@ -897,21 +949,6 @@ def geofeature_names_from_entries(geofeatures, language):
     return names
 
 
-def geolocation_fallback_names(geolocation):
-    names = {}
-    if geolocation.formatted_address:
-        names['address'] = geolocation.formatted_address
-    if geolocation.street:
-        names['street'] = geolocation.street
-    if geolocation.postal_code:
-        names['postcode'] = geolocation.postal_code
-    if geolocation.locality:
-        names['place'] = geolocation.locality
-    if geolocation.country:
-        names['country'] = geolocation.country.name
-    return names
-
-
 def geofeature_names_for_geolocation(geolocation, language):
     names = {}
 
@@ -923,9 +960,6 @@ def geofeature_names_for_geolocation(geolocation, language):
         name = geofeature.name or geofeature.place_name
         if name:
             names[feature_type] = name
-
-    for key, value in geolocation_fallback_names(geolocation).items():
-        names.setdefault(key, value)
 
     return names
 

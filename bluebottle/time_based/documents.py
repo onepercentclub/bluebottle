@@ -2,7 +2,7 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity, get_translated_country_list
-from bluebottle.geo.mapbox import get_translated_geofeature_list
+from bluebottle.geo.mapbox import get_translated_geofeature_list, locality_from_geolocation
 from bluebottle.time_based.models import (
     DateActivity,
     DeadlineActivity,
@@ -87,16 +87,6 @@ def geofeatures_for_geolocation(geolocation):
     return geofeatures
 
 
-def city_from_geolocation(geolocation):
-    primary = geolocation.geofeature
-    if primary and primary.feature_type in ('place', 'locality'):
-        return primary.name
-    for geofeature in geolocation.geofeatures.all():
-        if geofeature.feature_type in ('place', 'locality'):
-            return geofeature.name
-    return geolocation.locality
-
-
 def slot_location_entry(geolocation, location_hint=None):
     primary = geolocation.geofeature
     country = geolocation.country
@@ -105,7 +95,7 @@ def slot_location_entry(geolocation, location_hint=None):
         'name': primary.place_name if primary else geolocation.formatted_address,
         'formatted_address': primary.place_name if primary else geolocation.formatted_address,
         'location_hint': location_hint,
-        'locality': city_from_geolocation(geolocation),
+        'locality': locality_from_geolocation(geolocation),
         'country_code': country.alpha2_code if country else None,
         'country': country.name if country else None,
         'type': 'location',
@@ -200,7 +190,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 'start': slot.start,
                 'end': slot.end,
                 'location_hint': slot.location_hint,
-                'locality': city_from_geolocation(location),
+                'locality': locality_from_geolocation(location),
                 'formatted_address': (
                     location.geofeature.place_name
                     if location.geofeature else location.formatted_address

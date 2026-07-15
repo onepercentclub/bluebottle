@@ -1,3 +1,4 @@
+from bluebottle.test.geo_utils import ensure_geolocation_geofeatures
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.documents import (
@@ -12,6 +13,8 @@ from bluebottle.time_based.tests.factories import DateActivityFactory, DateActiv
 class DateActivityDocumentTestCase(BluebottleTestCase):
     def create_geolocation(self, **kwargs):
         geolocation = GeolocationFactory.build(**kwargs)
+        if geolocation.country_id is None and geolocation.country:
+            geolocation.country.save()
         geolocation.save(skip_mapbox_sync=True)
         return geolocation
 
@@ -28,6 +31,7 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
 
     def test_prepare_location_deduplicates_slot_locations(self):
         location = self.create_geolocation(locality='Leiden', formatted_address='Leiden, NL')
+        ensure_geolocation_geofeatures(location)
         activity = DateActivityFactory.create(slots=[])
         DateActivitySlotFactory.create(activity=activity, location=location)
         DateActivitySlotFactory.create(activity=activity, location=location)
@@ -35,7 +39,10 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
         document = DateActivityDocument()
         locations = document.prepare_location(activity)
 
-        slot_locations = [entry for entry in locations if entry.get('locality') == 'Leiden']
+        slot_locations = [
+            entry for entry in locations
+            if entry.get('id') == location.id and entry.get('locality') == 'Leiden'
+        ]
         self.assertEqual(len(slot_locations), 1)
         self.assertEqual(slot_locations[0]['id'], location.id)
 
@@ -52,6 +59,7 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
 
     def test_prepare_slots_includes_per_slot_geofeatures(self):
         location = self.create_geolocation(locality='Leiden')
+        ensure_geolocation_geofeatures(location)
         activity = DateActivityFactory.create(slots=[])
         slot = DateActivitySlotFactory.create(
             activity=activity,
@@ -65,7 +73,8 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
         self.assertEqual(len(slots), 1)
         self.assertEqual(slots[0]['id'], str(slot.pk))
         self.assertEqual(slots[0]['location_id'], location.id)
-        self.assertEqual(slots[0]['geofeatures'], [])
+        self.assertEqual(slots[0]['locality'], 'Leiden')
+        self.assertGreater(len(slots[0]['geofeatures']), 0)
 
     def test_prepare_position_deduplicates_coordinates(self):
         location = self.create_geolocation(locality='Leiden')

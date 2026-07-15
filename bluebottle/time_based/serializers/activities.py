@@ -16,7 +16,11 @@ from bluebottle.activities.models import Activity, Organizer
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
-from bluebottle.geo.mapbox import format_multi_location_label
+from bluebottle.geo.mapbox import (
+    format_multi_location_label,
+    formatted_address_from_geolocation,
+    locality_from_geolocation,
+)
 from bluebottle.initiatives.models import (
     InitiativePlatformSettings,
 )
@@ -640,12 +644,24 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             unique_locations.append(slot.location)
 
         if not unique_locations:
+            slot = slots.first()
+            meeting_url = None
+            user = self.context['request'].user
+            if (
+                is_online and
+                user.is_authenticated and
+                obj.contributors.filter(
+                    user=user, status='accepted'
+                ).instance_of(DateParticipant).count()
+            ):
+                meeting_url = slot.online_meeting_url or None
+
             return {
                 'has_multiple': False,
                 'is_online': is_online,
-                'online_meeting_url': None,
+                'online_meeting_url': meeting_url,
                 'location': None,
-                'location_hint': None,
+                'location_hint': slot.location_hint if slot else None,
             }
 
         has_multiple = len(unique_locations) > 1 and not is_online
@@ -664,7 +680,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             if common_address:
                 reference = unique_locations[0]
                 location = {
-                    'locality': reference.locality,
+                    'locality': locality_from_geolocation(reference),
                     'country': {
                         'code': (
                             reference.country.alpha2_code
@@ -686,11 +702,11 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             location = None
         else:
             location = {
-                'locality': slot.location.locality if slot.location else None,
+                'locality': locality_from_geolocation(slot.location),
                 'country': {
                     'code': slot.location.country.alpha2_code if slot.location.country else None,
                 },
-                'formattedAddress': slot.location.formatted_address if slot.location else None,
+                'formattedAddress': formatted_address_from_geolocation(slot.location),
             }
 
         user = self.context['request'].user

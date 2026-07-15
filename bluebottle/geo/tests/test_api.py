@@ -122,7 +122,8 @@ class UsedCountryListTestCase(GeoTestCase):
 
         DeadlineActivityFactory.create(
             status='draft',
-            location=location_de
+            location=location_de,
+            initiative=initiative,
         )
 
         activity = DateActivityFactory.create(

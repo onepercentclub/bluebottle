@@ -273,6 +273,41 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         )
         self.assertEqual(translations[0]['feature_type'], 'place')
 
+    def test_get_translated_geofeature_list_skips_missing_translations(self):
+        LanguageFactory.create(
+            code='en', language_name='English', native_name='English', default=True
+        )
+        LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
+        geofeature = GeoFeature.objects.create(
+            mapbox_id='dXJuOm1ieGFkcjpuZWdjb2VudHJ5',
+            feature_type='place',
+        )
+        geofeature.set_current_language('nl')
+        geofeature.name = 'Berlijn'
+        geofeature.place_name = 'Berlijn, Duitsland'
+        geofeature.save()
+
+        translations = mapbox_utils.get_translated_geofeature_list(geofeature)
+        languages = {entry['language'] for entry in translations}
+
+        self.assertEqual(languages, {'nl'})
+        self.assertEqual(translations[0]['name'], 'Berlijn')
+
+    def test_format_card_location_uses_requested_language_only(self):
+        activity = type('Activity', (), {'country': []})()
+        geofeatures = [
+            self._card_location_geofeature('place', 'Berlijn', 'nl'),
+            self._card_location_geofeature('country', 'Duitsland', 'nl', country_code='DE'),
+        ]
+
+        self.assertIsNone(
+            mapbox_utils.format_card_location(activity, 'city_country', 'en', geofeatures=geofeatures)
+        )
+        self.assertEqual(
+            mapbox_utils.format_card_location(activity, 'city_country', 'nl', geofeatures=geofeatures),
+            'Berlijn, DE',
+        )
+
     def _card_location_geofeature(self, feature_type, name, language='en', **extra):
         defaults = {
             'language': language,
@@ -534,7 +569,37 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             mapbox_utils.format_common_card_location(
                 activity, 'city_country', 'en', location_parts
             ),
-            'NL',
+            'Netherlands',
+        )
+
+    def test_format_common_card_location_same_country_uses_place_name(self):
+        activity = type('Activity', (), {'country': []})()
+        amsterdam = [
+            self._card_location_geofeature('place', 'Amsterdam', 'en'),
+            self._card_location_geofeature(
+                'country', '', 'en', place_name='Netherlands'
+            ),
+        ]
+        rotterdam = [
+            self._card_location_geofeature('place', 'Rotterdam', 'en'),
+            self._card_location_geofeature(
+                'country', '', 'en', place_name='Netherlands'
+            ),
+        ]
+        location_parts = [
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, amsterdam, 'en'
+            ),
+            mapbox_utils.card_location_parts_from_geofeatures(
+                activity, rotterdam, 'en'
+            ),
+        ]
+
+        self.assertEqual(
+            mapbox_utils.format_common_card_location(
+                activity, 'city_country', 'en', location_parts
+            ),
+            'Netherlands',
         )
 
     def test_format_common_card_location_same_region(self):
@@ -712,7 +777,9 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             self._card_location_geofeature('country', 'Netherlands', 'en'),
         ]
         de = [
-            self._card_location_geofeature('place', 'Berlin', 'en'),
+            self._card_location_geofeature(
+                'place', 'Berlin', 'en', country='Germany', country_code='DE'
+            ),
             self._card_location_geofeature('country', 'Germany', 'en', country_code='DE'),
         ]
         location_parts = [

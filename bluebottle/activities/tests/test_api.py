@@ -27,6 +27,7 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
 from bluebottle.grant_management.tests.factories import GrantApplicationFactory
+from bluebottle.geo.mapbox import card_location_for_geolocation
 from bluebottle.initiatives.models import (
     ActivitySearchFilter,
     InitiativePlatformSettings,
@@ -178,7 +179,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['has-multiple-locations'], False)
         location = activity.slots.first().location
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'],
+            card_location_for_geolocation(location, 'en'),
         )
 
     def test_date_preview_multiple_slots(self):
@@ -244,10 +246,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['has-multiple-locations'], False)
 
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'],
+            card_location_for_geolocation(location, 'en'),
         )
-
-    def test_date_preview_multiple_slots_single_open(self):
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create(activity=activity, status='draft', is_online=None)
         open_slot = DateActivitySlotFactory.create(activity=activity)
@@ -260,7 +261,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(
             attributes['location'],
-            f'{open_slot.location.locality}, {open_slot.location.country.alpha2_code}'
+            card_location_for_geolocation(open_slot.location, 'en'),
         )
 
         self.assertEqual(dateutil.parser.parse(attributes['start']), open_slot.start)
@@ -294,7 +295,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         location = current_slot.location
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'],
+            card_location_for_geolocation(location, 'en'),
         )
 
     def test_date_preview_multiple_slots_succeeded(self):
@@ -385,7 +387,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         location = activity.location
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'],
+            card_location_for_geolocation(location, 'en'),
         )
 
         self.assertEqual(attributes['matching-properties']['theme'], False)
@@ -433,7 +436,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         location = activity.initiative.place
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'],
+            card_location_for_geolocation(location, 'en'),
         )
 
     def test_collect_preview(self):
@@ -459,10 +463,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         location = activity.location
         self.assertEqual(
-            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
+            attributes['location'],
+            card_location_for_geolocation(location, 'en'),
         )
-
-    def test_collect_preview_dutch(self):
         activity = CollectActivityFactory.create(status='open')
         theme = activity.theme
         # Ensure theme has Dutch translation (ThemeFactory may not create it in all test setups).

@@ -5,7 +5,7 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donor
-from bluebottle.geo.mapbox import get_translated_geofeature_list
+from bluebottle.geo.mapbox import get_translated_geofeature_list, locality_from_geolocation
 from bluebottle.initiatives.documents import deduplicate, get_translated_country_list
 
 SCORE_MAP = {
@@ -54,12 +54,24 @@ class FundingDocument(ActivityDocument):
                 'name': (
                     geofeature.place_name if geofeature else impact_location.formatted_address
                 ),
-                'locality': (
-                    geofeature.name if geofeature else impact_location.locality
-                ),
+                'locality': locality_from_geolocation(impact_location),
                 'country_code': country.alpha2_code if country else None,
                 'country': country.name if country else None,
                 'type': 'location'
+            })
+        elif instance.initiative and instance.initiative.place:
+            place = instance.initiative.place
+            country = place.country
+            geofeature = place.geofeature
+            locations.append({
+                'id': place.id,
+                'name': (
+                    geofeature.place_name if geofeature else place.formatted_address
+                ),
+                'locality': locality_from_geolocation(place),
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
+                'type': 'impact_location',
             })
         return locations
 

@@ -6,7 +6,7 @@ from elasticsearch_dsl.field import DateRange
 from bluebottle.activities.models import Activity
 from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
-from bluebottle.geo.mapbox import get_translated_geofeature_list
+from bluebottle.geo.mapbox import get_translated_geofeature_list, locality_from_geolocation
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.documents import (
     deduplicate,
@@ -371,7 +371,7 @@ class ActivityDocument(Document):
                 'id': geolocation.id,
                 'name': primary.place_name if primary else geolocation.formatted_address,
                 'location_hint': getattr(instance, 'location_hint', None),
-                'locality': primary.name if primary else geolocation.locality,
+                'locality': locality_from_geolocation(geolocation),
                 'country_code': geolocation.country.alpha2_code if geolocation.country else None,
                 'country': geolocation.country.name if geolocation.country else None,
                 'type': 'location'
@@ -416,7 +416,7 @@ class ActivityDocument(Document):
         geofeatures = []
         if hasattr(instance, 'location') and instance.location:
             location = instance.location
-        elif instance.initiative and instance.initiative.place:
+        elif getattr(instance, 'initiative', None) and instance.initiative.place:
             location = instance.initiative.place
 
         if not location or location.geofeatures.count() == 0:

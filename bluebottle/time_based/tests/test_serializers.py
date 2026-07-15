@@ -4,6 +4,10 @@ from django.contrib.auth.models import AnonymousUser
 from django.test.client import RequestFactory
 from django.utils.timezone import now
 
+from bluebottle.geo.mapbox import (
+    formatted_address_from_geolocation,
+    locality_from_geolocation,
+)
 from bluebottle.geo.models import GeoFeature
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -194,8 +198,8 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'has_multiple': False,
                 'is_online': False,
                 'location': {
-                    'locality': slot.location.locality,
-                    'formattedAddress': slot.location.formatted_address,
+                    'locality': locality_from_geolocation(slot.location),
+                    'formattedAddress': formatted_address_from_geolocation(slot.location),
                     'country': {
                         'code': slot.location.country.alpha2_code
                     }
@@ -294,7 +298,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'has_multiple': True,
                 'is_online': False,
                 'location': {
-                    'locality': location_a.locality,
+                    'locality': 'Utrecht',
                     'formattedAddress': (
                         'Louis Armstronglaan, 3543 EB Utrecht, Netherlands'
                     ),
@@ -342,7 +346,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'has_multiple': True,
                 'is_online': False,
                 'location': {
-                    'locality': location_a.locality,
+                    'locality': 'Amsterdam',
                     'formattedAddress': 'North Holland, NL',
                     'country': {
                         'code': location_a.country.alpha2_code,
@@ -370,8 +374,8 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'has_multiple': False,
                 'is_online': False,
                 'location': {
-                    'locality': location.locality,
-                    'formattedAddress': location.formatted_address,
+                    'locality': locality_from_geolocation(location),
+                    'formattedAddress': formatted_address_from_geolocation(location),
                     'country': {
                         'code': location.country.alpha2_code
                     }
@@ -395,8 +399,8 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'has_multiple': False,
                 'is_online': False,
                 'location': {
-                    'locality': location.locality,
-                    'formattedAddress': location.formatted_address,
+                    'locality': locality_from_geolocation(location),
+                    'formattedAddress': formatted_address_from_geolocation(location),
                     'country': {
                         'code': location.country.alpha2_code
                     }

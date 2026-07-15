@@ -54,7 +54,7 @@ def format_geolocation_related_objects(obj):
 
     related.sort(key=lambda item: item['label'].lower())
     return format_html(
-        '<ul style="margin: 0; padding-left: 1.2em;">{}</ul>',
+        '<div style="display: inline-block"><ul style="margin: 0; ">{}</ul></div>',
         format_html_join(
             '',
             '<li><a href="{}?{}={}">{} {}</a></li>',
@@ -308,10 +308,13 @@ class GeolocationAdmin(admin.ModelAdmin):
     inlines = (GeolocationGeoFeatureInline,)
 
     fieldsets = (
-        (_('Location'), {'fields': ('position', 'place_name', 'mapbox_id')}),
+        (_('Location'), {'fields': ('position', 'place_name', 'mapbox_id', 'country')}),
     )
 
-    readonly_fields = ('place_name',)
+    readonly_fields = (
+        'place_name', 'locality', 'street', 'street_number', 'postal_code',
+        'province', 'formatted_address',
+    )
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
@@ -320,7 +323,7 @@ class GeolocationAdmin(admin.ModelAdmin):
                 (_('Old info'), {
                     'fields': (
                         'locality', 'street', 'street_number', 'postal_code',
-                        'province', 'country', 'formatted_address',
+                        'province', 'formatted_address',
                     )
                 }),
             )

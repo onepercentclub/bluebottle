@@ -117,6 +117,9 @@ class LinkedActivityDocument(ActivityDocument):
     def prepare_location(self, instance):
         return []
 
+    def prepare_geofeature(self, instance):
+        return []
+
     def prepare_office(self, instance):
         return []
 

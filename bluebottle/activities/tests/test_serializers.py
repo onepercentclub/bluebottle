@@ -1,6 +1,8 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+from django.test.client import RequestFactory
+
 from bluebottle.activities.preview_serializers import (
     ActivityPreviewLocationSerializer,
     ActivityPreviewSlottedLocationSerializer,
@@ -74,7 +76,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
         return SimpleNamespace(**defaults)
 
     def _context(self):
-        return {'request': MagicMock(GET={})}
+        return {'request': RequestFactory().get('/')}
 
     def test_slotted_location_uses_activity_geofeatures(self):
         location = ActivityPreviewLocationSerializer(

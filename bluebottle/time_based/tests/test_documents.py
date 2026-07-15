@@ -1,4 +1,4 @@
-from bluebottle.test.geo_utils import ensure_geolocation_geofeatures
+from bluebottle.test.geo_utils import ensure_geolocation_geofeatures, save_built_geolocation
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.documents import (
@@ -12,11 +12,7 @@ from bluebottle.time_based.tests.factories import DateActivityFactory, DateActiv
 
 class DateActivityDocumentTestCase(BluebottleTestCase):
     def create_geolocation(self, **kwargs):
-        geolocation = GeolocationFactory.build(**kwargs)
-        if geolocation.country_id is None and geolocation.country:
-            geolocation.country.save()
-        geolocation.save(skip_mapbox_sync=True)
-        return geolocation
+        return save_built_geolocation(GeolocationFactory.build(**kwargs))
 
     def test_unique_slot_geolocations_deduplicates_by_location(self):
         location = self.create_geolocation(locality='Leiden')

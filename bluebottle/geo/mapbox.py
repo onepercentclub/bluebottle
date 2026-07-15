@@ -426,6 +426,9 @@ def _entry_value(entry, key, default=None):
 
 
 def _entries_for_language(entries, language):
+    if not isinstance(language, str):
+        language = 'en'
+
     language_entries = [
         entry for entry in entries
         if _entry_value(entry, 'language') == language

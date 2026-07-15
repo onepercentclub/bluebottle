@@ -27,15 +27,18 @@ def preview_language(context):
         return get_current_language()
 
     api_language = get_language_from_request(request)
-    if api_language:
+    if isinstance(api_language, str) and api_language:
         return api_language
 
-    if getattr(request, 'LANGUAGE_CODE', None):
-        return request.LANGUAGE_CODE
+    language_code = getattr(request, 'LANGUAGE_CODE', None)
+    if isinstance(language_code, str) and language_code:
+        return language_code
 
-    accept_language = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
-    if accept_language:
-        return accept_language.split(',')[0].strip().split('-')[0]
+    meta = getattr(request, 'META', None)
+    if isinstance(meta, dict):
+        accept_language = meta.get('HTTP_ACCEPT_LANGUAGE', '')
+        if isinstance(accept_language, str) and accept_language:
+            return accept_language.split(',')[0].strip().split('-')[0]
 
     return get_current_language()
 

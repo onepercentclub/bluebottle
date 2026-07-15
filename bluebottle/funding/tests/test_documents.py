@@ -2,17 +2,13 @@ from bluebottle.funding.documents import FundingDocument
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.mapbox import locality_from_geolocation
 from bluebottle.test.factory_models.geo import GeolocationFactory
-from bluebottle.test.geo_utils import ensure_geolocation_geofeatures
+from bluebottle.test.geo_utils import ensure_geolocation_geofeatures, save_built_geolocation
 from bluebottle.test.utils import BluebottleTestCase
 
 
 class FundingDocumentTestCase(BluebottleTestCase):
     def create_geolocation(self, **kwargs):
-        geolocation = GeolocationFactory.build(**kwargs)
-        if geolocation.country_id is None and geolocation.country:
-            geolocation.country.save()
-        geolocation.save(skip_mapbox_sync=True)
-        return geolocation
+        return save_built_geolocation(GeolocationFactory.build(**kwargs))
 
     def test_prepare_location_impact_location_without_country(self):
         impact_location = self.create_geolocation(
@@ -28,7 +24,7 @@ class FundingDocumentTestCase(BluebottleTestCase):
 
         self.assertEqual(len(locations), 1)
         self.assertEqual(locations[0]['id'], impact_location.id)
-        self.assertEqual(locations[0]['name'], 'Dam 1, Amsterdam')
+        self.assertEqual(locations[0]['name'], impact_location.geofeature.place_name)
         self.assertEqual(
             locations[0]['locality'],
             locality_from_geolocation(impact_location),
@@ -68,7 +64,7 @@ class FundingDocumentTestCase(BluebottleTestCase):
             prepared['location'],
             [{
                 'id': impact_location.id,
-                'name': 'Dam 1, Amsterdam',
+                'name': impact_location.geofeature.place_name,
                 'locality': locality_from_geolocation(impact_location),
                 'country_code': None,
                 'country': None,

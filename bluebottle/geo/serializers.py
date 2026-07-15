@@ -191,6 +191,14 @@ class GeolocationSerializer(ModelSerializer):
     formatted_address = serializers.SerializerMethodField()
     locality = serializers.SerializerMethodField()
 
+    def create(self, validated_data):
+        mapbox_id = validated_data.get('mapbox_id')
+        if mapbox_id:
+            geolocation = Geolocation.objects.filter(mapbox_id=mapbox_id).first()
+            if geolocation:
+                return geolocation
+        return super(GeolocationSerializer, self).create(validated_data)
+
     def get_formatted_address(self, obj):
         if obj.geofeature:
             return obj.geofeature.place_name

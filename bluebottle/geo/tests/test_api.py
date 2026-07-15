@@ -258,6 +258,37 @@ class GeolocationCreateTestCase(GeoTestCase):
             'center={latitude},{longitude}'.format(**response.data['position']) in static_map_url
         )
 
+    @mock.patch(
+        'bluebottle.geo.models.Geolocation.reverse_geocode',
+        return_value=mapbox_response
+    )
+    def test_api_geolocation_create_reuses_existing_mapbox_id(self, mock_reverse_geocode):
+        mapbox_id = mapbox_response['properties']['mapbox_id']
+        existing = GeolocationFactory.create(mapbox_id=mapbox_id)
+        existing.save(skip_mapbox_sync=True)
+
+        data = {
+            "data": {
+                "type": "geolocations",
+                "attributes": {
+                    "mapbox-id": mapbox_id,
+                    "position": {"latitude": 43.0579025, "longitude": 23.6851594},
+                },
+                "relationships": {
+                    "country": {
+                        "data": {
+                            "type": "countries",
+                            "id": self.country.id
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(reverse('geolocation-list'), json.dumps(data), user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(int(response.data['id']), existing.id)
+
 
 class OfficeListTestCase(GeoTestCase):
     def setUp(self):

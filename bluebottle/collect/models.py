@@ -82,7 +82,7 @@ class CollectActivity(Activity):
 
         if self.is_adopted:
             readonly_fields = readonly_fields + [
-                'start', 'duration', 'period', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+                'start', 'location', 'location_hint', 'target', 'realized', 'collect_type'
             ]
 
         return readonly_fields

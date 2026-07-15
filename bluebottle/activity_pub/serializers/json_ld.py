@@ -151,9 +151,13 @@ class BaseEventSerializer(BaseActivityPubSerializer):
     organization = RelatedResourceField(type='Organization', include=True, allow_null=True, required=False)
     url = serializers.URLField()
 
+    contributor_count = serializers.IntegerField(
+        required=False, allow_null=True, default=0
+    )
+
     class Meta(BaseActivityPubSerializer.Meta):
         fields = BaseActivityPubSerializer.Meta.fields + (
-            'name', 'summary', 'image', 'organization', 'url',
+            'name', 'summary', 'image', 'organization', 'url', 'contributor_count'
         )
 
 
@@ -162,14 +166,11 @@ class GoodDeedSerializer(BaseEventSerializer):
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
-    contributor_count = serializers.IntegerField(
-        required=False, allow_null=True, default=0
-    )
 
     class Meta(BaseEventSerializer.Meta):
         model = GoodDeed
         fields = BaseEventSerializer.Meta.fields + (
-            'start_time', 'end_time', 'contributor_count'
+            'start_time', 'end_time',
         )
 
 
@@ -305,7 +306,6 @@ class DoGoodEventSerializer(BaseEventSerializer):
     )
 
     duration = serializers.DurationField(required=False, allow_null=True)
-    contributor_count = serializers.IntegerField(required=False, allow_null=True, default=0)
     capacity = serializers.IntegerField(required=False, allow_null=True)
 
     sub_event = RelatedResourceField(type='SubEvent', many=True, allow_null=True, required=False, include=True)
@@ -317,7 +317,6 @@ class DoGoodEventSerializer(BaseEventSerializer):
             'event_attendance_mode', 'join_mode',
             'repetition_mode', 'slot_mode',
             'application_deadline',
-            'contributor_count',
             'capacity',
             'sub_event',
         )
@@ -497,10 +496,6 @@ class LeaveSerializer(BaseActivitySerializer):
 
     class Meta(BaseActivitySerializer.Meta):
         model = Leave
-
-    def save(self, *args, **kwargs):
-        __import__('ipdb').set_trace()
-        return super().save(*args, **kwargs)
 
 
 from bluebottle.activity_pub.serializers.federated_activities import *  # noqa

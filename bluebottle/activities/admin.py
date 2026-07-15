@@ -95,7 +95,7 @@ from bluebottle.utils.widgets import get_human_readable_duration
 class RemoteMemberAdmin(admin.ModelAdmin):
     list_display = ['id', 'full_name', 'email', ]
     search_fields = ['full_name', 'email', ]
-    readonly_fields = ['full_name', 'email', ]
+    readonly_fields = ['full_name', 'email', 'first_name', 'last_name']
 
 
 @admin.register(Contributor)
@@ -177,7 +177,7 @@ class BaseContributorInline(TabularInlinePaginated):
 
     def platform(self, obj):
         if obj.remote_user:
-            return obj.remote_user.sync_actor
+            return obj.remote_user.origin.source.name
         return "-"
 
     def has_change_permission(self, request, obj=None):

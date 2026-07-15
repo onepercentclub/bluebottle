@@ -13,7 +13,8 @@ from bluebottle.activities.triggers import (
 )
 
 from bluebottle.activity_pub.effects import (
-    PublishAdoptionEffect, CancelEffect, SendJoinEffect, SendLeaveEffect, UpdateEventEffect, FinishEffect
+    PublishAdoptionEffect, CancelEffect, SendJoinEffect, SendLeaveEffect,
+    UpdateEventEffect, FinishEffect, SyncRelatedEvent
 )
 from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
@@ -324,7 +325,8 @@ class CollectContributorTriggers(ContributorTriggers):
                     NewParticipantNotification,
                     conditions=[is_user]
                 ),
-                SendJoinEffect
+                SendJoinEffect,
+                SyncRelatedEvent
             ]
         ),
         TransitionTrigger(
@@ -352,7 +354,8 @@ class CollectContributorTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
-                SendLeaveEffect
+                SendLeaveEffect,
+                SyncRelatedEvent
             ]
         ),
 
@@ -364,7 +367,8 @@ class CollectContributorTriggers(ContributorTriggers):
                     conditions=[contributor_activity_started]
                 ),
                 NotificationEffect(ParticipantJoinedNotification),
-                SendJoinEffect
+                SendJoinEffect,
+                SyncRelatedEvent
             ]
         ),
 

@@ -137,6 +137,40 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
 
         self.assertEqual(location, 'NL')
 
+    def test_neighbourhood_city_multiple_locations_uses_locality_city(self):
+        settings = InitiativePlatformSettings.load()
+        settings.card_location_display = 'neighbourhood_city'
+        settings.save()
+
+        activity = self._activity(
+            slots=[
+                self._slot(
+                    location_id=1,
+                    geofeatures=[
+                        self._geofeature('neighborhood', 'Centrum'),
+                        self._geofeature('locality', 'Utrecht-Centrum'),
+                        self._geofeature('place', 'Utrecht'),
+                        self._geofeature('country', 'Netherlands'),
+                    ],
+                ),
+                self._slot(
+                    location_id=2,
+                    geofeatures=[
+                        self._geofeature('neighborhood', 'Lombok'),
+                        self._geofeature('locality', 'Utrecht-Centrum'),
+                        self._geofeature('place', 'Utrecht'),
+                        self._geofeature('country', 'Netherlands'),
+                    ],
+                ),
+            ],
+            geofeature=[],
+        )
+        location = ActivityPreviewLocationSerializer(
+            context=self._context(),
+        ).to_representation(activity)
+
+        self.assertEqual(location, 'Utrecht-Centrum, Utrecht')
+
     def test_neighbourhood_city_multiple_locations_uses_common_city(self):
         settings = InitiativePlatformSettings.load()
         settings.card_location_display = 'neighbourhood_city'

@@ -16,14 +16,19 @@ from bluebottle.activities.models import Activity, Organizer
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
-from bluebottle.geo.mapbox import common_formatted_address_for_geolocations
+from bluebottle.geo.mapbox import format_multi_location_label
+from bluebottle.initiatives.models import (
+    InitiativePlatformSettings,
+)
 from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
     PeriodicActivity,
     ScheduleActivity,
     DateParticipant,
-    DateActivity, RegisteredDateActivity, )
+    DateActivity,
+    RegisteredDateActivity,
+)
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -647,9 +652,13 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         slot = slots.first()
 
         if has_multiple:
-            common_address = common_formatted_address_for_geolocations(
+            language = get_current_language()
+            mode = InitiativePlatformSettings.load().card_location_display
+            common_address = format_multi_location_label(
+                obj,
+                mode,
+                language,
                 unique_locations,
-                get_current_language(),
             )
             location = None
             if common_address:

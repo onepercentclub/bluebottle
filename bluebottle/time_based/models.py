@@ -240,15 +240,6 @@ class DateActivity(TimeBasedActivity):
     ]
 
     @property
-    def readonly_fields(self):
-        readonly_fields = super().readonly_fields
-
-        if hasattr(self, 'origin') and self.origin:
-            readonly_fields = readonly_fields + ['start', 'duration', ]
-
-        return readonly_fields
-
-    @property
     def start(self):
         if self.slots.first():
             return self.slots.first().start.date()

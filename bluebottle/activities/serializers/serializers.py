@@ -2,11 +2,9 @@ import hashlib
 from builtins import object
 from collections import namedtuple
 
-import dateutil
 from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
-from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
@@ -28,6 +26,10 @@ from bluebottle.activities.models import (
     ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
+from bluebottle.activities.serializers.preview import (
+    ActivityPreviewLocationSerializer,
+    ActivityPreviewSlotSelection,
+)
 from bluebottle.collect.serializers import (
     CollectActivityListSerializer,
     CollectActivitySerializer,
@@ -51,10 +53,6 @@ from bluebottle.funding.serializers import (
     FundingListSerializer,
     FundingSerializer,
     TinyFundingSerializer,
-)
-from bluebottle.activities.preview_serializers import (
-    ActivityPreviewLocationSerializer,
-    ActivityPreviewSlotSelection,
 )
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.grant_management.serializers import (
@@ -266,8 +264,10 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_start(self, obj):
         if hasattr(obj, "slots") and obj.slots:
-            upcoming = obj.status in ("open", "full")
-            slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
+            selection = ActivityPreviewSlotSelection(
+                obj, self.context['request']
+            )
+            slots = selection.get_slots()
             if slots:
                 return slots[0].start
         elif obj.start and len(obj.start) == 1:
@@ -275,52 +275,12 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_end(self, obj):
         if hasattr(obj, "slots") and obj.slots:
-            upcoming = obj.status in ("open", "full")
-
-            tz = get_current_timezone()
-            try:
-                start, end = (
-                    dateutil.parser.parse(date).astimezone(tz)
-                    for date in self.context["request"].GET.get("filter[date]").split(",")
-                )
-            except (ValueError, AttributeError):
-                start = None
-                end = None
-
-            if upcoming or (start and start >= now()):
-                ends = [
-                    slot.end
-                    for slot in obj.slots
-                    if (
-                        slot.status not in ["draft", "cancelled"]
-                        and (
-                            not start
-                            or dateutil.parser.parse(slot.start).date() >= start.date()
-                        )
-                        and (
-                            not end
-                            or dateutil.parser.parse(slot.end).date() <= end.date()
-                        )
-                    )
-                ]
-            else:
-                ends = [
-                    slot.end
-                    for slot in obj.slots
-                    if (
-                        slot.status not in ["draft", "cancelled"]
-                        and (
-                            not start
-                            or dateutil.parser.parse(slot.end).date() > start.date()
-                        )
-                        and (
-                            not end
-                            or dateutil.parser.parse(slot.end).date() <= end.date()
-                        )
-                    )
-                ]
-            if ends:
-                return max(ends)
+            selection = ActivityPreviewSlotSelection(
+                obj, self.context['request']
+            )
+            slots = selection.get_slots()
+            if slots:
+                return max(slot.end for slot in slots)
         elif obj.end and len(obj.end) == 1:
             return obj.end[0]
 
@@ -475,7 +435,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_filtered_slots(self, obj, only_upcoming=False):
         return ActivityPreviewSlotSelection(
             obj, self.context['request']
-        ).visible(only_upcoming=only_upcoming)
+        ).get_slots()
 
     def get_slot_count(self, obj):
         if hasattr(obj, "slots") and obj.slots:

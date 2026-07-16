@@ -7,8 +7,8 @@ from unittest import mock
 
 import dateutil
 from django.contrib.auth.models import Permission
-from django.db import connection
 from django.contrib.gis.geos import Point
+from django.db import connection
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -26,8 +26,8 @@ from bluebottle.collect.tests.factories import (
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
-from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.geo.mapbox import card_location_for_geolocation
+from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.initiatives.models import (
     ActivitySearchFilter,
     InitiativePlatformSettings,
@@ -45,6 +45,7 @@ from bluebottle.test.factory_models.geo import (
     PlaceFactory,
 )
 from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.geo_utils import save_built_geolocation
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -312,7 +313,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
-        self.assertEqual(attributes['slot-count'], 0)
+        self.assertEqual(attributes['slot-count'], 3)
 
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertEqual(attributes['is-online'], False)
@@ -1548,24 +1549,30 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching = [
             DeadlineActivityFactory.create(
                 office_location=LocationFactory.create(country=matching_country),
+                initiative=None,
                 status='open',
             ),
             DeadlineActivityFactory.create(
                 location=GeolocationFactory.create(country=matching_country),
+                initiative=None,
                 status='open',
             ),
             FundingFactory.create(
                 impact_location=GeolocationFactory.create(country=matching_country),
+                initiative=None,
                 status='open'
 
             ),
             DeedFactory.create(
                 office_location=LocationFactory.create(country=matching_country),
+                initiative=None,
                 status='open'
             )
         ]
 
-        date_activity = DateActivityFactory.create(slots=[], status='open')
+        date_activity = DateActivityFactory.create(
+            slots=[], status='open', initiative=None,
+        )
         DateActivitySlotFactory.create(
             activity=date_activity,
             is_online=False,
@@ -1606,8 +1613,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = []
         for country in countries:
-            location = GeolocationFactory.create(country=country)
-            matching.append(DeadlineActivityFactory.create(location=location, status='open'))
+            location = save_built_geolocation(
+                GeolocationFactory.build(country=country)
+            )
+            matching.append(
+                DeadlineActivityFactory.create(
+                    location=location,
+                    status='open',
+                    initiative=InitiativeFactory(place=None),
+                )
+            )
 
         self.search({})
         country_facets = self.data['meta']['facets']['country']

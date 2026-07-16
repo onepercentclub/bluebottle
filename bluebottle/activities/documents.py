@@ -412,11 +412,11 @@ class ActivityDocument(Document):
             return get_translated_list(instance.theme)
 
     def prepare_geofeature(self, instance):
-        location = None
+        location = getattr(instance, 'location', None)
         geofeatures = []
-        if hasattr(instance, 'location') and instance.location:
+        if getattr(instance, 'location', None):
             location = instance.location
-        elif getattr(instance, 'initiative', None) and instance.initiative.place:
+        elif getattr(instance, 'initiative', None) and instance.initiative.place_id:
             location = instance.initiative.place
 
         if not location or location.geofeatures.count() == 0:

@@ -10,7 +10,7 @@ from bluebottle.geo.mapbox import (
     format_common_card_location,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.utils.utils import get_current_language, get_language_from_request
+from bluebottle.utils.utils import get_current_language
 
 LOCATION_TYPE_ORDER = (
     'location',
@@ -19,28 +19,6 @@ LOCATION_TYPE_ORDER = (
     'initiative_office',
     'impact_location',
 )
-
-
-def preview_language(context):
-    request = context.get('request')
-    if request is None:
-        return get_current_language()
-
-    api_language = get_language_from_request(request)
-    if isinstance(api_language, str) and api_language:
-        return api_language
-
-    language_code = getattr(request, 'LANGUAGE_CODE', None)
-    if isinstance(language_code, str) and language_code:
-        return language_code
-
-    meta = getattr(request, 'META', None)
-    if isinstance(meta, dict):
-        accept_language = meta.get('HTTP_ACCEPT_LANGUAGE', '')
-        if isinstance(accept_language, str) and accept_language:
-            return accept_language.split(',')[0].strip().split('-')[0]
-
-    return get_current_language()
 
 
 class ActivityPreviewSlotSelection:
@@ -59,10 +37,10 @@ class ActivityPreviewSlotSelection:
             return None, None
         return start, end
 
-    def visible(self, only_upcoming=False):
+    def get_slots(self):
         if not getattr(self.activity, 'slots', None):
             return []
-
+        only_upcoming = self.request.GET.get('upcoming', False)
         start, end = self.date_range()
 
         return [
@@ -85,14 +63,8 @@ class ActivityPreviewSlotSelection:
             )
         ]
 
-    def for_card(self):
-        upcoming = self.visible(only_upcoming=True)
-        if upcoming:
-            return upcoming
-        return self.visible(only_upcoming=False)
-
     def distinct_location_ids(self, slots=None):
-        slots = slots if slots is not None else self.for_card()
+        slots = self.get_slots()
         return {
             slot.location_id
             for slot in slots
@@ -105,7 +77,7 @@ class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
     def to_representation(self, activity):
         slots = ActivityPreviewSlotSelection(
             activity, self.context['request']
-        ).for_card()
+        ).get_slots()
 
         if not slots:
             return None
@@ -141,7 +113,7 @@ class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
 
     def _single_location(self, activity, slot):
         mode = InitiativePlatformSettings.load().card_location_display
-        language = preview_language(self.context)
+        language = get_current_language()
         geofeatures = self._geofeatures_for_slot(slot, activity)
 
         return format_card_location(
@@ -153,7 +125,7 @@ class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
 
     def _multiple_locations(self, activity, slots):
         mode = InitiativePlatformSettings.load().card_location_display
-        language = preview_language(self.context)
+        language = get_current_language()
 
         seen = {}
         for slot in slots:
@@ -197,7 +169,7 @@ class ActivityPreviewSingleLocationSerializer(serializers.Serializer):
 
         location = locations[0]
         mode = InitiativePlatformSettings.load().card_location_display
-        language = preview_language(self.context)
+        language = get_current_language()
 
         location_geofeatures = getattr(location, 'geofeatures', None)
         activity_geofeatures = getattr(activity, 'geofeature', None)
@@ -230,7 +202,7 @@ class ActivityPreviewLocationSerializer(serializers.Serializer):
         selection = ActivityPreviewSlotSelection(
             activity, self.context['request']
         )
-        slots = selection.for_card()
+        slots = selection.get_slots()
         if len(selection.distinct_location_ids(slots)) <= 1:
             return False
 

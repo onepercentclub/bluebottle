@@ -3,12 +3,12 @@ from unittest.mock import MagicMock
 
 from django.test.client import RequestFactory
 
-from bluebottle.activities.preview_serializers import (
+from bluebottle.activities.serializers.preview import (
     ActivityPreviewLocationSerializer,
     ActivityPreviewSlottedLocationSerializer,
     ActivityPreviewSlotSelection,
 )
-from bluebottle.activities.serializers import ActivityPreviewSerializer
+from bluebottle.activities.serializers.serializers import ActivityPreviewSerializer
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 

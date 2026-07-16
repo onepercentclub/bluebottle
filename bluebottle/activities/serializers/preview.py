@@ -149,27 +149,30 @@ class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
 class ActivityPreviewSingleLocationSerializer(serializers.Serializer):
 
     def to_representation(self, activity):
+        location_types = (
+            'location',
+            'office',
+            'place',
+            'initiative_office',
+            'impact_location',
+        )
         if activity.type == 'funding':
-            locations = [
-                location for location in activity.location
-                if location.type in ('impact_location', 'location')
-            ]
-        elif activity.location:
-            locations = sorted(
-                activity.location,
-                key=lambda loc: LOCATION_TYPE_ORDER.index(
-                    getattr(loc, 'type', 'location')
-                ),
-            )
-        else:
-            return None
+            location_types = ('impact_location', 'location', 'office', 'initiative_office')
+
+        locations = []
+
+        for location_type in location_types:
+            for loc in activity.location:
+                if loc.type == location_type:
+                    locations.append(loc)
 
         if not locations:
             return None
 
-        location = locations[0]
         mode = InitiativePlatformSettings.load().card_location_display
         language = get_current_language()
+
+        location = locations[0]
 
         location_geofeatures = getattr(location, 'geofeatures', None)
         activity_geofeatures = getattr(activity, 'geofeature', None)

@@ -120,6 +120,14 @@ class IcalTestMixin:
 
         super().setUp()
 
+    def escape_ical(self, value):
+        return (
+            value
+            .replace('\\', '\\\\')
+            .replace(',', '\\,')
+            .replace(';', '\\;')
+        )
+
     def assert_field(self, field, value):
         for line in self.ics.replace('\r\n ', '').splitlines():
             if line.startswith(field):
@@ -216,9 +224,8 @@ class ScheduleSlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
         }
 
     def test_location(self):
-        self.assert_field(
-            'LOCATION', f'{self.model.location.formatted_address} ({self.model.location_hint})'
-        )
+        location = f'{self.model.location.formatted_address} ({self.model.location_hint})'
+        self.assert_field('LOCATION', self.escape_ical(location))
 
 
 class DateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
@@ -233,9 +240,8 @@ class DateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
         }
 
     def test_location(self):
-        self.assert_field(
-            'LOCATION', f'{self.model.location.formatted_address} ({self.model.location_hint})'
-        )
+        location = f'{self.model.location.formatted_address} ({self.model.location_hint})'
+        self.assert_field('LOCATION', self.escape_ical(location))
 
 
 class OnlineDateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):

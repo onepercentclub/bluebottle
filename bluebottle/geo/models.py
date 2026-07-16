@@ -5,10 +5,12 @@ from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.db import models
+from django.db.models import Case, IntegerField, When
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
+from parler.managers import TranslatableManager, TranslatableQuerySet
 from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 from timezonefinder import TimezoneFinder
@@ -248,6 +250,26 @@ class Place(models.Model):
         return self.locality or self.formatted_address or '-unknown-'
 
 
+class GeoFeatureQuerySet(TranslatableQuerySet):
+    def ordered_by_type(self):
+        from bluebottle.geo.mapbox import GEOFEATURE_TYPE_RANK
+
+        type_order = Case(
+            *[
+                When(feature_type=feature_type, then=rank)
+                for feature_type, rank in GEOFEATURE_TYPE_RANK.items()
+            ],
+            default=len(GEOFEATURE_TYPE_RANK),
+            output_field=IntegerField(),
+        )
+        return self.order_by(type_order, 'id')
+
+
+class GeoFeatureManager(TranslatableManager.from_queryset(GeoFeatureQuerySet)):
+    def get_queryset(self):
+        return super().get_queryset().ordered_by_type()
+
+
 @python_2_unicode_compatible
 class GeoFeature(TranslatableModel):
     mapbox_id = models.CharField(max_length=5000, unique=True)
@@ -258,9 +280,24 @@ class GeoFeature(TranslatableModel):
         place_name=models.CharField(_('place_name'), max_length=5000, blank=True)
     )
 
+    objects = GeoFeatureManager()
+
     class Meta(object):
         verbose_name = _('geo feature')
         verbose_name_plural = _('geo features')
+
+    @classmethod
+    def type_order(cls, field='feature_type'):
+        from bluebottle.geo.mapbox import GEOFEATURE_TYPE_RANK
+
+        return Case(
+            *[
+                When(**{field: feature_type}, then=rank)
+                for feature_type, rank in GEOFEATURE_TYPE_RANK.items()
+            ],
+            default=len(GEOFEATURE_TYPE_RANK),
+            output_field=IntegerField(),
+        )
 
     def __str__(self):
         return self.place_name or self.name or self.mapbox_id

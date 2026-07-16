@@ -1,122 +1,25 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.gis.db.models import PointField
-from django.db.models import Case, IntegerField, When
+from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.html import format_html, format_html_join
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
-from mapwidgets.settings import mw_settings
-from mapwidgets.widgets import MapboxPointFieldWidget
 from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.models import Activity
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
-from bluebottle.geo.mapbox import GEOFEATURE_TYPE_RANK
 from bluebottle.geo.models import (
     Location, Country, Place,
     Geolocation, GeoFeature)
+from bluebottle.geo.serializers import StaticMapsField
+from bluebottle.geo.widgets import (
+    CustomMapboxPointFieldWidget,
+    GeolocationMapboxPointFieldWidget,
+)
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
-
-EXCLUDED_GEOLOCATION_RELATIONS = frozenset({'geofeatures', 'geofeature'})
-
-
-def format_geolocation_related_objects(obj):
-    if not obj or not obj.pk:
-        return '-'
-
-    related = []
-    for relation in obj._meta.related_objects:
-        accessor_name = relation.get_accessor_name()
-        if accessor_name in EXCLUDED_GEOLOCATION_RELATIONS:
-            continue
-
-        related_model = relation.related_model
-        if related_model not in admin.site._registry:
-            continue
-
-        count = getattr(obj, accessor_name).count()
-        if count == 0:
-            continue
-
-        meta = related_model._meta
-        related.append({
-            'count': count,
-            'label': str(meta.verbose_name_plural),
-            'url': reverse(
-                'admin:{}_{}_changelist'.format(meta.app_label, meta.model_name)
-            ),
-            'filter_param': '{}__id__exact'.format(relation.field.name),
-        })
-
-    if not related:
-        return '-'
-
-    related.sort(key=lambda item: item['label'].lower())
-    return format_html(
-        '<div style="display: inline-block"><ul style="margin: 0; ">{}</ul></div>',
-        format_html_join(
-            '',
-            '<li><a href="{}?{}={}">{} {}</a></li>',
-            [
-                (
-                    item['url'],
-                    item['filter_param'],
-                    obj.pk,
-                    item['count'],
-                    item['label'],
-                )
-                for item in related
-            ],
-        ),
-    )
-
-
-class CustomMapboxPointFieldWidget(MapboxPointFieldWidget):
-
-    @property
-    def media(self):
-        return self._media(
-            extra_js=[
-                "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js",
-                "/static/assets/admin/js/mapbox-sdk.min.js",
-                "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js",
-            ],
-            extra_css=[
-                "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css",
-                "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css",
-            ],
-        )
-
-
-class GeolocationMapboxPointFieldWidget(MapboxPointFieldWidget):
-
-    @property
-    def media(self):
-        minified = not mw_settings.is_dev_mode
-        css_paths = self.get_css_paths(
-            [
-                "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css",
-            ],
-            minified=minified,
-        )
-        base_js = list(
-            self.settings.media.js.minified if minified else self.settings.media.js.dev
-        )
-        js_paths = [
-            "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js",
-        ] + base_js + [
-            "admin/js/geolocation-map-widget.js",
-        ]
-        return forms.Media(css={"all": css_paths}, js=js_paths)
-
-
-@admin.register(GeoFeature)
-class GeoFeatureAdmin(TranslatableAdmin):
-    list_display = ('place_name', 'feature_type', 'mapbox_id', 'name')
-    search_fields = ('mapbox_id', 'place_name', 'translations__name')
-    readonly_fields = ('mapbox_id', 'feature_type', 'name', 'place_name')
-    fields = ('mapbox_id', 'feature_type', 'place_name', 'name')
 
 
 class LocationFilter(admin.SimpleListFilter):
@@ -143,6 +46,14 @@ class LocationFilter(admin.SimpleListFilter):
             return queryset.filter(location__id__exact=self.value())
         else:
             return queryset
+
+
+@admin.register(GeoFeature)
+class GeoFeatureAdmin(TranslatableAdmin):
+    list_display = ('place_name', 'feature_type', 'mapbox_id', 'name')
+    search_fields = ('mapbox_id', 'place_name', 'translations__name')
+    readonly_fields = ('mapbox_id', 'feature_type', 'name', 'place_name')
+    fields = ('mapbox_id', 'feature_type', 'place_name', 'name')
 
 
 @admin.register(Country)
@@ -267,17 +178,9 @@ class GeolocationGeoFeatureInline(admin.TabularInline):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        type_order = Case(
-            *[
-                When(geofeature__feature_type=feature_type, then=rank)
-                for feature_type, rank in GEOFEATURE_TYPE_RANK.items()
-            ],
-            default=len(GEOFEATURE_TYPE_RANK),
-            output_field=IntegerField(),
-        )
         return queryset.select_related('geofeature').prefetch_related(
             'geofeature__translations'
-        ).order_by(type_order, 'geofeature__id')
+        ).order_by(GeoFeature.type_order('geofeature__feature_type'), 'geofeature__id')
 
     @admin.display(description=_('Type'), ordering='geofeature__feature_type')
     def feature_type(self, obj):
@@ -313,11 +216,35 @@ class GeolocationAdmin(admin.ModelAdmin):
 
     readonly_fields = (
         'place_name', 'locality', 'street', 'street_number', 'postal_code',
-        'province', 'formatted_address',
+        'province', 'formatted_address', 'map'
     )
+
+    def map(self, obj):
+        if not obj or not obj.position:
+            return '-'
+
+        url = StaticMapsField().to_representation(obj.position)
+        return format_html(
+            '<img src="{}" alt="{}" width="422" height="422" />',
+            url,
+            str(obj),
+        )
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return True
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
+        if obj and obj.pk:
+            fieldsets = (
+                (_('Location'), {'fields': ('map', 'place_name', 'mapbox_id', 'country')}),
+            )
         if request.user.is_superuser:
             fieldsets = fieldsets + (
                 (_('Old info'), {
@@ -343,4 +270,40 @@ class GeolocationAdmin(admin.ModelAdmin):
 
     @admin.display(description=_('Related objects'))
     def related_objects_display(self, obj):
-        return format_geolocation_related_objects(obj)
+        if not obj or not obj.pk:
+            return '-'
+
+        related = []
+        for relation in obj._meta.related_objects:
+            accessor_name = relation.get_accessor_name()
+            if accessor_name in ['geofeatures', 'geofeature']:
+                continue
+
+            related_model = relation.related_model
+            if related_model not in admin.site._registry:
+                continue
+
+            count = getattr(obj, accessor_name).count()
+            if count == 0:
+                continue
+
+            meta = related_model._meta
+            related.append({
+                'count': count,
+                'label': str(meta.verbose_name_plural),
+                'url': reverse(
+                    'admin:{}_{}_changelist'.format(meta.app_label, meta.model_name)
+                ),
+                'filter_param': '{}__id__exact'.format(relation.field.name),
+            })
+
+        if not related:
+            return '-'
+
+        return mark_safe(render_to_string(
+            'admin/geo/geolocation_related_objects.html',
+            {
+                'related': related,
+                'object_id': obj.pk,
+            },
+        ))

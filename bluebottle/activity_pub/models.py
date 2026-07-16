@@ -603,7 +603,11 @@ class Recipient(models.Model):
 
     def save(self, *args, **kwargs):
         created = not self.pk
-        super().save(*args, **kwargs)
+        try:
+            super().save(*args, **kwargs)
+        except Exception as e:
+            print(e)
+            __import__('ipdb').set_trace()
 
         if created and not self.actor.is_local:
             publish_to_recipient.delay_on_commit(self, connection.tenant)
@@ -894,9 +898,13 @@ class Update(Activity):
             for follow in self.object.activities.instance_of(Follow):
                 yield follow.object
         elif isinstance(self.object, Person):
+            recipients = set()
             for join in self.object.activities.all().instance_of(Join):
                 for recipient in join.recipients.all():
-                    yield recipient.actor
+                    recipients.add(recipient.actor)
+
+            for recipient in recipients:
+                yield recipient
         else:
             raise TypeError(f'Cannot create Update for {self.object}')
 

@@ -288,6 +288,14 @@ class Page(PublishableModel):
     def get_absolute_url(self):
         return f'/{self.language}/pages/{self.slug}'
 
+    def get_admin_url(self):
+        from django.urls import reverse
+        from bluebottle.utils.utils import get_current_host
+        return get_current_host() + reverse(
+            'admin:pages_page_change',
+            args=[self.pk]
+        )
+
     def get_meta_description(self, **kwargs):
         request = kwargs.get('request')
         s = MLStripper()

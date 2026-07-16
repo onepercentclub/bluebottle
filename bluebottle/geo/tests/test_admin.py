@@ -13,8 +13,8 @@ mapbox_response = MAPBOX_V6_ADDRESS_FEATURE
 
 
 @mock.patch(
-    'bluebottle.geo.models.Geolocation.reverse_geocode',
-    return_value=mapbox_response
+    'bluebottle.geo.mapbox.lookup_by_mapbox_id',
+    return_value={'features': [mapbox_response]}
 )
 class GeolocationAdminTest(BluebottleAdminTestCase):
     """
@@ -29,7 +29,7 @@ class GeolocationAdminTest(BluebottleAdminTestCase):
         self.user = BlueBottleUserFactory(is_staff=True, is_superuser=True)
         self.admin_add_url = reverse('admin:geo_geolocation_add')
 
-    def test_geolocation_admin(self, mock_reverse_geocode):
+    def test_geolocation_admin(self, mock_lookup):
         if not Country.objects.filter(alpha2_code='NL').exists():
             CountryFactory.create(alpha2_code='NL')
         self.app.set_user(self.user)
@@ -37,15 +37,13 @@ class GeolocationAdminTest(BluebottleAdminTestCase):
         self.assertEqual(page.status_code, status.HTTP_200_OK)
         form = page.forms[1]
         form.set('position', 'POINT (5.707144274290329 52.504414974388936)')
+        form.set('mapbox_id', mapbox_response['properties']['mapbox_id'])
         form.submit()
 
         geolocation = Geolocation.objects.last()
 
         self.assertEqual(
-            geolocation.formatted_address,
-            'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands'
+            geolocation.mapbox_id,
+            mapbox_response['properties']['mapbox_id'],
         )
-        self.assertEqual(
-            geolocation.locality,
-            'Ouddorp'
-        )
+        self.assertGreater(geolocation.geofeatures.count(), 0)

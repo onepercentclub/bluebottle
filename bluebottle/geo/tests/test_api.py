@@ -220,10 +220,10 @@ class GeolocationCreateTestCase(GeoTestCase):
         self.user = BlueBottleUserFactory.create()
 
     @mock.patch(
-        'bluebottle.geo.models.Geolocation.reverse_geocode',
-        return_value=mapbox_response
+        'bluebottle.geo.mapbox.lookup_by_mapbox_id',
+        return_value={'features': [mapbox_response]}
     )
-    def test_api_geolocation_create(self, mock_reverse_geocode):
+    def test_api_geolocation_create(self, mock_lookup):
         """
         Ensure post request returns 201.
         """
@@ -231,6 +231,7 @@ class GeolocationCreateTestCase(GeoTestCase):
             "data": {
                 "type": "geolocations",
                 "attributes": {
+                    "mapbox-id": mapbox_response['properties']['mapbox_id'],
                     "position": {"latitude": 43.0579025, "longitude": 23.6851594},
                 },
                 "relationships": {
@@ -260,10 +261,10 @@ class GeolocationCreateTestCase(GeoTestCase):
         )
 
     @mock.patch(
-        'bluebottle.geo.models.Geolocation.reverse_geocode',
-        return_value=mapbox_response
+        'bluebottle.geo.mapbox.lookup_by_mapbox_id',
+        return_value={'features': [mapbox_response]}
     )
-    def test_api_geolocation_create_reuses_existing_mapbox_id(self, mock_reverse_geocode):
+    def test_api_geolocation_create_reuses_existing_mapbox_id(self, mock_lookup):
         mapbox_id = mapbox_response['properties']['mapbox_id']
         existing = GeolocationFactory.create(mapbox_id=mapbox_id)
         existing.save(skip_mapbox_sync=True)

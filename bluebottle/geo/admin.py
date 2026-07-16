@@ -219,6 +219,10 @@ class GeolocationAdmin(admin.ModelAdmin):
         'province', 'formatted_address', 'map'
     )
 
+    def force_edit(self, request):
+        if 'edit' in request.GET:
+            return True
+
     def map(self, obj):
         if not obj or not obj.position:
             return '-'
@@ -231,6 +235,8 @@ class GeolocationAdmin(admin.ModelAdmin):
         )
 
     def has_change_permission(self, request, obj=None):
+        if self.force_edit(request):
+            return True
         return False
 
     def has_delete_permission(self, request, obj=None):
@@ -241,13 +247,13 @@ class GeolocationAdmin(admin.ModelAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
-        if obj and obj.pk:
+        if obj and obj.pk and not self.force_edit(request):
             fieldsets = (
                 (_('Location'), {'fields': ('map', 'place_name', 'mapbox_id', 'country')}),
             )
         if request.user.is_superuser:
             fieldsets = fieldsets + (
-                (_('Old info'), {
+                (_('Old info (superuser)'), {
                     'fields': (
                         'locality', 'street', 'street_number', 'postal_code',
                         'province', 'formatted_address',

@@ -1,4 +1,6 @@
 from copy import deepcopy
+from importlib.machinery import SourceFileLoader
+from pathlib import Path
 from unittest import mock
 
 from django.contrib.gis.geos import Point
@@ -10,6 +12,11 @@ from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.test.utils import BluebottleTestCase
 
+migrate_mapbox = SourceFileLoader(
+    'migrate_mapbox',
+    str(Path(__file__).resolve().parents[3] / 'scripts' / 'migrate_mapbox.py'),
+).load_module()
+
 
 class MapboxUtilsTestCase(BluebottleTestCase):
 
@@ -18,36 +25,13 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertFalse(mapbox_utils.is_v6_mapbox_id('address.123'))
         self.assertFalse(mapbox_utils.is_v6_mapbox_id(''))
 
-    def test_normalize_reverse_type(self):
-        self.assertEqual(mapbox_utils._normalize_reverse_type('address'), 'address')
-        self.assertEqual(mapbox_utils._normalize_reverse_type(['address']), 'address')
-        self.assertIsNone(mapbox_utils._normalize_reverse_type(['address', 'place']))
-
-    @mock.patch('bluebottle.geo.mapbox._request')
-    def test_reverse_v6_omits_limit_for_multiple_types(self, mock_request):
-        mock_request.return_value = {'features': []}
-        mapbox_utils.reverse_v6(4.85, 52.39, types=['address', 'place'], limit=5)
-
-        params = mock_request.call_args[0][1]
-        self.assertNotIn('types', params)
-        self.assertNotIn('limit', params)
-
-    @mock.patch('bluebottle.geo.mapbox._request')
-    def test_reverse_v6_allows_limit_with_single_type(self, mock_request):
-        mock_request.return_value = {'features': []}
-        mapbox_utils.reverse_v6(4.85, 52.39, types='address', limit=1)
-
-        params = mock_request.call_args[0][1]
-        self.assertEqual(params['types'], 'address')
-        self.assertEqual(params['limit'], 1)
-
     def test_extract_housenumber_from_street_number(self):
         geolocation = Geolocation(street_number='30')
-        self.assertEqual(mapbox_utils.extract_housenumber(geolocation), '30')
+        self.assertEqual(migrate_mapbox.extract_housenumber(geolocation), '30')
 
     def test_extract_housenumber_from_formatted_address(self):
         geolocation = Geolocation(formatted_address='Hansenstraat 30, Leiden')
-        self.assertEqual(mapbox_utils.extract_housenumber(geolocation), '30')
+        self.assertEqual(migrate_mapbox.extract_housenumber(geolocation), '30')
 
     def test_geofeature_place_name_hierarchy(self):
         context = MAPBOX_V6_ADDRESS_FEATURE['properties']['context']
@@ -83,7 +67,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         )
 
     def test_parse_feature(self):
-        parsed = mapbox_utils.parse_feature(MAPBOX_V6_ADDRESS_FEATURE)
+        parsed = migrate_mapbox.parse_feature(MAPBOX_V6_ADDRESS_FEATURE)
         self.assertEqual(
             parsed['mapbox_id'],
             MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
@@ -92,7 +76,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertEqual(parsed['street_number'], '20')
         self.assertEqual(parsed['country_code'], 'NL')
 
-    @mock.patch('bluebottle.geo.mapbox.forward_v6')
+    @mock.patch('migrate_mapbox.forward_v6')
     def test_resolve_geolocation_feature_for_address_v5_id(self, mock_forward):
         country = CountryFactory.create(alpha2_code='NL')
         geolocation = Geolocation(
@@ -105,7 +89,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         )
         mock_forward.return_value = {'features': [MAPBOX_V6_ADDRESS_FEATURE]}
 
-        feature = mapbox_utils.resolve_geolocation_feature(geolocation)
+        feature = migrate_mapbox.resolve_geolocation_feature(geolocation)
 
         self.assertEqual(feature, MAPBOX_V6_ADDRESS_FEATURE)
         mock_forward.assert_called_once()
@@ -234,15 +218,17 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         country_feature.set_current_language('nl')
         self.assertEqual(country_feature.name, 'Nederland')
 
-    @mock.patch('bluebottle.geo.mapbox.forward_v6')
-    def test_lookup_by_mapbox_id_requests_platform_languages(self, mock_forward):
+    @mock.patch('bluebottle.geo.mapbox._request')
+    def test_lookup_by_mapbox_id_requests_platform_languages(self, mock_request):
         LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)
         LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
-        mock_forward.return_value = {'features': []}
+        mock_request.return_value = {'features': []}
 
         mapbox_utils.lookup_by_mapbox_id('dXJuOm1ieGFkcjox', language='en')
 
-        self.assertEqual(mock_forward.call_args.kwargs['language'], 'en,nl')
+        params = mock_request.call_args[0][1]
+        self.assertEqual(params['language'], 'en,nl')
+        self.assertEqual(params['q'], 'dXJuOm1ieGFkcjox')
 
     def test_get_translated_geofeature_list(self):
         LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)
@@ -838,26 +824,19 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         )
 
     @mock.patch(
-        'bluebottle.geo.models.Geolocation.reverse_geocode',
-        return_value=MAPBOX_V6_ADDRESS_FEATURE,
+        'bluebottle.geo.mapbox.lookup_by_mapbox_id',
+        return_value={'features': [MAPBOX_V6_ADDRESS_FEATURE]},
     )
-    def test_geolocation_save_reverse_geocodes_position(self, mock_reverse_geocode):
+    def test_geolocation_save_syncs_geofeatures(self, mock_lookup):
         country = CountryFactory.create(alpha2_code='NL')
         geolocation = Geolocation(
             position=Point(3.851166, 51.762731),
+            mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
             country=country,
         )
         geolocation.save()
 
-        self.assertEqual(
-            geolocation.mapbox_id,
-            MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
-        )
-        self.assertEqual(geolocation.locality, 'Ouddorp')
-        self.assertEqual(
-            geolocation.formatted_address,
-            MAPBOX_V6_ADDRESS_FEATURE['properties']['full_address'],
-        )
+        mock_lookup.assert_called_once()
         self.assertGreater(geolocation.geofeatures.count(), 0)
         geolocation.refresh_from_db()
         self.assertEqual(geolocation.geofeature.feature_type, 'address')

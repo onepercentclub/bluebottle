@@ -372,18 +372,6 @@ class Geolocation(models.Model):
             )
         return 'Europe/Amsterdam'
 
-    def reverse_geocode(self, language=None):
-        from bluebottle.geo import mapbox as mapbox_utils
-
-        if not self.position:
-            return None
-
-        return mapbox_utils.reverse_geocode_feature(
-            self.position.x,
-            self.position.y,
-            language=language,
-        )
-
     def save(self, *args, **kwargs):
         import requests
 
@@ -393,36 +381,24 @@ class Geolocation(models.Model):
         language = kwargs.pop('mapbox_language', None)
         resolved_feature = kwargs.pop('mapbox_feature', None)
 
-        if not skip_mapbox_sync:
-            try:
-                if self.position and mapbox_utils.needs_mapbox_id(self.mapbox_id):
-                    if resolved_feature is None:
-                        resolved_feature = self.reverse_geocode(language=language)
-                    if resolved_feature:
-                        parsed = mapbox_utils.parse_feature(resolved_feature)
-                        mapbox_utils.apply_parsed_feature(self, parsed)
-
-                elif self.mapbox_id and not mapbox_utils.is_v6_mapbox_id(self.mapbox_id):
-                    if resolved_feature is None:
-                        resolved_feature = mapbox_utils.resolve_geolocation_feature(
-                            self, language=language
-                        )
-                    if resolved_feature:
-                        parsed = mapbox_utils.parse_feature(resolved_feature)
-                        mapbox_utils.apply_parsed_feature(self, parsed)
-            except requests.RequestException:
-                pass
-
         super(Geolocation, self).save(*args, **kwargs)
 
-        if not skip_mapbox_sync and self.mapbox_id and mapbox_utils.is_v6_mapbox_id(self.mapbox_id):
-            try:
-                if resolved_feature is None:
-                    response = mapbox_utils.lookup_by_mapbox_id(
-                        self.mapbox_id, language=language
-                    )
-                    resolved_feature = mapbox_utils._first_feature(response)
-                if resolved_feature:
-                    mapbox_utils.sync_geofeatures(self, resolved_feature, language=language)
-            except requests.RequestException:
-                pass
+        if (
+            skip_mapbox_sync
+            or not self.mapbox_id
+            or not mapbox_utils.is_v6_mapbox_id(self.mapbox_id)
+        ):
+            return
+
+        try:
+            if resolved_feature is None:
+                response = mapbox_utils.lookup_by_mapbox_id(
+                    self.mapbox_id, language=language
+                )
+                resolved_feature = mapbox_utils._first_feature(response)
+            if resolved_feature:
+                mapbox_utils.sync_geofeatures(
+                    self, resolved_feature, language=language
+                )
+        except requests.RequestException:
+            pass

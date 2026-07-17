@@ -315,6 +315,10 @@ class Event(ActivityPubModel):
     def adoption_type(self):
         return self.create_set.get().actor.follow.short_adoption_type
 
+    @property
+    def title(self):
+        return self.name
+
     def __str__(self):
         return self.name
 
@@ -518,6 +522,10 @@ class SubEvent(ActivityPubModel):
     adopted_content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     adopted_id = models.PositiveBigIntegerField(null=True)
     adopted = GenericForeignKey("adopted_content_type", "adopted_id")
+
+    @property
+    def title(self):
+        return self.name
 
     class Meta:
         verbose_name = _("Sub event")

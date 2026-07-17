@@ -29,7 +29,9 @@ from bluebottle.utils.models import (
     SortableTranslatableModel,
     ValidatedModelMixin,
 )
+
 from bluebottle.utils.utils import get_current_host, get_current_language
+from django.contrib.postgres.fields import ArrayField
 
 
 @python_2_unicode_compatible
@@ -317,6 +319,10 @@ def get_search_filters(filters):
         return []
 
 
+def get_office_restriction_values():
+    return list(OfficeRestrictionChoices.values.keys())
+
+
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
@@ -442,6 +448,15 @@ class InitiativePlatformSettings(BasePlatformSettings):
             "Allow activity managers to specify work location restrictions on activities."
         ),
     )
+
+    available_office_restrictions = ArrayField(
+        models.CharField(
+            max_length=200,
+            choices=OfficeRestrictionChoices.choices
+        ),
+        default=get_office_restriction_values
+    )
+
     default_office_restriction = models.CharField(
         _("Default work location restriction"),
         default=OfficeRestrictionChoices.all,
@@ -449,6 +464,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
         blank=True,
         null=True,
         max_length=100,
+    )
+
+    allow_disable_office_filter = models.BooleanField(
+        _("Allow members to see all activities"),
+        default=True,
+        help_text=_(
+            "Members can choose to view activities outside their work location"
+        ),
     )
 
     enable_multiple_dates = models.BooleanField(

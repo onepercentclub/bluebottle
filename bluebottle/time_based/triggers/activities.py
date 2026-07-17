@@ -326,6 +326,13 @@ class TimeBasedTriggers(ActivityTriggers):
 @register(DateActivity)
 class DateActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
+        ModelChangedTrigger(
+            ['title', 'description', 'image'],
+            effects=[
+                UpdateEventEffect,
+            ]
+        ),
+
         TransitionTrigger(
             DateStateMachine.reopen_manually,
             effects=[

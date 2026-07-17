@@ -674,6 +674,9 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
             'capacity', 'sub_event', 'review', 'join_mode', 'application_deadline',
         )
 
+    def get_contributor_count(self, obj):
+        return obj.participants.filter(status__in=['accepted', 'new', 'succeeded']).count()
+
     def create(self, validated_data):
         slots = validated_data.pop('slots', [])
         result = super().create(validated_data)
@@ -752,7 +755,6 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
         return SlotModeChoices.scheduled
 
     def get_contributor_count(self, obj):
-        print(list(part.status for part in obj.active_participants.all()))
         return obj.active_participants.count()
 
     class Meta(BaseFederatedActivitySerializer.Meta):

@@ -43,6 +43,7 @@ def create_task(request, tenant):
         print('Post to inbox:', request.data['type'], request.data['object'], request.headers['Host'])
 
         serializer.is_valid(raise_exception=True)
+
         try:
             serializer.save()
         except TypeError as e:

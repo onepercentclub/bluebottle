@@ -1267,6 +1267,8 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                         is_participant
                     ]
                 ),
+                SendJoinEffect,
+                SyncRelatedEvent
             ]
         ),
 
@@ -1293,7 +1295,6 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.accept,
             effects=[
-                SendJoinEffect,
                 TransitionEffect(
                     RegistrationParticipantStateMachine.succeed,
                     conditions=[participant_slot_is_finished]
@@ -1404,6 +1405,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             DateParticipantStateMachine.reapply,
             effects=[
                 SendJoinEffect,
+                SyncRelatedEvent,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,

@@ -15,7 +15,7 @@ from bluebottle.activities.messages.reviewer import (
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
 from bluebottle.activity_pub.effects import (
-    PublishAdoptionEffect, CreateEffect, CancelEffect, FinishEffect, UpdateEventEffect
+    LockEffect, PublishAdoptionEffect, CreateEffect, CancelEffect, FinishEffect, UpdateEventEffect
 )
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
@@ -302,6 +302,14 @@ class TimeBasedTriggers(ActivityTriggers):
                 CancelEffect
             ]
         ),
+
+        TransitionTrigger(
+            TimeBasedStateMachine.lock,
+            effects=[
+                LockEffect
+            ]
+        ),
+
         ModelChangedTrigger(
             'review',
             effects=[

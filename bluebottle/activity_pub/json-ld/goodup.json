@@ -6,6 +6,7 @@
     "Start": "goodup:Start",
     "Cancel": "goodup:Cancel",
     "Finish": "goodup:Finish",
+    "Lock": "goodup:Lock",
     "GoodDeed": "goodup:GoodDeed",
     "DoGoodEvent": "goodup:DoGoodEvent",
     "CollectCampaign": "goodup:CollectCampaign",

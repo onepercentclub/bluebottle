@@ -960,10 +960,16 @@ class Leave(Transition):
 
     def transition(self):
         if self.object.is_local:
-            contributor = self.object.origin.contributors.get(
-                remote_user=self.actor.adopted
-            )
-            contributor.states.withdraw(save=True)
+            if isinstance(self.object, DoGoodEvent) and self.object.activity_type == 'PeriodicActivity':
+                registration = self.object.origin.registrations.get(
+                    remote_user=self.actor.adopted
+                )
+                registration.states.stop(save=True)
+            else:
+                contributor = self.object.origin.contributors.get(
+                    remote_user=self.actor.adopted
+                )
+                contributor.states.withdraw(save=True)
 
             return True
 
@@ -1019,6 +1025,13 @@ class Finish(Transition):
 
         if self.object.link:
             self.object.link.states.succeed(save=True)
+            return True
+
+
+class Lock(Transition):
+    def transition(self):
+        if self.object.adopted:
+            self.object.adopted.states.lock(save=True)
             return True
 
 

@@ -487,7 +487,6 @@ class SyncTestCase(ActivityPubTestCase):
         self.test_join()
 
         with LocalTenant(self.other_tenant):
-            print('Leaving!!!!!!!!!!!!!!!!!!!!!!!!!!')
             self.participant.states.withdraw(save=True)
             self.adopted.origin.refresh_from_db()
             self.assertEqual(self.adopted.origin.contributor_count, 0)
@@ -550,7 +549,7 @@ class SyncTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             self.adopted.refresh_from_db()
-            self.assertEqual(self.model.status, 'succeeded')
+            self.assertStatus(self.adopted, 'succeeded')
 
     def test_cancel(self):
         self.test_adopt()
@@ -560,7 +559,7 @@ class SyncTestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             self.adopted.refresh_from_db()
-            self.assertEqual(self.model.status, 'cancelled')
+            self.assertStatus(self.adopted, 'cancelled')
 
 
 class LinkTestCase(ActivityPubTestCase):
@@ -713,6 +712,14 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         )
         self.submit()
 
+    def test_lock(self):
+        self.test_adopt()
+        self.model.states.lock(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertStatus(self.adopted, 'full')
+
     def join(self):
         registration = DeadlineRegistrationFactory.create(
             activity=self.adopted,
@@ -803,7 +810,6 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def join(self):
         super().join()
-        self.participant = self.participant.participants.first()
 
     def test_join(self):
         super().test_join()
@@ -817,9 +823,36 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()
             self.assertEqual(
-                self.participant.slot.origin.pub_url,
+                self.participant.participants.get().slot.origin.pub_url,
                 slot_url
             )
+
+    def test_leave(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.states.stop(save=True)
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 0)
+
+        self.synced_participant.refresh_from_db()
+        self.assertEqual(
+            self.synced_participant.status, 'stopped'
+        )
+
+    def test_rejoin(self):
+        self.test_leave()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.states.start(save=True)
+
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 1)
+
+        self.synced_participant.refresh_from_db()
+        self.assertEqual(
+            self.synced_participant.status, 'accepted'
+        )
 
     def test_next_slot(self):
         self.test_join()

@@ -722,6 +722,9 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     def get_slot_mode(self, obj):
         return SlotModeChoices.periodic
 
+    def get_contributor_count(self, obj):
+        return obj.registrations.filter(status__in=['new', 'accepted']).count()
+
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = PeriodicActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
@@ -966,6 +969,9 @@ class PeriodicParticipantSerializer(BaseContributorSerializer):
 
 class PeriodicRegistrationSerializer(BaseContributorSerializer):
     model = PeriodicRegistration
+
+    def update(self, contributor, validated_data):
+        contributor.states.start(save=True)
 
 
 class DateRegistrationSerializer(BaseContributorSerializer):

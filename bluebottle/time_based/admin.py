@@ -33,6 +33,7 @@ from bluebottle.activities.admin import (
     ContributionChildAdmin,
     ContributorChildAdmin,
 )
+from bluebottle.activities.models import Activity
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.files.widgets import PrivateDocumentWidget
 from bluebottle.fsm.admin import (
@@ -575,9 +576,24 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
-    readonly_fields = ('status_label', 'edit')
+    readonly_fields = ('status_label', 'edit', 'platform')
     fields = ('edit', 'user', 'status_label',)
     raw_id_fields = ('user',)
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        try:
+            obj.activity_pub_model
+            return list(fields) + ['remote_user', 'platform']
+        except (Activity.activity_pub_model.RelatedObjectDoesNotExist, AttributeError):
+            pass
+
+        return fields
+
+    def platform(self, obj):
+        if obj.remote_user:
+            return obj.remote_user.origin.source.name
+        return "-"
 
     def edit(self, obj):
         if not obj.user and obj.activity.has_deleted_data:

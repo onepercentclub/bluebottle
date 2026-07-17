@@ -20,6 +20,7 @@ from bluebottle.activity_pub.models import (
     Start,
     Cancel,
     Finish,
+    Lock,
     Join,
     Leave,
     Organization,
@@ -462,6 +463,19 @@ class FinishSerializer(BaseActivitySerializer):
 
     class Meta(BaseActivitySerializer.Meta):
         model = Finish
+
+
+class LockSerializer(BaseActivitySerializer):
+    type = TypeField('Lock')
+    object = RelatedResourceField(
+        type=(
+            'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
+            'CollectCampaign', 'DoGoodEvent'
+        )
+    )
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Lock
 
 
 class JoinSerializer(BaseActivitySerializer):

@@ -987,8 +987,20 @@ class LinkFundingTestCase(FundingStripeMixin, LinkTestCase, BluebottleTestCase):
             self.model.save()
 
         with LocalTenant(self.other_tenant):
-            link = LinkedActivity.objects.get()
+            link = LinkedFunding.objects.get()
             self.assertEqual(link.donated, Money(12, 'EUR'))
+
+    def test_update_donated_amount_includes_matching(self):
+        self.test_link()
+
+        with mock.patch('requests.get', return_value=self.mock_response):
+            self.model.amount_donated = Money(90, 'EUR')
+            self.model.amount_matching = Money(30, 'EUR')
+            self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            link = LinkedFunding.objects.get()
+            self.assertEqual(link.donated, Money(120, 'EUR'))
 
     def test_deadline_maps_to_end(self):
         self.test_link()

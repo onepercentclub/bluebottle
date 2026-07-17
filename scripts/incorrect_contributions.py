@@ -208,6 +208,7 @@ def run(*args):
                 contributor__in=PeriodicParticipant.objects.filter(
                     user__isnull=False,
                     status__in=('accepted', 'stopped'),
+                    slot__status__in=('finished'),
                     registration__status__in=('accepted', 'stopped'),
                     activity__status__in=('succeeded', 'open'),
                 ),

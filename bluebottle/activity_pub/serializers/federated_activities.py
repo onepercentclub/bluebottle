@@ -386,8 +386,8 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     end_time = serializers.DateTimeField(source='deadline')
     target = serializers.DecimalField(source='target.amount', decimal_places=2, max_digits=10)
     target_currency = serializers.CharField(source='target.currency')
-    donated = serializers.DecimalField(source='amount_donated.amount', decimal_places=2, max_digits=10)
-    donated_currency = serializers.CharField(source='amount_donated.currency')
+    donated = serializers.DecimalField(source='amount_raised.amount', decimal_places=2, max_digits=10)
+    donated_currency = serializers.CharField(source='amount_raised.currency')
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Funding
@@ -397,15 +397,16 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
             'donated', 'donated_currency'
         )
 
-    def to_internal_value(self, data):
-        internal_value = super().to_internal_value(data)
+    def to_internal_value(self, validated_data):
+        internal_value = super().to_internal_value(validated_data)
         if internal_value.get('target'):
             internal_value['target'] = Money(
                 **internal_value['target']
             )
-        if internal_value.get('amount_donated'):
+        if internal_value.get('amount_raised'):
+            donated = internal_value.pop('amount_raised')
             internal_value['amount_donated'] = Money(
-                **internal_value['amount_donated']
+                **donated
             )
 
         return internal_value

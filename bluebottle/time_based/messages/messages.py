@@ -113,30 +113,6 @@ class DeadlineChangedNotification(TransitionMessage):
         return context
 
 
-class ReminderSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
-    """
-    Reminder notification for a single date activity
-    """
-    subject = pgettext('platform-email', 'The activity "{title}" will take place in a few days!')
-    template = 'messages/reminder_single_date'
-    send_once = True
-    context = {
-        'title': 'title',
-    }
-
-    @property
-    def action_link(self):
-        return self.obj.get_absolute_url()
-
-    action_title = pgettext('platform-email', 'View activity')
-
-    def get_recipients(self):
-        """participants that signed up"""
-        return [
-            participant.user for participant in self.obj.accepted_participants
-        ]
-
-
 class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Reminder notification for a date activity slot

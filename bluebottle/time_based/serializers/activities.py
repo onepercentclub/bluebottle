@@ -441,7 +441,9 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         if hasattr(obj, 'origin'):
             return obj.origin.contributor_count
         else:
-            return obj.registrations.filter(status__in=['accepted', 'succeeded']).count()
+            return obj.registrations.filter(
+                status__in=['accepted', 'succeeded']
+            ).count()
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodicActivity
@@ -636,8 +638,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
         user = self.context['request'].user
         if (
-                user.is_authenticated and
-                obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
+            user.is_authenticated and
+            obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
         ):
             meeting_url = slot.online_meeting_url or None
         else:

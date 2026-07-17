@@ -284,7 +284,7 @@ class RichTextField(serializers.CharField):
         return clean_html(super().to_representation(value.html))
 
     def to_internal_value(self, data):
-        return json.dumps({'html': super().to_internal_value(data), 'delta': ''})
+        return json.dumps({'html': clean_html(super().to_internal_value(data)), 'delta': ''})
 
 
 class SafeField(serializers.CharField):

@@ -56,41 +56,24 @@ def _first_feature(response):
     return None
 
 
-def platform_language_param(primary_language=None):
+def platform_language_param():
     from bluebottle.utils.models import Language
 
-    if primary_language and ',' in primary_language:
-        return primary_language
-
-    primary_language = (primary_language or get_language() or 'en').split(',')[0]
-    codes = []
-    seen = set()
-
-    if primary_language:
-        codes.append(primary_language)
-        seen.add(primary_language)
-
-    for lang in Language.objects.all().order_by('language_name'):
-        if lang.full_code not in seen:
-            codes.append(lang.full_code)
-            seen.add(lang.full_code)
-
-    if not codes:
-        codes = ['en']
-
-    return ','.join(codes[:20])
+    return ','.join(
+        language.full_code for language in Language.objects.all()
+    ) or 'en'
 
 
 def lookup_by_mapbox_id(mapbox_id, language=None):
     return _request('/forward', {
         'q': mapbox_id,
         'limit': 1,
-        'language': platform_language_param(language),
+        'language': platform_language_param(),
     })
 
 
 # ---------------------------------------------------------------------------
-# Place-name helpers (used when syncing Mapbox features → GeoFeature)
+# Place-name helpers to set a full name on GeoFeature
 # ---------------------------------------------------------------------------
 
 def _localized_context_name(context, feature_type, language=None):
@@ -268,16 +251,6 @@ CARD_LOCATION_MODES = frozenset({
 })
 
 
-def _normalize_card_location_mode(card_location_display):
-    if not card_location_display:
-        return None
-    if isinstance(card_location_display, (list, tuple)):
-        return 'city_country'
-    if isinstance(card_location_display, str) and ',' in card_location_display:
-        return 'city_country'
-    return card_location_display
-
-
 def _first_present(*values):
     for value in values:
         if value:
@@ -372,8 +345,7 @@ def format_card_location_from_values(
     country=None,
     country_code=None,
 ):
-    mode = _normalize_card_location_mode(mode)
-    if not mode or mode not in CARD_LOCATION_MODES:
+    if mode not in CARD_LOCATION_MODES:
         return None
 
     parts = {
@@ -525,9 +497,9 @@ def _common_parts_for_keys(all_parts, keys):
 
 
 def format_common_card_location(activity, card_location_display, language, location_parts):
-    mode = _normalize_card_location_mode(card_location_display)
-    if not mode or mode not in CARD_LOCATION_MODES:
+    if card_location_display not in CARD_LOCATION_MODES:
         return None
+    mode = card_location_display
 
     if not location_parts:
         return None
@@ -806,9 +778,9 @@ def common_formatted_address_from_geofeatures(geofeature_groups, language=None):
 
 
 def format_card_location(activity, card_location_display, language, geofeatures=None):
-    mode = _normalize_card_location_mode(card_location_display)
-    if not mode or mode not in CARD_LOCATION_MODES:
+    if card_location_display not in CARD_LOCATION_MODES:
         return None
+    mode = card_location_display
 
     if geofeatures is None:
         geofeatures = getattr(activity, 'geofeature', None)

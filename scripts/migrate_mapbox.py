@@ -117,7 +117,7 @@ def _prefer_address_feature(response):
 
 
 def reverse_geocode_feature(longitude, latitude, language=None):
-    languages = mapbox_utils.platform_language_param(language)
+    languages = mapbox_utils.platform_language_param()
     try:
         response = reverse_v6(
             longitude,
@@ -225,7 +225,7 @@ def resolve_geolocation_feature(geolocation, language=None):
             'region': geolocation.province,
             'country': country_code,
             'types': ['address'],
-            'language': mapbox_utils.platform_language_param(language),
+            'language': mapbox_utils.platform_language_param(),
         }
         if address_number:
             params['address_number'] = address_number
@@ -238,7 +238,7 @@ def resolve_geolocation_feature(geolocation, language=None):
             response = forward_v6(
                 query=geolocation.formatted_address,
                 types=['address'],
-                language=mapbox_utils.platform_language_param(language),
+                language=mapbox_utils.platform_language_param(),
             )
             feature = _prefer_address_feature(response)
             if feature:
@@ -261,7 +261,7 @@ def resolve_geolocation_feature(geolocation, language=None):
         response = forward_v6(
             query=geolocation.formatted_address,
             types=['address'],
-            language=mapbox_utils.platform_language_param(language),
+            language=mapbox_utils.platform_language_param(),
         )
         return _prefer_address_feature(response)
 

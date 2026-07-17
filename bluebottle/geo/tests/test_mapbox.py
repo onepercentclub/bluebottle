@@ -227,7 +227,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         mapbox_utils.lookup_by_mapbox_id('dXJuOm1ieGFkcjox', language='en')
 
         params = mock_request.call_args[0][1]
-        self.assertEqual(params['language'], 'en,nl')
+        self.assertCountEqual(params['language'].split(','), ['en', 'nl'])
         self.assertEqual(params['q'], 'dXJuOm1ieGFkcjox')
 
     def test_get_translated_geofeature_list(self):
@@ -324,18 +324,6 @@ class MapboxUtilsTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mapbox_utils.format_card_location(activity, 'city_country', 'en'),
-            'Ouddorp, NL',
-        )
-
-    def test_format_card_location_city_country_legacy_multiselect(self):
-        geofeatures = [
-            self._card_location_geofeature('place', 'Ouddorp', 'en'),
-            self._card_location_geofeature('country', 'Netherlands', 'en'),
-        ]
-        activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
-
-        self.assertEqual(
-            mapbox_utils.format_card_location(activity, ['place', 'country_code'], 'en'),
             'Ouddorp, NL',
         )
 

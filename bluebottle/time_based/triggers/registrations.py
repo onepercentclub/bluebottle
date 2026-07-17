@@ -77,6 +77,16 @@ def is_user(effect):
     return user and effect.instance.user_id == user.id
 
 
+def is_remote(effect):
+    """Is remote participant"""
+    return bool(effect.instance.remote_user_id)
+
+
+def is_user_or_remote(effect):
+    """Registration was submitted by the participant (local or remote)"""
+    return is_user(effect) or is_remote(effect)
+
+
 def is_admin(effect):
     """Is not user"""
     user = effect.options.get("user")
@@ -105,7 +115,7 @@ class RegistrationTriggers(TriggerManager):
                     RegistrationStateMachine.auto_accept,
                     conditions=[
                         no_review_needed,
-                        is_user
+                        is_user_or_remote
                     ]
                 ),
                 TransitionEffect(

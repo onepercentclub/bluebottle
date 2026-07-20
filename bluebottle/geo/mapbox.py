@@ -486,7 +486,7 @@ def _common_parts_for_keys(all_parts, keys):
             merged['country'] = all_parts[0].get('country')
             merged['country_code'] = all_parts[0].get('country_code')
         else:
-            values = [part.get(key) for part in all_parts]
+            values = [part.get(key) for part in all_parts if part]
             if any(not value for value in values):
                 return None
             if len(set(values)) != 1:

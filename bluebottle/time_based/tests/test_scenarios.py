@@ -126,15 +126,15 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         )
         assert_registration_status(self, self.activity, self.supporter, status='accepted')
         assert_participant_status(self, slot, self.supporter, status='accepted')
-        api_registration_transition(
+        api_participant_transition(
             self, self.activity, self.supporter,
-            transition='reject', request_user=self.owner
+            transition='remove', request_user=self.owner
         )
-        assert_registration_status(self, self.activity, self.supporter, status='rejected')
-        assert_participant_status(self, slot, self.supporter, status='rejected')
-        api_registration_transition(
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+        assert_participant_status(self, slot, self.supporter, status='removed')
+        api_participant_transition(
             self, self.activity, self.supporter,
-            transition='accept', request_user=self.owner
+            transition='readd', request_user=self.owner
         )
         assert_registration_status(self, self.activity, self.supporter, status='accepted')
         assert_participant_status(self, slot, self.supporter, status='accepted')
@@ -248,14 +248,14 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         api_participant_transition(self, self.slot1, self.supporter, transition='reapply')
         assert_participant_status(self, self.slot1, self.supporter, status='accepted')
         assert_status(self, self.slot1, 'full')
-        api_registration_transition(
-            self, self.activity, self.supporter, transition='reject', request_user=self.owner
+        api_participant_transition(
+            self, self.activity, self.supporter, transition='remove', request_user=self.owner
         )
-        assert_registration_status(self, self.activity, self.supporter, status='rejected')
-        assert_participant_status(self, self.slot1, self.supporter, status='rejected')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+        assert_participant_status(self, self.slot1, self.supporter, status='removed')
         assert_status(self, self.slot1, 'open')
-        api_registration_transition(
-            self, self.activity, self.supporter, transition='accept', request_user=self.owner
+        api_participant_transition(
+            self, self.activity, self.supporter, transition='readd', request_user=self.owner
         )
         assert_registration_status(self, self.activity, self.supporter, status='accepted')
         assert_participant_status(self, self.slot1, self.supporter, status='accepted')

@@ -81,7 +81,7 @@ class RegistrationStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        [new, accepted],
+        new,
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant of this activity."),

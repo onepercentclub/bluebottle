@@ -278,7 +278,9 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
     contributor_count = serializers.SerializerMethodField(required=False, allow_null=True)
 
     def get_contributor_count(self, obj):
-        return obj.participants.count()
+        return obj.participants.filter(
+            status__in=['accepted', 'new', 'succeeded', 'scheduled']
+        ).count()
 
     def get_url(self, obj):
         return connection.tenant.build_absolute_url(

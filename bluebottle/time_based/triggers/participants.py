@@ -390,6 +390,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.reapply,
             effects=[
                 SendJoinEffect,
+                SyncRelatedEvent,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[

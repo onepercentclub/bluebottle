@@ -699,7 +699,7 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
 class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
     participant_factory = DeadlineParticipantFactory
-    expected_participant_status = 'accepted'
+    expected_participant_status = 'succeeded'
 
     motivation = 'Some motivation'
 
@@ -826,7 +826,6 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def test_join(self):
         super().test_join()
-        self.synced_participant.states.accept(save=True)
         slot_url = self.model.slots.first().activity_pub_model.pub_url
 
         self.assertEqual(

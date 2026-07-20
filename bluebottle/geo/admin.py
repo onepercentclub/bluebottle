@@ -168,8 +168,8 @@ class GeolocationGeoFeatureInline(admin.TabularInline):
     model = Geolocation.geofeatures.through
     extra = 0
     can_delete = False
-    verbose_name = _('Geo feature')
-    verbose_name_plural = _('Geo features')
+    verbose_name = _('Details')
+    verbose_name_plural = _('Details')
     fields = ('feature_type', 'name', 'place_name')
     readonly_fields = ('feature_type', 'name', 'place_name')
 
@@ -251,19 +251,19 @@ class GeolocationAdmin(admin.ModelAdmin):
             fieldsets = (
                 (_('Location'), {'fields': ('map', 'place_name', 'mapbox_id', 'country')}),
             )
-        if request.user.is_superuser:
+
+        if obj and obj.pk:
             fieldsets = fieldsets + (
-                (_('Old info (superuser)'), {
+                (_('Related objects'), {'fields': ('related_objects_display',)}),
+            )
+        if request.user.is_superuser and self.force_edit(request):
+            fieldsets = fieldsets + (
+                (_('Old info'), {
                     'fields': (
                         'locality', 'street', 'street_number', 'postal_code',
                         'province', 'formatted_address',
                     )
                 }),
-            )
-
-        if obj and obj.pk:
-            fieldsets = fieldsets + (
-                (_('Related objects'), {'fields': ('related_objects_display',)}),
             )
         return fieldsets
 

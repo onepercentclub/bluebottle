@@ -211,6 +211,8 @@ def run(*args):
                     slot__status__in=('finished'),
                     registration__status__in=('accepted', 'stopped'),
                     activity__status__in=('succeeded', 'open'),
+                ).exclude(
+                    slot__isnull=True
                 ),
             )
 

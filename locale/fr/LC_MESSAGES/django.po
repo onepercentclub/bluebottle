@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-16 14:53+0200\n"
-"PO-Revision-Date: 2026-07-16 12:53\n"
+"POT-Creation-Date: 2026-07-21 13:13+0200\n"
+"PO-Revision-Date: 2026-07-21 11:14\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -35,7 +35,8 @@ msgstr "Editer"
 
 #: bluebottle/activities/admin.py:220 bluebottle/activities/admin.py:343
 #: bluebottle/funding_stripe/admin.py:203
-#: bluebottle/funding_stripe/admin.py:275 bluebottle/time_based/admin.py:308
+#: bluebottle/funding_stripe/admin.py:275 bluebottle/geo/admin.py:171
+#: bluebottle/geo/admin.py:172 bluebottle/time_based/admin.py:308
 #: bluebottle/time_based/admin.py:456
 msgid "Details"
 msgstr "Détails du produit"
@@ -1889,7 +1890,7 @@ msgstr "activité liée"
 
 #: bluebottle/activity_links/models.py:90 bluebottle/activity_pub/models.py:321
 #: bluebottle/deeds/models.py:30 bluebottle/deeds/models.py:37
-#: bluebottle/initiatives/models.py:333
+#: bluebottle/initiatives/models.py:341
 msgid "Deed"
 msgstr "Acte"
 
@@ -1926,7 +1927,7 @@ msgstr "Activité sur date"
 msgid "Recurring activity"
 msgstr "Activité récurrente"
 
-#: bluebottle/activity_links/models.py:178 bluebottle/initiatives/models.py:332
+#: bluebottle/activity_links/models.py:178 bluebottle/initiatives/models.py:340
 #: bluebottle/members/admin.py:900 bluebottle/time_based/models.py:910
 msgid "Past date activity"
 msgstr "Activité à date passée"
@@ -2257,7 +2258,7 @@ msgstr "Collecter des campagnes"
 
 #: bluebottle/activity_pub/models.py:354 bluebottle/activity_pub/models.py:355
 #: bluebottle/funding/models.py:228 bluebottle/impact/models.py:28
-#: bluebottle/initiatives/models.py:325
+#: bluebottle/initiatives/models.py:333
 #: bluebottle/settings/admin_dashboard.py:116
 msgid "Funding"
 msgstr "Financement"
@@ -3335,7 +3336,7 @@ msgid "You are about to disable two-factor authentication. This weakens your acc
 msgstr "Vous êtes sur le point de désactiver l'authentification à deux facteurs. Cela affaiblit la sécurité de votre compte, êtes-vous sûr?"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/disable.html:18
-#: bluebottle/funding_stripe/states.py:165 bluebottle/initiatives/models.py:342
+#: bluebottle/funding_stripe/states.py:165 bluebottle/initiatives/models.py:350
 msgid "Disable"
 msgstr "Désactiver"
 
@@ -4118,7 +4119,7 @@ msgstr "Élément"
 msgid "location hint"
 msgstr "indice de localisation"
 
-#: bluebottle/collect/models.py:83 bluebottle/initiatives/models.py:334
+#: bluebottle/collect/models.py:83 bluebottle/initiatives/models.py:342
 msgid "Collect activity"
 msgstr "Collecter une activité"
 
@@ -6830,14 +6831,6 @@ msgstr "Région de lieu de travail"
 msgid "SSO"
 msgstr "SSO"
 
-#: bluebottle/geo/admin.py:171
-msgid "Geo feature"
-msgstr "Caractéristique géographique"
-
-#: bluebottle/geo/admin.py:172
-msgid "Geo features"
-msgstr "Caractéristiques géographiques"
-
 #: bluebottle/geo/admin.py:193
 msgid "Place name"
 msgstr "Nom de lieu"
@@ -6846,13 +6839,13 @@ msgstr "Nom de lieu"
 msgid "Geolocation"
 msgstr "Géolocalisation"
 
-#: bluebottle/geo/admin.py:256
-msgid "Old info (superuser)"
-msgstr "Anciennes informations (super utilisateur)"
-
-#: bluebottle/geo/admin.py:266 bluebottle/geo/admin.py:277
+#: bluebottle/geo/admin.py:257 bluebottle/geo/admin.py:277
 msgid "Related objects"
 msgstr "Objets associés"
+
+#: bluebottle/geo/admin.py:261
+msgid "Old info"
+msgstr "Anciennes informations"
 
 #: bluebottle/geo/models.py:37
 msgid "numeric code"
@@ -8169,65 +8162,65 @@ msgstr "Sélectionnez une région"
 msgid "Local / From partner"
 msgstr "Local / Du partenaire"
 
-#: bluebottle/initiatives/models.py:326
-msgid "Grant Application"
-msgstr "Demande de subvention"
-
-#: bluebottle/initiatives/models.py:327
-msgid "Activity during a period"
-msgstr "Activité pendant une période"
-
-#: bluebottle/initiatives/models.py:328
-msgid "Activity on a specific date"
-msgstr "Activité à une date spécifique"
-
-#: bluebottle/initiatives/models.py:329
-msgid "Activity within a deadline"
-msgstr "Activité dans un délai"
-
-#: bluebottle/initiatives/models.py:330
-msgid "Scheduled activity"
-msgstr "Activité planifiée"
-
-#: bluebottle/initiatives/models.py:331
-msgid "Periodic Activity"
-msgstr "Activité périodique"
-
-#: bluebottle/initiatives/models.py:337
-msgid "E-mail"
-msgstr "Courriel"
-
-#: bluebottle/initiatives/models.py:338
-msgid "Phone"
-msgstr "Téléphone"
-
-#: bluebottle/initiatives/models.py:343
-msgid "Unique per activity"
-msgstr "Unique par activité"
-
-#: bluebottle/initiatives/models.py:344
-msgid "Same for all activities"
-msgstr "Identique pour toutes les activités"
-
-#: bluebottle/initiatives/models.py:348
+#: bluebottle/initiatives/models.py:324
 msgid "Neighbourhood"
 msgstr "Quartier"
 
-#: bluebottle/initiatives/models.py:349
+#: bluebottle/initiatives/models.py:325
 msgid "Neighbourhood + city"
 msgstr "Quartier + ville"
 
-#: bluebottle/initiatives/models.py:350
+#: bluebottle/initiatives/models.py:326
 msgid "City"
 msgstr "Ville"
 
-#: bluebottle/initiatives/models.py:351
+#: bluebottle/initiatives/models.py:327
 msgid "City + region"
 msgstr "Ville + région"
 
-#: bluebottle/initiatives/models.py:352
+#: bluebottle/initiatives/models.py:328
 msgid "City + country"
 msgstr "Ville + pays"
+
+#: bluebottle/initiatives/models.py:334
+msgid "Grant Application"
+msgstr "Demande de subvention"
+
+#: bluebottle/initiatives/models.py:335
+msgid "Activity during a period"
+msgstr "Activité pendant une période"
+
+#: bluebottle/initiatives/models.py:336
+msgid "Activity on a specific date"
+msgstr "Activité à une date spécifique"
+
+#: bluebottle/initiatives/models.py:337
+msgid "Activity within a deadline"
+msgstr "Activité dans un délai"
+
+#: bluebottle/initiatives/models.py:338
+msgid "Scheduled activity"
+msgstr "Activité planifiée"
+
+#: bluebottle/initiatives/models.py:339
+msgid "Periodic Activity"
+msgstr "Activité périodique"
+
+#: bluebottle/initiatives/models.py:345
+msgid "E-mail"
+msgstr "Courriel"
+
+#: bluebottle/initiatives/models.py:346
+msgid "Phone"
+msgstr "Téléphone"
+
+#: bluebottle/initiatives/models.py:351
+msgid "Unique per activity"
+msgstr "Unique par activité"
+
+#: bluebottle/initiatives/models.py:352
+msgid "Same for all activities"
+msgstr "Identique pour toutes les activités"
 
 #: bluebottle/initiatives/models.py:358
 msgid "Enable team activities where teams sign-up instead of individuals."

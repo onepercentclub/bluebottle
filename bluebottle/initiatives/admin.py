@@ -17,7 +17,7 @@ from bluebottle.initiatives.models import (
     Initiative,
     InitiativePlatformSettings,
     InitiativeSearchFilter,
-    Theme,
+    Theme, ActivityCardLocationChoices,
 )
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.offices.admin import RegionManagerAdminMixin
@@ -314,7 +314,7 @@ class InitiativePlatformSettingsForm(forms.ModelForm):
     )
 
     card_location_display = forms.ChoiceField(
-        choices=InitiativePlatformSettings.ActivityCardLocationChoices.choices,
+        choices=ActivityCardLocationChoices.choices,
         widget=forms.RadioSelect,
         label=_('Activity card location'),
     )

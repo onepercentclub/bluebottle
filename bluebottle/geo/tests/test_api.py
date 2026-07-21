@@ -188,14 +188,12 @@ class LocationListTestCase(GeoTestCase):
 
         static_map_url = data['attributes']['static-map-url']
         self.assertTrue(
-            static_map_url.startswith('https://maps.googleapis.com/maps/api/staticmap?')
+            static_map_url.startswith(
+                'https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/'
+            )
         )
-        self.assertTrue(
-            'signature=' in static_map_url
-        )
-        self.assertTrue(
-            'center=10' in static_map_url
-        )
+        self.assertIn('access_token=', static_map_url)
+        self.assertIn(',10/422x422', static_map_url)
 
     def test_api_location_closed_platform(self):
         member_settings = MemberPlatformSettings.load()
@@ -251,13 +249,15 @@ class GeolocationCreateTestCase(GeoTestCase):
 
         static_map_url = response.data['static_map_url']
         self.assertTrue(
-            static_map_url.startswith('https://maps.googleapis.com/maps/api/staticmap?')
+            static_map_url.startswith(
+                'https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/'
+            )
         )
-        self.assertTrue(
-            'signature=' in static_map_url
-        )
-        self.assertTrue(
-            'center={latitude},{longitude}'.format(**response.data['position']) in static_map_url
+        self.assertIn('access_token=', static_map_url)
+        position = response.data['position']
+        self.assertIn(
+            '{longitude},{latitude},10/422x422'.format(**position),
+            static_map_url,
         )
 
     @mock.patch(

@@ -4,12 +4,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.test.client import RequestFactory
 from django.utils.timezone import now
 
-from bluebottle.geo.serializers import (
-    formatted_address_from_geolocation,
-    locality_from_geolocation,
-)
+from bluebottle.geo.serializers import activity_geolocation_display
 from bluebottle.geo.models import GeoFeature
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory, CountryFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -197,13 +193,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             {
                 'has_multiple': False,
                 'is_online': False,
-                'location': {
-                    'locality': locality_from_geolocation(slot.location),
-                    'formattedAddress': formatted_address_from_geolocation(slot.location),
-                    'country': {
-                        'code': slot.location.country.alpha2_code
-                    }
-                },
+                'location': activity_geolocation_display([slot.location]),
                 'online_meeting_url': None,
                 'location_hint': None,
             }
@@ -298,10 +288,8 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'has_multiple': True,
                 'is_online': False,
                 'location': {
-                    'locality': 'Utrecht',
-                    'formattedAddress': (
-                        'Louis Armstronglaan, 3543 EB Utrecht, Netherlands'
-                    ),
+                    'locality': 'Louis Armstronglaan',
+                    'formattedAddress': 'Louis Armstronglaan',
                     'country': {
                         'code': location_a.country.alpha2_code,
                     },
@@ -312,10 +300,6 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
         )
 
     def test_location_info_multiple_locations_same_region(self):
-        settings = InitiativePlatformSettings.load()
-        settings.card_location_display = 'city_country'
-        settings.save()
-
         location_a = self._geolocation_with_geofeatures(
             'Damrak 1, Amsterdam, Netherlands',
             {
@@ -346,8 +330,8 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
                 'has_multiple': True,
                 'is_online': False,
                 'location': {
-                    'locality': 'Amsterdam',
-                    'formattedAddress': 'North Holland, NL',
+                    'locality': 'North Holland',
+                    'formattedAddress': 'North Holland',
                     'country': {
                         'code': location_a.country.alpha2_code,
                     },
@@ -368,18 +352,13 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             location_hint='test hint'
         )
 
+        expected = activity_geolocation_display([location])
         self.assertAttribute(
             'location_info',
             {
                 'has_multiple': False,
                 'is_online': False,
-                'location': {
-                    'locality': locality_from_geolocation(location),
-                    'formattedAddress': formatted_address_from_geolocation(location),
-                    'country': {
-                        'code': location.country.alpha2_code
-                    }
-                },
+                'location': expected,
                 'online_meeting_url': None,
                 'location_hint': None,
             }
@@ -398,13 +377,7 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
             {
                 'has_multiple': False,
                 'is_online': False,
-                'location': {
-                    'locality': locality_from_geolocation(location),
-                    'formattedAddress': formatted_address_from_geolocation(location),
-                    'country': {
-                        'code': location.country.alpha2_code
-                    }
-                },
+                'location': activity_geolocation_display([location]),
                 'online_meeting_url': None,
                 'location_hint': None,
             },

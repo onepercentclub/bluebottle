@@ -9,17 +9,10 @@ from bluebottle.activities.serializers.preview import (
     ActivityPreviewSlotSelection,
 )
 from bluebottle.activities.serializers.serializers import ActivityPreviewSerializer
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 
 
 class ActivityPreviewLocationTestCase(BluebottleTestCase):
-
-    def setUp(self):
-        super().setUp()
-        settings = InitiativePlatformSettings.load()
-        settings.card_location_display = 'city_country'
-        settings.save()
 
     def _geofeature(self, feature_type, name, **extra):
         defaults = {
@@ -67,7 +60,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
                 )
             ],
             'geofeature': [
-                self._geofeature('place', 'Ouddorp'),
+                self._geofeature('place', 'Ouddorp', is_primary=True),
                 self._geofeature('country', 'Netherlands'),
             ],
             'country': [],
@@ -83,7 +76,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
             context=self._context(),
         ).to_representation(self._activity())
 
-        self.assertEqual(location, 'Ouddorp, NL')
+        self.assertEqual(location, 'Ouddorp')
 
     def test_slotted_location_without_geofeatures_returns_none(self):
         activity = self._activity(geofeature=[])
@@ -139,11 +132,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
 
         self.assertEqual(location, 'Netherlands')
 
-    def test_neighbourhood_city_multiple_locations_uses_locality_city(self):
-        settings = InitiativePlatformSettings.load()
-        settings.card_location_display = 'neighbourhood_city'
-        settings.save()
-
+    def test_multiple_locations_use_common_locality(self):
         activity = self._activity(
             slots=[
                 self._slot(
@@ -171,13 +160,9 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
             context=self._context(),
         ).to_representation(activity)
 
-        self.assertEqual(location, 'Utrecht-Centrum, Utrecht')
+        self.assertEqual(location, 'Utrecht-Centrum')
 
-    def test_neighbourhood_city_multiple_locations_uses_common_city(self):
-        settings = InitiativePlatformSettings.load()
-        settings.card_location_display = 'neighbourhood_city'
-        settings.save()
-
+    def test_multiple_locations_use_common_place(self):
         activity = self._activity(
             slots=[
                 self._slot(
@@ -205,11 +190,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
 
         self.assertEqual(location, 'The Hague')
 
-    def test_city_country_multiple_cities_uses_region_country(self):
-        settings = InitiativePlatformSettings.load()
-        settings.card_location_display = 'city_country'
-        settings.save()
-
+    def test_multiple_locations_use_common_region(self):
         activity = self._activity(
             slots=[
                 self._slot(
@@ -235,7 +216,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
             context=self._context(),
         ).to_representation(activity)
 
-        self.assertEqual(location, 'North Holland, NL')
+        self.assertEqual(location, 'North Holland')
 
     def test_multiple_slot_locations_without_common_feature_return_none(self):
         activity = self._activity(
@@ -276,7 +257,7 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
         serializer = ActivityPreviewSerializer(context=self._context())
         location = serializer.get_location(self._activity())
 
-        self.assertEqual(location, 'Ouddorp, NL')
+        self.assertEqual(location, 'Ouddorp')
 
     def test_common_country_sets_has_multiple_locations_false(self):
         activity = self._activity(

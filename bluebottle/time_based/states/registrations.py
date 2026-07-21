@@ -100,7 +100,7 @@ class RegistrationStateMachine(ModelStateMachine):
         description=_(
             "Cancel your participation in the activity. Participation hours will not be counted."
         ),
-        automatic=False,
+        automatic=True,
         permission=is_user,
         hide_from_admin=True,
     )

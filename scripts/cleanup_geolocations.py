@@ -1,4 +1,5 @@
 import argparse
+import sys
 from contextlib import contextmanager
 
 from django.apps import apps
@@ -40,6 +41,14 @@ def _normalize_script_args(args):
     return args
 
 
+def _print_progress(label, current, total):
+    sys.stdout.write('\r{}: {}/{}'.format(label, current, total))
+    sys.stdout.flush()
+    if current >= total:
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+
+
 def geolocation_is_used(geolocation):
     for relation in Geolocation._meta.related_objects:
         accessor_name = relation.get_accessor_name()
@@ -55,12 +64,20 @@ def pick_canonical_geolocation(geolocations):
     return min(candidates, key=lambda geolocation: geolocation.pk)
 
 
-def repoint_geolocation_references(source, target, dry_run=False):
+def repoint_geolocation_references(sources, target, dry_run=False):
+    source_ids = [source.pk for source in sources]
+    if not source_ids:
+        return 0
+
     repointed = 0
     for relation in Geolocation._meta.related_objects:
-        accessor_name = relation.get_accessor_name()
+        if relation.many_to_many:
+            continue
         field_name = relation.field.name
-        related_queryset = getattr(source, accessor_name)
+        related_model = relation.related_model
+        related_queryset = related_model.objects.filter(
+            **{'{}__in'.format(field_name): source_ids}
+        )
         count = related_queryset.count()
         if not count:
             continue
@@ -70,84 +87,89 @@ def repoint_geolocation_references(source, target, dry_run=False):
     return repointed
 
 
-def merge_geofeatures(source, target, dry_run=False):
-    geofeature_ids = list(source.geofeatures.values_list('pk', flat=True))
-    merged = 0
-    if geofeature_ids:
-        merged = len(geofeature_ids)
-        if not dry_run:
+def merge_geofeatures(sources, target, dry_run=False):
+    source_ids = [source.pk for source in sources]
+    if not source_ids:
+        return 0
+
+    through = Geolocation.geofeatures.through
+    geofeature_ids = list(
+        through.objects.filter(geolocation_id__in=source_ids)
+        .values_list('geofeature_id', flat=True)
+        .distinct()
+    )
+    merged = len(geofeature_ids)
+
+    if not dry_run:
+        if geofeature_ids:
             target.geofeatures.add(*geofeature_ids)
-    if not dry_run and source.geofeature_id and not target.geofeature_id:
-        target.geofeature_id = source.geofeature_id
-        target.save(update_fields=['geofeature_id'])
+        if not target.geofeature_id:
+            for source in sources:
+                if source.geofeature_id:
+                    target.geofeature_id = source.geofeature_id
+                    target.save(update_fields=['geofeature_id'])
+                    break
     return merged
 
 
-def delete_geolocation(geolocation, dry_run=False):
+def delete_geolocations(geolocations, dry_run=False):
     if dry_run:
         return
-    Geolocation.objects.filter(pk=geolocation.pk).delete()
+    pks = [geolocation.pk for geolocation in geolocations]
+    if pks:
+        Geolocation.objects.filter(pk__in=pks).delete()
 
 
-def merge_geolocation(source, target, dry_run=False):
-    repointed = repoint_geolocation_references(source, target, dry_run=dry_run)
-    geofeatures_merged = merge_geofeatures(source, target, dry_run=dry_run)
+def delete_geolocation(geolocation, dry_run=False):
+    delete_geolocations([geolocation], dry_run=dry_run)
+
+
+def merge_geolocations(sources, target, dry_run=False):
+    sources = list(sources)
+    repointed = repoint_geolocation_references(sources, target, dry_run=dry_run)
+    geofeatures_merged = merge_geofeatures(sources, target, dry_run=dry_run)
     if not dry_run:
-        delete_geolocation(source, dry_run=False)
-    return repointed, geofeatures_merged
+        delete_geolocations(sources, dry_run=False)
+    return len(sources), repointed, geofeatures_merged
 
 
 def deduplicate_geolocations(dry_run=False):
-    duplicate_groups = (
+    duplicate_groups = list(
         Geolocation.objects
         .values('mapbox_id', 'formatted_address')
         .annotate(count=Count('id'))
         .filter(count__gt=1)
         .order_by('-count')
     )
+    total_groups = len(duplicate_groups)
 
     groups_processed = 0
     merged_count = 0
     repointed_count = 0
     geofeatures_merged = 0
 
-    for group in duplicate_groups:
+    for index, group in enumerate(duplicate_groups, start=1):
         geolocations = Geolocation.objects.filter(
             mapbox_id=group['mapbox_id'],
             formatted_address=group['formatted_address'],
         ).order_by('pk')
         canonical = pick_canonical_geolocation(geolocations)
-        duplicates = geolocations.exclude(pk=canonical.pk)
-        if not duplicates.exists():
+        duplicates = list(geolocations.exclude(pk=canonical.pk))
+        if not duplicates:
+            _print_progress('Merging duplicate groups', index, total_groups)
             continue
 
         groups_processed += 1
-        print(
-            'Duplicate group mapbox_id={!r} formatted_address={!r} ({} records, keeping {})'.format(
-                group['mapbox_id'],
-                group['formatted_address'],
-                group['count'],
-                canonical.pk,
-            ),
-            flush=True,
+        merged, repointed, merged_features = merge_geolocations(
+            duplicates, canonical, dry_run=dry_run
         )
+        merged_count += merged
+        repointed_count += repointed
+        geofeatures_merged += merged_features
+        _print_progress('Merging duplicate groups', index, total_groups)
 
-        for duplicate in duplicates:
-            repointed, merged_features = merge_geolocation(
-                duplicate, canonical, dry_run=dry_run
-            )
-            repointed_count += repointed
-            geofeatures_merged += merged_features
-            merged_count += 1
-            print(
-                '  merged {} -> {} ({} references repointed, {} geofeatures)'.format(
-                    duplicate.pk,
-                    canonical.pk,
-                    repointed,
-                    merged_features,
-                ),
-                flush=True,
-            )
+    if total_groups == 0:
+        print('Merging duplicate groups: 0/0', flush=True)
 
     return {
         'groups_processed': groups_processed,
@@ -158,25 +180,21 @@ def deduplicate_geolocations(dry_run=False):
 
 
 def remove_unused_geolocations(dry_run=False):
-    removed_count = 0
     unused_geolocations = [
         geolocation
         for geolocation in Geolocation.objects.order_by('pk').iterator()
         if not geolocation_is_used(geolocation)
     ]
+    total = len(unused_geolocations)
 
-    for geolocation in unused_geolocations:
-        removed_count += 1
-        print(
-            'Removing unused geolocation {} ({!r})'.format(
-                geolocation.pk,
-                geolocation.formatted_address or geolocation.mapbox_id or '',
-            ),
-            flush=True,
-        )
+    for index, geolocation in enumerate(unused_geolocations, start=1):
         delete_geolocation(geolocation, dry_run=dry_run)
+        _print_progress('Removing unused geolocations', index, total)
 
-    return {'removed_count': removed_count}
+    if total == 0:
+        print('Removing unused geolocations: 0/0', flush=True)
+
+    return {'removed_count': total}
 
 
 def cleanup_tenant(dry_run=False):

@@ -3,6 +3,7 @@ from django.core import mail
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
 )
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
@@ -339,7 +340,18 @@ class SecondTeamMemberTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.other_team_member.participants.get().status, "accepted")
 
     def test_reject_registration(self):
-        self.team.registration.states.reject(save=True)
+        activity = ScheduleActivityFactory.create(
+            team_activity=True, initiative=None, review=True, image=ImageFactory.create()
+        )
+        activity.states.approve(save=True)
+
+        self.registration = TeamScheduleRegistrationFactory.create(user=self.captain)
+        self.team = TeamFactory.create(activity=activity, user=self.captain, registration=self.registration)
+        self.other_team = TeamFactory.create(activity=activity, user=self.captain, registration=self.registration)
+        self.team_member = TeamMemberFactory.create(team=self.team)
+        self.other_team_member = TeamMemberFactory.create(team=self.other_team)
+
+        self.registration.states.reject(save=True)
 
         self.team.refresh_from_db()
         self.other_team.refresh_from_db()

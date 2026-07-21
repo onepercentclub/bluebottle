@@ -162,7 +162,7 @@ class IcalTestMixin:
 
         self.assert_field(
             'DESCRIPTION',
-            f'{escaped}\, {self.model.get_absolute_url()}'
+            rf'{escaped}\, {self.model.get_absolute_url()}'
         )
 
     def test_orgnanizer(self):
@@ -209,7 +209,7 @@ class CollectIcalTestCase(IcalTestMixin, BluebottleTestCase):
         )[:-1]
         self.assert_field(
             'DESCRIPTION',
-            f'{description}\, Collecting {self.model.collect_type}\, {self.model.get_absolute_url()}'
+            rf'{description}\, Collecting {self.model.collect_type}\, {self.model.get_absolute_url()}'
         )
 
 
@@ -261,5 +261,5 @@ class OnlineDateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
         )[:-1]
         self.assert_field(
             'DESCRIPTION',
-            f'{description}\, {self.model.get_absolute_url()} Join: {self.model.online_meeting_url}'
+            rf'{description}\, {self.model.get_absolute_url()} Join: {self.model.online_meeting_url}'
         )

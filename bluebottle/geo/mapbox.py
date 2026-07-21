@@ -1,7 +1,8 @@
 import requests
-
 from django.conf import settings
 from django.utils.translation import get_language
+
+from bluebottle.initiatives.models import ActivityCardLocationChoices
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -191,15 +192,6 @@ def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
     return data
 
 
-CARD_LOCATION_FEATURE_TYPES = {
-    'address': 'address',
-    'neighborhood': 'neighborhood',
-    'locality': 'locality',
-    'place': 'place',
-    'region': 'region',
-}
-
-
 def _entry_value(entry, key, default=None):
     if entry is None:
         return default
@@ -227,28 +219,26 @@ def _entries_for_language(entries, language):
 
 
 def _card_location_level_value(geofeatures, level):
-
-    feature_type = CARD_LOCATION_FEATURE_TYPES.get(level)
-    if not feature_type:
+    if level not in [
+        'address',
+        'neighborhood',
+        'locality',
+        'place',
+        'region',
+    ]:
         return None
 
     feature = next(
         (
             geofeature for geofeature in geofeatures
-            if _entry_value(geofeature, 'feature_type') == feature_type
+            if _entry_value(geofeature, 'feature_type') == level
         ),
         None,
     )
     return _entry_value(feature, 'name') if feature else None
 
 
-CARD_LOCATION_MODES = frozenset({
-    'neighbourhood',
-    'neighbourhood_city',
-    'city',
-    'city_region',
-    'city_country',
-})
+CARD_LOCATION_MODES = ActivityCardLocationChoices.values
 
 
 def _first_present(*values):

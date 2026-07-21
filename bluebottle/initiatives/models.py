@@ -320,6 +320,14 @@ def get_office_restriction_values():
     return list(OfficeRestrictionChoices.values.keys())
 
 
+class ActivityCardLocationChoices(models.TextChoices):
+    NEIGHBOURHOOD = 'neighbourhood', _('Neighbourhood')
+    NEIGHBOURHOOD_CITY = 'neighbourhood_city', _('Neighbourhood + city')
+    CITY = 'city', _('City')
+    CITY_REGION = 'city_region', _('City + region')
+    CITY_COUNTRY = 'city_country', _('City + country')
+
+
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
@@ -343,14 +351,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("per_activity", _("Unique per activity")),
         ("generic", _("Same for all activities")),
     )
-
-    class ActivityCardLocationChoices(models.TextChoices):
-        NEIGHBOURHOOD = 'neighbourhood', _('Neighbourhood')
-        NEIGHBOURHOOD_CITY = 'neighbourhood_city', _('Neighbourhood + city')
-        CITY = 'city', _('City')
-        CITY_REGION = 'city_region', _('City + region')
-        CITY_COUNTRY = 'city_country', _('City + country')
-
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,

@@ -134,7 +134,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         for activity in response.json()['data']:
             self.assertTrue(
-                re.match('^/api/activities/\d+/image/600x337', activity['attributes']['image'])
+                re.match(r'^/api/activities/\d+/image/600x337', activity['attributes']['image'])
             )
 
     def test_deed_preview(self):

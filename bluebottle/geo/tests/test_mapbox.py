@@ -6,6 +6,7 @@ from unittest import mock
 from django.contrib.gis.geos import Point
 
 from bluebottle.geo import mapbox as mapbox_utils
+from bluebottle.geo import serializers as location_serializers
 from bluebottle.geo.models import GeoFeature, Geolocation
 from bluebottle.geo.tests.mapbox_fixtures import MAPBOX_V6_ADDRESS_FEATURE
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -248,7 +249,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         geofeature.place_name = 'Ouddorp, Nederland'
         geofeature.save()
 
-        translations = mapbox_utils.get_translated_geofeature_list(geofeature, country=country)
+        translations = location_serializers.get_translated_geofeature_list(geofeature, country=country)
         languages = {entry['language'] for entry in translations}
 
         self.assertIn('en', languages)
@@ -273,7 +274,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         geofeature.place_name = 'Berlijn, Duitsland'
         geofeature.save()
 
-        translations = mapbox_utils.get_translated_geofeature_list(geofeature)
+        translations = location_serializers.get_translated_geofeature_list(geofeature)
         languages = {entry['language'] for entry in translations}
 
         self.assertEqual(languages, {'nl'})
@@ -287,10 +288,10 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         ]
 
         self.assertIsNone(
-            mapbox_utils.format_card_location(activity, 'city_country', 'en', geofeatures=geofeatures)
+            location_serializers.format_card_location(activity, 'city_country', 'en', geofeatures=geofeatures)
         )
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city_country', 'nl', geofeatures=geofeatures),
+            location_serializers.format_card_location(activity, 'city_country', 'nl', geofeatures=geofeatures),
             'Berlijn, DE',
         )
 
@@ -323,7 +324,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city_country', 'en'),
+            location_serializers.format_card_location(activity, 'city_country', 'en'),
             'Ouddorp, NL',
         )
 
@@ -334,7 +335,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city_country', 'en'),
+            location_serializers.format_card_location(activity, 'city_country', 'en'),
             'Netherlands',
         )
 
@@ -357,7 +358,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         })()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city_country', 'nl'),
+            location_serializers.format_card_location(activity, 'city_country', 'nl'),
             'Ouddorp, NL',
         )
 
@@ -368,7 +369,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         })()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'neighbourhood', 'en'),
+            location_serializers.format_card_location(activity, 'neighbourhood', 'en'),
             'Scheveningen',
         )
 
@@ -381,7 +382,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'neighbourhood', 'en'),
+            location_serializers.format_card_location(activity, 'neighbourhood', 'en'),
             'The Hague',
         )
 
@@ -392,7 +393,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         })()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'neighbourhood_city', 'en'),
+            location_serializers.format_card_location(activity, 'neighbourhood_city', 'en'),
             'Scheveningen, The Hague',
         )
 
@@ -404,7 +405,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'neighbourhood_city', 'en'),
+            location_serializers.format_card_location(activity, 'neighbourhood_city', 'en'),
             'The Hague',
         )
 
@@ -416,7 +417,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'neighbourhood_city', 'en'),
+            location_serializers.format_card_location(activity, 'neighbourhood_city', 'en'),
             'South Holland',
         )
 
@@ -427,7 +428,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         })()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city', 'en'),
+            location_serializers.format_card_location(activity, 'city', 'en'),
             'The Hague',
         )
 
@@ -439,7 +440,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city', 'en'),
+            location_serializers.format_card_location(activity, 'city', 'en'),
             'South Holland',
         )
 
@@ -450,7 +451,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         })()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city_region', 'en'),
+            location_serializers.format_card_location(activity, 'city_region', 'en'),
             'The Hague, South Holland',
         )
 
@@ -462,7 +463,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city_region', 'en'),
+            location_serializers.format_card_location(activity, 'city_region', 'en'),
             'South Holland',
         )
 
@@ -473,7 +474,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city_region', 'en'),
+            location_serializers.format_card_location(activity, 'city_region', 'en'),
             'Netherlands',
         )
 
@@ -485,7 +486,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city_country', 'en'),
+            location_serializers.format_card_location(activity, 'city_country', 'en'),
             'South Holland, NL',
         )
 
@@ -497,13 +498,13 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         activity = type('Activity', (), {'geofeature': geofeatures, 'country': []})()
 
         self.assertEqual(
-            mapbox_utils.format_card_location(activity, 'city', 'en'),
+            location_serializers.format_card_location(activity, 'city', 'en'),
             'Ouddorp',
         )
 
     def test_format_card_location_from_values(self):
         self.assertEqual(
-            mapbox_utils.format_card_location_from_values(
+            location_serializers.format_card_location_from_values(
                 'city_country',
                 city='Ouddorp',
                 country='Netherlands',
@@ -512,7 +513,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             'Ouddorp, NL',
         )
         self.assertEqual(
-            mapbox_utils.format_card_location_from_values(
+            location_serializers.format_card_location_from_values(
                 'neighbourhood_city',
                 neighborhood='Scheveningen',
                 city='The Hague',
@@ -531,16 +532,16 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             self._card_location_geofeature('country', 'Netherlands', 'en'),
         ]
         location_parts = [
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, amsterdam, 'en'
             ),
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, rotterdam, 'en'
             ),
         ]
 
         self.assertEqual(
-            mapbox_utils.format_common_card_location(
+            location_serializers.format_common_card_location(
                 activity, 'city_country', 'en', location_parts
             ),
             'Netherlands',
@@ -561,16 +562,16 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             ),
         ]
         location_parts = [
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, amsterdam, 'en'
             ),
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, rotterdam, 'en'
             ),
         ]
 
         self.assertEqual(
-            mapbox_utils.format_common_card_location(
+            location_serializers.format_common_card_location(
                 activity, 'city_country', 'en', location_parts
             ),
             'Netherlands',
@@ -585,16 +586,16 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             self._card_location_geofeature('country', 'Netherlands', 'en'),
         ]
         location_parts = [
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, the_hague, 'en'
             ),
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, delft, 'en'
             ),
         ]
 
         self.assertEqual(
-            mapbox_utils.format_common_card_location(
+            location_serializers.format_common_card_location(
                 activity, 'city_country', 'en', location_parts
             ),
             'South Holland, NL',
@@ -615,16 +616,16 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             self._card_location_geofeature('country', 'Netherlands', 'en'),
         ]
         location_parts = [
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, location_a, 'en'
             ),
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, location_b, 'en'
             ),
         ]
 
         self.assertEqual(
-            mapbox_utils.format_common_card_location(
+            location_serializers.format_common_card_location(
                 activity, 'neighbourhood_city', 'en', location_parts
             ),
             'The Hague',
@@ -645,16 +646,16 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             self._card_location_geofeature('country', 'Netherlands', 'en'),
         ]
         location_parts = [
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, location_a, 'en'
             ),
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, location_b, 'en'
             ),
         ]
 
         self.assertEqual(
-            mapbox_utils.format_common_card_location(
+            location_serializers.format_common_card_location(
                 activity, 'neighbourhood_city', 'en', location_parts
             ),
             'Utrecht-Centrum, Utrecht',
@@ -673,16 +674,16 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             self._card_location_geofeature('country', 'Netherlands', 'en'),
         ]
         location_parts = [
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, scheveningen, 'en'
             ),
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, centrum, 'en'
             ),
         ]
 
         self.assertEqual(
-            mapbox_utils.format_common_card_location(
+            location_serializers.format_common_card_location(
                 activity, 'neighbourhood_city', 'en', location_parts
             ),
             'The Hague',
@@ -701,16 +702,16 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             self._card_location_geofeature('country', 'Netherlands', 'en'),
         ]
         location_parts = [
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, location_a, 'en'
             ),
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, location_b, 'en'
             ),
         ]
 
         self.assertEqual(
-            mapbox_utils.format_common_card_location(
+            location_serializers.format_common_card_location(
                 activity, 'neighbourhood_city', 'en', location_parts
             ),
             'Scheveningen, The Hague',
@@ -729,16 +730,16 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             self._card_location_geofeature('country', 'Netherlands', 'en'),
         ]
         location_parts = [
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, amsterdam, 'en'
             ),
-            mapbox_utils.card_location_parts_from_geofeatures(
+            location_serializers.card_location_parts_from_geofeatures(
                 activity, haarlem, 'en'
             ),
         ]
 
         self.assertEqual(
-            mapbox_utils.format_common_card_location(
+            location_serializers.format_common_card_location(
                 activity, 'city_country', 'en', location_parts
             ),
             'North Holland, NL',
@@ -757,12 +758,12 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             self._card_location_geofeature('country', 'Germany', 'en', country_code='DE'),
         ]
         location_parts = [
-            mapbox_utils.card_location_parts_from_geofeatures(activity, nl, 'en'),
-            mapbox_utils.card_location_parts_from_geofeatures(activity, de, 'en'),
+            location_serializers.card_location_parts_from_geofeatures(activity, nl, 'en'),
+            location_serializers.card_location_parts_from_geofeatures(activity, de, 'en'),
         ]
 
         self.assertIsNone(
-            mapbox_utils.format_common_card_location(
+            location_serializers.format_common_card_location(
                 activity, 'city_country', 'en', location_parts
             )
         )
@@ -788,7 +789,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         ]
 
         self.assertEqual(
-            mapbox_utils.common_formatted_address_from_geofeatures(
+            location_serializers.common_formatted_address_from_geofeatures(
                 [location_a, location_b], 'en'
             ),
             'Louis Armstronglaan, 3543 EB Utrecht, Netherlands',
@@ -805,7 +806,7 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         ]
 
         self.assertEqual(
-            mapbox_utils.common_formatted_address_from_geofeatures(
+            location_serializers.common_formatted_address_from_geofeatures(
                 [amsterdam, rotterdam], 'en'
             ),
             'Netherlands',

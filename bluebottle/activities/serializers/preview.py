@@ -4,7 +4,7 @@ import dateutil
 from django.utils.timezone import get_current_timezone, now
 from rest_framework import serializers
 
-from bluebottle.geo.mapbox import (
+from bluebottle.geo.serializers import (
     card_location_parts_from_geofeatures,
     format_card_location,
     format_common_card_location,

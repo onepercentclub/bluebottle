@@ -16,7 +16,7 @@ from bluebottle.activities.models import Activity, Organizer
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
-from bluebottle.geo.mapbox import (
+from bluebottle.geo.serializers import (
     format_multi_location_label,
     formatted_address_from_geolocation,
     locality_from_geolocation,

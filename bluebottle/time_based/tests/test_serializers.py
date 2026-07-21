@@ -4,7 +4,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.test.client import RequestFactory
 from django.utils.timezone import now
 
-from bluebottle.geo.mapbox import (
+from bluebottle.geo.serializers import (
     formatted_address_from_geolocation,
     locality_from_geolocation,
 )

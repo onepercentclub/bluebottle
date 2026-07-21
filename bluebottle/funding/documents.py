@@ -5,7 +5,7 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donor
-from bluebottle.geo.mapbox import get_translated_geofeature_list, locality_from_geolocation
+from bluebottle.geo.serializers import get_translated_geofeature_list, locality_from_geolocation
 from bluebottle.initiatives.documents import deduplicate, get_translated_country_list
 
 SCORE_MAP = {

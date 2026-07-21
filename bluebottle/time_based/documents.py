@@ -2,7 +2,7 @@ from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity, get_translated_country_list
-from bluebottle.geo.mapbox import get_translated_geofeature_list, locality_from_geolocation
+from bluebottle.geo.serializers import get_translated_geofeature_list, locality_from_geolocation
 from bluebottle.time_based.models import (
     DateActivity,
     DeadlineActivity,

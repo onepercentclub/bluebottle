@@ -6,7 +6,7 @@ from elasticsearch_dsl.field import DateRange
 from bluebottle.activities.models import Activity
 from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
-from bluebottle.geo.mapbox import get_translated_geofeature_list, locality_from_geolocation
+from bluebottle.geo.serializers import get_translated_geofeature_list, locality_from_geolocation
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.documents import (
     deduplicate,

@@ -26,7 +26,7 @@ from bluebottle.collect.tests.factories import (
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
-from bluebottle.geo.mapbox import card_location_for_geolocation
+from bluebottle.geo.serializers import card_location_for_geolocation
 from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.initiatives.models import (
     ActivitySearchFilter,

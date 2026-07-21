@@ -373,9 +373,7 @@ class Geolocation(models.Model):
         return 'Europe/Amsterdam'
 
     def save(self, *args, **kwargs):
-        import requests
-
-        from bluebottle.geo import mapbox as mapbox_utils
+        from bluebottle.geo.mapbox import sync_geolocation
 
         skip_mapbox_sync = kwargs.pop('skip_mapbox_sync', False)
         language = kwargs.pop('mapbox_language', None)
@@ -383,22 +381,7 @@ class Geolocation(models.Model):
 
         super(Geolocation, self).save(*args, **kwargs)
 
-        if (
-            skip_mapbox_sync
-            or not self.mapbox_id
-            or not mapbox_utils.is_v6_mapbox_id(self.mapbox_id)
-        ):
+        if skip_mapbox_sync:
             return
 
-        try:
-            if resolved_feature is None:
-                response = mapbox_utils.lookup_by_mapbox_id(
-                    self.mapbox_id, language=language
-                )
-                resolved_feature = mapbox_utils._first_feature(response)
-            if resolved_feature:
-                mapbox_utils.sync_geofeatures(
-                    self, resolved_feature, language=language
-                )
-        except requests.RequestException:
-            pass
+        sync_geolocation(self, language=language, feature=resolved_feature)

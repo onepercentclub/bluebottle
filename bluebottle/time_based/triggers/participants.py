@@ -1,11 +1,11 @@
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
-from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect, SyncRelatedEvent
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
 )
+from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect, SyncRelatedEvent
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -32,17 +32,17 @@ from bluebottle.time_based.messages import (
     ParticipantSlotParticipantRegisteredNotification, ParticipantChangedNotification,
     ManagerSlotParticipantWithdrewNotification,
 )
-from bluebottle.time_based.models import (
-    DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant,
-    TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
-)
 from bluebottle.time_based.messages.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
     UserParticipantWithdrewNotification,
     ManagerParticipantWithdrewNotification, UserScheduledNotification, RegisteredActivityParticipantAddedNotification,
     UserDateParticipantWithdrewNotification,
+)
+from bluebottle.time_based.models import (
+    DeadlineParticipant,
+    PeriodicParticipant, ScheduleParticipant,
+    TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
 )
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
@@ -78,7 +78,7 @@ def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
 
     settings = MemberPlatformSettings.load()
-    return (not settings.closed) and effect.instance.user.is_active
+    return (not settings.closed) and effect.instance.user and effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
@@ -390,6 +390,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.reapply,
             effects=[
                 SendJoinEffect,
+                SyncRelatedEvent,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[

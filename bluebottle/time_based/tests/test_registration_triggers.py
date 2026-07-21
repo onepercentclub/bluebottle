@@ -310,6 +310,44 @@ class DeadlineRegistrationTriggerTestCase(
         self.assertEqual(len(self.registration.participants.all()), 1)
         self.assertEqual(self.registration.participants.get().status, "new")
 
+    def test_initial_remote(self):
+        from bluebottle.activities.models import RemoteMember
+
+        remote_user = RemoteMember.objects.create(
+            email='remote@example.com',
+            first_name='Remote',
+            last_name='User',
+        )
+        self.registration = self.factory.create(
+            activity=self.activity,
+            user=None,
+            remote_user=remote_user,
+        )
+
+        self.assertEqual(self.registration.status, "accepted")
+        participant = self.registration.participants.get()
+        self.assertEqual(participant.status, "succeeded")
+
+    def test_initial_remote_review(self):
+        from bluebottle.activities.models import RemoteMember
+
+        self.activity.review = True
+        self.activity.save()
+
+        remote_user = RemoteMember.objects.create(
+            email='remote@example.com',
+            first_name='Remote',
+            last_name='User',
+        )
+        self.registration = self.factory.create(
+            activity=self.activity,
+            user=None,
+            remote_user=remote_user,
+        )
+
+        self.assertEqual(self.registration.status, "new")
+        self.assertEqual(self.registration.participants.get().status, "new")
+
     def test_accept(self):
         super().test_accept()
         self.assertEqual(self.registration.participants.get().status, "succeeded")

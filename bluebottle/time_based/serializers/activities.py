@@ -16,14 +16,7 @@ from bluebottle.activities.models import Activity, Organizer
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
-from bluebottle.geo.mapbox import (
-    format_multi_location_label,
-    formatted_address_from_geolocation,
-    locality_from_geolocation,
-)
-from bluebottle.initiatives.models import (
-    InitiativePlatformSettings,
-)
+from bluebottle.geo.serializers import activity_geolocation_display
 from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
@@ -36,7 +29,6 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
-from bluebottle.utils.utils import get_current_language
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
@@ -668,46 +660,18 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         slot = slots.first()
 
         if has_multiple:
-            language = get_current_language()
-            mode = InitiativePlatformSettings.load().card_location_display
-            common_address = format_multi_location_label(
-                obj,
-                mode,
-                language,
-                unique_locations,
-            )
-            location = None
-            if common_address:
-                reference = unique_locations[0]
-                location = {
-                    'locality': locality_from_geolocation(reference),
-                    'country': {
-                        'code': (
-                            reference.country.alpha2_code
-                            if reference.country else None
-                        ),
-                    },
-                    'formattedAddress': common_address,
-                }
-
             return {
                 'has_multiple': True,
                 'is_online': False,
                 'online_meeting_url': None,
-                'location': location,
+                'location': activity_geolocation_display(unique_locations),
                 'location_hint': None,
             }
 
         if is_online or not slot.location:
             location = None
         else:
-            location = {
-                'locality': locality_from_geolocation(slot.location),
-                'country': {
-                    'code': slot.location.country.alpha2_code if slot.location.country else None,
-                },
-                'formattedAddress': formatted_address_from_geolocation(slot.location),
-            }
+            location = activity_geolocation_display([slot.location])
 
         user = self.context['request'].user
         if (

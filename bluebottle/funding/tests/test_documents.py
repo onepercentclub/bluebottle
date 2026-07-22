@@ -1,6 +1,6 @@
+from bluebottle.activities.documents import locality_from_geolocation
 from bluebottle.funding.documents import FundingDocument
 from bluebottle.funding.tests.factories import FundingFactory
-from bluebottle.geo.mapbox import locality_from_geolocation
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.geo_utils import ensure_geolocation_geofeatures, save_built_geolocation
 from bluebottle.test.utils import BluebottleTestCase

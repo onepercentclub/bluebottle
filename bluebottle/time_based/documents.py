@@ -1,8 +1,13 @@
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import ActivityDocument, activity, get_translated_country_list
-from bluebottle.geo.mapbox import get_translated_geofeature_list, locality_from_geolocation
+from bluebottle.activities.documents import (
+    ActivityDocument,
+    activity,
+    geofeatures_for_geolocation,
+    get_translated_country_list,
+    locality_from_geolocation,
+)
 from bluebottle.time_based.models import (
     DateActivity,
     DeadlineActivity,
@@ -72,19 +77,6 @@ def deduplicate_positions(positions):
         if key not in seen:
             seen[key] = position
     return list(seen.values())
-
-
-def geofeatures_for_geolocation(geolocation):
-    geofeatures = []
-    primary_id = geolocation.geofeature_id
-    country = geolocation.country
-    for geofeature in geolocation.geofeatures.all():
-        geofeatures.extend(get_translated_geofeature_list(
-            geofeature,
-            country=country,
-            is_primary=geofeature.pk == primary_id,
-        ))
-    return geofeatures
 
 
 def slot_location_entry(geolocation, location_hint=None):

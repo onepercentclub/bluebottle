@@ -6,7 +6,6 @@ from elasticsearch_dsl.field import DateRange
 from bluebottle.activities.models import Activity
 from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
-from bluebottle.geo.mapbox import get_translated_geofeature_list, locality_from_geolocation
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.documents import (
     deduplicate,
@@ -31,6 +30,86 @@ activity.settings(
     number_of_shards=1,
     number_of_replicas=0
 )
+
+
+def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
+    from bluebottle.utils.models import Language
+
+    data = []
+    current_language = geofeature._current_language
+    country_language = country._current_language if country else None
+
+    for lang in Language.objects.all():
+        if not geofeature.has_translation(lang.full_code):
+            continue
+
+        geofeature.set_current_language(lang.full_code)
+        name = geofeature.name
+        place_name = geofeature.place_name
+        if not name and not place_name:
+            continue
+
+        entry = {
+            'id': geofeature.pk,
+            'name': name or '',
+            'place_name': place_name or '',
+            'language': lang.full_code,
+            'feature_type': geofeature.feature_type or '',
+            'is_primary': is_primary,
+        }
+        if country and country.has_translation(lang.full_code):
+            country.set_current_language(lang.full_code)
+            entry['country'] = country.name
+            entry['country_code'] = country.alpha2_code
+        data.append(entry)
+
+    geofeature._current_language = current_language
+    if country and country_language is not None:
+        country._current_language = country_language
+    return data
+
+
+def locality_from_geolocation(geolocation):
+    if not geolocation:
+        return None
+
+    primary = geolocation.geofeature
+    if primary and primary.feature_type in ('place', 'locality'):
+        return primary.name
+
+    for geofeature in geolocation.geofeatures.all():
+        if geofeature.feature_type in ('place', 'locality'):
+            return geofeature.name
+    return None
+
+
+def geofeatures_for_geolocation(geolocation):
+    if not geolocation:
+        return []
+
+    geofeatures = []
+    primary_id = geolocation.geofeature_id
+    country = geolocation.country
+    for geofeature in geolocation.geofeatures.all():
+        geofeatures.extend(get_translated_geofeature_list(
+            geofeature,
+            country=country,
+            is_primary=geofeature.pk == primary_id,
+        ))
+    return geofeatures
+
+
+def geolocation_for_activity(instance):
+    """Primary geolocation used when indexing an activity."""
+    location = getattr(instance, 'location', None)
+    if location:
+        return location
+    if getattr(instance, 'impact_location', None):
+        return instance.impact_location
+    initiative = getattr(instance, 'initiative', None)
+    if initiative and initiative.place_id:
+        return initiative.place
+    return None
 
 
 class ActivityDocument(Document):
@@ -412,25 +491,10 @@ class ActivityDocument(Document):
             return get_translated_list(instance.theme)
 
     def prepare_geofeature(self, instance):
-        location = getattr(instance, 'location', None)
-        geofeatures = []
-        if getattr(instance, 'location', None):
-            location = instance.location
-        elif getattr(instance, 'initiative', None) and instance.initiative.place_id:
-            location = instance.initiative.place
-
-        if not location or location.geofeatures.count() == 0:
+        location = geolocation_for_activity(instance)
+        if not location or not location.geofeatures.exists():
             return []
-
-        primary_id = location.geofeature_id
-        country = location.country
-        for geofeature in location.geofeatures.all():
-            geofeatures = geofeatures + get_translated_geofeature_list(
-                geofeature,
-                country=country,
-                is_primary=geofeature.pk == primary_id,
-            )
-        return geofeatures
+        return geofeatures_for_geolocation(location)
 
     def prepare_categories(self, instance):
         categories = []

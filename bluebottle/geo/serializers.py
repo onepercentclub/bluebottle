@@ -4,17 +4,86 @@ from django.conf import settings
 from django.contrib.gis.geos import Point
 from rest_framework import serializers
 from rest_framework_json_api.serializers import ModelSerializer
-from staticmaps_signature import StaticMapURLSigner
 from timezonefinder import TimezoneFinder
 
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.geo.mapbox import FEATURE_TYPE_HIERARCHY
 from bluebottle.geo.models import Country, Location, Place, Geolocation
-
-staticmap_url_signer = StaticMapURLSigner(
-    public_key=settings.STATIC_MAPS_API_KEY, private_key=settings.STATIC_MAPS_API_SECRET
-)
+from bluebottle.utils.utils import get_current_language
 
 tf = TimezoneFinder()
+
+
+def set_geofeature_language(geofeature, language=None):
+    if not geofeature:
+        return None
+    language = (language or get_current_language() or 'en').split(',')[0]
+    geofeature.set_current_language(language)
+    return geofeature
+
+
+def common_geofeature_for_geolocations(geolocations):
+    """
+    Most specific GeoFeature shared by all geolocations (same mapbox_id).
+
+    For a single geolocation, returns its primary geofeature.
+    """
+    geolocations = [geolocation for geolocation in geolocations if geolocation]
+    if not geolocations:
+        return None
+    if len(geolocations) == 1:
+        return geolocations[0].geofeature
+
+    feature_maps = []
+    for geolocation in geolocations:
+        by_type = {}
+        for geofeature in geolocation.geofeatures.all():
+            if geofeature.feature_type and geofeature.mapbox_id:
+                by_type[geofeature.feature_type] = geofeature
+        feature_maps.append(by_type)
+
+    for feature_type in FEATURE_TYPE_HIERARCHY:
+        features = [feature_map.get(feature_type) for feature_map in feature_maps]
+        if any(feature is None for feature in features):
+            continue
+        if len({feature.mapbox_id for feature in features}) == 1:
+            return features[0]
+    return None
+
+
+def activity_geolocation_display(geolocations, language=None):
+    """
+    Display fields for one or more activity geolocations.
+
+    Uses the primary geofeature, or the most specific geofeature shared by all
+    locations. Returns name/place_name in the active language only.
+    """
+    geolocations = [geolocation for geolocation in geolocations if geolocation]
+    if not geolocations:
+        return None
+
+    geofeature = set_geofeature_language(
+        common_geofeature_for_geolocations(geolocations),
+        language=language,
+    )
+    if not geofeature:
+        return None
+
+    country = geolocations[0].country
+    return {
+        'locality': geofeature.name,
+        'formattedAddress': geofeature.place_name,
+        'country': {
+            'code': country.alpha2_code if country else None,
+        },
+    }
+
+
+def card_location_for_geolocation(geolocation, language=None, activity=None):
+    display = activity_geolocation_display([geolocation], language=language)
+    if not display:
+        return None
+    return display['formattedAddress']
 
 
 class PointSerializer(serializers.CharField):
@@ -37,10 +106,10 @@ class PointSerializer(serializers.CharField):
 
 class StaticMapsField(serializers.ReadOnlyField):
     url = (
-        "https://maps.googleapis.com/maps/api/staticmap"
-        "?center={latitude},{longitude}&zoom=10&size=422x422"
-        "&maptype=roadmap&markers={latitude},{longitude}&sensor=false"
-        "&style=feature:poi|visibility:off&style=feature:poi.park|visibility:on"
+        'https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/'
+        'pin-s+3bb2d0({longitude},{latitude})/'
+        '{longitude},{latitude},10/422x422'
+        '?access_token={access_token}'
     )
 
     def to_representation(self, value):
@@ -51,9 +120,11 @@ class StaticMapsField(serializers.ReadOnlyField):
             latitude = value.coords[1]
             longitude = value.coords[0]
 
-        url = self.url.format(latitude=latitude, longitude=longitude)
-
-        return staticmap_url_signer.sign_url(url)
+        return self.url.format(
+            latitude=latitude,
+            longitude=longitude,
+            access_token=settings.MAPBOX_API_KEY,
+        )
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -199,14 +270,19 @@ class GeolocationSerializer(ModelSerializer):
                 return geolocation
         return super(GeolocationSerializer, self).create(validated_data)
 
+    def _geofeature(self, obj):
+        return set_geofeature_language(obj.geofeature)
+
     def get_formatted_address(self, obj):
-        if obj.geofeature:
-            return obj.geofeature.place_name
+        geofeature = self._geofeature(obj)
+        if geofeature:
+            return geofeature.place_name
         return obj.formatted_address
 
     def get_locality(self, obj):
-        if obj.geofeature:
-            return obj.geofeature.name
+        geofeature = self._geofeature(obj)
+        if geofeature:
+            return geofeature.name
         return obj.locality
 
     included_serializers = {

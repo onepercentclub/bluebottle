@@ -69,7 +69,7 @@ def reverse_v6(longitude, latitude, types=None, language=None, limit=None):
         if limit is not None:
             params['limit'] = limit
 
-    return mapbox_utils._request('/reverse', params)
+    return mapbox_utils.geocode_request('/reverse', params)
 
 
 def forward_v6(
@@ -104,7 +104,7 @@ def forward_v6(
     if country:
         params['country'] = country
 
-    return mapbox_utils._request('/forward', params)
+    return mapbox_utils.geocode_request('/forward', params)
 
 
 def _prefer_address_feature(response):
@@ -210,7 +210,7 @@ def resolve_geolocation_feature(geolocation, language=None):
 
     if geolocation.mapbox_id and mapbox_utils.is_v6_mapbox_id(geolocation.mapbox_id):
         response = mapbox_utils.lookup_by_mapbox_id(geolocation.mapbox_id, language=language)
-        return mapbox_utils._first_feature(response)
+        return mapbox_utils.first_feature(response)
 
     if geolocation.mapbox_id and geolocation.mapbox_id.startswith('address.'):
         address_number = extract_housenumber(geolocation)
@@ -246,7 +246,7 @@ def resolve_geolocation_feature(geolocation, language=None):
 
     if geolocation.mapbox_id:
         response = mapbox_utils.lookup_by_mapbox_id(geolocation.mapbox_id, language=language)
-        feature = mapbox_utils._first_feature(response)
+        feature = mapbox_utils.first_feature(response)
         if feature:
             return feature
 

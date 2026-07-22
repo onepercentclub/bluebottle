@@ -3,9 +3,13 @@ from datetime import datetime
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import ActivityDocument, activity
+from bluebottle.activities.documents import (
+    ActivityDocument,
+    activity,
+    geofeatures_for_geolocation,
+    locality_from_geolocation,
+)
 from bluebottle.funding.models import Funding, Donor
-from bluebottle.geo.mapbox import get_translated_geofeature_list, locality_from_geolocation
 from bluebottle.initiatives.documents import deduplicate, get_translated_country_list
 
 SCORE_MAP = {
@@ -76,20 +80,9 @@ class FundingDocument(ActivityDocument):
         return locations
 
     def prepare_geofeature(self, instance):
-        if not instance.impact_location or instance.impact_location.geofeatures.count() == 0:
-            return super().prepare_geofeature(instance)
-
-        geofeatures = []
-        location = instance.impact_location
-        primary_id = location.geofeature_id
-        country = location.country
-        for geofeature in location.geofeatures.all():
-            geofeatures = geofeatures + get_translated_geofeature_list(
-                geofeature,
-                country=country,
-                is_primary=geofeature.pk == primary_id,
-            )
-        return geofeatures
+        if instance.impact_location and instance.impact_location.geofeatures.exists():
+            return geofeatures_for_geolocation(instance.impact_location)
+        return super().prepare_geofeature(instance)
 
     def prepare_position(self, instance):
         positions = []

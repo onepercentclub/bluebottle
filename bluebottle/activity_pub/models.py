@@ -865,10 +865,7 @@ class Create(Activity):
     @property
     def default_recipients(self):
         if isinstance(self.object, SubEvent):
-            try:
-                return [recipient.actor for recipient in self.object.parent.create_set.get().recipients.all()]
-            except AttributeError:
-                return []
+            return [recipient.actor for recipient in self.object.parent.create_set.get().recipients.all()]
         else:
             return [follower.actor for follower in self.followers]
 

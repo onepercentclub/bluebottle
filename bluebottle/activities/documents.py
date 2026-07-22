@@ -7,7 +7,12 @@ from bluebottle.activities.models import Activity
 from bluebottle.clients.utils import tenant_url
 from bluebottle.funding.models import Donor
 from bluebottle.geo.models import Location
-from bluebottle.initiatives.documents import deduplicate, get_translated_list, get_translated_segments
+from bluebottle.initiatives.documents import (
+    deduplicate,
+    get_translated_country_list,
+    get_translated_list,
+    get_translated_segments,
+)
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.segments.models import Segment
 from bluebottle.utils.documents import MultiTenantIndex, TextField
@@ -25,6 +30,86 @@ activity.settings(
     number_of_shards=1,
     number_of_replicas=0
 )
+
+
+def get_translated_geofeature_list(geofeature, country=None, is_primary=False):
+    from bluebottle.utils.models import Language
+
+    data = []
+    current_language = geofeature._current_language
+    country_language = country._current_language if country else None
+
+    for lang in Language.objects.all():
+        if not geofeature.has_translation(lang.full_code):
+            continue
+
+        geofeature.set_current_language(lang.full_code)
+        name = geofeature.name
+        place_name = geofeature.place_name
+        if not name and not place_name:
+            continue
+
+        entry = {
+            'id': geofeature.pk,
+            'name': name or '',
+            'place_name': place_name or '',
+            'language': lang.full_code,
+            'feature_type': geofeature.feature_type or '',
+            'is_primary': is_primary,
+        }
+        if country and country.has_translation(lang.full_code):
+            country.set_current_language(lang.full_code)
+            entry['country'] = country.name
+            entry['country_code'] = country.alpha2_code
+        data.append(entry)
+
+    geofeature._current_language = current_language
+    if country and country_language is not None:
+        country._current_language = country_language
+    return data
+
+
+def locality_from_geolocation(geolocation):
+    if not geolocation:
+        return None
+
+    primary = geolocation.geofeature
+    if primary and primary.feature_type in ('place', 'locality'):
+        return primary.name
+
+    for geofeature in geolocation.geofeatures.all():
+        if geofeature.feature_type in ('place', 'locality'):
+            return geofeature.name
+    return None
+
+
+def geofeatures_for_geolocation(geolocation):
+    if not geolocation:
+        return []
+
+    geofeatures = []
+    primary_id = geolocation.geofeature_id
+    country = geolocation.country
+    for geofeature in geolocation.geofeatures.all():
+        geofeatures.extend(get_translated_geofeature_list(
+            geofeature,
+            country=country,
+            is_primary=geofeature.pk == primary_id,
+        ))
+    return geofeatures
+
+
+def geolocation_for_activity(instance):
+    """Primary geolocation used when indexing an activity."""
+    location = getattr(instance, 'location', None)
+    if location:
+        return location
+    if getattr(instance, 'impact_location', None):
+        return instance.impact_location
+    initiative = getattr(instance, 'initiative', None)
+    if initiative and initiative.place_id:
+        return initiative.place
+    return None
 
 
 class ActivityDocument(Document):
@@ -127,6 +212,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'code': fields.KeywordField(),
             'language': fields.KeywordField(),
         }
     )
@@ -160,6 +246,19 @@ class ActivityDocument(Document):
             'city': TextField(),
             'country': TextField(attr='country.name'),
             'country_code': TextField(attr='country.alpha2_code'),
+        }
+    )
+
+    geofeature = fields.NestedField(
+        properties={
+            'id': fields.LongField(),
+            'name': TextField(),
+            'place_name': TextField(),
+            'language': fields.KeywordField(),
+            'feature_type': fields.KeywordField(),
+            'is_primary': fields.BooleanField(),
+            'country': TextField(),
+            'country_code': TextField(),
         }
     )
 
@@ -331,22 +430,29 @@ class ActivityDocument(Document):
     def prepare_country(self, instance):
         countries = []
         if instance.office_location and instance.office_location.country:
-            countries += get_translated_list(instance.office_location.country)
+            countries += get_translated_country_list(instance.office_location.country)
         if hasattr(instance, 'place') and instance.place and instance.place.country:
-            countries += get_translated_list(instance.place.country)
+            countries += get_translated_country_list(instance.place.country)
         if instance.initiative and instance.initiative.place and instance.initiative.place.country:
-            countries += get_translated_list(instance.initiative.place.country)
+            countries += get_translated_country_list(instance.initiative.place.country)
+        if hasattr(instance, 'location') and instance.location and instance.location.country:
+            countries += get_translated_country_list(instance.location.country)
+        if hasattr(instance, 'impact_location') and instance.impact_location and instance.impact_location.country:
+            countries += get_translated_country_list(instance.impact_location.country)
         return deduplicate(countries)
 
     def prepare_location(self, instance):
         locations = []
         if hasattr(instance, 'location') and instance.location:
+            geolocation = instance.location
+            primary = geolocation.geofeature
             locations.append({
-                'id': instance.location.id,
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
-                'country_code': instance.location.country.alpha2_code if instance.location.country else None,
-                'country': instance.location.country.name if instance.location.country else None,
+                'id': geolocation.id,
+                'name': primary.place_name if primary else geolocation.formatted_address,
+                'location_hint': getattr(instance, 'location_hint', None),
+                'locality': locality_from_geolocation(geolocation),
+                'country_code': geolocation.country.alpha2_code if geolocation.country else None,
+                'country': geolocation.country.name if geolocation.country else None,
                 'type': 'location'
             })
         if hasattr(instance, 'office_location') and instance.office_location:
@@ -364,19 +470,7 @@ class ActivityDocument(Document):
                 ),
                 'type': 'office'
             })
-        elif instance.initiative and instance.initiative.place:
-            if instance.initiative.place.country:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'country_code': instance.initiative.place.country.alpha2_code,
-                    'country': instance.initiative.place.country.name,
-                    'type': 'impact_location'
-                })
-            else:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'type': 'impact_location'
-                })
+
         return locations
 
     def prepare_office_restriction(self, instance):
@@ -395,6 +489,12 @@ class ActivityDocument(Document):
     def prepare_theme(self, instance):
         if instance.theme:
             return get_translated_list(instance.theme)
+
+    def prepare_geofeature(self, instance):
+        location = geolocation_for_activity(instance)
+        if not location or not location.geofeatures.exists():
+            return []
+        return geofeatures_for_geolocation(location)
 
     def prepare_categories(self, instance):
         categories = []

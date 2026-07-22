@@ -1,5 +1,4 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
-
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import ValidationError
@@ -18,7 +17,7 @@ from bluebottle.initiatives.models import (
     Initiative,
     InitiativePlatformSettings,
     InitiativeSearchFilter,
-    Theme,
+    Theme, ActivityCardLocationChoices,
 )
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.offices.admin import RegionManagerAdminMixin
@@ -314,6 +313,12 @@ class InitiativePlatformSettingsForm(forms.ModelForm):
         label=_('Available work location restrictions')
     )
 
+    card_location_display = forms.ChoiceField(
+        choices=ActivityCardLocationChoices.choices,
+        widget=forms.RadioSelect,
+        label=_('Activity card location'),
+    )
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -386,6 +391,7 @@ class InitiativePlatformSettingsAdmin(
                     "enable_matching_emails",
                     "include_full_activities",
                     "restrict_updates",
+                    "card_location_display",
                 )
             },
         ),

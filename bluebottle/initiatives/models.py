@@ -2,6 +2,7 @@ from builtins import object, str
 
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models import Max
@@ -29,9 +30,7 @@ from bluebottle.utils.models import (
     SortableTranslatableModel,
     ValidatedModelMixin,
 )
-
 from bluebottle.utils.utils import get_current_host, get_current_language
-from django.contrib.postgres.fields import ArrayField
 
 
 @python_2_unicode_compatible
@@ -321,6 +320,14 @@ def get_office_restriction_values():
     return list(OfficeRestrictionChoices.values.keys())
 
 
+class ActivityCardLocationChoices(models.TextChoices):
+    NEIGHBOURHOOD = 'neighbourhood', _('Neighbourhood')
+    NEIGHBOURHOOD_CITY = 'neighbourhood_city', _('Neighbourhood + city')
+    CITY = 'city', _('City')
+    CITY_REGION = 'city_region', _('City + region')
+    CITY_COUNTRY = 'city_country', _('City + country')
+
+
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
@@ -344,7 +351,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("per_activity", _("Unique per activity")),
         ("generic", _("Same for all activities")),
     )
-
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
@@ -525,6 +531,17 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_(
             "Review initiatives and activities. Activities created within an initiative will not "
             "need to be reviewed. Crowdfunding activities will always need to be reviewed"
+        ),
+    )
+
+    card_location_display = models.CharField(
+        _('Activity card location'),
+        max_length=32,
+        choices=ActivityCardLocationChoices.choices,
+        default=ActivityCardLocationChoices.CITY_COUNTRY,
+        help_text=_(
+            'Choose how locations appear on activity cards. '
+            'Activity detail pages always show the full location.'
         ),
     )
 

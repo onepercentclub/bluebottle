@@ -1,13 +1,10 @@
 import hashlib
 from builtins import object
 from collections import namedtuple
-from datetime import datetime
 
-import dateutil
 from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
-from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
@@ -29,6 +26,10 @@ from bluebottle.activities.models import (
     ActivityMessage,
 )
 from bluebottle.activities.permissions import ActivityOwnerPermission
+from bluebottle.activities.serializers.preview import (
+    ActivityPreviewLocationSerializer,
+    ActivityPreviewSlotSelection,
+)
 from bluebottle.collect.serializers import (
     CollectActivityListSerializer,
     CollectActivitySerializer,
@@ -263,8 +264,10 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_start(self, obj):
         if hasattr(obj, "slots") and obj.slots:
-            upcoming = obj.status in ("open", "full")
-            slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
+            selection = ActivityPreviewSlotSelection(
+                obj, self.context['request']
+            )
+            slots = selection.get_slots()
             if slots:
                 return slots[0].start
         elif obj.start and len(obj.start) == 1:
@@ -272,52 +275,12 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_end(self, obj):
         if hasattr(obj, "slots") and obj.slots:
-            upcoming = obj.status in ("open", "full")
-
-            tz = get_current_timezone()
-            try:
-                start, end = (
-                    dateutil.parser.parse(date).astimezone(tz)
-                    for date in self.context["request"].GET.get("filter[date]").split(",")
-                )
-            except (ValueError, AttributeError):
-                start = None
-                end = None
-
-            if upcoming or (start and start >= now()):
-                ends = [
-                    slot.end
-                    for slot in obj.slots
-                    if (
-                        slot.status not in ["draft", "cancelled"]
-                        and (
-                            not start
-                            or dateutil.parser.parse(slot.start).date() >= start.date()
-                        )
-                        and (
-                            not end
-                            or dateutil.parser.parse(slot.end).date() <= end.date()
-                        )
-                    )
-                ]
-            else:
-                ends = [
-                    slot.end
-                    for slot in obj.slots
-                    if (
-                        slot.status not in ["draft", "cancelled"]
-                        and (
-                            not start
-                            or dateutil.parser.parse(slot.end).date() > start.date()
-                        )
-                        and (
-                            not end
-                            or dateutil.parser.parse(slot.end).date() <= end.date()
-                        )
-                    )
-                ]
-            if ends:
-                return max(ends)
+            selection = ActivityPreviewSlotSelection(
+                obj, self.context['request']
+            )
+            slots = selection.get_slots()
+            if slots:
+                return max(slot.end for slot in slots)
         elif obj.end and len(obj.end) == 1:
             return obj.end[0]
 
@@ -389,38 +352,9 @@ class ActivityPreviewSerializer(ModelSerializer):
         return obj.type.replace("activity", "")
 
     def get_location(self, obj):
-        location = False
-        if hasattr(obj, "slots") and obj.slots:
-            slots = self.get_filtered_slots(obj, only_upcoming=True)
-            if not len(slots):
-                slots = self.get_filtered_slots(obj)
-
-            if len(set(slot.locality for slot in slots)) == 1:
-                location = slots[0]
-
-        elif obj.type == "funding":
-            places = [
-                location for location in obj.location if
-                location.type in ("impact_location", "location")
-            ]
-            if places:
-                location = places[0]
-        elif len(obj.location):
-            order = [
-                "location",
-                "office",
-                "place",
-                "initiative_office",
-                "impact_location",
-            ]
-
-            location = sorted(obj.location, key=lambda loc: order.index(getattr(loc, 'type', 'location')))[0]
-
-        if location:
-            if location.locality:
-                return f"{location.locality}, {location.country_code}"
-            else:
-                return location.country
+        return ActivityPreviewLocationSerializer(
+            context=self.context,
+        ).to_representation(obj)
 
     def get_image(self, obj):
         if obj.image:
@@ -499,38 +433,9 @@ class ActivityPreviewSerializer(ModelSerializer):
         return matching
 
     def get_filtered_slots(self, obj, only_upcoming=False):
-        tz = get_current_timezone()
-
-        try:
-            start, end = (
-                dateutil.parser.parse(date).astimezone(tz)
-                for date in self.context["request"].GET.get("filter[date]").split(",")
-            )
-        except (ValueError, AttributeError):
-            start = None
-            end = None
-
-        if hasattr(obj, "slots") and obj.slots:
-            return [
-                slot
-                for slot in obj.slots
-                if (
-                    slot.status not in ["draft", "cancelled"]
-                    and (
-                        not only_upcoming
-                        or datetime.fromisoformat(slot.start) >= now()
-                    )
-                    and (
-                        not start
-                        or dateutil.parser.parse(slot.start).date() >= start.date()
-                    )
-                    and (
-                        not end or dateutil.parser.parse(slot.end).date() <= end.date()
-                    )
-                )
-            ]
-        else:
-            return []
+        return ActivityPreviewSlotSelection(
+            obj, self.context['request']
+        ).get_slots()
 
     def get_slot_count(self, obj):
         if hasattr(obj, "slots") and obj.slots:
@@ -543,10 +448,9 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.is_online
 
     def get_has_multiple_locations(self, obj):
-        slots = self.get_filtered_slots(obj, only_upcoming=True)
-        if not len(slots):
-            slots = self.get_filtered_slots(obj)
-        return len(set(slot.locality for slot in slots)) > 1
+        return ActivityPreviewLocationSerializer(
+            context=self.context,
+        ).has_multiple_unresolved_locations(obj)
 
     def get_is_full(self, obj):
         slots = self.get_filtered_slots(obj)

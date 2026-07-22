@@ -16,13 +16,16 @@ from bluebottle.activities.models import Activity, Organizer
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.geo.serializers import activity_geolocation_display
 from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
     PeriodicActivity,
     ScheduleActivity,
     DateParticipant,
-    DateActivity, RegisteredDateActivity, )
+    DateActivity,
+    RegisteredDateActivity,
+)
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -603,17 +606,19 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         slots = self.get_filtered_slots(obj, only_upcoming=True)
         if not slots:
             slots = self.get_filtered_slots(obj, only_upcoming=False)
-        is_online = len(slots) > 0 and len(slots.filter(is_online=True)) == len(slots)
 
-        locations = slots.values_list(
-            'location__locality',
-            'location__country__alpha2_code',
-            'location__formatted_address',
-            'online_meeting_url',
-            'location_hint'
+        slots = slots.select_related(
+            'location',
+            'location__country',
+            'location__geofeature',
+        ).prefetch_related(
+            'location__geofeatures',
+            'location__geofeatures__translations',
         )
 
-        if not len(slots) or not len(locations):
+        is_online = len(slots) > 0 and len(slots.filter(is_online=True)) == len(slots)
+
+        if not len(slots):
             return {
                 'has_multiple': False,
                 'is_online': is_online,
@@ -622,27 +627,51 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
                 'location_hint': None,
             }
 
-        has_multiple = len(set(location[:2] for location in locations)) > 1 and not is_online
+        unique_locations = []
+        seen_location_ids = set()
+        for slot in slots:
+            if not slot.location_id or slot.location_id in seen_location_ids:
+                continue
+            seen_location_ids.add(slot.location_id)
+            unique_locations.append(slot.location)
+
+        if not unique_locations:
+            slot = slots.first()
+            meeting_url = None
+            user = self.context['request'].user
+            if (
+                is_online and
+                user.is_authenticated and
+                obj.contributors.filter(
+                    user=user, status='accepted'
+                ).instance_of(DateParticipant).count()
+            ):
+                meeting_url = slot.online_meeting_url or None
+
+            return {
+                'has_multiple': False,
+                'is_online': is_online,
+                'online_meeting_url': meeting_url,
+                'location': None,
+                'location_hint': slot.location_hint if slot else None,
+            }
+
+        has_multiple = len(unique_locations) > 1 and not is_online
+        slot = slots.first()
+
         if has_multiple:
             return {
                 'has_multiple': True,
                 'is_online': False,
                 'online_meeting_url': None,
-                'location': None,
+                'location': activity_geolocation_display(unique_locations),
                 'location_hint': None,
             }
-        slot = slots.first()
 
         if is_online or not slot.location:
             location = None
         else:
-            location = {
-                'locality': slot.location.locality if slot.location else None,
-                'country': {
-                    'code': slot.location.country.alpha2_code if slot.location.country else None,
-                },
-                'formattedAddress': slot.location.formatted_address if slot.location else None,
-            }
+            location = activity_geolocation_display([slot.location])
 
         user = self.context['request'].user
         if (

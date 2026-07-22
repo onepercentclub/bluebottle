@@ -17,6 +17,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import DateActivitySlot, Skill, TimeContribution
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
@@ -68,7 +69,8 @@ class ActivitySlotSerializer(ModelSerializer):
             'location_hint',
             'online_meeting_url',
             'location',
-            'participants_export_url'
+            'participants_export_url',
+            'translations'
         )
         meta_fields = (
             'status',
@@ -80,6 +82,7 @@ class ActivitySlotSerializer(ModelSerializer):
             'errors',
             'created',
             'updated',
+            'translations'
         )
 
     class JSONAPIMeta(object):
@@ -110,6 +113,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
     links = serializers.SerializerMethodField()
+    translations = TranslationsSerializer(fields=['title'])
 
     def get_links(self, instance):
         if instance.start and instance.duration:

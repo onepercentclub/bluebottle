@@ -835,7 +835,7 @@ class Create(Activity):
 
         if created and self.is_local:
             if self.object.origin:
-                if isinstance(self.object, Event):
+                if isinstance(self.object, Event) and self.object.origin.status in ('open', 'granted', ):
                     Start.objects.create(object=self.object)
                 elif self.object.origin.status == 'succeeded':
                     Finish.objects.create(object=self.object)

@@ -1505,6 +1505,17 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         super().test_join()
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
 
+    def test_sync_slot(self):
+        super().test_adopt()
+        DateActivitySlotFactory.create(
+            activity=self.model,
+            location=GeolocationFactory.create(country=self.country),
+        )
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.sub_event.count(), 4)
+            self.assertEqual(self.adopted.slots.count(), 4)
+
 
 @override_settings(
     MAPBOX_API_KEY=None

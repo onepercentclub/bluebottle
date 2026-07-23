@@ -92,6 +92,12 @@ class SyncEffect(Effect):
         return str(_('Publish activity to followers'))
 
 
+class SyncSlotEffect(SyncEffect):
+    @property
+    def is_valid(self):
+        return hasattr(self.instance.activity, 'activity_pub_model')
+
+
 class PublishAdoptionEffect(Effect):
     """
     Announce that the activity has been adopted through GoodUp Connect.

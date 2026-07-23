@@ -611,11 +611,7 @@ class Recipient(models.Model):
 
     def save(self, *args, **kwargs):
         created = not self.pk
-        try:
-            super().save(*args, **kwargs)
-        except Exception as e:
-            print(e)
-            __import__('ipdb').set_trace()
+        super().save(*args, **kwargs)
 
         if created and not self.actor.is_local:
             publish_to_recipient.delay_on_commit(self, connection.tenant)
@@ -839,7 +835,7 @@ class Create(Activity):
 
         if created and self.is_local:
             if self.object.origin:
-                if self.object.origin.status in ('open', 'granted', ):
+                if isinstance(self.object, Event) and self.object.origin.status in ('open', 'granted', ):
                     Start.objects.create(object=self.object)
                 elif self.object.origin.status == 'succeeded':
                     Finish.objects.create(object=self.object)

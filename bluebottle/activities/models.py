@@ -251,7 +251,9 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def active_contributors(self):
-        return self.contributors.filter(status__in=['accepted', 'succeeded', 'scheduled'])
+        return self.contributors.exclude(
+            instance_of=Organizer
+        ).filter(status__in=['accepted', 'succeeded', 'scheduled'])
 
     @property
     def activity_date(self):

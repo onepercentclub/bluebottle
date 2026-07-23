@@ -1,6 +1,7 @@
 import re
 from rest_framework import generics, renderers, serializers, exceptions
 
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.activity_pub.serializers.base import ActivityPubSerializer
 
@@ -51,7 +52,9 @@ class WebFingerView(generics.RetrieveAPIView):
         if re.match(f'{self.request.scheme}://{self.request.get_host()}/?$', resource):
             settings = SitePlatformSettings.load()
 
-            if settings.organization and hasattr(settings.organization, 'activity_pub_model'):
-                return settings.organization.activity_pub_model
+            if settings.organization:
+                if hasattr(settings.organization, 'activity_pub_model'):
+                    return settings.organization.activity_pub_model
+                return adapter.sync(settings.organization)
 
         raise exceptions.NotFound()

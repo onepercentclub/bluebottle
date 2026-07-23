@@ -1,6 +1,6 @@
 from django.utils.timezone import now
 
-from bluebottle.activity_pub.effects import SyncEffect
+from bluebottle.activity_pub.effects import SyncEffect, SyncSlotEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register,
@@ -498,6 +498,7 @@ class DateActivitySlotTriggers(TriggerManager):
                         slot_has_not_started
                     ]
                 ),
+                SyncSlotEffect
             ],
         ),
 

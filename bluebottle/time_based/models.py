@@ -127,7 +127,7 @@ class TimeBasedActivity(Activity):
         if hasattr(self, 'origin') and self.origin:
             readonly_fields = readonly_fields + [
                 'capacity', 'registration_deadline', 'review', 'review_title', 'review_description',
-                'review_link',
+                'review_link', 'preparation',
             ]
 
         return readonly_fields
@@ -238,6 +238,15 @@ class DateActivity(TimeBasedActivity):
         HasSlotValidator,
         TosAcceptedValidator
     ]
+
+    @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if hasattr(self, 'origin') and self.origin:
+            readonly_fields = readonly_fields + ['start', 'duration', ]
+
+        return readonly_fields
 
     @property
     def start(self):
@@ -707,9 +716,9 @@ class DeadlineActivity(RegistrationActivity):
     def readonly_fields(self):
         readonly_fields = super().readonly_fields
 
-        if hasattr(self, 'origin') and self.origin:
+        if self.is_adopted:
             readonly_fields = readonly_fields + [
-                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+                'duration', 'online_meeting_url',
             ]
 
         return readonly_fields
@@ -809,7 +818,7 @@ class ScheduleActivity(RegistrationActivity):
 
         if hasattr(self, 'origin') and self.origin:
             readonly_fields = readonly_fields + [
-                'start', 'duration', 'is_online', 'location', 'location_hint',
+                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
             ]
 
         return readonly_fields

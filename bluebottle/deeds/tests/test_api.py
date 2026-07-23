@@ -181,7 +181,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertTransition('delete')
         self.assertMeta(
             'contributor-count',
-            {'total': len(self.accepted_participants), 'local': len(self.accepted_participants), 'remote': 0}
+            len(self.accepted_participants)
         )
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
@@ -323,7 +323,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', False)
         self.assertMeta(
             'contributor-count',
-            {'total': len(self.accepted_participants), 'local': len(self.accepted_participants), 'remote': 0}
+            len(self.accepted_participants)
         )
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
@@ -358,7 +358,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', False)
         self.assertMeta(
             'contributor-count',
-            {'total': len(self.accepted_participants), 'local': len(self.accepted_participants), 'remote': 0}
+            len(self.accepted_participants)
         )
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(

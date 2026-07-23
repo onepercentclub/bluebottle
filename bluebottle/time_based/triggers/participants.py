@@ -777,6 +777,10 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.reapply,
             effects=[
                 FollowActivityEffect,
+                RelatedTransitionEffect(
+                    "registration",
+                    ScheduleRegistrationStateMachine.restore,
+                ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
                     conditions=[

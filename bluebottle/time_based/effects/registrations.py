@@ -68,7 +68,7 @@ class CreateInitialPeriodicParticipantEffect(Effect):
             user=self.instance.user,
             remote_user=self.instance.remote_user,
             registration=self.instance,
-            slot=self.instance.activity.slots.last()
+            slot=None if self.instance.activity.review else self.instance.activity.slots.last()
         )
 
     def is_valid(self):

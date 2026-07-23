@@ -8,7 +8,6 @@ from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from bluebottle.utils.fields import QuillField
 from djchoices.choices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
@@ -26,6 +25,7 @@ from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import SegmentType, Segment
+from bluebottle.utils.fields import QuillField
 from bluebottle.utils.managers import TranslatablePolymorphicManager
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -247,7 +247,13 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def succeeded_contributor_count(self):
-        return self.donations.filter(status='succeeded').count()
+        return self.participants.filter(status='succeeded').count()
+
+    @property
+    def active_contributors(self):
+        return self.contributors.exclude(
+            instance_of=Organizer
+        ).filter(status__in=['accepted', 'succeeded', 'scheduled'])
 
     @property
     def activity_date(self):

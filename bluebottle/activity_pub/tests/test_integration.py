@@ -18,7 +18,7 @@ from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, Link
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
-    AdoptionTypeChoices, Follow, Accept, Event,
+    AdoptionTypeChoices, Follow, Accept, Event, Place,
     Recipient, RepetitionModeChoices
 )
 from bluebottle.activity_pub.tasks import publish_to_recipient
@@ -179,9 +179,12 @@ class ActivityPubTestCase:
 
         client_mock.start()
         webfinger_mock.start()
+        self._image_mock = httmock.HTTMock(image_mock)
+        self._image_mock.__enter__()
 
     def tearDown(self):
         super().tearDown()
+        self._image_mock.__exit__(None, None, None)
         client_mock.stop()
         webfinger_mock.stop()
 
@@ -240,8 +243,10 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             Event.objects.all().delete()
 
-        activity = self.factory.create(status='submitted')
-        activity.states.approve(save=True)
+        self.create()
+        activity = self.model
+        activity.status = 'submitted'
+        activity.save()
 
         publish = activity.activity_pub_model.create_set.first()
         self.assertIsNotNone(publish)
@@ -320,6 +325,15 @@ class ActivityPubTestCase:
     def approve(self, activity):
         activity.states.approve(save=True)
 
+    @property
+    def mock_response(self):
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
+            mock_response = Response()
+            mock_response.raw = BytesIO(image_file.read())
+            mock_response.status_code = 200
+
+        return mock_response
+
     def complete(self):
         self.adopted.theme = ThemeFactory.create()
 
@@ -380,12 +394,9 @@ class TemplateTestCase(ActivityPubTestCase):
             follow = Follow.objects.get()
             self.event = Event.objects.get()
 
-            request = RequestFactory().get('/')
-            request.user = BlueBottleUserFactory.create()
-
             with httmock.HTTMock(image_mock):
                 with mock.patch.object(Geolocation, 'update_location'):
-                    self.adopted = adapter.adopt(self.event, owner=request.user)
+                    self.adopted = adapter.adopt(self.event)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
 
@@ -1505,16 +1516,32 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         super().test_join()
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
 
-    def test_sync_slot(self):
-        super().test_adopt()
-        DateActivitySlotFactory.create(
+    def test_sync_shared_slot_location(self):
+        location = GeolocationFactory.create(country=self.country)
+        self.model = self.factory.create(
+            owner=self.user,
+            initiative=None,
+            image=ImageFactory.create(),
+            slots=[],
+            organization=None,
+        )
+        DateActivitySlotFactory.create_batch(
+            2,
             activity=self.model,
-            location=GeolocationFactory.create(country=self.country),
+            location=location,
+            is_online=False,
         )
 
-        with LocalTenant(self.other_tenant):
-            self.assertEqual(self.event.sub_event.count(), 4)
-            self.assertEqual(self.adopted.slots.count(), 4)
+        event = adapter.sync(self.model)
+
+        self.assertEqual(Place.objects.filter(origin=location).count(), 1)
+        places = {
+            sub_event.location_id
+            for sub_event in event.sub_event.all()
+            if sub_event.location_id
+        }
+        self.assertEqual(len(places), 1)
+        self.assertEqual(event.sub_event.count(), 2)
 
 
 @override_settings(

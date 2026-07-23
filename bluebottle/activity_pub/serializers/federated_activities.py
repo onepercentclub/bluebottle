@@ -8,30 +8,28 @@ from django.contrib.gis.geos import Point
 from django.core.files import File
 from django.db import connection
 from django.urls import reverse
-
-
 from djmoney.money import Money
 from rest_framework import exceptions
 from rest_framework import serializers
 from rest_framework.relations import RelatedField
 
+from bluebottle.activities.models import Contributor, RemoteMember
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices,
     RepetitionModeChoices, SlotModeChoices, Create, ActivityPubModel, SubEvent
 )
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
-from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activities.models import Contributor, RemoteMember
 from bluebottle.activity_pub.utils import is_local
 from bluebottle.collect.models import CollectActivity, CollectType, CollectContributor
-from bluebottle.members.models import Member
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.grant_management.models import GrantApplication
+from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import (
     DateActivitySlot, DateParticipant, DateRegistration, DeadlineActivity, DateActivity,
@@ -278,9 +276,7 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
     contributor_count = serializers.SerializerMethodField(required=False, allow_null=True)
 
     def get_contributor_count(self, obj):
-        return obj.participants.filter(
-            status__in=['accepted', 'new', 'succeeded', 'scheduled']
-        ).count()
+        return obj.active_contributors.count()
 
     def get_url(self, obj):
         return connection.tenant.build_absolute_url(
@@ -290,7 +286,7 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
     def create(self, validated_data):
         source = Create.objects.get(object__iri=validated_data['id']).actor
         follow = source.follow_set.get()
-        if follow.default_owner:
+        if follow.default_owner and not validated_data.get('owner'):
             validated_data['owner'] = follow.default_owner
 
         validated_data['host_organization'] = source.adopted

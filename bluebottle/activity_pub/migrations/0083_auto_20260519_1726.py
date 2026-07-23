@@ -10,7 +10,6 @@ def create_transition_parent(apps, schema_editor):
     Transition = apps.get_model('activity_pub', 'Transition')
 
     for model in [Start, Finish, Delete, Cancel]:
-        print(model.objects.all())
         for transition in model.objects.all():
             intermediate = Transition(
                 object_id=transition.object_id,

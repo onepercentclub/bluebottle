@@ -89,6 +89,11 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
             if instance:
                 return self.update(instance, validated_data)
 
+        if self.origin and hasattr(self.Meta.model, 'origin'):
+            existing = self.Meta.model.objects.filter(origin=self.origin).first()
+            if existing:
+                return self.update(existing, validated_data)
+
         for name, field in self.fields.items():
             if name in validated_data:
                 if isinstance(field, ManyResourceRelatedField):

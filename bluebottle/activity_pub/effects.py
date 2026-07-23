@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_links.models import LinkedActivity
@@ -319,12 +320,24 @@ def participant_is_not_local(effect):
     return effect.instance.remote_user is not None
 
 
+def remote_user_has_origin(effect):
+    remote_user = effect.instance.remote_user
+    if remote_user is None:
+        return False
+    try:
+        return remote_user.origin is not None
+    except ObjectDoesNotExist:
+        return False
+    except AttributeError:
+        return False
+
+
 class SendAcceptEffect(Effect):
     """
     Send a Accept activity to the consumer platform when a user is accepted.
     """
     template = 'admin/activity_pub/send_accept_effect.html'
-    conditions = [participant_is_not_local]
+    conditions = [participant_is_not_local, remote_user_has_origin]
 
     def post_save(self, **kwargs):
         join = Join.objects.get(
@@ -345,7 +358,7 @@ class SendRejectEffect(Effect):
     Send a Reject activity to the consumer platform when a user is rejected.
     """
     template = 'admin/activity_pub/send_reject_effect.html'
-    conditions = [participant_is_not_local]
+    conditions = [participant_is_not_local, remote_user_has_origin]
 
     def post_save(self, **kwargs):
         join = Join.objects.get(

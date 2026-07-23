@@ -145,8 +145,7 @@ class DeadlineActivityTestCase(BluebottleTestCase):
                 'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
                 'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
                 'review_title', 'review_description', 'review_link', 'preparation', 'is_online', 'location',
-                'location_hint', 'start', 'deadline', 'start', 'duration', 'is_online', 'location', 'location_hint',
-                'online_meeting_url'
+                'location_hint', 'start', 'deadline', 'duration', 'online_meeting_url'
             ]
         )
 

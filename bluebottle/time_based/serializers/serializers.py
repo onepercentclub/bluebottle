@@ -60,12 +60,7 @@ class ActivitySlotSerializer(ModelSerializer):
     def get_contributor_count(self, instance):
         local_count = instance.contributor_count
         remote_count = getattr(instance, 'remote_contributor_count', 0) or 0
-        total_count = max(local_count, remote_count)
-        return {
-            'total': total_count,
-            'local': local_count,
-            'remote': max(0, total_count - local_count),
-        }
+        return max(local_count, remote_count)
 
     class Meta:
         fields = (

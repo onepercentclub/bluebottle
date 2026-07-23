@@ -43,6 +43,8 @@ def get_translated_list(obj, field='name'):
     current_language = obj._current_language
 
     for lang in Language.objects.all():
+        if not obj.has_translation(lang.full_code):
+            continue
         obj.set_current_language(lang.full_code)
         data.append(
             {
@@ -60,6 +62,8 @@ def get_translated_segments(segment):
     current_language = segment._current_language
 
     for lang in Language.objects.all():
+        if not segment.has_translation(lang.full_code):
+            continue
         segment.set_current_language(lang.full_code)
         name = segment.name
         if name is None:

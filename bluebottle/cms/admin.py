@@ -1,7 +1,7 @@
 from builtins import str
 
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db import models
 from django.forms import Textarea
 from django.shortcuts import redirect
@@ -14,6 +14,7 @@ from fluent_contents.admin.contentitems import BaseContentItemInline
 import nested_admin
 
 from bluebottle.cms.fluent_admin import NestedContentItemFormSet, get_cms_content_item_inlines
+from bluebottle.cms.utils.color_contrast import evaluate_platform_colors
 from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
@@ -201,7 +202,13 @@ class HomePageAdmin(CMSNestedPlaceholderFieldAdmin, TranslatableAdmin, Singleton
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
-    readonly_fields = ['terminated_info', 'organization']
+    readonly_fields = ['terminated_info', 'organization', 'color_contrast_panel']
+
+    class Media:
+        css = {
+            'all': ('admin/css/platform_color_contrast.css',)
+        }
+        js = ('admin/js/platform_color_contrast.js',)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -237,6 +244,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
                         'action_color', 'action_text_color', 'alternative_link_color',
                         'description_color', 'description_text_color',
                         'footer_color', 'footer_text_color',
+                        'color_contrast_panel',
                         'title_font', 'body_font'
                     )
                 }
@@ -255,6 +263,74 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
             fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info',)
 
         return fieldsets
+
+    def color_contrast_panel(self, obj):
+        return mark_safe(
+            '<div id="platform-color-contrast-panel" class="platform-color-contrast">'
+            '  <div class="platform-color-contrast__pairs">'
+            '    <div class="platform-color-contrast__pair is-skipped" data-contrast-pair="action">'
+            '      <span class="platform-color-contrast__label">Action</span>'
+            '      <span class="platform-color-contrast__ratio" data-contrast-ratio>—</span>'
+            '      <span class="platform-color-contrast__badge" data-contrast-badge>Not set</span>'
+            '      <span class="platform-color-contrast__hint" data-contrast-hint hidden>'
+            '        Text may be hard to read on this background.'
+            '      </span>'
+            '    </div>'
+            '    <div class="platform-color-contrast__pair is-skipped" data-contrast-pair="description">'
+            '      <span class="platform-color-contrast__label">Description</span>'
+            '      <span class="platform-color-contrast__ratio" data-contrast-ratio>—</span>'
+            '      <span class="platform-color-contrast__badge" data-contrast-badge>Not set</span>'
+            '      <span class="platform-color-contrast__hint" data-contrast-hint hidden>'
+            '        Text may be hard to read on this background.'
+            '      </span>'
+            '    </div>'
+            '    <div class="platform-color-contrast__pair is-skipped" data-contrast-pair="footer">'
+            '      <span class="platform-color-contrast__label">Footer</span>'
+            '      <span class="platform-color-contrast__ratio" data-contrast-ratio>—</span>'
+            '      <span class="platform-color-contrast__badge" data-contrast-badge>Not set</span>'
+            '      <span class="platform-color-contrast__hint" data-contrast-hint hidden>'
+            '        Text may be hard to read on this background.'
+            '      </span>'
+            '    </div>'
+            '    <div class="platform-color-contrast__pair is-skipped" data-contrast-pair="link">'
+            '      <span class="platform-color-contrast__label">Link</span>'
+            '      <span class="platform-color-contrast__ratio" data-contrast-ratio>—</span>'
+            '      <span class="platform-color-contrast__badge" data-contrast-badge>Not set</span>'
+            '      <span class="platform-color-contrast__hint" data-contrast-hint hidden>'
+            '        Text may be hard to read on this background.'
+            '      </span>'
+            '    </div>'
+            '  </div>'
+            '  <div class="platform-color-contrast__preview" aria-hidden="true">'
+            '    <div class="platform-color-contrast__button">Button</div>'
+            '    <div class="platform-color-contrast__description">Description</div>'
+            '    <a class="platform-color-contrast__link" href="#" onclick="return false;">Link</a>'
+            '    <div class="platform-color-contrast__footer">Footer</div>'
+            '  </div>'
+            '</div>'
+        )
+
+    color_contrast_panel.short_description = _('Colour contrast')
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        failing = [
+            result for result in evaluate_platform_colors(obj)
+            if not result.passes
+        ]
+        if not failing:
+            return
+        details = ', '.join(
+            '{label} ({ratio:.1f}:1)'.format(label=result.label, ratio=result.ratio)
+            for result in failing
+        )
+        self.message_user(
+            request,
+            _('Colour contrast below WCAG AA for: %(pairs)s. You can still save, but text may be hard to read.') % {
+                'pairs': details,
+            },
+            level=messages.WARNING,
+        )
 
     def terminated_info(self, obj):
         active_members = Member.objects.filter(is_active=True)

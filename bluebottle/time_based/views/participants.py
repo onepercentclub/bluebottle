@@ -72,6 +72,13 @@ class DeadlineParticipantList(ParticipantList):
     serializer_class = DeadlineParticipantSerializer
 
 
+class ScheduleParticipantList(ParticipantList):
+    queryset = ScheduleParticipant.objects.prefetch_related(
+        'user', 'activity',
+    ).order_by('-created', 'pk')
+    serializer_class = ScheduleParticipantSerializer
+
+
 class RegisteredDateParticipantList(ParticipantList):
     queryset = RegisteredDateParticipant.objects.prefetch_related(
         'user',

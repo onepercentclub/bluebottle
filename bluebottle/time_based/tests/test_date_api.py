@@ -298,7 +298,7 @@ class DateSlotDetailAPITestCase(APITestCase):
 
         self.perform_get(user=self.manager)
         self.assertStatus(status.HTTP_200_OK)
-        self.assertMeta('contributor-count', {'total': 5, 'local': 1, 'remote': 4})
+        self.assertMeta('contributor-count', 5)
 
     def test_get_anonymous(self):
         self.perform_get()

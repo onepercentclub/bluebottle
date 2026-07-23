@@ -306,14 +306,10 @@ class BaseActivitySerializer(ModelSerializer):
                     pass
 
     def get_contributor_count(self, obj):
-        local_count = obj.active_contributors.count()
-        synced_total = obj.synced_contributor_count or 0
-        total_count = synced_total if synced_total else local_count
-        return {
-            'total': total_count,
-            'local': local_count,
-            'remote': max(0, total_count - local_count),
-        }
+        if hasattr(obj, 'origin'):
+            return obj.origin.contributor_count
+        else:
+            return obj.active_contributors.count()
 
     def get_source(self, obj):
         if hasattr(obj, 'origin') and obj.origin.source:

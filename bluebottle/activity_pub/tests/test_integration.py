@@ -325,6 +325,15 @@ class ActivityPubTestCase:
     def approve(self, activity):
         activity.states.approve(save=True)
 
+    @property
+    def mock_response(self):
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
+            mock_response = Response()
+            mock_response.raw = BytesIO(image_file.read())
+            mock_response.status_code = 200
+
+        return mock_response
+
     def complete(self):
         self.adopted.theme = ThemeFactory.create()
 
@@ -385,12 +394,9 @@ class TemplateTestCase(ActivityPubTestCase):
             follow = Follow.objects.get()
             self.event = Event.objects.get()
 
-            request = RequestFactory().get('/')
-            request.user = BlueBottleUserFactory.create()
-
             with httmock.HTTMock(image_mock):
                 with mock.patch.object(Geolocation, 'update_location'):
-                    self.adopted = adapter.adopt(self.event, owner=request.user)
+                    self.adopted = adapter.adopt(self.event)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
 

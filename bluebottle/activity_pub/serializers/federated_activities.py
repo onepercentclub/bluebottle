@@ -286,7 +286,7 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
     def create(self, validated_data):
         source = Create.objects.get(object__iri=validated_data['id']).actor
         follow = source.follow_set.get()
-        if follow.default_owner:
+        if follow.default_owner and not validated_data.get('owner'):
             validated_data['owner'] = follow.default_owner
 
         validated_data['host_organization'] = source.adopted

@@ -340,10 +340,10 @@ class SendAcceptEffect(Effect):
     conditions = [participant_is_not_local, remote_user_has_origin]
 
     def post_save(self, **kwargs):
-        join = Join.objects.get(
+        join = Join.objects.filter(
             actor=self.instance.remote_user.origin,
             object=self.instance.activity.activity_pub_model
-        )
+        ).latest('pk')
         Accept.objects.create(
             actor=get_platform_actor(),
             object=join
@@ -361,10 +361,10 @@ class SendRejectEffect(Effect):
     conditions = [participant_is_not_local, remote_user_has_origin]
 
     def post_save(self, **kwargs):
-        join = Join.objects.get(
+        join = Join.objects.filter(
             actor=self.instance.remote_user.origin,
             object=self.instance.activity.activity_pub_model
-        )
+        ).latest('pk')
         Reject.objects.create(
             actor=get_platform_actor(),
             object=join

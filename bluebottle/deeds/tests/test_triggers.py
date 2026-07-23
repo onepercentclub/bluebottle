@@ -475,7 +475,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
     def test_withdraw_synced_emits_leave_effect(self):
-        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].origin = GoodDeedFactory.create(
+            iri='https://example.com/good-deed/1'
+        )
         self.defaults['activity'].save(update_fields=['origin'])
         self.create()
 
@@ -536,7 +538,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
 
     def test_reapply_synced_emits_join_effect(self):
-        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].origin = GoodDeedFactory.create(
+            iri='https://example.com/good-deed/2'
+        )
         self.defaults['activity'].save(update_fields=['origin'])
         self.create()
         self.model.activity.states.publish(save=True)
@@ -558,7 +562,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantRemovedNotification)
 
     def test_remove_synced_emits_leave_effect(self):
-        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].origin = GoodDeedFactory.create(
+            iri='https://example.com/good-deed/3'
+        )
         self.defaults['activity'].save(update_fields=['origin'])
         self.create()
 
@@ -634,7 +640,9 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
 
     def test_accept_from_withdrawn_synced_emits_join_effect(self):
-        self.defaults['activity'].origin = GoodDeedFactory.create()
+        self.defaults['activity'].origin = GoodDeedFactory.create(
+            iri='https://example.com/good-deed/4'
+        )
         self.defaults['activity'].save(update_fields=['origin'])
         self.create()
 

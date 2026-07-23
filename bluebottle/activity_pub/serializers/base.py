@@ -1,4 +1,6 @@
 import inflection
+from django.core.exceptions import FieldDoesNotExist
+from django.db import models
 from rest_framework import serializers, relations
 
 from bluebottle.activity_pub.models import ActivityPubModel
@@ -89,10 +91,15 @@ class BaseActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityP
             if instance:
                 return self.update(instance, validated_data)
 
-        if self.origin and hasattr(self.Meta.model, 'origin'):
-            existing = self.Meta.model.objects.filter(origin=self.origin).first()
-            if existing:
-                return self.update(existing, validated_data)
+        if self.origin:
+            try:
+                origin_field = self.Meta.model._meta.get_field('origin')
+            except FieldDoesNotExist:
+                origin_field = None
+            if isinstance(origin_field, models.ForeignKey):
+                existing = self.Meta.model.objects.filter(origin=self.origin).first()
+                if existing:
+                    return self.update(existing, validated_data)
 
         for name, field in self.fields.items():
             if name in validated_data:

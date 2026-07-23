@@ -483,6 +483,7 @@ class BaseActivityListSerializer(ModelSerializer):
     matching_properties = MatchingPropertiesField()
     team_activity = SerializerMethodField()
     current_status = CurrentStatusField(source='states.current_state')
+    contributor_count = serializers.SerializerMethodField()
 
     def get_team_activity(self, instance):
         if InitiativePlatformSettings.load().team_activities:
@@ -500,6 +501,11 @@ class BaseActivityListSerializer(ModelSerializer):
     def get_is_follower(self, instance):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
+
+    def get_contributor_count(self, obj):
+        if hasattr(obj, 'origin'):
+            return obj.origin.contributor_count
+        return obj.active_contributors.count()
 
     class Meta(object):
         model = Activity

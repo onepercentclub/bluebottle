@@ -295,8 +295,9 @@ class Event(ActivityPubModel):
         super().save(*args, **kwargs)
 
         if self.is_local:
-            if not self.create_set.exists():
-                Create.objects.create(actor=get_platform_actor(), object=self)
+            actor = get_platform_actor()
+            if actor and not self.create_set.exists():
+                Create.objects.create(actor=actor, object=self)
 
     @property
     def source(self):

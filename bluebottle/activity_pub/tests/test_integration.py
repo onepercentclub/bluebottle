@@ -18,7 +18,7 @@ from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, Link
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
-    AdoptionTypeChoices, Follow, Accept, Event,
+    AdoptionTypeChoices, Follow, Accept, Event, Place,
     Recipient, RepetitionModeChoices
 )
 from bluebottle.activity_pub.tasks import publish_to_recipient
@@ -1515,6 +1515,33 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_join(self):
         super().test_join()
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
+
+    def test_sync_shared_slot_location(self):
+        location = GeolocationFactory.create(country=self.country)
+        self.model = self.factory.create(
+            owner=self.user,
+            initiative=None,
+            image=ImageFactory.create(),
+            slots=[],
+            organization=None,
+        )
+        DateActivitySlotFactory.create_batch(
+            2,
+            activity=self.model,
+            location=location,
+            is_online=False,
+        )
+
+        event = adapter.sync(self.model)
+
+        self.assertEqual(Place.objects.filter(origin=location).count(), 1)
+        places = {
+            sub_event.location_id
+            for sub_event in event.sub_event.all()
+            if sub_event.location_id
+        }
+        self.assertEqual(len(places), 1)
+        self.assertEqual(event.sub_event.count(), 2)
 
 
 @override_settings(

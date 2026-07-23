@@ -608,10 +608,7 @@ class Recipient(models.Model):
 
     def save(self, *args, **kwargs):
         created = not self.pk
-        try:
-            super().save(*args, **kwargs)
-        except Exception as e:
-            print(e)
+        super().save(*args, **kwargs)
 
         if created and not self.actor.is_local:
             publish_to_recipient.delay_on_commit(self, connection.tenant)

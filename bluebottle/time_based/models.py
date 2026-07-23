@@ -716,9 +716,9 @@ class DeadlineActivity(RegistrationActivity):
     def readonly_fields(self):
         readonly_fields = super().readonly_fields
 
-        if hasattr(self, 'origin') and self.origin:
+        if self.is_adopted:
             readonly_fields = readonly_fields + [
-                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
+                'duration', 'online_meeting_url',
             ]
 
         return readonly_fields

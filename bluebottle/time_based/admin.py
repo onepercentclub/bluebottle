@@ -576,7 +576,7 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
-    readonly_fields = ('status_label', 'edit', 'platform')
+    readonly_fields = ('status_label', 'edit', 'platform', 'remote_user')
     fields = ('edit', 'user', 'status_label',)
     raw_id_fields = ('user',)
 
@@ -638,7 +638,7 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
     def slots(self, obj):
         return obj.participants.filter(status__in=['accepted', 'succeeded', 'registered', 'running']).count()
 
-    readonly_fields = ('status_label', 'edit', 'slots')
+    readonly_fields = BaseRegistrationAdminInline.readonly_fields + ('slots',)
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)

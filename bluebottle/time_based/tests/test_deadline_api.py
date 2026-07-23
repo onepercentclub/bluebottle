@@ -7,6 +7,7 @@ from rest_framework import status
 
 from bluebottle.activities.models import RemoteMember
 from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
@@ -101,6 +102,61 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
         self.perform_get(user=self.model.owner)
         self.assertStatus(status.HTTP_200_OK)
         self.assertMeta('contributor-count', 6)
+
+    def test_put_synced_readonly(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        DoGoodEventFactory.create(adopted=self.model)
+
+        old_description = self.model.description.html
+        old_duration = self.model.duration
+        old_deadline = self.model.deadline
+
+        self.perform_update(
+            {
+                'description': 'Test description',
+                'duration': '04:00:00',
+                'deadline': date.today() + timedelta(days=40),
+            },
+            user=self.model.owner,
+        )
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.model.refresh_from_db()
+        self.assertEqual(self.model.description.html, old_description)
+        self.assertEqual(self.model.duration, old_duration)
+        self.assertEqual(self.model.deadline, old_deadline)
+
+        self.perform_get(user=self.model.owner)
+        self.assertMeta(
+            'readonly-fields',
+            [
+                'attributes.title',
+                'attributes.description',
+                'relationships.image',
+                'attributes.videoUrl',
+                'attributes.slug',
+                'attributes.nextStepLink',
+                'attributes.nextStepTitle',
+                'attributes.nextStepButtonLabel',
+                'attributes.nextStepDescription',
+                'attributes.capacity',
+                'attributes.registrationDeadline',
+                'attributes.review',
+                'attributes.reviewTitle',
+                'attributes.reviewDescription',
+                'attributes.reviewLink',
+                'attributes.isOnline',
+                'relationships.location',
+                'attributes.locationHint',
+                'attributes.start',
+                'attributes.deadline',
+                'attributes.duration',
+            ],
+        )
 
 
 class DeadlineActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):

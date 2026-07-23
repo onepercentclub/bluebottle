@@ -565,7 +565,12 @@ class ActivityPreviewSerializer(ModelSerializer):
         return obj.owner.full_name if obj.owner else None
 
     def get_contributor_count(self, obj):
-        return obj.contributor_count
+        count = getattr(obj, 'contributor_count', None) or 0
+        return {
+            'total': count,
+            'local': count,
+            'remote': 0,
+        }
 
     def get_capacity(self, obj):
         return obj.capacity

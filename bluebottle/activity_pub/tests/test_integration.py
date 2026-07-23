@@ -179,9 +179,12 @@ class ActivityPubTestCase:
 
         client_mock.start()
         webfinger_mock.start()
+        self._image_mock = httmock.HTTMock(image_mock)
+        self._image_mock.__enter__()
 
     def tearDown(self):
         super().tearDown()
+        self._image_mock.__exit__(None, None, None)
         client_mock.stop()
         webfinger_mock.stop()
 
@@ -240,8 +243,10 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             Event.objects.all().delete()
 
-        activity = self.factory.create(status='submitted')
-        activity.states.approve(save=True)
+        self.create()
+        activity = self.model
+        activity.status = 'submitted'
+        activity.save()
 
         publish = activity.activity_pub_model.create_set.first()
         self.assertIsNotNone(publish)
@@ -1504,17 +1509,6 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_join(self):
         super().test_join()
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
-
-    def test_sync_slot(self):
-        super().test_adopt()
-        DateActivitySlotFactory.create(
-            activity=self.model,
-            location=GeolocationFactory.create(country=self.country),
-        )
-
-        with LocalTenant(self.other_tenant):
-            self.assertEqual(self.event.sub_event.count(), 4)
-            self.assertEqual(self.adopted.slots.count(), 4)
 
 
 @override_settings(

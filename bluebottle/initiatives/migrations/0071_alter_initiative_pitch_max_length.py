@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
             name='pitch',
             field=models.TextField(
                 blank=True,
-                help_text='Pitch your smart idea in one sentence',
+                help_text='Pitch your smart idea in one sentence. Max: 350 characters.',
                 max_length=350,
                 verbose_name='pitch',
             ),

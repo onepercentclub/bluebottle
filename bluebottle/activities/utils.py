@@ -309,7 +309,7 @@ class BaseActivitySerializer(ModelSerializer):
         if hasattr(obj, 'origin'):
             return obj.origin.contributor_count
         else:
-            return obj.active_participants.count()
+            return obj.active_contributors.count()
 
     def get_source(self, obj):
         if hasattr(obj, 'origin') and obj.origin.source:

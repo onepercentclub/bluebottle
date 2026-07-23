@@ -1,10 +1,9 @@
 from urllib.parse import urlparse
 
-from django.contrib.contenttypes.fields import GenericForeignKey
 import inflection
-
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, connection
 from django.urls import reverse, resolve
@@ -13,18 +12,16 @@ from multiselectfield import MultiSelectField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.activities.models import Activity as DoGoodActivity, RemoteMember
-from bluebottle.time_based.models import Registration
+from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.tasks import publish_to_recipient
+from bluebottle.activity_pub.utils import is_local, get_platform_actor
+from bluebottle.files.models import Image as BluebottleImage
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
-from bluebottle.files.models import Image as BluebottleImage
+from bluebottle.time_based.models import Registration
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
-
-from bluebottle.activity_pub.tasks import publish_to_recipient
-from bluebottle.activity_pub.utils import is_local, get_platform_actor
-
-from bluebottle.activity_pub.adapters import adapter
 
 
 class ActivityPubManager(PolymorphicManager):
@@ -615,7 +612,6 @@ class Recipient(models.Model):
             super().save(*args, **kwargs)
         except Exception as e:
             print(e)
-            __import__('ipdb').set_trace()
 
         if created and not self.actor.is_local:
             publish_to_recipient.delay_on_commit(self, connection.tenant)

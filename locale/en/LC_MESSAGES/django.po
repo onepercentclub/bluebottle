@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-23 16:43+0200\n"
+"POT-Creation-Date: 2026-07-24 13:11+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1503,10 +1503,11 @@ msgstr ""
 #: bluebottle/time_based/templates/mails/messages/teams/captain_teammember_removed.html:10
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_added.html:10
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_removed.html:10
+#, python-format
 msgctxt "platform-email"
 msgid ""
-"If you have any questions, you can contact the platform manager by replying "
-"to this email."
+"If you have any questions, you can contact the platform manager at "
+"%(contact_email)s."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:6
@@ -1523,10 +1524,11 @@ msgid "Don’t worry, you can always create a new activity and try again."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:14
+#, python-format
 msgctxt "platform-email"
 msgid ""
 "Need some tips to make your activity stand out? Reach out to the platform "
-"manager by replying to this email."
+"manager at %(contact_email)s."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_impact_reminder.html:6
@@ -6218,7 +6220,7 @@ msgid ""
 "            Unfortunately your campaign “%(title)s” has been cancelled.\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager "
-"by replying to this email.\n"
+"at %(contact_email)s.\n"
 "        "
 msgstr ""
 
@@ -6233,7 +6235,7 @@ msgid ""
 "        Don’t worry, you can always create a new campaign and try again.\n"
 "\n"
 "        Need some tips to make your campaign stand out? Reach out to the "
-"platform manager by replying to this email.\n"
+"platform manager at %(contact_email)s.\n"
 "        "
 msgstr ""
 
@@ -6283,7 +6285,7 @@ msgid ""
 "refunded to the donors.\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager "
-"by replying to this email.\n"
+"at %(contact_email)s.\n"
 "        "
 msgstr ""
 
@@ -6443,7 +6445,7 @@ msgid ""
 "goal. Therefore, all donations will be fully refunded within 10 days.\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager "
-"by replying to this email.\n"
+"at %(contact_email)s.\n"
 "        "
 msgstr ""
 
@@ -7666,7 +7668,7 @@ msgid ""
 "cancelled.\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager "
-"by replying to this email.\n"
+"at %(contact_email)s.\n"
 "        "
 msgstr ""
 
@@ -10590,43 +10592,38 @@ msgstr ""
 msgid "Manage Reporting"
 msgstr ""
 
-#: bluebottle/settings/local.py:360 bluebottle/settings/secrets.py:327
-#: bluebottle/settings/testing.py:443
+#: bluebottle/settings/local.py:338 bluebottle/settings/testing.py:443
+#: tenants/rhi-magnesia/settings.py:25 tenants/rhi-magnesita/settings.py:25
+#: tenants/shell-grant-management/settings.py:26
 msgid "English"
 msgstr ""
 
-#: bluebottle/settings/local.py:361 bluebottle/settings/secrets.py:328
-#: bluebottle/settings/testing.py:444
+#: bluebottle/settings/local.py:339 bluebottle/settings/testing.py:444
+#: tenants/essent/settings.py:26 tenants/shell-grant-management/settings.py:25
 msgid "Dutch"
 msgstr ""
 
-#: bluebottle/settings/local.py:362 bluebottle/settings/secrets.py:329
-#: bluebottle/settings/testing.py:445
+#: bluebottle/settings/local.py:340 bluebottle/settings/testing.py:445
 msgid "French"
 msgstr ""
 
-#: bluebottle/settings/local.py:363 bluebottle/settings/secrets.py:330
-#: bluebottle/settings/testing.py:446
+#: bluebottle/settings/local.py:341 bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr ""
 
-#: bluebottle/settings/local.py:364 bluebottle/settings/secrets.py:331
-#: bluebottle/settings/testing.py:447
+#: bluebottle/settings/local.py:342 bluebottle/settings/testing.py:447
 msgid "German"
 msgstr ""
 
-#: bluebottle/settings/local.py:365 bluebottle/settings/secrets.py:332
-#: bluebottle/settings/testing.py:448
+#: bluebottle/settings/local.py:343 bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr ""
 
-#: bluebottle/settings/local.py:366 bluebottle/settings/secrets.py:333
-#: bluebottle/settings/testing.py:449
+#: bluebottle/settings/local.py:344 bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr ""
 
-#: bluebottle/settings/local.py:367 bluebottle/settings/secrets.py:334
-#: bluebottle/settings/testing.py:450
+#: bluebottle/settings/local.py:345 bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr ""
 

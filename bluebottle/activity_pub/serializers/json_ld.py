@@ -309,7 +309,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
     duration = serializers.DurationField(required=False, allow_null=True)
     capacity = serializers.IntegerField(required=False, allow_null=True)
 
-    sub_event = RelatedResourceField(type='SubEvent', many=True, allow_null=True, required=False, include=True)
+    sub_event = RelatedResourceField(type='subEvent', many=True, allow_null=True, required=False, include=True)
 
     class Meta(BaseEventSerializer.Meta):
         model = DoGoodEvent

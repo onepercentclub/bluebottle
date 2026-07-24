@@ -1516,6 +1516,19 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         super().test_join()
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
 
+        supplier_slot = self.synced_participant.slot
+        self.assertEqual(supplier_slot.contributor_count, 1)
+
+        event = self.model.activity_pub_model
+        sub_event = event.sub_event.order_by('start_time', 'id').first()
+        self.assertIsNotNone(sub_event)
+        self.assertEqual(sub_event.contributor_count, 1)
+
+        with LocalTenant(self.other_tenant):
+            consumer_slot = self.adopted.slots.order_by('start', 'id').first()
+            consumer_slot.origin.refresh_from_db()
+            self.assertEqual(consumer_slot.origin.contributor_count, 1)
+
     def test_join_with_slot_location(self):
         location = GeolocationFactory.create(country=self.country)
 

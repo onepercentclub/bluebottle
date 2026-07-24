@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-23 16:43+0200\n"
-"PO-Revision-Date: 2026-07-24 11:22\n"
+"PO-Revision-Date: 2026-07-24 11:23\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -1449,7 +1449,7 @@ msgstr "Lamentablemente, tu actividad «%(title)s» se ha cancelado."
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_removed.html:10
 msgctxt "platform-email"
 msgid "If you have any questions, you can contact the platform manager by replying to this email."
-msgstr ""
+msgstr "Si tienes alguna pregunta, puedes contactar con el administrador de la plataforma respondiendo a este correo electrónico."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:6
 #, python-format
@@ -1465,7 +1465,7 @@ msgstr "No te preocupes, puedes crear una actividad nueva en cualquier momento y
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:14
 msgctxt "platform-email"
 msgid "Need some tips to make your activity stand out? Reach out to the platform manager by replying to this email."
-msgstr ""
+msgstr "¿Necesitas consejos para destacar tu actividad? Contacta con el administrador de la plataforma respondiendo a este correo electrónico."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_impact_reminder.html:6
 msgctxt "platform-email"
@@ -6045,7 +6045,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Lamentablemente, tu campaña «%(title)s» se ha cancelado.\n"
+"            <br><br>\n"
+"            Si tienes alguna pregunta, puedes contactar con el administrador de la plataforma respondiendo a este correo electrónico.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_expired.html:6
 #, python-format
@@ -6055,7 +6059,11 @@ msgid "\n"
 "        Don’t worry, you can always create a new campaign and try again.\n\n"
 "        Need some tips to make your campaign stand out? Reach out to the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"        Lamentablemente, nadie donó fondos para tu campaña «%(title)s» antes de la fecha límite. Por eso hemos cancelado tu campaña.\n\n"
+"        No te preocupes, puedes crear una nueva campaña en cualquier momento y volver a intentarlo.\n\n"
+"        ¿Necesitas consejos para destacar tu campaña? Contacta con el administrador de la plataforma respondiendo a este correo electrónico.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_extended.html:6
 #, python-format
@@ -6105,7 +6113,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Todas las donaciones recibidas en tu campaña «%(title)s» se reembolsarán a los donantes.\n"
+"            <br><br>\n"
+"            Si tienes alguna pregunta, puedes contactar con el administrador de la plataforma respondiendo a este correo electrónico.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/grant_application_approved.html:5
 #, python-format
@@ -6296,7 +6308,13 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hola, %(recipient_name)s:\n"
+"            <br><br>\n"
+"            Lamentablemente, la campaña «%(title)s» no alcanzó su objetivo. Por lo tanto, todas las donaciones se reembolsarán por completo en el plazo de 10 días.\n"
+"            <br><br>\n"
+"            Si tienes alguna pregunta, puedes contactar con el administrador de la plataforma respondiendo a este correo electrónico.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_refunded_donor.html:7
 #, python-format
@@ -7509,7 +7527,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Lamentablemente, tu solicitud de ayuda «%(title)s» se ha cancelado.\n"
+"            <br><br>\n"
+"            Si tienes alguna pregunta, puedes contactar con el administrador de la plataforma respondiendo a este correo electrónico.\n"
+"        "
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_needs_work.html:5
 #, python-format

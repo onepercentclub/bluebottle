@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-23 16:43+0200\n"
-"PO-Revision-Date: 2026-07-24 11:22\n"
+"PO-Revision-Date: 2026-07-24 11:23\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -1449,7 +1449,7 @@ msgstr "Votre activité « %(title)s » a malheureusement été annulée."
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_removed.html:10
 msgctxt "platform-email"
 msgid "If you have any questions, you can contact the platform manager by replying to this email."
-msgstr ""
+msgstr "Des questions ? Contactez le gestionnaire de la plateforme en répondant à cet e-mail."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:6
 #, python-format
@@ -1465,7 +1465,7 @@ msgstr "Pas de panique, vous pouvez créer une nouvelle activité et réessayer.
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:14
 msgctxt "platform-email"
 msgid "Need some tips to make your activity stand out? Reach out to the platform manager by replying to this email."
-msgstr ""
+msgstr "Besoin de conseils pour faire sortir votre activité du lot ? Contactez le gestionnaire de la plateforme en répondant à cet e-mail."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_impact_reminder.html:6
 msgctxt "platform-email"
@@ -6043,7 +6043,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Votre campagne « %(title)s » a malheureusement été annulée.\n"
+"            <br><br>\n"
+"            Des questions ? Contactez le gestionnaire de la plateforme en répondant à cet e-mail.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_expired.html:6
 #, python-format
@@ -6053,7 +6057,11 @@ msgid "\n"
 "        Don’t worry, you can always create a new campaign and try again.\n\n"
 "        Need some tips to make your campaign stand out? Reach out to the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"        Malheureusement, votre campagne « %(title)s » n’a réuni aucun don avant la date limite, nous l’avons donc annulée.\n\n"
+"        Pas de panique, vous pouvez créer une nouvelle campagne et réessayer.\n\n"
+"        Besoin de conseils pour faire sortir votre campagne du lot ? Contactez le gestionnaire de la plateforme en répondant à cet e-mail.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_extended.html:6
 #, python-format
@@ -6103,7 +6111,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Tous les dons reçus pour votre campagne « %(title)s » seront remboursés aux donateurs.\n"
+"            <br><br>\n"
+"            Des questions ? Contactez le gestionnaire de la plateforme en répondant à cet e-mail.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/grant_application_approved.html:5
 #, python-format
@@ -6294,7 +6306,13 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Bonjour %(recipient_name)s,\n"
+"            <br><br>\n"
+"            La campagne « %(title)s » n’a malheureusement pas atteint son objectif. Tous les dons seront entièrement remboursés dans un délai de 10 jours.\n"
+"            <br><br>\n"
+"            Des questions ? Contactez le gestionnaire de la plateforme en répondant à cet e-mail.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_refunded_donor.html:7
 #, python-format
@@ -7507,7 +7525,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Votre demande de subvention « %(title)s » a malheureusement été annulée.\n"
+"            <br><br>\n"
+"            Des questions ? Contactez le gestionnaire de la plateforme en répondant à cet e-mail.\n"
+"        "
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_needs_work.html:5
 #, python-format

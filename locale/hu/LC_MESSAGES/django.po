@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-23 16:43+0200\n"
-"PO-Revision-Date: 2026-07-24 11:22\n"
+"PO-Revision-Date: 2026-07-24 11:23\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -1449,7 +1449,7 @@ msgstr "Sajnos a(z) „%(title)s” tevékenységedet törölték."
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_removed.html:10
 msgctxt "platform-email"
 msgid "If you have any questions, you can contact the platform manager by replying to this email."
-msgstr ""
+msgstr "Ha bármilyen kérdésed van, kapcsolatba léphetsz a platformmenedzserrel erre az e-mailre válaszolva."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:6
 #, python-format
@@ -1465,7 +1465,7 @@ msgstr "Ne aggódj, bármikor létrehozhatsz egy új tevékenységet, és megpr�
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:14
 msgctxt "platform-email"
 msgid "Need some tips to make your activity stand out? Reach out to the platform manager by replying to this email."
-msgstr ""
+msgstr "Szükséged van néhány tippre, hogy a tevékenységed kitűnjön? Erre az e-mailre válaszolva vedd fel a kapcsolatot a platformmenedzserrel."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_impact_reminder.html:6
 msgctxt "platform-email"
@@ -6043,7 +6043,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            A(z) „%(title)s” kampányodat sajnos törölték.\n"
+"            <br><br>\n"
+"            Ha bármilyen kérdésed van, az e-mailre válaszolva kapcsolatba léphetsz a platformmenedzserrel.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_expired.html:6
 #, python-format
@@ -6053,7 +6057,11 @@ msgid "\n"
 "        Don’t worry, you can always create a new campaign and try again.\n\n"
 "        Need some tips to make your campaign stand out? Reach out to the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"        Sajnos senki sem adományozott a(z) „%(title)s” kampányodra a határidő előtt. Ezért töröltük a kampányodat.\n\n"
+"        Ne aggódj, mindig létrehozhatsz egy új kampányt és próbálkozhatsz újra.\n\n"
+"        Adhatunk néhány tanácsot, hogy a kampányod kitűnjön? Vedd fel a kapcsolatot a platformmenedzserrel erre az emailre válaszolva.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_extended.html:6
 #, python-format
@@ -6102,7 +6110,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            A(z) „%(title)s” kampányodra beérkezett összes adományt visszatérítjük az adományozóknak.\n"
+"            <br><br>\n"
+"            Ha bármilyen kérdésed van, az e-mailre válaszolva kapcsolatba léphetsz a platformmenedzserrel.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/grant_application_approved.html:5
 #, python-format
@@ -6291,7 +6303,13 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Üdv, %(recipient_name)s!\n"
+"            <br><br>\n"
+"            Sajnos a(z) „%(title)s” kampány nem érte el a célját. Ezért az összes adományt teljes egészében visszatérítjük 10 napon belül.\n"
+"            <br><br>\n"
+"            Ha bármilyen kérdésed van, válaszolhatsz erre az e-mailre a platformmenedzsernek.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_refunded_donor.html:7
 #, python-format
@@ -7504,7 +7522,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            A „%(title)s” nevű támogatási kérelmedet sajnos törölték.\n"
+"            <br><br>\n"
+"            Ha kérdésed van, az e-mailre válaszolva kapcsolatba léphetsz a platformmenedzserrel.\n"
+"        "
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_needs_work.html:5
 #, python-format

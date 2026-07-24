@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-23 16:43+0200\n"
-"PO-Revision-Date: 2026-07-24 11:22\n"
+"PO-Revision-Date: 2026-07-24 11:23\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -1449,7 +1449,7 @@ msgstr "Leider wurde deine Aktivität „%(title)s“ abgebrochen."
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_removed.html:10
 msgctxt "platform-email"
 msgid "If you have any questions, you can contact the platform manager by replying to this email."
-msgstr ""
+msgstr "Wenn du Fragen hast, kannst du dich an den Plattform-Manager wenden, indem du auf diese E-Mail antwortest."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:6
 #, python-format
@@ -1465,7 +1465,7 @@ msgstr "Keine Sorge, du kannst jederzeit eine neue Aktivität erstellen und es e
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:14
 msgctxt "platform-email"
 msgid "Need some tips to make your activity stand out? Reach out to the platform manager by replying to this email."
-msgstr ""
+msgstr "Brauchst du ein paar Tipps, um deine Aktivität hervorheben zu können? Kontaktiere den Plattform-Manager, indem du auf diese E-Mail antwortest."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_impact_reminder.html:6
 msgctxt "platform-email"
@@ -6042,7 +6042,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Leider wurde deine Kampagne „%(title)s“ abgebrochen.\n"
+"            <br><br>\n"
+"            Wenn du Fragen hast, kannst du den Plattform-Manager kontaktieren, indem du auf diese E-Mail antwortest.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_expired.html:6
 #, python-format
@@ -6052,7 +6056,11 @@ msgid "\n"
 "        Don’t worry, you can always create a new campaign and try again.\n\n"
 "        Need some tips to make your campaign stand out? Reach out to the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"        Leider hat niemand vor dem Stichtag für deine Kampagne „%(title)s“ gespendet. Daher haben wir deine Kampagne storniert.\n\n"
+"        Mach dir keine Sorgen, du kannst jederzeit eine neue Kampagne erstellen und es erneut versuchen.\n\n"
+"        Brauchst du Tipps, um deine Kampagne hervorzubringen? Kontaktiere den Plattform-Manager, indem du auf diese E-Mail antwortest.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_extended.html:6
 #, python-format
@@ -6102,7 +6110,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Alle Spenden, die du für deine Kampagne „%(title)s“ erhalten hast, werden den Spendern zurückerstattet.\n"
+"            <br><br>\n"
+"            Wenn du Fragen hast, kannst du den Plattform-Manager kontaktieren, indem du auf diese E-Mail antwortest.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/grant_application_approved.html:5
 #, python-format
@@ -6292,7 +6304,13 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,\n"
+"            <br><br>\n"
+"            Leider hat die Kampagne „%(title)s“ ihr Ziel nicht erreicht. Daher werden alle Spenden innerhalb von 10 Tagen vollständig zurückerstattet.\n"
+"            <br><br>\n"
+"            Wenn du Fragen hast, kannst du den Plattform-Manager kontaktieren, indem du auf diese E-Mail antwortest.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_refunded_donor.html:7
 #, python-format
@@ -7506,7 +7524,11 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Leider wurde dein Zuschussantrag „%(title)s“ abgebrochen.\n"
+"            <br><br>\n"
+"            Wenn du noch Fragen hast, kannst du den Plattform-Manager kontaktieren, indem du auf diese E-Mail antwortest.\n"
+"        "
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_needs_work.html:5
 #, python-format

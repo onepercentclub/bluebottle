@@ -1516,6 +1516,23 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         super().test_join()
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
 
+    def test_join_with_slot_location(self):
+        location = GeolocationFactory.create(country=self.country)
+
+        def create(**kwargs):
+            ActivityPubTestCase.create(self, slots=[], organization=None, **kwargs)
+            DateActivitySlotFactory.create_batch(
+                3,
+                activity=self.model,
+                location=location,
+                is_online=False,
+            )
+            self.submit()
+
+        self.create = create
+        with mock.patch.object(Geolocation, 'update_location'):
+            self.test_join()
+
     def test_sync_shared_slot_location(self):
         location = GeolocationFactory.create(country=self.country)
         self.model = self.factory.create(

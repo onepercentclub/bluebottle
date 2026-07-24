@@ -344,7 +344,7 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
 
     @property
     def is_adopted(self):
-        return self.origin is not None
+        return hasattr(self, 'origin') and self.origin
 
     @property
     def host_organization(self):

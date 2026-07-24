@@ -58,9 +58,9 @@ class ActivitySlotSerializer(ModelSerializer):
         return instance.location.timezone if not is_online and has_location else None
 
     def get_contributor_count(self, instance):
-        local_count = instance.contributor_count
-        remote_count = getattr(instance, 'remote_contributor_count', 0) or 0
-        return max(local_count, remote_count)
+        if hasattr(instance, 'origin'):
+            return instance.origin.contributor_count
+        return instance.contributor_count
 
     class Meta:
         fields = (

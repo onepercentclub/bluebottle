@@ -320,6 +320,9 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
     def test_reapply(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=1)
+        self.defaults['activity'].save()
+
         self.create()
 
         self.model.states.withdraw(save=True)
@@ -336,6 +339,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantJoinedNotification)
 
     def test_reapply_finished(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=10)
         self.defaults['activity'].end = date.today() - timedelta(days=2)
         self.defaults['activity'].save()
 

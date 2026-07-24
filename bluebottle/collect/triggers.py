@@ -11,7 +11,6 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
-
 from bluebottle.activity_pub.effects import (
     PublishAdoptionEffect, CancelEffect, SendJoinEffect, SendLeaveEffect,
     UpdateEventEffect, FinishEffect, SyncRelatedEvent
@@ -265,6 +264,14 @@ def contributor_activity_started(effect):
     )
 
 
+def activity_has_started(effect):
+    """activity is started"""
+    return (
+        not effect.instance.activity.start or
+        effect.instance.activity.start < date.today()
+    )
+
+
 @register(CollectContribution)
 class CollectContributionTriggers(ContributionTriggers):
     triggers = ContributionTriggers.triggers + [
@@ -364,7 +371,7 @@ class CollectContributorTriggers(ContributorTriggers):
             effects=[
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
-                    conditions=[contributor_activity_started]
+                    conditions=[activity_has_started]
                 ),
                 NotificationEffect(ParticipantJoinedNotification),
                 SendJoinEffect,

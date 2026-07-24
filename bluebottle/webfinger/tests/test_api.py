@@ -26,7 +26,7 @@ class WebFingerTestCase(BluebottleTestCase):
 
         path = reverse(
             "activity_pub:resource",
-            args=('organization', self.organization.origin.pk, )
+            args=('organization', self.organization.activity_pub_model.pk, )
         )
         organization_url = f'http://test.localhost{path}'
 

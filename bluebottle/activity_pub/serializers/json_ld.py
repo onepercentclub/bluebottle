@@ -150,7 +150,7 @@ class BaseEventSerializer(BaseActivityPubSerializer):
     summary = serializers.CharField(allow_null=True, allow_blank=True, required=False)
     image = RelatedResourceField(type='Image', include=True, allow_null=True, required=False)
     organization = RelatedResourceField(type='Organization', include=True, allow_null=True, required=False)
-    url = serializers.URLField()
+    url = serializers.URLField(required=False, allow_null=True)
 
     contributor_count = serializers.IntegerField(
         required=False, allow_null=True, default=0

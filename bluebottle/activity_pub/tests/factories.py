@@ -170,6 +170,7 @@ class GoodDeedFactory(factory.DjangoModelFactory):
     summary = factory.Faker('text', max_nb_chars=500)
     image = factory.SubFactory(ImageFactory)
     organization = factory.SubFactory(OrganizationFactory)
+    url = factory.Sequence(lambda n: 'https://example.com/good-deed/{0}'.format(n))
 
     start_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=7))
     end_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=8))

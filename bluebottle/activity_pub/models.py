@@ -930,12 +930,11 @@ class Join(Activity):
             yield self.actor
             return
 
-        try:
-            create = self.object.create_set.get()
-        except (AttributeError, Create.DoesNotExist):
-            create = self.object.parent.create_set.get()
+        create = self.object.create_set.first()
+        if create is None and getattr(self.object, 'parent', None):
+            create = self.object.parent.create_set.first()
 
-        if not create.actor.is_local:
+        if create and not create.actor.is_local:
             yield create.actor
 
 

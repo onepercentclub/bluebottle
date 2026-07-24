@@ -20,7 +20,9 @@ from bluebottle.activities.states import (
     EffortContributionStateMachine,
 )
 from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect
-from bluebottle.activity_pub.tests.factories import GoodDeedFactory
+from bluebottle.activity_pub.tests.factories import (
+    CreateFactory, GoodDeedFactory, OrganizationFactory,
+)
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
@@ -362,6 +364,17 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         }
         super().setUp()
 
+    def make_synced(self, iri):
+        origin = GoodDeedFactory.create(
+            adopted=self.defaults['activity'],
+            iri=iri,
+        )
+        CreateFactory.create(
+            object=origin,
+            actor=OrganizationFactory.create(iri=f'{iri}/org'),
+        )
+        return origin
+
     def test_initiate_future_start(self):
         self.model = self.factory.build(**self.defaults)
         with self.execute(user=self.user):
@@ -475,10 +488,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantWithdrewConfirmationNotification)
 
     def test_withdraw_synced_emits_leave_effect(self):
-        self.defaults['activity'].origin = GoodDeedFactory.create(
-            iri='https://example.com/good-deed/1'
-        )
-        self.defaults['activity'].save(update_fields=['origin'])
+        self.make_synced('https://example.com/good-deed/1')
         self.create()
 
         self.model.states.withdraw()
@@ -537,11 +547,15 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
                 self.model.contributions.first()
             )
 
+    def test_apply_emits_join_effect(self):
+        self.make_synced('https://example.com/good-deed/2')
+        self.defaults['activity'].states.publish(save=True)
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.user):
+            self.assertEffect(SendJoinEffect)
+
     def test_reapply_synced_emits_join_effect(self):
-        self.defaults['activity'].origin = GoodDeedFactory.create(
-            iri='https://example.com/good-deed/2'
-        )
-        self.defaults['activity'].save(update_fields=['origin'])
+        self.make_synced('https://example.com/good-deed/2')
         self.create()
         self.model.activity.states.publish(save=True)
 
@@ -562,10 +576,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantRemovedNotification)
 
     def test_remove_synced_emits_leave_effect(self):
-        self.defaults['activity'].origin = GoodDeedFactory.create(
-            iri='https://example.com/good-deed/3'
-        )
-        self.defaults['activity'].save(update_fields=['origin'])
+        self.make_synced('https://example.com/good-deed/3')
         self.create()
 
         self.model.states.remove()
@@ -640,10 +651,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             )
 
     def test_accept_from_withdrawn_synced_emits_join_effect(self):
-        self.defaults['activity'].origin = GoodDeedFactory.create(
-            iri='https://example.com/good-deed/4'
-        )
-        self.defaults['activity'].save(update_fields=['origin'])
+        self.make_synced('https://example.com/good-deed/4')
         self.create()
 
         self.model.states.withdraw(save=True)

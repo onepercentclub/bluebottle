@@ -100,7 +100,13 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     slug = models.SlugField(_("slug"), max_length=100, default="new")
 
     pitch = models.TextField(
-        _("pitch"), help_text=_("Pitch your smart idea in one sentence"), blank=True
+        _("pitch"),
+        help_text=_(
+            "Pitch your smart idea in one sentence. Max: %(chars)s characters."
+        )
+        % {"chars": 350},
+        blank=True,
+        max_length=350,
     )
     story = QuillField(_("story"), blank=True)
 

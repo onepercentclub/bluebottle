@@ -2247,7 +2247,7 @@ class ActivityMessageAPITestCase(BluebottleTestCase):
         }
 
     @mock.patch(
-        'bluebottle.activities.tasks.send_activity_message_notification_email.delay'
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
     )
     def test_post_authenticated(self, notify_task_mock):
         response = self.client.post(
@@ -2263,7 +2263,7 @@ class ActivityMessageAPITestCase(BluebottleTestCase):
         notify_task_mock.assert_called_once_with(msg.pk, connection.tenant)
 
     @mock.patch(
-        'bluebottle.activities.tasks.send_activity_message_notification_email.delay'
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
     )
     def test_post_rate_limit(self, notify_task_mock):
         for _ in range(12):
@@ -2300,7 +2300,7 @@ class ActivityMessageAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @mock.patch(
-        'bluebottle.activities.tasks.send_activity_message_notification_email.delay'
+        'bluebottle.activities.signals.send_activity_message_notification_email.delay'
     )
     def test_post_disabled_by_platform_setting(self, notify_task_mock):
         settings = InitiativePlatformSettings.load()

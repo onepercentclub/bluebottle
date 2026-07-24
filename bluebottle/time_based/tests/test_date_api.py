@@ -291,9 +291,7 @@ class DateSlotDetailAPITestCase(APITestCase):
             self.assertIncluded(relationship)
 
     def test_get_contributor_count_uses_remote_total_for_synced_slot(self):
-        self.model.origin = SubEventFactory.create(contributor_count=5)
-        self.model.remote_contributor_count = 5
-        self.model.save(update_fields=['origin', 'remote_contributor_count'])
+        SubEventFactory.create(adopted=self.model, contributor_count=5)
         DateParticipantFactory.create(activity=self.activity, slot=self.model, status='accepted')
 
         self.perform_get(user=self.manager)

@@ -94,9 +94,7 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
         self.assertMeta("registration-status", {"accepted": 3, "new": 1, "rejected": 2})
 
     def test_contributor_count_uses_remote_total_for_synced_activity(self):
-        self.model.origin = DoGoodEventFactory.create(contributor_count=6)
-        self.model.synced_contributor_count = 6
-        self.model.save(update_fields=['origin', 'synced_contributor_count'])
+        DoGoodEventFactory.create(adopted=self.model, contributor_count=6)
         DeadlineParticipantFactory.create(activity=self.model, status='accepted')
 
         self.perform_get(user=self.model.owner)

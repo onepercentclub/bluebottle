@@ -10,8 +10,8 @@ from rest_framework import status
 
 from bluebottle.activities.tests.factories import TextQuestionFactory, \
     TextAnswerFactory
-from bluebottle.activity_pub.tests.factories import GoodDeedFactory, PersonFactory
 from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.tests.factories import GoodDeedFactory, PersonFactory
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer,
@@ -667,7 +667,9 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         )
 
         included_users = self.get_included('user')
-        self.assertEqual(len(included_users), 10)
+        meta = self.response.json()['meta']
+        self.assertEqual(meta['pagination']['count'], 10)
+        self.assertEqual(len(included_users), 8)
         for member in included_users:
             self.assertIsNotNone(member['attributes']['last-name'])
 

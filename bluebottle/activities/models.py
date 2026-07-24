@@ -767,3 +767,4 @@ class FileUploadAnswer(ActivityAnswer):
 
 
 from bluebottle.activities.states import *  # noqa
+from bluebottle.activities.signals import *  # noqa

@@ -13,7 +13,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase, JSONAPITestClient
-from bluebottle.activity_pub.tests.factories import SubEventFactory
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory, SubEventFactory
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,
@@ -459,6 +459,12 @@ class DateSlotListAPITestCase(APITestCase):
     def test_create_anonymous(self):
         self.perform_create()
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_adopted_activity(self):
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        self.perform_create(user=self.activity.owner)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
 
 class DateSlotRelatedListAPITestCase(APITestCase):

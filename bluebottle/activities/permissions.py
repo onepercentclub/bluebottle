@@ -139,6 +139,20 @@ class DeleteActivityPermission(ResourcePermission):
         return True
 
 
+class IsNotAdoptedPermission(ResourcePermission):
+    """
+    Deny write actions on activities adopted from another platform.
+    """
+
+    def has_object_action_permission(self, action, user, obj):
+        if action in permissions.SAFE_METHODS:
+            return True
+        return not getattr(obj, 'is_adopted', False)
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+
 class CanExportTeamParticipantsPermission(IsOwner):
     """ Allows access only to team owner or activity manager. """
     def has_object_action_permission(self, action, user, obj):

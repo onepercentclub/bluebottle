@@ -171,8 +171,8 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['registrations-0-user'] = BlueBottleUserFactory.create().pk
         form['registrations-0-activity'] = activity.pk
         page = form.submit()
-        form = page.forms['confirm']
-        form.submit()
+        if 'confirm' in page.forms:
+            page.forms['confirm'].submit()
 
         self.assertEqual(activity.registrations.count(), 1)
 

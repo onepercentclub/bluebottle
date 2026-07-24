@@ -2,13 +2,16 @@ from datetime import timedelta
 
 from django.utils.timezone import now
 
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateActivitySlotFactory, PeriodicActivityFactory
+    DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory, PeriodicActivityFactory,
+    RegisteredDateActivityFactory, ScheduleActivityFactory
 )
 
 
-class DeadlineActivityModelTestCase(BluebottleTestCase):
+class PeriodicActivityModelTestCase(BluebottleTestCase):
     def test_registration_deadline_validation_empty(self):
         activity = PeriodicActivityFactory.create(
             start=None,
@@ -45,6 +48,25 @@ class DeadlineActivityModelTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(list(activity.errors), [])
+
+    def test_readonly_fields(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        activity = PeriodicActivityFactory.create()
+
+        DoGoodEventFactory.create(adopted=activity)
+
+        self.assertEqual(
+            activity.readonly_fields,
+            [
+                'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
+                'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline',
+                'review', 'review_title', 'review_description', 'review_link', 'preparation', 'is_online',
+                'location', 'location_hint', 'start', 'deadline', 'period', 'duration'
+            ]
+        )
 
 
 class DateActivityModelTestCase(BluebottleTestCase):
@@ -88,3 +110,86 @@ class DateActivityModelTestCase(BluebottleTestCase):
         self.assertEqual(self.slotB.sequence, 1)
         self.assertEqual(self.slotC.sequence, 2)
         self.assertEqual(self.slotD.sequence, 3)
+
+    def test_readonly_fields(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        self.assertEqual(
+            self.activity.readonly_fields,
+            [
+                'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
+                'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
+                'review_title', 'review_description', 'review_link', 'preparation', 'start', 'duration'
+            ]
+        )
+
+
+class DeadlineActivityTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.activity = DeadlineActivityFactory.create()
+
+    def test_readonly_fields(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        self.assertEqual(
+            self.activity.readonly_fields,
+            [
+                'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
+                'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
+                'review_title', 'review_description', 'review_link', 'preparation', 'is_online', 'location',
+                'location_hint', 'start', 'deadline', 'duration', 'online_meeting_url'
+            ]
+        )
+
+
+class ScheduleActivityTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.activity = ScheduleActivityFactory.create()
+
+    def test_readonly_fields(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        self.assertEqual(
+            self.activity.readonly_fields,
+            [
+                'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
+                'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
+                'review_title', 'review_description', 'review_link', 'preparation', 'is_online', 'location',
+                'location_hint', 'start', 'deadline', 'start', 'duration', 'is_online', 'location', 'location_hint',
+                'online_meeting_url'
+            ]
+        )
+
+
+class RegisteredDataActivityTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.activity = RegisteredDateActivityFactory.create()
+
+    def test_readonly_fields(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        self.assertEqual(
+            self.activity.readonly_fields,
+            [
+                'title', 'description', 'image', 'video_url', 'slug', 'next_step_link', 'next_step_title',
+                'next_step_button_label', 'next_step_description', 'capacity', 'registration_deadline', 'review',
+                'review_title', 'review_description', 'review_link', 'preparation', 'start', 'duration', 'is_online',
+                'location', 'location_hint', 'online_meeting_url'
+            ]
+        )

@@ -83,18 +83,18 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
             form['default_owner'] = str(default_owner.id)
         actor = kwargs.get('actor') or self.create_remote_actor()
         with mock.patch(
-            'bluebottle.activity_pub.admin.client.get',
+            'bluebottle.webfinger.client.client.get',
             return_value=self.other_platform_url
         ), mock.patch(
-            'bluebottle.activity_pub.admin.adapter.follow'
-        ) as follow:
-            follow.side_effect = lambda url, model=None: setattr(model, 'object', actor)
+            'bluebottle.activity_pub.adapters.adapter.discover'
+        ) as discover:
+            discover.side_effect = lambda url: actor
             return form.submit()
 
     def create_published_activity(self, follow, status='open'):
         activity = DeedFactory.create(status=status)
-        adapter.create_or_update_event(activity)
-        publish = activity.event.create_set.first()
+        adapter.sync(activity)
+        publish = activity.activity_pub_model.create_set.first()
         Recipient.objects.create(actor=follow.actor, activity=publish)
         return activity
 
@@ -177,17 +177,17 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(url, user=self.superuser)
         form = page.forms[1]
 
-        with mock.patch('bluebottle.activity_pub.admin.publish_activities.delay') as delay:
+        with mock.patch('bluebottle.activity_pub.admin.publish_activity.delay_on_commit') as delay:
             response = form.submit(name='confirm')
 
         self.assertEqual(response.status_code, 302)
 
-        called_actor, called_queryset, called_tenant = delay.call_args[0]
+        called_actor, called_model, called_tenant = delay.call_args[0]
         self.assertEqual(called_actor, follower.actor)
         self.assertEqual(called_tenant, self.tenant)
         self.assertEqual(
-            set(called_queryset.values_list('id', flat=True)),
-            {open_activity.id}
+            called_model.pk,
+            open_activity.id
         )
 
     def test_follower_admin_accept_follow_request_sets_publish_mode(self):

@@ -36,6 +36,7 @@ class ActivityDocument(Document):
     is_upcoming = fields.BooleanField()
     status = fields.KeywordField()
     created = fields.DateField()
+    platform = fields.KeywordField()
 
     type = fields.KeywordField()
     resource_name = fields.KeywordField()
@@ -70,6 +71,13 @@ class ActivityDocument(Document):
 
     def prepare_is_local(self, instance):
         return True
+
+    def prepare_platform(self, instance):
+        if hasattr(instance, 'origin'):
+            return instance.origin.source.name
+
+        else:
+            return 'local'
 
     def prepare_archived(self, instance):
         return False

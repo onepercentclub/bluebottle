@@ -8,7 +8,6 @@ from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django_quill.fields import QuillField
 from djchoices.choices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
@@ -26,6 +25,7 @@ from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import SegmentType, Segment
+from bluebottle.utils.fields import QuillField
 from bluebottle.utils.managers import TranslatablePolymorphicManager
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -33,6 +33,16 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 @python_2_unicode_compatible
 class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
+    LOCAL_CONTRIBUTOR_STATUSES = (
+        "new",
+        "accepted",
+        "scheduled",
+        "participating",
+        "running",
+        "succeeded",
+        "activity_refunded",
+    )
+
     class TeamActivityChoices(DjangoChoices):
         teams = ChoiceItem("teams", label=_("Teams"))
         individuals = ChoiceItem("individuals", label=_("Individuals"))
@@ -115,6 +125,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     deleted_successful_contributors = models.PositiveIntegerField(
         _("Number of deleted successful contributors"), default=0, null=True, blank=True
     )
+    synced_contributor_count = models.PositiveIntegerField(default=0)
 
     title = models.CharField(_("Title"), max_length=255)
     slug = models.SlugField(_("Slug"), max_length=100, default="new")
@@ -129,7 +140,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
     image = ImageField(blank=True, null=True)
 
-    origin = models.ForeignKey(
+    old_origin = models.ForeignKey(
         'activity_pub.Event', null=True, related_name="adopted_activities", on_delete=models.SET_NULL
     )
 
@@ -205,21 +216,21 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     @property
+    def is_adopted(self):
+        return hasattr(self, 'origin') and self.origin
+
+    @property
+    def readonly_fields(self):
+        if self.is_adopted:
+            return [
+                'title', 'description', 'image', 'video_url', 'slug',
+                'next_step_link', 'next_step_title', 'next_step_button_label', 'next_step_description',
+            ]
+        return []
+
+    @property
     def link(self):
         return None
-
-    @property
-    def event(self):
-        from bluebottle.activity_pub.models import Event
-        return Event.objects.get(object=self)
-
-    @property
-    def activity_pub_url(self):
-        from bluebottle.activity_pub.models import Event
-        try:
-            return self.event.iri or self.event.pub_url
-        except Event.DoesNotExist:
-            return None
 
     @property
     def details(self):
@@ -236,7 +247,13 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def succeeded_contributor_count(self):
-        raise NotImplementedError
+        return self.participants.filter(status='succeeded').count()
+
+    @property
+    def active_contributors(self):
+        return self.contributors.exclude(
+            instance_of=Organizer
+        ).filter(status__in=['accepted', 'succeeded', 'scheduled'])
 
     @property
     def activity_date(self):
@@ -278,6 +295,11 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     @property
     def questions(self):
         return ActivityQuestion.objects.filter(activity_types__contains=self._meta.model_name)
+
+    @property
+    def activity_pub_url(self):
+        if hasattr(self, 'origin'):
+            return self.origin.pub_url
 
     class Meta(object):
         verbose_name = _("Activity")
@@ -339,6 +361,50 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 
 
 @python_2_unicode_compatible
+class RemoteMember(models.Model):
+    """
+    Remote identity for a contributor without a local user (e.g. synced from another platform).
+    Stores display name, email, sync id, and which Actor the Join came from.
+    """
+    first_name = models.CharField(
+        _("First name"),
+        max_length=255,
+        blank=True,
+        default="",
+    )
+    last_name = models.CharField(
+        _("First name"),
+        max_length=255,
+        blank=True,
+        default="",
+    )
+    email = models.EmailField(
+        _("Email"),
+        blank=True,
+        null=True,
+        help_text=_("Email when no user is linked (e.g. synced participants)."),
+    )
+
+    is_active = False
+
+    class Meta(object):
+        verbose_name = _("Remote contributor")
+        verbose_name_plural = _("Remote contributors")
+
+    @property
+    def full_name(self):
+        if self.first_name and self.last_name:
+            return f'{self.first_name} {self.last_name}'
+        elif self.first_name:
+            return self.first_name
+        elif self.last_name:
+            return self.last_name
+
+    def __str__(self):
+        return self.full_name or self.email
+
+
+@python_2_unicode_compatible
 class Contributor(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
@@ -366,6 +432,16 @@ class Contributor(TriggerMixin, PolymorphicModel):
         on_delete=models.SET_NULL,
     )
 
+    remote_user = models.ForeignKey(
+        "RemoteMember",
+        verbose_name=_("Remote member"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="contributors",
+        help_text=_("When set, this contributor is a synced participant without a local user."),
+    )
+
     @property
     def contributor(self):
         return self
@@ -378,6 +454,18 @@ class Contributor(TriggerMixin, PolymorphicModel):
     @property
     def owner(self):
         return self.user
+
+    @property
+    def actual_user(self):
+        if self.user_id:
+            return self.user
+        else:
+            return self.remote_user
+
+    @property
+    def email(self):
+        """Email: from user when set, else remote_contributor.email."""
+        return self.actual_user.email
 
     @property
     def is_team_captain(self):
@@ -397,8 +485,9 @@ class Contributor(TriggerMixin, PolymorphicModel):
         return self.polymorphic_ctype.model_class()._meta.verbose_name
 
     def __str__(self):
-        if self.user:
-            return str(self.user)
+        if self.actual_user:
+            return self.actual_user.full_name
+
         return str(_("Anonymous"))
 
 

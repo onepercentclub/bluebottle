@@ -2,6 +2,7 @@ import logging
 from builtins import object
 from itertools import groupby
 
+import inflection
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -14,7 +15,7 @@ from moneyed import Money
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
-    ResourceRelatedField, SerializerMethodResourceRelatedField,
+    RelatedField, ResourceRelatedField, SerializerMethodResourceRelatedField,
     PolymorphicResourceRelatedField,
 )
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
@@ -224,7 +225,6 @@ class BaseActivitySerializer(ModelSerializer):
     categories = ResourceRelatedField(many=True, read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
-    contributor_count = serializers.SerializerMethodField()
     team_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
     goals = ResourceRelatedField(required=False, many=True, read_only=True)
@@ -237,9 +237,6 @@ class BaseActivitySerializer(ModelSerializer):
         queryset=Organization.objects.all(),
         required=False,
         allow_null=True,
-    )
-    host_organization = ResourceRelatedField(
-        read_only=True
     )
 
     updates = RelativeHyperlinkedRelatedField(
@@ -263,6 +260,14 @@ class BaseActivitySerializer(ModelSerializer):
     )
 
     translations = TranslationsSerializer(fields=['description', 'title'])
+    contributor_count = serializers.SerializerMethodField()
+    source = SerializerMethodResourceRelatedField(
+        many=False,
+        read_only=True,
+        model=Organization
+    )
+
+    readonly_fields = serializers.SerializerMethodField()
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -292,6 +297,31 @@ class BaseActivitySerializer(ModelSerializer):
                 self.fields[key].validators = []
                 self.fields[key].allow_null = True
                 self.fields[key].required = False
+
+        if instance:
+            for field in instance.readonly_fields:
+                try:
+                    self.fields[field].read_only = True
+                except KeyError:
+                    pass
+
+    def get_contributor_count(self, obj):
+        if hasattr(obj, 'origin'):
+            return obj.origin.contributor_count
+        else:
+            return obj.active_contributors.count()
+
+    def get_source(self, obj):
+        if hasattr(obj, 'origin') and obj.origin.source:
+            return obj.origin.source.adopted
+
+    def get_readonly_fields(self, obj):
+        return [
+            f'relationships.{inflection.camelize(field, False)}' if
+            isinstance(self.fields[field], RelatedField) else
+            f'attributes.{inflection.camelize(field, False)}'
+            for field in obj.readonly_fields if field in self.fields
+        ]
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)
@@ -343,21 +373,16 @@ class BaseActivitySerializer(ModelSerializer):
         'office_location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
         'office_location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
         'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
-        'host_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'answers': 'bluebottle.activities.serializers.ActivityAnswerSerializer',
         'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
         'answers.file': 'bluebottle.files.serializers.DocumentSerializer',
         'answers.question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+        'source': 'bluebottle.organizations.serializers.OrganizationSerializer',
     }
 
     def get_is_follower(self, instance):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
-
-    def get_contributor_count(self, instance):
-        return instance.deleted_successful_contributors + instance.contributors.not_instance_of(Organizer).filter(
-            status__in=['accepted', 'succeeded', 'activity_refunded']
-        ).count()
 
     def get_team_count(self, instance):
         return instance.old_teams.filter(status__in=['open', 'finished']).count()
@@ -393,10 +418,10 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_button_label',
             'admin_url',
             'partner_organization',
-            'host_organization',
             'theme',
             'answers',
             'tos_accepted',
+            'source',
         )
 
         meta_fields = (
@@ -409,10 +434,11 @@ class BaseActivitySerializer(ModelSerializer):
             'required',
             'matching_properties',
             'deleted_successful_contributors',
-            'contributor_count',
             'team_count',
             'current_status',
             'admin_url',
+            'readonly_fields',
+            'contributor_count',
         )
 
     class JSONAPIMeta(object):
@@ -438,11 +464,11 @@ class BaseActivitySerializer(ModelSerializer):
             'office_location.subregion',
             'office_location.subregion.region',
             'partner_organization',
-            'host_organization',
             'answers',
             'answers.segment',
             'answers.file',
-            'answers.question'
+            'answers.question',
+            'source'
         ]
 
 
@@ -457,6 +483,7 @@ class BaseActivityListSerializer(ModelSerializer):
     matching_properties = MatchingPropertiesField()
     team_activity = SerializerMethodField()
     current_status = CurrentStatusField(source='states.current_state')
+    contributor_count = serializers.SerializerMethodField()
 
     def get_team_activity(self, instance):
         if InitiativePlatformSettings.load().team_activities:
@@ -475,6 +502,11 @@ class BaseActivityListSerializer(ModelSerializer):
         user = self.context['request'].user
         return bool(user.is_authenticated) and instance.followers.filter(user=user).exists()
 
+    def get_contributor_count(self, obj):
+        if hasattr(obj, 'origin'):
+            return obj.origin.contributor_count
+        return obj.active_contributors.count()
+
     class Meta(object):
         model = Activity
         fields = (
@@ -490,7 +522,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'stats',
             'goals',
             'team_activity',
-            'current_status'
+            'current_status',
         )
 
         meta_fields = (
@@ -498,7 +530,8 @@ class BaseActivityListSerializer(ModelSerializer):
             'created',
             'updated',
             'matching_properties',
-            'current_status'
+            'current_status',
+            'contributor_count'
         )
 
     class JSONAPIMeta(object):
@@ -605,17 +638,12 @@ class BaseContributorSerializer(ModelSerializer):
     start = serializers.SerializerMethodField()
     email = serializers.CharField(write_only=True, required=False)
     send_messages = serializers.BooleanField(write_only=True, required=False)
+    remote_user = ResourceRelatedField(read_only=True)
 
     def get_start(self, obj):
         if obj.contributions.exists():
             return obj.contributions.last().start
         return None
-
-    included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
-        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
-    }
 
     allow_multiple = False
 
@@ -664,6 +692,7 @@ class BaseContributorSerializer(ModelSerializer):
         model = Contributor
         fields = (
             'user',
+            'remote_user',
             'activity',
             'status',
             'current_status',
@@ -682,10 +711,19 @@ class BaseContributorSerializer(ModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'user',
+            'remote_user',
             'user.avatar',
             'activity',
         ]
         resource_name = 'contributors'
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
+        'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
+        'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
+    }
 
 
 # This can't be in serializers because of circular imports

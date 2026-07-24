@@ -4,6 +4,7 @@ from django_quill.fields import QuillField
 from djmoney.money import Money
 from polymorphic.models import PolymorphicModel, PolymorphicManager
 
+from bluebottle.activity_pub.serializers import ActivityPubSerializer
 from bluebottle.activity_pub.models import Follow, Create
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm.triggers import TriggerMixin
@@ -13,7 +14,6 @@ from bluebottle.utils.fields import MoneyField
 
 class LinkedActivityManager(PolymorphicManager):
     def sync(self, event):
-        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
         from bluebottle.activity_links.serializers import LinkedActivitySerializer
 
         try:
@@ -21,7 +21,7 @@ class LinkedActivityManager(PolymorphicManager):
         except LinkedActivity.DoesNotExist:
             instance = None
 
-        data = EventSerializer(instance=event).data
+        data = ActivityPubSerializer(instance=event).data
         serializer = LinkedActivitySerializer(
             data=data, instance=instance
         )
@@ -40,7 +40,7 @@ class LinkedActivityManager(PolymorphicManager):
             activity_type in follow.automatic_adoption_activity_types or
             serializer.instance
         ):
-            organization = Create.objects.filter(object=event).first().actor.organization
+            organization = Create.objects.filter(object=event).first().actor.federated_object
 
             return serializer.save(
                 event=event, host_organization=organization

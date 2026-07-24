@@ -918,7 +918,7 @@ class EventAdminMixin:
 
         event = get_object_or_404(Event, pk=unquote(object_id))
 
-        if event.activity:
+        if event.adopted_activity:
             self.message_user(
                 request,
                 "This activity has already been cloned.",
@@ -985,7 +985,7 @@ class EventAdminMixin:
 
         event = get_object_or_404(Event, pk=unquote(object_id))
 
-        if event.linked_activity:
+        if event.link:
             self.message_user(
                 request,
                 "This activity has already been linked.",

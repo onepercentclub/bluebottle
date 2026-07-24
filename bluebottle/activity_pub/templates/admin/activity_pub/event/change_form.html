@@ -1,64 +1,10 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_urls %}
 
+{% block object-tools-items %}
+    {% include "admin/activity_pub/event/adopt_buttons.html" %}
+{% endblock %}
 
 {% block submit_buttons_bottom %}
-
-    {% if original and not original.is_local %}
-        <div class="submit-row">
-            {% if adoption_type == 'clone' %}
-                {% if original.adopted_activity %}
-                    <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
-                        <input type="button" value="{% trans 'View cloned activity' %}" class="default"
-                               name="_clone">
-                    </a>
-                {% else %}
-                    {% if adoption_mode == 'automatic' %}
-                        {% trans "Activities are cloned automatically for this connection" %}
-                        <br/>
-                        Here's a link if it didn't work:
-                        <a href="{% url 'admin:activity_pub_event_clone' original.pk %}">
-                            {% trans 'Clone activity' %}
-                        </a>
-                    {% else %}
-                        <a href="{% url 'admin:activity_pub_event_clone' original.pk %}">
-                            <input type="button" value="{% trans 'Clone activity' %}" class="default" name="_clone">
-                        </a>
-                    {% endif %}
-                {% endif %}
-            {% endif %}
-            {% if adoption_type == 'link' %}
-                {% if original.linked_activity %}
-                    <a href="{% url 'admin:activity_links_linkedactivity_change' original.linked_activity.pk %}">
-                        <input type="button" value="{% trans 'View linked activity' %}" class="default"
-                               name="_link">
-                    </a>
-                {% else %}
-                    {% if adoption_mode == 'automatic' %}
-                        {% trans "Activities are linked automatically for this connection" %}
-                        <br/>
-                        Here's a link if it didn't work:
-                        <a href="{% url 'admin:activity_pub_event_link' original.pk %}">
-                            {% trans 'Link activity' %}
-                        </a>
-                    {% else %}
-                        <a href="{% url 'admin:activity_pub_event_link' original.pk %}">
-                            <input type="button" value="{% trans 'Link activity' %}" class="default" name="_link">
-                        </a>
-                    {% endif %}
-                {% endif %}
-            {% endif %}
-            {% if adoption_type == 'sync' %}
-                {% if original.adopted_activity %}
-                    <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
-                        {% trans 'View adopted activity' %}
-                    </a>
-                {% else %}
-                    <a href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
-                        <input type="button" value="{% trans 'Adopt event' %}" class="default" name="_adopt">
-                    </a>
-                {% endif %}
-            {% endif %}
-        </div>
-    {% endif %}
+    {% include "admin/activity_pub/event/adopt_buttons.html" %}
 {% endblock %}

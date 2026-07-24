@@ -11,6 +11,7 @@ from django.template.response import TemplateResponse
 from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 from django_admin_inline_paginator.admin import (
@@ -627,11 +628,25 @@ class ActivityChildAdmin(
         return formsets
 
     def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
+        readonly_fields = list(super().get_readonly_fields(request, obj))
         if obj:
-            readonly_fields = readonly_fields + obj.readonly_fields
+            for field in obj.readonly_fields:
+                if field == 'description':
+                    readonly_fields.append('description_preview')
+                else:
+                    readonly_fields.append(field)
 
         return readonly_fields
+
+    @admin.display(description=_('Description'))
+    def description_preview(self, obj):
+        if not obj or not obj.description:
+            return '-'
+        html = obj.description.html if hasattr(obj.description, 'html') else str(obj.description)
+        return format_html(
+            '<div class="readonly-description-scroll">{}</div>',
+            mark_safe(html),
+        )
 
     def lookup_allowed(self, key, value):
         if key in [
@@ -764,6 +779,11 @@ class ActivityChildAdmin(
         detail_fields = self.detail_fields
         if isinstance(detail_fields, list):
             detail_fields = tuple(detail_fields)
+        if obj and obj.is_adopted:
+            detail_fields = tuple(
+                'description_preview' if field == 'description' else field
+                for field in detail_fields
+            )
         if Location.objects.exists() and not settings.enable_office_restrictions:
             detail_fields += ('office_location',)
         return detail_fields

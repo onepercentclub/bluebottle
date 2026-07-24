@@ -27,7 +27,7 @@
 
 
 {% block end_message %}
-    {% blocktrans with title=obj.content_object.title context 'platform-email' %}
+    {% blocktrans with title=obj.activity.title context 'platform-email' %}
         <p>
             You received this email because you support {{ title }}.
             Don't want to receive activity updates anymore?

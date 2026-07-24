@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-24 13:11+0200\n"
-"PO-Revision-Date: 2026-07-24 11:12\n"
+"POT-Creation-Date: 2026-07-23 16:43+0200\n"
+"PO-Revision-Date: 2026-07-24 11:22\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -1447,10 +1447,9 @@ msgstr "Votre activité « %(title)s » a malheureusement été annulée."
 #: bluebottle/time_based/templates/mails/messages/teams/captain_teammember_removed.html:10
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_added.html:10
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_removed.html:10
-#, python-format
 msgctxt "platform-email"
-msgid "If you have any questions, you can contact the platform manager at %(contact_email)s."
-msgstr "Des questions ? Contactez le gestionnaire de la plateforme à l’adresse %(contact_email)s."
+msgid "If you have any questions, you can contact the platform manager by replying to this email."
+msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:6
 #, python-format
@@ -1464,10 +1463,9 @@ msgid "Don’t worry, you can always create a new activity and try again."
 msgstr "Pas de panique, vous pouvez créer une nouvelle activité et réessayer."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:14
-#, python-format
 msgctxt "platform-email"
-msgid "Need some tips to make your activity stand out? Reach out to the platform manager at %(contact_email)s."
-msgstr "Besoin de conseils pour faire sortir votre activité du lot ? Contactez le gestionnaire de la plateforme à l’adresse %(contact_email)s."
+msgid "Need some tips to make your activity stand out? Reach out to the platform manager by replying to this email."
+msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_impact_reminder.html:6
 msgctxt "platform-email"
@@ -6043,13 +6041,9 @@ msgctxt "platform-email"
 msgid "\n"
 "            Unfortunately your campaign “%(title)s” has been cancelled.\n"
 "            <br><br>\n"
-"            If you have any questions, you can contact the platform manager at %(contact_email)s.\n"
+"            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr "\n"
-"            Votre campagne « %(title)s » a malheureusement été annulée.\n"
-"            <br><br>\n"
-"           Des questions ? Contactez le gestionnaire de la plateforme à l’adresse %(contact_email)s.\n"
-"        "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_expired.html:6
 #, python-format
@@ -6057,13 +6051,9 @@ msgctxt "platform-email"
 msgid "\n"
 "        Unfortunately, nobody donated to your campaign \"%(title)s\" before the deadline. That’s why we have cancelled your campaign.\n\n"
 "        Don’t worry, you can always create a new campaign and try again.\n\n"
-"        Need some tips to make your campaign stand out? Reach out to the platform manager at %(contact_email)s.\n"
+"        Need some tips to make your campaign stand out? Reach out to the platform manager by replying to this email.\n"
 "        "
-msgstr "\n"
-"        Malheureusement, personne n’a fait de don à votre campagne « %(title)s » avant la date limite. C’est pourquoi nous avons annulé votre campagne.\n\n"
-"        Pas d’inquiétude, vous pouvez toujours créer une nouvelle campagne et réessayer.\n\n"
-"        Besoin de conseils pour faire sortir votre campagne du lot ? Contactez le gestionnaire de la plateforme à l’adresse %(contact_email)s.\n"
-"        "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_extended.html:6
 #, python-format
@@ -6111,13 +6101,9 @@ msgctxt "platform-email"
 msgid "\n"
 "            All donations received for your campaign \"%(title)s\" will be refunded to the donors.\n"
 "            <br><br>\n"
-"            If you have any questions, you can contact the platform manager at %(contact_email)s.\n"
+"            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr "\n"
-"            Tous les dons reçus pour votre campagne « %(title)s » seront remboursés aux donateurs.\n"
-"            <br><br>\n"
-"            Des questions ? Contactez le gestionnaire de la plateforme à l’adresse %(contact_email)s.\n"
-"        "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/grant_application_approved.html:5
 #, python-format
@@ -6306,15 +6292,9 @@ msgid "\n"
 "            <br><br>\n"
 "            Unfortunately, the campaign \"%(title)s\" did not reach its goal. Therefore, all donations will be fully refunded within 10 days.\n"
 "            <br><br>\n"
-"            If you have any questions, you can contact the platform manager at %(contact_email)s.\n"
+"            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr "\n"
-"            Bonjour %(recipient_name)s,\n"
-"            <br><br>\n"
-"            La campagne « %(title)s » n’a malheureusement pas atteint son objectif. Tous les dons seront entièrement remboursés dans un délai de 10 jours.\n"
-"            <br><br>\n"
-"            Des questions ? Contactez le gestionnaire de la plateforme à l’adresse %(contact_email)s.\n"
-"        "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_refunded_donor.html:7
 #, python-format
@@ -7525,13 +7505,9 @@ msgctxt "platform-email"
 msgid "\n"
 "            Unfortunately your grant application “%(title)s” has been cancelled.\n"
 "            <br><br>\n"
-"            If you have any questions, you can contact the platform manager at %(contact_email)s.\n"
+"            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr "\n"
-"Votre demande de subvention « %(title)s » a malheureusement été refusée.\n"
-"            <br><br>\n"
-"            Des questions ? Contactez le gestionnaire de la plateforme à l’adresse %(contact_email)s.\n"
-"        "
+msgstr ""
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_needs_work.html:5
 #, python-format
@@ -10367,38 +10343,43 @@ msgstr "Réglages"
 msgid "Manage Reporting"
 msgstr "Gérer les rapports"
 
-#: bluebottle/settings/local.py:338 bluebottle/settings/testing.py:443
-#: tenants/rhi-magnesia/settings.py:25 tenants/rhi-magnesita/settings.py:25
-#: tenants/shell-grant-management/settings.py:26
+#: bluebottle/settings/local.py:360 bluebottle/settings/secrets.py:327
+#: bluebottle/settings/testing.py:443
 msgid "English"
 msgstr "Anglais"
 
-#: bluebottle/settings/local.py:339 bluebottle/settings/testing.py:444
-#: tenants/essent/settings.py:26 tenants/shell-grant-management/settings.py:25
+#: bluebottle/settings/local.py:361 bluebottle/settings/secrets.py:328
+#: bluebottle/settings/testing.py:444
 msgid "Dutch"
 msgstr "Néerlandais"
 
-#: bluebottle/settings/local.py:340 bluebottle/settings/testing.py:445
+#: bluebottle/settings/local.py:362 bluebottle/settings/secrets.py:329
+#: bluebottle/settings/testing.py:445
 msgid "French"
 msgstr "Français"
 
-#: bluebottle/settings/local.py:341 bluebottle/settings/testing.py:446
+#: bluebottle/settings/local.py:363 bluebottle/settings/secrets.py:330
+#: bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr "Espagnol"
 
-#: bluebottle/settings/local.py:342 bluebottle/settings/testing.py:447
+#: bluebottle/settings/local.py:364 bluebottle/settings/secrets.py:331
+#: bluebottle/settings/testing.py:447
 msgid "German"
 msgstr "Allemand"
 
-#: bluebottle/settings/local.py:343 bluebottle/settings/testing.py:448
+#: bluebottle/settings/local.py:365 bluebottle/settings/secrets.py:332
+#: bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr "Portugais"
 
-#: bluebottle/settings/local.py:344 bluebottle/settings/testing.py:449
+#: bluebottle/settings/local.py:366 bluebottle/settings/secrets.py:333
+#: bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr "Hongrois"
 
-#: bluebottle/settings/local.py:345 bluebottle/settings/testing.py:450
+#: bluebottle/settings/local.py:367 bluebottle/settings/secrets.py:334
+#: bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr "Bulgare"
 

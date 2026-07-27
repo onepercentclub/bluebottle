@@ -212,8 +212,11 @@ class SendMailTestCase(BluebottleTestCase):
         self.assertTrue(celery_mail.delay.called)
 
     @mock.patch('bluebottle.utils.email_backend.create_message')
-    @override_settings(LANGUAGE_CODE='nl')
+    @override_settings(LANGUAGE_CODE='nl', CELERY_MAIL=False)
     def test_no_celery_mail(self, create_message):
+        from bluebottle.clients import properties
+        properties.tenant_properties.pop('CELERY_MAIL', None)
+
         send_mail(to=self.user, template_name='utils/test')
         self.assertEqual(create_message.call_count, 1)
         # Bit of a hack to check if our instance of the Mock class actually

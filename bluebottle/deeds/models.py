@@ -30,6 +30,17 @@ class Deed(Activity):
     activity_type = _('Deed')
 
     @property
+    def readonly_fields(self):
+        readonly_fields = super().readonly_fields
+
+        if self.is_adopted:
+            readonly_fields = readonly_fields + [
+                'start', 'end', 'target',
+            ]
+
+        return readonly_fields
+
+    @property
     def activity_date(self):
         return self.start
 
@@ -90,7 +101,16 @@ class Deed(Activity):
     def participants(self):
         if self.pk:
             return self.contributors.instance_of(DeedParticipant).filter(
-                status__in=('accepted', 'succeeded', )
+                status__in=('accepted', 'succeeded', 'new')
+            )
+        else:
+            return []
+
+    @property
+    def failed_participants(self):
+        if self.pk:
+            return self.contributors.instance_of(DeedParticipant).filter(
+                status__in=('failed',)
             )
         else:
             return []

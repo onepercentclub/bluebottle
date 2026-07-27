@@ -1,0 +1,129 @@
+from rest_framework import serializers
+from rest_polymorphic.serializers import PolymorphicSerializer
+
+
+from bluebottle.time_based.models import (
+    DeadlineActivity, PeriodicActivity, PeriodicSlot, RegisteredDateActivity, ScheduleActivity,
+    DateActivity, ScheduleSlot, DateActivitySlot
+)
+
+
+class ActivityPubSerializer(PolymorphicSerializer):
+    serializer_mapping = {}
+    model_serializer_mapping = {}
+    resource_type_field_name = 'type'
+
+    def __init__(self, *args, full=True, include=False, origin=None, **kwargs):
+        super(PolymorphicSerializer, self).__init__(*args, **kwargs)
+        self.origin = origin
+        self.resource_type_model_mapping = {}
+        self.model_serializer_mapping = {}
+
+        for model, serializer in self.serializer_mapping.items():
+            resource_type = self.to_resource_type(model)
+            if callable(serializer):
+                serializer = serializer(
+                    *args, full=full, include=include, origin=origin, **kwargs
+                )
+                serializer.parent = self
+
+            self.resource_type_model_mapping[resource_type] = model
+            self.model_serializer_mapping[model] = serializer
+
+    def to_resource_type(self, model_or_instance):
+        serializer = self.serializer_mapping[self._to_model(model_or_instance)]
+        return serializer._declared_fields['type'].type
+
+    def to_representation(self, instance):
+        serializer = self._get_serializer_from_model_or_instance(instance)
+
+        return serializer.to_representation(instance)
+
+    def save(self, *args, **kwargs):
+        iri = self.validated_data.get('iri', None)
+
+        if iri:
+            from bluebottle.activity_pub.models import ActivityPubModel
+            self.instance = ActivityPubModel.objects.from_iri(iri)
+
+        return super().save(*args, **kwargs)
+
+    @property
+    def data(self):
+        return super(serializers.Serializer, self).data
+
+
+class FederatedObjectSerializer(PolymorphicSerializer):
+    serializer_mapping = {}
+    model_serializer_mapping = {}
+    resource_type_field_name = 'type'
+
+    def __init__(self, *args, **kwargs):
+        super(PolymorphicSerializer, self).__init__(*args, **kwargs)
+
+        self.resource_type_model_mapping = {}
+        self.model_serializer_mapping = {}
+
+        for model, serializer in self.serializer_mapping.items():
+            resource_type = self.to_resource_type(model)
+            if callable(serializer):
+                serializer = serializer(*args, **kwargs)
+                serializer.parent = self
+
+            self.resource_type_model_mapping[resource_type] = model
+            self.model_serializer_mapping[model] = serializer
+
+        self.resource_type_model_mapping['ScheduleActivity'] = ScheduleActivity
+        self.resource_type_model_mapping['PeriodicActivity'] = PeriodicActivity
+        self.resource_type_model_mapping['RegisteredDateActivity'] = RegisteredDateActivity
+        self.resource_type_model_mapping['DateActivity'] = DateActivity
+        self.resource_type_model_mapping['DeadlineActivity'] = DeadlineActivity
+        self.resource_type_model_mapping['ScheduleSlot'] = ScheduleSlot
+        self.resource_type_model_mapping['PeriodicSlot'] = PeriodicSlot
+        self.resource_type_model_mapping['DateActivitySlot'] = DateActivitySlot
+
+    def _get_resource_type_from_mapping(self, mapping):
+        resource_type = super()._get_resource_type_from_mapping(mapping)
+        if resource_type == 'DoGoodEvent':
+            if mapping.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
+                return 'ScheduleActivity'
+            elif mapping.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
+                return 'PeriodicActivity'
+            elif mapping.get('join_mode', None) in ('selected', 'SelectedJoinMode'):
+                return 'RegisteredDateActivity'
+            elif len(mapping.get('sub_event', [])) > 0:
+                return 'DateActivity'
+            else:
+                return 'DeadlineActivity'
+
+        if resource_type == 'subEvent':
+            from bluebottle.activity_pub.models import ActivityPubModel
+            parent = ActivityPubModel.objects.from_iri(mapping['parent'])
+
+            slot_type_mapping = {
+                'ScheduleActivity': 'ScheduleSlot',
+                'PeriodicActivity': 'PeriodicSlot',
+                'DateActivity': 'DateActivitySlot',
+            }
+
+            if parent:
+                return slot_type_mapping[parent.activity_type]
+
+        return resource_type
+
+    def to_resource_type(self, model_or_instance):
+        serializer = self.serializer_mapping[self._to_model(model_or_instance)]
+        return serializer._declared_fields['type'].type
+
+    def to_representation(self, instance):
+        serializer = self._get_serializer_from_model_or_instance(instance)
+        return serializer.to_representation(instance)
+
+    def to_internal_value(self, data):
+        from bluebottle.activity_pub.models import ActivityPubModel
+
+        if isinstance(data, str):
+            instance = ActivityPubModel.objects.from_iri(data)
+            data = ActivityPubSerializer(instance=instance).data
+
+        return super().to_internal_value(data)

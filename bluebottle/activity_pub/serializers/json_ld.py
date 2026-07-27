@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from rest_framework.relations import RelatedField
 
-from bluebottle.activity_pub.clients import client
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Accept,
+    ActivityPubModel,
     CrowdFunding,
     CollectCampaign,
     Address,
@@ -14,105 +14,105 @@ from bluebottle.activity_pub.models import (
     Person,
     PublicKey,
     Create,
-    Reject,
     Update,
     Delete,
     Start,
     Cancel,
     Finish,
-    Lock,
-    Join,
-    Leave,
     Organization,
+    Actor,
+    Activity,
     GoodDeed,
     Image,
+    Event,
     DoGoodEvent,
     SubEvent,
     GrantApplication,
 )
-from bluebottle.activity_pub.serializers.base import BaseActivityPubSerializer
-from bluebottle.activity_pub.serializers.fields import TypeField
-from bluebottle.activity_pub.serializers.relations import RelatedResourceField
-from bluebottle.activity_pub.utils import is_local
+from bluebottle.activity_pub.serializers.base import (
+    ActivityPubSerializer, PolymorphicActivityPubSerializer
+)
+from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
 
 
-class InboxSerializer(BaseActivityPubSerializer):
+class InboxSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:inbox')
     type = TypeField('inbox')
 
-    class Meta(BaseActivityPubSerializer.Meta):
+    class Meta(ActivityPubSerializer.Meta):
         model = Inbox
 
 
-class OutboxSerializer(BaseActivityPubSerializer):
+class OutboxSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:outbox')
     type = TypeField('outbox')
 
-    class Meta(BaseActivityPubSerializer.Meta):
+    class Meta(ActivityPubSerializer.Meta):
         model = Outbox
 
 
-class PublicKeySerializer(BaseActivityPubSerializer):
+class PublicKeySerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:public-key')
     type = TypeField('publicKey')
     public_key_pem = serializers.CharField(allow_blank=True)
 
-    class Meta(BaseActivityPubSerializer.Meta):
+    class Meta(ActivityPubSerializer.Meta):
         model = PublicKey
-        fields = BaseActivityPubSerializer.Meta.fields + ('public_key_pem',)
+        fields = ActivityPubSerializer.Meta.fields + ('public_key_pem',)
 
 
-class PersonSerializer(BaseActivityPubSerializer):
+class PersonSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:person')
     type = TypeField('Person')
-    inbox = RelatedResourceField(type='inbox', required=False, allow_null=True)
-    outbox = RelatedResourceField(type='outbox', required=False, allow_null=True)
-    public_key = RelatedResourceField(type='publicKey', include=True, required=False, allow_null=True)
-    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    given_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    family_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    email = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    inbox = InboxSerializer()
+    outbox = OutboxSerializer()
+    public_key = PublicKeySerializer(include=True)
 
-    class Meta(BaseActivityPubSerializer.Meta):
-        fields = BaseActivityPubSerializer.Meta.fields + (
-            'inbox', 'outbox', 'public_key', 'name', 'given_name', 'family_name', 'email'
-        )
+    class Meta(ActivityPubSerializer.Meta):
+        fields = ActivityPubSerializer.Meta.fields + ('inbox', 'outbox', 'public_key', 'name')
         model = Person
 
-    def create(self, validated_data):
-        if 'request' in self.context:
-            validated_data['source'] = self.context['request'].auth
 
-        return super().create(validated_data)
-
-
-class ImageSerializer(BaseActivityPubSerializer):
+class ImageSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:image')
     type = TypeField('Image')
     url = serializers.URLField()
-    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    name = serializers.CharField(allow_null=True, allow_blank=True)
 
-    class Meta(BaseActivityPubSerializer.Meta):
+    class Meta(ActivityPubSerializer.Meta):
         model = Image
-        fields = BaseActivityPubSerializer.Meta.fields + ('url', 'name', )
+        fields = ActivityPubSerializer.Meta.fields + ('url', 'name', )
 
 
-class OrganizationSerializer(BaseActivityPubSerializer):
+class OrganizationSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:organization')
     type = TypeField('Organization')
-    inbox = RelatedResourceField(type='inbox', required=False, allow_null=True)
-    outbox = RelatedResourceField(type='outbox', required=False, allow_null=True)
-    public_key = RelatedResourceField(type='publicKey', include=True, required=False, allow_null=True)
+    inbox = InboxSerializer(required=False, allow_null=True)
+    outbox = OutboxSerializer(required=False, allow_null=True)
+    public_key = PublicKeySerializer(include=True, required=False, allow_null=True)
     name = serializers.CharField()
     summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    icon = RelatedResourceField(type='Image', required=False, allow_null=True)
-    image = RelatedResourceField(type='Image', required=False, allow_null=True, include=True)
-    preferred_username = serializers.CharField(required=False, allow_null=True)
+    icon = ImageSerializer(required=False, allow_null=True)
 
-    class Meta(BaseActivityPubSerializer.Meta):
-        fields = BaseActivityPubSerializer.Meta.fields + (
-            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content',
-            'image', 'icon', 'preferred_username'
+    class Meta(ActivityPubSerializer.Meta):
+        fields = ActivityPubSerializer.Meta.fields + (
+            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content', 'image', 'icon'
         )
         model = Organization
 
 
-class AddressSerializer(BaseActivityPubSerializer):
+class ActorSerializer(PolymorphicActivityPubSerializer):
+    polymorphic_serializers = [
+        OrganizationSerializer, PersonSerializer
+    ]
+
+    class Meta:
+        model = Actor
+
+
+class AddressSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:address')
     type = TypeField('Address')
 
     summary = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -124,45 +124,43 @@ class AddressSerializer(BaseActivityPubSerializer):
     region = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     country = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    class Meta(BaseActivityPubSerializer.Meta):
+    class Meta(ActivityPubSerializer.Meta):
         model = Address
-        fields = BaseActivityPubSerializer.Meta.fields + (
+        fields = ActivityPubSerializer.Meta.fields + (
             'street_address', 'postal_code', 'locality', 'region', 'country', 'summary'
         )
 
 
-class PlaceSerializer(BaseActivityPubSerializer):
+class PlaceSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:place')
     type = TypeField('Place')
 
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
     name = serializers.CharField()
 
-    address = RelatedResourceField(type='Address', allow_null=True, include=True, required=False)
+    address = AddressSerializer(allow_null=True, include=True, required=False)
 
-    class Meta(BaseActivityPubSerializer.Meta):
+    class Meta(ActivityPubSerializer.Meta):
         model = Place
-        fields = BaseActivityPubSerializer.Meta.fields + ('latitude', 'longitude', 'name', 'address', )
+        fields = ActivityPubSerializer.Meta.fields + ('latitude', 'longitude', 'name', 'address', )
 
 
-class BaseEventSerializer(BaseActivityPubSerializer):
+class BaseEventSerializer(ActivityPubSerializer):
     name = serializers.CharField()
     summary = serializers.CharField(allow_null=True, allow_blank=True, required=False)
-    image = RelatedResourceField(type='Image', include=True, allow_null=True, required=False)
-    organization = RelatedResourceField(type='Organization', include=True, allow_null=True, required=False)
-    url = serializers.URLField(required=False, allow_null=True)
+    image = ImageSerializer(include=True, allow_null=True, required=False)
+    organization = OrganizationSerializer(include=True, allow_null=True, required=False)
+    url = serializers.URLField()
 
-    contributor_count = serializers.IntegerField(
-        required=False, allow_null=True, default=0
-    )
-
-    class Meta(BaseActivityPubSerializer.Meta):
-        fields = BaseActivityPubSerializer.Meta.fields + (
-            'name', 'summary', 'image', 'organization', 'url', 'contributor_count'
+    class Meta(ActivityPubSerializer.Meta):
+        fields = ActivityPubSerializer.Meta.fields + (
+            'name', 'summary', 'image', 'organization', 'url',
         )
 
 
 class GoodDeedSerializer(BaseEventSerializer):
+    id = ActivityPubIdField(url_name='json-ld:good-deed')
     type = TypeField('GoodDeed')
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
@@ -170,12 +168,11 @@ class GoodDeedSerializer(BaseEventSerializer):
 
     class Meta(BaseEventSerializer.Meta):
         model = GoodDeed
-        fields = BaseEventSerializer.Meta.fields + (
-            'start_time', 'end_time',
-        )
+        fields = BaseEventSerializer.Meta.fields + ('start_time', 'end_time')
 
 
 class CrowdFundingSerializer(BaseEventSerializer):
+    id = ActivityPubIdField(url_name='json-ld:crowd-funding')
     type = TypeField('CrowdFunding')
 
     end_time = serializers.DateTimeField(required=False, allow_null=True)
@@ -186,7 +183,7 @@ class CrowdFundingSerializer(BaseEventSerializer):
     donated = serializers.DecimalField(decimal_places=2, max_digits=10)
     donated_currency = serializers.CharField()
 
-    location = RelatedResourceField(type='Place', allow_null=True, include=True, required=False)
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
@@ -199,13 +196,14 @@ class CrowdFundingSerializer(BaseEventSerializer):
 
 
 class GrantApplicationSerializer(BaseEventSerializer):
+    id = ActivityPubIdField(url_name='json-ld:grant-application')
     type = TypeField('GrantApplication')
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
     target = serializers.DecimalField(decimal_places=2, max_digits=10, required=False, allow_null=True)
     target_currency = serializers.CharField(required=False, allow_null=True)
-    location = RelatedResourceField(type='Place', allow_null=True, include=True, required=False)
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = GrantApplication
@@ -217,11 +215,12 @@ class GrantApplicationSerializer(BaseEventSerializer):
 
 
 class CollectCampaignSerializer(BaseEventSerializer):
+    id = ActivityPubIdField(url_name='json-ld:collect-campaign')
     type = TypeField('CollectCampaign')
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
-    location = RelatedResourceField(type='Place', allow_null=True, include=True, required=False)
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
     collect_type = serializers.CharField(required=False, allow_null=True)
     target = serializers.FloatField(required=False, allow_null=True)
     donated = serializers.FloatField(required=False, allow_null=True)
@@ -233,58 +232,37 @@ class CollectCampaignSerializer(BaseEventSerializer):
         )
 
 
-class RelatedParentField(RelatedField):
-    def get_queryset(self):
-        # TODO: filter queryset on correct types
-        return DoGoodEvent.objects.all()
+class SubEventSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:sub-event')
+    type = TypeField('Event')
 
-    def to_representation(self, value):
-        return value.pub_url
-
-    def to_internal_value(self, data):
-        if isinstance(data, str):
-            data = {'id': data}
-
-        event = DoGoodEvent.objects.from_iri(data['id'])
-        if event:
-            return event
-
-
-class SubEventSerializer(BaseActivityPubSerializer):
-    type = TypeField('subEvent')
-
-    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
 
-    location = RelatedResourceField(type='Place', allow_null=True, include=True, required=False)
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
     event_attendance_mode = serializers.ChoiceField(
         choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode'],
         required=False,
         allow_null=True,
     )
     duration = serializers.DurationField(required=False, allow_null=True)
-    contributor_count = serializers.IntegerField(required=False, allow_null=True, default=0)
-    capacity = serializers.IntegerField(required=False, allow_null=True)
-
-    parent = RelatedParentField(allow_null=True)
 
     class Meta(BaseEventSerializer.Meta):
         model = SubEvent
-        fields = BaseActivityPubSerializer.Meta.fields + (
+        fields = ActivityPubSerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode',
-            'contributor_count', 'capacity', 'name', 'parent'
         )
 
 
 class DoGoodEventSerializer(BaseEventSerializer):
+    id = ActivityPubIdField(url_name='json-ld:do-good-event')
     type = TypeField('DoGoodEvent')
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
     application_deadline = serializers.DateTimeField(required=False, allow_null=True)
 
-    location = RelatedResourceField(type='Place', allow_null=True, include=True, required=False)
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
     event_attendance_mode = serializers.ChoiceField(
         choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode'],
         required=False,
@@ -307,9 +285,8 @@ class DoGoodEventSerializer(BaseEventSerializer):
     )
 
     duration = serializers.DurationField(required=False, allow_null=True)
-    capacity = serializers.IntegerField(required=False, allow_null=True)
 
-    sub_event = RelatedResourceField(type='subEvent', many=True, allow_null=True, required=False, include=True)
+    sub_event = SubEventSerializer(many=True, allow_null=True, required=False, include=True)
 
     class Meta(BaseEventSerializer.Meta):
         model = DoGoodEvent
@@ -318,7 +295,6 @@ class DoGoodEventSerializer(BaseEventSerializer):
             'event_attendance_mode', 'join_mode',
             'repetition_mode', 'slot_mode',
             'application_deadline',
-            'capacity',
             'sub_event',
         )
 
@@ -326,27 +302,51 @@ class DoGoodEventSerializer(BaseEventSerializer):
         sub_events = validated_data.pop('sub_event', [])
         result = super().create(validated_data)
         field = self.fields['sub_event']
+        field.initial_data = sub_events
 
-        if sub_events:
-            for sub_event in sub_events:
-                sub_event['parent'] = result
-            sub_events = field.save(sub_events)
+        field.is_valid(raise_exception=True)
+        field.save(parent=result)
+        return result
+
+    def update(self, instance, validated_data):
+        sub_events = validated_data.pop('sub_event', [])
+        result = super().update(instance, validated_data)
+
+        field = self.fields['sub_event']
+        field.initial_data = sub_events
+
+        field.is_valid(raise_exception=True)
+        field.save(parent=result)
 
         return result
 
 
-class BaseActivitySerializer(BaseActivityPubSerializer):
-    actor = RelatedResourceField(type=('Organization', 'Person', ))
+class EventSerializer(PolymorphicActivityPubSerializer):
+    polymorphic_serializers = [
+        GoodDeedSerializer,
+        CrowdFundingSerializer,
+        GrantApplicationSerializer,
+        CollectCampaignSerializer,
+        DoGoodEventSerializer,
+    ]
 
-    class Meta(BaseActivityPubSerializer.Meta):
-        fields = BaseActivityPubSerializer.Meta.fields + ('actor', 'object')
+    class Meta:
+        model = Event
+
+
+class BaseActivitySerializer(ActivityPubSerializer):
+    actor = ActorSerializer()
+
+    class Meta(ActivityPubSerializer.Meta):
+        fields = ActivityPubSerializer.Meta.fields + ('actor', 'object')
 
 
 class FollowSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:follow')
     type = TypeField('Follow')
-    object = RelatedResourceField(type=('Organization', 'Person', ))
+    object = ActorSerializer()
     adoption_type = serializers.ChoiceField(
-        choices=['link', 'clone', 'sync'],
+        choices=['link', 'template'],
         required=False,
         allow_null=True
     )
@@ -356,160 +356,110 @@ class FollowSerializer(BaseActivitySerializer):
         fields = BaseActivitySerializer.Meta.fields + ('adoption_type', )
 
 
+class EventOrFollowSerializer(EventSerializer):
+    polymorphic_serializers = EventSerializer.polymorphic_serializers + [
+        FollowSerializer,
+    ]
+
+    class Meta(EventSerializer.Meta):
+        model = ActivityPubModel
+
+
+class AcceptObjectSerializer(PolymorphicActivityPubSerializer):
+    """Accept.object can be a Follow (Activity) or an Event (e.g. CrowdFunding)."""
+    polymorphic_serializers = [
+        FollowSerializer,
+        EventSerializer,
+        GoodDeedSerializer,
+        CrowdFundingSerializer,
+        GrantApplicationSerializer,
+        CollectCampaignSerializer,
+        DoGoodEventSerializer,
+    ]
+
+    class Meta:
+        model = ActivityPubModel
+
+
 class AcceptSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:accept')
     type = TypeField('Accept')
 
-    object = RelatedResourceField(
-        type=(
-            'Follow', 'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent', 'Join'
-        )
-    )
+    object = AcceptObjectSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Accept
 
 
-class RejectSerializer(BaseActivitySerializer):
-    type = TypeField('Reject')
-
-    object = RelatedResourceField(
-        type=('Join', )
-    )
-
-    class Meta(BaseActivitySerializer.Meta):
-        model = Reject
-
-
 class CreateSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:create')
     type = TypeField('Create')
-    object = RelatedResourceField(
-        type=(
-            'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
-        )
-    )
+    object = EventSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Create
 
 
 class UpdateSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:update')
     type = TypeField('Update')
-    object = RelatedResourceField(
-        type=(
-            'Follow', 'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
-        )
-    )
+    object = EventOrFollowSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Update
 
-    def to_internal_value(self, data):
-        if isinstance(data['object'], str) and not is_local(data['object']):
-            data['object'] = client.fetch(data['object'])
-
-        return super().to_internal_value(data)
+    def save(self, *args, **kwargs):
+        self.validated_data['object'] = adapter.fetch(self.validated_data['object']['id'])
+        return super().save(*args, **kwargs)
 
 
 class DeleteSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:delete')
     type = TypeField('Delete')
-    object = RelatedResourceField(
-        type=(
-            'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
-        )
-    )
+    object = EventSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Delete
 
 
 class CancelSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:cancel')
     type = TypeField('Cancel')
-    object = RelatedResourceField(
-        type=(
-            'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
-        )
-    )
+    object = EventSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Cancel
 
 
 class StartSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:start')
     type = TypeField('Start')
-    object = RelatedResourceField(
-        type=(
-            'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
-        )
-    )
+    object = EventSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Start
 
 
 class FinishSerializer(BaseActivitySerializer):
+    id = ActivityPubIdField(url_name='json-ld:finish')
     type = TypeField('Finish')
-    object = RelatedResourceField(
-        type=(
-            'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
-        )
-    )
+    object = EventSerializer()
 
     class Meta(BaseActivitySerializer.Meta):
         model = Finish
 
 
-class LockSerializer(BaseActivitySerializer):
-    type = TypeField('Lock')
-    object = RelatedResourceField(
-        type=(
-            'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent'
-        )
-    )
+class ActivitySerializer(PolymorphicActivityPubSerializer):
+    polymorphic_serializers = [
+        FollowSerializer,
+        AcceptSerializer,
+        CreateSerializer,
+        UpdateSerializer,
+        StartSerializer,
+        CancelSerializer,
+        DeleteSerializer,
+        FinishSerializer,
+    ]
 
-    class Meta(BaseActivitySerializer.Meta):
-        model = Lock
-
-
-class JoinSerializer(BaseActivitySerializer):
-    type = TypeField('Join')
-    object = RelatedResourceField(
-        type=(
-            'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent', 'SubEvent'
-        )
-    )
-    motivation = serializers.CharField(required=False, allow_null=True)
-
-    class Meta(BaseActivitySerializer.Meta):
-        model = Join
-        fields = BaseActivitySerializer.Meta.fields + ('motivation', )
-
-    def create(self, validated_data):
-        if 'request' in self.context:
-            validated_data['platform'] = self.context['request'].auth
-
-        return super().create(validated_data)
-
-
-class LeaveSerializer(BaseActivitySerializer):
-    type = TypeField('Leave')
-    object = RelatedResourceField(
-        type=(
-            'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent', 'SubEvent'
-        )
-    )
-
-    class Meta(BaseActivitySerializer.Meta):
-        model = Leave
-
-
-from bluebottle.activity_pub.serializers.federated_activities import *  # noqa
+    class Meta:
+        model = Activity

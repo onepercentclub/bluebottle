@@ -7,8 +7,8 @@ from unittest import mock
 
 import dateutil
 from django.contrib.auth.models import Permission
-from django.contrib.gis.geos import Point
 from django.db import connection
+from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -1621,12 +1621,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create(alpha2_code='NL')
         other_country = CountryFactory.create(alpha2_code='DE')
 
-        # `DateActivityFactory` creates default slots with random locations.
-        # For deterministic facet counts we must start without slots and
-        # create the slots explicitly with the countries under test.
         matching = DateActivityFactory.create_batch(
             2,
-            slots=[],
             status='open',
         )
         for activity in matching:
@@ -1638,7 +1634,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         other = DateActivityFactory.create_batch(
             3,
-            slots=[],
             status='open',
         )
         for activity in other:

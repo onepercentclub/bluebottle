@@ -12,7 +12,7 @@ from bluebottle.activity_links.models import (
     LinkedFunding, LinkedDateSlot, LinkedCollectCampaign, LinkedPeriodicActivity,
     LinkedScheduleActivity, LinkedGrantApplication
 )
-from bluebottle.activity_pub.models import Create, ActivityPubModel, Image as ActivityPubImage
+from bluebottle.activity_pub.models import Image as ActivityPubImage
 from bluebottle.files.models import Image
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.geo.serializers import GeolocationSerializer
@@ -101,7 +101,6 @@ class LinkedLocationSerializer(GeolocationSerializer):
 
 
 class BaseLinkedActivitySerializer(serializers.ModelSerializer):
-    id = serializers.CharField()
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
     url = serializers.URLField(source='link')
@@ -109,7 +108,7 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LinkedActivity
-        fields = ('name', 'summary', 'url', 'image', 'id')
+        fields = ('name', 'summary', 'url', 'image')
 
     def create(self, validated_data):
         image_data = validated_data.pop('image', None)
@@ -121,23 +120,9 @@ class BaseLinkedActivitySerializer(serializers.ModelSerializer):
         if location_data:
             validated_data['location'] = Geolocation.objects.create(**location_data)
 
-        iri = validated_data.pop('id', None)
-        if iri:
-            source = Create.objects.get(object__iri=iri).actor
-            validated_data['host_organization'] = source.adopted
-
-        result = super().create(validated_data)
-
-        origin = ActivityPubModel.objects.from_iri(iri)
-        if origin:
-            origin.link = result
-            origin.save()
-
-        return result
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        validated_data.pop('id')
-
         image_data = validated_data.pop('image', None)
         if image_data:
             image_instance = getattr(instance, 'image', None)
@@ -192,7 +177,7 @@ class LinkedSlotSerializer(BaseLinkedActivitySerializer):
         model = LinkedDateSlot
         fields = (
             'start_time', 'end_time',
-            'location',
+            'location'
         )
 
 
@@ -219,12 +204,11 @@ class LinkedDateActivitySerializer(BaseLinkedActivitySerializer):
         slots = validated_data.pop('slots', [])
         result = super().update(instance, validated_data)
 
-        instance.slots.all().delete()
         field = self.fields['sub_event']
         for slot in slots:
             slot['activity'] = result
 
-        validated_data[field.source] = field.create(slots)
+        validated_data[field.source] = field.update(instance.slots.all(), slots)
 
         return result
 

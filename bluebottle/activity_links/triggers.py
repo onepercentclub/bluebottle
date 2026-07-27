@@ -10,11 +10,7 @@ from bluebottle.fsm.triggers import (
 class LinkedActivityTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
-            LinkedActivityStateMachine.start,
-            effects=[PublishAdoptionEffect]
-        ),
-        TransitionTrigger(
-            LinkedActivityStateMachine.succeed,
+            LinkedActivityStateMachine.initiate,
             effects=[PublishAdoptionEffect]
         ),
     ]

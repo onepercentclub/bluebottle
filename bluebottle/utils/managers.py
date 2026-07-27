@@ -1,5 +1,4 @@
 from builtins import object
-
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Case, When, fields

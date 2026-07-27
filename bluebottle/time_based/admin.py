@@ -33,7 +33,6 @@ from bluebottle.activities.admin import (
     ContributionChildAdmin,
     ContributorChildAdmin,
 )
-from bluebottle.activities.models import Activity
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.files.widgets import PrivateDocumentWidget
 from bluebottle.fsm.admin import (
@@ -183,7 +182,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         fields = super().get_registration_fields(request, obj)
         settings = InitiativePlatformSettings.load()
         if settings.hour_registration == 'per_activity':
-            fields = ('hour_registration_data', ) + fields
+            fields = ['hour_registration_data'] + list(fields)
         return fields
 
     def registration_link(self, obj):
@@ -230,37 +229,6 @@ class DateActivitySlotInline(TabularInlinePaginated):
     ]
 
     extra = 0
-
-    def _is_activity_pub_synced_slot(self, slot):
-        return bool(getattr(slot, 'origin_id', None) or getattr(slot, 'event', None))
-
-    def _has_activity_pub_subevents(self, activity):
-        from bluebottle.activity_pub.models import Event
-
-        if activity is None:
-            return False
-        try:
-            event = activity.event
-        except AttributeError:
-            return False
-        except Event.DoesNotExist:
-            return False
-        return event.sub_event.exists()
-
-    def has_change_permission(self, request, obj=None):
-        if obj is not None and self._is_activity_pub_synced_slot(obj):
-            return False
-        return True
-
-    def has_delete_permission(self, request, obj=None):
-        if obj is not None and self._is_activity_pub_synced_slot(obj):
-            return False
-        return True
-
-    def has_add_permission(self, request, obj=None):
-        if self._has_activity_pub_subevents(obj):
-            return False
-        return True
 
     def link(self, obj):
         url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
@@ -393,17 +361,6 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
         'location_hint',
         'online_meeting_url'
     )
-
-    activity_pub_readonly_fields = (
-        'start', 'duration', 's_online', 'location', 'location_hint', 'online_meeting_url'
-    )
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        if hasattr(obj, 'origin'):
-            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
-
-        return readonly_fields
 
     def link(self, obj):
         url = reverse(
@@ -576,24 +533,9 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
-    readonly_fields = ('status_label', 'edit', 'platform', 'remote_user')
+    readonly_fields = ('status_label', 'edit')
     fields = ('edit', 'user', 'status_label',)
     raw_id_fields = ('user',)
-
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        try:
-            obj.activity_pub_model
-            return list(fields) + ['remote_user', 'platform']
-        except (Activity.activity_pub_model.RelatedObjectDoesNotExist, AttributeError):
-            pass
-
-        return fields
-
-    def platform(self, obj):
-        if obj.remote_user:
-            return obj.remote_user.origin.source.name
-        return "-"
 
     def edit(self, obj):
         if not obj.user and obj.activity.has_deleted_data:
@@ -638,7 +580,7 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
     def slots(self, obj):
         return obj.participants.filter(status__in=['accepted', 'succeeded', 'registered', 'running']).count()
 
-    readonly_fields = BaseRegistrationAdminInline.readonly_fields + ('slots',)
+    readonly_fields = ('status_label', 'edit', 'slots')
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
@@ -766,7 +708,6 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
         'duration',
         'location',
     ]
-
     registration_fields = []
 
     def get_fieldsets(self, request, obj=None):
@@ -848,7 +789,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     def get_registration_fields(self, request, obj):
         fields = super().get_registration_fields(request, obj)
         if obj and obj.registrations.count():
-            fields = ("team_registration_warning",) + fields
+            fields = ["team_registration_warning"] + list(fields)
         return fields
 
     def get_fieldsets(self, request, obj=None):
@@ -889,17 +830,6 @@ class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     readonly_fields = ("activity", "status")
     fields = readonly_fields + ("start", "end", "duration")
 
-    activity_pub_readonly_fields = (
-        'start', 'end', 'duration',
-    )
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        if obj.origin:
-            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
-
-        return readonly_fields
-
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     def participant_count(self, obj):
@@ -928,17 +858,6 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         "location_hint",
         "online_meeting_url"
     )
-
-    activity_pub_readonly_fields = (
-        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url',
-    )
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        if hasattr(obj, 'origin'):
-            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
-
-        return readonly_fields
 
     formfield_overrides = {
         models.DurationField: {
@@ -986,17 +905,6 @@ class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
         "location_hint",
         "online_meeting_url"
     )
-
-    activity_pub_readonly_fields = (
-        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url',
-    )
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        if hasattr(obj, 'origin'):
-            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
-
-        return readonly_fields
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -1166,19 +1074,6 @@ class SlotAdmin(StateMachineAdmin):
 
     activity_link.short_description = _('Activity')
 
-    activity_pub_readonly_fields = (
-        'activity', 'start', 'location', 'location_hint',
-        'online_meeting_url', 'title', 'capacity', 'start', 'duration',
-        'origin', 'host_organization'
-    )
-
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        if hasattr(obj, 'origin'):
-            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
-
-        return readonly_fields
-
     def get_form(self, request, obj=None, **kwargs):
         if obj and not obj.is_online and obj.location:
             local_start = obj.start.astimezone(timezone(obj.location.timezone))
@@ -1230,8 +1125,7 @@ class SlotAdmin(StateMachineAdmin):
     readonly_fields = [
         'created',
         'updated',
-        'valid',
-
+        'valid'
     ]
     detail_fields = [
         'activity',
@@ -1244,7 +1138,7 @@ class SlotAdmin(StateMachineAdmin):
         'status',
         'states',
         'created',
-        'updated',
+        'updated'
     ]
 
     def get_status_fields(self, request, obj):
@@ -1259,13 +1153,6 @@ class SlotAdmin(StateMachineAdmin):
             (_('Detail'), {'fields': self.detail_fields}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
-        if obj and obj.is_adopted:
-            fieldsets += (
-                (_('GoodUp Connect'), {'fields': (
-                    'origin',
-                    'host_organization',
-                )}),
-            )
         if request.user.is_superuser:
             fieldsets += (
                 (_('Super admin'), {'fields': (

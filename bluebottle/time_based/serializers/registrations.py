@@ -20,7 +20,7 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 class ContactEmailField(serializers.CharField):
     def __init__(self):
-        super().__init__(read_only=True, source="*")
+        super().__init__(read_only=True, source="user.email")
 
     def to_representation(self, value):
         user = self.context["request"].user
@@ -34,9 +34,7 @@ class ContactEmailField(serializers.CharField):
             user.is_superuser or
             user in activity.owners
         ):
-            member = value.user or value.remote_user
-            if member:
-                return member.email
+            return super().to_representation(value)
 
 
 class RegistrationSerializer(ModelSerializer):
@@ -52,8 +50,6 @@ class RegistrationSerializer(ModelSerializer):
         permissions=[ParticipantDocumentPermission]
     )
 
-    remote_user = ResourceRelatedField(read_only=True)
-
     class Meta(BaseContributorSerializer.Meta):
         model = Registration
         fields = [
@@ -65,7 +61,6 @@ class RegistrationSerializer(ModelSerializer):
             "document",
             "answer",
             "participants",
-            "remote_user",
         ]
         meta_fields = (
             'permissions', 'current_status', 'transitions'
@@ -79,19 +74,10 @@ class RegistrationSerializer(ModelSerializer):
         ]
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        included_resources = [
-            'user',
-            "remote_user",
-            "remote_user.source",
-            'document',
-            'activity',
-            'participants'
-        ]
+        included_resources = ['user', 'document', 'activity', 'participants']
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
-        'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
     }
 
     def to_representation(self, instance):
@@ -136,7 +122,7 @@ class DateRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-registrations'
-        included_resources = ['user', 'remote_user', 'document', 'activity']
+        included_resources = ['user', 'document', 'activity']
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers.serializers,
@@ -176,6 +162,7 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/schedule-registrations'
+        included_resources = ['user', 'document', 'activity']
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers.serializers,

@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activities.forms import ActivityCancelledForm
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
 from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.fsm.state import register, State, Transition, EmptyState, AllStates
+from bluebottle.fsm.state import register, State, Transition, EmptyState
 
 
 @register(Deed)
@@ -101,14 +101,6 @@ class DeedStateMachine(ActivityStateMachine):
         automatic=False,
     )
 
-    start = Transition(
-        AllStates(),
-        ActivityStateMachine.open,
-        name=_('Start'),
-        automatic=True,
-        description=_("Start the activity. This is only for remote activities."),
-    )
-
 
 @register(DeedParticipant)
 class DeedParticipantStateMachine(ContributorStateMachine):
@@ -159,10 +151,7 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     )
 
     re_accept = Transition(
-        [
-            ContributorStateMachine.succeeded,
-            ContributorStateMachine.new,
-        ],
+        ContributorStateMachine.succeeded,
         accepted,
         name=_('Reaccept'),
         description=_("Put a participant back as participating after it was successful."),
@@ -201,24 +190,10 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     )
 
     accept = Transition(
-        [
-            rejected,
-            withdrawn,
-            ContributorStateMachine.new,
-            ContributorStateMachine.failed
-        ],
+        [rejected, withdrawn],
         accepted,
         name=_('Reaccept'),
         description=_("Reaccept user after previously withdrawing or rejecting."),
         automatic=False,
         permission=is_owner,
-    )
-
-    fail = ContributorStateMachine.fail.extend(
-        sources=[
-            ContributorStateMachine.new,
-            ContributorStateMachine.succeeded,
-            ContributorStateMachine.failed,
-            accepted
-        ],
     )

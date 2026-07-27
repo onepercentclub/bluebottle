@@ -6,49 +6,37 @@ import pytz
 import requests
 from django.contrib.gis.geos import Point
 from django.core.files import File
-from django.db import connection
+from django.db import connection, models
 from django.urls import reverse
 from djmoney.money import Money
 from rest_framework import exceptions
 from rest_framework import serializers
-from rest_framework.relations import RelatedField
+from rest_polymorphic.serializers import PolymorphicSerializer
 
-from bluebottle.activities.models import Contributor, RemoteMember
-from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.models import (
-    EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices,
-    RepetitionModeChoices, SlotModeChoices, Create, ActivityPubModel, SubEvent
-)
-from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
-from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
-from bluebottle.activity_pub.utils import is_local
-from bluebottle.collect.models import CollectActivity, CollectType, CollectContributor
-from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
+    SubEvent, RepetitionModeChoices, SlotModeChoices
+from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
+from bluebottle.activity_pub.serializers.fields import FederatedIdField
+from bluebottle.collect.models import CollectActivity, CollectType
+from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.grant_management.models import GrantApplication
-from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization
-from bluebottle.time_based.models import (
-    DateActivitySlot, DateParticipant, DateRegistration, DeadlineActivity, DateActivity,
-    DeadlineRegistration, PeriodicRegistration, PeriodicSlot, RegisteredDateActivity,
-    PeriodicActivity, Registration, ScheduleActivity, ScheduleRegistration, ScheduleSlot,
-    ScheduleParticipant, PeriodicParticipant
-)
+from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
+    PeriodicActivity, ScheduleActivity
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.models import get_default_language
 
 logger = logging.getLogger(__name__)
 
 
-class ImageSerializer(FederatedObjectBaseSerializer):
-    type = TypeField('Image')
-
+class ImageSerializer(FederatedObjectSerializer):
+    id = FederatedIdField('json-ld:image')
     url = serializers.SerializerMethodField()
     name = serializers.CharField(allow_null=True, allow_blank=True, required=False)
-    type = TypeField('Image')
 
     def get_url(self, instance):
         return connection.tenant.build_absolute_url(
@@ -59,6 +47,7 @@ class ImageSerializer(FederatedObjectBaseSerializer):
         if not validated_data:
             return None
 
+        validated_data['owner'] = self.context['request'].user
         image = ActivityPubImage.objects.from_iri(validated_data['id'])
 
         response = requests.get(image.url, timeout=30)
@@ -68,15 +57,9 @@ class ImageSerializer(FederatedObjectBaseSerializer):
 
         return super().create(validated_data)
 
-    def update(self, instance, validated_data):
-        if self.instance.origin.iri != validated_data['id']:
-            return self.create(validated_data)
-        else:
-            return super().update(instance, validated_data)
-
     class Meta:
         model = Image
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
+        fields = FederatedObjectSerializer.Meta.fields + (
             'url', 'name'
         )
 
@@ -92,7 +75,7 @@ class ImageField(serializers.Field):
             response = requests.get(image_url, timeout=30)
             response.raise_for_status()
 
-            return File(BytesIO(response.content), name=image.name or 'file')
+            return File(BytesIO(response.content), name=image.name)
         except requests.exceptions.HTTPError as e:
             # If image is not found (404), log and return None since logo is an optional field
             if e.response.status_code == 404:
@@ -104,8 +87,7 @@ class ImageField(serializers.Field):
     def to_representation(self, value):
         if not value:
             return None
-
-        return {'url': connection.tenant.build_absolute_url(value.url)}
+        return value
 
 
 class DateField(serializers.Field):
@@ -137,18 +119,8 @@ class CountryField(serializers.CharField):
                 raise exceptions.ValidationError(f'Unknown country code: {result}')
 
 
-class AddressIdField(FederatedIdField):
-    def to_representation(self, value):
-        if hasattr(value, 'origin') and value.origin:
-            return value.origin.address.pub_url
-
-        if hasattr(value, 'activity_pub_model') and value.activity_pub_model:
-            return value.activity_pub_model.address.pub_url
-
-
-class AddressSerializer(FederatedObjectBaseSerializer):
-    id = AddressIdField()
-    type = TypeField('Address')
+class AddressSerializer(FederatedObjectSerializer):
+    id = FederatedIdField('json-ld:address')
 
     street_address = serializers.CharField(source='street', required=False, allow_null=True)
     postal_code = serializers.CharField(required=False, allow_null=True)
@@ -159,8 +131,8 @@ class AddressSerializer(FederatedObjectBaseSerializer):
 
     class Meta:
         model = Geolocation
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'street_address', 'postal_code', 'locality',
+        fields = (
+            'id', 'street_address', 'postal_code', 'locality',
             'region', 'country'
         )
 
@@ -172,54 +144,9 @@ class AddressSerializer(FederatedObjectBaseSerializer):
         return result
 
 
-class MemberSerializer(FederatedObjectBaseSerializer):
-    type = TypeField('Person')
-    name = serializers.CharField(source="full_name", allow_null=True, read_only=True)
-    given_name = serializers.CharField(source="first_name", allow_null=True)
-    family_name = serializers.CharField(source="last_name", allow_null=True)
-    email = serializers.CharField(allow_null=True)
-    summary = serializers.CharField(
-        source='description',
-        allow_blank=True,
-        allow_null=True,
-        required=False
-    )
-    icon = ImageField(source='logo', required=False, allow_null=True)
-
-    class Meta:
-        model = Member
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'name', 'family_name', 'given_name', 'email', 'summary', 'icon'
-        )
-
-    def save(self, *args, **kwargs):
-        try:
-            self.instance = RemoteMember.objects.get(origin__iri=self.validated_data['id'])
-        except RemoteMember.DoesNotExist:
-            pass
-
-        return super().save(*args, **kwargs)
-
-    def create(self, validated_data):
-        result = RemoteMember.objects.create(
-            **dict(
-                (key, value) for key, value in validated_data.items() if
-                key not in ['id', 'type']
-            )
-        )
-
-        origin = ActivityPubModel.objects.from_iri(validated_data['id'])
-        if origin:
-            origin.adopted = result
-            origin.save()
-
-        return result
-
-
-class OrganizationSerializer(FederatedObjectBaseSerializer):
-    type = TypeField('Organization')
+class OrganizationSerializer(FederatedObjectSerializer):
+    id = FederatedIdField('json-ld:organization')
     name = serializers.CharField(allow_null=True)
-    preferred_username = serializers.CharField(allow_null=True, source='slug')
     summary = serializers.CharField(
         source='description',
         allow_blank=True,
@@ -230,13 +157,11 @@ class OrganizationSerializer(FederatedObjectBaseSerializer):
 
     class Meta:
         model = Organization
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'name', 'summary', 'icon', 'preferred_username'
-        )
+        fields = ('id', 'name', 'summary', 'icon')
 
 
-class LocationSerializer(FederatedObjectBaseSerializer):
-    type = TypeField('Place')
+class LocationSerializer(FederatedObjectSerializer):
+    id = FederatedIdField('json-ld:place')
     latitude = serializers.FloatField(source='position.x', allow_null=True)
     longitude = serializers.FloatField(source='position.y', allow_null=True)
     name = serializers.CharField(source='formatted_address', allow_null=True)
@@ -245,70 +170,60 @@ class LocationSerializer(FederatedObjectBaseSerializer):
 
     class Meta:
         model = Geolocation
-        fields = FederatedObjectBaseSerializer.Meta.fields + ('latitude', 'longitude', 'name', 'address',)
+        fields = ('id', 'latitude', 'longitude', 'name', 'address',)
 
-    def to_internal_value(self, data):
-        internal_value = super().to_internal_value(data)
-
+    def create(self, validated_data):
+        if not validated_data:
+            return None
         try:
-            internal_value['country'] = internal_value['country']['code']
+            validated_data['country'] = validated_data['country']['code']
         except KeyError:
             pass
 
         try:
-            internal_value['position'] = Point(
-                float(internal_value['position']['x']),
-                float(internal_value['position']['y'])
+            validated_data['position'] = Point(
+                float(validated_data['position']['x']),
+                float(validated_data['position']['y'])
             )
         except KeyError:
             pass
 
-        return internal_value
+        return super().create(validated_data)
 
 
-class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
+class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description', allow_blank=True, allow_null=True)
     image = ImageSerializer(required=False, allow_null=True)
     organization = OrganizationSerializer(required=False, allow_null=True)
     url = serializers.SerializerMethodField()
 
-    contributor_count = serializers.SerializerMethodField(required=False, allow_null=True)
-
-    def get_contributor_count(self, obj):
-        return obj.active_contributors.count()
-
     def get_url(self, obj):
         return connection.tenant.build_absolute_url(
             obj.get_absolute_url()
         )
 
-    def create(self, validated_data):
-        source = Create.objects.get(object__iri=validated_data['id']).actor
-        follow = source.follow_set.get()
-        if follow.default_owner and not validated_data.get('owner'):
-            validated_data['owner'] = follow.default_owner
-
-        validated_data['host_organization'] = source.adopted
-
-        return super().create(validated_data)
-
-    class Meta(FederatedObjectBaseSerializer.Meta):
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'name', 'summary', 'image', 'organization', 'contributor_count', 'url'
+    class Meta(FederatedObjectSerializer.Meta):
+        fields = FederatedObjectSerializer.Meta.fields + (
+            'name', 'summary', 'image', 'organization', 'url'
         )
+
+    def save(self, *args, **kwargs):
+        if not kwargs.get('owner'):
+            kwargs['owner'] = self.context['request'].user
+
+        return super().save(**kwargs)
 
 
 class FederatedDeedSerializer(BaseFederatedActivitySerializer):
-    type = TypeField('GoodDeed')
-
+    id = FederatedIdField('json-ld:good-deed')
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='end', allow_null=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Deed
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'start_time', 'end_time', 'contributor_count'
+            'start_time', 'end_time'
         )
 
 
@@ -353,8 +268,7 @@ class ParlerNameRelatedField(serializers.RelatedField):
 
 
 class FederatedCollectSerializer(BaseFederatedActivitySerializer):
-    type = TypeField('CollectCampaign')
-
+    id = FederatedIdField('json-ld:collect-campaign')
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='end', allow_null=True)
     collect_type = ParlerNameRelatedField(
@@ -377,7 +291,7 @@ class FederatedCollectSerializer(BaseFederatedActivitySerializer):
 
 
 class FederatedFundingSerializer(BaseFederatedActivitySerializer):
-    type = TypeField('CrowdFunding')
+    id = FederatedIdField('json-ld:crowd-funding')
 
     location = LocationSerializer(source='impact_location', allow_null=True, required=False)
 
@@ -395,23 +309,21 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
             'donated', 'donated_currency'
         )
 
-    def to_internal_value(self, validated_data):
-        internal_value = super().to_internal_value(validated_data)
-        if internal_value.get('target'):
-            internal_value['target'] = Money(
-                **internal_value['target']
+    def create(self, validated_data):
+        if validated_data.get('target'):
+            validated_data['target'] = Money(
+                **validated_data['target']
             )
-        if internal_value.get('amount_raised'):
-            donated = internal_value.pop('amount_raised')
-            internal_value['amount_donated'] = Money(
+        if validated_data.get('amount_raised'):
+            donated = validated_data.pop('amount_raised')
+            validated_data['amount_donated'] = Money(
                 **donated
             )
-
-        return internal_value
+        return super().create(validated_data)
 
 
 class FederatedGrantApplicationSerializer(BaseFederatedActivitySerializer):
-    type = TypeField('GrantApplication')
+    id = FederatedIdField('json-ld:grant-application')
 
     location = LocationSerializer(source='impact_location', allow_null=True, required=False)
 
@@ -500,7 +412,7 @@ class RepetitionModeField(serializers.Field):
 
 
 class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
-    type = TypeField('DoGoodEvent')
+    id = FederatedIdField('json-ld:do-good-event')
 
     location = LocationSerializer(allow_null=True, required=False)
 
@@ -515,14 +427,13 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DeadlineActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'capacity',
             'location', 'start_time', 'end_time', 'application_deadline',
             'event_attendance_mode', 'duration', 'join_mode'
         )
 
 
 class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer):
-    type = TypeField('DoGoodEvent')
+    id = FederatedIdField('json-ld:do-good-event')
 
     location = LocationSerializer(allow_null=True, required=False)
 
@@ -549,132 +460,60 @@ class FederatedRegisteredDateActivitySerializer(BaseFederatedActivitySerializer)
         )
 
 
-class RelatedParentField(RelatedField):
-    def get_queryset(self):
-        # TODO: filter queryset on correct types
-        return DateActivity.objects.all()
-
-    def to_representation(self, value):
-        if hasattr(value, 'activity_pub_model'):
-            return value.activity_pub_model.pub_url
-
-    def to_internal_value(self, data):
-        if isinstance(data, str):
-            data = {'id': data}
-
-        activity_pub_model = ActivityPubModel.objects.from_iri(data['id'])
-        if activity_pub_model.is_local:
-            return activity_pub_model.origin
-        else:
-            return activity_pub_model.adopted
-
-
-class DateSlotsSerializer(FederatedObjectBaseSerializer):
-    type = TypeField('subEvent')
+class SlotsSerializer(FederatedObjectSerializer):
+    id = FederatedIdField('json-ld:sub-event')
 
     name = serializers.CharField(source='title', required=False, allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
     end_time = serializers.DateTimeField(source='end', read_only=True)
     location = LocationSerializer(allow_null=True, required=False)
 
-    event_attendance_mode = EventAttendanceModeField(required=False, allow_null=True)
+    event_attendance_mode = EventAttendanceModeField()
 
     duration = serializers.DurationField(required=False, allow_null=True)
 
-    capacity = serializers.IntegerField(required=False, allow_null=True)
-    status = serializers.CharField(required=False, allow_null=True)
-    location_hint = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    online_meeting_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    parent = RelatedParentField(source='activity')
+    def create(self, validated_data):
 
-    contributor_count = serializers.IntegerField(
-        source='remote_contributor_count',
-        required=False,
-        allow_null=True,
-    )
+        iri = validated_data.get('id')
+        if iri:
+            try:
+                sub_event = SubEvent.objects.get(iri=iri)
+                activity = validated_data.get('activity')
+                if activity:
+                    existing_slot = DateActivitySlot.objects.filter(origin=sub_event, activity=activity).first()
+                    if existing_slot:
+                        for key, value in validated_data.items():
+                            if key not in ('id', 'origin'):
+                                setattr(existing_slot, key, value)
+                        existing_slot.save()
+                        return existing_slot
+                validated_data.pop('id', None)
+                validated_data['origin'] = sub_event
+            except SubEvent.DoesNotExist:
+                pass
 
-    def to_representation(self, instance):
-        # Supplier platform should sent `contributor_count`
-        # Consumer should store it in `remote_contributor_count`
-        data = super().to_representation(instance)
-        data['contributor_count'] = instance.contributor_count
-        return data
+        return super().create(validated_data)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivitySlot
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
+        fields = FederatedObjectSerializer.Meta.fields + (
             'name', 'location', 'start_time', 'end_time',
-            'event_attendance_mode', 'duration', 'capacity',
-            'status', 'location_hint', 'online_meeting_url',
-            'parent', 'contributor_count',
-        )
-
-
-class ScheduleSlotsSerializer(FederatedObjectBaseSerializer):
-    type = TypeField('subEvent')
-
-    start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
-    end_time = serializers.DateTimeField(source='end', read_only=True)
-    location = LocationSerializer(allow_null=True, required=False)
-
-    event_attendance_mode = EventAttendanceModeField(required=False, allow_null=True)
-
-    duration = serializers.DurationField(required=False, allow_null=True)
-
-    status = serializers.CharField(required=False, allow_null=True)
-    location_hint = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    online_meeting_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-
-    parent = RelatedParentField(source='activity')
-
-    class Meta(BaseFederatedActivitySerializer.Meta):
-        model = ScheduleSlot
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'location', 'start_time', 'end_time',
             'event_attendance_mode', 'duration',
-            'status', 'location_hint', 'online_meeting_url',
-            'parent',
-        )
-
-
-class PeriodicSlotsSerializer(FederatedObjectBaseSerializer):
-    type = TypeField('subEvent')
-
-    start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
-    end_time = serializers.DateTimeField(source='end', read_only=True)
-
-    duration = serializers.DurationField(required=False, allow_null=True)
-
-    status = serializers.CharField(required=False, allow_null=True)
-
-    parent = RelatedParentField(source='activity')
-
-    class Meta(BaseFederatedActivitySerializer.Meta):
-        model = PeriodicSlot
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'start_time',
-            'end_time',
-            'duration',
-            'status',
-            'parent',
         )
 
 
 class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
-    type = TypeField('DoGoodEvent')
+    id = FederatedIdField('json-ld:do-good-event')
 
-    sub_event = DateSlotsSerializer(many=True, source='slots')
+    sub_event = SlotsSerializer(many=True, source='slots')
     join_mode = JoinModeField()
     application_deadline = DateField(source='registration_deadline', allow_null=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'capacity', 'sub_event', 'review', 'join_mode', 'application_deadline',
+            'sub_event', 'review', 'join_mode', 'application_deadline',
         )
-
-    def get_contributor_count(self, obj):
-        return obj.participants.filter(status__in=['accepted', 'new', 'succeeded']).count()
 
     def create(self, validated_data):
         slots = validated_data.pop('slots', [])
@@ -693,22 +532,16 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
         result = super().update(instance, validated_data)
 
         field = self.fields['sub_event']
-        validated_data['slots'] = []
-        for index, slot in enumerate(slots):
+        for slot in slots:
             slot['activity'] = result
-            field.child.initial_data = self.initial_data['sub_event'][index]
-            validated_data['slots'].append(
-                field.child.update(
-                    SubEvent.objects.from_iri(slot.pop('id')).adopted,
-                    slot
-                )
-            )
+
+        validated_data[field.source] = field.update(instance.slots.all(), slots)
 
         return result
 
 
 class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
-    type = TypeField('DoGoodEvent')
+    id = FederatedIdField('json-ld:do-good-event')
 
     location = LocationSerializer(allow_null=True, required=False)
     image = ImageSerializer(required=False, allow_null=True)
@@ -724,9 +557,6 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
     def get_slot_mode(self, obj):
         return SlotModeChoices.periodic
 
-    def get_contributor_count(self, obj):
-        return obj.registrations.filter(status__in=['new', 'accepted']).count()
-
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = PeriodicActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
@@ -737,7 +567,7 @@ class FederatedPeriodicActivitySerializer(BaseFederatedActivitySerializer):
 
 
 class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
-    type = TypeField('DoGoodEvent')
+    id = FederatedIdField('json-ld:do-good-event')
 
     location = LocationSerializer(allow_null=True, required=False)
 
@@ -753,9 +583,6 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
     def get_slot_mode(self, obj):
         return SlotModeChoices.scheduled
 
-    def get_contributor_count(self, obj):
-        return obj.active_participants.count()
-
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = ScheduleActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
@@ -764,240 +591,75 @@ class FederatedScheduleActivitySerializer(BaseFederatedActivitySerializer):
         )
 
 
-class RelatedActivityField(RelatedField):
-    def get_queryset(self):
-        # TODO: filter queryset on correct types
-        return ActivityPubModel.objects.all()
+class FederatedActivitySerializer(PolymorphicSerializer):
+    resource_type_field_name = 'type'
 
-    def get_origin_value(self, instance):
-        if getattr(instance, 'slot', None):
-            return instance.slot
-        return getattr(instance, self.source)
+    polymorphic_serializers = [
+        FederatedDeadlineActivitySerializer,
+        FederatedDeedSerializer,
+        FederatedDateActivitySerializer,
+        FederatedFundingSerializer,
+        FederatedGrantApplicationSerializer,
+        FederatedCollectSerializer,
+        FederatedRegisteredDateActivitySerializer,
+        FederatedPeriodicActivitySerializer,
+        FederatedScheduleActivitySerializer,
+    ]
 
-    def to_representation(self, value):
-        if hasattr(self.parent.instance, 'slot') and self.parent.instance.slot:
-            value = self.parent.instance.slot
+    model_type_mapping = {
+        Deed: 'GoodDeed',
+        Funding: 'CrowdFunding',
+        GrantApplication: 'GrantApplication',
+        DateActivity: 'DoGoodEvent',
+        PeriodicActivity: 'DoGoodEvent',
+        RegisteredDateActivity: 'DoGoodEvent',
+        DeadlineActivity: 'DoGoodEvent',
+        ScheduleActivity: 'DoGoodEvent',
+        CollectActivity: 'CollectCampaign',
 
-        if hasattr(value, 'activity_pub_model'):
-            return value.activity_pub_model.pub_url
-        elif hasattr(value, 'origin'):
-            return value.origin.pub_url
+    }
 
-    def to_internal_value(self, data):
-        if isinstance(data, str):
-            data = {'id': data}
+    def __new__(cls, *args, **kwargs):
+        cls.model_serializer_mapping = dict(
+            (serializer.Meta.model, serializer) for serializer in cls.polymorphic_serializers
+        )
 
-        activity_pub_model = ActivityPubModel.objects.from_iri(data['id'])
-        if activity_pub_model.is_local:
-            return activity_pub_model.origin
+        return super().__new__(cls, *args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.resource_type_model_mapping['DeadlineActivity'] = DeadlineActivity
+        self.resource_type_model_mapping['DateActivity'] = DateActivity
+        self.resource_type_model_mapping['RegisteredDateActivity'] = RegisteredDateActivity
+        self.resource_type_model_mapping['PeriodicActivity'] = PeriodicActivity
+        self.resource_type_model_mapping['ScheduleActivity'] = ScheduleActivity
+
+    def to_resource_type(self, model_or_instance):
+        if isinstance(model_or_instance, models.Model):
+            model = type(model_or_instance)
         else:
-            return adapter.adopt(activity_pub_model)
+            model = model_or_instance
 
+        return self.model_type_mapping[model]
 
-class RegistrationSerializer(FederatedObjectBaseSerializer):
-    type = TypeField('Join')
-    actor = MemberSerializer(source='user')
-    object = RelatedActivityField(source='activity')
-    motivation = serializers.CharField(source='answer')
+    def _get_resource_type_from_mapping(self, data):
+        if data.get('type') == 'DoGoodEvent':
+            if data.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
+                return 'ScheduleActivity'
+            elif data.get('slot_mode', 'SetSlotMode') == 'PeriodicSlotMode':
+                return 'PeriodicActivity'
+            elif data.get('join_mode', None) in ('selected', JoinModeChoices.selected):
+                return 'RegisteredDateActivity'
+            elif len(data.get('sub_event', [])) > 0:
+                return 'DateActivity'
+            else:
+                return 'DeadlineActivity'
 
-    class Meta:
-        model = Registration
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'actor', 'object', 'motivation'
-        )
+        return super()._get_resource_type_from_mapping(data)
 
+    def save(self, *args, **kwargs):
+        if not kwargs.get('owner'):
+            kwargs['owner'] = self.context['request'].user
 
-class MotivationField(serializers.CharField):
-    def to_representation(self, value):
-        if hasattr(value, 'registration'):
-            value = value.registration
-
-        if isinstance(value, Registration):
-            return value.answer
-
-    def to_internal_value(self, data):
-        return {'answer': data}
-
-
-class ContributorSerializer(FederatedObjectBaseSerializer):
-    type = TypeField('Join')
-    actor = MemberSerializer(source='user')
-    object = RelatedActivityField(source='activity')
-    motivation = MotivationField(required=False, allow_null=True, source='*')
-
-    class Meta:
-        model = Contributor
-        fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'actor', 'object', 'motivation'
-        )
-
-    def get_polymorphic_serializer(self, validated_data):
-        serializer_mapping = {
-            'deed': DeedParticipantSerializer,
-            'collectactivity': CollectParticipantSerializer,
-            'deadlineactivity': DeadlineParticipantSerializer,
-            'scheduleactivity': ScheduleRegistrationSerializer,
-            'periodicactivity': PeriodicRegistrationSerializer,
-            'dateactivityslot': DateParticipantSerializer,
-            'dateactivity': DateRegistrationSerializer,
-            'scheduleslot': ScheduleParticipantSerializer,
-            'periodicslot': PeriodicParticipantSerializer,
-        }
-
-        return serializer_mapping[validated_data['activity']._meta.model_name]()
-
-    def create(self, validated_data):
-        validated_data.pop('id')
-        user = validated_data.pop('user')
-
-        field = self.fields['actor']
-        field.initial_data = self.initial_data['actor']
-        field.is_valid(raise_exception=True)
-        if is_local(user['id']):
-            validated_data['user'] = ActivityPubModel.objects.from_iri(user['id']).origin
-        else:
-            validated_data['remote_user'] = field.save()
-
-        polymorphic_serializer = self.get_polymorphic_serializer(validated_data)
-        return polymorphic_serializer.create(validated_data)
-
-
-class BaseContributorSerializer(FederatedObjectBaseSerializer):
-    def get_contributor(self, validated_data):
-        return self.model.objects.filter(
-            activity=validated_data['activity'],
-            remote_user=validated_data['remote_user'],
-        ).first()
-
-    def update(self, contributor, validated_data):
-        contributor.states.reapply(save=True)
-
-    def create(self, validated_data):
-        contributor = self.get_contributor(validated_data)
-        if contributor:
-            self.update(contributor, validated_data)
-            return contributor
-        else:
-            return self.model.objects.create(**validated_data)
-
-
-class DeedParticipantSerializer(BaseContributorSerializer):
-    model = DeedParticipant
-
-    def create(self, validated_data):
-        validated_data.pop('answer')
-        return super().create(validated_data)
-
-
-class CollectParticipantSerializer(BaseContributorSerializer):
-    model = CollectContributor
-
-    def create(self, validated_data):
-        validated_data.pop('answer')
-        return super().create(validated_data)
-
-
-class DeadlineParticipantSerializer(BaseContributorSerializer):
-    model = DeadlineRegistration
-
-    def get_contributor(self, validated_data):
-        contributor = super().get_contributor(validated_data)
-        if contributor:
-            return contributor.participants.first()
-
-
-class ScheduleRegistrationSerializer(BaseContributorSerializer):
-    model = ScheduleRegistration
-
-    def get_contributor(self, validated_data):
-        contributor = super().get_contributor(validated_data)
-        if contributor:
-            return contributor.participants.first()
-
-
-class ScheduleParticipantSerializer(BaseContributorSerializer):
-    model = ScheduleParticipant
-
-    def get_contributor(self, validated_data):
-        return self.model.objects.filter(
-            activity=validated_data['activity'],
-            user=validated_data['user'],
-        ).first()
-
-    def update(self, contributor, validated_data):
-        contributor.slot = validated_data['slot']
-        contributor.save()
-
-    def create(self, validated_data):
-        slot = validated_data.pop('activity')
-
-        validated_data['registration'] = ScheduleRegistration.objects.get(
-            activity=slot.activity,
-            user=validated_data['user']
-        )
-
-        validated_data['slot'] = slot
-        validated_data['activity'] = slot.activity
-
-        validated_data.pop('answer')
-
-        return super().create(validated_data)
-
-
-class PeriodicParticipantSerializer(BaseContributorSerializer):
-    model = PeriodicParticipant
-
-    def get_contributor(self, validated_data):
-        return self.model.objects.filter(
-            activity=validated_data['activity'],
-            user=validated_data['user'],
-        ).first()
-
-    def update(self, contributor, validated_data):
-        contributor.slot = validated_data['slot']
-        contributor.save()
-
-    def create(self, validated_data):
-        slot = validated_data.pop('activity')
-
-        validated_data['registration'] = PeriodicRegistration.objects.get(
-            activity=slot.activity,
-            user=validated_data['user']
-        )
-
-        validated_data['slot'] = slot
-        validated_data['activity'] = slot.activity
-
-        validated_data.pop('answer')
-
-        return super().create(validated_data)
-
-
-class PeriodicRegistrationSerializer(BaseContributorSerializer):
-    model = PeriodicRegistration
-
-    def update(self, contributor, validated_data):
-        contributor.states.start(save=True)
-
-
-class DateRegistrationSerializer(BaseContributorSerializer):
-    model = DateRegistration
-
-
-class DateParticipantSerializer(BaseContributorSerializer):
-    model = DateParticipant
-
-    def create(self, validated_data):
-        slot = validated_data.pop('activity')
-
-        validated_data['registration'] = DateRegistration.objects.get(
-            activity=slot.activity,
-            remote_user=validated_data['remote_user']
-        )
-
-        validated_data['slot'] = slot
-        validated_data['activity'] = slot.activity
-
-        validated_data.pop('answer')
-
-        return super().create(validated_data)
+        return super().save(**kwargs)

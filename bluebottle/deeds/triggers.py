@@ -10,15 +10,13 @@ from bluebottle.activities.messages.participant import (
     ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import (
-    OrganizerStateMachine, EffortContributionStateMachine, ActivityStateMachine,
-    ContributorStateMachine
+    OrganizerStateMachine, EffortContributionStateMachine, ActivityStateMachine
 )
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
 from bluebottle.activity_pub.effects import (
-    PublishAdoptionEffect, CancelEffect, StartEffect, SyncRelatedEvent, UpdateEventEffect, FinishEffect,
-    SendJoinEffect, SendLeaveEffect
+    PublishAdoptionEffect, CancelEffect, StartEffect, UpdateEventEffect, FinishEffect
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
@@ -170,14 +168,6 @@ class DeedTriggers(ActivityTriggers):
             ActivityStateMachine.approve,
             effects=[
                 PublishAdoptionEffect,
-                RelatedTransitionEffect('failed_participants', DeedParticipantStateMachine.accept),
-                StartEffect
-            ]
-        ),
-        TransitionTrigger(
-            DeedStateMachine.start,
-            effects=[
-                RelatedTransitionEffect('failed_participants', DeedParticipantStateMachine.accept),
                 StartEffect
             ]
         ),
@@ -207,8 +197,7 @@ class DeedTriggers(ActivityTriggers):
                     DeedParticipantStateMachine.re_accept,
                     conditions=[is_not_finished]
                 ),
-                StartEffect
-            ],
+            ]
         ),
 
         TransitionTrigger(
@@ -247,7 +236,6 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                RelatedTransitionEffect('participants', ContributorStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
                 CancelEffect
             ],
@@ -257,7 +245,6 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.restore,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.reset),
-                RelatedTransitionEffect('failed_participants', ContributorStateMachine.reset),
                 NotificationEffect(ActivityRestoredNotification),
             ]
         ),
@@ -312,16 +299,11 @@ def contributor_is_active(effect):
 def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
     settings = MemberPlatformSettings.load()
-    return (not settings.closed) and effect.instance.user and effect.instance.user.is_active
+    return (not settings.closed) and effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
     return not participant_is_active(effect)
-
-
-def deed_is_synced(effect):
-    """Deed is a synced copy (has origin pointing to source GoodDeed)."""
-    return getattr(effect.instance.activity, 'origin', None) is not None
 
 
 @register(DeedParticipant)
@@ -356,8 +338,6 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_user]
                 ),
                 FollowActivityEffect,
-                SendJoinEffect,
-                SyncRelatedEvent
             ]
         ),
         TransitionTrigger(
@@ -377,10 +357,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     ParticipantRemovedNotification,
                     conditions=[is_not_owner]
                 ),
-                UnFollowActivityEffect,
-                # Notify source platform of leave for synced deeds
-                SendLeaveEffect,
-                SyncRelatedEvent
+                UnFollowActivityEffect
             ]
         ),
 
@@ -412,8 +389,6 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedStateMachine.succeed,
                     conditions=[activity_is_finished, activity_expired]
                 ),
-                SendJoinEffect,
-                SyncRelatedEvent
             ]
         ),
         TransitionTrigger(
@@ -429,10 +404,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
-                UnFollowActivityEffect,
-                # Notify source platform of leave for synced deeds
-                SendLeaveEffect,
-                SyncRelatedEvent
+                UnFollowActivityEffect
             ]
         ),
 
@@ -445,8 +417,6 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[activity_did_start, ]
                 ),
                 FollowActivityEffect,
-                SendJoinEffect,
-                SyncRelatedEvent
             ]
         ),
 

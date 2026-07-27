@@ -1,7 +1,5 @@
 from django.test import RequestFactory
 
-import mock
-
 from bluebottle.activity_pub.views import ActivityPubPermission, InboxPermission
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
@@ -65,11 +63,7 @@ class ActivityPubPermissionTestCase(PermissionTestCase):
 
     def test_signed_get_closed_platform_followed(self):
         MemberPlatformSettings.objects.create(closed=True)
-
-        with mock.patch(
-            'bluebottle.activity_pub.adapters.adapter.publish',
-        ):
-            FollowFactory.create(object=self.actor)
+        FollowFactory.create(object=self.actor)
 
         request = self.authenticate(self.request_factory.get(path='/'), self.actor)
 
@@ -109,10 +103,7 @@ class InboxPermissionTestCase(PermissionTestCase):
         )
 
     def test_post_accept(self):
-        with mock.patch(
-            'bluebottle.activity_pub.adapters.adapter.publish',
-        ):
-            FollowFactory.create(object=self.actor)
+        FollowFactory.create(object=self.actor)
 
         self.assertTrue(
             self.permission.has_permission(self.request(data={'type': 'Create'}, actor=self.actor))
@@ -124,20 +115,14 @@ class InboxPermissionTestCase(PermissionTestCase):
         )
 
     def test_post_accept_no_auth(self):
-        with mock.patch(
-            'bluebottle.activity_pub.adapters.adapter.publish',
-        ):
-            FollowFactory.create(object=self.actor)
+        FollowFactory.create(object=self.actor)
 
         self.assertFalse(
             self.permission.has_permission(self.request(data={'type': 'Create'}))
         )
 
     def test_post_publish(self):
-        with mock.patch(
-            'bluebottle.activity_pub.adapters.adapter.publish',
-        ):
-            FollowFactory.create(object=self.actor)
+        FollowFactory.create(object=self.actor)
 
         self.assertTrue(
             self.permission.has_permission(self.request(data={'type': 'Create'}, actor=self.actor))
@@ -149,10 +134,7 @@ class InboxPermissionTestCase(PermissionTestCase):
         )
 
     def test_post_publish_no_auth(self):
-        with mock.patch(
-            'bluebottle.activity_pub.adapters.adapter.publish',
-        ):
-            FollowFactory.create(object=self.actor)
+        FollowFactory.create(object=self.actor)
 
         self.assertFalse(
             self.permission.has_permission(self.request(data={'type': 'Create'}))

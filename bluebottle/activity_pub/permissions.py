@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from bluebottle.activity_pub.models import ActivityPubModel, Follow, Accept, Join
+from bluebottle.activity_pub.models import ActivityPubModel, Follow, Accept
 from bluebottle.members.models import MemberPlatformSettings
 
 
@@ -27,8 +27,7 @@ class InboxPermission(permissions.BasePermission):
                 if request.data['type'] == 'Follow':
                     return True
                 if request.data['type'] in (
-                    'Create', 'Update', 'Start', 'Cancel', 'Finish', 'Lock', 'Delete',
-                    'Join', 'Leave', 'Reject'
+                    'Create', 'Update', 'Start', 'Cancel', 'Finish', 'Delete'
                 ):
                     # Only actors we follow can post publish activities
                     return (
@@ -40,7 +39,7 @@ class InboxPermission(permissions.BasePermission):
                     try:
                         object = ActivityPubModel.objects.from_iri(request.data['object'])
 
-                        if isinstance(object, (Follow, Join)):
+                        if isinstance(object, Follow):
                             return Follow.objects.filter(object=request.auth).exists()
                         else:
                             # If it's an Accept on an Event, make sure we accepted the related follow

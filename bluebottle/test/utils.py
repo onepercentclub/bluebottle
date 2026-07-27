@@ -442,8 +442,6 @@ class APITestCase(BluebottleTestCase):
 
         for resource in data:
             relationship = resource['relationships'][parts[0]]['data']
-            if relationship is None:
-                continue
 
             try:
                 for part in parts[1:]:
@@ -452,13 +450,8 @@ class APITestCase(BluebottleTestCase):
                         if resource['id'] == relationship['id'] and resource['type'] == relationship['type']
                     ][0]
                     relationship = included['relationships'][part]['data']
-                    if relationship is None:
-                        break
             except IndexError:
                 return self.fail('Included relation not found')
-
-            if relationship is None:
-                continue
 
             if isinstance(relationship, (list, tuple)):
                 for rel in relationship:
@@ -487,14 +480,10 @@ class APITestCase(BluebottleTestCase):
             included not in included_types
         )
 
-    def get_included(self, relationship, resources=None):
+    def get_included(self, relationship):
         relations = []
-
-        resources = resources or self.response.json()['data']
-        for resource in resources:
-            relation = resource['relationships'][relationship]['data']
-            if relation is not None:
-                relations.append(relation)
+        for resource in self.response.json()['data']:
+            relations.append(resource['relationships'][relationship]['data'])
 
         return [
             included for included in self.response.json()['included']

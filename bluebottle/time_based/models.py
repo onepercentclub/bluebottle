@@ -2,14 +2,10 @@ import uuid
 from urllib.parse import urlencode
 import datetime
 
-from django.core.exceptions import ObjectDoesNotExist
 import pytz
-
-from django.contrib.contenttypes.fields import GenericRelation
 from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
-from django.urls import reverse
 from django.utils import timezone
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
@@ -118,19 +114,8 @@ class TimeBasedActivity(Activity):
         blank=True, null=True,
         max_length=300,
     )
+
     activity_type = _('Time-based activity')
-
-    @property
-    def readonly_fields(self):
-        readonly_fields = super().readonly_fields
-
-        if hasattr(self, 'origin') and self.origin:
-            readonly_fields = readonly_fields + [
-                'capacity', 'registration_deadline', 'review', 'review_title', 'review_description',
-                'review_link', 'preparation',
-            ]
-
-        return readonly_fields
 
     @property
     def local_timezone(self):
@@ -240,15 +225,6 @@ class DateActivity(TimeBasedActivity):
     ]
 
     @property
-    def readonly_fields(self):
-        readonly_fields = super().readonly_fields
-
-        if hasattr(self, 'origin') and self.origin:
-            readonly_fields = readonly_fields + ['start', 'duration', ]
-
-        return readonly_fields
-
-    @property
     def start(self):
         if self.slots.first():
             return self.slots.first().start.date()
@@ -342,34 +318,22 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
 
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
-    @property
-    def is_adopted(self):
-        return hasattr(self, 'origin') and self.origin
-
-    @property
-    def host_organization(self):
-        return self.activity.host_organization if self.activity else None
+    origin = models.ForeignKey(
+        'activity_pub.SubEvent', null=True, related_name="adopted_slots", on_delete=models.SET_NULL
+    )
 
     @property
     def event(self):
         from bluebottle.activity_pub.models import SubEvent
         try:
-            return self.subevent
+            return SubEvent.objects.get(slot=self)
         except SubEvent.DoesNotExist:
             pass
 
     @property
     def activity_pub_url(self):
-        sub = self.event
-        if sub is None and self.origin_id:
-            sub = self.origin
-        if sub is None:
-            return None
-        if sub.iri:
-            return sub.iri
-        return connection.tenant.build_absolute_url(
-            reverse('json-ld:sub-event', args=(sub.pk,))
-        )
+        if self.event:
+            return self.event.iri
 
     @property
     def uid(self):
@@ -486,33 +450,6 @@ class DateActivitySlot(ActivitySlot):
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
-    remote_contributor_count = models.PositiveIntegerField(default=0)
-
-    origins = GenericRelation(
-        'activity_pub.SubEvent',
-        object_id_field="adopted_id",
-        content_type_field="adopted_content_type",
-    )
-
-    @property
-    def origin(self):
-        try:
-            return self.origins.get()
-        except ObjectDoesNotExist:
-            raise AttributeError('origins')
-
-    activity_pub_models = GenericRelation(
-        'activity_pub.SubEvent',
-        object_id_field="origin_id",
-        content_type_field="origin_content_type",
-    )
-
-    @property
-    def activity_pub_model(self):
-        try:
-            return self.activity_pub_models.get()
-        except ObjectDoesNotExist:
-            raise AttributeError('activity_pub_model')
 
     @property
     def owners(self):
@@ -635,17 +572,6 @@ class RegistrationActivity(TimeBasedActivity):
     )
 
     @property
-    def readonly_fields(self):
-        readonly_fields = super().readonly_fields
-
-        if hasattr(self, 'origin') and self.origin:
-            readonly_fields = readonly_fields + [
-                'is_online', 'location', 'location_hint', 'start', 'deadline',
-            ]
-
-        return readonly_fields
-
-    @property
     def duration_human_readable(self):
         if self.duration:
             return get_human_readable_duration(str(self.duration)).lower()
@@ -711,17 +637,6 @@ class DeadlineActivity(RegistrationActivity):
         null=True,
         blank=True,
     )
-
-    @property
-    def readonly_fields(self):
-        readonly_fields = super().readonly_fields
-
-        if self.is_adopted:
-            readonly_fields = readonly_fields + [
-                'duration', 'online_meeting_url',
-            ]
-
-        return readonly_fields
 
     @property
     def required_fields(self):
@@ -813,27 +728,9 @@ class ScheduleActivity(RegistrationActivity):
     )
 
     @property
-    def readonly_fields(self):
-        readonly_fields = super().readonly_fields
-
-        if hasattr(self, 'origin') and self.origin:
-            readonly_fields = readonly_fields + [
-                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
-            ]
-
-        return readonly_fields
-
-    @property
     def accepted_participants(self):
         if self.pk:
             return self.registrations.filter(status__in=["accepted", "succeeded", "scheduled"])
-        else:
-            return ScheduleRegistration.objects.none()
-
-    @property
-    def active_participants(self):
-        if self.pk:
-            return self.registrations.filter(status__in=["new", "accepted", "succeeded", "scheduled"])
         else:
             return ScheduleRegistration.objects.none()
 
@@ -897,17 +794,6 @@ class PeriodicActivity(RegistrationActivity):
         blank=True,
     )
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
-
-    @property
-    def readonly_fields(self):
-        readonly_fields = super().readonly_fields
-
-        if hasattr(self, 'origin') and self.origin:
-            readonly_fields = readonly_fields + [
-                'period', 'duration',
-            ]
-
-        return readonly_fields
 
     @property
     def required_fields(self):
@@ -986,17 +872,6 @@ class RegisteredDateActivity(TimeBasedActivity):
         ),
         null=True, blank=True, on_delete=models.SET_NULL
     )
-
-    @property
-    def readonly_fields(self):
-        readonly_fields = super().readonly_fields
-
-        if hasattr(self, 'origin') and self.origin:
-            readonly_fields = readonly_fields + [
-                'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url'
-            ]
-
-        return readonly_fields
 
     @property
     def end(self):
@@ -1304,17 +1179,7 @@ class Registration(TriggerMixin, PolymorphicModel):
     user = models.ForeignKey(
         'members.Member',
         related_name='registrations',
-        on_delete=models.CASCADE,
-        null=True
-    )
-    remote_user = models.ForeignKey(
-        "activities.RemoteMember",
-        verbose_name=_("Remote member"),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="registrations",
-        help_text=_("When set, this registration is a synced participant without a local user."),
+        on_delete=models.CASCADE
     )
 
     status = models.CharField(max_length=40)
@@ -2046,34 +1911,8 @@ class Slot(models.Model):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 
-    origins = GenericRelation(
-        'activity_pub.SubEvent',
-        object_id_field="adopted_id",
-        content_type_field="adopted_content_type",
-    )
-
-    @property
-    def origin(self):
-        try:
-            return self.origins.get()
-        except ObjectDoesNotExist:
-            raise AttributeError('origin')
-
-    activity_pub_models = GenericRelation(
-        'activity_pub.SubEvent',
-        object_id_field="origin_id",
-        content_type_field="origin_content_type",
-    )
-
     class Meta:
         abstract = True
-
-    @property
-    def activity_pub_model(self):
-        try:
-            return self.activity_pub_models.get()
-        except ObjectDoesNotExist:
-            raise AttributeError('activity_pub_model')
 
     @property
     def uid(self):

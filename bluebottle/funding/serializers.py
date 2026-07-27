@@ -340,14 +340,6 @@ class FundingSerializer(BaseActivitySerializer):
         MaxDeadlineValidator(),
     ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Keep these writable so validate() can return 400 instead of silently
-        # dropping changes when BaseActivitySerializer marks them read_only.
-        for field_name in ('target', 'deadline'):
-            if field_name in self.fields:
-                self.fields[field_name].read_only = False
-
     def get_account_currency(self, obj):
         if obj.bank_account and getattr(obj.bank_account, 'account', False):
             if not obj.bank_account.currency:
@@ -384,28 +376,17 @@ class FundingSerializer(BaseActivitySerializer):
 
     def validate(self, data):
         """
-        Reject changes to target and deadline when those fields are read-only
-        (published or adopted campaigns).
+        Ignore changes to target and deadline when status is not 'draft' or 'needs_work'
         """
-        if self.instance:
-            readonly_fields = self.instance.readonly_fields
-            if (
-                'target' in data and
-                'target' in readonly_fields and
-                data['target'] != self.instance.target
-            ):
+        if self.instance and self.instance.status not in ['draft', 'needs_work']:
+            # Remove target and deadline from data if they're being changed
+            if 'target' in data and data['target'] != self.instance.target:
                 raise ValidationError(
                     {'target': _('Target cannot be changed after the funding has been published.')}
                 )
-            if (
-                'deadline' in data and
-                'deadline' in readonly_fields and
-                self.instance.deadline and
-                data['deadline'] and
-                data['deadline'].date() != self.instance.deadline.date()
-            ):
+            if 'deadline' in data and data['deadline'].date() != self.instance.deadline.date():
                 raise ValidationError(
-                    {'deadline': _('Deadline cannot be changed after the funding has been published.')}
+                    {'target': _('Deadline cannot be changed after the funding has been published.')}
                 )
         return data
 

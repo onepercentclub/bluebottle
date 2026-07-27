@@ -23,10 +23,7 @@ def get_effects(effects):
     for effect in displayed_effects:
         grouped_effects[(effect.__class__, effect.instance.__class__)].append(effect)
 
-    rendered = [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
-    hidden = [effect for effect in effects if not effect.display]
-    rendered.extend(effect.to_html() for effect in hidden)
-    return rendered
+    return [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
 
 
 class StateMachineAdminMixin(object):
@@ -67,7 +64,6 @@ class StateMachineAdminMixin(object):
                                     send_messages=send_messages
                                 )
             rendered_effects = get_effects(effects)
-
             if rendered_effects:
 
                 cancel_link = reverse(

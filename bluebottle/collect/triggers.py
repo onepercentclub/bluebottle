@@ -11,9 +11,9 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
-
 from bluebottle.activity_pub.effects import (
-    PublishAdoptionEffect, CancelEffect, UpdateEventEffect, FinishEffect
+    PublishAdoptionEffect, CancelEffect, SendJoinEffect, SendLeaveEffect,
+    UpdateEventEffect, FinishEffect, SyncRelatedEvent
 )
 from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
@@ -264,6 +264,14 @@ def contributor_activity_started(effect):
     )
 
 
+def activity_has_started(effect):
+    """activity is started"""
+    return (
+        not effect.instance.activity.start or
+        effect.instance.activity.start < date.today()
+    )
+
+
 @register(CollectContribution)
 class CollectContributionTriggers(ContributionTriggers):
     triggers = ContributionTriggers.triggers + [
@@ -282,7 +290,7 @@ class CollectContributionTriggers(ContributionTriggers):
 def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
     settings = MemberPlatformSettings.load()
-    return settings.closed or effect.instance.user.is_active
+    return settings.closed or (effect.instance.user and effect.instance.user.is_active)
 
 
 def participant_is_inactive(effect):
@@ -324,6 +332,8 @@ class CollectContributorTriggers(ContributorTriggers):
                     NewParticipantNotification,
                     conditions=[is_user]
                 ),
+                SendJoinEffect,
+                SyncRelatedEvent
             ]
         ),
         TransitionTrigger(
@@ -351,6 +361,8 @@ class CollectContributorTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
+                SendLeaveEffect,
+                SyncRelatedEvent
             ]
         ),
 
@@ -359,8 +371,11 @@ class CollectContributorTriggers(ContributorTriggers):
             effects=[
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
+                    conditions=[activity_has_started]
                 ),
-                NotificationEffect(ParticipantJoinedNotification)
+                NotificationEffect(ParticipantJoinedNotification),
+                SendJoinEffect,
+                SyncRelatedEvent
             ]
         ),
 

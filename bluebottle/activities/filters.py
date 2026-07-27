@@ -411,6 +411,7 @@ class ActivitySearch(Search):
         "draft": DraftFacet(),
         "activity-type": TermsFacet(field="activity_type", min_doc_count=0),
         "status": TermsFacet(field="status"),
+        "platform": TermsFacet(field="platform"),
         "matching": MatchingFacet(field="matching"),
         "highlight": BooleanFacet(field="highlight"),
         "distance": DistanceFacet(),

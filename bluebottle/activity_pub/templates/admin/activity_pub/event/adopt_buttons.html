@@ -1,0 +1,57 @@
+{% load i18n admin_urls %}
+{% if original %}
+    <div class="submit-row">
+        {% if original.is_local %}
+            {% if original.origin %}
+                <a class="button" href="{% url 'admin:activities_activity_change' original.origin.pk %}">
+                    {% trans 'View original activity' %}
+                </a>
+            {% endif %}
+        {% else %}
+            {% if adoption_type == 'clone' %}
+                {% if original.adopted_activity %}
+                    <a class="button"
+                       href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
+                        {% trans 'View cloned activity' %}
+                    </a>
+                {% else %}
+                    {% if adoption_mode == 'automatic' %}
+                        {% trans "Activities are cloned automatically for this connection" %}
+                    {% else %}
+                        <a class="button default" href="{% url 'admin:activity_pub_event_clone' original.pk %}">
+                            {% trans 'Clone activity' %}
+                        </a>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+            {% if adoption_type == 'link' %}
+                {% if original.link %}
+                    <a class="button"
+                       href="{% url 'admin:activity_links_linkedactivity_change' original.link.pk %}">
+                        % trans 'View linked activity' %}
+                    </a>
+                {% else %}
+                    {% if adoption_mode == 'automatic' %}
+                        {% trans "Activities are linked automatically for this connection" %}
+                    {% else %}
+                        <a href="{% url 'admin:activity_pub_event_link' original.pk %}">
+                            {% trans 'Link activity' %}
+                        </a>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+            {% if adoption_type == 'sync' %}
+                {% if original.adopted_activity %}
+                    <a class="button"
+                       href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
+                        {% trans 'View adopted activity' %}
+                    </a>
+                {% else %}
+                    <a class="button default" href="{% url 'admin:activity_pub_event_adopt' original.pk %}">
+                        {% trans 'Adopt event' %}
+                    </a>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </div>
+{% endif %}

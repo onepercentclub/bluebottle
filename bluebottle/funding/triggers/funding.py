@@ -303,7 +303,7 @@ class FundingTriggers(ActivityTriggers):
         ModelChangedTrigger(
             [
                 'target', 'amount_donated', 'amount_matching', 'amount_pledged',
-                'deadline', 'impact_location'
+                'deadline', 'impact_location', 'image'
             ],
             effects=[
                 UpdateEventEffect,

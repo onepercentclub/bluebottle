@@ -6,6 +6,8 @@ from django.utils.timezone import now
 from moneyed import Money
 
 from bluebottle.activities.tasks import data_retention_contribution_task
+from bluebottle.activity_pub.tests.factories import CrowdFundingFactory
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.funding.models import Payout
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, RewardFactory, DonorFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
@@ -146,6 +148,47 @@ class FundingTestCase(BluebottleTestCase):
         self.assertEqual(
             errors,
             ["Please specify a budget", "Make sure your payout account is verified"],
+        )
+
+    def test_readonly_fields(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        funding = FundingFactory.create()
+
+        CrowdFundingFactory.create(adopted=funding)
+
+        self.assertEqual(
+            funding.readonly_fields,
+            [
+                'title',
+                'description',
+                'image',
+                'video_url',
+                'slug',
+                'next_step_link',
+                'next_step_title',
+                'next_step_button_label',
+                'next_step_description',
+                'start',
+                'deadline',
+                'target',
+                'duration',
+                'impact_location'
+            ]
+        )
+
+    def test_readonly_fields_open(self):
+        funding = FundingFactory.create(status='open')
+
+        self.assertEqual(
+            funding.readonly_fields,
+            [
+                'start',
+                'deadline',
+                'target',
+            ]
         )
 
 

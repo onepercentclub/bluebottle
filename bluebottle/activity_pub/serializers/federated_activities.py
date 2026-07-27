@@ -150,11 +150,15 @@ class AddressSerializer(FederatedObjectBaseSerializer):
     id = AddressIdField()
     type = TypeField('Address')
 
-    street_address = serializers.CharField(source='street', required=False, allow_null=True)
-    postal_code = serializers.CharField(required=False, allow_null=True)
+    street_address = serializers.CharField(
+        source='street', required=False, allow_null=True, allow_blank=True
+    )
+    postal_code = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    locality = serializers.CharField(required=False, allow_null=True)
-    region = serializers.CharField(source='province', required=False, allow_null=True)
+    locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    region = serializers.CharField(
+        source='province', required=False, allow_null=True, allow_blank=True
+    )
     country = CountryField(source='country.code', required=False, allow_null=True)
 
     class Meta:
@@ -572,7 +576,7 @@ class RelatedParentField(RelatedField):
 class DateSlotsSerializer(FederatedObjectBaseSerializer):
     type = TypeField('subEvent')
 
-    name = serializers.CharField(source='title', required=False, allow_null=True)
+    name = serializers.CharField(source='title', required=False, allow_null=True, allow_blank=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
     end_time = serializers.DateTimeField(source='end', read_only=True)
     location = LocationSerializer(allow_null=True, required=False)

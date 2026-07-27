@@ -1482,6 +1482,50 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
         with LocalTenant(self.other_tenant):
             self.assertEqual(self.adopted.slots.count(), 3)
 
+    def test_adopt_blank_slot_title(self):
+        def create(**kwargs):
+            ActivityPubTestCase.create(self, slots=[], organization=None, **kwargs)
+            DateActivitySlotFactory.create(
+                activity=self.model,
+                title='',
+                location=None,
+                is_online=True,
+            )
+            self.submit()
+
+        self.create = create
+        self.test_publish = lambda: ActivityPubTestCase.test_publish(self)
+        TemplateTestCase.test_adopt(self)
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.adopted.slots.count(), 1)
+            self.assertEqual(self.adopted.slots.first().title, '')
+
+    def test_adopt_blank_slot_address_fields(self):
+        def create(**kwargs):
+            ActivityPubTestCase.create(self, slots=[], organization=None, **kwargs)
+            location = GeolocationFactory.create(
+                street='',
+                province='',
+                postal_code='',
+                country=self.country,
+            )
+            DateActivitySlotFactory.create(
+                activity=self.model,
+                location=location,
+                is_online=False,
+            )
+            self.submit()
+
+        self.create = create
+        self.test_publish = lambda: ActivityPubTestCase.test_publish(self)
+        with mock.patch.object(Geolocation, 'update_location'):
+            TemplateTestCase.test_adopt(self)
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.adopted.slots.count(), 1)
+            slot = self.adopted.slots.first()
+            self.assertEqual(slot.location.street, '')
+            self.assertEqual(slot.location.province, '')
+
 
 class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = DateActivityFactory

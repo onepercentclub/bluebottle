@@ -776,19 +776,24 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create(alpha2_code='NL')
         other_country = CountryFactory.create(alpha2_code='DE')
 
-        matching = InitiativeFactory.create_batch(2, status='approved')
+        # InitiativeFactory creates a random place country via get_or_create(alpha2_code),
+        # which can collide with NL/DE and inflate facet counts. Clear place so only
+        # the explicit activity office locations determine country facets.
+        matching = InitiativeFactory.create_batch(2, status='approved', place=None)
         for initiative in matching:
             DeadlineActivityFactory.create(
                 status='open',
                 initiative=initiative,
+                location=None,
                 office_location=LocationFactory.create(country=matching_country)
             )
 
-        other = InitiativeFactory.create_batch(3, status='approved')
+        other = InitiativeFactory.create_batch(3, status='approved', place=None)
         for initiative in other:
             DeadlineActivityFactory.create(
                 status='open',
                 initiative=initiative,
+                location=None,
                 office_location=LocationFactory.create(country=other_country)
             )
 

@@ -18,14 +18,18 @@ class ManyResourceRelatedField(ManyRelatedField):
 
     def get_related_origin(self):
         origin = self.parent.origin
-        if origin:
-            serializer = FederatedObjectSerializer()._get_serializer_from_model_or_instance(
-                origin
-            )
-            source = serializer.fields[self.source].source
-            return getattr(origin, source).all()
-        else:
+        if not origin:
             return []
+
+        serializer = FederatedObjectSerializer()._get_serializer_from_model_or_instance(
+            origin
+        )
+        field = serializer.fields.get(self.source)
+        if field is None:
+            return []
+
+        related = getattr(origin, field.source)
+        return related.all()
 
     def save(self, validated_data):
         related_origin = self.get_related_origin()
@@ -84,17 +88,23 @@ class RelatedResourceField(RelatedField):
     def get_related_origin(self):
         try:
             origin = self.parent.origin
-            if origin:
-                serializer = FederatedObjectSerializer(context=self.context)._get_serializer_from_model_or_instance(
-                    origin
-                )
-                source = serializer.fields[self.source].source
-                related_origin = getattr(origin, source)
-
-                if isinstance(related_origin, models.Model):
-                    return related_origin
-            else:
+            if not origin:
                 return None
+
+            serializer = FederatedObjectSerializer(context=self.context)._get_serializer_from_model_or_instance(
+                origin
+            )
+            field = serializer.fields.get(self.source)
+            if field is None:
+                return None
+
+            if hasattr(field, 'get_origin_value'):
+                related_origin = field.get_origin_value(origin)
+            else:
+                related_origin = getattr(origin, field.source)
+
+            if isinstance(related_origin, models.Model):
+                return related_origin
         except AttributeError:
             pass
 

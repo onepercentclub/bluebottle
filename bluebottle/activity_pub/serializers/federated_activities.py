@@ -769,6 +769,11 @@ class RelatedActivityField(RelatedField):
         # TODO: filter queryset on correct types
         return ActivityPubModel.objects.all()
 
+    def get_origin_value(self, instance):
+        if getattr(instance, 'slot', None):
+            return instance.slot
+        return getattr(instance, self.source)
+
     def to_representation(self, value):
         if hasattr(self.parent.instance, 'slot') and self.parent.instance.slot:
             value = self.parent.instance.slot

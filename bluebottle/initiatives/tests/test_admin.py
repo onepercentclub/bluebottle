@@ -16,6 +16,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory, Initiative
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationContactFactory, OrganizationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.time_based.tests.factories import DeadlineActivityFactory
 
 
 class TestInitiativeAdmin(BluebottleAdminTestCase):
@@ -260,10 +261,24 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertTrue('is_open' in page.forms[1].fields)
 
     def test_paginated_activities(self):
+        small_initiative = InitiativeFactory.create(title='Small initiative')
+        DeadlineActivityFactory.create_batch(3, initiative=small_initiative)
+
         self.app.set_user(self.staff_member)
+        small_url = reverse('admin:initiatives_initiative_change', args=(small_initiative.id,))
+        page = self.app.get(small_url)
+        self.assertNotContains(page, 'btn-page page-selected')
+        self.assertNotContains(page, 'btn-page results')
+
+        DeadlineActivityFactory.create_batch(11, initiative=self.initiative)
         admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
         page = self.app.get(admin_url)
-        self.assertTrue('<span class="btn-page page-selected">1</span>' in page.text)
+        self.assertContains(page, '<span class="btn-page page-selected">1</span>')
+        self.assertContains(page, '11 results')
+
+        page = self.app.get(f'{admin_url}?page=2')
+        self.assertContains(page, '<span class="btn-page page-selected">2</span>')
+        self.assertContains(page, 'previous')
 
 
 class TestThemeAdmin(BluebottleAdminTestCase):

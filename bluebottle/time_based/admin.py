@@ -231,34 +231,21 @@ class DateActivitySlotInline(TabularInlinePaginated):
 
     extra = 0
 
-    def _is_activity_pub_synced_slot(self, slot):
-        return bool(getattr(slot, 'origin_id', None) or getattr(slot, 'event', None))
-
-    def _has_activity_pub_subevents(self, activity):
-        from bluebottle.activity_pub.models import Event
-
-        if activity is None:
-            return False
-        try:
-            event = activity.event
-        except AttributeError:
-            return False
-        except Event.DoesNotExist:
-            return False
-        return event.sub_event.exists()
+    def is_adopted(self, activity):
+        return bool(getattr(activity, 'origin', None) or getattr(activity, 'event', None))
 
     def has_change_permission(self, request, obj=None):
-        if obj is not None and self._is_activity_pub_synced_slot(obj):
+        if obj is not None and self.is_adopted(obj):
             return False
         return True
 
     def has_delete_permission(self, request, obj=None):
-        if obj is not None and self._is_activity_pub_synced_slot(obj):
+        if obj is not None and self.is_adopted(obj):
             return False
         return True
 
     def has_add_permission(self, request, obj=None):
-        if self._has_activity_pub_subevents(obj):
+        if self.is_adopted(obj):
             return False
         return True
 

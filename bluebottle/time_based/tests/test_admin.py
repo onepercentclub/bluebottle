@@ -414,7 +414,7 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
             f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/'
         )
         page = page.follow()
-        self.assertContains(page, '6 Results')
+        self.assertNotContains(page, '6 Results')
         self.assertEqual(self.activity.slots.count(), 6)
         self.assertEqual(
             [s.start.date() for s in self.activity.slots.all()],
@@ -434,7 +434,7 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
             f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/'
         )
         page = page.follow()
-        self.assertContains(page, '6 Results')
+        self.assertNotContains(page, '6 Results')
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.slots.count(), 6)
         self.assertEqual(self.activity.status, 'open')

@@ -33,6 +33,9 @@ class RegistrationStateMachine(ModelStateMachine):
 
     def can_accept_registration(self, user):
         """can accept participant"""
+        if self.instance.activity.origin:
+            # No review on adopted activities
+            return False
         return (
             user in self.instance.activity.owners or
             user.is_superuser or

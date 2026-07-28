@@ -2,7 +2,7 @@ from builtins import object, str
 
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
-from django.core.exceptions import ValidationError
+from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
@@ -29,9 +29,7 @@ from bluebottle.utils.models import (
     SortableTranslatableModel,
     ValidatedModelMixin,
 )
-
 from bluebottle.utils.utils import get_current_host, get_current_language
-from django.contrib.postgres.fields import ArrayField
 
 
 @python_2_unicode_compatible
@@ -347,8 +345,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
     HOUR_REGISTRATION_OPTIONS = (
         ("disabled", _("Disable")),
-        ("per_activity", _("Unique per activity")),
-        ("generic", _("Same for all activities")),
+        ("per_activity", _("Enable")),
     )
 
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
@@ -520,8 +517,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
         max_length=400,
         blank=True, null=True,
         help_text=_(
-            "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, "
-            "this code or link will be used for every activity and can’t be changed."
+            "Enter a default code or URL for hour registration. "
+            "This will be used as the default for all activities, but can be changed per activity."
         )
     )
 
@@ -554,17 +551,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
         verbose_name_plural = _("Activity & initiative settings")
         verbose_name = _("Activity & initiative settings")
 
-    def clean(self):
-        if self.hour_registration == "generic" and not self.hour_registration_data:
-            raise ValidationError({
-                "hour_registration_data": _(
-                    "Hour registration data is required when 'generic' hour registration is selected."
-                )
-            })
-
 
 class SearchFilter(SortableMixin, models.Model):
-
     settings = models.ForeignKey(
         InitiativePlatformSettings,
         related_name="search_filters",

@@ -83,9 +83,8 @@ class UserRegistrationNotification(BaseParticipantNotification):
 
         settings = InitiativePlatformSettings.load()
         context['hour_registration'] = (
-            settings.hour_registration != 'none'
+            settings.hour_registration != 'disabled'
             and self.obj.activity.hour_registration_data
-            or settings.hour_registration_data
         )
 
         return context

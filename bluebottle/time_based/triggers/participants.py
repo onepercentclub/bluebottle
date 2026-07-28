@@ -270,7 +270,10 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 SendJoinEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
-                    conditions=[is_not_self],
+                    conditions=[
+                        is_not_self,
+                        activity_is_local
+                    ],
                 ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.accept,
@@ -1248,7 +1251,10 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.add,
-                    conditions=[is_not_self],
+                    conditions=[
+                        is_not_self,
+                        activity_is_local
+                    ],
                 ),
                 TransitionEffect(
                     DateParticipantStateMachine.accept,

@@ -74,6 +74,11 @@ def activity_will_be_expired(effect):
     )
 
 
+def activity_is_local(effect):
+    """Is local activity"""
+    return not effect.instance.activity.is_adopted
+
+
 def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
 
@@ -649,7 +654,10 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 SyncRelatedEvent,
                 TransitionEffect(
                     ScheduleParticipantStateMachine.add,
-                    conditions=[is_not_self],
+                    conditions=[
+                        is_not_self,
+                        activity_is_local
+                    ],
                 ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,

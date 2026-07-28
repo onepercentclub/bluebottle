@@ -82,6 +82,11 @@ def is_remote(effect):
     return bool(effect.instance.remote_user_id)
 
 
+def is_local_activity(effect):
+    """Is local activity"""
+    return not effect.instance.activity.is_adopted
+
+
 def is_user_or_remote(effect):
     """Registration was submitted by the participant (local or remote)"""
     return is_user(effect) or is_remote(effect)
@@ -121,7 +126,8 @@ class RegistrationTriggers(TriggerManager):
                 TransitionEffect(
                     RegistrationStateMachine.add,
                     conditions=[
-                        is_admin
+                        is_admin,
+                        is_local_activity
                     ]
                 ),
                 SyncRelatedEvent

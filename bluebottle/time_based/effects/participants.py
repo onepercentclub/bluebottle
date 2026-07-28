@@ -130,10 +130,12 @@ class CreateRegistrationEffect(Effect):
         raise ValueError(f'No registration defined for participant model {self.instance.__class__.__name__}')
 
     def post_save(self, **kwargs):
+        is_local = not self.instance.activity.is_adopted
+        status = 'accepted' if is_local else 'new'
         registration = self.get_registration_model().objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
-            status='accepted'
+            status=status
         )
         self.instance.registration = registration
         self.instance.save()

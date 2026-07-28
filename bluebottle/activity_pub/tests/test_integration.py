@@ -785,6 +785,18 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         )
         self.submit()
 
+    def test_join_with_review(self):
+        self.test_adopt()
+        self.model.review = True
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            self.join()
+
+        self.synced_participant = self.participant_factory._meta.model.objects.get()
+        self.assertEqual(self.synced_participant.status, 'new')
+        self.assertEqual(self.synced_participant.registration.status, 'new')
+
     def test_schedule(self):
         self.test_join()
 
@@ -849,6 +861,18 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
                 self.participant.participants.get().slot.origin.pub_url,
                 slot_url
             )
+
+    def test_join_with_review(self):
+        self.test_adopt()
+        self.model.review = True
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            self.join()
+
+        self.synced_participant = self.participant_factory._meta.model.objects.get()
+        self.assertEqual(self.synced_participant.status, 'new')
+        self.assertEqual(self.synced_participant.participants.get().status, 'new')
 
     def test_leave(self):
         self.test_join()
@@ -1572,6 +1596,18 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
             consumer_slot = self.adopted.slots.order_by('start', 'id').first()
             consumer_slot.origin.refresh_from_db()
             self.assertEqual(consumer_slot.origin.contributor_count, 1)
+
+    def test_join_with_review(self):
+        self.test_adopt()
+        self.model.review = True
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            self.join()
+
+        self.synced_participant = self.participant_factory._meta.model.objects.get()
+        self.assertEqual(self.synced_participant.status, 'new')
+        self.assertEqual(self.synced_participant.registration.status, 'new')
 
     def test_join_with_slot_location(self):
         location = GeolocationFactory.create(country=self.country)

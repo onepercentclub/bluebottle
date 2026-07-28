@@ -12,6 +12,7 @@ from django.template.loader import render_to_string
 from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
@@ -20,7 +21,6 @@ from polymorphic.admin import (
 )
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.tasks import publish_activity
 from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
 from bluebottle.activity_pub.models import (
     Activity,
@@ -41,6 +41,7 @@ from bluebottle.activity_pub.models import (
     Finish, Join, Leave, Update, Start,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
+from bluebottle.activity_pub.tasks import publish_activity
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import admin_form
 from bluebottle.members.models import Member
@@ -1042,7 +1043,8 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
         model_name = real_instance._meta.model_name
         app_label = real_instance._meta.app_label
         change_url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.pk])
-        return format_html('<a href="{}">{}</a>', change_url, obj.name)
+        name = Truncator(obj.name or '').chars(50)
+        return format_html('<a href="{}" title="{}">{}</a>', change_url, obj.name or '', name)
 
     name_link.short_description = _("Activity title")
     name_link.admin_order_field = "name"  # Allow sorting by name
@@ -1088,13 +1090,19 @@ def adopt_events(modeladmin, request, events):
 @admin.register(ReceivedActivity)
 class ReceivedActivityAdmin(EventPolymorphicAdmin):
     model = ReceivedActivity
-    list_display = ("name_link", "type", "source", "adopted", 'adoption_type')
+    list_display = ("name_link", "type", "source", "is_adopted", 'adoption_type')
     list_display_links = ("name_link",)
     actions = [adopt_events]
 
     def source(self, obj):
         return obj.source
     source.short_description = _('Partner')
+
+    def is_adopted(self, obj):
+        return bool(obj.adopted_activity)
+
+    is_adopted.boolean = True
+    is_adopted.short_description = _('Adopted')
 
     def get_queryset(self, request):
         return Event.objects.filter(iri__isnull=False)

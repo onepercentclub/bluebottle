@@ -57,7 +57,6 @@ from bluebottle.time_based.tests.factories import (
     ScheduleParticipantFactory,
     TeamFactory,
     TeamMemberFactory,
-    TeamScheduleRegistrationFactory,
 )
 
 

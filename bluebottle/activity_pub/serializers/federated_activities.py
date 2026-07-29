@@ -1426,4 +1426,3 @@ class TeamScheduleSlotsSerializer(ScheduleSlotsSerializer):
         result = serializers.ModelSerializer.update(self, target, validated_data)
         self._link_adopted(iri, result)
         return result
-

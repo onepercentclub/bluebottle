@@ -189,6 +189,10 @@ class TeamTriggers(TriggerManager):
                     'team_members',
                     TeamMemberStateMachine.reapply,
                 ),
+                RelatedTransitionEffect(
+                    "registration",
+                    RegistrationStateMachine.restore,
+                ),
                 SendTeamJoinEffect,
                 SyncRelatedEvent,
             ]
@@ -238,7 +242,7 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    TeamScheduleParticipantStateMachine.restore,
+                    TeamScheduleParticipantStateMachine.reapply,
                 ),
                 SendAddToTeamEffect,
             ]

@@ -1,10 +1,18 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+from django.db import connection
 
 from bluebottle.activities.models import Activity
-from bluebottle.clients.signals import TenantCelerySignalProcessor
+from bluebottle.clients.signals import (
+    TenantCelerySignalProcessor,
+    registry_delete_related_task,
+)
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.models import DateActivity
-from bluebottle.time_based.tests.factories import DateActivityFactory
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+)
 
 
 class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
@@ -20,7 +28,7 @@ class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
         processor.related_models = []
         return processor
 
-    def test_save_is_skipped_for_parent_sender(self):
+    def test_save_is_not_skipped_for_parent_sender(self):
         processor = self._processor()
         activity = DateActivityFactory.create()
 
@@ -32,7 +40,7 @@ class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
             "save from parent sender should not skip ES update task.",
         )
 
-    def test_delete_is_skipped_for_parent_sender(self):
+    def test_delete_is_not_skipped_for_parent_sender(self):
         processor = self._processor()
         activity = DateActivityFactory.create()
 
@@ -43,3 +51,91 @@ class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
             delete_mock.called,
             "delete from parent sender should not skip ES delete.",
         )
+
+
+class RelatedDeleteReindexRaceTestCase(BluebottleTestCase):
+    """
+    When a DateActivity is hard-deleted, slots cascade-delete first.
+
+    Slot pre_delete schedules registry_delete_related_task with the parent
+    activity. Activity post_delete sync-removes it from ES. After commit the
+    related task must not re-index that stale in-memory parent (default
+    Document.update action is 'index').
+    """
+
+    def _assert_update_is_delete_action(self, update_mock):
+        self.assertTrue(update_mock.called, "expected an ES update call")
+        for call in update_mock.call_args_list:
+            _args, kwargs = call
+            self.assertEqual(
+                kwargs.get("action"),
+                "delete",
+                "related delete task must not re-index a parent that no longer exists "
+                f"(got kwargs={kwargs!r})",
+            )
+
+    def test_related_delete_task_does_not_reindex_deleted_parent(self):
+        activity = DateActivityFactory.create()
+        stale_activity = activity
+        activity_id = activity.pk
+
+        # Parent is already gone when the deferred related task runs.
+        DateActivity.objects.filter(pk=activity_id).delete()
+        self.assertFalse(DateActivity.objects.filter(pk=activity_id).exists())
+
+        doc_instance = MagicMock()
+        registry_delete_related_task(doc_instance, stale_activity, connection.tenant)
+
+        self._assert_update_is_delete_action(doc_instance.update)
+
+    def test_related_delete_task_still_reindexes_existing_parent(self):
+        """Deleting only a related child should still refresh the parent in ES."""
+        activity = DateActivityFactory.create()
+        doc_instance = MagicMock()
+
+        registry_delete_related_task(doc_instance, activity, connection.tenant)
+
+        self.assertTrue(doc_instance.update.called)
+        _args, kwargs = doc_instance.update.call_args
+        self.assertNotEqual(
+            kwargs.get("action"),
+            "delete",
+            "existing parents should keep being re-indexed after related deletes",
+        )
+        self.assertEqual(_args[0], activity)
+
+    def test_slot_pre_delete_related_task_does_not_reindex_cascaded_parent(self):
+        """
+        End-to-end signal/task race for cascade delete:
+
+        1. slot pre_delete schedules related task with parent activity
+        2. parent is removed from DB (and would be sync-deleted from ES)
+        3. deferred task runs and must not put the parent back
+        """
+        activity = DateActivityFactory.create()
+        slot = activity.slots.first() or DateActivitySlotFactory.create(activity=activity)
+        processor = TenantCelerySignalProcessor.__new__(TenantCelerySignalProcessor)
+
+        scheduled = []
+
+        def capture_delay(doc_instance, related, tenant):
+            scheduled.append((doc_instance, related, tenant))
+
+        with patch(
+            "bluebottle.clients.signals.registry_delete_related_task.delay_on_commit",
+            side_effect=capture_delay,
+        ):
+            processor.handle_pre_delete(slot.__class__, slot)
+
+        self.assertTrue(scheduled, "slot pre_delete should schedule a related ES task")
+
+        # Simulate activity cascade delete completing before on_commit tasks run.
+        activity_id = activity.pk
+        DateActivity.objects.filter(pk=activity_id).delete()
+        self.assertFalse(DateActivity.objects.filter(pk=activity_id).exists())
+
+        for doc_instance, related, tenant in scheduled:
+            # Replace doc with a mock so we can assert the update action without ES.
+            mock_doc = MagicMock()
+            registry_delete_related_task(mock_doc, related, tenant)
+            self._assert_update_is_delete_action(mock_doc.update)

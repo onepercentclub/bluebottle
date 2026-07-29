@@ -27,6 +27,13 @@ class GrantApplicationDocument(ActivityDocument):
                 }
             ]
 
+    def get_instances_from_related(self, related_instance):
+        result = super().get_instances_from_related(related_instance)
+        if result is not None:
+            return result
+        if isinstance(related_instance, GrantDonor):
+            return GrantApplication.objects.filter(contributors=related_instance)
+
     class Django:
         related_models = ActivityDocument.Django.related_models + (GrantDonor,)
         model = GrantApplication

@@ -39,6 +39,8 @@ class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
             delay_mock.called,
             "save from parent sender should not skip ES update task.",
         )
+        model_info = delay_mock.call_args.args[0]
+        self.assertEqual(model_info["model_name"], "dateactivity")
 
     def test_delete_is_not_skipped_for_parent_sender(self):
         processor = self._processor()
@@ -51,6 +53,7 @@ class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
             delete_mock.called,
             "delete from parent sender should not skip ES delete.",
         )
+        self.assertEqual(delete_mock.call_args.kwargs.get("raise_on_error"), False)
 
 
 class RelatedDeleteReindexRaceTestCase(BluebottleTestCase):
@@ -72,6 +75,11 @@ class RelatedDeleteReindexRaceTestCase(BluebottleTestCase):
                 "delete",
                 "related delete task must not re-index a parent that no longer exists "
                 f"(got kwargs={kwargs!r})",
+            )
+            self.assertEqual(
+                kwargs.get("raise_on_error"),
+                False,
+                "duplicate ES deletes after sync handle_delete must not raise",
             )
 
     def test_related_delete_task_does_not_reindex_deleted_parent(self):
@@ -128,6 +136,9 @@ class RelatedDeleteReindexRaceTestCase(BluebottleTestCase):
             processor.handle_pre_delete(slot.__class__, slot)
 
         self.assertTrue(scheduled, "slot pre_delete should schedule a related ES task")
+        for _doc_instance, related, _tenant in scheduled:
+            # Related parents must be materialized before commit.
+            self.assertFalse(hasattr(related, "query"))
 
         # Simulate activity cascade delete completing before on_commit tasks run.
         activity_id = activity.pk
@@ -139,3 +150,32 @@ class RelatedDeleteReindexRaceTestCase(BluebottleTestCase):
             mock_doc = MagicMock()
             registry_delete_related_task(mock_doc, related, tenant)
             self._assert_update_is_delete_action(mock_doc.update)
+
+    def test_pre_delete_materializes_queryset_related_parents(self):
+        activity = DateActivityFactory.create()
+        # Participant-style related lookups return querysets; materialize before deferral.
+        related_qs = DateActivity.objects.filter(pk=activity.pk)
+        processor = TenantCelerySignalProcessor.__new__(TenantCelerySignalProcessor)
+
+        scheduled = []
+
+        def capture_delay(doc_instance, related, tenant):
+            scheduled.append(related)
+
+        fake_doc = MagicMock()
+        fake_doc.return_value.get_instances_from_related.return_value = related_qs
+
+        with patch(
+            "bluebottle.clients.signals.registry._get_related_doc",
+            return_value=[fake_doc],
+        ), patch(
+            "bluebottle.clients.signals.registry_delete_related_task.delay_on_commit",
+            side_effect=lambda doc_instance, related, tenant: capture_delay(
+                doc_instance, related, tenant
+            ),
+        ):
+            processor.handle_pre_delete(DateActivity, activity)
+
+        self.assertEqual(len(scheduled), 1)
+        self.assertIsInstance(scheduled[0], list)
+        self.assertEqual(scheduled[0][0].pk, activity.pk)

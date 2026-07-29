@@ -12,13 +12,37 @@ def _instance_exists(instance):
     return instance.__class__._default_manager.filter(pk=instance.pk).exists()
 
 
+def _resolve_real_instance(instance):
+    """Return the concrete polymorphic instance when available."""
+    if hasattr(instance, 'get_real_instance'):
+        try:
+            return instance.get_real_instance()
+        except Exception:
+            return instance
+    return instance
+
+
+def _materialize_related(related):
+    """
+    Materialize related parents before deferring work until after commit.
+
+    Lazy querysets that join through the deleted related child evaluate empty
+    after commit, which would skip the parent reindex for child-only deletes.
+    """
+    if related is None:
+        return None
+    if isinstance(related, models.Model):
+        return related
+    return list(related)
+
+
 def _split_related_instances(related):
     """
     Split related ES parents into still-existing vs already-deleted instances.
 
     Related deletes are deferred until after commit. When a parent is cascade-
     deleted in the same transaction, the deferred task still receives the stale
-    in-memory parent and must delete it from ES instead of re-indexing it.
+    in-memory parent and must not re-index it.
     """
     if related is None:
         return [], []
@@ -89,6 +113,10 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
             except ObjectDoesNotExist:
                 related = None
 
+            related = _materialize_related(related)
+            if related is None or related == []:
+                continue
+
             registry_delete_related_task.delay_on_commit(
                 doc_instance, related, tenant
             )
@@ -99,7 +127,10 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         Given an individual model instance, create a task to delete the object from index.
         """
         if self._sender_matches_registered_model(sender, self.models):
-            registry.delete(instance, raise_on_error=False)
+            registry.delete(
+                _resolve_real_instance(instance),
+                raise_on_error=False,
+            )
 
     def handle_save(self, sender, instance, **kwargs):
         """Handle save with a Celery task.
@@ -107,9 +138,10 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         Given an individual model instance, update the object in the index.
         Update the related objects either.
         """
+        instance = _resolve_real_instance(instance)
         model_info = {
-            'app_label': sender._meta.app_label,
-            'model_name': sender._meta.model_name,
+            'app_label': instance._meta.app_label,
+            'model_name': instance._meta.model_name,
             'pk': instance.pk
         }
         tenant = connection.tenant
@@ -132,7 +164,9 @@ def registry_delete_related_task(doc_instance, related, tenant):
 
     Related child deletes are handled after commit. If the related parent was
     also deleted in the same transaction (cascade), re-indexing would put a
-    stale document back into ES. Delete those parents from the index instead.
+    stale document back into ES. Those parents are removed from the index
+    instead, with raise_on_error=False because sync handle_delete may already
+    have removed them.
     """
     with LocalTenant(tenant):
         existing, missing = _split_related_instances(related)
@@ -144,6 +178,7 @@ def registry_delete_related_task(doc_instance, related, tenant):
             doc_instance.update(
                 missing[0] if len(missing) == 1 else missing,
                 action='delete',
+                raise_on_error=False,
             )
 
 

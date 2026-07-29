@@ -164,7 +164,7 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
             return result
 
         if isinstance(related_instance, self.participant_class):
-            return DeadlineActivity.objects.filter(contributors=related_instance)
+            return self.Django.model.objects.filter(contributors=related_instance)
 
     def prepare_contribution_duration(self, instance):
 

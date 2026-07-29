@@ -3,14 +3,18 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.models import Activity
 from bluebottle.categories.models import Category
+from bluebottle.collect.models import CollectActivity
 from bluebottle.deeds.models import Deed
 from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Geolocation
+from bluebottle.grant_management.models import GrantApplication
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.time_based.models import (
     DeadlineActivity,
     PeriodicActivity,
     DateActivity,
+    ScheduleActivity,
+    RegisteredDateActivity,
 )
 from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.utils.models import Language
@@ -190,7 +194,11 @@ class InitiativeDocument(Document):
             DeadlineActivity,
             PeriodicActivity,
             DateActivity,
-            Deed
+            ScheduleActivity,
+            RegisteredDateActivity,
+            Deed,
+            CollectActivity,
+            GrantApplication,
         )
 
     def get_queryset(self):

@@ -9,9 +9,7 @@ from bluebottle.time_based.tests.factories import DateActivityFactory
 
 class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
     """
-    These tests intentionally capture current buggy behavior.
-
-    In the buggy implementation, ES updates/deletes are skipped when the signal
+    Regression tests ES updates/deletes are no longer skipped when the signal
     sender is the polymorphic parent model (Activity) and the registered
     document model is a child model (for example DateActivity).
     """
@@ -29,9 +27,9 @@ class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
         with patch("bluebottle.clients.signals.registry_update_task.delay_on_commit") as delay_mock:
             processor.handle_save(Activity, activity)
 
-        self.assertFalse(
+        self.assertTrue(
             delay_mock.called,
-            "Bug repro: save from parent sender should currently skip ES update task.",
+            "save from parent sender should not skip ES update task.",
         )
 
     def test_delete_is_skipped_for_parent_sender(self):
@@ -41,7 +39,7 @@ class TenantCelerySignalProcessorRegressionTestCase(BluebottleTestCase):
         with patch("bluebottle.clients.signals.registry.delete") as delete_mock:
             processor.handle_delete(Activity, activity)
 
-        self.assertFalse(
+        self.assertTrue(
             delete_mock.called,
-            "Bug repro: delete from parent sender should currently skip ES delete.",
+            "delete from parent sender should not skip ES delete.",
         )

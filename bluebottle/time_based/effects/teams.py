@@ -22,10 +22,13 @@ class CreateTeamRegistrationEffect(Effect):
         ).first()
 
         if not registration:
+            is_local = not getattr(self.instance.activity, 'is_adopted', False)
+            status = 'accepted' if is_local else 'new'
             registration = self.get_registration_model().objects.create(
                 activity=self.instance.activity,
                 user=self.instance.user,
-                status='accepted'
+                remote_user=self.instance.remote_user,
+                status=status,
             )
 
         self.instance.registration = registration
@@ -47,6 +50,7 @@ class CreateCaptainTeamMemberEffect(Effect):
         TeamMember.objects.create(
             team=self.instance,
             user=self.instance.user,
+            remote_user=self.instance.remote_user,
         )
 
     conditions = [
@@ -92,6 +96,7 @@ class CreateTeamMemberSlotParticipantsEffect(Effect):
         for slot in self.instance.team.slots.filter(status__in=['new', 'running', 'scheduled', 'finished']).all():
             slot.participants.get_or_create(
                 user=team_member.user,
+                remote_user=team_member.remote_user,
                 team_member=team_member,
                 activity=slot.activity,
                 registration=self.instance.team.registration,

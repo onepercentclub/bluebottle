@@ -502,6 +502,14 @@ class SubEvent(ActivityPubModel):
         on_delete=models.CASCADE,
         related_name='sub_event'
     )
+    team = models.ForeignKey(
+        'activity_pub.Team',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='sub_events',
+        help_text=_('Team this schedule slot belongs to (team-mode activities).'),
+    )
     contributor_count = models.PositiveIntegerField(
         default=0,
         help_text=_('Accepted participants for this slot.'),
@@ -556,6 +564,12 @@ class DoGoodEvent(Event):
         default=SlotModeChoices.set,
         null=True
     )
+    participation_mode = models.CharField(
+        choices=ParticipationModeChoices.choices,
+        default=ParticipationModeChoices.individuals,
+        null=True,
+        blank=True,
+    )
     capacity = models.PositiveIntegerField(
         _('maximum attendee capacity'),
         null=True,
@@ -576,9 +590,56 @@ class DoGoodEvent(Event):
         else:
             return 'DeadlineActivity'
 
+    @property
+    def is_team_activity(self):
+        return self.participation_mode == ParticipationModeChoices.teams
+
     class Meta(Event.Meta):
         verbose_name = _('Date activity')
         verbose_name_plural = _('Date activities')
+
+
+class Team(ActivityPubModel):
+    """
+    Federated team for team-schedule activities. Maps to time_based.Team.
+    """
+    name = models.CharField(max_length=300, null=True, blank=True)
+    summary = models.TextField(null=True, blank=True)
+
+    attributed_to = models.ForeignKey(
+        'activity_pub.DoGoodEvent',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name='teams',
+    )
+    captain = models.ForeignKey(
+        Person,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='captained_teams',
+    )
+
+    origin = models.OneToOneField(
+        'time_based.Team',
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='activity_pub_model',
+    )
+    adopted = models.OneToOneField(
+        'time_based.Team',
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='origin',
+    )
+
+    def __str__(self):
+        return self.name or f'Team {self.pk}'
+
+    class Meta:
+        verbose_name = _('Team')
+        verbose_name_plural = _('Teams')
 
 
 class Activity(ActivityPubModel):
@@ -915,6 +976,14 @@ class Join(Activity):
     """Sent by a follower when a user joins an Event"""
     object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
     motivation = models.TextField(null=True, blank=True)
+    instrument = models.ForeignKey(
+        'activity_pub.Team',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='joins',
+        help_text=_('Team used when joining a team-schedule activity.'),
+    )
 
     platform = models.ForeignKey(Organization, null=True, on_delete=models.CASCADE)
 
@@ -936,6 +1005,39 @@ class Join(Activity):
 
         if create and not create.actor.is_local:
             yield create.actor
+
+
+class Add(Activity):
+    """Add a Person to a Team (team member join on the local platform)."""
+    object = models.ForeignKey(
+        Person,
+        on_delete=models.CASCADE,
+        related_name='added_by',
+    )
+    target = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name='adds',
+    )
+    platform = models.ForeignKey(Organization, null=True, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if not self.is_local:
+            adapter.adopt(self)
+
+    @property
+    def default_recipients(self):
+        if not self.actor.is_local:
+            yield self.actor
+            return
+
+        event = self.target.attributed_to
+        if event:
+            create = event.create_set.first()
+            if create and not create.actor.is_local:
+                yield create.actor
 
 
 class Transition(Activity):
@@ -960,27 +1062,57 @@ class Transition(Activity):
 
 
 class Leave(Transition):
-    """Sent by a follower when a user leaves a synced activity; object is the source Event."""
+    """Sent when a user leaves a synced activity or team."""
     @property
     def default_recipients(self):
-        create = self.object.create_set.first()
+        obj = self.object
+        if isinstance(obj, Team):
+            event = obj.attributed_to
+            create = event.create_set.first() if event else None
+        else:
+            create = obj.create_set.first()
         if create:
             yield create.actor
 
     def transition(self):
-        if self.object.is_local:
-            if isinstance(self.object, DoGoodEvent) and self.object.activity_type == 'PeriodicActivity':
-                registration = self.object.origin.registrations.get(
-                    remote_user=self.actor.adopted
-                )
-                registration.states.stop(save=True)
-            else:
-                contributor = self.object.origin.contributors.get(
-                    remote_user=self.actor.adopted
-                )
-                contributor.states.withdraw(save=True)
+        if isinstance(self.object, Team):
+            team = (
+                self.object.origin if self.object.is_local else self.object.adopted
+            )
+            if not team:
+                return False
+            member = team.team_members.filter(
+                remote_user=self.actor.adopted
+            ).first()
+            if member:
+                member.states.withdraw(save=True)
+                return True
+            return False
 
-            return True
+        if not self.object.is_local:
+            return False
+
+        if isinstance(self.object, DoGoodEvent) and self.object.activity_type == 'PeriodicActivity':
+            registration = self.object.origin.registrations.get(
+                remote_user=self.actor.adopted
+            )
+            registration.states.stop(save=True)
+        elif (
+            isinstance(self.object, DoGoodEvent)
+            and self.object.is_team_activity
+        ):
+            registration = self.object.origin.registrations.get(
+                remote_user=self.actor.adopted
+            )
+            for team in registration.teams.all():
+                team.states.withdraw(save=True)
+        else:
+            contributor = self.object.origin.contributors.get(
+                remote_user=self.actor.adopted
+            )
+            contributor.states.withdraw(save=True)
+
+        return True
 
 
 class Delete(Transition):

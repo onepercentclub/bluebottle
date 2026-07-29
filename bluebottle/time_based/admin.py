@@ -387,7 +387,7 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
-        if hasattr(obj, 'origin'):
+        if obj.activity.is_adopted:
             readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
 
         return readonly_fields

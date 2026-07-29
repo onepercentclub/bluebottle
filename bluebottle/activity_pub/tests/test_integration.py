@@ -55,6 +55,9 @@ from bluebottle.time_based.tests.factories import (
     PeriodicActivityFactory,
     ScheduleActivityFactory,
     ScheduleParticipantFactory,
+    TeamFactory,
+    TeamMemberFactory,
+    TeamScheduleRegistrationFactory,
 )
 
 
@@ -1759,3 +1762,182 @@ class TemplateCollectActivityTestCase(TemplateTestCase, BluebottleTestCase):
                 self.adopted.location.position,
                 self.model.location.position
             )
+
+
+class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
+    factory = ScheduleActivityFactory
+    expected_participant_status = 'accepted'
+
+    def create(self, **kwargs):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            organization=None,
+            team_activity='teams',
+            **kwargs
+        )
+        self.submit()
+
+    def test_adopt(self):
+        super().test_adopt()
+        self.assertEqual(self.adopted.team_activity, 'teams')
+        self.assertEqual(self.event.participation_mode, 'TeamParticipationMode')
+
+    def join(self):
+        self.captain = BlueBottleUserFactory.create()
+        self.team = TeamFactory.create(
+            activity=self.adopted,
+            user=self.captain,
+        )
+        self.participant = self.team.registration
+
+    def test_join(self):
+        self.test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            self.join()
+            self.email = self.captain.email
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 1)
+
+        from bluebottle.time_based.models import TeamScheduleRegistration, Team
+        self.synced_registration = TeamScheduleRegistration.objects.get()
+        self.synced_team = Team.objects.get()
+
+        self.assertEqual(self.email, self.synced_registration.remote_user.email)
+        self.assertEqual(self.synced_registration.status, self.expected_participant_status)
+        self.assertEqual(self.synced_team.remote_user.email, self.email)
+        self.assertEqual(self.synced_team.team_members.count(), 1)
+        self.assertIsNone(self.synced_team.user)
+        self.synced_participant = self.synced_registration
+
+    def test_update_participant(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            user = self.captain
+            user.first_name = 'New first name'
+            user.save()
+
+        remote_user = self.synced_registration.remote_user
+        remote_user.refresh_from_db()
+        self.assertEqual(remote_user.first_name, 'New first name')
+
+    def test_leave(self):
+        self.test_team_withdraw()
+
+    def test_rejoin(self):
+        pass
+
+    def test_join_with_review(self):
+        self.test_adopt()
+        self.model.review = True
+        self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            self.join()
+
+        from bluebottle.time_based.models import TeamScheduleRegistration, Team
+        self.synced_registration = TeamScheduleRegistration.objects.get()
+        self.synced_team = Team.objects.get()
+        self.assertEqual(self.synced_registration.status, 'new')
+        self.assertEqual(self.synced_team.status, 'new')
+
+        with LocalTenant(self.other_tenant):
+            self.team.refresh_from_db()
+            self.participant.refresh_from_db()
+            self.assertEqual(self.participant.status, 'new')
+            self.assertEqual(self.team.status, 'new')
+
+    def test_accept_registration(self):
+        self.test_join_with_review()
+        self.synced_registration.states.accept(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.team.refresh_from_db()
+            self.assertEqual(self.participant.status, 'accepted')
+            self.assertEqual(self.team.status, 'accepted')
+
+    def test_reject_registration(self):
+        self.test_join_with_review()
+        self.synced_registration.states.reject(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.team.refresh_from_db()
+            self.assertEqual(self.participant.status, 'rejected')
+            self.assertEqual(self.team.status, 'rejected')
+
+    def test_member_join(self):
+        self.test_join()
+        capacity_before = self.model.registrations.filter(
+            status__in=['new', 'accepted']
+        ).count()
+
+        with LocalTenant(self.other_tenant):
+            member = BlueBottleUserFactory.create()
+            self.team_member = TeamMemberFactory.create(
+                team=self.team,
+                user=member,
+            )
+            self.assertEqual(self.team.team_members.count(), 2)
+
+        from bluebottle.time_based.models import TeamMember
+        self.assertEqual(TeamMember.objects.count(), 2)
+        remote_member = TeamMember.objects.exclude(
+            remote_user=self.synced_team.remote_user
+        ).get()
+        self.assertEqual(remote_member.remote_user.email, member.email)
+        self.assertEqual(
+            self.model.registrations.filter(status__in=['new', 'accepted']).count(),
+            capacity_before,
+        )
+
+    def test_schedule(self):
+        self.test_join()
+
+        slot = self.synced_team.slots.get()
+        slot.start = datetime.now(get_current_timezone()) + timedelta(days=10)
+        slot.duration = timedelta(hours=10)
+        slot.location = GeolocationFactory.create(country=self.country)
+        slot.is_online = False
+        slot.save()
+
+        with LocalTenant(self.other_tenant):
+            self.team.refresh_from_db()
+            participant = self.team.team_members.get().participants.get()
+            consumer_slot = self.team.slots.order_by('pk').first()
+            self.assertEqual(self.team.slots.count(), 1)
+            self.assertEqual(self.team.status, 'scheduled')
+            self.assertEqual(consumer_slot.status, 'scheduled')
+            self.assertEqual(consumer_slot.start, slot.start)
+            self.assertEqual(consumer_slot.duration, slot.duration)
+            self.assertIsNotNone(consumer_slot.location)
+            self.assertEqual(participant.status, 'scheduled')
+            self.assertEqual(participant.slot_id, consumer_slot.pk)
+            self.assertEqual(participant.slot.start, slot.start)
+
+    def test_member_withdraw(self):
+        self.test_member_join()
+
+        with LocalTenant(self.other_tenant):
+            self.team_member.states.withdraw(save=True)
+
+        from bluebottle.time_based.models import TeamMember
+        remote_member = TeamMember.objects.exclude(
+            remote_user=self.synced_team.remote_user
+        ).get()
+        remote_member.refresh_from_db()
+        self.assertEqual(remote_member.status, 'withdrawn')
+
+    def test_team_withdraw(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.team.states.withdraw(save=True)
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 0)
+
+        self.synced_team.refresh_from_db()
+        self.synced_registration.refresh_from_db()
+        self.assertEqual(self.synced_team.status, 'withdrawn')

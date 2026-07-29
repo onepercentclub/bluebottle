@@ -1,11 +1,10 @@
+import datetime
 import uuid
 from urllib.parse import urlencode
-import datetime
 
-from django.core.exceptions import ObjectDoesNotExist
 import pytz
-
 from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
@@ -1730,7 +1729,18 @@ class Team(TriggerMixin, models.Model):
         'members.Member',
         verbose_name=_('Team captain'),
         related_name='team_captains',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    remote_user = models.ForeignKey(
+        "activities.RemoteMember",
+        verbose_name=_("Remote captain"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="captained_teams",
+        help_text=_("When set, this team was synced from another platform without a local captain user."),
     )
 
     name = models.CharField(
@@ -1780,7 +1790,13 @@ class Team(TriggerMixin, models.Model):
 
     def save(self, *args, **kwargs):
         if not self.name:
-            self.name = _("Team {name}").format(name=self.user.full_name)
+            captain_name = None
+            if self.user:
+                captain_name = self.user.full_name
+            elif self.remote_user:
+                captain_name = self.remote_user.full_name or self.remote_user.email
+            if captain_name:
+                self.name = _("Team {name}").format(name=captain_name)
 
         super().save(*args, **kwargs)
 
@@ -1805,6 +1821,15 @@ class TeamMember(TriggerMixin, models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
+    remote_user = models.ForeignKey(
+        "activities.RemoteMember",
+        verbose_name=_("Remote member"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="team_members",
+        help_text=_("When set, this team member was synced from another platform without a local user."),
+    )
 
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
@@ -1815,7 +1840,11 @@ class TeamMember(TriggerMixin, models.Model):
 
     @property
     def is_captain(self):
-        return self.user_id == self.team.user_id
+        if self.user_id and self.team.user_id:
+            return self.user_id == self.team.user_id
+        if self.remote_user_id and self.team.remote_user_id:
+            return self.remote_user_id == self.team.remote_user_id
+        return False
 
     class Meta:
         verbose_name = _("Team member")
@@ -2055,7 +2084,7 @@ class Slot(models.Model):
     @property
     def origin(self):
         try:
-            return self.origins.get()
+            return self.origins.first()
         except ObjectDoesNotExist:
             raise AttributeError('origin')
 

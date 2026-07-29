@@ -1145,6 +1145,21 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                 ),
             ],
         ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.schedule,
+            effects=[
+                SendJoinSlotEffect,
+                SyncRelatedEvent,
+            ],
+        ),
+        ModelChangedTrigger(
+            "slot_id",
+            effects=[
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+            ],
+        ),
     ]
 
 

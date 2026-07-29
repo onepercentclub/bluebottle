@@ -28,7 +28,7 @@ class InboxPermission(permissions.BasePermission):
                     return True
                 if request.data['type'] in (
                     'Create', 'Update', 'Start', 'Cancel', 'Finish', 'Lock', 'Delete',
-                    'Join', 'Leave', 'Reject'
+                    'Join', 'Leave', 'Reject', 'Add'
                 ):
                     # Only actors we follow can post publish activities
                     return (

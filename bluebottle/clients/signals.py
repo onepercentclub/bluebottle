@@ -33,6 +33,17 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
 
         super().__init__(*args, **kwargs)
 
+    def _sender_matches_registered_model(self, sender, models):
+        """
+        Return True when sender is a registered model or one of its parents.
+        This is important for polymorphic parent models (e.g. Activity) that
+        can emit signals for child instances with dedicated documents.
+        """
+        return any(
+            sender is model or issubclass(model, sender)
+            for model in models
+        )
+
     def handle_pre_delete(self, sender, instance, **kwargs):
         """Handle removing of instance object from related models instance.
         We need to do this before the real delete otherwise the relation
@@ -57,7 +68,7 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
 
         Given an individual model instance, create a task to delete the object from index.
         """
-        if sender in self.models:
+        if self._sender_matches_registered_model(sender, self.models):
             registry.delete(instance, raise_on_error=False)
 
     def handle_save(self, sender, instance, **kwargs):
@@ -73,12 +84,12 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         }
         tenant = connection.tenant
 
-        if sender in self.models:
+        if self._sender_matches_registered_model(sender, self.models):
             registry_update_task.delay_on_commit(
                 model_info, tenant
             )
 
-        if sender in self.related_models:
+        if self._sender_matches_registered_model(sender, self.related_models):
             registry_update_related_task.delay_on_commit(
                 model_info, tenant
             )

@@ -1,11 +1,41 @@
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connection
+from django.db import connection, models
 from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl.signals import RealTimeSignalProcessor
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.celery import app
+
+
+def _instance_exists(instance):
+    return instance.__class__._default_manager.filter(pk=instance.pk).exists()
+
+
+def _split_related_instances(related):
+    """
+    Split related ES parents into still-existing vs already-deleted instances.
+
+    Related deletes are deferred until after commit. When a parent is cascade-
+    deleted in the same transaction, the deferred task still receives the stale
+    in-memory parent and must delete it from ES instead of re-indexing it.
+    """
+    if related is None:
+        return [], []
+
+    if isinstance(related, models.Model):
+        instances = [related]
+    else:
+        instances = list(related)
+
+    existing = []
+    missing = []
+    for instance in instances:
+        if _instance_exists(instance):
+            existing.append(instance)
+        else:
+            missing.append(instance)
+    return existing, missing
 
 
 class TenantCelerySignalProcessor(RealTimeSignalProcessor):
@@ -33,6 +63,17 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
 
         super().__init__(*args, **kwargs)
 
+    def _sender_matches_registered_model(self, sender, models):
+        """
+        Return True when sender is a registered model or one of its parents.
+        This is important for polymorphic parent models (e.g. Activity) that
+        can emit signals for child instances with dedicated documents.
+        """
+        return any(
+            sender is model or issubclass(model, sender)
+            for model in models
+        )
+
     def handle_pre_delete(self, sender, instance, **kwargs):
         """Handle removing of instance object from related models instance.
         We need to do this before the real delete otherwise the relation
@@ -57,7 +98,7 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
 
         Given an individual model instance, create a task to delete the object from index.
         """
-        if sender in self.models:
+        if self._sender_matches_registered_model(sender, self.models):
             registry.delete(instance, raise_on_error=False)
 
     def handle_save(self, sender, instance, **kwargs):
@@ -73,12 +114,12 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         }
         tenant = connection.tenant
 
-        if sender in self.models:
+        if self._sender_matches_registered_model(sender, self.models):
             registry_update_task.delay_on_commit(
                 model_info, tenant
             )
 
-        if sender in self.related_models:
+        if self._sender_matches_registered_model(sender, self.related_models):
             registry_update_related_task.delay_on_commit(
                 model_info, tenant
             )
@@ -88,10 +129,22 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
 def registry_delete_related_task(doc_instance, related, tenant):
     """
     Update related instances index as a celery task.
-    Implementation differs, because the object will not exist any more at this point.
+
+    Related child deletes are handled after commit. If the related parent was
+    also deleted in the same transaction (cascade), re-indexing would put a
+    stale document back into ES. Delete those parents from the index instead.
     """
     with LocalTenant(tenant):
-        doc_instance.update(related)
+        existing, missing = _split_related_instances(related)
+
+        if existing:
+            doc_instance.update(existing[0] if len(existing) == 1 else existing)
+
+        if missing:
+            doc_instance.update(
+                missing[0] if len(missing) == 1 else missing,
+                action='delete',
+            )
 
 
 @app.task

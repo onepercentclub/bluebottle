@@ -1,11 +1,41 @@
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connection
+from django.db import connection, models
 from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl.signals import RealTimeSignalProcessor
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.celery import app
+
+
+def _instance_exists(instance):
+    return instance.__class__._default_manager.filter(pk=instance.pk).exists()
+
+
+def _split_related_instances(related):
+    """
+    Split related ES parents into still-existing vs already-deleted instances.
+
+    Related deletes are deferred until after commit. When a parent is cascade-
+    deleted in the same transaction, the deferred task still receives the stale
+    in-memory parent and must delete it from ES instead of re-indexing it.
+    """
+    if related is None:
+        return [], []
+
+    if isinstance(related, models.Model):
+        instances = [related]
+    else:
+        instances = list(related)
+
+    existing = []
+    missing = []
+    for instance in instances:
+        if _instance_exists(instance):
+            existing.append(instance)
+        else:
+            missing.append(instance)
+    return existing, missing
 
 
 class TenantCelerySignalProcessor(RealTimeSignalProcessor):
@@ -99,10 +129,22 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
 def registry_delete_related_task(doc_instance, related, tenant):
     """
     Update related instances index as a celery task.
-    Implementation differs, because the object will not exist any more at this point.
+
+    Related child deletes are handled after commit. If the related parent was
+    also deleted in the same transaction (cascade), re-indexing would put a
+    stale document back into ES. Delete those parents from the index instead.
     """
     with LocalTenant(tenant):
-        doc_instance.update(related)
+        existing, missing = _split_related_instances(related)
+
+        if existing:
+            doc_instance.update(existing[0] if len(existing) == 1 else existing)
+
+        if missing:
+            doc_instance.update(
+                missing[0] if len(missing) == 1 else missing,
+                action='delete',
+            )
 
 
 @app.task

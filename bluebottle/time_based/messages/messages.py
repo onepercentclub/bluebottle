@@ -784,9 +784,8 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
         context['slot'] = get_slot_info(self.obj.slot)
         settings = InitiativePlatformSettings.load()
         context['hour_registration'] = (
-            settings.hour_registration != 'none'
+            settings.hour_registration != 'disabled'
             and self.obj.activity.hour_registration_data
-            or settings.hour_registration_data
         )
         return context
 
@@ -821,9 +820,8 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
         context['slot'] = get_slot_info(self.obj.slot)
         settings = InitiativePlatformSettings.load()
         context['hour_registration'] = (
-            settings.hour_registration != 'none'
+            settings.hour_registration != 'disabled'
             and self.obj.activity.hour_registration_data
-            or settings.hour_registration_data
         )
         return context
 

@@ -186,6 +186,16 @@ class TimeBasedAdmin(ActivityChildAdmin):
             fields = ('hour_registration_data', ) + fields
         return fields
 
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        settings = InitiativePlatformSettings.load()
+        if (
+            settings.hour_registration == 'per_activity'
+            and settings.hour_registration_data
+        ):
+            initial['hour_registration_data'] = settings.hour_registration_data
+        return initial
+
     def registration_link(self, obj):
         return admin_info_box(
             _("Answer this question if you selected 'Direct the participants to a questionnaire'")

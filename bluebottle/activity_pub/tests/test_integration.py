@@ -1825,7 +1825,26 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.test_team_withdraw()
 
     def test_rejoin(self):
-        pass
+        self.test_team_withdraw()
+
+        with LocalTenant(self.other_tenant):
+            self.team.refresh_from_db()
+            self.team.states.rejoin(save=True)
+            self.participant.refresh_from_db()
+            self.adopted.origin.refresh_from_db()
+            self.assertEqual(self.adopted.origin.contributor_count, 1)
+            self.assertEqual(self.team.status, 'accepted')
+            self.assertEqual(self.participant.status, 'accepted')
+
+        self.synced_team.refresh_from_db()
+        self.synced_registration.refresh_from_db()
+        self.assertEqual(self.synced_team.status, 'accepted')
+        self.assertEqual(
+            self.synced_registration.status, self.expected_participant_status
+        )
+        self.assertEqual(
+            self.synced_team.team_members.filter(status='active').count(), 1
+        )
 
     def test_join_with_review(self):
         self.test_adopt()
@@ -1929,6 +1948,21 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         remote_member.refresh_from_db()
         self.assertEqual(remote_member.status, 'withdrawn')
 
+    def test_member_reapply(self):
+        self.test_member_withdraw()
+
+        with LocalTenant(self.other_tenant):
+            self.team_member.refresh_from_db()
+            self.team_member.states.reapply(save=True)
+            self.assertEqual(self.team_member.status, 'active')
+
+        from bluebottle.time_based.models import TeamMember
+        remote_member = TeamMember.objects.exclude(
+            remote_user=self.synced_team.remote_user
+        ).get()
+        remote_member.refresh_from_db()
+        self.assertEqual(remote_member.status, 'active')
+
     def test_team_withdraw(self):
         self.test_join()
 
@@ -1940,3 +1974,4 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_team.refresh_from_db()
         self.synced_registration.refresh_from_db()
         self.assertEqual(self.synced_team.status, 'withdrawn')
+        self.assertEqual(self.synced_registration.status, 'withdrawn')

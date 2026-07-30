@@ -16,6 +16,7 @@ from rest_framework.relations import RelatedField
 
 from bluebottle.activities.models import Contributor, RemoteMember
 from bluebottle.activity_pub.adapters import adapter
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.activity_pub.models import (
     EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices,
     ParticipationModeChoices, RepetitionModeChoices, SlotModeChoices, Create,
@@ -1126,6 +1127,14 @@ class TeamScheduleRegistrationSerializer(BaseContributorSerializer):
             user=user,
         ).first()
         if existing:
+            team = existing.teams.first()
+            try:
+                if team and team.status == 'withdrawn':
+                    team.states.rejoin(save=True)
+                elif existing.status == 'withdrawn':
+                    existing.states.restore(save=True)
+            except TransitionNotPossible:
+                pass
             return existing
 
         registration = TeamScheduleRegistration(
@@ -1294,6 +1303,15 @@ class TeamMemberAddSerializer(FederatedObjectBaseSerializer):
             team=team, user=user, remote_user=remote_user
         ).first()
         if existing:
+            try:
+                if existing.status == 'withdrawn':
+                    existing.states.reapply(save=True)
+                elif existing.status == 'removed':
+                    existing.states.readd(save=True)
+                elif existing.status == 'rejected':
+                    existing.states.accept(save=True)
+            except TransitionNotPossible:
+                pass
             return existing
 
         member = TeamMember(

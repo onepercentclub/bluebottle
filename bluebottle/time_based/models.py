@@ -1303,7 +1303,7 @@ class Registration(TriggerMixin, PolymorphicModel):
     user = models.ForeignKey(
         'members.Member',
         related_name='registrations',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True
     )
     remote_user = models.ForeignKey(

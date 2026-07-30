@@ -1,5 +1,3 @@
-from unittest import mock
-
 from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.models import RemoteMember

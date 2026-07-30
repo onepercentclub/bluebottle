@@ -40,6 +40,20 @@ class TeamDetailAPIViewTestCase(APITestCase):
         self.perform_get(self.user)
         self.assertAttribute('captain-email', None)
 
+    def test_manager_remote_captain_email(self):
+        from bluebottle.activities.models import RemoteMember
+        remote = RemoteMember.objects.create(
+            email='remote-captain@example.com',
+            first_name='Remote',
+            last_name='Captain',
+        )
+        self.team.user = None
+        self.team.remote_user = remote
+        self.team.save()
+
+        self.perform_get(self.manager)
+        self.assertAttribute('captain-email', remote.email)
+
 
 class TeamMemberListAPIViewTestCase(APITestCase):
     serializer = TeamMemberSerializer

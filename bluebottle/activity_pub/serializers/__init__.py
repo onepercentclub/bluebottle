@@ -4,8 +4,10 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.time_based.models import (
     DeadlineActivity, PeriodicActivity, PeriodicSlot, RegisteredDateActivity, ScheduleActivity,
-    DateActivity, ScheduleSlot, DateActivitySlot
+    DateActivity, ScheduleSlot, DateActivitySlot, TeamScheduleSlot, TeamMember,
+    Team as LocalTeam,
 )
+from bluebottle.activities.models import Contributor
 
 
 class ActivityPubSerializer(PolymorphicSerializer):
@@ -81,6 +83,12 @@ class FederatedObjectSerializer(PolymorphicSerializer):
         self.resource_type_model_mapping['ScheduleSlot'] = ScheduleSlot
         self.resource_type_model_mapping['PeriodicSlot'] = PeriodicSlot
         self.resource_type_model_mapping['DateActivitySlot'] = DateActivitySlot
+        # Team schedule registrations serialize as Join outbound, but inbound Join
+        # adopt must stay on Contributor (polymorphic dispatch handles teams).
+        self.resource_type_model_mapping['Join'] = Contributor
+        self.resource_type_model_mapping['Add'] = TeamMember
+        self.resource_type_model_mapping['Team'] = LocalTeam
+        self.resource_type_model_mapping['TeamScheduleSlot'] = TeamScheduleSlot
 
     def _get_resource_type_from_mapping(self, mapping):
         resource_type = super()._get_resource_type_from_mapping(mapping)
@@ -105,6 +113,8 @@ class FederatedObjectSerializer(PolymorphicSerializer):
                 'PeriodicActivity': 'PeriodicSlot',
                 'DateActivity': 'DateActivitySlot',
             }
+            if parent and getattr(parent, 'is_team_activity', False):
+                slot_type_mapping['ScheduleActivity'] = 'TeamScheduleSlot'
 
             if parent:
                 return slot_type_mapping[parent.activity_type]

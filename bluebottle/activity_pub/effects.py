@@ -316,6 +316,98 @@ class SendLeaveEffect(Effect):
         return str(_('Notify source platform of leave'))
 
 
+def team_activity_is_synced(effect):
+    return getattr(effect.instance.activity, 'origin', None) is not None
+
+
+def team_captain_is_local(effect):
+    return effect.instance.remote_user is None and effect.instance.user is not None
+
+
+def team_member_is_local(effect):
+    return effect.instance.remote_user is None and effect.instance.user is not None
+
+
+def team_member_is_not_captain(effect):
+    return not effect.instance.is_captain
+
+
+def team_member_activity_is_synced(effect):
+    return getattr(effect.instance.team.activity, 'origin', None) is not None
+
+
+class SendTeamJoinEffect(Effect):
+    """
+    Sync team registration as a Join (with nested Team) to the supplier.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+    conditions = [team_activity_is_synced, team_captain_is_local]
+
+    def post_save(self, **kwargs):
+        registration = self.instance.registration
+        if registration:
+            adapter.sync(registration)
+
+    def __str__(self):
+        return str(_('Notify source platform of team join'))
+
+
+class SendAddToTeamEffect(Effect):
+    """
+    Sync a TeamMember as an Add activity to the supplier.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+    conditions = [team_member_activity_is_synced, team_member_is_local, team_member_is_not_captain]
+
+    def post_save(self, **kwargs):
+        adapter.sync(self.instance)
+
+    def __str__(self):
+        return str(_('Notify source platform of team member add'))
+
+
+class SendTeamLeaveEffect(Effect):
+    """
+    Captain withdraws the whole team — Leave the Event Join.
+    """
+    template = 'admin/activity_pub/send_leave_effect.html'
+    conditions = [team_activity_is_synced, team_captain_is_local]
+
+    def post_save(self, **kwargs):
+        Leave.objects.create(
+            actor=self.instance.user.activity_pub_model,
+            object=self.instance.activity.origin,
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of team leave'))
+
+
+class SendTeamMemberLeaveEffect(Effect):
+    """
+    Member leaves a team — Leave targeting the Team object.
+    """
+    template = 'admin/activity_pub/send_leave_effect.html'
+    conditions = [team_member_activity_is_synced, team_member_is_local, team_member_is_not_captain]
+
+    def post_save(self, **kwargs):
+        team = self.instance.team
+        if hasattr(team, 'origin') and team.origin:
+            target = team.origin
+        elif hasattr(team, 'activity_pub_model'):
+            target = team.activity_pub_model
+        else:
+            return
+
+        Leave.objects.create(
+            actor=self.instance.user.activity_pub_model,
+            object=target,
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of team member leave'))
+
+
 def participant_is_not_local(effect):
     return effect.instance.remote_user is not None
 

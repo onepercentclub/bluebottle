@@ -23,6 +23,8 @@ from bluebottle.activity_pub.models import (
     Lock,
     Join,
     Leave,
+    Add,
+    Team,
     Organization,
     GoodDeed,
     Image,
@@ -250,6 +252,21 @@ class RelatedParentField(RelatedField):
             return event
 
 
+class RelatedTeamField(RelatedField):
+    def get_queryset(self):
+        return Team.objects.all()
+
+    def to_representation(self, value):
+        return value.pub_url
+
+    def to_internal_value(self, data):
+        if data is None:
+            return None
+        if isinstance(data, str):
+            data = {'id': data}
+        return Team.objects.from_iri(data['id'])
+
+
 class SubEventSerializer(BaseActivityPubSerializer):
     type = TypeField('subEvent')
 
@@ -268,12 +285,13 @@ class SubEventSerializer(BaseActivityPubSerializer):
     capacity = serializers.IntegerField(required=False, allow_null=True)
 
     parent = RelatedParentField(allow_null=True)
+    team = RelatedTeamField(allow_null=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = SubEvent
         fields = BaseActivityPubSerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode',
-            'contributor_count', 'capacity', 'name', 'parent'
+            'contributor_count', 'capacity', 'name', 'parent', 'team',
         )
 
 
@@ -305,6 +323,15 @@ class DoGoodEventSerializer(BaseEventSerializer):
         required=False,
         allow_null=True
     )
+    participation_mode = serializers.ChoiceField(
+        choices=[
+            'IndividualParticipationMode',
+            'TeamParticipationMode',
+            'AnyParticipationMode',
+        ],
+        required=False,
+        allow_null=True,
+    )
 
     duration = serializers.DurationField(required=False, allow_null=True)
     capacity = serializers.IntegerField(required=False, allow_null=True)
@@ -315,7 +342,7 @@ class DoGoodEventSerializer(BaseEventSerializer):
         model = DoGoodEvent
         fields = BaseEventSerializer.Meta.fields + (
             'location', 'start_time', 'end_time', 'duration',
-            'event_attendance_mode', 'join_mode',
+            'event_attendance_mode', 'join_mode', 'participation_mode',
             'repetition_mode', 'slot_mode',
             'application_deadline',
             'capacity',
@@ -487,10 +514,13 @@ class JoinSerializer(BaseActivitySerializer):
         )
     )
     motivation = serializers.CharField(required=False, allow_null=True)
+    instrument = RelatedResourceField(
+        type='Team', allow_null=True, required=False, include=True
+    )
 
     class Meta(BaseActivitySerializer.Meta):
         model = Join
-        fields = BaseActivitySerializer.Meta.fields + ('motivation', )
+        fields = BaseActivitySerializer.Meta.fields + ('motivation', 'instrument')
 
     def create(self, validated_data):
         if 'request' in self.context:
@@ -499,12 +529,45 @@ class JoinSerializer(BaseActivitySerializer):
         return super().create(validated_data)
 
 
+class AddSerializer(BaseActivitySerializer):
+    type = TypeField('Add')
+    object = RelatedResourceField(type='Person', include=True)
+    target = RelatedResourceField(type='Team', include=True)
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Add
+        fields = BaseActivitySerializer.Meta.fields + ('target',)
+
+    def create(self, validated_data):
+        if 'request' in self.context:
+            validated_data['platform'] = self.context['request'].auth
+        return super().create(validated_data)
+
+
+class TeamSerializer(BaseActivityPubSerializer):
+    type = TypeField('Team')
+    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    summary = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    attributed_to = RelatedResourceField(
+        type='DoGoodEvent', allow_null=True, required=False
+    )
+    captain = RelatedResourceField(
+        type='Person', allow_null=True, required=False, include=True
+    )
+
+    class Meta(BaseActivityPubSerializer.Meta):
+        model = Team
+        fields = BaseActivityPubSerializer.Meta.fields + (
+            'name', 'summary', 'attributed_to', 'captain',
+        )
+
+
 class LeaveSerializer(BaseActivitySerializer):
     type = TypeField('Leave')
     object = RelatedResourceField(
         type=(
             'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent', 'SubEvent'
+            'CollectCampaign', 'DoGoodEvent', 'SubEvent', 'Team'
         )
     )
 

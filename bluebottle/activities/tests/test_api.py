@@ -1535,30 +1535,41 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        matching_country = CountryFactory.create()
-        other_country = CountryFactory.create()
+        # Explicit codes + no initiative place / default location: CountryFactory
+        # uses get_or_create(alpha2_code) with Faker, so random factory countries
+        # can collide and inflate facet counts.
+        matching_country = CountryFactory.create(alpha2_code='NL')
+        other_country = CountryFactory.create(alpha2_code='BE')
 
         matching = [
             DeadlineActivityFactory.create(
                 office_location=LocationFactory.create(country=matching_country),
+                location=None,
+                initiative__place=None,
                 status='open',
             ),
             DeadlineActivityFactory.create(
                 location=GeolocationFactory.create(country=matching_country),
+                initiative__place=None,
                 status='open',
             ),
             FundingFactory.create(
                 impact_location=GeolocationFactory.create(country=matching_country),
+                initiative__place=None,
                 status='open'
-
             ),
             DeedFactory.create(
                 office_location=LocationFactory.create(country=matching_country),
+                initiative__place=None,
                 status='open'
             )
         ]
 
-        date_activity = DateActivityFactory.create(slots=[], status='open')
+        date_activity = DateActivityFactory.create(
+            slots=[],
+            status='open',
+            initiative__place=None,
+        )
         DateActivitySlotFactory.create(
             activity=date_activity,
             is_online=False,
@@ -1570,11 +1581,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = DeadlineActivityFactory.create_batch(
             3,
             office_location=LocationFactory.create(country=other_country),
+            location=None,
+            initiative__place=None,
             status='open',
         )
         DeadlineActivityFactory.create_batch(
             3,
             location=GeolocationFactory.create(country=None),
+            initiative__place=None,
             status='open',
         )
 
@@ -1628,6 +1642,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             2,
             slots=[],
             status='open',
+            initiative__place=None,
         )
         for activity in matching:
             DateActivitySlotFactory.create_batch(
@@ -1640,6 +1655,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             3,
             slots=[],
             status='open',
+            initiative__place=None,
         )
         for activity in other:
             DateActivitySlotFactory.create_batch(

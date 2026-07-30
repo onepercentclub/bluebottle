@@ -1,6 +1,7 @@
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
+from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.time_based.models import ScheduleActivity, TeamScheduleRegistration, TeamMember, TeamScheduleSlot
 
 
@@ -17,19 +18,44 @@ class CreateTeamRegistrationEffect(Effect):
         raise ValueError(f'No registration defined for activity model {self.instance.activity.__class__.__name__}')
 
     def post_save(self, **kwargs):
-        registration = self.instance.activity.registrations.filter(
-            user=self.instance.user
-        ).first()
+        if not self.instance.remote_user and not self.instance.user:
+            raise ValueError(
+                'Team must have a captain identity (user or remote_user) '
+                'before creating a registration'
+            )
+
+        registration_model = self.get_registration_model()
+        filters = {'activity': self.instance.activity}
+        if self.instance.remote_user:
+            filters['remote_user'] = self.instance.remote_user
+        else:
+            filters['user'] = self.instance.user
+
+        registration = registration_model.objects.filter(**filters).first()
 
         if not registration:
-            is_local = not getattr(self.instance.activity, 'is_adopted', False)
-            status = 'accepted' if is_local else 'new'
-            registration = self.get_registration_model().objects.create(
+            registration = registration_model(
                 activity=self.instance.activity,
                 user=self.instance.user,
                 remote_user=self.instance.remote_user,
-                status=status,
             )
+            trigger_options = {}
+            if self.instance.user_id:
+                trigger_options['user'] = self.instance.user
+            registration.execute_triggers(**trigger_options)
+
+            # Local activities end accepted; adopted wait for supplier Accept.
+            is_local = not getattr(self.instance.activity, 'is_adopted', False)
+            if is_local:
+                if registration.status == 'new':
+                    try:
+                        registration.states.auto_accept(save=False)
+                    except TransitionNotPossible:
+                        registration.status = 'accepted'
+            else:
+                registration.status = 'new'
+
+            registration.save()
 
         self.instance.registration = registration
         self.instance.save()

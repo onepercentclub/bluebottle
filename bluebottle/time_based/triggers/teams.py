@@ -301,6 +301,7 @@ class TeamMemberTriggers(TriggerManager):
                     "participants",
                     TeamScheduleParticipantStateMachine.readd,
                 ),
+                SendAddToTeamEffect,
             ],
         ),
         TransitionTrigger(
@@ -319,6 +320,7 @@ class TeamMemberTriggers(TriggerManager):
                     "participants",
                     TeamScheduleParticipantStateMachine.accept,
                 ),
+                SendAddToTeamEffect,
             ],
         ),
     ]

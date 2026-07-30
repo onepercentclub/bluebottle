@@ -1975,3 +1975,66 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_registration.refresh_from_db()
         self.assertEqual(self.synced_team.status, 'withdrawn')
         self.assertEqual(self.synced_registration.status, 'withdrawn')
+
+    def test_member_readd_syncs_to_supplier(self):
+        self.test_member_join()
+
+        from bluebottle.time_based.models import TeamMember
+        remote_member = TeamMember.objects.exclude(
+            remote_user=self.synced_team.remote_user
+        ).get()
+
+        with LocalTenant(self.other_tenant):
+            self.team_member.states.remove(save=True)
+
+        # Supplier does not receive remove via federation; mirror the removed
+        # state so Add → readd has a removed target to restore.
+        if remote_member.status != 'removed':
+            remote_member.states.remove(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.team_member.refresh_from_db()
+            self.team_member.states.readd(save=True)
+            self.assertEqual(self.team_member.status, 'active')
+
+        remote_member.refresh_from_db()
+        self.assertEqual(remote_member.status, 'active')
+
+    def test_member_accept_after_reject_syncs_to_supplier(self):
+        self.test_member_join()
+
+        from bluebottle.time_based.models import TeamMember
+        remote_member = TeamMember.objects.exclude(
+            remote_user=self.synced_team.remote_user
+        ).get()
+
+        with LocalTenant(self.other_tenant):
+            self.team_member.states.reject(save=True)
+
+        if remote_member.status != 'rejected':
+            remote_member.states.reject(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.team_member.refresh_from_db()
+            self.team_member.states.accept(save=True)
+            self.assertEqual(self.team_member.status, 'active')
+
+        remote_member.refresh_from_db()
+        self.assertEqual(remote_member.status, 'active')
+
+    def test_supplier_remote_member_readd_does_not_echo(self):
+        self.test_member_join()
+
+        from bluebottle.time_based.models import TeamMember
+        remote_member = TeamMember.objects.exclude(
+            remote_user=self.synced_team.remote_user
+        ).get()
+        remote_member.states.remove(save=True)
+
+        with mock.patch(
+            'bluebottle.activity_pub.effects.adapter.sync'
+        ) as sync_mock:
+            remote_member.states.readd(save=True)
+            sync_mock.assert_not_called()
+
+        self.assertEqual(remote_member.status, 'active')

@@ -689,7 +689,7 @@ class PeriodicSlotsSerializer(FederatedObjectBaseSerializer):
 class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
     type = TypeField('DoGoodEvent')
 
-    sub_event = DateSlotsSerializer(many=True, source='slots')
+    sub_event = DateSlotsSerializer(many=True, source='publishable_slots')
     join_mode = JoinModeField()
     application_deadline = DateField(source='registration_deadline', allow_null=True)
 
@@ -703,7 +703,7 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
         return obj.participants.filter(status__in=['accepted', 'new', 'succeeded']).count()
 
     def create(self, validated_data):
-        slots = validated_data.pop('slots', [])
+        slots = validated_data.pop('publishable_slots', validated_data.pop('slots', []))
         result = super().create(validated_data)
 
         field = self.fields['sub_event']
@@ -715,15 +715,15 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
         return result
 
     def update(self, instance, validated_data):
-        slots = validated_data.pop('slots', [])
+        slots = validated_data.pop('publishable_slots', validated_data.pop('slots', []))
         result = super().update(instance, validated_data)
 
         field = self.fields['sub_event']
-        validated_data['slots'] = []
+        validated_data['publishable_slots'] = []
         for index, slot in enumerate(slots):
             slot['activity'] = result
             field.child.initial_data = self.initial_data['sub_event'][index]
-            validated_data['slots'].append(
+            validated_data['publishable_slots'].append(
                 field.child.update(
                     SubEvent.objects.from_iri(slot.pop('id')).adopted,
                     slot

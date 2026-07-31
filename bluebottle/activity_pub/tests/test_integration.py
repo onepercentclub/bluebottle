@@ -1502,6 +1502,67 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
         with LocalTenant(self.other_tenant):
             self.assertEqual(self.event.sub_event.count(), 3)
 
+    def test_publish_skips_past_unpublished_slots(self):
+        from django.utils.timezone import now
+
+        self.test_accept()
+        ActivityPubTestCase.create(self, slots=[], organization=None)
+
+        past_slot = DateActivitySlotFactory.create(
+            activity=self.model,
+            location=None,
+            is_online=True,
+            start=now() - timedelta(weeks=2),
+        )
+        upcoming_slot = DateActivitySlotFactory.create(
+            activity=self.model,
+            location=None,
+            is_online=True,
+            start=now() + timedelta(weeks=2),
+        )
+
+        self.submit()
+
+        self.assertFalse(past_slot.activity_pub_models.exists())
+        self.assertTrue(upcoming_slot.activity_pub_models.exists())
+        self.assertEqual(self.model.activity_pub_model.sub_event.count(), 1)
+        self.assertEqual(
+            self.model.activity_pub_model.sub_event.get().origin_id,
+            upcoming_slot.id,
+        )
+
+    def test_publish_keeps_already_published_past_slots(self):
+        from django.utils.timezone import now
+
+        self.test_accept()
+        ActivityPubTestCase.create(self, slots=[], organization=None)
+
+        slot = DateActivitySlotFactory.create(
+            activity=self.model,
+            location=None,
+            is_online=True,
+            start=now() + timedelta(weeks=2),
+        )
+        self.submit()
+        self.assertTrue(slot.activity_pub_models.exists())
+
+        slot.start = now() - timedelta(weeks=2)
+        slot.save(update_fields=['start'])
+
+        past_unpublished = DateActivitySlotFactory.create(
+            activity=self.model,
+            location=None,
+            is_online=True,
+            start=now() - timedelta(weeks=1),
+        )
+
+        event = adapter.sync(self.model)
+
+        self.assertTrue(slot.activity_pub_models.exists())
+        self.assertFalse(past_unpublished.activity_pub_models.exists())
+        self.assertEqual(event.sub_event.count(), 1)
+        self.assertEqual(event.sub_event.get().origin_id, slot.id)
+
     def test_adopt(self):
         super().test_adopt()
 

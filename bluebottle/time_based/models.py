@@ -257,6 +257,20 @@ class DateActivity(TimeBasedActivity):
         return self.slots.filter(status__in=['open', 'full', 'running', 'finished']).order_by('start', 'id')
 
     @property
+    def publishable_slots(self):
+        from django.db.models import Q, F, ExpressionWrapper, DateTimeField
+
+        current = timezone.now()
+        return self.slots.annotate(
+            _end=ExpressionWrapper(
+                F('start') + F('duration'),
+                output_field=DateTimeField()
+            )
+        ).filter(
+            Q(_end__gte=current) | Q(start__gte=current) | Q(activity_pub_models__isnull=False)
+        ).distinct().order_by('start', 'id')
+
+    @property
     def active_durations(self):
         # Avoid the effects of activity setting duration status directly, participants should do that
         return []
@@ -512,6 +526,17 @@ class DateActivitySlot(ActivitySlot):
             return self.activity_pub_models.get()
         except ObjectDoesNotExist:
             raise AttributeError('activity_pub_model')
+
+    @property
+    def is_activity_pub_publishable(self):
+        if self.activity_pub_models.exists():
+            return True
+        current = timezone.now()
+        if self.end is not None:
+            return self.end >= current
+        if self.start is not None:
+            return self.start >= current
+        return False
 
     @property
     def owners(self):

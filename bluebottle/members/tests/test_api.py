@@ -1332,31 +1332,26 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
         response = self.client.get(self.url, token=self.user_token)
         self.assertEqual(response.json()['platform']['members']['create_initiatives'], True)
 
-    def test_reminder_emails(self):
+    def test_reminder_emails_enabled(self):
         settings = MemberPlatformSettings.load()
         settings.reminder_q1 = True
-        settings.reminder_q2 = False
-        settings.reminder_q3 = True
-        settings.reminder_q4 = False
-        settings.save()
-        response = self.client.get(self.url, token=self.user_token)
-        members = response.json()['platform']['members']
-        self.assertEqual(members['reminder_q1'], True)
-        self.assertEqual(members['reminder_q2'], False)
-        self.assertEqual(members['reminder_q3'], True)
-        self.assertEqual(members['reminder_q4'], False)
-
-        settings.reminder_q1 = False
         settings.reminder_q2 = False
         settings.reminder_q3 = False
         settings.reminder_q4 = False
         settings.save()
         response = self.client.get(self.url, token=self.user_token)
-        members = response.json()['platform']['members']
-        self.assertEqual(members['reminder_q1'], False)
-        self.assertEqual(members['reminder_q2'], False)
-        self.assertEqual(members['reminder_q3'], False)
-        self.assertEqual(members['reminder_q4'], False)
+        self.assertEqual(
+            response.json()['platform']['members']['reminder_emails_enabled'],
+            True
+        )
+
+        settings.reminder_q1 = False
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(
+            response.json()['platform']['members']['reminder_emails_enabled'],
+            False
+        )
 
 
 class CurrentMemberAPITestCase(APITestCase):

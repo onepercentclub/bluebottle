@@ -12,26 +12,35 @@
 {% endblock %}
 
 {% block content %}
+    <p>{% trans 'Select how activities from this partner should be shared before accepting the follow request.' %}</p>
 
     <form method="post">
         {% csrf_token %}
         <fieldset class="module aligned">
             <div class="form-row">
-                <div class="form-row">
-                    <label>{% trans 'Partner:' %}</label> {{ obj.actor }}
-                </div>
-                <div class="form-row">
-                    <label>{% trans 'Adoption type:' %}</label> {{ obj.short_adoption_type }}
-                </div>
-                <div class="form-row">
-                    {% trans 'Select how activities from this partner should be shared before accepting the follow request.' %}
-                </div>
-                <div class="form-row">
-                    <div>
-                        {{ form.as_table }}
-                    </div>
+                <div>
+                    <label>{% trans 'Partner' %}:</label>
+                    <div class="readonly">{{ obj.actor }}</div>
                 </div>
             </div>
+            <div class="form-row">
+                <div>
+                    <label>{% trans 'Adoption type' %}:</label>
+                    <div class="readonly">{{ obj.short_adoption_type }}</div>
+                </div>
+            </div>
+            {% for field in form %}
+                <div class="form-row{% if field.errors %} errors{% endif %}">
+                    <div>
+                        {{ field.errors }}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
         </fieldset>
 
         <div class="submit-row flex-row">

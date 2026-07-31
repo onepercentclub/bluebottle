@@ -42,8 +42,44 @@ class SegmentAdminFormMetaClass(ModelFormMetaclass):
         return super(SegmentAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
+class SegmentInlineForm(TranslatableModelForm):
+    """
+    Prefill translated fields from an existing language when the current
+    language has no translation yet.
+
+    Without this, SegmentTypeAdmin's language tabs show empty required
+    segment name fields for untranslated languages, so saving a new
+    SegmentType translation fails with unexplained required-field errors
+    on the inline.
+    """
+
+    class Meta:
+        model = Segment
+        fields = ('name', 'slug')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = self.instance
+        language_code = getattr(self, 'language_code', None)
+        if (
+            instance
+            and instance.pk
+            and language_code
+            and not instance.has_translation(language_code)
+        ):
+            for field_name in instance._parler_meta.get_all_fields():
+                if field_name not in self.fields:
+                    continue
+                fallback = instance.safe_translation_getter(
+                    field_name, any_language=True
+                )
+                if fallback is not None:
+                    self.initial.setdefault(field_name, fallback)
+
+
 class SegmentInline(TranslatableTabularInline, TabularInlinePaginated):
     model = Segment
+    form = SegmentInlineForm
     fields = ('name', 'slug')
     show_change_link = True
     can_delete = True
@@ -182,6 +218,11 @@ class SegmentTypeAdmin(
     inlines = [SegmentInline]
 
     def get_prepopulated_fields(self, request, obj=None):
+        # Slug is shared across languages. Parler treats a missing
+        # translation as an "add" form, which would re-run slug
+        # prepopulation from the translated name and overwrite it.
+        if obj is not None:
+            return {}
         return {'slug': ('name',)}
 
     def segments(self, obj):

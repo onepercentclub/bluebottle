@@ -190,6 +190,109 @@ class TestSegmentTypeAdmin(BluebottleAdminTestCase):
         page = self.app.get(member_settings_url)
         self.assertFalse('no segment types are marked as required' in page.text)
 
+    def test_can_save_new_language_without_segment_translations(self):
+        """
+        Saving a SegmentType translation must not fail when child segments
+        only exist in another language (empty required inline names).
+        """
+        segment_type = SegmentTypeFactory.create(name='Theme', slug='themas')
+        segment_type.set_current_language('en')
+        segment_type.name = 'Theme'
+        segment_type.save()
+
+        segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Loneliness',
+            slug='loneliness',
+        )
+        segment.set_current_language('en')
+        segment.name = 'Loneliness'
+        segment.save()
+
+        self.assertFalse(segment_type.has_translation('nl'))
+        self.assertFalse(segment.has_translation('nl'))
+
+        url = reverse(
+            'admin:segments_segmenttype_change',
+            args=(segment_type.id,),
+        )
+        page = self.app.get(url, {'language': 'nl'})
+        form = page.forms[1]
+
+        # Inline name is prefilled from the English fallback.
+        self.assertEqual(form['segments-0-name'].value, 'Loneliness')
+
+        form['name'] = 'Thema'
+        response = form.submit()
+        self.assertEqual(response.status_code, 302, response.text)
+
+        segment_type.refresh_from_db()
+        self.assertTrue(segment_type.has_translation('nl'))
+        segment_type.set_current_language('nl')
+        self.assertEqual(segment_type.name, 'Thema')
+        # Shared slug must not be overwritten by translated-name prepopulation.
+        self.assertEqual(segment_type.slug, 'themas')
+
+        # Unchanged inline names are not written as new translations; parler
+        # falls back to the existing English name, which is the intended UX
+        # when only translating the segment type label.
+        segment.refresh_from_db()
+        self.assertFalse(segment.has_translation('nl'))
+        self.assertEqual(
+            segment.safe_translation_getter('name', language_code='nl', any_language=True),
+            'Loneliness',
+        )
+
+        segment_type.set_current_language('en')
+        self.assertEqual(segment_type.name, 'Theme')
+        segment.set_current_language('en')
+        self.assertEqual(segment.name, 'Loneliness')
+
+    def test_changing_dutch_leaves_english_unchanged(self):
+        """
+        Editing Dutch translations must create/update NL only and leave EN as-is.
+        """
+        segment_type = SegmentTypeFactory.create(name='Theme', slug='themas')
+        segment_type.set_current_language('en')
+        segment_type.name = 'Theme'
+        segment_type.save()
+
+        segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Loneliness',
+            slug='loneliness',
+        )
+        segment.set_current_language('en')
+        segment.name = 'Loneliness'
+        segment.save()
+
+        url = reverse(
+            'admin:segments_segmenttype_change',
+            args=(segment_type.id,),
+        )
+        page = self.app.get(url, {'language': 'nl'})
+        form = page.forms[1]
+
+        self.assertEqual(form['segments-0-name'].value, 'Loneliness')
+
+        form['name'] = 'Thema'
+        form['segments-0-name'] = 'Eenzaamheid'
+        response = form.submit()
+        self.assertEqual(response.status_code, 302, response.text)
+
+        segment_type.refresh_from_db()
+        segment.refresh_from_db()
+
+        segment_type.set_current_language('nl')
+        self.assertEqual(segment_type.name, 'Thema')
+        segment.set_current_language('nl')
+        self.assertEqual(segment.name, 'Eenzaamheid')
+
+        segment_type.set_current_language('en')
+        self.assertEqual(segment_type.name, 'Theme')
+        segment.set_current_language('en')
+        self.assertEqual(segment.name, 'Loneliness')
+
 
 class TestMemberSegmentAdmin(BluebottleAdminTestCase):
 

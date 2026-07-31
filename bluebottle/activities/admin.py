@@ -52,6 +52,7 @@ from bluebottle.activities.models import (
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.activity_pub.forms import SharePublishForm
 from bluebottle.activity_pub.models import Follow as ActivityPubFollow, Recipient
+from bluebottle.activity_pub.models import Organization
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import admin_form, confirmation_form
 from bluebottle.cms.models import SitePlatformSettings
@@ -133,8 +134,6 @@ class RemoteMemberPlatformFilter(admin.SimpleListFilter):
     parameter_name = 'platform'
 
     def lookups(self, request, model_admin):
-        from bluebottle.activity_pub.models import Organization
-
         platform_ids = (
             model_admin.get_queryset(request)
             .exclude(origin__source_id=None)

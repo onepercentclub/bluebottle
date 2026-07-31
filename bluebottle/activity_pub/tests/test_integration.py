@@ -9,7 +9,7 @@ from django.db import connection
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from djmoney.money import Money
 from pytz import UTC
 from requests import Request, Response
@@ -1503,8 +1503,6 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
             self.assertEqual(self.event.sub_event.count(), 3)
 
     def test_publish_skips_past_unpublished_slots(self):
-        from django.utils.timezone import now
-
         self.test_accept()
         ActivityPubTestCase.create(self, slots=[], organization=None)
 
@@ -1532,8 +1530,6 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
         )
 
     def test_publish_keeps_already_published_past_slots(self):
-        from django.utils.timezone import now
-
         self.test_accept()
         ActivityPubTestCase.create(self, slots=[], organization=None)
 

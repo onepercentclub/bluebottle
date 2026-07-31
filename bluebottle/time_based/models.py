@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator
 from django.db import connection
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -258,16 +258,8 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def publishable_slots(self):
-        from django.db.models import Q, F, ExpressionWrapper, DateTimeField
-
-        current = timezone.now()
-        return self.slots.annotate(
-            _end=ExpressionWrapper(
-                F('start') + F('duration'),
-                output_field=DateTimeField()
-            )
-        ).filter(
-            Q(_end__gte=current) | Q(start__gte=current) | Q(activity_pub_models__isnull=False)
+        return self.slots.filter(
+            self.slots.model.activity_pub_publishable_q()
         ).distinct().order_by('start', 'id')
 
     @property
@@ -527,16 +519,16 @@ class DateActivitySlot(ActivitySlot):
         except ObjectDoesNotExist:
             raise AttributeError('activity_pub_model')
 
+    @classmethod
+    def activity_pub_publishable_q(cls, at=None):
+        at = at or timezone.now()
+        return Q(activity_pub_models__isnull=False) | Q(start__gte=at)
+
     @property
     def is_activity_pub_publishable(self):
         if self.activity_pub_models.exists():
             return True
-        current = timezone.now()
-        if self.end is not None:
-            return self.end >= current
-        if self.start is not None:
-            return self.start >= current
-        return False
+        return bool(self.start and self.start >= timezone.now())
 
     @property
     def owners(self):

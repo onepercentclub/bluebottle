@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator
 from django.db import connection
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -255,6 +255,12 @@ class DateActivity(TimeBasedActivity):
     @property
     def active_slots(self):
         return self.slots.filter(status__in=['open', 'full', 'running', 'finished']).order_by('start', 'id')
+
+    @property
+    def publishable_slots(self):
+        return self.slots.filter(
+            self.slots.model.activity_pub_publishable_q()
+        ).distinct().order_by('start', 'id')
 
     @property
     def active_durations(self):
@@ -512,6 +518,17 @@ class DateActivitySlot(ActivitySlot):
             return self.activity_pub_models.get()
         except ObjectDoesNotExist:
             raise AttributeError('activity_pub_model')
+
+    @classmethod
+    def activity_pub_publishable_q(cls, at=None):
+        at = at or timezone.now()
+        return Q(activity_pub_models__isnull=False) | Q(start__gte=at)
+
+    @property
+    def is_activity_pub_publishable(self):
+        if self.activity_pub_models.exists():
+            return True
+        return bool(self.start and self.start >= timezone.now())
 
     @property
     def owners(self):

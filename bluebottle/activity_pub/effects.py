@@ -96,7 +96,10 @@ class SyncEffect(Effect):
 class SyncSlotEffect(SyncEffect):
     @property
     def is_valid(self):
-        return hasattr(self.instance.activity, 'activity_pub_model')
+        return (
+            hasattr(self.instance.activity, 'activity_pub_model') and
+            self.instance.is_activity_pub_publishable
+        )
 
 
 class PublishAdoptionEffect(Effect):

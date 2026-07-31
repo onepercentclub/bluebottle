@@ -1332,6 +1332,27 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
         response = self.client.get(self.url, token=self.user_token)
         self.assertEqual(response.json()['platform']['members']['create_initiatives'], True)
 
+    def test_reminder_emails_enabled(self):
+        settings = MemberPlatformSettings.load()
+        settings.reminder_q1 = True
+        settings.reminder_q2 = False
+        settings.reminder_q3 = False
+        settings.reminder_q4 = False
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(
+            response.json()['platform']['members']['reminder_emails_enabled'],
+            True
+        )
+
+        settings.reminder_q1 = False
+        settings.save()
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(
+            response.json()['platform']['members']['reminder_emails_enabled'],
+            False
+        )
+
 
 class CurrentMemberAPITestCase(APITestCase):
 

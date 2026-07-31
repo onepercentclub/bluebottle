@@ -194,6 +194,10 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         follower = self.create_follower(accepted=False)
         url = reverse('admin:activity_pub_follower_accept', args=(follower.id,))
         page = self.app.get(url, user=self.superuser)
+        self.assertContains(page, 'Partner:')
+        self.assertContains(page, str(follower.actor))
+        self.assertContains(page, 'Adoption type:')
+        self.assertContains(page, follower.short_adoption_type)
         form = page.forms[1]
         form['publish_mode'] = 'automatic'
         response = form.submit(name='confirm')

@@ -29,6 +29,7 @@ from bluebottle.activities.admin import (
     ActivityBulkAddForm,
     ActivityChildAdmin,
     BaseContributorInline,
+    BaseParticipantUserInline,
     BulkAddMixin,
     ContributionChildAdmin,
     ContributorChildAdmin,
@@ -292,7 +293,7 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
-    fields = ['edit', 'slot_date', 'user', 'status_label']
+    fields = ['edit', 'slot_date', 'participant', 'user', 'status_label']
     readonly_fields = BaseContributorInline.readonly_fields + ['slot_date']
 
     def slot_date(self, obj):
@@ -569,54 +570,12 @@ class PeriodicParticipantAdminInline(BaseContributorInline):
         return obj.slot.end.date()
 
 
-class BaseRegistrationAdminInline(TabularInlinePaginated):
+class BaseRegistrationAdminInline(BaseParticipantUserInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
-    readonly_fields = ('status_label', 'edit', 'platform', 'remote_user')
-    fields = ('edit', 'user', 'status_label',)
-    raw_id_fields = ('user',)
-
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        try:
-            obj.activity_pub_model
-            return list(fields) + ['remote_user', 'platform']
-        except (Activity.activity_pub_model.RelatedObjectDoesNotExist, AttributeError):
-            pass
-
-        return fields
-
-    def platform(self, obj):
-        if obj.remote_user:
-            return obj.remote_user.origin.source.name
-        return "-"
-
-    def edit(self, obj):
-        if not obj.user and obj.activity.has_deleted_data:
-            return format_html(f'<i>{_("Anonymous")}</i>')
-        if not obj.id:
-            return '-'
-        return format_html(
-            '<a href="{}">{}</a>',
-            reverse(
-                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
-                args=(obj.id,)),
-            _('Edit')
-        )
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    can_delete = True
-
-    def status_label(self, obj):
-        return obj.states.current_state.name
-
-    status_label.short_description = _('Status')
+    readonly_fields = ('status_label', 'edit', 'participant')
+    fields = ('edit', 'participant', 'user', 'status_label',)
 
 
 class DateRegistrationAdminInline(BaseRegistrationAdminInline):

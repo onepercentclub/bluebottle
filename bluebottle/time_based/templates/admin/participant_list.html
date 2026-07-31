@@ -33,7 +33,8 @@
                 <thead><tr>
                     <th class="original"></th>
                     {% for field in inline_admin_formset.fields %}
-                        {% if not field.widget.is_hidden %}
+                        {% if field.name == 'user' %}
+                        {% elif not field.widget.is_hidden %}
                             <th class="column-{{ field.name }}{% if field.required %} required{% endif %}">{{ field.label|capfirst }}
                                 {% if field.help_text %}&nbsp;<img src="{% static "admin/img/icon-unknown.svg" %}" class="help help-tooltip" width="10" height="10" alt="({{ field.help_text|striptags }})" title="{{ field.help_text|striptags }}">{% endif %}
                             </th>
@@ -72,8 +73,10 @@
                         {% for fieldset in inline_admin_form %}
                             {% for line in fieldset %}
                                 {% for field in line %}
-                                    {% if field.is_readonly or not field.field.is_hidden %}
-                                        <td{% if field.field.name %} class="field-{{ field.field.name }}"{% endif %}>
+                                    {% if field.field.name == 'user' and inline_admin_form.original %}
+                                    {% elif field.field.name == 'participant' and not inline_admin_form.original %}
+                                    {% elif field.is_readonly or not field.field.is_hidden %}
+                                        <td{% if field.field.name %} class="field-{{ field.field.name }}{% if field.field.name == 'user' or field.field.name == 'participant' %} field-participant{% endif %}"{% endif %}>
                                             {% if field.is_readonly %}
                                                 <p>{{ field.contents }}</p>
                                             {% else %}

@@ -52,6 +52,7 @@ from bluebottle.activities.models import (
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.activity_pub.forms import SharePublishForm
 from bluebottle.activity_pub.models import Follow as ActivityPubFollow, Recipient
+from bluebottle.activity_pub.models import Organization
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import admin_form, confirmation_form
 from bluebottle.cms.models import SitePlatformSettings
@@ -92,11 +93,89 @@ from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import get_human_readable_duration
 
 
+class RemoteMemberContributorInline(admin.TabularInline):
+    model = Contributor
+    fk_name = 'remote_user'
+    extra = 0
+    can_delete = False
+    fields = ['edit', 'activity', 'status_label', 'created']
+    readonly_fields = fields
+    show_change_link = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def edit(self, obj):
+        if not obj.pk:
+            return '-'
+        obj = obj.get_real_instance()
+        url = reverse(
+            'admin:{}_{}_change'.format(
+                obj._meta.app_label,
+                obj._meta.model_name,
+            ),
+            args=(obj.id,),
+        )
+        return format_html('<a href="{}">{}</a>', url, _('Edit'))
+
+    edit.short_description = _('Edit')
+
+    def status_label(self, obj):
+        obj = obj.get_real_instance()
+        if obj.states.current_state:
+            return obj.states.current_state.name
+        return obj.status
+
+    status_label.short_description = _('Status')
+
+
+class RemoteMemberPlatformFilter(admin.SimpleListFilter):
+    title = _('Platform')
+    parameter_name = 'platform'
+
+    def lookups(self, request, model_admin):
+        platform_ids = (
+            model_admin.get_queryset(request)
+            .exclude(origin__source_id=None)
+            .values_list('origin__source_id', flat=True)
+            .distinct()
+        )
+        return [
+            (organization.pk, organization.name)
+            for organization in Organization.objects.filter(
+                pk__in=platform_ids
+            ).order_by('name')
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(origin__source_id=self.value())
+        return queryset
+
+
 @admin.register(RemoteMember)
 class RemoteMemberAdmin(admin.ModelAdmin):
-    list_display = ['id', 'full_name', 'email', ]
-    search_fields = ['full_name', 'email', ]
-    readonly_fields = ['full_name', 'email', 'first_name', 'last_name']
+    list_display = ['full_name', 'email', 'platform']
+    list_filter = [RemoteMemberPlatformFilter]
+    search_fields = ['first_name', 'last_name', 'email']
+    readonly_fields = ['full_name', 'platform', 'email', 'first_name', 'last_name']
+    fields = ['first_name', 'last_name', 'email', 'platform']
+    inlines = [RemoteMemberContributorInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'origin',
+            'origin__source',
+        )
+
+    def platform(self, obj):
+        platform = obj.platform
+        if not platform:
+            return '-'
+        url = reverse('admin:activity_pub_organization_change', args=(platform.pk,))
+        return format_html('<a href="{}">{}</a>', url, platform.name)
+
+    platform.short_description = _('Platform')
 
 
 @admin.register(Contributor)
@@ -149,37 +228,70 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
     contributor_link.short_description = _('Edit')
 
 
-class BaseContributorInline(TabularInlinePaginated):
-    model = Contributor
+class BaseParticipantUserInline(TabularInlinePaginated):
     raw_id_fields = ['user']
-    readonly_fields = ['edit', 'created', 'status_label', 'remote_user', 'platform']
-    fields = ['edit', 'created', 'user', 'status_label']
+    template = 'admin/participant_list.html'
     extra = 0
     per_page = 10
+    can_delete = True
     ordering = ['-created']
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('user', 'remote_user')
+        return super().get_queryset(request).select_related(
+            'user',
+            'remote_user',
+            'remote_user__origin',
+            'remote_user__origin__source',
+        )
 
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        try:
-            obj.activity_pub_model
-            return list(fields) + ['remote_user', 'platform']
-        except Activity.activity_pub_model.RelatedObjectDoesNotExist:
-            pass
-        except AttributeError:
-            pass
-        return fields
+    def participant(self, obj):
+        if not obj.pk:
+            return '-'
+        if obj.user_id:
+            url = reverse('admin:members_member_change', args=(obj.user_id,))
+            return format_html('<a href="{}">{}</a>', url, obj.user.full_name)
+        if obj.remote_user_id:
+            url = reverse('admin:activities_remotemember_change', args=(obj.remote_user_id,))
+            name = format_html('<a href="{}">{}</a>', url, obj.remote_user)
+            try:
+                platform = obj.remote_user.origin.source.name
+            except AttributeError:
+                platform = None
+            if platform:
+                return format_html(
+                    '{}<br><span style="color:#999;font-size:14px;">{}</span>',
+                    name,
+                    platform,
+                )
+            return name
+        if obj.activity.has_deleted_data:
+            return format_html('<i>{}</i>', _('Anonymous'))
+        return '-'
 
-    template = 'admin/participant_list.html'
+    participant.short_description = _('User')
 
-    can_delete = True
+    def edit(self, obj):
+        if not obj.pk:
+            return '-'
+        if not obj.user_id and obj.activity.has_deleted_data:
+            return format_html('<i>{}</i>', _('Anonymous'))
+        url = reverse(
+            'admin:{}_{}_change'.format(
+                obj._meta.app_label,
+                obj._meta.model_name,
+            ),
+            args=(obj.id,),
+        )
+        return format_html('<a href="{}">{}</a>', url, _('Edit'))
 
-    def platform(self, obj):
-        if obj.remote_user:
-            return obj.remote_user.origin.source.name
-        return "-"
+    edit.short_description = _('Edit')
+
+    def status_label(self, obj):
+        if not obj.pk:
+            return '-'
+        return obj.states.current_state.name
+
+    status_label.short_description = _('Status')
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -187,19 +299,11 @@ class BaseContributorInline(TabularInlinePaginated):
     def has_delete_permission(self, request, obj=None):
         return True
 
-    def edit(self, obj):
-        if not obj.user and obj.activity.has_deleted_data:
-            return format_html(f'<i>{_("Anonymous")}</i>')
-        url = reverse('admin:{}_{}_change'.format(
-            obj._meta.app_label,
-            obj._meta.model_name
-        ), args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, _('Edit'))
 
-    edit.short_description = _('Edit')
-
-    def status_label(self, obj):
-        return obj.states.current_state.name
+class BaseContributorInline(BaseParticipantUserInline):
+    model = Contributor
+    readonly_fields = ['edit', 'created', 'status_label', 'participant']
+    fields = ['edit', 'created', 'participant', 'user', 'status_label']
 
 
 class ContributorChildAdmin(

@@ -134,6 +134,15 @@ class SegmentAdmin(
 
     merge_form = SegmentMergeForm
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(
+            request, queryset, search_term
+        )
+        segment_type = request.GET.get('segment_type')
+        if segment_type:
+            queryset = queryset.filter(segment_type_id=segment_type)
+        return queryset, use_distinct
+
     def has_add_permission(self, *args, **kwargs):
         return False
 

@@ -21,7 +21,7 @@ from polymorphic.admin import (
 )
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.forms import AcceptFollowPublishModeForm, PublishActivitiesForm
+from bluebottle.activity_pub.forms import PublishActivitiesForm, AcceptFollowPublishModeForm
 from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
@@ -562,7 +562,7 @@ class FollowerAdminForm(forms.ModelForm):
 
     class Meta:
         model = Follower
-        fields = '__all__'
+        fields = ('publish_mode',)
 
 
 @admin.register(Follower)
@@ -573,7 +573,7 @@ class FollowerAdmin(FollowAdmin):
         'platform', 'accepted', "shared_activities", "adopted_activities",
         "publish_activities_button", "show_adoption_type"
     )
-    fields = ('platform', 'accepted')
+    fields = ("platform", "show_adoption_type",)
     form = FollowerAdminForm
     inlines = []
 
@@ -614,8 +614,10 @@ class FollowerAdmin(FollowAdmin):
         fields = super().get_fields(request, obj)
         if obj and self.accepted(obj):
             fields += (
-                'publish_mode', "shared_activities",
-                "publish_activities_button"
+                "shared_activities",
+                "publish_mode",
+                "accepted",
+                "publish_activities_button",
             )
         return fields
 

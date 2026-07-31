@@ -12,26 +12,24 @@
 {% endblock %}
 
 {% block content %}
-    <p>{% trans 'Select how activities from this partner should be shared before accepting the follow request.' %}</p>
-    <p><strong>{% trans 'Partner:' %}</strong> {{ obj.actor }}</p>
 
     <form method="post">
         {% csrf_token %}
         <fieldset class="module aligned">
             <div class="form-row">
-                <div>
-                    <label for="{{ form.publish_mode.id_for_label }}">{{ form.publish_mode.label }}:</label>
-                    {{ form.publish_mode }}
-                    {% if form.publish_mode.help_text %}
-                        <p class="help">{{ form.publish_mode.help_text }}</p>
-                    {% endif %}
-                    {% if form.publish_mode.errors %}
-                        <ul class="errorlist">
-                            {% for error in form.publish_mode.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
+                <div class="form-row">
+                    <label>{% trans 'Partner:' %}</label> {{ obj.actor }}
+                </div>
+                <div class="form-row">
+                    <label>{% trans 'Adoption type:' %}</label> {{ obj.short_adoption_type }}
+                </div>
+                <div class="form-row">
+                    {% trans 'Select how activities from this partner should be shared before accepting the follow request.' %}
+                </div>
+                <div class="form-row">
+                    <div>
+                        {{ form.as_table }}
+                    </div>
                 </div>
             </div>
         </fieldset>
@@ -42,4 +40,3 @@
         </div>
     </form>
 {% endblock %}
-

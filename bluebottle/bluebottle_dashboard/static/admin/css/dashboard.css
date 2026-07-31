@@ -430,6 +430,15 @@ form .aligned .form-row label + p.help {
     padding-left: 0;
 }
 
+form .aligned .form-row br + span.helptext {
+    clear: left;
+    margin-top: 0;
+    margin-left: 12.85714rem;
+    padding-left: 0;
+    color: #9b9b9b;
+    font-size: 0.85714rem;
+}
+
 
 form .aligned .django-quill-widget p,
 form .aligned .django-quill-widget ol,

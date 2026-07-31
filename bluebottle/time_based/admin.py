@@ -29,6 +29,7 @@ from bluebottle.activities.admin import (
     ActivityBulkAddForm,
     ActivityChildAdmin,
     BaseContributorInline,
+    BaseParticipantUserInline,
     BulkAddMixin,
     ContributionChildAdmin,
     ContributorChildAdmin,
@@ -569,74 +570,12 @@ class PeriodicParticipantAdminInline(BaseContributorInline):
         return obj.slot.end.date()
 
 
-class BaseRegistrationAdminInline(TabularInlinePaginated):
+class BaseRegistrationAdminInline(BaseParticipantUserInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
     readonly_fields = ('status_label', 'edit', 'participant')
     fields = ('edit', 'participant', 'user', 'status_label',)
-    raw_id_fields = ('user',)
-    template = 'admin/participant_list.html'
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'user',
-            'remote_user',
-            'remote_user__origin',
-            'remote_user__origin__source',
-        )
-
-    def participant(self, obj):
-        if not obj.pk:
-            return '-'
-        if obj.user_id:
-            url = reverse('admin:members_member_change', args=(obj.user_id,))
-            return format_html('<a href="{}">{}</a>', url, obj.user.full_name)
-        if obj.remote_user_id:
-            url = reverse('admin:activities_remotemember_change', args=(obj.remote_user_id,))
-            name = format_html('<a href="{}">{}</a>', url, obj.remote_user)
-            try:
-                platform = obj.remote_user.origin.source.name
-            except AttributeError:
-                platform = None
-            if platform:
-                return format_html(
-                    '{}<br><span style="color:#999;font-size:14px;">{}</span>',
-                    name,
-                    platform,
-                )
-            return name
-        if obj.activity.has_deleted_data:
-            return format_html('<i>{}</i>', _('Anonymous'))
-        return '-'
-
-    participant.short_description = _('User')
-
-    def edit(self, obj):
-        if not obj.user and obj.activity.has_deleted_data:
-            return format_html(f'<i>{_("Anonymous")}</i>')
-        if not obj.id:
-            return '-'
-        return format_html(
-            '<a href="{}">{}</a>',
-            reverse(
-                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
-                args=(obj.id,)),
-            _('Edit')
-        )
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    can_delete = True
-
-    def status_label(self, obj):
-        return obj.states.current_state.name
-
-    status_label.short_description = _('Status')
 
 
 class DateRegistrationAdminInline(BaseRegistrationAdminInline):

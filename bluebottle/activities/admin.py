@@ -228,13 +228,12 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
     contributor_link.short_description = _('Edit')
 
 
-class BaseContributorInline(TabularInlinePaginated):
-    model = Contributor
+class BaseParticipantUserInline(TabularInlinePaginated):
     raw_id_fields = ['user']
-    readonly_fields = ['edit', 'created', 'status_label', 'participant']
-    fields = ['edit', 'created', 'participant', 'user', 'status_label']
+    template = 'admin/participant_list.html'
     extra = 0
     per_page = 10
+    can_delete = True
     ordering = ['-created']
 
     def get_queryset(self, request):
@@ -245,11 +244,9 @@ class BaseContributorInline(TabularInlinePaginated):
             'remote_user__origin__source',
         )
 
-    template = 'admin/participant_list.html'
-
-    can_delete = True
-
     def participant(self, obj):
+        if not obj.pk:
+            return '-'
         if obj.user_id:
             url = reverse('admin:members_member_change', args=(obj.user_id,))
             return format_html('<a href="{}">{}</a>', url, obj.user.full_name)
@@ -267,27 +264,24 @@ class BaseContributorInline(TabularInlinePaginated):
                     platform,
                 )
             return name
-        if obj.pk and obj.activity.has_deleted_data:
+        if obj.activity.has_deleted_data:
             return format_html('<i>{}</i>', _('Anonymous'))
         return '-'
 
     participant.short_description = _('User')
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return True
 
     def edit(self, obj):
         if not obj.pk:
             return '-'
         if not obj.user_id and obj.activity.has_deleted_data:
             return format_html('<i>{}</i>', _('Anonymous'))
-        url = reverse('admin:{}_{}_change'.format(
-            obj._meta.app_label,
-            obj._meta.model_name
-        ), args=(obj.id,))
+        url = reverse(
+            'admin:{}_{}_change'.format(
+                obj._meta.app_label,
+                obj._meta.model_name,
+            ),
+            args=(obj.id,),
+        )
         return format_html('<a href="{}">{}</a>', url, _('Edit'))
 
     edit.short_description = _('Edit')
@@ -296,6 +290,20 @@ class BaseContributorInline(TabularInlinePaginated):
         if not obj.pk:
             return '-'
         return obj.states.current_state.name
+
+    status_label.short_description = _('Status')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+
+class BaseContributorInline(BaseParticipantUserInline):
+    model = Contributor
+    readonly_fields = ['edit', 'created', 'status_label', 'participant']
+    fields = ['edit', 'created', 'participant', 'user', 'status_label']
 
 
 class ContributorChildAdmin(

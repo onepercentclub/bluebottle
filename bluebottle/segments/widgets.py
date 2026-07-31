@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.admin.widgets import AutocompleteSelect, AutocompleteSelectMultiple
+from django.contrib.admin.widgets import AutocompleteSelectMultiple
 
 
 class SegmentTypeAutocompleteMixin:
@@ -16,8 +16,4 @@ class SegmentTypeAutocompleteMixin:
 
 
 class SegmentAutocompleteSelectMultiple(SegmentTypeAutocompleteMixin, AutocompleteSelectMultiple):
-    pass
-
-
-class SegmentAutocompleteSelect(SegmentTypeAutocompleteMixin, AutocompleteSelect):
     pass

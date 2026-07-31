@@ -703,7 +703,9 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
         return obj.participants.filter(status__in=['accepted', 'new', 'succeeded']).count()
 
     def create(self, validated_data):
-        slots = validated_data.pop('publishable_slots', validated_data.pop('slots', []))
+        slots = validated_data.pop('publishable_slots', None)
+        if slots is None:
+            slots = validated_data.pop('slots', [])
         result = super().create(validated_data)
 
         field = self.fields['sub_event']

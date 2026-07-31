@@ -189,11 +189,14 @@ JET_SIDE_MENU_ITEMS = [
                 "label": _("Shared activities"),
             },
             {
+                "name": "activities.remotemember",
+                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
+            },
+            {
                 "name": "activity_pub.receivedactivity",
-                "permissions": ["activity_pub.change_event"],
                 "enabled": "cms.SitePlatformSettings.is_receiving_activities",
                 "url": "/en/admin/activity_pub/receivedactivity/",
-                "label": _("Received activities"),
+                "label": _("Remote contributors"),
             },
             {
                 "name": "activity_links.linkedactivity",

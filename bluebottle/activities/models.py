@@ -382,7 +382,6 @@ class RemoteMember(models.Model):
         _("Email"),
         blank=True,
         null=True,
-        help_text=_("Email when no user is linked (e.g. synced participants)."),
     )
 
     is_active = False
@@ -399,6 +398,13 @@ class RemoteMember(models.Model):
             return self.first_name
         elif self.last_name:
             return self.last_name
+
+    @property
+    def platform(self):
+        try:
+            return self.origin.source
+        except AttributeError:
+            return None
 
     def __str__(self):
         return self.full_name or self.email

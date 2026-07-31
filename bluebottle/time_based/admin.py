@@ -292,7 +292,7 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
-    fields = ['edit', 'slot_date', 'user', 'status_label']
+    fields = ['edit', 'slot_date', 'participant', 'user', 'status_label']
     readonly_fields = BaseContributorInline.readonly_fields + ['slot_date']
 
     def slot_date(self, obj):
@@ -573,24 +573,44 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
-    readonly_fields = ('status_label', 'edit', 'platform', 'remote_user')
-    fields = ('edit', 'user', 'status_label',)
+    readonly_fields = ('status_label', 'edit', 'participant')
+    fields = ('edit', 'participant', 'user', 'status_label',)
     raw_id_fields = ('user',)
+    template = 'admin/participant_list.html'
 
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        try:
-            obj.activity_pub_model
-            return list(fields) + ['remote_user', 'platform']
-        except (Activity.activity_pub_model.RelatedObjectDoesNotExist, AttributeError):
-            pass
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'user',
+            'remote_user',
+            'remote_user__origin',
+            'remote_user__origin__source',
+        )
 
-        return fields
+    def participant(self, obj):
+        if not obj.pk:
+            return '-'
+        if obj.user_id:
+            url = reverse('admin:members_member_change', args=(obj.user_id,))
+            return format_html('<a href="{}">{}</a>', url, obj.user.full_name)
+        if obj.remote_user_id:
+            url = reverse('admin:activities_remotemember_change', args=(obj.remote_user_id,))
+            name = format_html('<a href="{}">{}</a>', url, obj.remote_user)
+            try:
+                platform = obj.remote_user.origin.source.name
+            except AttributeError:
+                platform = None
+            if platform:
+                return format_html(
+                    '{}<br><span style="color:#999;font-size:14px;">{}</span>',
+                    name,
+                    platform,
+                )
+            return name
+        if obj.activity.has_deleted_data:
+            return format_html('<i>{}</i>', _('Anonymous'))
+        return '-'
 
-    def platform(self, obj):
-        if obj.remote_user:
-            return obj.remote_user.origin.source.name
-        return "-"
+    participant.short_description = _('User')
 
     def edit(self, obj):
         if not obj.user and obj.activity.has_deleted_data:

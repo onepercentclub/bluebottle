@@ -247,7 +247,7 @@ class DateActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer',)
+            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', 'Platform',)
         )
 
 
@@ -391,8 +391,49 @@ class DateSlotDetailAPITestCase(APITestCase):
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status',)
+            ('Email', 'Name', 'Registration Date', 'Status', 'Platform',)
         )
+
+    def test_export_download_includes_remote_participant(self):
+        from bluebottle.activities.models import RemoteMember
+        from bluebottle.activity_pub.tests.factories import PersonFactory
+
+        settings = InitiativePlatformSettings.load()
+        settings.enable_participant_exports = True
+        settings.save()
+
+        remote_user = RemoteMember.objects.create(
+            first_name='Remote',
+            last_name='Participant',
+            email='remote@example.com',
+        )
+        person = PersonFactory.create(adopted=remote_user)
+        DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.model,
+            user=None,
+            remote_user=remote_user,
+            status='accepted',
+        )
+
+        self.perform_get(user=self.model.owner)
+        export_response = self.client.get(
+            self.response.json()['data']['attributes']['participants-export-url']['url']
+        )
+        workbook = load_workbook(filename=BytesIO(export_response.content))
+        sheet = workbook.get_active_sheet()
+        rows = list(sheet.values)
+
+        self.assertEqual(
+            rows[0],
+            ('Email', 'Name', 'Registration Date', 'Status', 'Platform',)
+        )
+        remote_row = next(
+            row for row in rows[1:]
+            if row and row[0] == 'remote@example.com'
+        )
+        self.assertEqual(remote_row[1], 'Remote Participant')
+        self.assertEqual(remote_row[4], person.source.name)
 
 
 class DateSlotListAPITestCase(APITestCase):

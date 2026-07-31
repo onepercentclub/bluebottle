@@ -134,15 +134,20 @@ class SlotParticipantExportView(ExportView):
     model = DateActivitySlot
 
     def get_instances(self):
-        return self.get_object().participants.all()
+        return (
+            self.get_object()
+            .participants.all()
+            .select_related('user', 'remote_user')
+        )
 
     def get_fields(self):
         question = self.get_object().activity.review_title
         fields = (
-            ('user__email', 'Email'),
-            ('user__full_name', 'Name'),
+            ('actual_user__email', 'Email'),
+            ('actual_user__full_name', 'Name'),
             ('created', 'Registration Date'),
             ('status', 'Status'),
+            ('platform_name', 'Platform'),
         )
         if question:
             fields += (

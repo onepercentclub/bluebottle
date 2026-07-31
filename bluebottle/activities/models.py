@@ -468,6 +468,15 @@ class Contributor(TriggerMixin, PolymorphicModel):
         return self.actual_user.email
 
     @property
+    def platform_name(self):
+        if not self.remote_user_id:
+            return ''
+        try:
+            return self.remote_user.origin.source.name
+        except AttributeError:
+            return ''
+
+    @property
     def is_team_captain(self):
         return self.team and self.user == self.team.owner
 

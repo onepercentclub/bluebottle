@@ -184,18 +184,19 @@ class DateParticipantExportView(TimeBasedExportView):
     participant_model = DateRegistration
 
     fields = (
-        ("user__email", "Email"),
-        ("user__full_name", "Name"),
+        ("actual_user__email", "Email"),
+        ("actual_user__full_name", "Name"),
         ("created", "Registration Date"),
         ("status", "Status"),
         ("answer", "Registration answer"),
+        ("platform_name", "Platform"),
     )
 
     def get_instances(self):
         return (
             self.participant_model.objects.filter(activity=self.get_object())
             .prefetch_related("user__segments")
-            .select_related("user")
+            .select_related("user", "remote_user")
         )
 
     def write_data(self, workbook):
@@ -218,7 +219,7 @@ class DateParticipantExportView(TimeBasedExportView):
                 c += 1
             r = 0
 
-            for participant in slot.participants.all():
+            for participant in slot.participants.select_related('user', 'remote_user'):
                 row = self.get_row(participant)
                 r += 1
                 worksheet.write_row(r, 0, row)

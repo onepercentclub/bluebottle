@@ -2083,10 +2083,10 @@ class Slot(models.Model):
 
     @property
     def origin(self):
-        try:
-            return self.origins.first()
-        except ObjectDoesNotExist:
+        origin = self.origins.first()
+        if origin is None:
             raise AttributeError('origin')
+        return origin
 
     activity_pub_models = GenericRelation(
         'activity_pub.SubEvent',

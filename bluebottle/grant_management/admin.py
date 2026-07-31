@@ -557,7 +557,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         if request.user.is_superuser:
             fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
 
-        if SegmentType.objects.count():
+        if SegmentType.objects.exists():
             fieldsets.append(
                 (
                     _("Segments"),

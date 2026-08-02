@@ -163,11 +163,26 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         return str(self.subject.format(**context))
 
     def already_send(self, recipient):
+        # Count messages for this year, including rows that were saved but never
+        # got `sent` set (worker kill / broker redelivery between save and send).
+        # Without this, the same reminder is mailed again on every task retry.
         return Message.objects.filter(
             template=self.get_template(),
             recipient=recipient,
-            sent__year=now().year
-        ).count() > 0
+        ).filter(
+            Q(sent__year=now().year) | Q(sent__isnull=True)
+        ).exists()
+
+    def compose_and_send(self, **base_context):
+        # Mark as sent before SMTP so a crash mid-send still dedupes on retry.
+        for message in self.get_messages(**base_context):
+            context = self.get_context(message.recipient, **base_context)
+            reply_to = self.reply_to
+            if reply_to:
+                context['reply_to'] = reply_to
+            message.sent = now()
+            message.save()
+            message.send(**context)
 
     def get_recipients(self):
         """members with do good hours"""

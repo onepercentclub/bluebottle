@@ -34,7 +34,6 @@ from bluebottle.activities.admin import (
     ContributionChildAdmin,
     ContributorChildAdmin,
 )
-from bluebottle.activities.models import Activity
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.files.widgets import PrivateDocumentWidget
 from bluebottle.fsm.admin import (

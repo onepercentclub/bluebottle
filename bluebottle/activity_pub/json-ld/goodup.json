@@ -29,6 +29,7 @@
     "collectType": "goodup:collectType",
     "contributorCount": "goodup:contributorCount",
     "forced": "goodup:forced",
+    "videoUrl": "goodup:videoUrl",
     "capacity": "schema:maximumAttendeeCapacity",
     "participantSyncId": "goodup:participantSyncId",
     "participantName": "goodup:participantName",

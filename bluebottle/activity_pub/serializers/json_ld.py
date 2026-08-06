@@ -389,7 +389,7 @@ class AcceptSerializer(BaseActivitySerializer):
     object = RelatedResourceField(
         type=(
             'Follow', 'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent', 'Join'
+            'CollectCampaign', 'DoGoodEvent', 'Join', 'subEvent'
         )
     )
 
@@ -401,7 +401,10 @@ class RejectSerializer(BaseActivitySerializer):
     type = TypeField('Reject')
 
     object = RelatedResourceField(
-        type=('Join', )
+        type=(
+            'Join', 'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
+            'CollectCampaign', 'DoGoodEvent', 'subEvent'
+        )
     )
 
     class Meta(BaseActivitySerializer.Meta):
@@ -570,9 +573,11 @@ class LeaveSerializer(BaseActivitySerializer):
             'CollectCampaign', 'DoGoodEvent', 'SubEvent', 'Team'
         )
     )
+    forced = serializers.BooleanField(required=False, default=False)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Leave
+        fields = BaseActivitySerializer.Meta.fields + ('forced',)
 
 
 from bluebottle.activity_pub.serializers.federated_activities import *  # noqa

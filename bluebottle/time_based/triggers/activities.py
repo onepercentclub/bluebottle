@@ -15,7 +15,8 @@ from bluebottle.activities.messages.reviewer import (
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
 from bluebottle.activity_pub.effects import (
-    LockEffect, PublishAdoptionEffect, CreateEffect, CancelEffect, FinishEffect, UpdateEventEffect
+    LockEffect, PublishAdoptionEffect, CreateEffect, CancelEffect, FinishEffect, UpdateEventEffect,
+    UnpublishAdoptionEffect
 )
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
@@ -274,6 +275,7 @@ class TimeBasedTriggers(ActivityTriggers):
                 NotificationEffect(ActivityCancelledNotification),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                UnpublishAdoptionEffect,
                 CancelEffect
             ]
         ),
@@ -283,6 +285,7 @@ class TimeBasedTriggers(ActivityTriggers):
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 RelatedTransitionEffect('slots', SlotStateMachine.auto_cancel),
                 RelatedTransitionEffect('slots', DateActivitySlotStateMachine.auto_cancel),
+                UnpublishAdoptionEffect,
                 CancelEffect
             ]
         ),
@@ -349,6 +352,7 @@ class DateActivityTriggers(TimeBasedTriggers):
                 ),
 
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
+                UnpublishAdoptionEffect,
                 CancelEffect
             ],
         ),
@@ -790,7 +794,8 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
                 RelatedTransitionEffect(
                     'participants',
                     RegisteredDateParticipantStateMachine.cancel
-                )
+                ),
+                UnpublishAdoptionEffect,
             ]
         ),
         TransitionTrigger(

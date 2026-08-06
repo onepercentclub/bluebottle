@@ -19,7 +19,7 @@ from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event, Place,
-    Recipient, RepetitionModeChoices
+    Recipient, RepetitionModeChoices, Reject, Leave
 )
 from bluebottle.activity_pub.tasks import publish_to_recipient
 from bluebottle.clients.models import Client
@@ -521,6 +521,44 @@ class SyncTestCase(ActivityPubTestCase):
         self.synced_participant.refresh_from_db()
         self.assertEqual(
             self.synced_participant.status, self.expected_participant_status
+        )
+
+    def test_cancel_adoption(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.states.cancel(save=True)
+            self.assertStatus(self.adopted, 'cancelled')
+            self.assertTrue(
+                Reject.objects.filter(object=self.adopted.origin).exists()
+            )
+            self.assertTrue(
+                Leave.objects.filter(
+                    object=self.adopted.origin, forced=True
+                ).exists()
+            )
+
+        self.assertFalse(
+            Accept.objects.filter(object=self.model.activity_pub_model).exists()
+        )
+        self.synced_participant.refresh_from_db()
+        self.assertIn(self.synced_participant.status, ('failed', 'cancelled'))
+
+    def test_restore_and_reapprove(self):
+        self.test_cancel_adoption()
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.states.restore(save=True)
+            self.assertStatus(self.adopted, 'needs_work')
+            self.adopted.states.submit(save=True)
+            self.approve(self.adopted)
+            self.assertStatus(self.adopted, 'open')
+            self.assertTrue(
+                Accept.objects.filter(object=self.adopted.origin).exists()
+            )
+
+        self.assertTrue(
+            Accept.objects.filter(object=self.model.activity_pub_model).exists()
         )
 
     def test_update(self):

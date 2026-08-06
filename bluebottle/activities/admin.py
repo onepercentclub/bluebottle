@@ -803,7 +803,8 @@ class ActivityChildAdmin(
         'send_impact_reminder_message_link',
         'event',
         'activity_pub',
-        'host_organization'
+        'host_organization',
+        'display_image',
     ]
 
     office_fields = (
@@ -837,6 +838,13 @@ class ActivityChildAdmin(
     )
 
     registration_fields = None
+
+    def display_image(self, obj):
+        return format_html(
+            '<img src="{}" style="max-height: 200px; max-width: 500px;" />', obj.image.file.url
+        )
+
+    display_image.short_description = _("Image")
 
     def get_registration_fields(self, request, obj):
         return self.registration_fields
@@ -902,6 +910,11 @@ class ActivityChildAdmin(
             )
         if Location.objects.exists() and not settings.enable_office_restrictions:
             detail_fields += ('office_location',)
+        if obj:
+            detail_fields = tuple(
+                'display_image' if field == 'image' else field
+                for field in detail_fields
+            )
         return detail_fields
 
     list_display = [

@@ -71,7 +71,8 @@ from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.filters import ActivitySegmentAdminMixin
-from bluebottle.segments.models import SegmentType
+from bluebottle.segments.models import Segment, SegmentType
+from bluebottle.segments.widgets import SegmentAutocompleteSelectMultiple
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
@@ -485,14 +486,18 @@ class EffortContributionAdmin(ContributionChildAdmin):
 class ActivityFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs and connection.tenant.schema_name != 'public':
-            segment_types = SegmentType.objects.all()
+            segments_field = attrs['Meta'].model._meta.get_field('segments')
+            segment_types = SegmentType.objects.prefetch_related('translations')
 
             for segment_type in segment_types:
-
                 attrs[segment_type.field_name] = forms.ModelMultipleChoiceField(
                     required=False,
                     label=segment_type.name,
-                    queryset=segment_type.segments,
+                    queryset=Segment.objects.filter(segment_type=segment_type),
+                    widget=SegmentAutocompleteSelectMultiple(
+                        segments_field,
+                        segment_type.id,
+                    ),
                 )
 
         return super().__new__(cls, name, bases, attrs)
@@ -506,9 +511,14 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
             f.queryset = f.queryset.select_related('content_type')
 
         if connection.tenant.schema_name != 'public' and self.instance.pk:
+            selected_by_type = {}
+            for segment in self.instance.segments.all():
+                selected_by_type.setdefault(segment.segment_type_id, []).append(segment)
             for segment_type in SegmentType.objects.all():
-                selected = self.instance.segments.filter(segment_type=segment_type).all()
-                self.initial[segment_type.field_name] = selected
+                if segment_type.field_name in self.fields:
+                    self.initial[segment_type.field_name] = selected_by_type.get(
+                        segment_type.id, []
+                    )
 
 
 class TeamInline(admin.TabularInline):
@@ -687,6 +697,8 @@ class ActivityAnswerInline(StackedPolymorphicInline):
 
     class SegmentAnswerInline(StackedPolymorphicInline.Child):
         model = SegmentAnswer
+        autocomplete_fields = ('segment',)
+        raw_id_fields = ('question',)
 
     class FileUploadAnswerInline(StackedPolymorphicInline.Child):
         model = FileUploadAnswer
@@ -1025,7 +1037,7 @@ class ActivityChildAdmin(
                     _('Work location'), {'fields': self.office_fields}
                 ))
 
-        if SegmentType.objects.count():
+        if SegmentType.objects.exists():
             fieldsets.append((
                 _('Segments'), {
                     'fields': [

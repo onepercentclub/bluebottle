@@ -917,6 +917,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     background = SorlImageField('1408x1080', crop='center')
     read_only_fields = serializers.SerializerMethodField()
     social_login_methods = serializers.SerializerMethodField()
+    reminder_emails_enabled = serializers.SerializerMethodField()
 
     def get_read_only_fields(self, obj):
         try:
@@ -929,6 +930,9 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             {'key': method.client_id, 'backend': method.backend}
             for method in obj.social_login_methods.all()
         ]
+
+    def get_reminder_emails_enabled(self, obj):
+        return any([obj.reminder_q1, obj.reminder_q2, obj.reminder_q3, obj.reminder_q4])
 
     class Meta(object):
         model = MemberPlatformSettings
@@ -957,6 +961,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'require_phone_number',
             'create_initiatives',
             'do_good_hours',
+            'reminder_emails_enabled',
             'fiscal_month_offset',
             'fiscal_year',
             'fiscal_year_start',

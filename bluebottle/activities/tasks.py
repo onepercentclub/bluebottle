@@ -166,11 +166,11 @@ def do_good_hours_reminder():
                 notification = None
                 if settings.reminder_q1 and today == q1:
                     notification = DoGoodHoursReminderQ1Notification(settings)
-                if settings.reminder_q2 and today == q2:
+                elif settings.reminder_q2 and today == q2:
                     notification = DoGoodHoursReminderQ2Notification(settings)
-                if settings.reminder_q3 and today == q3:
+                elif settings.reminder_q3 and today == q3:
                     notification = DoGoodHoursReminderQ3Notification(settings)
-                if settings.reminder_q4 and today == q4:
+                elif settings.reminder_q4 and today == q4:
                     notification = DoGoodHoursReminderQ4Notification(settings)
 
                 if notification:

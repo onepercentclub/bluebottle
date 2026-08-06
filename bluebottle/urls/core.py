@@ -53,6 +53,10 @@ urlpatterns = [
         include('bluebottle.statistics.urls.api')
     ),
     path(
+        'api/content/',
+        include('bluebottle.content.urls.api')
+    ),
+    path(
         'api/cms/',
         include('bluebottle.cms.urls.api')
     ),

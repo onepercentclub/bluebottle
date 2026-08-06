@@ -1291,7 +1291,7 @@ class Skill(TranslatableModel):
     )
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', any_language=True) or str(self.pk)
 
     class Meta():
         ordering = ['pk']

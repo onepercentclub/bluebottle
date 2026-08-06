@@ -15,7 +15,7 @@ class LinkedBaseAdmin(StateMachineAdminMixin, admin.ModelAdmin):
     fields = readonly_fields + ['archived']
     superadmin_fields = ['force_status']
 
-    def get_fieldsets(self, request, obj=None):
+    def get_fieldsets(self, request, obj):
         fieldsets = (
             (_('Details'), {'fields': self.get_fields(request, obj)}),
         )
@@ -24,6 +24,7 @@ class LinkedBaseAdmin(StateMachineAdminMixin, admin.ModelAdmin):
                 (_('Super admin'), {'fields': self.superadmin_fields}),
             )
         return fieldsets
+
 
 @admin.register(LinkedDeed)
 class LinkedDeedAdmin(LinkedBaseAdmin):

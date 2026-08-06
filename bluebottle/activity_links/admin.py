@@ -1,15 +1,29 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 from polymorphic.admin import PolymorphicParentModelAdmin
 
 from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedDateActivity, LinkedActivity, \
     LinkedDateSlot, LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity, LinkedScheduleActivity, \
     LinkedGrantApplication
+from bluebottle.fsm.admin import StateMachineAdminMixin
+from bluebottle.fsm.forms import StateMachineModelForm
 
 
-class LinkedBaseAdmin(admin.ModelAdmin):
+class LinkedBaseAdmin(StateMachineAdminMixin, admin.ModelAdmin):
+    form = StateMachineModelForm
     readonly_fields = ["title", "link", "status", "host_organization"]
     fields = readonly_fields + ['archived']
+    superadmin_fields = ['force_status']
 
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = (
+            (_('Details'), {'fields': self.get_fields(request, obj)}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': self.superadmin_fields}),
+            )
+        return fieldsets
 
 @admin.register(LinkedDeed)
 class LinkedDeedAdmin(LinkedBaseAdmin):

@@ -278,6 +278,17 @@ class Event(ActivityPubModel):
     )
 
     url = models.URLField(null=True, blank=True)
+    video_url = models.URLField(
+        _("video"),
+        max_length=2048,
+        blank=True,
+        null=True,
+        default="",
+        help_text=_(
+            "Make your activity come alive with a video. "
+            "You can paste the link to YouTube or Vimeo here."
+        ),
+    )
 
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL

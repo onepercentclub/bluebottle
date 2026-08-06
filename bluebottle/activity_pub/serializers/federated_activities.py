@@ -280,6 +280,7 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
     image = ImageSerializer(required=False, allow_null=True)
     organization = OrganizationSerializer(required=False, allow_null=True)
     url = serializers.SerializerMethodField()
+    video_url = serializers.URLField(required=False, allow_null=True, allow_blank=True)
 
     contributor_count = serializers.SerializerMethodField(required=False, allow_null=True)
 
@@ -303,7 +304,7 @@ class BaseFederatedActivitySerializer(FederatedObjectBaseSerializer):
 
     class Meta(FederatedObjectBaseSerializer.Meta):
         fields = FederatedObjectBaseSerializer.Meta.fields + (
-            'name', 'summary', 'image', 'organization', 'contributor_count', 'url'
+            'name', 'summary', 'image', 'organization', 'contributor_count', 'url', 'video_url'
         )
 
 

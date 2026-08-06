@@ -153,6 +153,7 @@ class BaseEventSerializer(BaseActivityPubSerializer):
     image = RelatedResourceField(type='Image', include=True, allow_null=True, required=False)
     organization = RelatedResourceField(type='Organization', include=True, allow_null=True, required=False)
     url = serializers.URLField(required=False, allow_null=True)
+    video_url = serializers.URLField(required=False, allow_null=True, allow_blank=True)
 
     contributor_count = serializers.IntegerField(
         required=False, allow_null=True, default=0
@@ -160,7 +161,7 @@ class BaseEventSerializer(BaseActivityPubSerializer):
 
     class Meta(BaseActivityPubSerializer.Meta):
         fields = BaseActivityPubSerializer.Meta.fields + (
-            'name', 'summary', 'image', 'organization', 'url', 'contributor_count'
+            'name', 'summary', 'image', 'organization', 'url', 'video_url', 'contributor_count'
         )
 
 

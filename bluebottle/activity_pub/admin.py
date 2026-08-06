@@ -850,6 +850,7 @@ class EventAdminMixin:
         "source",
         "activity",
         "url",
+        "video_url",
         "iri",
     )
     fields = readonly_fields

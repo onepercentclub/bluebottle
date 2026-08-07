@@ -34,6 +34,7 @@ from bluebottle.activities.admin import (
     BulkAddMixin,
     ContributionChildAdmin,
     ContributorChildAdmin,
+    RemoteUserAdminMixin,
 )
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.files.widgets import PrivateDocumentWidget
@@ -322,7 +323,7 @@ class TeamScheduleRegistrationAdminInline(BaseContributorInline):
 
 
 @admin.register(TeamMember)
-class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
+class TeamMemberAdmin(RemoteUserAdminMixin, RegionManagerAdminMixin, StateMachineAdmin):
     model = TeamMember
     inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
@@ -332,53 +333,13 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     superadmin_fields = ['force_status']
 
-    def activity_is_shared(self, obj):
+    def get_shared_activity(self, obj):
         if not obj or not getattr(obj, 'team_id', None):
-            return False
+            return None
         try:
-            return bool(obj.team.activity.activity_pub_model)
+            return obj.team.activity
         except (ObjectDoesNotExist, AttributeError):
-            return False
-
-    def platform(self, obj):
-        remote_user = getattr(obj, 'remote_user', None)
-        if not remote_user:
-            return '-'
-        platform = remote_user.platform
-        if not platform:
-            return '-'
-        url = reverse('admin:activity_pub_organization_change', args=(platform.pk,))
-        return format_html('<a href="{}">{}</a>', url, platform.name)
-
-    platform.short_description = _('Platform')
-
-    def get_fields(self, request, obj=None):
-        fields = list(super().get_fields(request, obj))
-        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
-        if has_remote or self.activity_is_shared(obj):
-            if 'remote_user' not in fields:
-                if 'user' in fields:
-                    fields.insert(fields.index('user') + 1, 'remote_user')
-                else:
-                    fields.append('remote_user')
-        if has_remote:
-            if 'user' in fields:
-                fields.remove('user')
-            if 'platform' not in fields:
-                if 'remote_user' in fields:
-                    fields.insert(fields.index('remote_user') + 1, 'platform')
-                else:
-                    fields.append('platform')
-        return fields
-
-    def get_readonly_fields(self, request, obj=None):
-        fields = list(super().get_readonly_fields(request, obj))
-        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
-        if (has_remote or self.activity_is_shared(obj)) and 'remote_user' not in fields:
-            fields.append('remote_user')
-        if has_remote and 'platform' not in fields:
-            fields.append('platform')
-        return fields
+            return None
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
@@ -533,6 +494,7 @@ class TeamBulkAddForm(ActivityBulkAddForm):
 
 @admin.register(Team)
 class TeamAdmin(
+    RemoteUserAdminMixin,
     PolymorphicInlineSupportMixin,
     RegionManagerAdminMixin,
     BulkAddMixin,
@@ -562,54 +524,6 @@ class TeamAdmin(
         return inlines
 
     superadmin_fields = ['force_status']
-
-    def activity_is_shared(self, obj):
-        if not obj or not getattr(obj, 'activity_id', None):
-            return False
-        try:
-            return bool(obj.activity.activity_pub_model)
-        except (ObjectDoesNotExist, AttributeError):
-            return False
-
-    def platform(self, obj):
-        remote_user = getattr(obj, 'remote_user', None)
-        if not remote_user:
-            return '-'
-        platform = remote_user.platform
-        if not platform:
-            return '-'
-        url = reverse('admin:activity_pub_organization_change', args=(platform.pk,))
-        return format_html('<a href="{}">{}</a>', url, platform.name)
-
-    platform.short_description = _('Platform')
-
-    def get_fields(self, request, obj=None):
-        fields = list(super().get_fields(request, obj))
-        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
-        if has_remote or self.activity_is_shared(obj):
-            if 'remote_user' not in fields:
-                if 'user' in fields:
-                    fields.insert(fields.index('user') + 1, 'remote_user')
-                else:
-                    fields.append('remote_user')
-        if has_remote:
-            if 'user' in fields:
-                fields.remove('user')
-            if 'platform' not in fields:
-                if 'remote_user' in fields:
-                    fields.insert(fields.index('remote_user') + 1, 'platform')
-                else:
-                    fields.append('platform')
-        return fields
-
-    def get_readonly_fields(self, request, obj=None):
-        fields = list(super().get_readonly_fields(request, obj))
-        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
-        if (has_remote or self.activity_is_shared(obj)) and 'remote_user' not in fields:
-            fields.append('remote_user')
-        if has_remote and 'platform' not in fields:
-            fields.append('platform')
-        return fields
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
@@ -1995,7 +1909,12 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         return obj.get_real_instance_class()._meta.verbose_name
 
 
-class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
+class RegistrationChildAdmin(
+    RemoteUserAdminMixin,
+    PolymorphicInlineSupportMixin,
+    PolymorphicChildModelAdmin,
+    StateMachineAdmin,
+):
     base_model = Registration
     readonly_fields = ["created", "activity", "user", "show_answer"]
     fields = readonly_fields + ["document", "status", "states"]
@@ -2010,54 +1929,6 @@ class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildMode
             "widget": PrivateDocumentWidget
         }
     }
-
-    def activity_is_shared(self, obj):
-        if not obj or not getattr(obj, 'activity_id', None):
-            return False
-        try:
-            return bool(obj.activity.activity_pub_model)
-        except (ObjectDoesNotExist, AttributeError):
-            return False
-
-    def platform(self, obj):
-        remote_user = getattr(obj, 'remote_user', None)
-        if not remote_user:
-            return '-'
-        platform = remote_user.platform
-        if not platform:
-            return '-'
-        url = reverse('admin:activity_pub_organization_change', args=(platform.pk,))
-        return format_html('<a href="{}">{}</a>', url, platform.name)
-
-    platform.short_description = _('Platform')
-
-    def get_fields(self, request, obj=None):
-        fields = list(super().get_fields(request, obj))
-        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
-        if has_remote or self.activity_is_shared(obj):
-            if 'remote_user' not in fields:
-                if 'user' in fields:
-                    fields.insert(fields.index('user') + 1, 'remote_user')
-                else:
-                    fields.append('remote_user')
-        if has_remote:
-            if 'user' in fields:
-                fields.remove('user')
-            if 'platform' not in fields:
-                if 'remote_user' in fields:
-                    fields.insert(fields.index('remote_user') + 1, 'platform')
-                else:
-                    fields.append('platform')
-        return fields
-
-    def get_readonly_fields(self, request, obj=None):
-        fields = list(super().get_readonly_fields(request, obj))
-        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
-        if (has_remote or self.activity_is_shared(obj)) and 'remote_user' not in fields:
-            fields.append('remote_user')
-        if has_remote and 'platform' not in fields:
-            fields.append('platform')
-        return fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

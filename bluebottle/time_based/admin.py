@@ -357,51 +357,17 @@ class TeamMemberAdminInline(BaseParticipantUserInline):
     model = TeamMember
     fields = ('edit', 'participant', 'user', 'status_label',)
     readonly_fields = ('edit', 'participant', 'status_label')
+    remote_user_select_related = BaseParticipantUserInline.remote_user_select_related + (
+        'team__activity',
+    )
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'user',
-            'remote_user',
-            'remote_user__origin',
-            'remote_user__origin__source',
-            'team__activity',
-        )
-
-    def participant(self, obj):
-        if not obj.pk:
-            return '-'
-        if obj.user_id:
-            url = reverse('admin:members_member_change', args=(obj.user_id,))
-            return format_html('<a href="{}">{}</a>', url, obj.user.full_name)
-        if obj.remote_user_id:
-            url = reverse('admin:activities_remotemember_change', args=(obj.remote_user_id,))
-            name = format_html('<a href="{}">{}</a>', url, obj.remote_user)
-            try:
-                platform = obj.remote_user.origin.source.name
-            except AttributeError:
-                platform = None
-            if platform:
-                return format_html(
-                    '{}<br><span style="color:#999;font-size:14px;">{}</span>',
-                    name,
-                    platform,
-                )
-            return name
-        if obj.team.activity.has_deleted_data:
-            return format_html('<i>{}</i>', _('Anonymous'))
-        return '-'
-
-    participant.short_description = _('User')
-
-    def edit(self, obj):
-        if not obj.pk:
-            return '-'
-        if not obj.user_id and obj.team.activity.has_deleted_data:
-            return format_html('<i>{}</i>', _('Anonymous'))
-        url = reverse('admin:time_based_teammember_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, _('Edit'))
-
-    edit.short_description = _('Edit')
+    def get_activity(self, obj):
+        if not obj or not getattr(obj, 'team_id', None):
+            return None
+        try:
+            return obj.team.activity
+        except (ObjectDoesNotExist, AttributeError):
+            return None
 
 
 class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
@@ -564,16 +530,10 @@ class TeamAdminInline(BaseParticipantUserInline):
     model = Team
     readonly_fields = ('edit', 'participant', 'created', 'status_label', 'team_members_count')
     fields = ('edit', 'participant', 'user', 'status_label', 'team_members_count')
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'user',
-            'remote_user',
-            'remote_user__origin',
-            'remote_user__origin__source',
-            'activity',
-            'registration',
-        )
+    remote_user_select_related = BaseParticipantUserInline.remote_user_select_related + (
+        'activity',
+        'registration',
+    )
 
     def status_label(self, obj):
         if not obj.pk:

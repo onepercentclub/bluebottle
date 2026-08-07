@@ -229,20 +229,20 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
     contributor_link.short_description = _('Edit')
 
 
-class BaseParticipantUserInline(TabularInlinePaginated):
-    raw_id_fields = ['user']
-    template = 'admin/participant_list.html'
-    extra = 0
-    per_page = 10
-    can_delete = True
-    ordering = ['-created']
+class RemoteUserInlineMixin:
+    remote_user_select_related = (
+        'user',
+        'remote_user',
+        'remote_user__origin',
+        'remote_user__origin__source',
+    )
+
+    def get_activity(self, obj):
+        return getattr(obj, 'activity', None)
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            'user',
-            'remote_user',
-            'remote_user__origin',
-            'remote_user__origin__source',
+            *self.remote_user_select_related
         )
 
     def participant(self, obj):
@@ -265,7 +265,8 @@ class BaseParticipantUserInline(TabularInlinePaginated):
                     platform,
                 )
             return name
-        if obj.activity.has_deleted_data:
+        activity = self.get_activity(obj)
+        if activity and activity.has_deleted_data:
             return format_html('<i>{}</i>', _('Anonymous'))
         return '-'
 
@@ -274,7 +275,8 @@ class BaseParticipantUserInline(TabularInlinePaginated):
     def edit(self, obj):
         if not obj.pk:
             return '-'
-        if not obj.user_id and obj.activity.has_deleted_data:
+        activity = self.get_activity(obj)
+        if not obj.user_id and activity and activity.has_deleted_data:
             return format_html('<i>{}</i>', _('Anonymous'))
         url = reverse(
             'admin:{}_{}_change'.format(
@@ -286,6 +288,15 @@ class BaseParticipantUserInline(TabularInlinePaginated):
         return format_html('<a href="{}">{}</a>', url, _('Edit'))
 
     edit.short_description = _('Edit')
+
+
+class BaseParticipantUserInline(RemoteUserInlineMixin, TabularInlinePaginated):
+    raw_id_fields = ['user']
+    template = 'admin/participant_list.html'
+    extra = 0
+    per_page = 10
+    can_delete = True
+    ordering = ['-created']
 
     def status_label(self, obj):
         if not obj.pk:
@@ -337,6 +348,12 @@ class RemoteUserAdminMixin:
     def with_remote_user_field(self, fields, obj):
         fields = list(fields)
         has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if has_remote or self.activity_is_shared(obj):
+            if 'remote_user' not in fields:
+                if 'user' in fields:
+                    fields.insert(fields.index('user') + 1, 'remote_user')
+                else:
+                    fields.append('remote_user')
         if has_remote:
             if 'user' in fields:
                 fields.remove('user')

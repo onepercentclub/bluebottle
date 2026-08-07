@@ -685,8 +685,8 @@ class LinkTestCase(ActivityPubTestCase):
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'cancelled')
-            self.assertFalse(Accept.objects.filter(object=link.event).exists())
-            self.assertTrue(Reject.objects.filter(object=link.event).exists())
+            self.assertFalse(Accept.objects.filter(object=link.origin).exists())
+            self.assertTrue(Reject.objects.filter(object=link.origin).exists())
 
         self.assertFalse(
             Accept.objects.filter(object=self.model.activity_pub_model).exists()

@@ -111,7 +111,10 @@ class PublishAdoptionEffect(Effect):
 
     def get_event(self):
         if isinstance(self.instance, LinkedActivity):
-            return self.instance.event
+            try:
+                return self.instance.origin
+            except (AttributeError, ObjectDoesNotExist):
+                return self.instance.event
         try:
             return self.instance.origin
         except (AttributeError, ObjectDoesNotExist):
@@ -139,7 +142,10 @@ class UnpublishAdoptionEffect(Effect):
 
     def get_event(self):
         if isinstance(self.instance, LinkedActivity):
-            return self.instance.event
+            try:
+                return self.instance.origin
+            except (AttributeError, ObjectDoesNotExist):
+                return self.instance.event
         try:
             return self.instance.origin
         except (AttributeError, ObjectDoesNotExist):

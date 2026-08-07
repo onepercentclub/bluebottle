@@ -21,6 +21,7 @@ from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event, Place,
     Recipient, RepetitionModeChoices
 )
+from bluebottle.activity_pub.serializers import FederatedObjectSerializer
 from bluebottle.activity_pub.tasks import publish_to_recipient
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -40,7 +41,7 @@ from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactor
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
-from bluebottle.time_based.models import PeriodicParticipant, RegisteredDateActivity
+from bluebottle.time_based.models import PeriodicParticipant, RegisteredDateActivity, DateParticipant
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -1642,6 +1643,11 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
     def test_join(self):
         super().test_join()
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
+        self.assertIsInstance(self.synced_participant, DateParticipant)
+        self.assertEqual(
+            self.synced_participant.slot,
+            self.model.slots.order_by('start', 'id').first(),
+        )
 
         supplier_slot = self.synced_participant.slot
         self.assertEqual(supplier_slot.contributor_count, 1)
@@ -1656,6 +1662,44 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
             consumer_slot.origin.refresh_from_db()
             self.assertEqual(consumer_slot.origin.contributor_count, 1)
 
+    def test_join_targets_slot(self):
+        self.test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            self.join()
+            join_data = FederatedObjectSerializer(self.participant).data
+            consumer_slot = self.adopted.slots.order_by('start', 'id').first()
+            self.assertEqual(join_data['object'], consumer_slot.origin.pub_url)
+
+    def test_join_additional_slot(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            second_slot = self.adopted.slots.order_by('start', 'id')[1]
+            DateParticipantFactory.create(
+                activity=self.adopted,
+                slot=second_slot,
+                registration=self.participant.registration,
+                user=self.participant.user,
+            )
+
+        participants = DateParticipant.objects.filter(
+            activity=self.model,
+            remote_user=self.synced_participant.remote_user,
+        ).order_by('slot__start', 'slot__id')
+        self.assertEqual(participants.count(), 2)
+        self.assertEqual(
+            list(participants.values_list('slot_id', flat=True)),
+            list(self.model.slots.order_by('start', 'id').values_list('id', flat=True)[:2]),
+        )
+        self.assertEqual(
+            participants.first().registration_id,
+            participants.last().registration_id,
+        )
+
+        second_supplier_slot = self.model.slots.order_by('start', 'id')[1]
+        self.assertEqual(second_supplier_slot.contributor_count, 1)
+
     def test_join_with_review(self):
         self.test_adopt()
         self.model.review = True
@@ -1667,6 +1711,10 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_participant = self.participant_factory._meta.model.objects.get()
         self.assertEqual(self.synced_participant.status, 'new')
         self.assertEqual(self.synced_participant.registration.status, 'new')
+        self.assertEqual(
+            self.synced_participant.slot,
+            self.model.slots.order_by('start', 'id').first(),
+        )
 
     def test_join_with_slot_location(self):
         location = GeolocationFactory.create(country=self.country)

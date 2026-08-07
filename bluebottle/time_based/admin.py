@@ -846,7 +846,7 @@ class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
-        if obj.origin:
+        if obj is not None and getattr(obj, 'origin', None):
             readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
 
         return readonly_fields

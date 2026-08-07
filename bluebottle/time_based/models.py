@@ -2105,6 +2105,10 @@ class Slot(models.Model):
             raise AttributeError('origin')
         return origin
 
+    @property
+    def is_adopted(self):
+        return hasattr(self, 'origin') and self.origin
+
     activity_pub_models = GenericRelation(
         'activity_pub.SubEvent',
         object_id_field="origin_id",

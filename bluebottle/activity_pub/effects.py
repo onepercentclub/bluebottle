@@ -136,14 +136,12 @@ class UnpublishAdoptionEffect(Effect):
     def post_save(self, **kwargs):
         event = self.instance.origin
         actor = get_platform_actor()
-
         Reject.objects.create(actor=actor, object=event)
 
     @property
     def is_valid(self):
         return (
-            getattr(self.instance, 'origin', False) or
-            isinstance(self.instance, LinkedActivity)
+            getattr(self.instance, 'origin', False)
         ) and get_platform_actor() is not None
 
     def __str__(self):

@@ -851,25 +851,11 @@ class Following(Follow):
             return "-"
 
 
-def _end_remote_contributor(contributor, forced=False):
-    """End a remote contributor on the supplier after Leave or un-adopt Reject."""
-    states = contributor.states
+def _end_remote_contributor(contributor):
+    """Withdraw a remote contributor on the supplier after Leave."""
     try:
-        if forced:
-            if hasattr(states, 'fail'):
-                try:
-                    states.fail(save=True)
-                    return True
-                except TransitionNotPossible:
-                    pass
-            if hasattr(states, 'cancel'):
-                try:
-                    states.cancel(save=True)
-                    return True
-                except TransitionNotPossible:
-                    pass
-        if hasattr(states, 'withdraw'):
-            states.withdraw(save=True)
+        if hasattr(contributor.states, 'withdraw'):
+            contributor.states.withdraw(save=True)
             return True
     except TransitionNotPossible:
         pass
@@ -1124,10 +1110,6 @@ class Transition(Activity):
 
 class Leave(Transition):
     """Sent when a user leaves a synced activity or team."""
-    forced = models.BooleanField(
-        default=False,
-        help_text=_('When true, fail/cancel the remote contributor instead of withdrawing.'),
-    )
 
     @property
     def default_recipients(self):
@@ -1154,7 +1136,7 @@ class Leave(Transition):
                 remote_user=self.actor.adopted
             ).first()
             if member:
-                return _end_remote_contributor(member, forced=self.forced)
+                return _end_remote_contributor(member)
             return False
 
         if not self.object.is_local:
@@ -1169,19 +1151,13 @@ class Leave(Transition):
             ).first()
             if not contributor:
                 return False
-            return _end_remote_contributor(contributor, forced=self.forced)
+            return _end_remote_contributor(contributor)
 
         if isinstance(self.object, DoGoodEvent) and self.object.activity_type == 'PeriodicActivity':
             registration = self.object.origin.registrations.get(
                 remote_user=self.actor.adopted
             )
-            if self.forced:
-                try:
-                    registration.states.stop(save=True)
-                except TransitionNotPossible:
-                    pass
-            else:
-                registration.states.stop(save=True)
+            registration.states.stop(save=True)
         elif (
             isinstance(self.object, DoGoodEvent)
             and self.object.is_team_activity
@@ -1190,12 +1166,12 @@ class Leave(Transition):
                 remote_user=self.actor.adopted
             )
             for team in registration.teams.all():
-                _end_remote_contributor(team, forced=self.forced)
+                _end_remote_contributor(team)
         else:
             contributor = self.object.origin.contributors.get(
                 remote_user=self.actor.adopted
             )
-            return _end_remote_contributor(contributor, forced=self.forced)
+            return _end_remote_contributor(contributor)
 
         return True
 

@@ -574,11 +574,9 @@ class LeaveSerializer(BaseActivitySerializer):
             'CollectCampaign', 'DoGoodEvent', 'SubEvent', 'Team'
         )
     )
-    forced = serializers.BooleanField(required=False, default=False)
 
     class Meta(BaseActivitySerializer.Meta):
         model = Leave
-        fields = BaseActivitySerializer.Meta.fields + ('forced',)
 
 
 from bluebottle.activity_pub.serializers.federated_activities import *  # noqa

@@ -81,7 +81,7 @@ class RegistrationSerializer(ModelSerializer):
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         included_resources = BaseContributorSerializer.JSONAPIMeta.included_resources + [
             'document',
-            'participants'
+            'participants',
         ]
 
     included_serializers = {
@@ -132,6 +132,9 @@ class DateRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-registrations'
+        included_resources = BaseContributorSerializer.JSONAPIMeta.included_resources + [
+            'document',
+        ]
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers.serializers,

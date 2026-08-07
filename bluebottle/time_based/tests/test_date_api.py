@@ -177,6 +177,45 @@ class DateRegistrationRelatedListAPITestCase(TimeBasedRegistrationRelatedAPIList
 
     activity_defaults = {}
 
+    def test_get_remote_user(self):
+        from bluebottle.activity_pub.adapters import adapter
+        from bluebottle.activity_pub.tests.factories import PersonFactory
+
+        self.activity.contributors.all().delete()
+        self.activity.registrations.all().delete()
+
+        actor = PersonFactory.create()
+        remote_user = adapter.adopt(actor)
+        adapter.adopt(actor.source)
+        registration = DateRegistrationFactory.create(
+            activity=self.activity,
+            status='accepted',
+            user=None,
+            remote_user=remote_user,
+        )
+
+        self.perform_get(
+            user=self.activity.owner,
+            query={'filter[status]': 'accepted'},
+        )
+        self.assertStatus(status.HTTP_200_OK)
+
+        payload = next(
+            item for item in self.response.json()['data']
+            if item['id'] == str(registration.pk)
+        )
+        self.assertEqual(
+            payload['relationships']['remote-user']['data']['id'],
+            str(remote_user.pk),
+        )
+        self.assertIncluded('remote-user', remote_user)
+        self.assertIncluded('remote-user.source')
+
+        for member in self.get_included('remote-user'):
+            self.assertIsNotNone(member['relationships']['source']['data'])
+            organization = self.get_included('source', [member])[0]
+            self.assertTrue(organization['attributes']['name'])
+
 
 class DateRegistrationDetailAPITestCase(TimeBasedRegistrationDetailAPITestCase, APITestCase):
     url_name = 'date-registration-detail'

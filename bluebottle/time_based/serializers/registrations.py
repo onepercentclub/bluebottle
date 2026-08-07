@@ -79,12 +79,8 @@ class RegistrationSerializer(ModelSerializer):
         ]
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        included_resources = [
-            'user',
-            "remote_user",
-            "remote_user.source",
+        included_resources = BaseContributorSerializer.JSONAPIMeta.included_resources + [
             'document',
-            'activity',
             'participants'
         ]
 
@@ -136,7 +132,6 @@ class DateRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-registrations'
-        included_resources = ['user', 'remote_user', 'document', 'activity']
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers.serializers,
@@ -200,13 +195,7 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/team-schedule-registrations'
-        included_resources = [
-            'user',
-            'remote_user',
-            'remote_user.source',
-            'document',
-            'activity',
-            'participants',
+        included_resources = RegistrationSerializer.JSONAPIMeta.included_resources + [
             'teams',
             'teams.remote_user',
             'teams.remote_user.source',

@@ -1156,7 +1156,6 @@ class RemoteMemberSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'remote-members'
-
         included_resources = ['source', ]
 
     included_serializers = {

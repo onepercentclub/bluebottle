@@ -321,7 +321,6 @@ class ContributorChildAdmin(
     show_in_index = True
 
     date_hierarchy = 'contributor_date'
-
     raw_id_fields = ('user',)
 
     readonly_fields = [
@@ -329,11 +328,13 @@ class ContributorChildAdmin(
         "contributor_date",
         "created",
         "updated",
+        "remote_user"
     ]
 
     fields = [
         "activity",
         "user",
+        "remote_user",
         "states",
         "status",
         "contributor_date",

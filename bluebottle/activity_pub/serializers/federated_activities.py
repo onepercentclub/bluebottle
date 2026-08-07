@@ -802,15 +802,12 @@ class RelatedActivityField(RelatedField):
         # TODO: filter queryset on correct types
         return ActivityPubModel.objects.all()
 
-    def get_origin_value(self, instance):
+    def get_attribute(self, instance):
         if getattr(instance, 'slot', None):
             return instance.slot
-        return getattr(instance, self.source)
+        return super().get_attribute(instance)
 
     def to_representation(self, value):
-        if hasattr(self.parent.instance, 'slot') and self.parent.instance.slot:
-            value = self.parent.instance.slot
-
         if hasattr(value, 'activity_pub_model'):
             return value.activity_pub_model.pub_url
         elif hasattr(value, 'origin'):
@@ -1035,18 +1032,32 @@ class DateRegistrationSerializer(BaseContributorSerializer):
 class DateParticipantSerializer(BaseContributorSerializer):
     model = DateParticipant
 
+    def get_contributor(self, validated_data):
+        return self.model.objects.filter(
+            activity=validated_data['activity'],
+            slot=validated_data['slot'],
+            remote_user=validated_data['remote_user'],
+        ).first()
+
     def create(self, validated_data):
         slot = validated_data.pop('activity')
+        remote_user = validated_data['remote_user']
+        answer = validated_data.pop('answer', None)
 
-        validated_data['registration'] = DateRegistration.objects.get(
+        registration = DateRegistration.objects.filter(
             activity=slot.activity,
-            remote_user=validated_data['remote_user']
-        )
+            remote_user=remote_user,
+        ).first()
+        if registration is None:
+            registration = DateRegistration.objects.create(
+                activity=slot.activity,
+                remote_user=remote_user,
+                answer=answer,
+            )
 
+        validated_data['registration'] = registration
         validated_data['slot'] = slot
         validated_data['activity'] = slot.activity
-
-        validated_data.pop('answer')
 
         return super().create(validated_data)
 

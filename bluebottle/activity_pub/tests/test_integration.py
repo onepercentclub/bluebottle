@@ -19,7 +19,7 @@ from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event, Place,
-    Recipient, RepetitionModeChoices, Reject, Leave
+    Recipient, RepetitionModeChoices, Reject
 )
 from bluebottle.activity_pub.tasks import publish_to_recipient
 from bluebottle.clients.models import Client
@@ -532,17 +532,10 @@ class SyncTestCase(ActivityPubTestCase):
             self.assertTrue(
                 Reject.objects.filter(object=self.adopted.origin).exists()
             )
-            self.assertTrue(
-                Leave.objects.filter(
-                    object=self.adopted.origin, forced=True
-                ).exists()
-            )
 
         self.assertFalse(
             Accept.objects.filter(object=self.model.activity_pub_model).exists()
         )
-        self.synced_participant.refresh_from_db()
-        self.assertIn(self.synced_participant.status, ('failed', 'cancelled'))
 
     def test_restore_and_reapprove(self):
         self.test_cancel_adoption()

@@ -944,24 +944,6 @@ class Reject(Activity):
     def _unadopt(self):
         Accept.objects.filter(actor=self.actor, object=self.object).delete()
 
-        if isinstance(self.object, SubEvent):
-            slot = self.object.origin
-            if not slot:
-                return
-            contributors = slot.participants.filter(
-                remote_user__origin__source=self.actor
-            )
-        else:
-            activity = self.object.origin
-            if not activity:
-                return
-            contributors = activity.contributors.filter(
-                remote_user__origin__source=self.actor
-            )
-
-        for contributor in contributors:
-            _end_remote_contributor(contributor, forced=True)
-
 
 class Create(Activity):
     object = models.ForeignKey('activity_pub.ActivityPubModel', on_delete=models.CASCADE)

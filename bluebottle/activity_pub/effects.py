@@ -139,42 +139,6 @@ class UnpublishAdoptionEffect(Effect):
 
         Reject.objects.create(actor=actor, object=event)
 
-        for contributor in self._local_contributors():
-            if not contributor.user or not hasattr(contributor.user, 'activity_pub_model'):
-                continue
-            if contributor.user.activity_pub_model is None:
-                continue
-            target = self._leave_target(contributor)
-            if target is None:
-                continue
-            Leave.objects.create(
-                actor=contributor.user.activity_pub_model,
-                object=target,
-                forced=True,
-            )
-
-    def _local_contributors(self):
-        exclude_statuses = ('withdrawn', 'removed', 'rejected')
-        if hasattr(self.instance, 'participants'):
-            return self.instance.participants.filter(
-                remote_user__isnull=True,
-            ).exclude(status__in=exclude_statuses)
-        if hasattr(self.instance, 'contributors'):
-            from bluebottle.activities.models import Organizer
-            return self.instance.contributors.filter(
-                remote_user__isnull=True,
-            ).exclude(
-                status__in=exclude_statuses
-            ).exclude(
-                id__in=Organizer.objects.filter(activity=self.instance).values('id')
-            )
-        return []
-
-    def _leave_target(self, contributor):
-        if hasattr(contributor, 'slot') and contributor.slot and getattr(contributor.slot, 'origin', None):
-            return contributor.slot.origin
-        return getattr(self.instance, 'origin', None)
-
     @property
     def is_valid(self):
         return (

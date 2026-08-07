@@ -343,6 +343,57 @@ class ContributorChildAdmin(
 
     superadmin_fields = ['force_status']
 
+    def activity_is_shared(self, obj):
+        if not obj or not getattr(obj, 'activity_id', None):
+            return False
+        try:
+            return bool(obj.activity.activity_pub_model)
+        except (ObjectDoesNotExist, AttributeError):
+            return False
+
+    def platform(self, obj):
+        remote_user = getattr(obj, 'remote_user', None)
+        if not remote_user:
+            return '-'
+        platform = remote_user.platform
+        if not platform:
+            return '-'
+        url = reverse('admin:activity_pub_organization_change', args=(platform.pk,))
+        return format_html('<a href="{}">{}</a>', url, platform.name)
+
+    platform.short_description = _('Platform')
+
+    def with_remote_user_field(self, fields, obj):
+        fields = list(fields)
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if has_remote or self.activity_is_shared(obj):
+            if 'remote_user' not in fields:
+                if 'user' in fields:
+                    fields.insert(fields.index('user') + 1, 'remote_user')
+                else:
+                    fields.append('remote_user')
+        if has_remote:
+            if 'user' in fields:
+                fields.remove('user')
+            if 'platform' not in fields:
+                if 'remote_user' in fields:
+                    fields.insert(fields.index('remote_user') + 1, 'platform')
+                else:
+                    fields.append('platform')
+        return fields
+
+    def get_fields(self, request, obj=None):
+        return self.with_remote_user_field(super().get_fields(request, obj), obj)
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if (has_remote or self.activity_is_shared(obj)) and 'remote_user' not in fields:
+            fields.append('remote_user')
+        if has_remote and 'platform' not in fields:
+            fields.append('platform')
+        return fields
+
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
         fieldsets = (
@@ -908,13 +959,12 @@ class ActivityChildAdmin(
                 'description_preview' if field == 'description' else field
                 for field in detail_fields
             )
-        if Location.objects.exists() and not settings.enable_office_restrictions:
-            detail_fields += ('office_location',)
-        if obj:
             detail_fields = tuple(
                 'display_image' if field == 'image' else field
                 for field in detail_fields
             )
+        if Location.objects.exists() and not settings.enable_office_restrictions:
+            detail_fields += ('office_location',)
         return detail_fields
 
     list_display = [

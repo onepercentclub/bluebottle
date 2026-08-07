@@ -445,7 +445,6 @@ class Contributor(TriggerMixin, PolymorphicModel):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="contributors",
-        help_text=_("When set, this contributor is a synced participant without a local user."),
     )
 
     @property

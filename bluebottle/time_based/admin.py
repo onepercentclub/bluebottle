@@ -4,6 +4,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, StackedInline, widgets
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
@@ -331,6 +332,54 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     superadmin_fields = ['force_status']
 
+    def activity_is_shared(self, obj):
+        if not obj or not getattr(obj, 'team_id', None):
+            return False
+        try:
+            return bool(obj.team.activity.activity_pub_model)
+        except (ObjectDoesNotExist, AttributeError):
+            return False
+
+    def platform(self, obj):
+        remote_user = getattr(obj, 'remote_user', None)
+        if not remote_user:
+            return '-'
+        platform = remote_user.platform
+        if not platform:
+            return '-'
+        url = reverse('admin:activity_pub_organization_change', args=(platform.pk,))
+        return format_html('<a href="{}">{}</a>', url, platform.name)
+
+    platform.short_description = _('Platform')
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if has_remote or self.activity_is_shared(obj):
+            if 'remote_user' not in fields:
+                if 'user' in fields:
+                    fields.insert(fields.index('user') + 1, 'remote_user')
+                else:
+                    fields.append('remote_user')
+        if has_remote:
+            if 'user' in fields:
+                fields.remove('user')
+            if 'platform' not in fields:
+                if 'remote_user' in fields:
+                    fields.insert(fields.index('remote_user') + 1, 'platform')
+                else:
+                    fields.append('platform')
+        return fields
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if (has_remote or self.activity_is_shared(obj)) and 'remote_user' not in fields:
+            fields.append('remote_user')
+        if has_remote and 'platform' not in fields:
+            fields.append('platform')
+        return fields
+
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
         fieldsets = (
@@ -343,31 +392,55 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         return fieldsets
 
 
-class TeamMemberAdminInline(TabularInlinePaginated):
+class TeamMemberAdminInline(BaseParticipantUserInline):
     model = TeamMember
-    fields = ('link', 'status_label', 'user',)
-    raw_id_fields = ('user',)
+    fields = ('edit', 'participant', 'user', 'status_label',)
+    readonly_fields = ('edit', 'participant', 'status_label')
 
-    def has_change_permission(self, request, obj):
-        return False
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'user',
+            'remote_user',
+            'remote_user__origin',
+            'remote_user__origin__source',
+            'team__activity',
+        )
 
-    def has_delete_permission(self, request, obj):
-        return True
+    def participant(self, obj):
+        if not obj.pk:
+            return '-'
+        if obj.user_id:
+            url = reverse('admin:members_member_change', args=(obj.user_id,))
+            return format_html('<a href="{}">{}</a>', url, obj.user.full_name)
+        if obj.remote_user_id:
+            url = reverse('admin:activities_remotemember_change', args=(obj.remote_user_id,))
+            name = format_html('<a href="{}">{}</a>', url, obj.remote_user)
+            try:
+                platform = obj.remote_user.origin.source.name
+            except AttributeError:
+                platform = None
+            if platform:
+                return format_html(
+                    '{}<br><span style="color:#999;font-size:14px;">{}</span>',
+                    name,
+                    platform,
+                )
+            return name
+        if obj.team.activity.has_deleted_data:
+            return format_html('<i>{}</i>', _('Anonymous'))
+        return '-'
 
-    can_delete = True
+    participant.short_description = _('User')
 
-    readonly_fields = ('link', 'status_label')
-
-    def status_label(self, obj):
-        return obj.states.current_state.name
-
-    status_label.short_description = _('Status')
-
-    def link(self, obj):
+    def edit(self, obj):
+        if not obj.pk:
+            return '-'
+        if not obj.user_id and obj.team.activity.has_deleted_data:
+            return format_html('<i>{}</i>', _('Anonymous'))
         url = reverse('admin:time_based_teammember_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj)
+        return format_html('<a href="{}">{}</a>', url, _('Edit'))
 
-    link.short_description = _('Edit')
+    edit.short_description = _('Edit')
 
 
 class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
@@ -490,6 +563,54 @@ class TeamAdmin(
 
     superadmin_fields = ['force_status']
 
+    def activity_is_shared(self, obj):
+        if not obj or not getattr(obj, 'activity_id', None):
+            return False
+        try:
+            return bool(obj.activity.activity_pub_model)
+        except (ObjectDoesNotExist, AttributeError):
+            return False
+
+    def platform(self, obj):
+        remote_user = getattr(obj, 'remote_user', None)
+        if not remote_user:
+            return '-'
+        platform = remote_user.platform
+        if not platform:
+            return '-'
+        url = reverse('admin:activity_pub_organization_change', args=(platform.pk,))
+        return format_html('<a href="{}">{}</a>', url, platform.name)
+
+    platform.short_description = _('Platform')
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if has_remote or self.activity_is_shared(obj):
+            if 'remote_user' not in fields:
+                if 'user' in fields:
+                    fields.insert(fields.index('user') + 1, 'remote_user')
+                else:
+                    fields.append('remote_user')
+        if has_remote:
+            if 'user' in fields:
+                fields.remove('user')
+            if 'platform' not in fields:
+                if 'remote_user' in fields:
+                    fields.insert(fields.index('remote_user') + 1, 'platform')
+                else:
+                    fields.append('platform')
+        return fields
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if (has_remote or self.activity_is_shared(obj)) and 'remote_user' not in fields:
+            fields.append('remote_user')
+        if has_remote and 'platform' not in fields:
+            fields.append('platform')
+        return fields
+
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
         fieldsets = (
@@ -525,32 +646,33 @@ class TeamAdmin(
     registration_info.short_description = _('Registration')
 
 
-class TeamAdminInline(TabularInlinePaginated):
+class TeamAdminInline(BaseParticipantUserInline):
     model = Team
-    readonly_fields = ('link', 'created', 'status_label', 'team_members_count')
-    raw_id_fields = ('user', 'registration')
-    fields = ('link', 'user', 'status_label', 'team_members_count')
+    readonly_fields = ('edit', 'participant', 'created', 'status_label', 'team_members_count')
+    fields = ('edit', 'participant', 'user', 'status_label', 'team_members_count')
 
-    def link(self, obj):
-        url = reverse('admin:time_based_team_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj)
-
-    def has_change_permission(self, request, obj=None):
-        return False
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'user',
+            'remote_user',
+            'remote_user__origin',
+            'remote_user__origin__source',
+            'activity',
+            'registration',
+        )
 
     def status_label(self, obj):
-        if obj.registration.status != 'accepted':
+        if not obj.pk:
+            return '-'
+        if obj.registration_id and obj.registration.status != 'accepted':
             return obj.registration.states.current_state.name
         return obj.states.current_state.name
 
     status_label.short_description = _('Status')
 
-    can_delete = True
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
     def team_members_count(self, obj):
+        if not obj.pk:
+            return '-'
         return obj.team_members.filter(status='active').count()
     team_members_count.short_description = _('Members')
 
@@ -1066,26 +1188,22 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
     duration_string.short_description = _('Duration')
 
 
-class DateParticipantInline(admin.TabularInline):
+class DateParticipantInline(BaseParticipantUserInline):
     model = DateParticipant
-    readonly_fields = ['participant_link', 'smart_status', 'registration_status']
-    fields = ['participant_link', 'user', 'smart_status', 'registration_status']
-
-    raw_id_fields = ['user']
-    extra = 0
+    readonly_fields = ['edit', 'participant', 'smart_status', 'registration_status']
+    fields = ['edit', 'participant', 'user', 'smart_status', 'registration_status']
 
     verbose_name = _('Participant')
     verbose_name_plural = _('Participants')
 
-    def participant_link(self, obj):
-        url = reverse('admin:time_based_dateparticipant_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, _('Edit'))
-    participant_link.short_description = _('Edit')
-
     def smart_status(self, obj):
+        if not obj.pk:
+            return '-'
         return obj.states.current_state.name
 
     def registration_status(self, obj):
+        if not obj.pk or not obj.registration_id:
+            return '-'
         return obj.registration.states.current_state.name
 
     registration_status.short_description = _('Registered')
@@ -1629,8 +1747,10 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
 
     def get_fields(self, request, obj=None):
         if obj and obj.registration and obj.registration.status == 'new':
-            return self.pending_fields
-        return self.fields
+            fields = self.pending_fields
+        else:
+            fields = self.fields
+        return self.with_remote_user_field(fields, obj)
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
         'registration_info'
@@ -1697,8 +1817,10 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
 
     def get_fields(self, request, obj=None):
         if obj and obj.registration and obj.registration.status == 'new':
-            return self.pending_fields
-        return self.fields
+            fields = self.pending_fields
+        else:
+            fields = self.fields
+        return self.with_remote_user_field(fields, obj)
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
         "registration_info",
@@ -1792,8 +1914,10 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
 
     def get_fields(self, request, obj=None):
         if obj and obj.registration and obj.registration.status == "new":
-            return self.pending_fields
-        return self.fields
+            fields = self.pending_fields
+        else:
+            fields = self.fields
+        return self.with_remote_user_field(fields, obj)
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
         "activity", "created", "updated",
@@ -1887,12 +2011,62 @@ class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildMode
         }
     }
 
+    def activity_is_shared(self, obj):
+        if not obj or not getattr(obj, 'activity_id', None):
+            return False
+        try:
+            return bool(obj.activity.activity_pub_model)
+        except (ObjectDoesNotExist, AttributeError):
+            return False
+
+    def platform(self, obj):
+        remote_user = getattr(obj, 'remote_user', None)
+        if not remote_user:
+            return '-'
+        platform = remote_user.platform
+        if not platform:
+            return '-'
+        url = reverse('admin:activity_pub_organization_change', args=(platform.pk,))
+        return format_html('<a href="{}">{}</a>', url, platform.name)
+
+    platform.short_description = _('Platform')
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if has_remote or self.activity_is_shared(obj):
+            if 'remote_user' not in fields:
+                if 'user' in fields:
+                    fields.insert(fields.index('user') + 1, 'remote_user')
+                else:
+                    fields.append('remote_user')
+        if has_remote:
+            if 'user' in fields:
+                fields.remove('user')
+            if 'platform' not in fields:
+                if 'remote_user' in fields:
+                    fields.insert(fields.index('remote_user') + 1, 'platform')
+                else:
+                    fields.append('platform')
+        return fields
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if (has_remote or self.activity_is_shared(obj)) and 'remote_user' not in fields:
+            fields.append('remote_user')
+        if has_remote and 'platform' not in fields:
+            fields.append('platform')
+        return fields
+
     def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets = (
+            (_('Details'), {'fields': self.get_fields(request, obj)}),
+        )
         if request.user.is_superuser:
-            fieldsets += [
+            fieldsets += (
                 (_("Super admin"), {"fields": ("force_status",)}),
-            ]
+            )
         return fieldsets
 
     def status_label(self, obj):

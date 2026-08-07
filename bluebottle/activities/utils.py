@@ -712,6 +712,7 @@ class BaseContributorSerializer(ModelSerializer):
         included_resources = [
             'user',
             'remote_user',
+            'remote_user.source',
             'user.avatar',
             'activity',
         ]

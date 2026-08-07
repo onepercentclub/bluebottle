@@ -75,8 +75,14 @@ class OldRelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin
 
 
 class DateActivityRelatedRegistrationList(RelatedRegistrationListView):
-    queryset = DateRegistration.objects.prefetch_related(
-        'user', 'participants', 'participants__slot'
+    queryset = DateRegistration.objects.select_related(
+        'user',
+        'remote_user',
+        'remote_user__origin',
+        'remote_user__origin__source',
+        'remote_user__origin__source__adopted',
+    ).prefetch_related(
+        'participants', 'participants__slot'
     )
     serializer_class = DateRegistrationSerializer
 

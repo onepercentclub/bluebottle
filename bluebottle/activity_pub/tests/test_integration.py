@@ -19,7 +19,7 @@ from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event, Place,
-    Recipient, RepetitionModeChoices
+    Recipient, RepetitionModeChoices, Reject
 )
 from bluebottle.activity_pub.serializers import FederatedObjectSerializer
 from bluebottle.activity_pub.tasks import publish_to_recipient
@@ -524,6 +524,42 @@ class SyncTestCase(ActivityPubTestCase):
             self.synced_participant.status, self.expected_participant_status
         )
 
+    def test_cancel_adoption(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.states.cancel(save=True)
+            self.assertStatus(self.adopted, 'cancelled')
+            self.assertTrue(
+                Reject.objects.filter(object=self.adopted.origin).exists()
+            )
+            self.assertFalse(
+                Accept.objects.filter(object=self.adopted.origin).exists()
+            )
+
+        self.assertFalse(
+            Accept.objects.filter(object=self.model.activity_pub_model).exists()
+        )
+
+    def test_restore_and_reapprove(self):
+        self.test_cancel_adoption()
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.states.restore(save=True)
+            self.assertStatus(self.adopted, 'needs_work')
+            self.adopted.states.submit(save=True)
+            self.approve(self.adopted)
+            self.assertStatus(self.adopted, 'open')
+            self.assertEqual(
+                Accept.objects.filter(object=self.adopted.origin).count(),
+                1,
+            )
+
+        self.assertEqual(
+            Accept.objects.filter(object=self.model.activity_pub_model).count(),
+            1,
+        )
+
     def test_update(self):
         self.test_adopt()
 
@@ -650,6 +686,12 @@ class LinkTestCase(ActivityPubTestCase):
         with LocalTenant(self.other_tenant):
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'cancelled')
+            self.assertFalse(Accept.objects.filter(object=link.origin).exists())
+            self.assertTrue(Reject.objects.filter(object=link.origin).exists())
+
+        self.assertFalse(
+            Accept.objects.filter(object=self.model.activity_pub_model).exists()
+        )
 
     def test_finish(self):
         self.test_link()

@@ -109,21 +109,60 @@ class PublishAdoptionEffect(Effect):
     display = True
     template = 'admin/activity_pub/publish_adoption_effect.html'
 
-    def post_save(self, **kwargs):
-        event = self.instance.origin
-        actor = get_platform_actor()
+    def get_event(self):
+        if isinstance(self.instance, LinkedActivity):
+            try:
+                return self.instance.origin
+            except (AttributeError, ObjectDoesNotExist):
+                return self.instance.event
+        try:
+            return self.instance.origin
+        except (AttributeError, ObjectDoesNotExist):
+            return None
 
+    def post_save(self, **kwargs):
+        event = self.get_event()
+        actor = get_platform_actor()
         Accept.objects.create(actor=actor, object=event)
 
     @property
     def is_valid(self):
-        return (
-            getattr(self.instance, 'origin', False) or
-            isinstance(self.instance, LinkedActivity)
-        ) and get_platform_actor() is not None
+        return bool(self.get_event()) and get_platform_actor() is not None
 
     def __str__(self):
         return str(_('Publish that the activity has been adopted'))
+
+
+class UnpublishAdoptionEffect(Effect):
+    """
+    Announce that an adopted activity or slot is no longer adopted.
+    """
+    display = True
+    template = 'admin/activity_pub/unpublish_adoption_effect.html'
+
+    def get_event(self):
+        if isinstance(self.instance, LinkedActivity):
+            try:
+                return self.instance.origin
+            except (AttributeError, ObjectDoesNotExist):
+                return self.instance.event
+        try:
+            return self.instance.origin
+        except (AttributeError, ObjectDoesNotExist):
+            return None
+
+    def post_save(self, **kwargs):
+        event = self.get_event()
+        actor = get_platform_actor()
+        Accept.objects.filter(actor=actor, object=event).delete()
+        Reject.objects.create(actor=actor, object=event)
+
+    @property
+    def is_valid(self):
+        return bool(self.get_event()) and get_platform_actor() is not None
+
+    def __str__(self):
+        return str(_('Notify source platform that adoption ended'))
 
 
 class UpdateEventEffect(Effect):

@@ -390,7 +390,7 @@ class AcceptSerializer(BaseActivitySerializer):
     object = RelatedResourceField(
         type=(
             'Follow', 'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent', 'Join'
+            'CollectCampaign', 'DoGoodEvent', 'Join', 'subEvent'
         )
     )
 
@@ -402,7 +402,10 @@ class RejectSerializer(BaseActivitySerializer):
     type = TypeField('Reject')
 
     object = RelatedResourceField(
-        type=('Join', )
+        type=(
+            'Join', 'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
+            'CollectCampaign', 'DoGoodEvent', 'subEvent'
+        )
     )
 
     class Meta(BaseActivitySerializer.Meta):

@@ -1,6 +1,6 @@
 from django.utils.timezone import now
 
-from bluebottle.activity_pub.effects import SyncEffect, SyncSlotEffect
+from bluebottle.activity_pub.effects import SyncEffect, SyncSlotEffect, UnpublishAdoptionEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register,
@@ -165,6 +165,7 @@ class ScheduleSlotTriggers(TriggerManager):
                     "participants",
                     ScheduleParticipantStateMachine.cancel,
                 ),
+                UnpublishAdoptionEffect,
             ],
         ),
         TransitionTrigger(
@@ -174,6 +175,7 @@ class ScheduleSlotTriggers(TriggerManager):
                     "participants",
                     ScheduleParticipantStateMachine.cancel,
                 ),
+                UnpublishAdoptionEffect,
             ],
         ),
         TransitionTrigger(
@@ -604,6 +606,7 @@ class DateActivitySlotTriggers(TriggerManager):
                     DateStateMachine.cancel,
                     conditions=[all_slots_cancelled]
                 ),
+                UnpublishAdoptionEffect,
             ],
         ),
         TransitionTrigger(
@@ -614,6 +617,7 @@ class DateActivitySlotTriggers(TriggerManager):
                     "participants",
                     ParticipantStateMachine.cancel,
                 ),
+                UnpublishAdoptionEffect,
             ],
         ),
         TransitionTrigger(

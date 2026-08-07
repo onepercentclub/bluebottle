@@ -915,7 +915,12 @@ class BaseContributorSerializer(FederatedObjectBaseSerializer):
         ).first()
 
     def update(self, contributor, validated_data):
-        contributor.states.reapply(save=True)
+        if contributor.status != 'withdrawn':
+            return
+        try:
+            contributor.states.reapply(save=True)
+        except TransitionNotPossible:
+            pass
 
     def create(self, validated_data):
         contributor = self.get_contributor(validated_data)

@@ -851,6 +851,17 @@ class Following(Follow):
             return "-"
 
 
+def _end_remote_contributor(contributor):
+    """Withdraw a remote contributor on the supplier after Leave."""
+    try:
+        if hasattr(contributor.states, 'withdraw'):
+            contributor.states.withdraw(save=True)
+            return True
+    except TransitionNotPossible:
+        pass
+    return False
+
+
 class Accept(Activity):
     object = models.ForeignKey('activity_pub.ActivityPubModel', on_delete=models.CASCADE)
 
@@ -860,7 +871,13 @@ class Accept(Activity):
             yield self.object.actor
         elif isinstance(self.object, Event):
             create = self.object.create_set.first()
-            yield create.actor
+            if create:
+                yield create.actor
+        elif isinstance(self.object, SubEvent):
+            parent = self.object.parent
+            create = parent.create_set.first() if parent else None
+            if create:
+                yield create.actor
         elif isinstance(self.object, Join) and self.object.platform:
             yield self.object.platform
 
@@ -883,17 +900,35 @@ class Reject(Activity):
 
     @property
     def default_recipients(self):
-        yield self.object.platform
+        if isinstance(self.object, Join) and self.object.platform:
+            yield self.object.platform
+        elif isinstance(self.object, Event):
+            create = self.object.create_set.first()
+            if create:
+                yield create.actor
+        elif isinstance(self.object, SubEvent):
+            parent = self.object.parent
+            create = parent.create_set.first() if parent else None
+            if create:
+                yield create.actor
 
     def save(self, *args, **kwargs):
         created = not self.pk
         super().save(*args, **kwargs)
 
-        if created and not self.is_local and isinstance(self.object, Join):
+        if not created or self.is_local:
+            return
+
+        if isinstance(self.object, Join):
             registration = Registration.objects.get(
                 user=self.object.actor.origin, activity=self.object.object.adopted
             )
             registration.states.reject(save=True)
+        elif isinstance(self.object, (Event, SubEvent)):
+            self._unadopt()
+
+    def _unadopt(self):
+        Accept.objects.filter(actor=self.actor, object=self.object).delete()
 
 
 class Create(Activity):
@@ -1074,12 +1109,16 @@ class Transition(Activity):
 
 class Leave(Transition):
     """Sent when a user leaves a synced activity or team."""
+
     @property
     def default_recipients(self):
         obj = self.object
         if isinstance(obj, Team):
             event = obj.attributed_to
             create = event.create_set.first() if event else None
+        elif isinstance(obj, SubEvent):
+            parent = obj.parent
+            create = parent.create_set.first() if parent else None
         else:
             create = obj.create_set.first()
         if create:
@@ -1096,12 +1135,22 @@ class Leave(Transition):
                 remote_user=self.actor.adopted
             ).first()
             if member:
-                member.states.withdraw(save=True)
-                return True
+                return _end_remote_contributor(member)
             return False
 
         if not self.object.is_local:
             return False
+
+        if isinstance(self.object, SubEvent):
+            slot = self.object.origin
+            if not slot:
+                return False
+            contributor = slot.participants.filter(
+                remote_user=self.actor.adopted
+            ).first()
+            if not contributor:
+                return False
+            return _end_remote_contributor(contributor)
 
         if isinstance(self.object, DoGoodEvent) and self.object.activity_type == 'PeriodicActivity':
             registration = self.object.origin.registrations.get(
@@ -1116,12 +1165,12 @@ class Leave(Transition):
                 remote_user=self.actor.adopted
             )
             for team in registration.teams.all():
-                team.states.withdraw(save=True)
+                _end_remote_contributor(team)
         else:
             contributor = self.object.origin.contributors.get(
                 remote_user=self.actor.adopted
             )
-            contributor.states.withdraw(save=True)
+            return _end_remote_contributor(contributor)
 
         return True
 

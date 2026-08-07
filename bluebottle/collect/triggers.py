@@ -13,7 +13,7 @@ from bluebottle.activities.triggers import (
 )
 from bluebottle.activity_pub.effects import (
     PublishAdoptionEffect, CancelEffect, SendJoinEffect, SendLeaveEffect,
-    UpdateEventEffect, FinishEffect, SyncRelatedEvent
+    UpdateEventEffect, FinishEffect, SyncRelatedEvent, UnpublishAdoptionEffect
 )
 from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
@@ -180,6 +180,7 @@ class CollectActivityTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(ActivityCancelledNotification),
+                UnpublishAdoptionEffect,
                 CancelEffect
             ]
         ),

@@ -2,7 +2,6 @@ import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from colorfield.fields import ColorField
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -90,14 +89,15 @@ class SegmentType(TranslatableModel, models.Model):
 
     def save(self, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
-        if not self.name:
+            name = self.safe_translation_getter('name', any_language=True) or ''
+            self.slug = slugify(name)
+        if not self.safe_translation_getter('name', any_language=True):
             self.name = self.slug.replace('-', ' ').title()
 
         super(SegmentType, self).save(**kwargs)
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', any_language=True) or self.slug or '---'
 
     class Meta(object):
         ordering = ['pk']
@@ -247,10 +247,7 @@ class Segment(TranslatableModel, models.Model):
             return "text"
 
     def __str__(self):
-        try:
-            return self.name
-        except ObjectDoesNotExist:
-            return '---'
+        return self.safe_translation_getter('name', any_language=True) or '---'
 
     def get_absolute_url(self):
         domain = get_current_host()

@@ -130,10 +130,12 @@ class CreateRegistrationEffect(Effect):
         raise ValueError(f'No registration defined for participant model {self.instance.__class__.__name__}')
 
     def post_save(self, **kwargs):
+        is_local = not self.instance.activity.is_adopted
+        status = 'accepted' if is_local else 'new'
         registration = self.get_registration_model().objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
-            status='accepted'
+            status=status
         )
         self.instance.registration = registration
         self.instance.save()
@@ -155,7 +157,7 @@ class CreateDateRegistrationEffect(Effect):
         self.instance.registration = self.instance.activity.registrations.filter(user=self.instance.user).first()
 
     def post_save(self, **kwargs):
-        if not self.instance.registration:
+        if not self.instance.registration and self.instance.user:
             self.instance.registration = DateRegistration.objects.create(
                 activity=self.instance.activity,
                 user=self.instance.user,
@@ -211,8 +213,12 @@ class CreateScheduleSlotEffect(Effect):
     def without_slot(self):
         return not self.instance.slot_id
 
+    def is_local(self):
+        return not hasattr(self.instance.activity, 'origin')
+
     def post_save(self, **kwargs):
         activity = self.instance.activity
+
         self.instance.slot = ScheduleSlot.objects.create(
             activity=activity,
             is_online=activity.is_online,
@@ -223,4 +229,4 @@ class CreateScheduleSlotEffect(Effect):
         )
         self.instance.save()
 
-    conditions = [without_slot]
+    conditions = [without_slot, is_local]

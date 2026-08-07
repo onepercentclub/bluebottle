@@ -5,6 +5,7 @@ from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
 )
+from bluebottle.activity_pub.effects import SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect, SyncRelatedEvent
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
@@ -31,16 +32,17 @@ from bluebottle.time_based.messages import (
     ParticipantSlotParticipantRegisteredNotification, ParticipantChangedNotification,
     ManagerSlotParticipantWithdrewNotification,
 )
-from bluebottle.time_based.models import (
-    DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
-)
 from bluebottle.time_based.messages.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
     UserParticipantWithdrewNotification,
     ManagerParticipantWithdrewNotification, UserScheduledNotification, RegisteredActivityParticipantAddedNotification,
     UserDateParticipantWithdrewNotification,
+)
+from bluebottle.time_based.models import (
+    DeadlineParticipant,
+    PeriodicParticipant, ScheduleParticipant,
+    TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
 )
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
@@ -55,6 +57,7 @@ from bluebottle.time_based.states import (
     RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine,
     RegistrationStateMachine
 )
+from bluebottle.time_based.states.registrations import ScheduleRegistrationStateMachine
 
 
 def activity_is_expired(effect):
@@ -71,11 +74,16 @@ def activity_will_be_expired(effect):
     )
 
 
+def activity_is_local(effect):
+    """Is local activity"""
+    return not effect.instance.activity.is_adopted
+
+
 def participant_is_active(effect):
     from bluebottle.members.models import MemberPlatformSettings
 
     settings = MemberPlatformSettings.load()
-    return (not settings.closed) and effect.instance.user.is_active
+    return (not settings.closed) and effect.instance.user and effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
@@ -259,9 +267,13 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 CreateRegistrationEffect,
                 CreateTimeContributionEffect,
                 CreatePreparationTimeContributionEffect,
+                SendJoinEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
-                    conditions=[is_not_self],
+                    conditions=[
+                        is_not_self,
+                        activity_is_local
+                    ],
                 ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.accept,
@@ -291,6 +303,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
+                SendJoinEffect,
                 NotificationEffect(
                     ParticipantAddedNotification,
                     conditions=[participant_is_active]
@@ -322,6 +335,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             RegistrationParticipantStateMachine.readd,
             effects=[
+                SendJoinEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -352,6 +366,8 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.withdraw,
             effects=[
+                SendLeaveEffect,
+                SyncRelatedEvent,
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,
@@ -364,6 +380,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.restore,
             effects=[
+                SendJoinEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -380,6 +397,8 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.reapply,
             effects=[
+                SendJoinEffect,
+                SyncRelatedEvent,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -415,6 +434,8 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.remove,
             effects=[
+                SendLeaveEffect,
+                SyncRelatedEvent,
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,
@@ -496,6 +517,7 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
                 ),
+                SendJoinSlotEffect
             ],
         ),
         TransitionTrigger(
@@ -631,9 +653,14 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 CreateScheduleContributionEffect,
                 CreateRegistrationEffect,
                 CreateScheduleSlotEffect,
+                SendJoinEffect,
+                SyncRelatedEvent,
                 TransitionEffect(
                     ScheduleParticipantStateMachine.add,
-                    conditions=[is_not_self],
+                    conditions=[
+                        is_not_self,
+                        activity_is_local
+                    ],
                 ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
@@ -733,6 +760,12 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
+                RelatedTransitionEffect(
+                    "registration",
+                    ScheduleRegistrationStateMachine.withdraw,
+                ),
+                SendLeaveEffect,
+                SyncRelatedEvent
             ],
         ),
         TransitionTrigger(
@@ -755,6 +788,10 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.reapply,
             effects=[
                 FollowActivityEffect,
+                RelatedTransitionEffect(
+                    "registration",
+                    ScheduleRegistrationStateMachine.restore,
+                ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
                     conditions=[
@@ -770,6 +807,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                SendJoinEffect,
+                SyncRelatedEvent
             ],
         ),
         TransitionTrigger(
@@ -905,6 +944,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
                 ),
+                SendJoinSlotEffect,
+                SyncRelatedEvent
             ],
         ),
         TransitionTrigger(
@@ -1104,6 +1145,21 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                 ),
             ],
         ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.schedule,
+            effects=[
+                SendJoinSlotEffect,
+                SyncRelatedEvent,
+            ],
+        ),
+        ModelChangedTrigger(
+            "slot_id",
+            effects=[
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+            ],
+        ),
     ]
 
 
@@ -1210,7 +1266,10 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.add,
-                    conditions=[is_not_self],
+                    conditions=[
+                        is_not_self,
+                        activity_is_local
+                    ],
                 ),
                 TransitionEffect(
                     DateParticipantStateMachine.accept,
@@ -1242,12 +1301,16 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                         is_participant
                     ]
                 ),
+                SendJoinEffect,
+                SyncRelatedEvent
             ]
         ),
 
         TransitionTrigger(
             DateParticipantStateMachine.remove,
             effects=[
+                SendLeaveEffect,
+                SyncRelatedEvent,
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
@@ -1290,6 +1353,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.add,
             effects=[
+                SendJoinEffect,
                 TransitionEffect(
                     RegistrationParticipantStateMachine.succeed,
                     conditions=[participant_slot_is_finished]
@@ -1335,6 +1399,8 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.withdraw,
             effects=[
+                SendLeaveEffect,
+                SyncRelatedEvent,
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
@@ -1372,6 +1438,8 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.reapply,
             effects=[
+                SendJoinEffect,
+                SyncRelatedEvent,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,
@@ -1408,6 +1476,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.readd,
             effects=[
+                SendJoinEffect,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,
@@ -1438,6 +1507,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.restore,
             effects=[
+                SendJoinEffect,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,

@@ -4,6 +4,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, StackedInline, widgets
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
@@ -29,9 +30,11 @@ from bluebottle.activities.admin import (
     ActivityBulkAddForm,
     ActivityChildAdmin,
     BaseContributorInline,
+    BaseParticipantUserInline,
     BulkAddMixin,
     ContributionChildAdmin,
     ContributorChildAdmin,
+    RemoteUserAdminMixin,
 )
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.files.widgets import PrivateDocumentWidget
@@ -182,7 +185,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         fields = super().get_registration_fields(request, obj)
         settings = InitiativePlatformSettings.load()
         if settings.hour_registration == 'per_activity':
-            fields = ['hour_registration_data'] + list(fields)
+            fields = ('hour_registration_data', ) + fields
         return fields
 
     def get_changeform_initial_data(self, request):
@@ -240,6 +243,24 @@ class DateActivitySlotInline(TabularInlinePaginated):
 
     extra = 0
 
+    def is_adopted(self, activity):
+        return bool(getattr(activity, 'origin', None) or getattr(activity, 'event', None))
+
+    def has_change_permission(self, request, obj=None):
+        if obj is not None and self.is_adopted(obj):
+            return False
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and self.is_adopted(obj):
+            return False
+        return True
+
+    def has_add_permission(self, request, obj=None):
+        if self.is_adopted(obj):
+            return False
+        return True
+
     def link(self, obj):
         url = reverse('admin:time_based_dateactivityslot_change', args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj)
@@ -273,7 +294,7 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
-    fields = ['edit', 'slot_date', 'user', 'status_label']
+    fields = ['edit', 'slot_date', 'participant', 'user', 'status_label']
     readonly_fields = BaseContributorInline.readonly_fields + ['slot_date']
 
     def slot_date(self, obj):
@@ -302,7 +323,7 @@ class TeamScheduleRegistrationAdminInline(BaseContributorInline):
 
 
 @admin.register(TeamMember)
-class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
+class TeamMemberAdmin(RemoteUserAdminMixin, RegionManagerAdminMixin, StateMachineAdmin):
     model = TeamMember
     inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
@@ -311,6 +332,14 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     raw_id_fields = ('user', 'team')
 
     superadmin_fields = ['force_status']
+
+    def get_shared_activity(self, obj):
+        if not obj or not getattr(obj, 'team_id', None):
+            return None
+        try:
+            return obj.team.activity
+        except (ObjectDoesNotExist, AttributeError):
+            return None
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
@@ -324,31 +353,21 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         return fieldsets
 
 
-class TeamMemberAdminInline(TabularInlinePaginated):
+class TeamMemberAdminInline(BaseParticipantUserInline):
     model = TeamMember
-    fields = ('link', 'status_label', 'user',)
-    raw_id_fields = ('user',)
+    fields = ('edit', 'participant', 'user', 'status_label',)
+    readonly_fields = ('edit', 'participant', 'status_label')
+    remote_user_select_related = BaseParticipantUserInline.remote_user_select_related + (
+        'team__activity',
+    )
 
-    def has_change_permission(self, request, obj):
-        return False
-
-    def has_delete_permission(self, request, obj):
-        return True
-
-    can_delete = True
-
-    readonly_fields = ('link', 'status_label')
-
-    def status_label(self, obj):
-        return obj.states.current_state.name
-
-    status_label.short_description = _('Status')
-
-    def link(self, obj):
-        url = reverse('admin:time_based_teammember_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj)
-
-    link.short_description = _('Edit')
+    def get_activity(self, obj):
+        if not obj or not getattr(obj, 'team_id', None):
+            return None
+        try:
+            return obj.team.activity
+        except (ObjectDoesNotExist, AttributeError):
+            return None
 
 
 class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
@@ -371,6 +390,17 @@ class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
         'location_hint',
         'online_meeting_url'
     )
+
+    activity_pub_readonly_fields = (
+        'start', 'duration', 's_online', 'location', 'location_hint', 'online_meeting_url'
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj.activity.is_adopted:
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     def link(self, obj):
         url = reverse(
@@ -430,6 +460,7 @@ class TeamBulkAddForm(ActivityBulkAddForm):
 
 @admin.register(Team)
 class TeamAdmin(
+    RemoteUserAdminMixin,
     PolymorphicInlineSupportMixin,
     RegionManagerAdminMixin,
     BulkAddMixin,
@@ -495,32 +526,27 @@ class TeamAdmin(
     registration_info.short_description = _('Registration')
 
 
-class TeamAdminInline(TabularInlinePaginated):
+class TeamAdminInline(BaseParticipantUserInline):
     model = Team
-    readonly_fields = ('link', 'created', 'status_label', 'team_members_count')
-    raw_id_fields = ('user', 'registration')
-    fields = ('link', 'user', 'status_label', 'team_members_count')
-
-    def link(self, obj):
-        url = reverse('admin:time_based_team_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj)
-
-    def has_change_permission(self, request, obj=None):
-        return False
+    readonly_fields = ('edit', 'participant', 'created', 'status_label', 'team_members_count')
+    fields = ('edit', 'participant', 'user', 'status_label', 'team_members_count')
+    remote_user_select_related = BaseParticipantUserInline.remote_user_select_related + (
+        'activity',
+        'registration',
+    )
 
     def status_label(self, obj):
-        if obj.registration.status != 'accepted':
+        if not obj.pk:
+            return '-'
+        if obj.registration_id and obj.registration.status != 'accepted':
             return obj.registration.states.current_state.name
         return obj.states.current_state.name
 
     status_label.short_description = _('Status')
 
-    can_delete = True
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
     def team_members_count(self, obj):
+        if not obj.pk:
+            return '-'
         return obj.team_members.filter(status='active').count()
     team_members_count.short_description = _('Members')
 
@@ -539,39 +565,12 @@ class PeriodicParticipantAdminInline(BaseContributorInline):
         return obj.slot.end.date()
 
 
-class BaseRegistrationAdminInline(TabularInlinePaginated):
+class BaseRegistrationAdminInline(BaseParticipantUserInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
-    readonly_fields = ('status_label', 'edit')
-    fields = ('edit', 'user', 'status_label',)
-    raw_id_fields = ('user',)
-
-    def edit(self, obj):
-        if not obj.user and obj.activity.has_deleted_data:
-            return format_html(f'<i>{_("Anonymous")}</i>')
-        if not obj.id:
-            return '-'
-        return format_html(
-            '<a href="{}">{}</a>',
-            reverse(
-                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
-                args=(obj.id,)),
-            _('Edit')
-        )
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return True
-
-    can_delete = True
-
-    def status_label(self, obj):
-        return obj.states.current_state.name
-
-    status_label.short_description = _('Status')
+    readonly_fields = ('status_label', 'edit', 'participant')
+    fields = ('edit', 'participant', 'user', 'status_label',)
 
 
 class DateRegistrationAdminInline(BaseRegistrationAdminInline):
@@ -590,7 +589,7 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
     def slots(self, obj):
         return obj.participants.filter(status__in=['accepted', 'succeeded', 'registered', 'running']).count()
 
-    readonly_fields = ('status_label', 'edit', 'slots')
+    readonly_fields = BaseRegistrationAdminInline.readonly_fields + ('slots',)
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
@@ -718,6 +717,7 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
         'duration',
         'location',
     ]
+
     registration_fields = []
 
     def get_fieldsets(self, request, obj=None):
@@ -799,7 +799,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     def get_registration_fields(self, request, obj):
         fields = super().get_registration_fields(request, obj)
         if obj and obj.registrations.count():
-            fields = ["team_registration_warning"] + list(fields)
+            fields = ("team_registration_warning",) + fields
         return fields
 
     def get_fieldsets(self, request, obj=None):
@@ -840,6 +840,17 @@ class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     readonly_fields = ("activity", "status")
     fields = readonly_fields + ("start", "end", "duration")
 
+    activity_pub_readonly_fields = (
+        'start', 'end', 'duration',
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj is not None and getattr(obj, 'origin', None):
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
+
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     def participant_count(self, obj):
@@ -868,6 +879,17 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         "location_hint",
         "online_meeting_url"
     )
+
+    activity_pub_readonly_fields = (
+        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url',
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if hasattr(obj, 'origin'):
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     formfield_overrides = {
         models.DurationField: {
@@ -915,6 +937,17 @@ class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
         "location_hint",
         "online_meeting_url"
     )
+
+    activity_pub_readonly_fields = (
+        'start', 'duration', 'is_online', 'location', 'location_hint', 'online_meeting_url',
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if hasattr(obj, 'origin'):
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -1029,26 +1062,22 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
     duration_string.short_description = _('Duration')
 
 
-class DateParticipantInline(admin.TabularInline):
+class DateParticipantInline(BaseParticipantUserInline):
     model = DateParticipant
-    readonly_fields = ['participant_link', 'smart_status', 'registration_status']
-    fields = ['participant_link', 'user', 'smart_status', 'registration_status']
-
-    raw_id_fields = ['user']
-    extra = 0
+    readonly_fields = ['edit', 'participant', 'smart_status', 'registration_status']
+    fields = ['edit', 'participant', 'user', 'smart_status', 'registration_status']
 
     verbose_name = _('Participant')
     verbose_name_plural = _('Participants')
 
-    def participant_link(self, obj):
-        url = reverse('admin:time_based_dateparticipant_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, _('Edit'))
-    participant_link.short_description = _('Edit')
-
     def smart_status(self, obj):
+        if not obj.pk:
+            return '-'
         return obj.states.current_state.name
 
     def registration_status(self, obj):
+        if not obj.pk or not obj.registration_id:
+            return '-'
         return obj.registration.states.current_state.name
 
     registration_status.short_description = _('Registered')
@@ -1083,6 +1112,19 @@ class SlotAdmin(StateMachineAdmin):
         return format_html('<a href="{}">{}</a>', url, obj.activity)
 
     activity_link.short_description = _('Activity')
+
+    activity_pub_readonly_fields = (
+        'activity', 'start', 'location', 'location_hint',
+        'online_meeting_url', 'title', 'capacity', 'start', 'duration',
+        'origin', 'host_organization'
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if hasattr(obj, 'origin'):
+            readonly_fields = tuple(readonly_fields) + self.activity_pub_readonly_fields
+
+        return readonly_fields
 
     def get_form(self, request, obj=None, **kwargs):
         if obj and not obj.is_online and obj.location:
@@ -1135,7 +1177,8 @@ class SlotAdmin(StateMachineAdmin):
     readonly_fields = [
         'created',
         'updated',
-        'valid'
+        'valid',
+
     ]
     detail_fields = [
         'activity',
@@ -1148,7 +1191,7 @@ class SlotAdmin(StateMachineAdmin):
         'status',
         'states',
         'created',
-        'updated'
+        'updated',
     ]
 
     def get_status_fields(self, request, obj):
@@ -1163,6 +1206,13 @@ class SlotAdmin(StateMachineAdmin):
             (_('Detail'), {'fields': self.detail_fields}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
+        if obj and obj.is_adopted:
+            fieldsets += (
+                (_('GoodUp Connect'), {'fields': (
+                    'origin',
+                    'host_organization',
+                )}),
+            )
         if request.user.is_superuser:
             fieldsets += (
                 (_('Super admin'), {'fields': (
@@ -1571,8 +1621,10 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
 
     def get_fields(self, request, obj=None):
         if obj and obj.registration and obj.registration.status == 'new':
-            return self.pending_fields
-        return self.fields
+            fields = self.pending_fields
+        else:
+            fields = self.fields
+        return self.with_remote_user_field(fields, obj)
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
         'registration_info'
@@ -1639,8 +1691,10 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
 
     def get_fields(self, request, obj=None):
         if obj and obj.registration and obj.registration.status == 'new':
-            return self.pending_fields
-        return self.fields
+            fields = self.pending_fields
+        else:
+            fields = self.fields
+        return self.with_remote_user_field(fields, obj)
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
         "registration_info",
@@ -1734,8 +1788,10 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
 
     def get_fields(self, request, obj=None):
         if obj and obj.registration and obj.registration.status == "new":
-            return self.pending_fields
-        return self.fields
+            fields = self.pending_fields
+        else:
+            fields = self.fields
+        return self.with_remote_user_field(fields, obj)
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
         "activity", "created", "updated",
@@ -1813,9 +1869,14 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         return obj.get_real_instance_class()._meta.verbose_name
 
 
-class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
+class RegistrationChildAdmin(
+    RemoteUserAdminMixin,
+    PolymorphicInlineSupportMixin,
+    PolymorphicChildModelAdmin,
+    StateMachineAdmin,
+):
     base_model = Registration
-    readonly_fields = ["created", "activity", "user", "show_answer"]
+    readonly_fields = ["created", "activity", "user", "remote_user", "show_answer"]
     fields = readonly_fields + ["document", "status", "states"]
     list_display = ["__str__", "activity", "user", "status_label"]
 
@@ -1830,11 +1891,13 @@ class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildMode
     }
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets = (
+            (_('Details'), {'fields': self.get_fields(request, obj)}),
+        )
         if request.user.is_superuser:
-            fieldsets += [
+            fieldsets += (
                 (_("Super admin"), {"fields": ("force_status",)}),
-            ]
+            )
         return fieldsets
 
     def status_label(self, obj):

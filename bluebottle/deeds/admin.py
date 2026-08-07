@@ -20,7 +20,10 @@ class EffortContributionInlineAdmin(admin.TabularInline):
 class DeedParticipantAdmin(ContributorChildAdmin):
     readonly_fields = ['created']
     raw_id_fields = ['user', 'activity']
-    fields = ['activity', 'user', 'status', 'states'] + readonly_fields
+    fields = [
+        'activity', 'user',
+        'status', 'states'
+    ] + readonly_fields
     list_display = ['__str__', 'activity_link', 'status']
     inlines = ContributorChildAdmin.inlines + (EffortContributionInlineAdmin, )
 
@@ -37,13 +40,15 @@ class DeedAdmin(ActivityChildAdmin):
     inlines = (TeamInline, DeedParticipantInline, ) + ActivityChildAdmin.inlines
     list_filter = ['status']
     search_fields = ['title', 'description']
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity', 'next_step_info']
     list_display = ActivityChildAdmin.list_display + [
         'start',
         'end',
         'enable_impact',
         'target',
         'participant_count',
+    ]
+    readonly_fields = ActivityChildAdmin.readonly_fields + [
+        'team_activity', 'next_step_info',
     ]
     save_as = True
 

@@ -13,6 +13,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase, JSONAPITestClient
+from bluebottle.activity_pub.tests.factories import DoGoodEventFactory, SubEventFactory
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,
@@ -176,6 +177,45 @@ class DateRegistrationRelatedListAPITestCase(TimeBasedRegistrationRelatedAPIList
 
     activity_defaults = {}
 
+    def test_get_remote_user(self):
+        from bluebottle.activity_pub.adapters import adapter
+        from bluebottle.activity_pub.tests.factories import PersonFactory
+
+        self.activity.contributors.all().delete()
+        self.activity.registrations.all().delete()
+
+        actor = PersonFactory.create()
+        remote_user = adapter.adopt(actor)
+        adapter.adopt(actor.source)
+        registration = DateRegistrationFactory.create(
+            activity=self.activity,
+            status='accepted',
+            user=None,
+            remote_user=remote_user,
+        )
+
+        self.perform_get(
+            user=self.activity.owner,
+            query={'filter[status]': 'accepted'},
+        )
+        self.assertStatus(status.HTTP_200_OK)
+
+        payload = next(
+            item for item in self.response.json()['data']
+            if item['id'] == str(registration.pk)
+        )
+        self.assertEqual(
+            payload['relationships']['remote-user']['data']['id'],
+            str(remote_user.pk),
+        )
+        self.assertIncluded('remote-user', remote_user)
+        self.assertIncluded('remote-user.source')
+
+        for member in self.get_included('remote-user'):
+            self.assertIsNotNone(member['relationships']['source']['data'])
+            organization = self.get_included('source', [member])[0]
+            self.assertTrue(organization['attributes']['name'])
+
 
 class DateRegistrationDetailAPITestCase(TimeBasedRegistrationDetailAPITestCase, APITestCase):
     url_name = 'date-registration-detail'
@@ -246,7 +286,7 @@ class DateActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer',)
+            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', 'Platform',)
         )
 
 
@@ -288,6 +328,14 @@ class DateSlotDetailAPITestCase(APITestCase):
 
         for relationship in self.included:
             self.assertIncluded(relationship)
+
+    def test_get_contributor_count_uses_remote_total_for_synced_slot(self):
+        SubEventFactory.create(adopted=self.model, contributor_count=5)
+        DateParticipantFactory.create(activity=self.activity, slot=self.model, status='accepted')
+
+        self.perform_get(user=self.manager)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertMeta('contributor-count', 5)
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -382,8 +430,49 @@ class DateSlotDetailAPITestCase(APITestCase):
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status',)
+            ('Email', 'Name', 'Registration Date', 'Status', 'Platform',)
         )
+
+    def test_export_download_includes_remote_participant(self):
+        from bluebottle.activities.models import RemoteMember
+        from bluebottle.activity_pub.tests.factories import PersonFactory
+
+        settings = InitiativePlatformSettings.load()
+        settings.enable_participant_exports = True
+        settings.save()
+
+        remote_user = RemoteMember.objects.create(
+            first_name='Remote',
+            last_name='Participant',
+            email='remote@example.com',
+        )
+        person = PersonFactory.create(adopted=remote_user)
+        DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.model,
+            user=None,
+            remote_user=remote_user,
+            status='accepted',
+        )
+
+        self.perform_get(user=self.model.owner)
+        export_response = self.client.get(
+            self.response.json()['data']['attributes']['participants-export-url']['url']
+        )
+        workbook = load_workbook(filename=BytesIO(export_response.content))
+        sheet = workbook.get_active_sheet()
+        rows = list(sheet.values)
+
+        self.assertEqual(
+            rows[0],
+            ('Email', 'Name', 'Registration Date', 'Status', 'Platform',)
+        )
+        remote_row = next(
+            row for row in rows[1:]
+            if row and row[0] == 'remote@example.com'
+        )
+        self.assertEqual(remote_row[1], 'Remote Participant')
+        self.assertEqual(remote_row[4], person.source.name)
 
 
 class DateSlotListAPITestCase(APITestCase):
@@ -450,6 +539,12 @@ class DateSlotListAPITestCase(APITestCase):
     def test_create_anonymous(self):
         self.perform_create()
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_adopted_activity(self):
+        DoGoodEventFactory.create(adopted=self.activity)
+
+        self.perform_create(user=self.activity.owner)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
 
 class DateSlotRelatedListAPITestCase(APITestCase):

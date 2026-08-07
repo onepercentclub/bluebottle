@@ -290,13 +290,15 @@ SEARCH_FILTERS = {
     "office_region": (_("Work location region"), _("Select a region")),
     'open': (_('Open initiatives'), _("Make a choice")),
     "is_local": (_("Local / From partner"), _("Make a choice")),
+    "platform": (_("Partner platform"), _("select a partner platform")),
 
 }
 
 ACTIVITY_SEARCH_FILTERS = [
     (k, v[0]) for k, v in SEARCH_FILTERS.items() if k in [
         "country", "date", "distance", "is_online", "is_local", "skill",
-        "team_activity", "theme", "category", "office", "office_subregion", "office_region"
+        "team_activity", "theme", "category", "office", "office_subregion", "office_region",
+        "platform"
     ]
 ]
 
@@ -631,11 +633,12 @@ class Theme(SortableTranslatableModel):
     )
 
     def __str__(self):
-        return self.name
+        return self.safe_translation_getter('name', any_language=True) or self.slug
 
     def save(self, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            name = self.safe_translation_getter('name', any_language=True) or ''
+            self.slug = slugify(name)
 
         super(Theme, self).save(**kwargs)
 

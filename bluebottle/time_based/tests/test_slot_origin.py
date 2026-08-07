@@ -1,8 +1,11 @@
 from django.core.exceptions import MultipleObjectsReturned
+from django.template import Context, Template
 
 from bluebottle.activity_pub.tests.factories import SubEventFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
     ScheduleActivityFactory,
     ScheduleSlotFactory,
     TeamFactory,
@@ -49,3 +52,27 @@ class ScheduleSlotOriginPropertyTestCase(BluebottleTestCase):
     def test_single_origin_returns_origin(self):
         sub_event = SubEventFactory.create(adopted=self.slot)
         self.assertEqual(self.slot.origin, sub_event)
+
+
+class ParticipantListOriginTemplateTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.activity = DateActivityFactory.create()
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+
+    def test_local_slot_skips_origin(self):
+        self.assertFalse(self.slot.is_adopted)
+        rendered = Template(
+            '{% if original.is_adopted and original.origin.contributor_count %}'
+            'yes{% else %}no{% endif %}'
+        ).render(Context({'original': self.slot}))
+        self.assertEqual(rendered, 'no')
+
+    def test_adopted_slot_shows_contributor_count(self):
+        SubEventFactory.create(adopted=self.slot, contributor_count=4)
+        self.assertTrue(self.slot.is_adopted)
+        rendered = Template(
+            '{% if original.is_adopted and original.origin.contributor_count %}'
+            '{{ original.origin.contributor_count }}'
+            '{% endif %}'
+        ).render(Context({'original': self.slot}))
+        self.assertEqual(rendered, '4')

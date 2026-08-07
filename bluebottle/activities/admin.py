@@ -229,20 +229,20 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
     contributor_link.short_description = _('Edit')
 
 
-class BaseParticipantUserInline(TabularInlinePaginated):
-    raw_id_fields = ['user']
-    template = 'admin/participant_list.html'
-    extra = 0
-    per_page = 10
-    can_delete = True
-    ordering = ['-created']
+class RemoteUserInlineMixin:
+    remote_user_select_related = (
+        'user',
+        'remote_user',
+        'remote_user__origin',
+        'remote_user__origin__source',
+    )
+
+    def get_activity(self, obj):
+        return getattr(obj, 'activity', None)
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            'user',
-            'remote_user',
-            'remote_user__origin',
-            'remote_user__origin__source',
+            *self.remote_user_select_related
         )
 
     def participant(self, obj):
@@ -265,7 +265,8 @@ class BaseParticipantUserInline(TabularInlinePaginated):
                     platform,
                 )
             return name
-        if obj.activity.has_deleted_data:
+        activity = self.get_activity(obj)
+        if activity and activity.has_deleted_data:
             return format_html('<i>{}</i>', _('Anonymous'))
         return '-'
 
@@ -274,7 +275,8 @@ class BaseParticipantUserInline(TabularInlinePaginated):
     def edit(self, obj):
         if not obj.pk:
             return '-'
-        if not obj.user_id and obj.activity.has_deleted_data:
+        activity = self.get_activity(obj)
+        if not obj.user_id and activity and activity.has_deleted_data:
             return format_html('<i>{}</i>', _('Anonymous'))
         url = reverse(
             'admin:{}_{}_change'.format(
@@ -286,6 +288,15 @@ class BaseParticipantUserInline(TabularInlinePaginated):
         return format_html('<a href="{}">{}</a>', url, _('Edit'))
 
     edit.short_description = _('Edit')
+
+
+class BaseParticipantUserInline(RemoteUserInlineMixin, TabularInlinePaginated):
+    raw_id_fields = ['user']
+    template = 'admin/participant_list.html'
+    extra = 0
+    per_page = 10
+    can_delete = True
+    ordering = ['-created']
 
     def status_label(self, obj):
         if not obj.pk:
@@ -307,11 +318,76 @@ class BaseContributorInline(BaseParticipantUserInline):
     fields = ['edit', 'created', 'participant', 'user', 'status_label']
 
 
+class RemoteUserAdminMixin:
+    def get_shared_activity(self, obj):
+        if not obj or not getattr(obj, 'activity_id', None):
+            return None
+        return obj.activity
+
+    def activity_is_shared(self, obj):
+        activity = self.get_shared_activity(obj)
+        if not activity:
+            return False
+        try:
+            return bool(activity.activity_pub_model)
+        except (ObjectDoesNotExist, AttributeError):
+            return False
+
+    def platform(self, obj):
+        remote_user = getattr(obj, 'remote_user', None)
+        if not remote_user:
+            return '-'
+        platform = remote_user.platform
+        if not platform:
+            return '-'
+        url = reverse('admin:activity_pub_organization_change', args=(platform.pk,))
+        return format_html('<a href="{}">{}</a>', url, platform.name)
+
+    platform.short_description = _('Platform')
+
+    def with_remote_user_field(self, fields, obj):
+        fields = list(fields)
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if has_remote or self.activity_is_shared(obj):
+            if 'remote_user' not in fields:
+                if 'user' in fields:
+                    fields.insert(fields.index('user') + 1, 'remote_user')
+                else:
+                    fields.append('remote_user')
+        if has_remote:
+            if 'user' in fields:
+                fields.remove('user')
+            if 'platform' not in fields:
+                if 'remote_user' in fields:
+                    fields.insert(fields.index('remote_user') + 1, 'platform')
+                else:
+                    fields.append('platform')
+        return fields
+
+    def with_remote_user_readonly_fields(self, fields, obj):
+        fields = list(fields)
+        has_remote = bool(obj and getattr(obj, 'remote_user_id', None))
+        if (has_remote or self.activity_is_shared(obj)) and 'remote_user' not in fields:
+            fields.append('remote_user')
+        if has_remote and 'platform' not in fields:
+            fields.append('platform')
+        return fields
+
+    def get_fields(self, request, obj=None):
+        return self.with_remote_user_field(super().get_fields(request, obj), obj)
+
+    def get_readonly_fields(self, request, obj=None):
+        return self.with_remote_user_readonly_fields(
+            super().get_readonly_fields(request, obj), obj
+        )
+
+
 class ContributorChildAdmin(
     PolymorphicInlineSupportMixin,
     PolymorphicChildModelAdmin,
     RegionManagerAdminMixin,
     ActivitySegmentAdminMixin,
+    RemoteUserAdminMixin,
     StateMachineAdmin
 ):
     base_model = Contributor
@@ -909,13 +985,12 @@ class ActivityChildAdmin(
                 'description_preview' if field == 'description' else field
                 for field in detail_fields
             )
-        if Location.objects.exists() and not settings.enable_office_restrictions:
-            detail_fields += ('office_location',)
-        if obj:
             detail_fields = tuple(
                 'display_image' if field == 'image' else field
                 for field in detail_fields
             )
+        if Location.objects.exists() and not settings.enable_office_restrictions:
+            detail_fields += ('office_location',)
         return detail_fields
 
     list_display = [

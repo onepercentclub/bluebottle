@@ -176,6 +176,16 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(activity.registrations.count(), 1)
 
+    def test_slot_change_without_origin(self):
+        # Local (non-adopted) slot admin uses participant_list.html; must not touch origin
+        activity = DateActivityFactory.create(initiative=self.initiative)
+        slot = DateActivitySlotFactory.create(activity=activity)
+        self.assertFalse(slot.is_adopted)
+
+        url = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
+        page = self.app.get(url)
+        self.assertEqual(page.status, '200 OK')
+
     def test_add_participant(self):
         activity = DateActivityFactory.create(initiative=self.initiative)
         slot = DateActivitySlotFactory.create(activity=activity)

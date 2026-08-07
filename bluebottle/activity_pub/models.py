@@ -930,14 +930,15 @@ class Reject(Activity):
         created = not self.pk
         super().save(*args, **kwargs)
 
-        if not created or self.is_local:
+        if not created:
             return
 
         if isinstance(self.object, Join):
-            registration = Registration.objects.get(
-                user=self.object.actor.origin, activity=self.object.object.adopted
-            )
-            registration.states.reject(save=True)
+            if not self.is_local:
+                registration = Registration.objects.get(
+                    user=self.object.actor.origin, activity=self.object.object.adopted
+                )
+                registration.states.reject(save=True)
         elif isinstance(self.object, (Event, SubEvent)):
             self._unadopt()
 

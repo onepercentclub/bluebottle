@@ -532,6 +532,9 @@ class SyncTestCase(ActivityPubTestCase):
             self.assertTrue(
                 Reject.objects.filter(object=self.adopted.origin).exists()
             )
+            self.assertFalse(
+                Accept.objects.filter(object=self.adopted.origin).exists()
+            )
 
         self.assertFalse(
             Accept.objects.filter(object=self.model.activity_pub_model).exists()
@@ -546,12 +549,14 @@ class SyncTestCase(ActivityPubTestCase):
             self.adopted.states.submit(save=True)
             self.approve(self.adopted)
             self.assertStatus(self.adopted, 'open')
-            self.assertTrue(
-                Accept.objects.filter(object=self.adopted.origin).exists()
+            self.assertEqual(
+                Accept.objects.filter(object=self.adopted.origin).count(),
+                1,
             )
 
-        self.assertTrue(
-            Accept.objects.filter(object=self.model.activity_pub_model).exists()
+        self.assertEqual(
+            Accept.objects.filter(object=self.model.activity_pub_model).count(),
+            1,
         )
 
     def test_update(self):

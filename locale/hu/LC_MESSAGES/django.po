@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-28 15:31+0200\n"
-"PO-Revision-Date: 2026-07-28 14:07\n"
+"PO-Revision-Date: 2026-08-07 12:43\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -2324,7 +2324,7 @@ msgstr "Alapértelmezett aktivitás tulajdonosa"
 
 #: bluebottle/activity_pub/models.py:550
 msgid "This user will be assigned as the activity manager for any activity adopted as a template. It can be left empty and no activity manager will be assigned by default."
-msgstr "Ez a felhasználó lesz hozzárendelve a tevékenységmenedzserhez, bármely tevékenységhez, amelyet sablonként elfogadtak. Hagyható üresen, és alapértelmezetten nem lesz hozzárendelve tevékenységmenedzser."
+msgstr "Ez a felhasználó a tevékenységmenedzser szerepét kapja meg bármely tevékenységhez, amit sablonként fogadtak el. Ez üresen hagyható, és alapértelmezés szerint nem fog hozzárendelésre kerülni tevékenységmenedzser."
 
 #: bluebottle/activity_pub/models.py:558
 msgid "Automatically adopted these activity types"
@@ -2387,7 +2387,7 @@ msgstr "Fogadott tevékenység megtekintése"
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:17
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:38
 msgid "Activities are adopted automatically for this connection"
-msgstr "A tevékenységek automatikusan el vannak fogadva ehhez a kapcsolathoz"
+msgstr "A tevékenységek automatikusan el lesznek fogadva ehhez a kapcsolathoz"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:21
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:25
@@ -2396,7 +2396,7 @@ msgstr "Tevékenység elfogadása"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:33
 msgid "View linked activity"
-msgstr "Kapcsolt tevékenység megtekintése"
+msgstr "Kapcsolódó tevékenység megtekintése"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:42
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:46

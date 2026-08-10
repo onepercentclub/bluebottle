@@ -5,10 +5,22 @@ from bluebottle.time_based.views import (
     TimeContributionDetail,
     SkillList,
     SkillDetail,
-    SlotParticipantExportView, PeriodActivityDetailView, RegistrationDocumentDetail, DateSlotTransitionList
+    SlotParticipantExportView, PeriodActivityDetailView, RegistrationDocumentDetail, DateSlotTransitionList,
+    InterestList, InterestDetail,
 )
 
 urlpatterns = [
+    path(
+        '/interests/',
+        InterestList.as_view(),
+        name='interest-list'
+    ),
+    path(
+        '/interests/<int:pk>',
+        InterestDetail.as_view(),
+        name='interest-detail'
+    ),
+
     path(
         '/contributions/time/<int:pk>',
         TimeContributionDetail.as_view(),

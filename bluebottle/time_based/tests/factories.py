@@ -32,6 +32,7 @@ from bluebottle.time_based.models import (
     TimeContribution,
     TeamMember,
     DateRegistration, RegisteredDateActivity, RegisteredDateParticipant,
+    Interest,
 )
 from bluebottle.utils.models import Language
 
@@ -316,3 +317,12 @@ class ScheduleSlotFactory(factory.DjangoModelFactory):
     location = factory.SubFactory(GeolocationFactory)
     start = now() + timedelta(weeks=4)
     duration = timedelta(hours=2)
+
+
+class InterestFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Interest
+
+    activity = factory.SubFactory(DeadlineActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+    slot = None

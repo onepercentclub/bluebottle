@@ -8,7 +8,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
-    HyperlinkedRelatedField
+    HyperlinkedRelatedField,
+    SerializerMethodResourceRelatedField,
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -22,10 +23,24 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     ScheduleActivity,
     DateParticipant,
-    DateActivity, RegisteredDateActivity, )
+    DateActivity, RegisteredDateActivity, Interest, )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
+
+
+class MyInterestMixin:
+    my_interest = SerializerMethodResourceRelatedField(
+        model=Interest,
+        read_only=True,
+        source='get_my_interest'
+    )
+
+    def get_my_interest(self, instance):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return instance.interests.filter(user=user, slot__isnull=True).first()
+
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
@@ -197,7 +212,7 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
         return return_data
 
 
-class DeadlineActivitySerializer(TimeBasedBaseSerializer):
+class DeadlineActivitySerializer(MyInterestMixin, TimeBasedBaseSerializer):
     detail_view_name = 'deadline-detail'
     export_view_name = 'deadline-participant-export'
 
@@ -232,18 +247,21 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
             'is_online',
             'location',
             'location_hint',
+            'my_interest',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/deadlines'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
+            'my_interest',
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.InterestSerializer',
         }
     )
 
@@ -329,7 +347,7 @@ class RelatedTeamsLinkField(RelatedLinkFieldByStatus):
         return links
 
 
-class ScheduleActivitySerializer(TimeBasedBaseSerializer):
+class ScheduleActivitySerializer(MyInterestMixin, TimeBasedBaseSerializer):
     detail_view_name = 'schedule-detail'
 
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
@@ -392,23 +410,26 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
             "location_hint",
             "team_activity",
             "teams",
+            "my_interest",
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/schedules'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
+            'my_interest',
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.InterestSerializer',
         }
     )
 
 
-class PeriodicActivitySerializer(TimeBasedBaseSerializer):
+class PeriodicActivitySerializer(MyInterestMixin, TimeBasedBaseSerializer):
     detail_view_name = 'periodic-detail'
     export_view_name = 'periodic-participant-export'
 
@@ -455,18 +476,21 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
             'is_online',
             'location',
             'location_hint',
+            'my_interest',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/periodics'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
+            'my_interest',
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.InterestSerializer',
         }
     )
 

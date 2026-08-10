@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-28 15:31+0200\n"
-"PO-Revision-Date: 2026-07-28 14:07\n"
+"PO-Revision-Date: 2026-08-07 12:43\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -2317,7 +2317,7 @@ msgstr "Standaard activiteit eigenaar"
 
 #: bluebottle/activity_pub/models.py:550
 msgid "This user will be assigned as the activity manager for any activity adopted as a template. It can be left empty and no activity manager will be assigned by default."
-msgstr "Deze gebruiker wordt toegewezen als de activiteitbeheerder voor elke activiteit die als sjabloon is aangenomen. Het kan leeg worden gelaten en er zal standaard geen activiteitbeheerder worden toegewezen."
+msgstr "Deze gebruiker wordt aangesteld als de activiteitbeheerder voor elke activiteit die als sjabloon wordt aangenomen. Het kan leeg worden gelaten en er zal standaard geen activiteitbeheerder worden aangesteld."
 
 #: bluebottle/activity_pub/models.py:558
 msgid "Automatically adopted these activity types"
@@ -2389,7 +2389,7 @@ msgstr "Activiteit aannemen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:33
 msgid "View linked activity"
-msgstr "Bekijk gekoppelde activiteit"
+msgstr "Bekijk gelinkte activiteit"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:42
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:46

@@ -7,6 +7,7 @@ from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
+from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -112,6 +113,7 @@ class MatchingActivitiesNotification(TransitionMessage):
             not (len(recipient.skills.all())) or
             not (recipient.place or recipient.location)
         )
+        context['opt_out_link'] = tenant_url('/member/profile?tab=notifications')
         if activities:
             context['activities'] = [
                 self.get_activity_context(activity) for activity in activities[:3]
@@ -145,7 +147,7 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         context = super(BaseDoGoodHoursReminderNotification, self).get_context(recipient)
         settings = MemberPlatformSettings.load()
         context['do_good_hours'] = settings.do_good_hours
-        context['opt_out_link'] = tenant_url('/member/profile')
+        context['opt_out_link'] = tenant_url('/member/profile?tab=notifications')
         return context
 
     def get_generic_context(self):

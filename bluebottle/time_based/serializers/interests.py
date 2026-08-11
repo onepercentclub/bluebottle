@@ -148,10 +148,11 @@ class InterestSerializer(ModelSerializer):
                 slot=slot,
                 defaults={'activity': activity},
             )
-        else:
-            interest, _created = Interest.objects.get_or_create(
-                user=user,
-                activity=activity,
-                slot=None,
-            )
+            return interest
+
+        interest, _created = Interest.objects.get_or_create(
+            user=user,
+            activity=activity,
+            slot=None,
+        )
         return interest

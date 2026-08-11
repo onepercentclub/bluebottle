@@ -124,8 +124,11 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 
     def get_my_interest(self, instance):
         user = self.context['request'].user
-        if user.is_authenticated:
-            return instance.interests.filter(user=user).first()
+        if not user.is_authenticated:
+            return None
+        if hasattr(instance, '_my_interests'):
+            return instance._my_interests[0] if instance._my_interests else None
+        return instance.interests.filter(user=user).first()
 
     def get_links(self, instance):
         if instance.start and instance.duration:
@@ -192,7 +195,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'country': 'bluebottle.geo.serializers.CountrySerializer',
-            'my_interest': 'bluebottle.time_based.serializers.InterestSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
         }
     )
 

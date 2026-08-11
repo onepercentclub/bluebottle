@@ -19,9 +19,6 @@ def add_group_permissions(apps, schema_editor):
                     'api_add_own_interest',
                     'api_read_own_interest',
                     'api_delete_own_interest',
-                    'api_add_interest',
-                    'api_read_interest',
-                    'api_delete_interest',
                 )
             },
             'Staff': {
@@ -29,6 +26,10 @@ def add_group_permissions(apps, schema_editor):
                     'add_interest',
                     'change_interest',
                     'delete_interest',
+                    'api_read_interest',
+                    'api_add_interest',
+                    'api_change_interest',
+                    'api_delete_interest',
                 )
             },
         }

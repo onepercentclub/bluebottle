@@ -1,10 +1,14 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.relations import (
+    PolymorphicResourceRelatedField,
+    ResourceRelatedField,
+)
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
+from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
@@ -33,11 +37,15 @@ class InterestSerializer(ModelSerializer):
     user = ResourceRelatedField(
         read_only=True, default=serializers.CurrentUserDefault()
     )
-    activity = ResourceRelatedField(queryset=Activity.objects.all())
+    activity = PolymorphicResourceRelatedField(
+        ActivitySerializer,
+        queryset=Activity.objects.all(),
+    )
     slot = ResourceRelatedField(
         queryset=DateActivitySlot.objects.all(),
         required=False,
         allow_null=True,
+        default=None,
     )
     created = serializers.DateTimeField(read_only=True)
 
@@ -52,6 +60,7 @@ class InterestSerializer(ModelSerializer):
             'created',
         )
         meta_fields = ('permissions',)
+        validators = []
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/interests'
@@ -62,7 +71,7 @@ class InterestSerializer(ModelSerializer):
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
     def _user_already_involved(self, user, activity, slot):
@@ -73,9 +82,15 @@ class InterestSerializer(ModelSerializer):
                 status__in=ACTIVE_PARTICIPANT_STATUSES,
             ).exists()
 
-        return activity.registrations.filter(
+        if activity.registrations.filter(
             user=user,
             status__in=ACTIVE_REGISTRATION_STATUSES,
+        ).exists():
+            return True
+
+        return activity.participants.filter(
+            user=user,
+            status__in=ACTIVE_PARTICIPANT_STATUSES,
         ).exists()
 
     def validate(self, data):

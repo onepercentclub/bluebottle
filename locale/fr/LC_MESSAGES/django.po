@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-28 15:31+0200\n"
-"PO-Revision-Date: 2026-08-07 12:43\n"
+"PO-Revision-Date: 2026-08-11 13:14\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -2323,7 +2323,7 @@ msgstr "Propriétaire d'activité par défaut"
 
 #: bluebottle/activity_pub/models.py:550
 msgid "This user will be assigned as the activity manager for any activity adopted as a template. It can be left empty and no activity manager will be assigned by default."
-msgstr "Cet utilisateur sera désigné comme le gestionnaire de l’activité pour toute activité adoptée comme modèle. Il peut être laissé vide et aucun gestionnaire d’activité ne sera assigné par défaut."
+msgstr "Cet utilisateur sera assigné comme gestionnaire de l’activité pour toute activité adoptée comme modèle. Cela peut être laissé vide et aucun gestionnaire d’activité ne sera assigné par défaut."
 
 #: bluebottle/activity_pub/models.py:558
 msgid "Automatically adopted these activity types"

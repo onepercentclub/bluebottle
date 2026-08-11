@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-28 15:31+0200\n"
-"PO-Revision-Date: 2026-08-07 12:43\n"
+"PO-Revision-Date: 2026-08-11 13:14\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -2324,7 +2324,7 @@ msgstr "Standardaktivitätsbesitzer"
 
 #: bluebottle/activity_pub/models.py:550
 msgid "This user will be assigned as the activity manager for any activity adopted as a template. It can be left empty and no activity manager will be assigned by default."
-msgstr "Dieser Benutzer wird als Aktivitätsmanager für jede als Vorlage angenommene Aktivität zugewiesen. Es kann leer gelassen werden, und es wird standardmäßig kein Aktivitätsmanager zugewiesen."
+msgstr "Dieser Benutzer wird als Aktivitätsmanager für jede Aktivität zugewiesen, die als Vorlage übernommen wurde. Es kann leer gelassen werden, und es wird standardmäßig kein Aktivitätsmanager zugewiesen."
 
 #: bluebottle/activity_pub/models.py:558
 msgid "Automatically adopted these activity types"
@@ -2387,16 +2387,16 @@ msgstr "Angenommene Aktivität anzeigen"
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:17
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:38
 msgid "Activities are adopted automatically for this connection"
-msgstr "Aktivitäten werden automatisch für diese Verbindung angenommen"
+msgstr "Aktivitäten werden automatisch für diese Verbindung übernommen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:21
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:25
 msgid "Adopt activity"
-msgstr "Aktivität annehmen"
+msgstr "Aktivität übernehmen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:33
 msgid "View linked activity"
-msgstr "Verknüpfte Aktivität anzeigen"
+msgstr "Verlinkte Aktivität anzeigen"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:42
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:46

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-28 15:31+0200\n"
-"PO-Revision-Date: 2026-08-07 12:43\n"
+"PO-Revision-Date: 2026-08-11 13:14\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -2324,7 +2324,7 @@ msgstr "Proprietário padrão da atividade"
 
 #: bluebottle/activity_pub/models.py:550
 msgid "This user will be assigned as the activity manager for any activity adopted as a template. It can be left empty and no activity manager will be assigned by default."
-msgstr "Este usuário será designado como o gerente de atividades para qualquer atividade adotada como modelo. Pode ser deixado em branco e nenhum gerente de atividades será atribuído por padrão."
+msgstr "Este usuário será designado como o gerente de atividades para qualquer atividade adotada como um modelo. Pode ser deixado em branco e nenhum gerente de atividades será atribuído por padrão."
 
 #: bluebottle/activity_pub/models.py:558
 msgid "Automatically adopted these activity types"
@@ -2387,7 +2387,7 @@ msgstr "Ver atividade adotada"
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:17
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:38
 msgid "Activities are adopted automatically for this connection"
-msgstr "As atividades são adotadas automaticamente para esta conexão"
+msgstr "Atividades são adotadas automaticamente para esta conexão"
 
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:21
 #: bluebottle/activity_pub/templates/admin/activity_pub/event/change_form.html:25

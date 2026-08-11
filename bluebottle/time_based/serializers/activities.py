@@ -29,23 +29,14 @@ from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
-class MyInterestMixin:
+class TimeBasedBaseSerializer(BaseActivitySerializer):
+    review = serializers.BooleanField()
+    registration_status = serializers.SerializerMethodField()
     my_interest = SerializerMethodResourceRelatedField(
         model=Interest,
         read_only=True,
         source='get_my_interest'
     )
-
-    def get_my_interest(self, instance):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return instance.interests.filter(user=user, slot__isnull=True).first()
-
-
-
-class TimeBasedBaseSerializer(BaseActivitySerializer):
-    review = serializers.BooleanField()
-    registration_status = serializers.SerializerMethodField()
 
     def get_registration_status(self, instance):
         return dict(
@@ -54,6 +45,11 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
                 count=Count("pk")
             )
         )
+
+    def get_my_interest(self, instance):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return instance.interests.filter(user=user, slot__isnull=True).first()
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -212,7 +208,7 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
         return return_data
 
 
-class DeadlineActivitySerializer(MyInterestMixin, TimeBasedBaseSerializer):
+class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'deadline-detail'
     export_view_name = 'deadline-participant-export'
 
@@ -347,7 +343,7 @@ class RelatedTeamsLinkField(RelatedLinkFieldByStatus):
         return links
 
 
-class ScheduleActivitySerializer(MyInterestMixin, TimeBasedBaseSerializer):
+class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'schedule-detail'
 
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
@@ -429,7 +425,7 @@ class ScheduleActivitySerializer(MyInterestMixin, TimeBasedBaseSerializer):
     )
 
 
-class PeriodicActivitySerializer(MyInterestMixin, TimeBasedBaseSerializer):
+class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'periodic-detail'
     export_view_name = 'periodic-participant-export'
 

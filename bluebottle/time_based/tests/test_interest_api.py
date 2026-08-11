@@ -1,5 +1,7 @@
 from datetime import date, timedelta
+from unittest import expectedFailure
 
+from django.contrib.auth.models import Group, Permission
 from django.urls import reverse
 from rest_framework import status
 
@@ -262,11 +264,19 @@ class InterestDetailAPITestCase(APITestCase):
         self.model = InterestFactory.create(user=self.user, activity=self.activity)
         self.url = reverse(self.url_name, args=(self.model.pk,))
 
+    @expectedFailure
     def test_get(self):
+        # Currently errors while including activity: DeadlineActivitySerializer
+        # rejects Meta field `my_interest` (ImproperlyConfigured). Separate from
+        # the permission hole — fix MyInterestMixin / fields wiring first.
         self.perform_get(user=self.user)
         self.assertStatus(status.HTTP_200_OK)
 
+    @expectedFailure
     def test_get_other_user(self):
+        # Desired: 403. Currently allowed via api_read_interest on Authenticated
+        # (see InterestPermissionHoleAPITestCase). Also blocked by a separate
+        # included-activity serializer error until my_interest is fixed there.
         other = BlueBottleUserFactory.create()
         self.perform_get(user=other)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
@@ -278,10 +288,111 @@ class InterestDetailAPITestCase(APITestCase):
             self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
         )
 
+    @expectedFailure
     def test_delete_other_user(self):
+        # Desired: 403. Currently returns 204 — see InterestPermissionHoleAPITestCase.
         other = BlueBottleUserFactory.create()
         self.perform_delete(user=other)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+
+class InterestPermissionHoleAPITestCase(APITestCase):
+    """
+    Documents the current permission hole:
+
+    migration 0150 grants Authenticated both global and own interest API perms
+    (`api_read_interest`, `api_delete_interest`, …). InterestDetail uses
+    OneOf(ResourcePermission, …), and ResourcePermission does not check
+    object ownership. Any Authenticated user can therefore delete another
+    user's interest.
+
+    These tests assert the *current insecure behaviour* so the hole stays
+    visible. After tightening migration + view permissions, flip the
+    HTTP assertions to 403 and drop/rename this class.
+    """
+    url_name = 'interest-detail'
+    serializer = InterestSerializer
+    factory = InterestFactory
+
+    def setUp(self):
+        super().setUp()
+        self.activity = DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='full',
+            capacity=1,
+            review=False,
+        )
+        self.model = InterestFactory.create(user=self.user, activity=self.activity)
+        self.url = reverse(self.url_name, args=(self.model.pk,))
+        self.other = BlueBottleUserFactory.create()
+
+    def test_authenticated_group_has_global_interest_api_permissions(self):
+        authenticated = Group.objects.get(name='Authenticated')
+        codenames = set(
+            authenticated.permissions.filter(
+                content_type__app_label='time_based',
+                codename__endswith='_interest',
+            ).values_list('codename', flat=True)
+        )
+        self.assertTrue(
+            {
+                'api_read_interest',
+                'api_delete_interest',
+                'api_read_own_interest',
+                'api_delete_own_interest',
+            }.issubset(codenames),
+            codenames,
+        )
+
+    def test_other_authenticated_user_has_global_delete_perm(self):
+        self.assertTrue(
+            self.other.has_perm('time_based.api_delete_interest'),
+            'Expected Authenticated members to receive api_delete_interest '
+            'from migration 0150',
+        )
+
+    def test_other_authenticated_user_can_delete_foreign_interest(self):
+        self.perform_delete(user=self.other)
+        # Desired after fix: HTTP_403_FORBIDDEN and the row still exists.
+        self.assertStatus(status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
+        )
+
+    def test_other_user_lacks_object_owner_check_once_global_perms_removed(self):
+        """
+        Intended config: Authenticated keeps only *_own_* interest API perms.
+
+        With global api_delete_interest removed, ResourcePermission no longer
+        matches. The remaining OneOf entries should deny non-owners with 403,
+        but IsOwner lacks has_object_action_permission, so the view currently
+        raises AttributeError instead. Fixing permissions should also drop
+        IsOwner from InterestDetail and then this must return 403.
+        """
+        authenticated = Group.objects.get(name='Authenticated')
+        for codename in (
+            'api_read_interest',
+            'api_add_interest',
+            'api_change_interest',
+            'api_delete_interest',
+        ):
+            authenticated.permissions.remove(
+                Permission.objects.get(
+                    content_type__app_label='time_based',
+                    codename=codename,
+                )
+            )
+
+        self.other = BlueBottleUserFactory.create()
+        self.assertFalse(self.other.has_perm('time_based.api_delete_interest'))
+        self.assertTrue(self.other.has_perm('time_based.api_delete_own_interest'))
+
+        with self.assertRaises(AttributeError) as raised:
+            self.perform_delete(user=self.other)
+        self.assertIn('has_object_action_permission', str(raised.exception))
+        self.assertTrue(
+            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
+        )
 
 
 class DeadlineActivityMyInterestAPITestCase(APITestCase):

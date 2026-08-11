@@ -126,11 +126,9 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
         user = self.context['request'].user
         if not user.is_authenticated:
             return None
-        try:
-            my_interests = instance._my_interests
-        except AttributeError:
-            return instance.interests.filter(user=user).first()
-        return my_interests[0] if my_interests else None
+        if hasattr(instance, '_my_interests'):
+            return instance._my_interests[0] if instance._my_interests else None
+        return instance.interests.filter(user=user).first()
 
     def get_links(self, instance):
         if instance.start and instance.duration:

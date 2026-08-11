@@ -1,11 +1,29 @@
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.http import HttpResponse
 from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.ical import ActivityIcal
 from bluebottle.activities.models import Activity
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.time_based.models import Interest
 from bluebottle.utils.views import PrivateFileView
+
+
+def prefetch_my_interests(queryset, user, *, activity_level=False):
+    """
+    Prefetch the current user's interests onto each instance as `_my_interests`
+    so serializers can avoid an N+1 query in get_my_interest.
+    """
+    if not getattr(user, 'is_authenticated', False):
+        return queryset
+
+    interest_qs = Interest.objects.filter(user=user)
+    if activity_level:
+        interest_qs = interest_qs.filter(slot__isnull=True)
+
+    return queryset.prefetch_related(
+        Prefetch('interests', queryset=interest_qs, to_attr='_my_interests')
+    )
 
 
 class AnonymizeMembersMixin:

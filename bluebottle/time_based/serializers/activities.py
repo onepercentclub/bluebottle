@@ -48,8 +48,11 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
     def get_my_interest(self, instance):
         user = self.context['request'].user
-        if user.is_authenticated:
-            return instance.interests.filter(user=user, slot__isnull=True).first()
+        if not user.is_authenticated:
+            return None
+        if hasattr(instance, '_my_interests'):
+            return instance._my_interests[0] if instance._my_interests else None
+        return instance.interests.filter(user=user, slot__isnull=True).first()
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -257,7 +260,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'my_interest': 'bluebottle.time_based.serializers.InterestSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
         }
     )
 
@@ -420,7 +423,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'my_interest': 'bluebottle.time_based.serializers.InterestSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
         }
     )
 
@@ -486,7 +489,7 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'my_interest': 'bluebottle.time_based.serializers.InterestSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
         }
     )
 

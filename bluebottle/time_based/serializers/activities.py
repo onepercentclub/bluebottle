@@ -50,9 +50,11 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         user = self.context['request'].user
         if not user.is_authenticated:
             return None
-        if hasattr(instance, '_my_interests'):
-            return instance._my_interests[0] if instance._my_interests else None
-        return instance.interests.filter(user=user, slot__isnull=True).first()
+        try:
+            my_interests = instance._my_interests
+        except AttributeError:
+            return instance.interests.filter(user=user, slot__isnull=True).first()
+        return my_interests[0] if my_interests else None
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)

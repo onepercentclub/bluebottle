@@ -14,7 +14,7 @@ def prefetch_my_interests(queryset, user, *, activity_level=False):
     Prefetch the current user's interests onto each instance as `_my_interests`
     so serializers can avoid an N+1 query in get_my_interest.
     """
-    if not getattr(user, 'is_authenticated', False):
+    if not user.is_authenticated:
         return queryset
 
     interest_qs = Interest.objects.filter(user=user)

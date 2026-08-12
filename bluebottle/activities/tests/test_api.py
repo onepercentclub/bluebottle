@@ -1136,7 +1136,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_upcoming(self):
         matching = (
             DeadlineActivityFactory.create_batch(2, status='open') +
-            DeadlineActivityFactory.create_batch(2, status='full')
+            DeadlineActivityFactory.create_batch(2, status='full') +
+            DeadlineActivityFactory.create_batch(2, status='registration_closed')
         )
         DeadlineActivityFactory.create_batch(2, status='succeeded')
         DeadlineActivityFactory.create_batch(2, status='draft')
@@ -1151,6 +1152,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         initiative_settings.save()
         matching = DeadlineActivityFactory.create_batch(2, status='open')
         DeadlineActivityFactory.create_batch(2, status='full')
+        DeadlineActivityFactory.create_batch(2, status='registration_closed')
         DeadlineActivityFactory.create_batch(2, status='succeeded')
         DeadlineActivityFactory.create_batch(2, status='draft')
         DeadlineActivityFactory.create_batch(2, status='needs_work')
@@ -1162,7 +1164,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching = (
             DeadlineActivityFactory.create_batch(2, status='open') +
             DeadlineActivityFactory.create_batch(2, status='full') +
-            DeadlineActivityFactory.create_batch(2, status='full') +
+            DeadlineActivityFactory.create_batch(2, status='registration_closed') +
             FundingFactory.create_batch(2, status='partially_funded')
         )
         DeadlineActivityFactory.create_batch(2, status='draft')

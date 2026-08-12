@@ -406,7 +406,7 @@ def activity_has_no_upcoming_slots(effect):
     """
     return effect.instance.activity.slots.exclude(
         pk=effect.instance.pk
-    ).filter(status__in=['open', 'full']).count() == 0
+    ).filter(status__in=['open', 'full', 'registration_closed']).count() == 0
 
 
 def activity_is_finished(effect):
@@ -419,7 +419,7 @@ def activity_is_finished(effect):
         effect.instance.activity.slots.exclude(
             pk=effect.instance.pk
         ).filter(
-            status__in=['open', 'full']
+            status__in=['open', 'full', 'registration_closed']
         ).count() == 0
     )
     return result
@@ -514,6 +514,16 @@ class DateActivitySlotTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.reopen,
+                ),
+            ],
+        ),
+
+        TransitionTrigger(
+            DateActivitySlotStateMachine.reopen,
+            effects=[
+                TransitionEffect(
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[slot_is_full]
                 ),
             ],
         ),

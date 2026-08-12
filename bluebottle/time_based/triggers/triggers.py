@@ -87,7 +87,7 @@ def has_open_slots(effect):
     """
     has open slots
     """
-    return effect.instance.slots.filter(status='open').exits()
+    return effect.instance.slots.filter(status='open').exists()
 
 
 def has_no_open_slots(effect):

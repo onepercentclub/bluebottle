@@ -28,6 +28,7 @@ from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffe
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
+from bluebottle.time_based.effects.slots import ReopenRegistrationClosedSlotsEffect
 from bluebottle.time_based.messages.activity_manager import (
     PastActivityRegisteredNotification,
     PastActivityApprovedNotification,
@@ -294,10 +295,7 @@ class TimeBasedTriggers(ActivityTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.reopen,
             effects=[
-                RelatedTransitionEffect(
-                    'slots',
-                    DateActivitySlotStateMachine.reopen,
-                ),
+                ReopenRegistrationClosedSlotsEffect,
             ]
         ),
         TransitionTrigger(

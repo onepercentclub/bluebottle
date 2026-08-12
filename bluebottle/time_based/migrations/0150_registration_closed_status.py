@@ -3,6 +3,7 @@
 from datetime import date
 
 from django.db import migrations
+from django.db.models import Count, Q
 
 
 def migrate_deadline_locked_to_registration_closed(apps, schema_editor):
@@ -22,7 +23,7 @@ def migrate_deadline_locked_to_registration_closed(apps, schema_editor):
             status='registration_closed'
         )
         DateActivitySlot.objects.filter(
-            status='full',
+            status__in=['open', 'full'],
             activity_id__in=closed_activity_ids,
         ).update(status='registration_closed')
 
@@ -37,14 +38,34 @@ def reverse_migrate(apps, schema_editor):
         ).values_list('id', flat=True)
     )
 
-    if closed_activity_ids:
-        TimeBasedActivity.objects.filter(id__in=closed_activity_ids).update(
-            status='full'
+    if not closed_activity_ids:
+        return
+
+    TimeBasedActivity.objects.filter(id__in=closed_activity_ids).update(
+        status='full'
+    )
+
+    slots = DateActivitySlot.objects.filter(
+        status='registration_closed',
+        activity_id__in=closed_activity_ids,
+    ).annotate(
+        participant_count=Count(
+            'participants',
+            filter=Q(participants__status__in=['accepted', 'succeeded']),
         )
-        DateActivitySlot.objects.filter(
-            status='registration_closed',
-            activity_id__in=closed_activity_ids,
-        ).update(status='full')
+    )
+
+    slot_ids = []
+    full_slot_ids = []
+    for slot in slots:
+        slot_ids.append(slot.id)
+        if slot.capacity and slot.participant_count >= slot.capacity:
+            full_slot_ids.append(slot.id)
+
+    DateActivitySlot.objects.filter(id__in=full_slot_ids).update(status='full')
+    DateActivitySlot.objects.filter(id__in=slot_ids).exclude(
+        id__in=full_slot_ids
+    ).update(status='open')
 
 
 class Migration(migrations.Migration):

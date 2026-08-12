@@ -115,6 +115,16 @@ class ActivityTriggerTestCase:
 
         self.assertEqual(self.activity.status, "open")
 
+    def test_registration_deadline_today_closes_registration(self):
+        self.publish()
+
+        self.activity.refresh_from_db()
+
+        self.activity.registration_deadline = date.today()
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+
 
 class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory

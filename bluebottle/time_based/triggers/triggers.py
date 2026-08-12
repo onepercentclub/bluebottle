@@ -1,5 +1,3 @@
-from datetime import date
-
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.participant import (
@@ -128,26 +126,6 @@ def is_not_finished(effect):
         slot.start and
         slot.duration and
         slot.start + slot.duration > now()
-    )
-
-
-def registration_deadline_is_passed(effect):
-    """
-    registration deadline has passed
-    """
-    return (
-        effect.instance.registration_deadline and
-        effect.instance.registration_deadline < date.today()
-    )
-
-
-def deadline_is_passed(effect):
-    """
-    deadline has passed
-    """
-    return (
-        effect.instance.deadline and
-        effect.instance.deadline < date.today()
     )
 
 

@@ -223,6 +223,44 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
         self.assertEqual(self.activity.status, "registration_closed")
 
+    def test_extend_deadline_while_registration_closed_does_not_reopen(self):
+        self.publish()
+        self.create_participants()
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.deadline = date.today() + timedelta(weeks=8)
+        self.activity.save()
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+
+    def test_extend_deadline_from_succeeded_closes_registration_when_still_past(self):
+        self.publish()
+        self.create_participants()
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "succeeded")
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.deadline = date.today() + timedelta(weeks=8)
+        self.activity.save()
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+
     def test_cancel(self):
         self.create_participants()
         super().test_cancel()

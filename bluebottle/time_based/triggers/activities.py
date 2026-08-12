@@ -215,6 +215,19 @@ def can_close_registration(effect):
     return effect.instance.status in ('open', 'full')
 
 
+def can_reopen_when_deadline_extended(effect):
+    """
+    may reopen after the activity deadline is extended or removed
+
+    Registration closed activities only reopen when the registration deadline
+    is also no longer passed. Other statuses (e.g. succeeded) may reopen, after
+    which registration can be closed again if needed.
+    """
+    if is_registration_closed(effect):
+        return registration_deadline_is_not_passed(effect)
+    return True
+
+
 class TimeBasedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
         ModelChangedTrigger(
@@ -543,7 +556,23 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
                 TransitionEffect(
                     RegistrationActivityStateMachine.reopen,
                     conditions=[
-                        deadline_is_not_passed
+                        deadline_is_not_passed,
+                        can_reopen_when_deadline_extended,
+                    ]
+                ),
+                TransitionEffect(
+                    RegistrationActivityStateMachine.lock,
+                    conditions=[
+                        deadline_is_not_passed,
+                        is_full,
+                        registration_deadline_is_not_passed,
+                    ]
+                ),
+                TransitionEffect(
+                    RegistrationActivityStateMachine.close_registration,
+                    conditions=[
+                        deadline_is_not_passed,
+                        registration_deadline_is_passed,
                     ]
                 ),
             ]

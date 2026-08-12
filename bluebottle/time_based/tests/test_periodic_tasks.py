@@ -144,6 +144,26 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             timezone.get_current_timezone()
         )
 
+    @property
+    def on_registration_deadline(self):
+        return make_aware(
+            datetime(
+                self.activity.registration_deadline.year,
+                self.activity.registration_deadline.month,
+                self.activity.registration_deadline.day
+            ),
+            timezone.get_current_timezone()
+        )
+
+    def test_registration_closed_on_registration_deadline(self):
+        self.participant_factory.create(activity=self.activity)
+        self.run_task(self.on_registration_deadline)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'registration_closed')
+
     def test_reminder_single_date(self):
         eng = BlueBottleUserFactory.create(primary_language='en')
         registration = DateRegistrationFactory.create(

@@ -129,10 +129,13 @@ def is_finished(effect):
 def registration_deadline_is_passed(effect):
     """
     registration deadline has passed
+
+    The deadline day itself is closed, matching
+    TimeBasedActivityRegistrationDeadlinePassedTask.
     """
     return (
         effect.instance.registration_deadline and
-        effect.instance.registration_deadline < date.today()
+        effect.instance.registration_deadline <= date.today()
     )
 
 

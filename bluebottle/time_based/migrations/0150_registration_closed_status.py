@@ -13,7 +13,7 @@ def migrate_deadline_locked_to_registration_closed(apps, schema_editor):
     closed_activity_ids = list(
         TimeBasedActivity.objects.filter(
             status='full',
-            registration_deadline__lt=today,
+            registration_deadline__lte=today,
         ).values_list('id', flat=True)
     )
 

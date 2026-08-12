@@ -99,7 +99,7 @@ class ActivityTriggerTestCase:
             'Your activity "{}" has been cancelled'.format(self.activity.title),
         )
 
-    def change_registration_deadline(self):
+    def test_change_registration_deadline(self):
         self.publish()
 
         self.activity.refresh_from_db()
@@ -107,7 +107,7 @@ class ActivityTriggerTestCase:
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, "registration_closed")
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.registration_deadline = date.today() + timedelta(days=1)
@@ -152,6 +152,77 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
         self.assertEqual(self.activity.status, "open")
 
+    def test_registration_closed_reopens_to_full_when_at_capacity(self):
+        self.publish()
+        self.create_participants()
+
+        self.activity.capacity = len(self.registrations)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+    def test_withdraw_while_registration_closed_does_not_reopen(self):
+        self.publish()
+        self.create_participants()
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+        participant = self.registrations[0].participants.first()
+        participant.states.withdraw(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+    def test_remove_while_registration_closed_does_not_reopen(self):
+        self.publish()
+        self.create_participants()
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+        participant = self.registrations[0].participants.first()
+        participant.states.remove(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+    def test_capacity_increase_while_registration_closed_does_not_reopen(self):
+        self.publish()
+        self.create_participants()
+
+        self.activity.capacity = len(self.registrations)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.capacity = len(self.registrations) + 5
+        self.activity.save()
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+
     def test_cancel(self):
         self.create_participants()
         super().test_cancel()
@@ -177,6 +248,7 @@ class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
     def setUp(self):
         super().setUp()
         self.activity.team_activity = 'teams'
+
         self.activity.save()
 
     def register_team(self):

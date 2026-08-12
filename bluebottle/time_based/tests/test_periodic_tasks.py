@@ -19,18 +19,12 @@ from bluebottle.notifications.models import Message
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.tasks import (
-    date_activity_tasks,
-    periodic_activity_tasks,
-    periodic_slot_tasks,
-    schedule_activity_tasks,
-    schedule_slot_tasks,
-    team_schedule_slot_tasks,
-)
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory, DateActivitySlotFactory,
     DateRegistrationFactory,
+    DeadlineActivityFactory,
+    DeadlineRegistrationFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
@@ -38,6 +32,15 @@ from bluebottle.time_based.tests.factories import (
     ScheduleSlotFactory,
     TeamFactory,
     TeamMemberFactory,
+)
+from bluebottle.time_based.tasks import (
+    date_activity_tasks,
+    deadline_activity_tasks,
+    periodic_activity_tasks,
+    periodic_slot_tasks,
+    schedule_activity_tasks,
+    schedule_slot_tasks,
+    team_schedule_slot_tasks,
 )
 from bluebottle.time_based.triggers import slots
 
@@ -75,14 +78,14 @@ class TimeBasedActivityPeriodicTasksTestCase():
 
         self.assertEqual(self.activity.status, 'expired')
 
-    def test_full_after_registration_deadline(self):
+    def test_registration_closed_after_registration_deadline(self):
         self.participant_factory.create(activity=self.activity)
         self.run_task(self.after_registration_deadline)
 
         with LocalTenant(self.tenant, clear_tenant=True):
             self.activity.refresh_from_db()
 
-        self.assertEqual(self.activity.status, 'full')
+        self.assertEqual(self.activity.status, 'registration_closed')
 
 
 class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
@@ -592,9 +595,81 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         with LocalTenant(self.tenant, clear_tenant=True):
             self.activity.refresh_from_db()
 
-        # Activity should NOT expire - it should be 'full' instead
+        # Activity should NOT expire - it should be registration_closed instead
         self.assertNotEqual(self.activity.status, 'expired')
+        self.assertEqual(self.activity.status, 'registration_closed')
+
+    def test_registration_closed_from_full_after_registration_deadline(self):
+        self.slot.capacity = 1
+        self.slot.save()
+        registration = DateRegistrationFactory.create(
+            status='accepted', activity=self.activity
+        )
+        DateParticipantFactory.create(
+            registration=registration,
+            slot=self.slot,
+        )
+        self.slot.refresh_from_db()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.slot.status, 'full')
         self.assertEqual(self.activity.status, 'full')
+
+        self.run_task(self.after_registration_deadline)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+            self.slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'registration_closed')
+        self.assertEqual(self.slot.status, 'registration_closed')
+
+
+class DeadlineActivityPeriodicTasksTest(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.activity = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            review=False,
+            capacity=1,
+        )
+        self.activity.states.publish(save=True)
+        self.tenant = connection.tenant
+
+    @property
+    def after_registration_deadline(self):
+        return make_aware(
+            datetime(
+                self.activity.registration_deadline.year,
+                self.activity.registration_deadline.month,
+                self.activity.registration_deadline.day
+            ) + timedelta(days=1),
+            timezone.get_current_timezone()
+        )
+
+    def run_task(self, when):
+        with mock.patch.object(timezone, 'now', return_value=when):
+            with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+                mock_date.today.return_value = when.date()
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+                deadline_activity_tasks()
+
+    def test_registration_closed_from_full_after_registration_deadline(self):
+        user = BlueBottleUserFactory.create()
+        DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user,
+        )
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+
+        self.run_task(self.after_registration_deadline)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, 'registration_closed')
 
 
 class SlotActivityPeriodicTasksTest(BluebottleTestCase):

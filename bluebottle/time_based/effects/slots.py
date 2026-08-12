@@ -40,6 +40,6 @@ class LockActivityEffect(Effect):
     def post_save(self, **kwargs):
         if (
             all(slot.status == 'full' for slot in self.instance.activity.slots.all()) and
-            self.instance.activity.status != 'full'
+            self.instance.activity.status not in ('full', 'registration_closed')
         ):
             self.instance.activity.states.lock(save=True)

@@ -231,7 +231,9 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def active_slots(self):
-        return self.slots.filter(status__in=['open', 'full', 'running', 'finished']).order_by('start', 'id')
+        return self.slots.filter(
+            status__in=['open', 'full', 'registration_closed', 'running', 'finished']
+        ).order_by('start', 'id')
 
     @property
     def active_durations(self):

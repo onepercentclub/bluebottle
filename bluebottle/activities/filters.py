@@ -106,6 +106,7 @@ class UpcomingFacet(Facet):
             statuses = ["open", "running"]
             if settings.include_full_activities:
                 statuses.append("full")
+                statuses.append("registration_closed")
             return Terms(status=statuses)
         if filter_values == ["0"]:
             return Terms(status=["succeeded", "partially_funded", "refunded"])
@@ -182,6 +183,7 @@ class MatchingFacet(BooleanFacet):
         statuses = ["open", "running"]
         if settings.include_full_activities:
             statuses.append("full")
+            statuses.append("registration_closed")
 
         filters = Terms(status=statuses)
 
@@ -330,7 +332,16 @@ class StatusFacet(Facet):
         if filter_values == ["needs_work"]:
             return Terms(status=["needs_work"])
         if filter_values == ["open"]:
-            return Terms(status=["open", "running", "full", "on_hold", "granted"])
+            return Terms(
+                status=[
+                    "open",
+                    "running",
+                    "full",
+                    "registration_closed",
+                    "on_hold",
+                    "granted",
+                ]
+            )
         if filter_values == ["succeeded"]:
             return Terms(status=["succeeded", "partially_funded"])
         if filter_values == ["failed"]:
@@ -348,7 +359,15 @@ class InitiativeFacet(TermsFacet):
         initiative_filter = Nested(
             path="initiative", query=(Terms(initiative__id=filter_values))
         )
-        open_filter = Terms(status=["succeeded", "open", "full", "partially_funded"])
+        open_filter = Terms(
+            status=[
+                "succeeded",
+                "open",
+                "full",
+                "registration_closed",
+                "partially_funded",
+            ]
+        )
         user = get_current_user()
         if user.is_authenticated:
             return (
@@ -604,7 +623,14 @@ class ActivitySearch(Search):
         if "initiative.id" not in self._filters and "status" not in self._filters:
             search = search.filter(
                 Terms(
-                    status=["succeeded", "open", "full", "partially_funded", "refunded"]
+                    status=[
+                        "succeeded",
+                        "open",
+                        "full",
+                        "registration_closed",
+                        "partially_funded",
+                        "refunded",
+                    ]
                 )
             )
 

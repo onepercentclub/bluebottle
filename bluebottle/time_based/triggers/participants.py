@@ -18,6 +18,7 @@ from bluebottle.time_based.effects import CreatePreparationTimeContributionEffec
 from bluebottle.time_based.effects.effects import (
     CreateSchedulePreparationTimeContributionEffect,
 )
+from bluebottle.time_based.effects.interests import DeleteInterestEffect
 from bluebottle.time_based.effects.participants import (
     CreateScheduleContributionEffect,
     CreateTimeContributionEffect,
@@ -1206,6 +1207,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.initiate,
             effects=[
+                DeleteInterestEffect,
                 CreateDateRegistrationEffect,
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(

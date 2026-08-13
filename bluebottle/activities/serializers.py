@@ -263,7 +263,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_start(self, obj):
         if hasattr(obj, "slots") and obj.slots:
-            upcoming = obj.status in ("open", "full")
+            upcoming = obj.status in ("open", "full", "registration_closed")
             slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[0].start
@@ -272,7 +272,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_end(self, obj):
         if hasattr(obj, "slots") and obj.slots:
-            upcoming = obj.status in ("open", "full")
+            upcoming = obj.status in ("open", "full", "registration_closed")
 
             tz = get_current_timezone()
             try:

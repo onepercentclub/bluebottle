@@ -28,6 +28,7 @@ from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffe
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
+from bluebottle.time_based.effects.slots import ReopenRegistrationClosedSlotsEffect
 from bluebottle.time_based.messages.activity_manager import (
     PastActivityRegisteredNotification,
     PastActivityApprovedNotification,
@@ -129,10 +130,13 @@ def is_finished(effect):
 def registration_deadline_is_passed(effect):
     """
     registration deadline has passed
+
+    The deadline day itself is closed, matching
+    TimeBasedActivityRegistrationDeadlinePassedTask.
     """
     return (
         effect.instance.registration_deadline and
-        effect.instance.registration_deadline < date.today()
+        effect.instance.registration_deadline <= date.today()
     )
 
 
@@ -196,9 +200,36 @@ def is_open(effect):
 
 def is_locked(effect):
     """
-    is locked
+    is locked (capacity full)
     """
     return effect.instance.status == 'full'
+
+
+def is_registration_closed(effect):
+    """
+    registration is closed
+    """
+    return effect.instance.status == 'registration_closed'
+
+
+def can_close_registration(effect):
+    """
+    activity is open or full and can close registration
+    """
+    return effect.instance.status in ('open', 'full')
+
+
+def can_reopen_when_deadline_extended(effect):
+    """
+    may reopen after the activity deadline is extended or removed
+
+    Registration closed activities only reopen when the registration deadline
+    is also no longer passed. Other statuses (e.g. succeeded) may reopen, after
+    which registration can be closed again if needed.
+    """
+    if is_registration_closed(effect):
+        return registration_deadline_is_not_passed(effect)
+    return True
 
 
 class TimeBasedTriggers(ActivityTriggers):
@@ -207,17 +238,25 @@ class TimeBasedTriggers(ActivityTriggers):
             'registration_deadline',
             effects=[
                 TransitionEffect(
-                    TimeBasedStateMachine.lock,
+                    TimeBasedStateMachine.close_registration,
                     conditions=[
                         registration_deadline_is_passed,
-                        is_open
+                        can_close_registration
                     ]
                 ),
                 TransitionEffect(
                     TimeBasedStateMachine.reopen,
                     conditions=[
                         registration_deadline_is_not_passed,
-                        is_locked
+                        is_registration_closed
+                    ]
+                ),
+                TransitionEffect(
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        is_full,
+                        registration_deadline_is_not_passed,
+                        is_open,
                     ]
                 ),
             ]
@@ -243,6 +282,21 @@ class TimeBasedTriggers(ActivityTriggers):
         ),
         ModelChangedTrigger(
             "preparation", effects=[RelatedPreparationTimeContributionEffect]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.close_registration,
+            effects=[
+                RelatedTransitionEffect(
+                    'slots',
+                    DateActivitySlotStateMachine.close_registration,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.reopen,
+            effects=[
+                ReopenRegistrationClosedSlotsEffect,
+            ]
         ),
         TransitionTrigger(
             TimeBasedStateMachine.publish,
@@ -416,7 +470,7 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
                     ]
                 ),
                 TransitionEffect(
-                    TimeBasedStateMachine.lock,
+                    TimeBasedStateMachine.close_registration,
                     conditions=[
                         registration_deadline_is_passed,
                     ]
@@ -471,10 +525,11 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
                     RegistrationActivityStateMachine.lock,
                     conditions=[
                         is_full,
+                        registration_deadline_is_not_passed,
                     ]
                 ),
                 TransitionEffect(
-                    RegistrationActivityStateMachine.lock,
+                    RegistrationActivityStateMachine.close_registration,
                     conditions=[
                         registration_deadline_is_passed,
                     ]
@@ -502,7 +557,23 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
                 TransitionEffect(
                     RegistrationActivityStateMachine.reopen,
                     conditions=[
-                        deadline_is_not_passed
+                        deadline_is_not_passed,
+                        can_reopen_when_deadline_extended,
+                    ]
+                ),
+                TransitionEffect(
+                    RegistrationActivityStateMachine.lock,
+                    conditions=[
+                        deadline_is_not_passed,
+                        is_full,
+                        registration_deadline_is_not_passed,
+                    ]
+                ),
+                TransitionEffect(
+                    RegistrationActivityStateMachine.close_registration,
+                    conditions=[
+                        deadline_is_not_passed,
+                        registration_deadline_is_passed,
                     ]
                 ),
             ]

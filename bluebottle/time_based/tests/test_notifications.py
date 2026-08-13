@@ -5,7 +5,10 @@ from bluebottle.activities.messages.activity_manager import (
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import NotificationTestCase
+from django.template import defaultfilters
+from datetime import date, timedelta
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, ParticipantFinishedNotification,
     ParticipantWithdrewNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
@@ -13,7 +16,8 @@ from bluebottle.time_based.messages import (
     SlotCancelledNotification, ParticipantAddedNotification,
     ParticipantSlotParticipantRegisteredNotification,
     ManagerSlotParticipantRegisteredNotification,
-    ManagerSlotParticipantWithdrewNotification
+    ManagerSlotParticipantWithdrewNotification,
+    SpotOpenedNotification,
 )
 from bluebottle.time_based.messages.activity_manager import PastActivityRegisteredNotification
 from bluebottle.time_based.messages.participants import RegisteredActivityParticipantAddedNotification
@@ -23,7 +27,7 @@ from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNo
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory,
     DeadlineActivityFactory, DeadlineRegistrationFactory, DateRegistrationFactory, RegisteredDateActivityFactory,
-    RegisteredDateParticipantFactory
+    RegisteredDateParticipantFactory, InterestFactory
 )
 
 
@@ -402,3 +406,86 @@ class RegisteredDateParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('You have been added to the activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('View activity')
+
+
+class SpotOpenedNotificationTestCase(NotificationTestCase):
+
+    def test_deadline_activity(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        other = BlueBottleUserFactory.create(first_name='Grace')
+        self.obj = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            is_online=True,
+            location=None,
+        )
+        InterestFactory.create(activity=self.obj, user=interested)
+        InterestFactory.create(activity=self.obj, user=other)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([interested, other])
+        self.assertSubject('A spot has opened up for an activity on Test.')
+        self.assertBodyContains('Good news, a spot has opened up for the activity:')
+        self.assertBodyContains('Save the world!')
+        self.assertBodyContains('first-come, first-served')
+        self.assertBodyContains("If you're no longer interested, you don't need to do anything.")
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_date_slot(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DateActivityFactory.create(title="Save the world!")
+        self.obj = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+            is_online=True,
+            location=None,
+        )
+        InterestFactory.create(activity=activity, slot=self.obj, user=interested)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([interested])
+        self.assertSubject('A spot has opened up for an activity on Test.')
+        self.assertBodyContains('Save the world!')
+        self.assertBodyContains('Anywhere/Online')
+        self.assertActionLink(activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_deadline_activity_includes_date_and_location(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        location = GeolocationFactory.create()
+        start = date.today() + timedelta(days=7)
+        deadline = date.today() + timedelta(days=14)
+        self.obj = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            is_online=False,
+            location=location,
+            start=start,
+            deadline=deadline,
+            registration_deadline=None,
+        )
+        InterestFactory.create(activity=self.obj, user=interested)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([interested])
+        self.assertBodyContains(defaultfilters.date(start))
+        self.assertBodyContains(defaultfilters.date(deadline))
+        self.assertBodyContains(location.formatted_address)
+
+    def test_no_recipients_without_interest(self):
+        self.obj = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+            registration_deadline=None,
+        )
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([])

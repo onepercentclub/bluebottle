@@ -259,13 +259,25 @@ class MockQueryset:
         self.elements = elements
 
     def first(self):
-        return self.elements[0]
+        return self.elements[0] if self.elements else None
 
     def last(self):
-        return self.elements[-1]
+        return self.elements[-1] if self.elements else None
 
     def count(self):
         return len(self.elements)
+
+    def all(self):
+        return self
+
+    def filter(self, **kwargs):
+        return self
+
+    def select_related(self, *args):
+        return self
+
+    def __iter__(self):
+        return iter(self.elements)
 
 
 class MockActivity:
@@ -290,12 +302,24 @@ class MockActivity:
         self.hour_registration_data = None
         self.even_data = None
         self.period = 'weeks'
+        self.is_online = True
+        self.location = None
+        self.interests = MockQueryset([MockInterest(language)])
 
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/details/deed/{self.id}/{self.slug}"
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/admin/activities/deed/{self.id}/{self.slug}"
+
+
+class MockInterest:
+    """Mock Interest object for spot-opened notifications"""
+
+    def __init__(self, language='en'):
+        self.id = 999
+        self.pk = 999
+        self.user = MockMember(language)
 
 
 class MockParticipant:
@@ -363,6 +387,7 @@ class MockSlot:
         self.is_online = True
         self.online_meeting_url = "https://example.goodup.com/en/meeting/vzzbxx"
         self.location_hint = ""
+        self.interests = MockQueryset([MockInterest(language)])
 
     @property
     def owner(self):

@@ -938,3 +938,57 @@ class SlotCancelledNotification(TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('platform-email', 'View this activity')
+
+
+class SpotOpenedNotification(TransitionMessage):
+    """
+    A spot opened on a previously full activity or date slot.
+    Interested members are notified on a first-come, first-served basis.
+    """
+    subject = pgettext(
+        'platform-email',
+        'A spot has opened up for an activity on {site_name}.'
+    )
+    template = 'messages/spot_opened'
+    action_title = pgettext('platform-email', 'View activity')
+
+    @property
+    def action_link(self):
+        if isinstance(self.obj, DateActivitySlot):
+            return self.obj.activity.get_absolute_url()
+        return self.obj.get_absolute_url()
+
+    def get_recipients(self):
+        """interested members"""
+        if isinstance(self.obj, DateActivitySlot):
+            return [interest.user for interest in self.obj.interests.all()]
+        return [
+            interest.user
+            for interest in self.obj.interests.filter(slot__isnull=True)
+        ]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if isinstance(self.obj, DateActivitySlot):
+            context['title'] = self.obj.activity.title
+            slot_info = get_slot_info(self.obj)
+            context['slots'] = [slot_info] if slot_info else []
+            context['start'] = None
+            context['end'] = None
+            context['is_online'] = None
+            context['location'] = None
+            return context
+
+        context['title'] = self.obj.title
+        context['slots'] = []
+        context['start'] = (
+            defaultfilters.date(self.obj.start) if self.obj.start else None
+        )
+        deadline = getattr(self.obj, 'deadline', None)
+        context['end'] = defaultfilters.date(deadline) if deadline else None
+        context['is_online'] = self.obj.is_online
+        if self.obj.location and not self.obj.is_online:
+            context['location'] = self.obj.location.formatted_address
+        else:
+            context['location'] = None
+        return context

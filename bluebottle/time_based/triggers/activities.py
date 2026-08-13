@@ -33,6 +33,7 @@ from bluebottle.time_based.messages.activity_manager import (
     PastActivityApprovedNotification,
     PastActivitySubmittedNotification
 )
+from bluebottle.time_based.messages.messages import SpotOpenedNotification
 from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNotification
 from bluebottle.time_based.models import (
     DateActivity,
@@ -226,7 +227,7 @@ class TimeBasedTriggers(ActivityTriggers):
             'capacity',
             effects=[
                 TransitionEffect(
-                    TimeBasedStateMachine.reopen,
+                    TimeBasedStateMachine.unlock,
                     conditions=[
                         is_not_full,
                         registration_deadline_is_not_passed
@@ -243,6 +244,15 @@ class TimeBasedTriggers(ActivityTriggers):
         ),
         ModelChangedTrigger(
             "preparation", effects=[RelatedPreparationTimeContributionEffect]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.unlock,
+            effects=[
+                NotificationEffect(
+                    SpotOpenedNotification,
+                    conditions=[registration_deadline_is_not_passed],
+                ),
+            ]
         ),
         TransitionTrigger(
             TimeBasedStateMachine.publish,
@@ -517,7 +527,7 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
             "capacity",
             effects=[
                 TransitionEffect(
-                    TimeBasedStateMachine.reopen,
+                    TimeBasedStateMachine.unlock,
                     conditions=[is_not_full, registration_deadline_is_not_passed],
                 ),
                 TransitionEffect(
@@ -550,7 +560,7 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
             "capacity",
             effects=[
                 TransitionEffect(
-                    TimeBasedStateMachine.reopen,
+                    TimeBasedStateMachine.unlock,
                     conditions=[is_not_full, registration_deadline_is_not_passed],
                 ),
                 TransitionEffect(

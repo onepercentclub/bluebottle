@@ -455,6 +455,43 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             any(interested.email in message.to for message in mail.outbox)
         )
 
+    def test_reject_pending_participant_does_not_notify_interested(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+
+        self.activity.review = True
+        self.activity.save()
+
+        pending_registration = DateRegistrationFactory.create(activity=self.activity)
+        pending = DateParticipantFactory.create(
+            registration=pending_registration, slot=self.slot
+        )
+        self.assertStatus(pending, "new")
+
+        mail.outbox = []
+        pending.states.reject(save=True)
+
+        self.assertStatus(self.slot, "full")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
     def test_other_slot_interest_not_notified(self):
         self.slot.capacity = 1
         self.slot.save()

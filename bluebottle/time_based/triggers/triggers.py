@@ -335,6 +335,23 @@ def is_not_owner(effect):
     return True
 
 
+def spots_taken_after_release(taken, instance):
+    """
+    Number of spots taken once this instance releases the spot it holds.
+
+    Conditions are evaluated before the instance is saved, so an instance that
+    holds a spot is still counted. An instance that holds no spot yet, such as
+    a participant awaiting review, does not free one up. Activities that count
+    spots on another model, such as schedule activities counting registrations,
+    fall back to assuming the spot is released.
+    """
+    count = taken.count()
+    if isinstance(instance, taken.model):
+        holds_spot = bool(instance.pk) and taken.filter(pk=instance.pk).exists()
+        return count - 1 if holds_spot else count
+    return count - 1
+
+
 def activity_will_be_full(effect):
     """
     the activity is full
@@ -368,7 +385,9 @@ def activity_will_not_be_full(effect):
 
     return (
         not activity.capacity or
-        activity.capacity >= len(activity.accepted_participants)
+        activity.capacity > spots_taken_after_release(
+            activity.accepted_participants, effect.instance
+        )
     )
 
 

@@ -56,6 +56,7 @@ from bluebottle.time_based.states.registrations import (
     ScheduleRegistrationStateMachine,
 )
 from bluebottle.time_based.states.states import PeriodicActivityStateMachine
+from bluebottle.time_based.triggers.triggers import spots_taken_after_release
 
 
 def review_needed(effect):
@@ -268,8 +269,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             return True
         accepted = effect.instance.activity.registrations.filter(
             status="accepted"
-        ).count()
-        return effect.instance.activity.capacity > accepted - 1
+        )
+        return effect.instance.activity.capacity > spots_taken_after_release(
+            accepted, effect.instance
+        )
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
@@ -500,8 +503,10 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
 
         accepted = effect.instance.activity.registrations.filter(
             status="accepted"
-        ).count()
-        return effect.instance.activity.capacity > accepted - 1
+        )
+        return effect.instance.activity.capacity > spots_taken_after_release(
+            accepted, effect.instance
+        )
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(

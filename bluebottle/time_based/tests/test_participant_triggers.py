@@ -342,6 +342,36 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
             any(interested.email in message.to for message in mail.outbox)
         )
 
+    def test_reject_pending_applicant_does_not_notify_interested(self):
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(activity=self.activity, user=interested)
+
+        self.activity.review = True
+        self.activity.capacity = 1
+        self.activity.save()
+
+        self.register()
+        self.participant.registration.states.accept(save=True)
+
+        self.register()
+        pending = self.participant
+        self.assertEqual(pending.status, "new")
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+        mail.outbox = []
+        pending.states.reject(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
     def test_initial_succeed_activity(self):
         self.activity.deadline = date.today() - timedelta(days=4)
         self.activity.save()

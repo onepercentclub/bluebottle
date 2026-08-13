@@ -431,7 +431,7 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Save the world!')
         self.assertBodyContains('first-come, first-served')
         self.assertBodyContains("If you're no longer interested, you don't need to do anything.")
-        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionLink(self.obj.get_absolute_url() + '?spotOpened=true')
         self.assertActionTitle('View activity')
 
     def test_date_slot(self):
@@ -455,7 +455,7 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertSubject('A spot has opened up for an activity on Test.')
         self.assertBodyContains('Save the world!')
         self.assertBodyContains(defaultfilters.date(activity.start))
-        self.assertActionLink(activity.get_absolute_url())
+        self.assertActionLink(activity.get_absolute_url() + '?spotOpened=true')
         self.assertActionTitle('View activity')
 
     def test_date_slot_does_not_leak_online_meeting_url(self):

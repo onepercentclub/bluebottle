@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from urllib.parse import urlencode
+
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone
@@ -955,8 +957,10 @@ class SpotOpenedNotification(TransitionMessage):
     @property
     def action_link(self):
         if isinstance(self.obj, DateActivitySlot):
-            return self.obj.activity.get_absolute_url()
-        return self.obj.get_absolute_url()
+            url = self.obj.activity.get_absolute_url()
+        else:
+            url = self.obj.get_absolute_url()
+        return '{}?{}'.format(url, urlencode({'spotOpened': 'true'}))
 
     def get_recipients(self):
         """interested members"""

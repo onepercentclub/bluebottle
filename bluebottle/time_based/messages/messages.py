@@ -972,6 +972,8 @@ class SpotOpenedNotification(TransitionMessage):
         if isinstance(self.obj, DateActivitySlot):
             context['title'] = self.obj.activity.title
             slot_info = get_slot_info(self.obj)
+            if slot_info:
+                slot_info = dict(slot_info, online_meeting_url=None)
             context['slots'] = [slot_info] if slot_info else []
             context['start'] = None
             context['end'] = None

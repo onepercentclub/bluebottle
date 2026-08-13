@@ -2,6 +2,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect, TransitionEffect
+from bluebottle.time_based.states.slots import DateActivitySlotStateMachine
 
 
 class CreateTeamSlotParticipantsEffect(Effect):
@@ -53,7 +54,6 @@ class ReopenRegistrationClosedSlotsEffect(Effect):
     Slot lock triggers can mark the activity full while sibling slots are still
     registration_closed, so capacity is recalculated after those slots are saved.
     """
-    post_save = True
     display = False
 
     def __init__(self, *args, **kwargs):
@@ -66,8 +66,6 @@ class ReopenRegistrationClosedSlotsEffect(Effect):
             self.slots = []
 
     def pre_save(self, effects):
-        from bluebottle.time_based.states.slots import DateActivitySlotStateMachine
-
         self.reopened_slots = []
         for slot in self.slots:
             if slot.status != 'registration_closed':

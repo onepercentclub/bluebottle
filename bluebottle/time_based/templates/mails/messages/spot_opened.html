@@ -7,41 +7,19 @@
     </p>
     <p>
         <b>{{ title }}</b><br/>
-        {% if slots %}
-            {% for slot in slots %}
-                {{ slot.start_date }}<br/>
-                {{ slot.start_time }} to {{ slot.end_time }} ({{ slot.timezone }})<br/>
-                {% if slot.is_online %}
-                    {% if slot.online_meeting_url %}
-                        <a href="{{ slot.online_meeting_url }}">
-                            {% trans "Meeting link" context "platform-email" %}
-                        </a>
-                    {% else %}
-                        {% trans "Anywhere/Online" context "platform-email" %}
-                    {% endif %}
-                {% else %}
-                    {{ slot.location }}
-                    {% if slot.location_hint %}
-                        <br/>
-                        {{ slot.location_hint }}
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            {% if start or end %}
-                {% if start and end %}
-                    {{ start }} – {{ end }}<br/>
-                {% elif start %}
-                    {{ start }}<br/>
-                {% else %}
-                    {{ end }}<br/>
-                {% endif %}
+        {% if start or end %}
+            {% if start and end %}
+                {{ start }} – {{ end }}<br/>
+            {% elif start %}
+                {{ start }}<br/>
+            {% else %}
+                {{ end }}<br/>
             {% endif %}
-            {% if is_online %}
-                {% trans "Anywhere/Online" context "platform-email" %}
-            {% elif location %}
-                {{ location }}
-            {% endif %}
+        {% endif %}
+        {% if is_online %}
+            {% trans "Anywhere/Online" context "platform-email" %}
+        {% elif location %}
+            {{ location }}
         {% endif %}
     </p>
     <p>

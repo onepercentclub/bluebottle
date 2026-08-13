@@ -436,7 +436,10 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
 
     def test_date_slot(self):
         interested = BlueBottleUserFactory.create(first_name='Ada')
-        activity = DateActivityFactory.create(title="Save the world!")
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+        )
         self.obj = DateActivitySlotFactory.create(
             activity=activity,
             status='full',
@@ -451,19 +454,23 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertRecipients([interested])
         self.assertSubject('A spot has opened up for an activity on Test.')
         self.assertBodyContains('Save the world!')
-        self.assertBodyContains('Anywhere/Online')
+        self.assertBodyContains(defaultfilters.date(activity.start))
         self.assertActionLink(activity.get_absolute_url())
         self.assertActionTitle('View activity')
 
     def test_date_slot_does_not_leak_online_meeting_url(self):
         interested = BlueBottleUserFactory.create(first_name='Ada')
-        activity = DateActivityFactory.create(title="Save the world!")
+        slot_location = GeolocationFactory.create()
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+        )
         self.obj = DateActivitySlotFactory.create(
             activity=activity,
             status='full',
             capacity=1,
             is_online=True,
-            location=None,
+            location=slot_location,
             online_meeting_url='https://example.com/secret-meeting',
         )
         InterestFactory.create(activity=activity, slot=self.obj, user=interested)
@@ -471,8 +478,11 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.message_class = SpotOpenedNotification
         self.create()
         self.assertRecipients([interested])
+        context = self.message.get_context(interested)
+        self.assertNotIn('slots', context)
+        self.assertNotIn('online_meeting_url', context)
         self.assertBodyNotContains('https://example.com/secret-meeting')
-        self.assertBodyContains('Anywhere/Online')
+        self.assertBodyNotContains(slot_location.formatted_address)
 
     def test_deadline_activity_includes_date_and_location(self):
         interested = BlueBottleUserFactory.create(first_name='Ada')

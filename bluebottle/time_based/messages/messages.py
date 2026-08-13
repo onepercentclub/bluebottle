@@ -969,28 +969,22 @@ class SpotOpenedNotification(TransitionMessage):
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        if isinstance(self.obj, DateActivitySlot):
-            context['title'] = self.obj.activity.title
-            slot_info = get_slot_info(self.obj)
-            if slot_info:
-                slot_info = dict(slot_info, online_meeting_url=None)
-            context['slots'] = [slot_info] if slot_info else []
-            context['start'] = None
-            context['end'] = None
-            context['is_online'] = None
-            context['location'] = None
-            return context
-
-        context['title'] = self.obj.title
-        context['slots'] = []
-        context['start'] = (
-            defaultfilters.date(self.obj.start) if self.obj.start else None
+        activity = (
+            self.obj.activity
+            if isinstance(self.obj, DateActivitySlot)
+            else self.obj
         )
-        deadline = getattr(self.obj, 'deadline', None)
+        context['title'] = activity.title
+        start = getattr(activity, 'start', None)
+        context['start'] = (
+            defaultfilters.date(start) if start else None
+        )
+        deadline = getattr(activity, 'deadline', None)
         context['end'] = defaultfilters.date(deadline) if deadline else None
-        context['is_online'] = self.obj.is_online
-        if self.obj.location and not self.obj.is_online:
-            context['location'] = self.obj.location.formatted_address
+        context['is_online'] = getattr(activity, 'is_online', None)
+        location = getattr(activity, 'location', None)
+        if location and not context['is_online']:
+            context['location'] = location.formatted_address
         else:
             context['location'] = None
         return context

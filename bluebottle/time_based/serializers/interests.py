@@ -93,6 +93,16 @@ class InterestSerializer(ModelSerializer):
             status__in=ACTIVE_PARTICIPANT_STATUSES,
         ).exists()
 
+    def _existing_interest(self, user, activity, slot):
+        if slot:
+            return Interest.objects.filter(user=user, slot=slot).exists()
+
+        return Interest.objects.filter(
+            user=user,
+            activity=activity,
+            slot__isnull=True,
+        ).exists()
+
     def validate(self, data):
         request = self.context['request']
         user = data.get('user') or request.user
@@ -103,6 +113,7 @@ class InterestSerializer(ModelSerializer):
             raise ValidationError({'activity': [_('This field is required.')]})
 
         activity = activity.get_real_instance()
+        already_interested = self._existing_interest(user, activity, slot)
 
         if isinstance(activity, DateActivity):
             if not slot:
@@ -113,7 +124,10 @@ class InterestSerializer(ModelSerializer):
                 raise ValidationError(
                     {'slot': [_('Slot does not belong to this activity.')]}
                 )
-            if slot.status != 'full':
+            if not already_interested and (
+                slot.status != 'full'
+                or activity.status == 'registration_closed'
+            ):
                 raise ValidationError(
                     _('Interests can only be registered for full slots.')
                 )
@@ -122,7 +136,7 @@ class InterestSerializer(ModelSerializer):
                 raise ValidationError(
                     {'slot': [_('Slot is only allowed for date activities.')]}
                 )
-            if activity.status != 'full':
+            if not already_interested and activity.status != 'full':
                 raise ValidationError(
                     _('Interests can only be registered for full activities.')
                 )

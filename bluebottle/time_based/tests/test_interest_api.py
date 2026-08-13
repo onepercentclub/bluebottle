@@ -147,6 +147,83 @@ class InterestListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertEqual(self.model.activity, activity)
 
+    def test_create_registration_closed_activity(self):
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_registration_closed_not_at_capacity(self):
+        """Interest stays blocked when closed, even if capacity is free."""
+        self.activity.status = 'registration_closed'
+        self.activity.capacity = 10
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_registration_closed_periodic(self):
+        activity = PeriodicActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='registration_closed',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        self.defaults = {'activity': activity}
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_registration_closed_schedule(self):
+        activity = ScheduleActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='registration_closed',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        self.defaults = {'activity': activity}
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_after_withdraw_while_registration_closed(self):
+        """Freed capacity after withdraw must not reopen interest signup."""
+        participant = DeadlineParticipantFactory.create(
+            activity=self.activity,
+            status='accepted',
+        )
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+
+        participant.states.withdraw(save=True)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'registration_closed')
+
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_idempotent_when_already_interested_and_closed(self):
+        existing = InterestFactory.create(user=self.user, activity=self.activity)
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.pk, existing.pk)
+
+    def test_create_allowed_again_when_reopened_to_full(self):
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.activity.status = 'full'
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.activity, self.activity)
+
 
 class InterestDateSlotAPITestCase(APITestCase):
     url_name = 'interest-list'
@@ -245,6 +322,18 @@ class InterestDateSlotAPITestCase(APITestCase):
             self.activity.interests.filter(user=self.user).count(),
             2,
         )
+
+    def test_create_registration_closed_slot(self):
+        self.slot.status = 'registration_closed'
+        self.slot.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_when_activity_registration_closed(self):
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
 
 class InterestDetailAPITestCase(APITestCase):
@@ -390,6 +479,15 @@ class DeadlineActivityMyInterestAPITestCase(APITestCase):
             self.response.json()['data']['relationships']['my-interest']['data']
         )
 
+    def test_my_interest_persists_after_registration_closed(self):
+        interest = InterestFactory.create(user=self.user, activity=self.model)
+        self.model.status = 'registration_closed'
+        self.model.save()
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertIncluded('my-interest', interest)
+
 
 class PeriodicActivityMyInterestAPITestCase(APITestCase):
     url_name = 'periodic-detail'
@@ -474,3 +572,18 @@ class DateSlotMyInterestAPITestCase(APITestCase):
         self.assertIsNone(
             self.response.json()['data']['relationships']['my-interest']['data']
         )
+
+    def test_my_interest_persists_after_registration_closed(self):
+        interest = InterestFactory.create(
+            user=self.user,
+            activity=self.activity,
+            slot=self.model,
+        )
+        self.model.status = 'registration_closed'
+        self.model.save()
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertIncluded('my-interest', interest)

@@ -3,6 +3,7 @@ from rest_framework_json_api.relations import (
     HyperlinkedRelatedField,
     ResourceRelatedField,
     SerializerMethodHyperlinkedRelatedField,
+    SerializerMethodResourceRelatedField,
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -14,7 +15,7 @@ from bluebottle.fsm.serializers import (
     TransitionSerializer,
 )
 from bluebottle.geo.models import Geolocation
-from bluebottle.time_based.models import DateActivitySlot, Skill, TimeContribution
+from bluebottle.time_based.models import DateActivitySlot, Interest, Skill, TimeContribution
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.translations.serializers import TranslationsSerializer
@@ -110,10 +111,24 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
         },
     )
 
+    my_interest = SerializerMethodResourceRelatedField(
+        model=Interest,
+        read_only=True,
+        source='get_my_interest'
+    )
+
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
     links = serializers.SerializerMethodField()
     translations = TranslationsSerializer(fields=['title'])
+
+    def get_my_interest(self, instance):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return None
+        if hasattr(instance, '_my_interests'):
+            return instance._my_interests[0] if instance._my_interests else None
+        return instance.interests.filter(user=user).first()
 
     def get_links(self, instance):
         if instance.start and instance.duration:
@@ -160,6 +175,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'duration',
             'capacity',
             'participants',
+            'my_interest',
         )
 
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
@@ -168,6 +184,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'activity',
             'my_contributor',
             'my_contributor.user',
+            'my_interest',
             'location',
             'location.country'
         ]
@@ -178,6 +195,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'country': 'bluebottle.geo.serializers.CountrySerializer',
+            'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
         }
     )
 

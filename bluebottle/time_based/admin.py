@@ -70,6 +70,7 @@ from bluebottle.time_based.models import (
     TeamScheduleRegistration,
     TeamScheduleSlot,
     TimeContribution, RegisteredDateActivity, RegisteredDateParticipant,
+    Interest,
 )
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
@@ -1889,3 +1890,11 @@ class SkillAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, Tr
         )
 
     member_link.short_description = _('Users with this skill')
+
+
+@admin.register(Interest)
+class InterestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'activity', 'slot', 'created')
+    raw_id_fields = ('user', 'activity', 'slot')
+    readonly_fields = ('created',)
+    search_fields = ('user__email', 'user__first_name', 'user__last_name', 'activity__title')

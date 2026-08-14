@@ -2151,5 +2151,72 @@ class PeriodicParticipant(Participant, Contributor):
         resource_name = "contributors/time-based/periodic-participants"
 
 
+class Interest(models.Model):
+    """
+    A member registering interest in a full activity or date slot,
+    to be notified when a spot opens up.
+    """
+    user = models.ForeignKey(
+        'members.Member',
+        related_name='interests',
+        on_delete=models.CASCADE,
+    )
+    activity = models.ForeignKey(
+        Activity,
+        related_name='interests',
+        on_delete=models.CASCADE,
+    )
+    slot = models.ForeignKey(
+        'time_based.DateActivitySlot',
+        related_name='interests',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
+    created = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = _('Interest')
+        verbose_name_plural = _('Interests')
+        permissions = (
+            ('api_read_interest', 'Can view interest through the API'),
+            ('api_add_interest', 'Can add interest through the API'),
+            ('api_change_interest', 'Can change interest through the API'),
+            ('api_delete_interest', 'Can delete interest through the API'),
+            ('api_read_own_interest', 'Can view own interest through the API'),
+            ('api_add_own_interest', 'Can add own interest through the API'),
+            ('api_change_own_interest', 'Can change own interest through the API'),
+            ('api_delete_own_interest', 'Can delete own interest through the API'),
+        )
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'slot'],
+                condition=models.Q(slot__isnull=False),
+                name='unique_interest_user_slot',
+            ),
+            models.UniqueConstraint(
+                fields=['user', 'activity'],
+                condition=models.Q(slot__isnull=True),
+                name='unique_interest_user_activity',
+            ),
+        ]
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/interests'
+
+    @property
+    def owner(self):
+        return self.user
+
+    def __str__(self):
+        if self.slot_id:
+            return _('Interest from {user} in {slot}').format(
+                user=self.user, slot=self.slot
+            )
+        return _('Interest from {user} in {activity}').format(
+            user=self.user, activity=self.activity
+        )
+
+
 from bluebottle.time_based.periodic_tasks import *  # noqa
 from bluebottle.time_based.signals import *  # noqa

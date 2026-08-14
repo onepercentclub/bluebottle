@@ -8,7 +8,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
-    HyperlinkedRelatedField
+    HyperlinkedRelatedField,
+    SerializerMethodResourceRelatedField,
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -22,7 +23,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     ScheduleActivity,
     DateParticipant,
-    DateActivity, RegisteredDateActivity, )
+    DateActivity, RegisteredDateActivity, Interest, )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -31,6 +32,11 @@ from bluebottle.utils.serializers import ResourcePermissionField
 class TimeBasedBaseSerializer(BaseActivitySerializer):
     review = serializers.BooleanField()
     registration_status = serializers.SerializerMethodField()
+    my_interest = SerializerMethodResourceRelatedField(
+        model=Interest,
+        read_only=True,
+        source='get_my_interest'
+    )
 
     def get_registration_status(self, instance):
         return dict(
@@ -39,6 +45,14 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
                 count=Count("pk")
             )
         )
+
+    def get_my_interest(self, instance):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return None
+        if hasattr(instance, '_my_interests'):
+            return instance._my_interests[0] if instance._my_interests else None
+        return instance.interests.filter(user=user, slot__isnull=True).first()
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -232,18 +246,21 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
             'is_online',
             'location',
             'location_hint',
+            'my_interest',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/deadlines'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
+            'my_interest',
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
         }
     )
 
@@ -392,18 +409,21 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
             "location_hint",
             "team_activity",
             "teams",
+            "my_interest",
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/schedules'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
+            'my_interest',
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
         }
     )
 
@@ -455,18 +475,21 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
             'is_online',
             'location',
             'location_hint',
+            'my_interest',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/periodics'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
+            'my_interest',
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'my_interest': 'bluebottle.time_based.serializers.interests.InterestSerializer',
         }
     )
 

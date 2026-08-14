@@ -1200,7 +1200,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         return not effect.instance.registration.participants.exclude(
             id=effect.instance.id
         ).filter(
-            status__in=['accepted', 'succeeded', 'new']
+            status__in=['accepted', 'new']
         ).exists()
 
     triggers = [

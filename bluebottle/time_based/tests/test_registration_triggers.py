@@ -232,8 +232,9 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.participant, "succeeded")
         self.registration.states.withdraw(save=True)
         self.assertStatus(self.registration, "withdrawn")
-        self.assertStatus(self.participant, "withdrawn")
-        self.assertStatus(self.contribution, "failed")
+        # Past participation remains succeeded; hours stay counted.
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.contribution, "succeeded")
 
     def test_withdraw_past(self):
         super().test_accept()

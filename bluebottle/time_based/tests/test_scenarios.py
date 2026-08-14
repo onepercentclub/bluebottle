@@ -170,6 +170,43 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
 
         assert_participant_status(self, slot, self.supporter, status='withdrawn')
 
+    def test_user_withdraws_from_all_slots(self):
+        api_user_joins_slot(self, self.slot1, self.supporter)
+        api_user_joins_slot(self, self.slot2, self.supporter)
+
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+
+        api_participant_transition(self, self.slot1, self.supporter, transition='withdraw')
+        assert_participant_status(self, self.slot1, self.supporter, status='withdrawn')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+
+        api_participant_transition(self, self.slot2, self.supporter, transition='withdraw')
+        assert_participant_status(self, self.slot2, self.supporter, status='withdrawn')
+        assert_registration_status(self, self.activity, self.supporter, status='withdrawn')
+
+        api_participant_transition(self, self.slot1, self.supporter, transition='reapply')
+        assert_participant_status(self, self.slot1, self.supporter, status='accepted')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+
+    def test_user_withdraws_from_remaining_slots_after_succeed(self):
+        api_user_joins_slot(self, self.slot1, self.supporter)
+        api_user_joins_slot(self, self.slot2, self.supporter)
+
+        self.slot1.start = now() - timedelta(days=3)
+        self.slot1.save()
+        assert_participant_status(self, self.slot1, self.supporter, status='succeeded')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+
+        api_participant_transition(self, self.slot2, self.supporter, transition='withdraw')
+        assert_participant_status(self, self.slot2, self.supporter, status='withdrawn')
+        assert_participant_status(self, self.slot1, self.supporter, status='succeeded')
+        assert_registration_status(self, self.activity, self.supporter, status='withdrawn')
+
+        api_user_joins_slot(self, self.slot3, self.supporter)
+        assert_participant_status(self, self.slot3, self.supporter, status='accepted')
+        assert_registration_status(self, self.activity, self.supporter, status='accepted')
+        assert_participant_status(self, self.slot1, self.supporter, status='succeeded')
+
     def test_user_withdraws_from_review_activity(self):
         slot = self.activity.slots.first()
 

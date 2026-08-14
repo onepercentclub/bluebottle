@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 
 from bluebottle.activities.models import Activity
@@ -114,10 +115,10 @@ class RelatedActivityInterestListPermission(permissions.BasePermission):
             return True
 
         if 'slot_id' in view.kwargs:
-            slot = DateActivitySlot.objects.get(pk=view.kwargs['slot_id'])
+            slot = get_object_or_404(DateActivitySlot, pk=view.kwargs['slot_id'])
             return user in slot.activity.owners
 
-        activity = Activity.objects.get(pk=view.kwargs['activity_id'])
+        activity = get_object_or_404(Activity, pk=view.kwargs['activity_id'])
         return user in activity.owners
 
 

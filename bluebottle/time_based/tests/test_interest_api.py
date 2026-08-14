@@ -1080,6 +1080,11 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
             self.response.json()['data']['relationships'],
         )
 
+    def test_list_invalid_activity_returns_404(self):
+        self.url = reverse(self.url_name, args=(999999,))
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_404_NOT_FOUND)
+
 
 class DateSlotInterestRelatedListAPITestCase(APITestCase):
     url_name = 'date-slot-interests'
@@ -1124,3 +1129,8 @@ class DateSlotInterestRelatedListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         interests = self.response.json()['data']['relationships']['interests']['links']
         self.assertEqual(interests['related']['meta']['count'], 2)
+
+    def test_list_invalid_slot_returns_404(self):
+        self.url = reverse(self.url_name, args=(999999,))
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_404_NOT_FOUND)

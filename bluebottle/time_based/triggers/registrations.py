@@ -4,6 +4,7 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import LockFilledSlotsEffect
+from bluebottle.time_based.effects.interests import DeleteInterestEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
@@ -99,6 +100,7 @@ class RegistrationTriggers(TriggerManager):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
+                DeleteInterestEffect,
                 TransitionEffect(
                     RegistrationStateMachine.auto_accept,
                     conditions=[
@@ -179,6 +181,13 @@ class RegistrationTriggers(TriggerManager):
             ]
         ),
     ]
+
+
+def _is_registration_withdraw_trigger(trigger):
+    return (
+        isinstance(trigger, TransitionTrigger)
+        and trigger.transition == RegistrationStateMachine.withdraw
+    )
 
 
 @register(DeadlineRegistration)
@@ -614,7 +623,21 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
 
 @register(DateRegistration)
 class DateRegistrationTriggers(RegistrationTriggers):
-    triggers = RegistrationTriggers.triggers + [
+    triggers = [
+        trigger
+        for trigger in RegistrationTriggers.triggers
+        if not _is_registration_withdraw_trigger(trigger)
+    ] + [
+        TransitionTrigger(
+            RegistrationStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'withdrawable_participants',
+                    RegistrationParticipantStateMachine.withdraw,
+                ),
+                UnFollowActivityEffect,
+            ]
+        ),
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[

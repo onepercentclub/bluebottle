@@ -231,7 +231,9 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def active_slots(self):
-        return self.slots.filter(status__in=['open', 'full', 'running', 'finished']).order_by('start', 'id')
+        return self.slots.filter(
+            status__in=['open', 'full', 'registration_closed', 'running', 'finished']
+        ).order_by('start', 'id')
 
     @property
     def active_durations(self):
@@ -1221,6 +1223,16 @@ class DateRegistration(Registration):
     def unreviewed_participants(self):
         if self.id:
             return self.participants.exclude(status='withdrawn')
+        return Registration.objects.none()
+
+    @property
+    def withdrawable_participants(self):
+        """Participants that should be withdrawn when the registration is withdrawn.
+
+        Succeeded participants keep their hours and status; they already took part.
+        """
+        if self.id:
+            return self.participants.exclude(status='succeeded')
         return Registration.objects.none()
 
     class Meta(Registration.Meta):

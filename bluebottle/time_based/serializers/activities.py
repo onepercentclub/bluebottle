@@ -529,9 +529,12 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         related_link_url_kwarg="activity_id",
         include_my=False,
         statuses={
-            "upcoming": ["open", "full", "running"],
+            "upcoming": ["open", "full", "registration_closed", "running"],
             "passed": ["failed", "succeeded", "expired", "cancelled", "finished"],
-            "total": ["open", "full", "running", "failed", "succeeded", "expired", "cancelled", "finished"],
+            "total": [
+                "open", "full", "registration_closed", "running",
+                "failed", "succeeded", "expired", "cancelled", "finished"
+            ],
         },
     )
 

@@ -23,7 +23,9 @@ from bluebottle.time_based.tests.factories import (
     DeadlineRegistrationFactory,
     InterestFactory,
     PeriodicActivityFactory,
+    PeriodicRegistrationFactory,
     ScheduleActivityFactory,
+    ScheduleRegistrationFactory,
 )
 
 
@@ -147,6 +149,83 @@ class InterestListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertEqual(self.model.activity, activity)
 
+    def test_create_registration_closed_activity(self):
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_registration_closed_not_at_capacity(self):
+        """Interest stays blocked when closed, even if capacity is free."""
+        self.activity.status = 'registration_closed'
+        self.activity.capacity = 10
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_registration_closed_periodic(self):
+        activity = PeriodicActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='registration_closed',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        self.defaults = {'activity': activity}
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_registration_closed_schedule(self):
+        activity = ScheduleActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='registration_closed',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        self.defaults = {'activity': activity}
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_after_withdraw_while_registration_closed(self):
+        """Freed capacity after withdraw must not reopen interest signup."""
+        participant = DeadlineParticipantFactory.create(
+            activity=self.activity,
+            status='accepted',
+        )
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+
+        participant.states.withdraw(save=True)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'registration_closed')
+
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_idempotent_when_already_interested_and_closed(self):
+        existing = InterestFactory.create(user=self.user, activity=self.activity)
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.pk, existing.pk)
+
+    def test_create_allowed_again_when_reopened_to_full(self):
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+        self.activity.status = 'full'
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.activity, self.activity)
+
 
 class InterestDateSlotAPITestCase(APITestCase):
     url_name = 'interest-list'
@@ -246,6 +325,18 @@ class InterestDateSlotAPITestCase(APITestCase):
             2,
         )
 
+    def test_create_registration_closed_slot(self):
+        self.slot.status = 'registration_closed'
+        self.slot.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_create_when_activity_registration_closed(self):
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
 
 class InterestDetailAPITestCase(APITestCase):
     url_name = 'interest-detail'
@@ -291,8 +382,8 @@ class InterestDetailAPITestCase(APITestCase):
 class InterestPermissionAPITestCase(APITestCase):
     """
     Authenticated members only receive *_own_* interest API permissions.
-    Interest detail is gated by ResourceOwnerPermission, so cross-user
-    access is denied.
+    Unrelated users still cannot access foreign interests; activity managers
+    and staff can delete via RelatedActivityOwnerPermission / IsAdminPermission.
     """
     url_name = 'interest-detail'
     serializer = InterestSerializer
@@ -390,6 +481,15 @@ class DeadlineActivityMyInterestAPITestCase(APITestCase):
             self.response.json()['data']['relationships']['my-interest']['data']
         )
 
+    def test_my_interest_persists_after_registration_closed(self):
+        interest = InterestFactory.create(user=self.user, activity=self.model)
+        self.model.status = 'registration_closed'
+        self.model.save()
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertIncluded('my-interest', interest)
+
 
 class PeriodicActivityMyInterestAPITestCase(APITestCase):
     url_name = 'periodic-detail'
@@ -473,4 +573,413 @@ class DateSlotMyInterestAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertIsNone(
             self.response.json()['data']['relationships']['my-interest']['data']
+        )
+
+    def test_my_interest_persists_after_registration_closed(self):
+        interest = InterestFactory.create(
+            user=self.user,
+            activity=self.activity,
+            slot=self.model,
+        )
+        self.model.status = 'registration_closed'
+        self.model.save()
+        self.activity.status = 'registration_closed'
+        self.activity.save()
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertIncluded('my-interest', interest)
+
+
+class InterestDeleteOnJoinAPITestCase(APITestCase):
+    """Joining or applying deletes the matching Interest row entirely."""
+
+    def test_deadline_registration_deletes_interest(self):
+        activity = DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            capacity=2,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        user = BlueBottleUserFactory.create()
+        interest = InterestFactory.create(user=user, activity=activity)
+
+        DeadlineRegistrationFactory.create(
+            user=user,
+            activity=activity,
+        )
+
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_deadline_registration_with_review_still_deletes_interest(self):
+        activity = DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            capacity=2,
+            review=True,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        user = BlueBottleUserFactory.create()
+        interest = InterestFactory.create(user=user, activity=activity)
+
+        registration = DeadlineRegistrationFactory.create(
+            user=user,
+            activity=activity,
+        )
+
+        self.assertEqual(registration.status, 'new')
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_date_participant_deletes_slot_interest(self):
+        activity = DateActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='open',
+            capacity=2,
+        )
+        user = BlueBottleUserFactory.create()
+        interest = InterestFactory.create(
+            user=user,
+            activity=activity,
+            slot=slot,
+        )
+
+        DateParticipantFactory.create(
+            user=user,
+            activity=activity,
+            slot=slot,
+        )
+
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_date_participant_does_not_delete_other_slot_interest(self):
+        activity = DateActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='open',
+            capacity=2,
+        )
+        other_slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+        user = BlueBottleUserFactory.create()
+        other_interest = InterestFactory.create(
+            user=user,
+            activity=activity,
+            slot=other_slot,
+        )
+
+        DateParticipantFactory.create(
+            user=user,
+            activity=activity,
+            slot=slot,
+        )
+
+        self.assertTrue(
+            InterestFactory._meta.model.objects.filter(pk=other_interest.pk).exists()
+        )
+
+    def test_schedule_registration_deletes_interest(self):
+        activity = ScheduleActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            capacity=2,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        user = BlueBottleUserFactory.create()
+        interest = InterestFactory.create(user=user, activity=activity)
+
+        ScheduleRegistrationFactory.create(
+            user=user,
+            activity=activity,
+        )
+
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_periodic_registration_deletes_interest(self):
+        activity = PeriodicActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            capacity=2,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        user = BlueBottleUserFactory.create()
+        interest = InterestFactory.create(user=user, activity=activity)
+
+        PeriodicRegistrationFactory.create(
+            user=user,
+            activity=activity,
+        )
+
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_date_participant_with_review_still_deletes_interest(self):
+        activity = DateActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=True,
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='open',
+            capacity=2,
+        )
+        user = BlueBottleUserFactory.create()
+        interest = InterestFactory.create(
+            user=user,
+            activity=activity,
+            slot=slot,
+        )
+
+        participant = DateParticipantFactory.create(
+            user=user,
+            activity=activity,
+            slot=slot,
+        )
+
+        self.assertEqual(participant.status, 'new')
+        self.assertFalse(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+
+class InterestLifecycleIsolationTestCase(APITestCase):
+    """Interest survives activity cancel/succeed; only explicit removals delete it."""
+
+    def test_cancel_activity_keeps_interest(self):
+        activity = DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='full',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        interest = InterestFactory.create(
+            user=BlueBottleUserFactory.create(),
+            activity=activity,
+        )
+
+        activity.states.cancel(save=True)
+
+        self.assertEqual(activity.status, 'cancelled')
+        self.assertTrue(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_succeed_activity_keeps_interest(self):
+        activity = DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            capacity=2,
+            review=False,
+            start=date.today() - timedelta(days=10),
+            deadline=date.today() - timedelta(days=1),
+        )
+        DeadlineParticipantFactory.create(
+            activity=activity,
+            status='accepted',
+        )
+        interest = InterestFactory.create(
+            user=BlueBottleUserFactory.create(),
+            activity=activity,
+        )
+
+        activity.states.succeed(save=True)
+
+        self.assertEqual(activity.status, 'succeeded')
+        self.assertTrue(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_registration_deadline_lock_keeps_interest(self):
+        """
+        On this branch, a passed registration deadline locks an open activity
+        with participants to full. Interest must survive that transition.
+        """
+        activity = DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            capacity=2,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+            registration_deadline=date.today() - timedelta(days=1),
+        )
+        DeadlineParticipantFactory.create(
+            activity=activity,
+            status='accepted',
+        )
+        interest = InterestFactory.create(
+            user=BlueBottleUserFactory.create(),
+            activity=activity,
+        )
+
+        activity.states.lock(save=True)
+
+        self.assertEqual(activity.status, 'full')
+        self.assertTrue(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+    def test_registration_deadline_expire_keeps_interest(self):
+        """
+        A passed registration deadline with no participants expires the
+        activity. Interest must survive that transition too.
+        """
+        activity = DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            capacity=2,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+            registration_deadline=date.today() - timedelta(days=1),
+        )
+        interest = InterestFactory.create(
+            user=BlueBottleUserFactory.create(),
+            activity=activity,
+        )
+
+        activity.states.expire(save=True)
+
+        self.assertEqual(activity.status, 'expired')
+        self.assertTrue(
+            InterestFactory._meta.model.objects.filter(pk=interest.pk).exists()
+        )
+
+
+class InterestManagerDeleteAPITestCase(APITestCase):
+    url_name = 'interest-detail'
+    serializer = InterestSerializer
+    factory = InterestFactory
+
+    def setUp(self):
+        super().setUp()
+        initiative = InitiativeFactory.create(status='approved')
+        self.activity = DeadlineActivityFactory.create(
+            initiative=initiative,
+            status='full',
+            capacity=1,
+            review=False,
+            owner=initiative.owner,
+        )
+        self.interested_user = BlueBottleUserFactory.create()
+        self.model = InterestFactory.create(
+            user=self.interested_user,
+            activity=self.activity,
+        )
+        self.url = reverse(self.url_name, args=(self.model.pk,))
+
+    def test_activity_owner_can_delete_interest(self):
+        self.perform_delete(user=self.activity.owner)
+        self.assertStatus(status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
+        )
+
+    def test_activity_manager_can_delete_interest(self):
+        manager = BlueBottleUserFactory.create()
+        self.activity.initiative.activity_managers.add(manager)
+
+        self.perform_delete(user=manager)
+        self.assertStatus(status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
+        )
+
+    def test_staff_can_delete_interest(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        self.perform_delete(user=staff)
+        self.assertStatus(status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
+        )
+
+    def test_unrelated_user_still_cannot_delete(self):
+        other = BlueBottleUserFactory.create()
+        self.perform_delete(user=other)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+        self.assertTrue(
+            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
+        )
+
+
+class InterestSlotManagerDeleteAPITestCase(APITestCase):
+    url_name = 'interest-detail'
+    serializer = InterestSerializer
+    factory = InterestFactory
+
+    def setUp(self):
+        super().setUp()
+        initiative = InitiativeFactory.create(status='approved')
+        self.activity = DateActivityFactory.create(
+            initiative=initiative,
+            status='open',
+            review=False,
+            owner=initiative.owner,
+        )
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            status='full',
+            capacity=1,
+        )
+        self.interested_user = BlueBottleUserFactory.create()
+        self.model = InterestFactory.create(
+            user=self.interested_user,
+            activity=self.activity,
+            slot=self.slot,
+        )
+        self.url = reverse(self.url_name, args=(self.model.pk,))
+
+    def test_activity_owner_can_delete_slot_interest(self):
+        self.perform_delete(user=self.activity.owner)
+        self.assertStatus(status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
+        )
+
+    def test_activity_manager_can_delete_slot_interest(self):
+        manager = BlueBottleUserFactory.create()
+        self.activity.initiative.activity_managers.add(manager)
+
+        self.perform_delete(user=manager)
+        self.assertStatus(status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
+        )
+
+    def test_staff_can_delete_slot_interest(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        self.perform_delete(user=staff)
+        self.assertStatus(status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
         )

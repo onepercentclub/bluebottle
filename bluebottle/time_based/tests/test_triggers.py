@@ -111,7 +111,7 @@ class TimeBasedActivityTriggerTestCase():
             'Your activity "{}" has been cancelled'.format(self.activity.title)
         )
 
-    def change_registration_deadline(self):
+    def test_change_registration_deadline(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
 
@@ -120,7 +120,7 @@ class TimeBasedActivityTriggerTestCase():
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, "registration_closed")
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.registration_deadline = date.today() + timedelta(days=1)
@@ -173,7 +173,7 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
 
-        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(self.activity.status, "registration_closed")
 
         self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
         self.activity.refresh_from_db()
@@ -181,6 +181,122 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.activity.save()
 
         self.assertEqual(self.activity.status, "open")
+
+    def test_registration_deadline_closes_slots(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        self.assertEqual(slot.status, "open")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(slot.status, "open")
+
+    def test_registration_closed_reopens_to_full_when_slot_at_capacity(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        slot.capacity = 1
+        slot.save()
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=slot)
+
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(slot.status, "full")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "full")
+        self.assertEqual(slot.status, "full")
+
+    def test_withdraw_while_registration_closed_does_not_reopen(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=slot
+        )
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        participant.states.withdraw(save=True)
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+    def test_remove_while_registration_closed_does_not_reopen(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=slot
+        )
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        participant.states.remove(save=True)
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
 
     def test_add_to_expired_activity(self):
         self.initiative.states.submit(save=True)
@@ -276,6 +392,51 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot, "full")
         self.assertStatus(self.slot2, "full")
         self.assertStatus(self.activity, "full")
+
+    def test_registration_closed_reopens_to_full_when_all_slots_full(self):
+        self.test_fill_free()
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.assertStatus(self.activity, "registration_closed")
+        self.assertStatus(self.slot, "registration_closed")
+        self.assertStatus(self.slot2, "registration_closed")
+
+        self.activity = self.activity.__class__.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+
+        self.assertStatus(self.activity, "full")
+        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.slot2, "full")
+
+    def test_registration_closed_reopens_partially_full_slots(self):
+        self.slot.capacity = 1
+        self.slot.save()
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=2)
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
+
+        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.slot2, "open")
+        self.assertStatus(self.activity, "open")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.assertStatus(self.activity, "registration_closed")
+        self.assertStatus(self.slot, "registration_closed")
+        self.assertStatus(self.slot2, "registration_closed")
+
+        self.activity = self.activity.__class__.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+
+        self.assertStatus(self.activity, "open")
+        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.slot2, "open")
 
     def test_unlock_on_delete(self):
 

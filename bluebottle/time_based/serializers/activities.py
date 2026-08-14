@@ -240,7 +240,6 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     interests = InterestLinkField(
         read_only=True,
         many=True,
-        source='interests',
         related_link_view_name='deadline-interests',
         related_link_url_kwarg='activity_id',
     )
@@ -402,7 +401,6 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     interests = InterestLinkField(
         read_only=True,
         many=True,
-        source='interests',
         related_link_view_name='schedule-interests',
         related_link_url_kwarg='activity_id',
     )
@@ -476,7 +474,6 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     interests = InterestLinkField(
         read_only=True,
         many=True,
-        source='interests',
         related_link_view_name='periodic-interests',
         related_link_url_kwarg='activity_id',
     )
@@ -565,7 +562,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
     interests = InterestLinkField(
         read_only=True,
         many=True,
-        source='interests',
         related_link_view_name='date-interests',
         related_link_url_kwarg='activity_id',
         activity_level_only=False,

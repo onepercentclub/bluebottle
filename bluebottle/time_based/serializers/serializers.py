@@ -120,7 +120,6 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     interests = InterestLinkField(
         read_only=True,
         many=True,
-        source='interests',
         related_link_view_name='date-slot-interests',
         related_link_url_kwarg='slot_id',
         slot_level=True,

@@ -140,6 +140,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
             ActivityStateMachine.open,
         ],
         ActivityStateMachine.cancelled,
+        permission=can_approve,
         name=_('Cancel'),
         description=_("The grant application has been cancelled and it will no longer be up for review."),
         automatic=False,

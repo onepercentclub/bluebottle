@@ -983,3 +983,144 @@ class InterestSlotManagerDeleteAPITestCase(APITestCase):
         self.assertFalse(
             self.factory._meta.model.objects.filter(pk=self.model.pk).exists()
         )
+
+
+class DeadlineInterestRelatedListAPITestCase(APITestCase):
+    url_name = 'deadline-interests'
+    serializer = InterestSerializer
+    factory = InterestFactory
+    activity_factory = DeadlineActivityFactory
+    activity_serializer = DeadlineActivitySerializer
+
+    def setUp(self):
+        super().setUp()
+        initiative = InitiativeFactory.create(status='approved')
+        self.activity = self.activity_factory.create(
+            initiative=initiative,
+            status='full',
+            capacity=1,
+            review=False,
+            owner=initiative.owner,
+        )
+        self.interests = InterestFactory.create_batch(
+            3, activity=self.activity, slot=None
+        )
+        other_activity = DateActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+        )
+        InterestFactory.create(
+            activity=self.activity,
+            slot=DateActivitySlotFactory.create(
+                activity=self.activity,
+                status='full',
+            ),
+        )
+        self.url = reverse(self.url_name, args=(self.activity.pk,))
+
+    def test_manager_can_list_interests(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+
+    def test_activity_manager_can_list_interests(self):
+        manager = BlueBottleUserFactory.create()
+        self.activity.initiative.activity_managers.add(manager)
+
+        self.perform_get(user=manager)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+
+    def test_unrelated_user_cannot_list_interests(self):
+        other = BlueBottleUserFactory.create()
+        self.perform_get(user=other)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_anonymous_user_cannot_list_interests(self):
+        self.perform_get(user=None)
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_list_works_when_activity_succeeded(self):
+        self.activity.status = 'succeeded'
+        self.activity.save()
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+
+    def test_list_works_when_activity_cancelled(self):
+        self.activity.status = 'cancelled'
+        self.activity.save()
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+
+    def test_activity_includes_interests_link_for_manager(self):
+        self.perform_get(
+            user=self.activity.owner,
+            url=reverse('deadline-detail', args=(self.activity.pk,)),
+        )
+        self.assertStatus(status.HTTP_200_OK)
+        interests = self.response.json()['data']['relationships']['interests']['links']
+        self.assertEqual(interests['related']['meta']['count'], 3)
+        self.assertIn(
+            reverse(self.url_name, args=(self.activity.pk,)),
+            interests['related']['href'],
+        )
+
+    def test_activity_hides_interests_link_for_member(self):
+        member = BlueBottleUserFactory.create()
+        self.perform_get(
+            user=member,
+            url=reverse('deadline-detail', args=(self.activity.pk,)),
+        )
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertNotIn(
+            'interests',
+            self.response.json()['data']['relationships'],
+        )
+
+
+class DateSlotInterestRelatedListAPITestCase(APITestCase):
+    url_name = 'date-slot-interests'
+    serializer = InterestSerializer
+    factory = InterestFactory
+
+    def setUp(self):
+        super().setUp()
+        initiative = InitiativeFactory.create(status='approved')
+        self.activity = DateActivityFactory.create(
+            initiative=initiative,
+            status='open',
+            review=False,
+            owner=initiative.owner,
+        )
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            status='full',
+            capacity=1,
+        )
+        self.interests = InterestFactory.create_batch(
+            2, activity=self.activity, slot=self.slot
+        )
+        InterestFactory.create(activity=self.activity, slot=None)
+        self.url = reverse(self.url_name, args=(self.slot.pk,))
+
+    def test_manager_can_list_slot_interests(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
+
+    def test_unrelated_user_cannot_list_slot_interests(self):
+        other = BlueBottleUserFactory.create()
+        self.perform_get(user=other)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_slot_includes_interests_link_for_manager(self):
+        self.perform_get(
+            user=self.activity.owner,
+            url=reverse('date-slot-detail', args=(self.slot.pk,)),
+        )
+        self.assertStatus(status.HTTP_200_OK)
+        interests = self.response.json()['data']['relationships']['interests']['links']
+        self.assertEqual(interests['related']['meta']['count'], 2)

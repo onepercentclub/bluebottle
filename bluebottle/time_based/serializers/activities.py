@@ -26,6 +26,7 @@ from bluebottle.time_based.models import (
     DateActivity, RegisteredDateActivity, Interest, )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import RichTextField
+from bluebottle.time_based.serializers.interests import InterestLinkField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -236,6 +237,13 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         related_link_url_kwarg="activity_id",
         statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
     )
+    interests = InterestLinkField(
+        read_only=True,
+        many=True,
+        source='interests',
+        related_link_view_name='deadline-interests',
+        related_link_url_kwarg='activity_id',
+    )
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DeadlineActivity
@@ -247,6 +255,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
             'location',
             'location_hint',
             'my_interest',
+            'interests',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -390,6 +399,13 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         related_link_url_kwarg="activity_id",
         statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
     )
+    interests = InterestLinkField(
+        read_only=True,
+        many=True,
+        source='interests',
+        related_link_view_name='schedule-interests',
+        related_link_url_kwarg='activity_id',
+    )
 
     @property
     def export_view_name(self):
@@ -410,6 +426,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
             "team_activity",
             "teams",
             "my_interest",
+            "interests",
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -456,6 +473,13 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
             "rejected": ["rejected", "stopped", "removed"],
         },
     )
+    interests = InterestLinkField(
+        read_only=True,
+        many=True,
+        source='interests',
+        related_link_view_name='periodic-interests',
+        related_link_url_kwarg='activity_id',
+    )
 
     def get_contributor_count(self, instance):
         return (
@@ -476,6 +500,7 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
             'location',
             'location_hint',
             'my_interest',
+            'interests',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
@@ -536,6 +561,14 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
                 "failed", "succeeded", "expired", "cancelled", "finished"
             ],
         },
+    )
+    interests = InterestLinkField(
+        read_only=True,
+        many=True,
+        source='interests',
+        related_link_view_name='date-interests',
+        related_link_url_kwarg='activity_id',
+        activity_level_only=False,
     )
 
     def get_contributor_count(self, instance):
@@ -694,6 +727,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             'date_info',
             'location_info',
             'preparation',
+            'interests',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

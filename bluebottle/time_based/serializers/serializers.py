@@ -18,6 +18,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import DateActivitySlot, Interest, Skill, TimeContribution
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
+from bluebottle.time_based.serializers.interests import InterestLinkField
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -116,6 +117,14 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
         read_only=True,
         source='get_my_interest'
     )
+    interests = InterestLinkField(
+        read_only=True,
+        many=True,
+        source='interests',
+        related_link_view_name='date-slot-interests',
+        related_link_url_kwarg='slot_id',
+        slot_level=True,
+    )
 
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
@@ -176,6 +185,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             'capacity',
             'participants',
             'my_interest',
+            'interests',
         )
 
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):

@@ -18,7 +18,10 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import DateActivitySlot, Interest, Skill, TimeContribution
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
-from bluebottle.time_based.serializers.interest_link_field import InterestLinkField
+from bluebottle.time_based.serializers.interest_link_field import (
+    InterestLinkField,
+    remove_interests_field_for_non_managers,
+)
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -129,6 +132,10 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
     required = RequiredErrorsField()
     links = serializers.SerializerMethodField()
     translations = TranslationsSerializer(fields=['title'])
+
+    def __init__(self, instance=None, *args, **kwargs):
+        super().__init__(instance, *args, **kwargs)
+        remove_interests_field_for_non_managers(self, instance)
 
     def get_my_interest(self, instance):
         user = self.context['request'].user

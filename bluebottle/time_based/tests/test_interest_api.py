@@ -1005,13 +1005,13 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
         self.interests = InterestFactory.create_batch(
             3, activity=self.activity, slot=None
         )
-        other_activity = DateActivityFactory.create(
-            initiative=InitiativeFactory.create(status='approved'),
+        date_activity = DateActivityFactory.create(
+            initiative=initiative,
         )
         InterestFactory.create(
-            activity=self.activity,
+            activity=date_activity,
             slot=DateActivitySlotFactory.create(
-                activity=self.activity,
+                activity=date_activity,
                 status='full',
             ),
         )
@@ -1056,10 +1056,8 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
         self.assertTotal(3)
 
     def test_activity_includes_interests_link_for_manager(self):
-        self.perform_get(
-            user=self.activity.owner,
-            url=reverse('deadline-detail', args=(self.activity.pk,)),
-        )
+        self.url = reverse('deadline-detail', args=(self.activity.pk,))
+        self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
         interests = self.response.json()['data']['relationships']['interests']['links']
         self.assertEqual(interests['related']['meta']['count'], 3)
@@ -1070,10 +1068,8 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
 
     def test_activity_hides_interests_link_for_member(self):
         member = BlueBottleUserFactory.create()
-        self.perform_get(
-            user=member,
-            url=reverse('deadline-detail', args=(self.activity.pk,)),
-        )
+        self.url = reverse('deadline-detail', args=(self.activity.pk,))
+        self.perform_get(user=member)
         self.assertStatus(status.HTTP_200_OK)
         self.assertNotIn(
             'interests',
@@ -1223,10 +1219,8 @@ class DateSlotInterestRelatedListAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_slot_includes_interests_link_for_manager(self):
-        self.perform_get(
-            user=self.activity.owner,
-            url=reverse('date-slot-detail', args=(self.slot.pk,)),
-        )
+        self.url = reverse('date-slot-detail', args=(self.slot.pk,))
+        self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
         interests = self.response.json()['data']['relationships']['interests']['links']
         self.assertEqual(interests['related']['meta']['count'], 2)

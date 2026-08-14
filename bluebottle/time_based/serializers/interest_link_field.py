@@ -1,4 +1,26 @@
+from rest_framework.fields import empty
 from rest_framework_json_api.relations import HyperlinkedRelatedField
+
+
+def remove_interests_field_for_non_managers(serializer, instance):
+    if not instance or 'interests' not in serializer.fields:
+        return
+
+    request = serializer.context.get('request')
+    if not request or not request.user.is_authenticated:
+        serializer.fields.pop('interests')
+        return
+
+    owners = getattr(instance, 'owners', None)
+    if owners is None and hasattr(instance, 'activity'):
+        owners = instance.activity.owners
+
+    if not (
+        request.user in owners
+        or request.user.is_staff
+        or request.user.is_superuser
+    ):
+        serializer.fields.pop('interests')
 
 
 class InterestLinkField(HyperlinkedRelatedField):
@@ -11,16 +33,24 @@ class InterestLinkField(HyperlinkedRelatedField):
         self.slot_level = slot_level
         super().__init__(**kwargs)
 
-    def get_attribute(self, instance):
+    def _can_view_interests(self, instance):
         request = self.context.get('request')
         if not request or not request.user.is_authenticated:
-            return None
-        if not (
-            request.user in instance.owners or
+            return False
+
+        owners = getattr(instance, 'owners', None)
+        if owners is None and hasattr(instance, 'activity'):
+            owners = instance.activity.owners
+
+        return (
+            request.user in owners or
             request.user.is_staff or
             request.user.is_superuser
-        ):
-            return None
+        )
+
+    def get_attribute(self, instance):
+        if not self._can_view_interests(instance):
+            return empty
         return getattr(instance, self.source or 'interests')
 
     def get_count(self, instance):

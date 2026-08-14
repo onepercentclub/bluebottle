@@ -26,7 +26,10 @@ from bluebottle.time_based.models import (
     DateActivity, RegisteredDateActivity, Interest, )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import RichTextField
-from bluebottle.time_based.serializers.interest_link_field import InterestLinkField
+from bluebottle.time_based.serializers.interest_link_field import (
+    InterestLinkField,
+    remove_interests_field_for_non_managers,
+)
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -74,6 +77,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             permission=CanExportParticipantsPermission,
             read_only=True
         )
+
+        remove_interests_field_for_non_managers(self, instance)
 
     class Meta(BaseActivitySerializer.Meta):
         fields = BaseActivitySerializer.Meta.fields + (

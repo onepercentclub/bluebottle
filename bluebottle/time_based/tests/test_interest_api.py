@@ -1085,6 +1085,107 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_404_NOT_FOUND)
 
+    def test_staff_can_list_interests(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        self.perform_get(user=staff)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+
+    def test_list_works_when_activity_expired(self):
+        self.activity.status = 'expired'
+        self.activity.save()
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+
+    def test_list_includes_user(self):
+        self.perform_get(user=self.activity.owner, query={'include': 'user'})
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTrue(
+            any(
+                item['type'] == 'members'
+                for item in self.response.json().get('included', [])
+            )
+        )
+
+
+class ScheduleInterestRelatedListAPITestCase(APITestCase):
+    url_name = 'schedule-interests'
+    serializer = InterestSerializer
+    factory = InterestFactory
+
+    def setUp(self):
+        super().setUp()
+        initiative = InitiativeFactory.create(status='approved')
+        self.activity = ScheduleActivityFactory.create(
+            initiative=initiative,
+            status='full',
+            capacity=1,
+            review=False,
+            owner=initiative.owner,
+        )
+        InterestFactory.create_batch(2, activity=self.activity, slot=None)
+        self.url = reverse(self.url_name, args=(self.activity.pk,))
+
+    def test_manager_can_list_interests(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
+
+
+class PeriodicInterestRelatedListAPITestCase(APITestCase):
+    url_name = 'periodic-interests'
+    serializer = InterestSerializer
+    factory = InterestFactory
+
+    def setUp(self):
+        super().setUp()
+        initiative = InitiativeFactory.create(status='approved')
+        self.activity = PeriodicActivityFactory.create(
+            initiative=initiative,
+            status='full',
+            capacity=1,
+            review=False,
+            owner=initiative.owner,
+        )
+        InterestFactory.create_batch(2, activity=self.activity, slot=None)
+        self.url = reverse(self.url_name, args=(self.activity.pk,))
+
+    def test_manager_can_list_interests(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
+
+
+class DateActivityInterestRelatedListAPITestCase(APITestCase):
+    url_name = 'date-interests'
+    serializer = InterestSerializer
+    factory = InterestFactory
+
+    def setUp(self):
+        super().setUp()
+        initiative = InitiativeFactory.create(status='approved')
+        self.activity = DateActivityFactory.create(
+            initiative=initiative,
+            status='open',
+            review=False,
+            owner=initiative.owner,
+        )
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            status='full',
+            capacity=1,
+        )
+        InterestFactory.create_batch(2, activity=self.activity, slot=self.slot)
+        InterestFactory.create(activity=self.activity, slot=None)
+        self.url = reverse(self.url_name, args=(self.activity.pk,))
+
+    def test_manager_can_list_all_interests(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(3)
+
 
 class DateSlotInterestRelatedListAPITestCase(APITestCase):
     url_name = 'date-slot-interests'

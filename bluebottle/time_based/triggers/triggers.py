@@ -50,6 +50,9 @@ def is_full(effect):
     """
     the activity is full
     """
+    if not effect.instance.pk:
+        return False
+
     if isinstance(effect.instance, DateActivity) and effect.instance.slots.count() > 1:
         return False
 

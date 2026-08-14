@@ -12,24 +12,12 @@ from bluebottle.activities.serializers import ActivitySerializer
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
-    DateParticipant,
     Interest,
 )
+from bluebottle.time_based.serializers.interest_validators import (
+    UserAlreadyInvolvedValidator,
+)
 from bluebottle.utils.serializers import ResourcePermissionField
-
-ACTIVE_REGISTRATION_STATUSES = (
-    'new',
-    'accepted',
-    'succeeded',
-    'scheduled',
-    'participating',
-)
-ACTIVE_PARTICIPANT_STATUSES = (
-    'new',
-    'accepted',
-    'succeeded',
-    'running',
-)
 
 
 class InterestSerializer(ModelSerializer):
@@ -73,25 +61,6 @@ class InterestSerializer(ModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
-
-    def _user_already_involved(self, user, activity, slot):
-        if slot:
-            return DateParticipant.objects.filter(
-                user=user,
-                slot=slot,
-                status__in=ACTIVE_PARTICIPANT_STATUSES,
-            ).exists()
-
-        if activity.registrations.filter(
-            user=user,
-            status__in=ACTIVE_REGISTRATION_STATUSES,
-        ).exists():
-            return True
-
-        return activity.participants.filter(
-            user=user,
-            status__in=ACTIVE_PARTICIPANT_STATUSES,
-        ).exists()
 
     def _existing_interest(self, user, activity, slot):
         if slot:
@@ -141,11 +110,7 @@ class InterestSerializer(ModelSerializer):
                     _('Interests can only be registered for full activities.')
                 )
 
-        if self._user_already_involved(user, activity, slot):
-            raise ValidationError(
-                _('You are already participating in or applied to this activity.'),
-                code='already_involved',
-            )
+        UserAlreadyInvolvedValidator().validate(user, activity, slot)
 
         data['user'] = user
         data['activity'] = activity

@@ -18,7 +18,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import DateActivitySlot, Interest, Skill, TimeContribution
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
-from bluebottle.time_based.serializers.interests import InterestLinkField
+from bluebottle.time_based.serializers.interest_link_field import InterestLinkField
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField

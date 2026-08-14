@@ -26,7 +26,7 @@ from bluebottle.time_based.models import (
     DateActivity, RegisteredDateActivity, Interest, )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import RichTextField
-from bluebottle.time_based.serializers.interests import InterestLinkField
+from bluebottle.time_based.serializers.interest_link_field import InterestLinkField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 

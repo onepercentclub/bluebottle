@@ -458,6 +458,30 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertActionLink(activity.get_absolute_url() + '?spotOpened=true')
         self.assertActionTitle('View activity')
 
+    def test_date_slot_only_notifies_interested_users_for_that_slot(self):
+        interested = BlueBottleUserFactory.create(first_name='Ada')
+        other = BlueBottleUserFactory.create(first_name='Grace')
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+        )
+        self.obj = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+        other_slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+        InterestFactory.create(activity=activity, slot=self.obj, user=interested)
+        InterestFactory.create(activity=activity, slot=other_slot, user=other)
+
+        self.message_class = SpotOpenedNotification
+        self.create()
+        self.assertRecipients([interested])
+
     def test_date_slot_does_not_leak_online_meeting_url(self):
         interested = BlueBottleUserFactory.create(first_name='Ada')
         slot_location = GeolocationFactory.create()

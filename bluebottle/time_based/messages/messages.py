@@ -965,11 +965,10 @@ class SpotOpenedNotification(TransitionMessage):
     def get_recipients(self):
         """interested members"""
         if isinstance(self.obj, DateActivitySlot):
-            return [interest.user for interest in self.obj.interests.all()]
-        return [
-            interest.user
-            for interest in self.obj.interests.filter(slot__isnull=True)
-        ]
+            interests = self.obj.activity.interests.filter(slot=self.obj)
+        else:
+            interests = self.obj.interests.filter(slot__isnull=True)
+        return [interest.user for interest in interests]
 
     def get_context(self, recipient):
         context = super().get_context(recipient)

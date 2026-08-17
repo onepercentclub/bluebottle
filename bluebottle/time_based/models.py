@@ -1374,6 +1374,16 @@ class DateRegistration(Registration):
             return self.participants.exclude(status='withdrawn')
         return Registration.objects.none()
 
+    @property
+    def withdrawable_participants(self):
+        """Participants that should be withdrawn when the registration is withdrawn.
+
+        Succeeded participants keep their hours and status; they already took part.
+        """
+        if self.id:
+            return self.participants.exclude(status='succeeded')
+        return Registration.objects.none()
+
     class Meta(Registration.Meta):
         verbose_name = _("Candidate for date activities")
         verbose_name_plural = _("Candidates for date activities")

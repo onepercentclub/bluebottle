@@ -1,9 +1,17 @@
+from django.db.models import Model
 from rest_framework.fields import empty
 from rest_framework_json_api.relations import HyperlinkedRelatedField
 
 
+def _get_owners(instance):
+    owners = getattr(instance, 'owners', None)
+    if owners is None and hasattr(instance, 'activity'):
+        owners = getattr(instance.activity, 'owners', None)
+    return owners
+
+
 def remove_interests_field_for_non_managers(serializer, instance):
-    if not instance or 'interests' not in serializer.fields:
+    if not isinstance(instance, Model) or 'interests' not in serializer.fields:
         return
 
     request = serializer.context.get('request')
@@ -11,9 +19,10 @@ def remove_interests_field_for_non_managers(serializer, instance):
         serializer.fields.pop('interests')
         return
 
-    owners = getattr(instance, 'owners', None)
-    if owners is None and hasattr(instance, 'activity'):
-        owners = instance.activity.owners
+    owners = _get_owners(instance)
+    if not owners:
+        serializer.fields.pop('interests')
+        return
 
     if not (
         request.user in owners
@@ -38,9 +47,9 @@ class InterestLinkField(HyperlinkedRelatedField):
         if not request or not request.user.is_authenticated:
             return False
 
-        owners = getattr(instance, 'owners', None)
-        if owners is None and hasattr(instance, 'activity'):
-            owners = instance.activity.owners
+        owners = _get_owners(instance)
+        if not owners:
+            return False
 
         return (
             request.user in owners or

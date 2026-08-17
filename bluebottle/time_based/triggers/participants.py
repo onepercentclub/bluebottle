@@ -1264,6 +1264,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 CreateDateRegistrationEffect,
                 CreateSlotTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'registration',
+                    RegistrationStateMachine.restore,
+                    conditions=[registration_is_withdrawn]
+                ),
                 TransitionEffect(
                     DateParticipantStateMachine.add,
                     conditions=[

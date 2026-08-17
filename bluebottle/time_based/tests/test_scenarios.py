@@ -217,13 +217,33 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_participant_status(self, slot, self.supporter, status='new')
         api_participant_transition(self, slot, self.supporter, transition='withdraw')
         assert_participant_status(self, slot, self.supporter, status='withdrawn')
+        assert_registration_status(self, self.activity, self.supporter, status='withdrawn')
         api_participant_transition(self, slot, self.supporter, transition='reapply')
         assert_participant_status(self, slot, self.supporter, status='new')
+        assert_registration_status(self, self.activity, self.supporter, status='new')
         api_registration_transition(
             self, self.activity, self.supporter,
             transition='reject', request_user=self.owner
         )
         assert_participant_status(self, slot, self.supporter, status='rejected')
+
+    def test_user_withdraws_from_all_slots_review_then_joins_other_slot(self):
+        self.activity.review = True
+        self.activity.save()
+
+        api_user_joins_slot(self, self.slot1, self.supporter)
+        api_user_joins_slot(self, self.slot2, self.supporter)
+        assert_registration_status(self, self.activity, self.supporter, status='new')
+
+        api_participant_transition(self, self.slot1, self.supporter, transition='withdraw')
+        assert_registration_status(self, self.activity, self.supporter, status='new')
+
+        api_participant_transition(self, self.slot2, self.supporter, transition='withdraw')
+        assert_registration_status(self, self.activity, self.supporter, status='withdrawn')
+
+        api_user_joins_slot(self, self.slot3, self.supporter)
+        assert_participant_status(self, self.slot3, self.supporter, status='new')
+        assert_registration_status(self, self.activity, self.supporter, status='new')
 
     def test_user_fills_activity(self):
         self.slot1.capacity = 1

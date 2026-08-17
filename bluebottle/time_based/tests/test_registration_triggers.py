@@ -225,6 +225,62 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.participant, "withdrawn")
         self.assertStatus(self.contribution, "failed")
 
+    def test_withdraw_from_last_slot(self):
+        self.create()
+        self.participant.states.withdraw(save=True)
+        self.assertStatus(self.participant, "withdrawn")
+        self.registration.refresh_from_db()
+        self.assertStatus(self.registration, "withdrawn")
+
+    def test_withdraw_from_one_of_two_slots(self):
+        self.create()
+        other_slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=3)
+        )
+        other = DateParticipantFactory.create(
+            user=self.user,
+            registration=self.registration,
+            slot=other_slot,
+            activity=self.activity,
+            as_user=self.user,
+        )
+        self.participant.states.withdraw(save=True)
+        self.assertStatus(self.participant, "withdrawn")
+        self.registration.refresh_from_db()
+        self.assertStatus(self.registration, "accepted")
+        self.assertStatus(other, "accepted")
+
+        other.states.withdraw(save=True)
+        self.assertStatus(other, "withdrawn")
+        self.registration.refresh_from_db()
+        self.assertStatus(self.registration, "withdrawn")
+
+    def test_reapply_after_last_slot_withdraw(self):
+        self.test_withdraw_from_last_slot()
+        self.participant.states.reapply(save=True)
+        self.assertStatus(self.participant, "accepted")
+        self.registration.refresh_from_db()
+        self.assertStatus(self.registration, "accepted")
+
+    def test_join_other_slot_after_last_slot_withdraw(self):
+        self.test_withdraw_from_last_slot()
+        other_slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=3)
+        )
+        other = DateParticipantFactory.create(
+            user=self.user,
+            registration=self.registration,
+            slot=other_slot,
+            activity=self.activity,
+            as_user=self.user,
+        )
+        self.assertStatus(other, "accepted")
+        other.registration.refresh_from_db()
+        self.assertEqual(other.registration_id, self.registration.id)
+        self.assertStatus(other.registration, "accepted")
+
     def test_withdraw_after_past(self):
         super().test_accept()
         self.slot.start = now() - timedelta(days=3)

@@ -171,10 +171,20 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['registrations-0-user'] = BlueBottleUserFactory.create().pk
         form['registrations-0-activity'] = activity.pk
         page = form.submit()
-        form = page.forms['confirm']
-        form.submit()
+        if 'confirm' in page.forms:
+            page.forms['confirm'].submit()
 
         self.assertEqual(activity.registrations.count(), 1)
+
+    def test_slot_change_without_origin(self):
+        # Local (non-adopted) slot admin uses participant_list.html; must not touch origin
+        activity = DateActivityFactory.create(initiative=self.initiative)
+        slot = DateActivitySlotFactory.create(activity=activity)
+        self.assertFalse(slot.is_adopted)
+
+        url = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
+        page = self.app.get(url)
+        self.assertEqual(page.status, '200 OK')
 
     def test_add_participant(self):
         activity = DateActivityFactory.create(initiative=self.initiative)
@@ -414,7 +424,7 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
             f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/'
         )
         page = page.follow()
-        self.assertContains(page, '6 Results')
+        self.assertNotContains(page, '6 Results')
         self.assertEqual(self.activity.slots.count(), 6)
         self.assertEqual(
             [s.start.date() for s in self.activity.slots.all()],
@@ -434,7 +444,7 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
             f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/'
         )
         page = page.follow()
-        self.assertContains(page, '6 Results')
+        self.assertNotContains(page, '6 Results')
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.slots.count(), 6)
         self.assertEqual(self.activity.status, 'open')

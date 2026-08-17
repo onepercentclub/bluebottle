@@ -20,7 +20,7 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 class ContactEmailField(serializers.CharField):
     def __init__(self):
-        super().__init__(read_only=True, source="user.email")
+        super().__init__(read_only=True, source="*")
 
     def to_representation(self, value):
         user = self.context["request"].user
@@ -34,7 +34,9 @@ class ContactEmailField(serializers.CharField):
             user.is_superuser or
             user in activity.owners
         ):
-            return super().to_representation(value)
+            member = value.user or value.remote_user
+            if member:
+                return member.email
 
 
 class RegistrationSerializer(ModelSerializer):
@@ -50,6 +52,8 @@ class RegistrationSerializer(ModelSerializer):
         permissions=[ParticipantDocumentPermission]
     )
 
+    remote_user = ResourceRelatedField(read_only=True)
+
     class Meta(BaseContributorSerializer.Meta):
         model = Registration
         fields = [
@@ -61,6 +65,7 @@ class RegistrationSerializer(ModelSerializer):
             "document",
             "answer",
             "participants",
+            "remote_user",
         ]
         meta_fields = (
             'permissions', 'current_status', 'transitions'
@@ -74,10 +79,15 @@ class RegistrationSerializer(ModelSerializer):
         ]
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        included_resources = ['user', 'document', 'activity', 'participants']
+        included_resources = BaseContributorSerializer.JSONAPIMeta.included_resources + [
+            'document',
+            'participants',
+        ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
+        'remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
     }
 
     def to_representation(self, instance):
@@ -122,7 +132,9 @@ class DateRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-registrations'
-        included_resources = ['user', 'document', 'activity']
+        included_resources = BaseContributorSerializer.JSONAPIMeta.included_resources + [
+            'document',
+        ]
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers.serializers,
@@ -162,7 +174,6 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/schedule-registrations'
-        included_resources = ['user', 'document', 'activity']
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers.serializers,
@@ -187,12 +198,10 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/team-schedule-registrations'
-        included_resources = [
-            'user',
-            'document',
-            'activity',
-            'participants',
+        included_resources = RegistrationSerializer.JSONAPIMeta.included_resources + [
             'teams',
+            'teams.remote_user',
+            'teams.remote_user.source',
             'teams.slots'
         ]
 
@@ -203,6 +212,8 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
             "document": "bluebottle.time_based.serializers.RegistrationDocumentSerializer",
             "teams": "bluebottle.time_based.serializers.teams.TeamSerializer",
             'teams.slots': 'bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer',
+            'teams.remote_user': 'bluebottle.activities.serializers.RemoteMemberSerializer',
+            'teams.remote_user.source': 'bluebottle.organizations.serializers.OrganizationSerializer',
             "participants": "bluebottle.time_based.serializers.TeamScheduleParticipantSerializer",
         }
     )

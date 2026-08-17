@@ -263,10 +263,6 @@ class Geolocation(models.Model):
 
     position = PointField(null=True)
 
-    origin = models.ForeignKey(
-        'activity_pub.Place', null=True, related_name="locations", on_delete=models.SET_NULL
-    )
-
     @property
     def activity_pub_url(self):
         return None

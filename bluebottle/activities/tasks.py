@@ -142,10 +142,13 @@ def recommend():
             if settings.enable_matching_emails:
                 for user in Member.objects.filter(subscribed=True):
                     try:
+                        notification = MatchingActivitiesNotification(user)
+                        if notification.already_send(user):
+                            continue
+
                         activities = get_matching_activities(user)
 
                         if activities:
-                            notification = MatchingActivitiesNotification(user)
                             notification.compose_and_send(activities=activities)
                     except Exception as e:
                         logger.error(e)

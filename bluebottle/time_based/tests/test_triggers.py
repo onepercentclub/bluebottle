@@ -571,11 +571,13 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.activity.registration_deadline = date.today() - timedelta(days=1)
         self.activity.save()
+        self.assertStatus(self.activity, "registration_closed")
+        self.assertStatus(self.slot, "registration_closed")
 
         mail.outbox = []
         participant.states.withdraw(save=True)
-        self.slot.refresh_from_db()
-        self.assertStatus(self.slot, "open")
+        self.assertStatus(self.slot, "registration_closed")
+        self.assertStatus(self.activity, "registration_closed")
 
         subjects = [message.subject for message in mail.outbox]
         self.assertNotIn(

@@ -323,4 +323,22 @@ class TeamMemberTriggers(TriggerManager):
                 SendAddToTeamEffect,
             ],
         ),
+        TransitionTrigger(
+            TeamMemberStateMachine.resume,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    TeamScheduleParticipantStateMachine.reapply,
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    TeamScheduleParticipantStateMachine.readd,
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    TeamScheduleParticipantStateMachine.accept,
+                ),
+                SendAddToTeamEffect,
+            ],
+        ),
     ]

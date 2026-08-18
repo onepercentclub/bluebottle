@@ -72,18 +72,20 @@ class TeamMemberAddAuthorizationTestCase(BluebottleTestCase):
 
     def test_object_must_match_actor(self):
         serializer = self._serializer({
+            'id': 'https://consumer.example/adds/1',
             'type': 'Add',
             'actor': self._person_data(self.person),
             'object': self._person_data(self.other_person),
             'target': {'id': self.ap_team.iri},
         })
         with self.assertRaises(ValidationError) as error:
-            serializer.create({})
+            serializer.is_valid(raise_exception=True)
         self.assertIn('object', error.exception.detail)
 
     def test_unauthorized_platform_rejected(self):
         serializer = self._serializer(
             {
+                'id': 'https://consumer.example/adds/1',
                 'type': 'Add',
                 'actor': self._person_data(self.person),
                 'object': self._person_data(self.person),
@@ -92,17 +94,19 @@ class TeamMemberAddAuthorizationTestCase(BluebottleTestCase):
             platform=self.other_platform,
         )
         with self.assertRaises(ValidationError) as error:
-            serializer.create({})
+            serializer.is_valid(raise_exception=True)
         self.assertIn('target', error.exception.detail)
 
     def test_authorized_add_succeeds(self):
         serializer = self._serializer({
+            'id': 'https://consumer.example/adds/1',
             'type': 'Add',
             'actor': self._person_data(self.person),
             'object': self._person_data(self.person),
             'target': {'id': self.ap_team.iri},
         })
-        member = serializer.create({})
+        serializer.is_valid(raise_exception=True)
+        member = serializer.save()
         self.assertEqual(member.team, self.team)
         self.assertEqual(member.remote_user.origin.iri, self.person.iri)
 

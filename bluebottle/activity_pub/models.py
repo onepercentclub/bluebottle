@@ -20,7 +20,7 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
-from bluebottle.time_based.models import Registration
+from bluebottle.time_based.models import Registration, PeriodicRegistration, TeamMember
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
 
 
@@ -1037,7 +1037,15 @@ class Join(Activity):
         super().save(*args, **kwargs)
 
         if not self.is_local:
-            adapter.adopt(self)
+            adopted = adapter.adopt(self)
+            if (
+                isinstance(adopted, PeriodicRegistration) and
+                adopted.status == 'stopped'
+            ):
+                try:
+                    adopted.states.start(save=True)
+                except TransitionNotPossible:
+                    pass
 
     @property
     def default_recipients(self):
@@ -1071,7 +1079,12 @@ class Add(Activity):
         super().save(*args, **kwargs)
 
         if not self.is_local:
-            adapter.adopt(self)
+            adopted = adapter.adopt(self)
+            if isinstance(adopted, TeamMember) and adopted.status != 'active':
+                try:
+                    adopted.states.resume(save=True)
+                except TransitionNotPossible:
+                    pass
 
     @property
     def default_recipients(self):

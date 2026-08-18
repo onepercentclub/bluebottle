@@ -216,6 +216,12 @@ class FederatedMemberSerializer(MemberSerializer):
             return None
         return super().to_representation(user)
 
+    def validate_empty_values(self, data):
+        is_empty, value = super().validate_empty_values(data)
+        if is_empty and not value:
+            return True, {}
+        return is_empty, value
+
     def to_internal_value(self, data):
         result = super().to_internal_value(data)
         iri = result.get('id')
@@ -967,9 +973,6 @@ class PeriodicParticipantSerializer(BaseContributorSerializer):
 class PeriodicRegistrationSerializer(BaseContributorSerializer):
     model = PeriodicRegistration
 
-    def update(self, contributor, validated_data):
-        contributor.states.start(save=True)
-
 
 class DateRegistrationSerializer(BaseContributorSerializer):
     model = DateRegistration
@@ -1015,43 +1018,13 @@ class FederatedTeamSerializer(FederatedObjectBaseSerializer):
         source='description', required=False, allow_null=True, allow_blank=True
     )
     attributed_to = RelatedActivityField(source='activity')
-    captain = MemberSerializer(source='user', required=False, allow_null=True)
+    captain = FederatedMemberSerializer(source='*', required=False, allow_null=True)
 
     class Meta:
         model = LocalTeam
         fields = FederatedObjectBaseSerializer.Meta.fields + (
             'name', 'summary', 'attributed_to', 'captain',
         )
-
-    def create(self, validated_data):
-        validated_data.pop('id', None)
-        captain = validated_data.pop('user', None)
-        activity = validated_data['activity']
-
-        remote_user = None
-        user = None
-        if captain:
-            field = self.fields['captain']
-            if self.initial_data.get('captain'):
-                field.initial_data = self.initial_data['captain']
-                field.is_valid(raise_exception=True)
-                captain_id = (
-                    captain['id'] if isinstance(captain, dict) else captain
-                )
-                if is_local(captain_id):
-                    user = ActivityPubModel.objects.from_iri(captain_id).origin
-                else:
-                    remote_user = field.save()
-
-        team = LocalTeam.objects.create(
-            activity=activity,
-            user=user,
-            remote_user=remote_user,
-            name=validated_data.get('name'),
-            description=validated_data.get('description'),
-            registration=validated_data.get('registration'),
-        )
-        return team
 
 
 class TeamInstrumentField(serializers.Field):
@@ -1229,30 +1202,65 @@ class TeamScheduleParticipantSerializer(BaseContributorSerializer):
         return super().create(validated_data)
 
 
+class RelatedTeamField(RelatedField):
+    required_message = 'Team is required'
+    unknown_message = 'Unknown team'
+    unresolved_message = 'Team could not be resolved'
+
+    def get_queryset(self):
+        return ActivityPubModel.objects.all()
+
+    def get_origin_value(self, instance):
+        return getattr(instance, 'team', None)
+
+    def to_representation(self, value):
+        if value is None:
+            return None
+        try:
+            if value.origin:
+                return value.origin.pub_url
+        except (AttributeError, ObjectDoesNotExist):
+            pass
+        if hasattr(value, 'activity_pub_model'):
+            return value.activity_pub_model.pub_url
+
+    def to_internal_value(self, data):
+        if data is None:
+            raise serializers.ValidationError(self.required_message)
+        if isinstance(data, str):
+            data = {'id': data}
+        elif isinstance(data, dict) and 'id' not in data and 'iri' in data:
+            data = {'id': data['iri']}
+        team_iri = data.get('id') or data.get('iri')
+        if not team_iri:
+            raise serializers.ValidationError(self.required_message)
+
+        ap_team = ActivityPubModel.objects.from_iri(team_iri)
+        if not ap_team:
+            raise serializers.ValidationError(self.unknown_message)
+        if ap_team.is_local:
+            team = ap_team.origin
+        elif ap_team.adopted:
+            team = ap_team.adopted
+        else:
+            team = adapter.adopt(ap_team)
+
+        if team is None:
+            raise serializers.ValidationError(self.unresolved_message)
+        return team
+
+
 class TeamMemberAddSerializer(FederatedObjectBaseSerializer):
     type = TypeField('Add')
-    actor = MemberSerializer(source='user')
-    object = MemberSerializer(source='user')
-    target = serializers.SerializerMethodField()
+    actor = FederatedMemberSerializer(source='*', read_only=True)
+    object = FederatedMemberSerializer(source='*')
+    target = RelatedTeamField(source='team')
 
     class Meta:
         model = TeamMember
         fields = FederatedObjectBaseSerializer.Meta.fields + (
             'actor', 'object', 'target',
         )
-
-    def get_target(self, obj):
-        if hasattr(obj.team, 'activity_pub_model'):
-            return obj.team.activity_pub_model.pub_url
-        if hasattr(obj.team, 'origin'):
-            return obj.team.origin.pub_url
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        target = self.get_target(instance)
-        if target:
-            data['target'] = target
-        return data
 
     @staticmethod
     def _resource_iri(value):
@@ -1263,6 +1271,19 @@ class TeamMemberAddSerializer(FederatedObjectBaseSerializer):
         if isinstance(value, dict):
             return value.get('id') or value.get('iri')
         return None
+
+    def to_internal_value(self, data):
+        actor_iri = self._resource_iri(data.get('actor'))
+        object_iri = self._resource_iri(data.get('object'))
+        if not actor_iri or actor_iri != object_iri:
+            raise serializers.ValidationError({
+                'object': 'Add object must match actor',
+            })
+        if object_iri and is_local(object_iri):
+            raise serializers.ValidationError({
+                'object': 'Cannot add a local person via remote Add',
+            })
+        return super().to_internal_value(data)
 
     def _get_add_platform(self):
         request = self.context.get('request') if self.context else None
@@ -1278,7 +1299,8 @@ class TeamMemberAddSerializer(FederatedObjectBaseSerializer):
             return add.platform
         return None
 
-    def _event_for_team(self, ap_team, team):
+    def _event_for_team(self, team):
+        ap_team = getattr(team, 'origin', None)
         if isinstance(ap_team, ActivityPubTeam) and ap_team.attributed_to_id:
             return ap_team.attributed_to
         return getattr(team.activity, 'activity_pub_model', None)
@@ -1292,18 +1314,14 @@ class TeamMemberAddSerializer(FederatedObjectBaseSerializer):
                 return True
         return False
 
-    def _validate_add(self, actor_iri, object_iri, ap_team, team):
-        if not actor_iri or actor_iri != object_iri:
-            raise serializers.ValidationError({
-                'object': 'Add object must match actor',
-            })
-
-        if ap_team is None:
+    def validate(self, attrs):
+        team = attrs.get('team')
+        if team is None:
             raise serializers.ValidationError({
                 'target': 'Add target team is required',
             })
 
-        event = self._event_for_team(ap_team, team)
+        event = self._event_for_team(team)
         if event is None:
             raise serializers.ValidationError({
                 'target': 'Add target team is not attributed to an activity',
@@ -1326,59 +1344,7 @@ class TeamMemberAddSerializer(FederatedObjectBaseSerializer):
                 'target': 'Platform is not authorized to add members to this team',
             })
 
-        return platform
-
-    def create(self, validated_data):
-        validated_data.pop('id', None)
-        actor_data = self.initial_data.get('actor')
-        object_data = self.initial_data.get('object')
-        actor_iri = self._resource_iri(actor_data)
-        object_iri = self._resource_iri(object_data)
-        user_data = object_data or actor_data
-
-        target = self.initial_data.get('target')
-        if isinstance(target, str):
-            target = {'id': target}
-        elif isinstance(target, dict) and 'id' not in target and 'iri' in target:
-            target = {'id': target['iri']}
-
-        target_iri = self._resource_iri(target)
-        if not target_iri:
-            raise serializers.ValidationError({
-                'target': 'Add target team is required',
-            })
-
-        ap_team = ActivityPubModel.objects.from_iri(target_iri)
-        if ap_team is None:
-            raise serializers.ValidationError({
-                'target': 'Unknown Add target team',
-            })
-
-        if ap_team.is_local:
-            team = ap_team.origin
-        elif ap_team.adopted:
-            team = ap_team.adopted
-        else:
-            team = adapter.adopt(ap_team)
-
-        if team is None:
-            raise serializers.ValidationError({
-                'target': 'Add target team could not be resolved',
-            })
-
-        platform = self._validate_add(actor_iri, object_iri, ap_team, team)
-
-        field = self.fields['object']
-        field.initial_data = user_data
-        field.is_valid(raise_exception=True)
-        person_id = user_data['id'] if isinstance(user_data, dict) else user_data
-
-        if is_local(person_id):
-            raise serializers.ValidationError({
-                'object': 'Cannot add a local person via remote Add',
-            })
-
-        remote_user = field.save()
+        remote_user = attrs.get('remote_user')
         person = getattr(remote_user, 'origin', None)
         if (
             person is not None and
@@ -1389,72 +1355,28 @@ class TeamMemberAddSerializer(FederatedObjectBaseSerializer):
                 'object': 'Person does not belong to the sending platform',
             })
 
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('id', None)
+        validated_data.pop('type', None)
+        team = validated_data['team']
+        remote_user = validated_data['remote_user']
+
         existing = TeamMember.objects.filter(
-            team=team, user=None, remote_user=remote_user
+            team=team, remote_user=remote_user
         ).first()
         if existing:
-            try:
-                if existing.status == 'withdrawn':
-                    existing.states.reapply(save=True)
-                elif existing.status == 'removed':
-                    existing.states.readd(save=True)
-                elif existing.status == 'rejected':
-                    existing.states.accept(save=True)
-            except TransitionNotPossible:
-                pass
             return existing
 
-        member = TeamMember(
-            team=team,
-            user=None,
-            remote_user=remote_user,
-        )
+        member = TeamMember(team=team, user=None, remote_user=remote_user)
         member.execute_triggers()
         member.save()
         return member
 
 
-class RelatedTeamSlotField(RelatedField):
-    def get_queryset(self):
-        return ActivityPubModel.objects.all()
-
-    def get_origin_value(self, instance):
-        return getattr(instance, 'team', None)
-
-    def to_representation(self, value):
-        if value is None:
-            return None
-        # Prefer the federated identity shared across platforms (adopted-from Team).
-        try:
-            if value.origin:
-                return value.origin.pub_url
-        except (AttributeError, ObjectDoesNotExist):
-            pass
-        if hasattr(value, 'activity_pub_model'):
-            return value.activity_pub_model.pub_url
-
-    def to_internal_value(self, data):
-        if data is None:
-            raise serializers.ValidationError('Team is required for team schedule slots')
-        if isinstance(data, str):
-            data = {'id': data}
-        team_iri = data.get('id') or data.get('iri')
-        if not team_iri:
-            raise serializers.ValidationError('Team is required for team schedule slots')
-
-        ap_team = ActivityPubModel.objects.from_iri(team_iri)
-        if not ap_team:
-            raise serializers.ValidationError('Unknown team')
-        if ap_team.is_local:
-            team = ap_team.origin
-        elif ap_team.adopted:
-            team = ap_team.adopted
-        else:
-            team = adapter.adopt(ap_team)
-
-        if team is None:
-            raise serializers.ValidationError('Team could not be resolved')
-        return team
+class RelatedTeamSlotField(RelatedTeamField):
+    required_message = 'Team is required for team schedule slots'
 
 
 class TeamScheduleSlotsSerializer(ScheduleSlotsSerializer):

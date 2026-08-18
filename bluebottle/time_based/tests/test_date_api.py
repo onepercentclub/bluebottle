@@ -249,6 +249,54 @@ class DateActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase
             ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer',)
         )
 
+    def test_export_participant_without_registration(self):
+        slot = self.activity.slots.filter(start__gt=now()).order_by('start').first()
+        if not slot:
+            slot = self.activity.slots.order_by('start').first()
+            slot.start = now() + timedelta(days=10)
+            slot.save()
+
+        participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=slot,
+            user=BlueBottleUserFactory.create(),
+        )
+        participant.registration = None
+        participant.save(update_fields=['registration'])
+        participant.refresh_from_db()
+        self.assertIsNone(participant.registration_id)
+
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        participant_row = None
+
+        for sheet in workbook.worksheets:
+            for row in sheet.values:
+                if row[0] == participant.user.email:
+                    participant_row = row
+                    break
+            if participant_row:
+                break
+
+        self.assertIsNotNone(participant_row)
+        self.assertIn(participant_row[4], (None, ''))
+
+    def test_date_participant_answer_without_registration(self):
+        slot = self.activity.slots.first()
+        participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=slot,
+            user=BlueBottleUserFactory.create(),
+        )
+        participant.registration = None
+        participant.save(update_fields=['registration'])
+        participant.refresh_from_db()
+        self.assertIsNone(participant.registration_id)
+        self.assertEqual(participant.answer, '')
+
 
 class DateSlotDetailAPITestCase(APITestCase):
     url_name = 'date-slot-detail'

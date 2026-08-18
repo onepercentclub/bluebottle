@@ -1034,7 +1034,9 @@ class DateParticipant(Participant):
 
     @property
     def answer(self):
-        return self.registration.answer
+        if self.registration_id:
+            return self.registration.answer
+        return ''
 
     class Meta(Participant.Meta):
         verbose_name = _("Participant to date activity slot")

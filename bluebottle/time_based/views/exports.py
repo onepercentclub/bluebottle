@@ -20,9 +20,7 @@ INTEREST_EXPORT_FIELDS = (
     ('user__email', 'Email'),
     ('user__full_name', 'Name'),
     ('created', 'Registration Date'),
-    ('status', 'Status'),
 )
-INTEREST_STATUS = 'Interested'
 
 
 def format_slot_worksheet_title(slot, prefix=''):
@@ -64,10 +62,7 @@ class InterestExportMixin:
     def get_interest_row(self, interest):
         row = []
         for field, _name in INTEREST_EXPORT_FIELDS:
-            if field == 'status':
-                row.append(INTEREST_STATUS)
-            else:
-                row.append(prep_field(self.request, interest, field))
+            row.append(prep_field(self.request, interest, field))
         return row
 
     def write_interest_sheet(self, workbook):

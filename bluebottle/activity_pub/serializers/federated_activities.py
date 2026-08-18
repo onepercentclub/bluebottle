@@ -9,7 +9,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.db import connection
 from django.urls import reverse
-from djmoney.money import Money
 from rest_framework import exceptions
 from rest_framework import serializers
 from rest_framework.relations import RelatedField
@@ -22,7 +21,7 @@ from bluebottle.activity_pub.models import (
     ActivityPubModel, SubEvent, Team as ActivityPubTeam, Add, Follow,
 )
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
-from bluebottle.activity_pub.serializers.fields import FederatedIdField, TypeField
+from bluebottle.activity_pub.serializers.fields import FederatedIdField, MoneyField, TypeField
 from bluebottle.activity_pub.utils import is_local
 from bluebottle.collect.models import CollectActivity, CollectType, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -200,28 +199,32 @@ class MemberSerializer(FederatedObjectBaseSerializer):
             'name', 'family_name', 'given_name', 'email', 'summary', 'icon'
         )
 
-    def save(self, *args, **kwargs):
-        try:
-            self.instance = RemoteMember.objects.get(origin__iri=self.validated_data['id'])
-        except RemoteMember.DoesNotExist:
-            pass
+    lookup_field = 'origin__iri'
+    lookup_url_kwarg = 'id'
 
-        return super().save(*args, **kwargs)
+    def get_queryset(self):
+        return RemoteMember.objects.all()
 
-    def create(self, validated_data):
-        result = RemoteMember.objects.create(
-            **dict(
-                (key, value) for key, value in validated_data.items() if
-                key not in ['id', 'type']
-            )
-        )
 
-        origin = ActivityPubModel.objects.from_iri(validated_data['id'])
-        if origin:
-            origin.adopted = result
-            origin.save()
+class FederatedMemberSerializer(MemberSerializer):
+    def get_origin_value(self, instance):
+        return instance.user
 
-        return result
+    def to_representation(self, instance):
+        user = getattr(instance, 'user', None)
+        if user is None:
+            return None
+        return super().to_representation(user)
+
+    def to_internal_value(self, data):
+        result = super().to_internal_value(data)
+        iri = result.get('id')
+        if iri and is_local(iri):
+            return {'user': ActivityPubModel.objects.from_iri(iri).origin}
+
+        self._validated_data = result
+        self._errors = {}
+        return {'remote_user': self.save()}
 
 
 class OrganizationSerializer(FederatedObjectBaseSerializer):
@@ -322,43 +325,22 @@ class FederatedDeedSerializer(BaseFederatedActivitySerializer):
 
 
 class ParlerNameRelatedField(serializers.RelatedField):
-    def __init__(self, *, name_field="name", create_if_missing=True, **kwargs):
-        self.name_field = name_field
-        self.create_if_missing = create_if_missing
-        super().__init__(**kwargs)
-
     def to_representation(self, value):
-        lang = get_default_language()
-        translated = value.safe_translation_getter(
-            self.name_field,
-            language_code=lang,
+        return value.safe_translation_getter(
+            'name',
+            language_code=get_default_language(),
             any_language=True,
         )
-        return translated
 
     def to_internal_value(self, data):
-        if data is None or data == "":
+        if not data:
             return None
-        if not isinstance(data, str):
-            raise serializers.ValidationError("Expected a string.")
 
         lang = get_default_language()
-        qs = self.get_queryset()
-        if qs is None:
-            raise serializers.ValidationError("No queryset provided for related field.")
-
-        try:
-            obj = qs.translated(lang, **{self.name_field: data}).get()
-            return obj
-        except qs.model.DoesNotExist:
-            if not self.create_if_missing:
-                raise serializers.ValidationError(f"Unknown {qs.model.__name__}: {data}")
-
-        obj = qs.model()
-        obj.set_current_language(lang)
-        setattr(obj, self.name_field, data)
-        obj.save()
-        return obj
+        collect_type = self.get_queryset().translated(lang, name=data).first()
+        if collect_type:
+            return collect_type
+        return self.get_queryset().model.objects.language(lang).create(name=data)
 
 
 class FederatedCollectSerializer(BaseFederatedActivitySerializer):
@@ -370,7 +352,6 @@ class FederatedCollectSerializer(BaseFederatedActivitySerializer):
         queryset=CollectType.objects.all(),
         allow_null=True,
         required=False,
-        create_if_missing=True,
     )
     target = serializers.FloatField(allow_null=True, required=False)
     donated = serializers.FloatField(source='realized', allow_null=True, required=False)
@@ -391,10 +372,10 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     location = LocationSerializer(source='impact_location', allow_null=True, required=False)
 
     end_time = serializers.DateTimeField(source='deadline')
-    target = serializers.DecimalField(source='target.amount', decimal_places=2, max_digits=10)
-    target_currency = serializers.CharField(source='target.currency')
-    donated = serializers.DecimalField(source='amount_raised.amount', decimal_places=2, max_digits=10)
-    donated_currency = serializers.CharField(source='amount_raised.currency')
+    target = MoneyField()
+    target_currency = serializers.CharField(source='target.currency', read_only=True)
+    donated = MoneyField(source='amount_donated')
+    donated_currency = serializers.CharField(source='amount_donated.currency', read_only=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = Funding
@@ -404,20 +385,6 @@ class FederatedFundingSerializer(BaseFederatedActivitySerializer):
             'donated', 'donated_currency'
         )
 
-    def to_internal_value(self, validated_data):
-        internal_value = super().to_internal_value(validated_data)
-        if internal_value.get('target'):
-            internal_value['target'] = Money(
-                **internal_value['target']
-            )
-        if internal_value.get('amount_raised'):
-            donated = internal_value.pop('amount_raised')
-            internal_value['amount_donated'] = Money(
-                **donated
-            )
-
-        return internal_value
-
 
 class FederatedGrantApplicationSerializer(BaseFederatedActivitySerializer):
     type = TypeField('GrantApplication')
@@ -425,14 +392,8 @@ class FederatedGrantApplicationSerializer(BaseFederatedActivitySerializer):
     location = LocationSerializer(source='impact_location', allow_null=True, required=False)
 
     start_time = serializers.DateTimeField(source='started', required=False, allow_null=True)
-    target = serializers.DecimalField(
-        source='target.amount',
-        decimal_places=2,
-        max_digits=10,
-        required=False,
-        allow_null=True,
-    )
-    target_currency = serializers.CharField(source='target.currency', required=False, allow_null=True)
+    target = MoneyField(required=False, allow_null=True)
+    target_currency = serializers.CharField(source='target.currency', read_only=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = GrantApplication
@@ -440,13 +401,6 @@ class FederatedGrantApplicationSerializer(BaseFederatedActivitySerializer):
             'location', 'start_time',
             'target', 'target_currency',
         )
-
-    def create(self, validated_data):
-        if validated_data.get('target'):
-            validated_data['target'] = Money(
-                **validated_data['target']
-            )
-        return super().create(validated_data)
 
 
 class EventAttendanceModeField(serializers.Field):
@@ -851,7 +805,7 @@ class MotivationField(serializers.CharField):
 
 class ContributorSerializer(FederatedObjectBaseSerializer):
     type = TypeField('Join')
-    actor = MemberSerializer(source='user')
+    actor = FederatedMemberSerializer(source='*')
     object = RelatedActivityField(source='activity')
     motivation = MotivationField(required=False, allow_null=True, source='*')
 
@@ -869,82 +823,73 @@ class ContributorSerializer(FederatedObjectBaseSerializer):
             model_name == 'scheduleactivity'
             and getattr(activity, 'team_activity', None) == 'teams'
         ):
-            return TeamScheduleRegistrationSerializer()
+            serializer_class = TeamScheduleRegistrationSerializer
+        else:
+            serializer_mapping = {
+                'deed': DeedParticipantSerializer,
+                'collectactivity': CollectParticipantSerializer,
+                'deadlineactivity': DeadlineParticipantSerializer,
+                'scheduleactivity': ScheduleRegistrationSerializer,
+                'periodicactivity': PeriodicRegistrationSerializer,
+                'dateactivityslot': DateParticipantSerializer,
+                'dateactivity': DateRegistrationSerializer,
+                'scheduleslot': ScheduleParticipantSerializer,
+                'periodicslot': PeriodicParticipantSerializer,
+                'teamscheduleslot': TeamScheduleParticipantSerializer,
+            }
+            serializer_class = serializer_mapping[model_name]
 
-        serializer_mapping = {
-            'deed': DeedParticipantSerializer,
-            'collectactivity': CollectParticipantSerializer,
-            'deadlineactivity': DeadlineParticipantSerializer,
-            'scheduleactivity': ScheduleRegistrationSerializer,
-            'periodicactivity': PeriodicRegistrationSerializer,
-            'dateactivityslot': DateParticipantSerializer,
-            'dateactivity': DateRegistrationSerializer,
-            'scheduleslot': ScheduleParticipantSerializer,
-            'periodicslot': PeriodicParticipantSerializer,
-            'teamscheduleslot': TeamScheduleParticipantSerializer,
-        }
-
-        return serializer_mapping[model_name]()
+        serializer = serializer_class()
+        serializer.parent = self
+        return serializer
 
     def create(self, validated_data):
-        validated_data.pop('id')
-        user = validated_data.pop('user')
-
-        field = self.fields['actor']
-        field.initial_data = self.initial_data['actor']
-        field.is_valid(raise_exception=True)
-        if is_local(user['id']):
-            validated_data['user'] = ActivityPubModel.objects.from_iri(user['id']).origin
-        else:
-            validated_data['remote_user'] = field.save()
-
-        polymorphic_serializer = self.get_polymorphic_serializer(validated_data)
-        if isinstance(polymorphic_serializer, TeamScheduleRegistrationSerializer):
-            return polymorphic_serializer.create(
-                validated_data,
-                instrument=self.initial_data.get('instrument'),
-            )
-        return polymorphic_serializer.create(validated_data)
+        validated_data.pop('id', None)
+        validated_data.pop('type', None)
+        return self.get_polymorphic_serializer(validated_data).create(validated_data)
 
 
 class BaseContributorSerializer(FederatedObjectBaseSerializer):
+    def get_queryset(self):
+        return self.model.objects.all()
+
     def get_contributor(self, validated_data):
-        return self.model.objects.filter(
-            activity=validated_data['activity'],
-            remote_user=validated_data['remote_user'],
-        ).first()
+        filters = {'activity': validated_data['activity']}
+        if validated_data.get('remote_user'):
+            filters['remote_user'] = validated_data['remote_user']
+        elif validated_data.get('user'):
+            filters['user'] = validated_data['user']
+        else:
+            return None
+        return self.get_queryset().filter(**filters).first()
 
     def update(self, contributor, validated_data):
-        if contributor.status != 'withdrawn':
-            return
-        try:
-            contributor.states.reapply(save=True)
-        except TransitionNotPossible:
-            pass
+        if contributor.status == 'withdrawn':
+            try:
+                contributor.states.reapply(save=True)
+            except TransitionNotPossible:
+                pass
+        return contributor
 
     def create(self, validated_data):
         contributor = self.get_contributor(validated_data)
         if contributor:
             self.update(contributor, validated_data)
             return contributor
-        else:
-            return self.model.objects.create(**validated_data)
+
+        create_kwargs = {
+            key: value for key, value in validated_data.items()
+            if key in {field.name for field in self.model._meta.fields}
+        }
+        return self.model.objects.create(**create_kwargs)
 
 
 class DeedParticipantSerializer(BaseContributorSerializer):
     model = DeedParticipant
 
-    def create(self, validated_data):
-        validated_data.pop('answer')
-        return super().create(validated_data)
-
 
 class CollectParticipantSerializer(BaseContributorSerializer):
     model = CollectContributor
-
-    def create(self, validated_data):
-        validated_data.pop('answer')
-        return super().create(validated_data)
 
 
 class DeadlineParticipantSerializer(BaseContributorSerializer):
@@ -989,8 +934,6 @@ class ScheduleParticipantSerializer(BaseContributorSerializer):
         validated_data['slot'] = slot
         validated_data['activity'] = slot.activity
 
-        validated_data.pop('answer')
-
         return super().create(validated_data)
 
 
@@ -1017,8 +960,6 @@ class PeriodicParticipantSerializer(BaseContributorSerializer):
 
         validated_data['slot'] = slot
         validated_data['activity'] = slot.activity
-
-        validated_data.pop('answer')
 
         return super().create(validated_data)
 
@@ -1134,11 +1075,14 @@ class TeamInstrumentField(serializers.Field):
 class TeamScheduleRegistrationSerializer(BaseContributorSerializer):
     model = TeamScheduleRegistration
 
-    def create(self, validated_data, instrument=None):
+    def create(self, validated_data):
         answer = validated_data.pop('answer', None)
         remote_user = validated_data.get('remote_user')
         user = validated_data.get('user')
         activity = validated_data['activity']
+        instrument = None
+        if self.parent is not None:
+            instrument = self.parent.initial_data.get('instrument')
 
         existing = TeamScheduleRegistration.objects.filter(
             activity=activity,

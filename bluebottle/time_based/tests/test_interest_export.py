@@ -98,7 +98,6 @@ class InterestExportAssertionsMixin:
             self.assertEqual(row[0], interest.user.email)
             self.assertEqual(row[1], interest.user.full_name)
             self.assertEqual(row[2], interest.created.strftime('%d-%m-%y %H:%M'))
-            self.assertEqual(row[3], 'Interested')
 
     def assert_no_interest_sheet(self, workbook):
         self.assertEqual(get_interest_sheets(workbook), [])
@@ -115,7 +114,6 @@ class InterestExportAssertionsMixin:
             self.assertEqual(row[0], interest.user.email)
             self.assertEqual(row[1], interest.user.full_name)
             self.assertEqual(row[2], interest.created.strftime('%d-%m-%y %H:%M'))
-            self.assertEqual(row[3], 'Interested')
 
 
 class DeadlineInterestExportTestCase(

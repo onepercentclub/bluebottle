@@ -64,11 +64,12 @@ class InterestExportMixin:
         if not interests:
             return
 
+        bold = workbook.add_format({'bold': True})
         worksheet = add_unique_worksheet(workbook, self.interest_sheet_title)
         worksheet.set_column(0, len(INTEREST_EXPORT_FIELDS) - 1, 30)
-        worksheet.write_row(
-            0, 0, [name for _field, name in INTEREST_EXPORT_FIELDS]
-        )
+
+        for column, (_field, name) in enumerate(INTEREST_EXPORT_FIELDS):
+            worksheet.write(0, column, name, bold)
 
         for index, interest in enumerate(interests):
             worksheet.write_row(index + 1, 0, self.get_interest_row(interest))

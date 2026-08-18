@@ -8,7 +8,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.activity_pub.effects import (
     SendTeamJoinEffect,
-    SendAddToTeamEffect,
+    SendTeamMemberJoinEffect,
     SendTeamLeaveEffect,
     SendTeamMemberLeaveEffect,
     SyncRelatedEvent,
@@ -218,7 +218,7 @@ class TeamMemberTriggers(TriggerManager):
                     CaptainTeamMemberJoinedNotification,
                     conditions=[is_not_captain],
                 ),
-                SendAddToTeamEffect,
+                SendTeamMemberJoinEffect,
             ]
         ),
         TransitionTrigger(
@@ -244,7 +244,7 @@ class TeamMemberTriggers(TriggerManager):
                     'participants',
                     TeamScheduleParticipantStateMachine.reapply,
                 ),
-                SendAddToTeamEffect,
+                SendTeamMemberJoinEffect,
             ]
         ),
         TransitionTrigger(
@@ -301,7 +301,7 @@ class TeamMemberTriggers(TriggerManager):
                     "participants",
                     TeamScheduleParticipantStateMachine.readd,
                 ),
-                SendAddToTeamEffect,
+                SendTeamMemberJoinEffect,
             ],
         ),
         TransitionTrigger(
@@ -320,7 +320,7 @@ class TeamMemberTriggers(TriggerManager):
                     "participants",
                     TeamScheduleParticipantStateMachine.accept,
                 ),
-                SendAddToTeamEffect,
+                SendTeamMemberJoinEffect,
             ],
         ),
         TransitionTrigger(
@@ -338,7 +338,7 @@ class TeamMemberTriggers(TriggerManager):
                     'participants',
                     TeamScheduleParticipantStateMachine.accept,
                 ),
-                SendAddToTeamEffect,
+                SendTeamMemberJoinEffect,
             ],
         ),
     ]

@@ -6,7 +6,7 @@ from bluebottle.activity_pub.models import (
     Create, Recipient, Team as ActivityPubTeam,
 )
 from bluebottle.activity_pub.serializers.federated_activities import (
-    TeamMemberAddSerializer, TeamScheduleSlotsSerializer,
+    TeamMemberJoinSerializer, TeamScheduleSlotsSerializer,
 )
 from bluebottle.activity_pub.tests.factories import OrganizationFactory, PersonFactory
 from bluebottle.cms.models import SitePlatformSettings
@@ -14,7 +14,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import ScheduleActivityFactory, TeamFactory
 
 
-class TeamMemberAddAuthorizationTestCase(BluebottleTestCase):
+class TeamMemberJoinAuthorizationTestCase(BluebottleTestCase):
     def setUp(self):
         site_settings = SitePlatformSettings.load()
         site_settings.share_activities = ['supplier', 'consumer']
@@ -63,20 +63,27 @@ class TeamMemberAddAuthorizationTestCase(BluebottleTestCase):
             'email': person.email,
         }
 
+    def _join_data(self, person, team_iri=None):
+        return {
+            'id': 'https://consumer.example/joins/1',
+            'type': 'Join',
+            'actor': self._person_data(person),
+            'object': {'id': team_iri or self.ap_team.iri},
+        }
+
     def _serializer(self, data, platform=None):
         request = RequestFactory().post('/')
         request.auth = platform or self.platform
-        serializer = TeamMemberAddSerializer(context={'request': request})
+        serializer = TeamMemberJoinSerializer(context={'request': request})
         serializer.initial_data = data
         return serializer
 
-    def test_object_must_match_actor(self):
+    def test_object_must_be_team(self):
         serializer = self._serializer({
-            'id': 'https://consumer.example/adds/1',
-            'type': 'Add',
+            'id': 'https://consumer.example/joins/1',
+            'type': 'Join',
             'actor': self._person_data(self.person),
             'object': self._person_data(self.other_person),
-            'target': {'id': self.ap_team.iri},
         })
         with self.assertRaises(ValidationError) as error:
             serializer.is_valid(raise_exception=True)
@@ -84,31 +91,33 @@ class TeamMemberAddAuthorizationTestCase(BluebottleTestCase):
 
     def test_unauthorized_platform_rejected(self):
         serializer = self._serializer(
-            {
-                'id': 'https://consumer.example/adds/1',
-                'type': 'Add',
-                'actor': self._person_data(self.person),
-                'object': self._person_data(self.person),
-                'target': {'id': self.ap_team.iri},
-            },
+            self._join_data(self.person),
             platform=self.other_platform,
         )
         with self.assertRaises(ValidationError) as error:
             serializer.is_valid(raise_exception=True)
-        self.assertIn('target', error.exception.detail)
+        self.assertIn('object', error.exception.detail)
 
-    def test_authorized_add_succeeds(self):
-        serializer = self._serializer({
-            'id': 'https://consumer.example/adds/1',
-            'type': 'Add',
-            'actor': self._person_data(self.person),
-            'object': self._person_data(self.person),
-            'target': {'id': self.ap_team.iri},
-        })
+    def test_authorized_join_succeeds(self):
+        serializer = self._serializer(self._join_data(self.person))
         serializer.is_valid(raise_exception=True)
         member = serializer.save()
         self.assertEqual(member.team, self.team)
         self.assertEqual(member.remote_user.origin.iri, self.person.iri)
+        self.assertEqual(member.status, 'active')
+
+    def test_rejoin_resumes_existing_member(self):
+        serializer = self._serializer(self._join_data(self.person))
+        serializer.is_valid(raise_exception=True)
+        member = serializer.save()
+        member.states.withdraw(save=True)
+        self.assertEqual(member.status, 'withdrawn')
+
+        serializer = self._serializer(self._join_data(self.person))
+        serializer.is_valid(raise_exception=True)
+        resumed = serializer.save()
+        self.assertEqual(resumed.pk, member.pk)
+        self.assertEqual(resumed.status, 'active')
 
 
 class TeamScheduleSlotReuseTestCase(BluebottleTestCase):

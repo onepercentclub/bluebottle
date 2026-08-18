@@ -86,12 +86,24 @@ class FederatedObjectSerializer(PolymorphicSerializer):
         # Team schedule registrations serialize as Join outbound, but inbound Join
         # adopt must stay on Contributor (polymorphic dispatch handles teams).
         self.resource_type_model_mapping['Join'] = Contributor
-        self.resource_type_model_mapping['Add'] = TeamMember
+        self.resource_type_model_mapping['TeamMember'] = TeamMember
         self.resource_type_model_mapping['Team'] = LocalTeam
         self.resource_type_model_mapping['TeamScheduleSlot'] = TeamScheduleSlot
 
     def _get_resource_type_from_mapping(self, mapping):
         resource_type = super()._get_resource_type_from_mapping(mapping)
+        if resource_type == 'Join':
+            from bluebottle.activity_pub.models import ActivityPubModel, Team as ActivityPubTeam
+            from bluebottle.activity_pub.utils import resource_iri
+
+            object_ref = mapping.get('object')
+            if isinstance(object_ref, dict) and object_ref.get('type') == 'Team':
+                return 'TeamMember'
+            object_iri = resource_iri(object_ref)
+            obj = ActivityPubModel.objects.from_iri(object_iri) if object_iri else None
+            if isinstance(obj, ActivityPubTeam):
+                return 'TeamMember'
+
         if resource_type == 'DoGoodEvent':
             if mapping.get('slot_mode', 'SetSlotMode') == 'ScheduledSlotMode':
                 return 'ScheduleActivity'

@@ -149,21 +149,37 @@ class CreateDateRegistrationEffect(Effect):
     title = _('Create or assign registration for this participant')
     template = 'admin/create_date_registration.html'
 
-    def pre_save(self, **kwargs):
+    def _registration_filters(self):
+        if self.instance.remote_user_id:
+            return {'remote_user': self.instance.remote_user}
+        if self.instance.user_id:
+            return {'user': self.instance.user}
+        return None
 
+    def pre_save(self, **kwargs):
         if not self.instance.activity_id:
-            # we need this for inline admin, so we can add users to a slot
             self.instance.activity = self.instance.slot.activity
-        self.instance.registration = self.instance.activity.registrations.filter(user=self.instance.user).first()
+        if self.instance.registration:
+            return
+        filters = self._registration_filters()
+        if not filters:
+            return
+        self.instance.registration = self.instance.activity.registrations.filter(
+            **filters
+        ).first()
 
     def post_save(self, **kwargs):
-        if not self.instance.registration and self.instance.user:
-            self.instance.registration = DateRegistration.objects.create(
-                activity=self.instance.activity,
-                user=self.instance.user,
-            )
-
-            self.instance.save()
+        if self.instance.registration:
+            return
+        if not self._registration_filters():
+            return
+        self.instance.registration = DateRegistration.objects.create(
+            activity=self.instance.activity,
+            user=self.instance.user,
+            remote_user=self.instance.remote_user,
+            answer=self.instance.motivation,
+        )
+        self.instance.save()
 
 
 class CreatePeriodicPreparationTimeContributionEffect(CreatePeriodicParticipantsEffect):

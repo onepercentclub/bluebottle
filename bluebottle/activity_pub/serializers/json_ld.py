@@ -23,7 +23,6 @@ from bluebottle.activity_pub.models import (
     Lock,
     Join,
     Leave,
-    Add,
     Team,
     Organization,
     GoodDeed,
@@ -514,37 +513,24 @@ class JoinSerializer(BaseActivitySerializer):
     object = RelatedResourceField(
         type=(
             'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
-            'CollectCampaign', 'DoGoodEvent', 'SubEvent'
+            'CollectCampaign', 'DoGoodEvent', 'SubEvent', 'Team'
         )
     )
     motivation = serializers.CharField(required=False, allow_null=True)
-    instrument = RelatedResourceField(
+    team = RelatedResourceField(
         type='Team', allow_null=True, required=False, include=True
     )
 
     class Meta(BaseActivitySerializer.Meta):
         model = Join
-        fields = BaseActivitySerializer.Meta.fields + ('motivation', 'instrument')
+        fields = BaseActivitySerializer.Meta.fields + ('motivation', 'team')
 
     def create(self, validated_data):
         if 'request' in self.context:
             validated_data['platform'] = self.context['request'].auth
-
-        return super().create(validated_data)
-
-
-class AddSerializer(BaseActivitySerializer):
-    type = TypeField('Add')
-    object = RelatedResourceField(type='Person', include=True)
-    target = RelatedResourceField(type='Team', include=True)
-
-    class Meta(BaseActivitySerializer.Meta):
-        model = Add
-        fields = BaseActivitySerializer.Meta.fields + ('target',)
-
-    def create(self, validated_data):
-        if 'request' in self.context:
-            validated_data['platform'] = self.context['request'].auth
+        obj = validated_data.get('object')
+        if isinstance(obj, Team) and not validated_data.get('team'):
+            validated_data['team'] = obj
         return super().create(validated_data)
 
 

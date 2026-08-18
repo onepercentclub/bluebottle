@@ -20,7 +20,7 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
-from bluebottle.time_based.models import Registration, PeriodicRegistration, TeamMember
+from bluebottle.time_based.models import Registration, PeriodicRegistration
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
 
 
@@ -645,6 +645,15 @@ class Team(ActivityPubModel):
         related_name='origin',
     )
 
+    def save(self, *args, **kwargs):
+        if not self.attributed_to_id:
+            local_team = self.adopted or self.origin
+            activity = getattr(local_team, 'activity', None)
+            ap_activity = getattr(activity, 'activity_pub_model', None)
+            if ap_activity is not None:
+                self.attributed_to = ap_activity
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name or f'Team {self.pk}'
 
@@ -1022,7 +1031,7 @@ class Join(Activity):
     """Sent by a follower when a user joins an Event"""
     object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
     motivation = models.TextField(null=True, blank=True)
-    instrument = models.ForeignKey(
+    team = models.ForeignKey(
         'activity_pub.Team',
         null=True,
         blank=True,
@@ -1053,50 +1062,17 @@ class Join(Activity):
             yield self.actor
             return
 
-        create = self.object.create_set.first()
-        if create is None and getattr(self.object, 'parent', None):
-            create = self.object.parent.create_set.first()
+        create = None
+        if isinstance(self.object, Team):
+            event = self.object.attributed_to
+            create = event.create_set.first() if event else None
+        else:
+            create = self.object.create_set.first()
+            if create is None and getattr(self.object, 'parent', None):
+                create = self.object.parent.create_set.first()
 
         if create and not create.actor.is_local:
             yield create.actor
-
-
-class Add(Activity):
-    """Add a Person to a Team (team member join on the local platform)."""
-    object = models.ForeignKey(
-        Person,
-        on_delete=models.CASCADE,
-        related_name='added_by',
-    )
-    target = models.ForeignKey(
-        Team,
-        on_delete=models.CASCADE,
-        related_name='adds',
-    )
-    platform = models.ForeignKey(Organization, null=True, on_delete=models.CASCADE)
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-        if not self.is_local:
-            adopted = adapter.adopt(self)
-            if isinstance(adopted, TeamMember) and adopted.status != 'active':
-                try:
-                    adopted.states.resume(save=True)
-                except TransitionNotPossible:
-                    pass
-
-    @property
-    def default_recipients(self):
-        if not self.actor.is_local:
-            yield self.actor
-            return
-
-        event = self.target.attributed_to
-        if event:
-            create = event.create_set.first()
-            if create and not create.actor.is_local:
-                yield create.actor
 
 
 class Transition(Activity):

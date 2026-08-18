@@ -227,6 +227,114 @@ class InterestListAPITestCase(APITestCase):
         self.assertEqual(self.model.activity, self.activity)
 
 
+class MyInterestListAPITestCase(APITestCase):
+    url_name = 'interest-list'
+    serializer = InterestSerializer
+    factory = InterestFactory
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(self.url_name)
+        self.initiative = InitiativeFactory.create(status='approved')
+
+        self.deadline = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            status='full',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        self.deadline_interest = InterestFactory.create(
+            user=self.user,
+            activity=self.deadline,
+        )
+
+        self.date_activity = DateActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            review=False,
+        )
+        self.date_slot = DateActivitySlotFactory.create(
+            activity=self.date_activity,
+            status='full',
+            capacity=1,
+        )
+        self.date_interest = InterestFactory.create(
+            user=self.user,
+            activity=self.date_activity,
+            slot=self.date_slot,
+        )
+
+        self.registration_closed = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            status='registration_closed',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=5),
+            deadline=date.today() + timedelta(days=15),
+        )
+        InterestFactory.create(user=self.user, activity=self.registration_closed)
+
+        self.succeeded = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            status='succeeded',
+            capacity=1,
+            review=False,
+            start=date.today() - timedelta(days=30),
+            deadline=date.today() - timedelta(days=20),
+        )
+        InterestFactory.create(user=self.user, activity=self.succeeded)
+
+        self.open_activity = PeriodicActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=3),
+            deadline=date.today() + timedelta(days=13),
+        )
+        self.open_interest = InterestFactory.create(
+            user=self.user,
+            activity=self.open_activity,
+        )
+
+        other = BlueBottleUserFactory.create()
+        InterestFactory.create(user=other, activity=self.deadline)
+
+    def test_list_own_interests(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        data = self.response.json()['data']
+        self.assertEqual(len(data), 3)
+        interest_ids = {item['id'] for item in data}
+        self.assertEqual(
+            interest_ids,
+            {
+                str(self.deadline_interest.pk),
+                str(self.date_interest.pk),
+                str(self.open_interest.pk),
+            },
+        )
+
+    def test_list_excludes_inactive_activities(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        included_activity_ids = {
+            item['id']
+            for item in self.response.json().get('included', [])
+            if item['type'].startswith('activities/')
+        }
+        self.assertNotIn(str(self.registration_closed.pk), included_activity_ids)
+        self.assertNotIn(str(self.succeeded.pk), included_activity_ids)
+
+    def test_list_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
 class InterestDateSlotAPITestCase(APITestCase):
     url_name = 'interest-list'
     serializer = InterestSerializer

@@ -1,0 +1,36 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'platform-email' %}Good news, a spot has opened up for the activity:{% endblocktrans %}
+    </p>
+    <p>
+        <b>{{ title }}</b><br/>
+        {% if start or end %}
+            {% if start and end %}
+                {{ start }} – {{ end }}<br/>
+            {% elif start %}
+                {{ start }}<br/>
+            {% else %}
+                {{ end }}<br/>
+            {% endif %}
+        {% endif %}
+        {% if is_online %}
+            {% trans "Anywhere/Online" context "platform-email" %}
+        {% elif location %}
+            {{ location }}
+        {% endif %}
+    </p>
+    <p>
+        {% blocktrans context 'platform-email' %}Head to the activity page to join. Spots are first-come, first-served. If the spot has been taken, you'll still be notified when another spot opens up.{% endblocktrans %}
+    </p>
+{% endblock %}
+
+{% block end_message %}
+    <p>
+        <em>
+            {% blocktrans context 'platform-email' %}If you're no longer interested, you don't need to do anything.{% endblocktrans %}
+        </em>
+    </p>
+{% endblock %}

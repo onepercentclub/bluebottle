@@ -38,6 +38,7 @@ from bluebottle.time_based.tests.factories import (
     ScheduleRegistrationFactory,
     ScheduleActivityFactory,
     ScheduleSlotFactory, RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
+    InterestFactory,
 )
 from tenant_extras.utils import TenantLanguage
 
@@ -455,6 +456,235 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertTrue(DateRegistration.objects.filter(pk=first.pk).exists())
         participant2.delete()
         self.assertFalse(DateRegistration.objects.filter(pk=first.pk).exists())
+
+    def test_unlock_notifies_interested(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+
+        mail.outbox = []
+        participant.states.withdraw(save=True)
+        self.slot.refresh_from_db()
+        self.assertStatus(self.slot, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+        self.assertTrue(
+            any(interested.email in message.to for message in mail.outbox)
+        )
+
+    def test_increase_capacity_notifies_interested(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+
+        mail.outbox = []
+        self.slot.capacity = 2
+        self.slot.save()
+        self.assertStatus(self.slot, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
+    def test_increase_capacity_while_open_does_not_notify(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+
+        self.slot.capacity = 2
+        self.slot.save()
+        self.assertStatus(self.slot, "open")
+
+        mail.outbox = []
+        self.slot.capacity = 3
+        self.slot.save()
+        self.assertStatus(self.slot, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
+    def test_unlock_after_deadline_does_not_notify(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.assertStatus(self.activity, "registration_closed")
+        self.assertStatus(self.slot, "registration_closed")
+
+        mail.outbox = []
+        participant.states.withdraw(save=True)
+        self.assertStatus(self.slot, "registration_closed")
+        self.assertStatus(self.activity, "registration_closed")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
+    def test_remove_notifies_interested(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+
+        mail.outbox = []
+        participant.states.remove(save=True)
+        self.slot.refresh_from_db()
+        self.assertStatus(self.slot, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+        self.assertTrue(
+            any(interested.email in message.to for message in mail.outbox)
+        )
+
+    def test_reject_pending_participant_does_not_notify_interested(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        DateParticipantFactory.create(registration=registration, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+
+        self.activity.review = True
+        self.activity.save()
+
+        pending_registration = DateRegistrationFactory.create(activity=self.activity)
+        pending = DateParticipantFactory.create(
+            registration=pending_registration, slot=self.slot
+        )
+        self.assertStatus(pending, "new")
+
+        mail.outbox = []
+        pending.states.reject(save=True)
+
+        self.assertStatus(self.slot, "full")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
+    def test_other_slot_interest_not_notified(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        other_slot = DateActivitySlotFactory.create(
+            activity=self.activity, capacity=1
+        )
+        other_interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=other_slot,
+            user=other_interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+
+        mail.outbox = []
+        participant.states.withdraw(save=True)
+        self.slot.refresh_from_db()
+        self.assertStatus(self.slot, "open")
+
+        self.assertFalse(
+            any(other_interested.email in message.to for message in mail.outbox)
+        )
 
     def test_fill_cancel_slot(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)

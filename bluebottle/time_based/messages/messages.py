@@ -938,3 +938,53 @@ class SlotCancelledNotification(TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('platform-email', 'View this activity')
+
+
+class SpotOpenedNotification(TransitionMessage):
+    """
+    A spot opened on a previously full activity or date slot.
+    Interested members are notified on a first-come, first-served basis.
+    """
+    subject = pgettext(
+        'platform-email',
+        'A spot has opened up for an activity on {site_name}.'
+    )
+    template = 'messages/spot_opened'
+    action_title = pgettext('platform-email', 'View activity')
+
+    @property
+    def action_link(self):
+        if isinstance(self.obj, DateActivitySlot):
+            return self.obj.activity.get_absolute_url()
+        return self.obj.get_absolute_url()
+
+    def get_recipients(self):
+        """interested members"""
+        if isinstance(self.obj, DateActivitySlot):
+            return [interest.user for interest in self.obj.interests.all()]
+        return [
+            interest.user
+            for interest in self.obj.interests.filter(slot__isnull=True)
+        ]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        activity = (
+            self.obj.activity
+            if isinstance(self.obj, DateActivitySlot)
+            else self.obj
+        )
+        context['title'] = activity.title
+        start = getattr(activity, 'start', None)
+        context['start'] = (
+            defaultfilters.date(start) if start else None
+        )
+        deadline = getattr(activity, 'deadline', None)
+        context['end'] = defaultfilters.date(deadline) if deadline else None
+        context['is_online'] = getattr(activity, 'is_online', None)
+        location = getattr(activity, 'location', None)
+        if location and not context['is_online']:
+            context['location'] = location.formatted_address
+        else:
+            context['location'] = None
+        return context

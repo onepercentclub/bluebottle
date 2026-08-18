@@ -25,6 +25,17 @@ INTEREST_EXPORT_FIELDS = (
 INTEREST_STATUS = 'Interested'
 
 
+def format_slot_worksheet_title(slot, prefix=''):
+    title = f"{prefix}{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
+    return re.sub(r"[\[\]\\:*?/]", "", str(title).strip())[:31]
+
+
+def get_export_slots(activity):
+    if activity.status == 'succeeded':
+        return activity.slots.order_by('start')
+    return activity.active_slots.filter(start__gt=now()).order_by('start')
+
+
 def add_unique_worksheet(workbook, title):
     base_title = re.sub(r"[\[\]\\:*?/]", "", str(title)[:31])
     worksheet_title = base_title or "Sheet"
@@ -61,11 +72,14 @@ class InterestExportMixin:
 
     def write_interest_sheet(self, workbook):
         interests = list(self.get_interest_queryset())
+        self.write_interest_worksheet(workbook, self.interest_sheet_title, interests)
+
+    def write_interest_worksheet(self, workbook, title, interests):
         if not interests:
             return
 
         bold = workbook.add_format({'bold': True})
-        worksheet = add_unique_worksheet(workbook, self.interest_sheet_title)
+        worksheet = add_unique_worksheet(workbook, title)
         worksheet.set_column(0, len(INTEREST_EXPORT_FIELDS) - 1, 30)
 
         for column, (_field, name) in enumerate(INTEREST_EXPORT_FIELDS):
@@ -252,14 +266,8 @@ class DateParticipantExportView(TimeBasedExportView):
         activity = self.get_object()
         bold = workbook.add_format({'bold': True})
 
-        if activity.status == 'succeeded':
-            slots = activity.slots.order_by('start')
-        else:
-            slots = activity.active_slots.filter(start__gt=now()).order_by('start')
-
-        for slot in slots:
-            title = f"{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
-            title = re.sub("[\[\]\\:*?/]", '', str(title)[:30])
+        for slot in get_export_slots(activity):
+            title = format_slot_worksheet_title(slot)
             worksheet = workbook.add_worksheet(title)
             worksheet.set_column(0, 4, 30)
             c = 0
@@ -275,9 +283,12 @@ class DateParticipantExportView(TimeBasedExportView):
 
         self.write_interest_sheet(workbook)
 
-    def get_interest_queryset(self):
-        return (
-            self.get_object()
-            .interests.select_related('user')
-            .order_by('created', 'pk')
-        )
+    def write_interest_sheet(self, workbook):
+        activity = self.get_object()
+
+        for slot in get_export_slots(activity):
+            interests = list(
+                slot.interests.select_related('user').order_by('created', 'pk')
+            )
+            title = format_slot_worksheet_title(slot, prefix='Interested ')
+            self.write_interest_worksheet(workbook, title, interests)

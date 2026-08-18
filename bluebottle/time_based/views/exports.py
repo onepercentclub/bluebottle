@@ -16,6 +16,14 @@ from bluebottle.time_based.models import (
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import ExportView
 
+INTEREST_EXPORT_FIELDS = (
+    ('user__email', 'Email'),
+    ('user__full_name', 'Name'),
+    ('created', 'Registration Date'),
+    ('status', 'Status'),
+)
+INTEREST_STATUS = 'Interested'
+
 
 def add_unique_worksheet(workbook, title):
     base_title = re.sub(r"[\[\]\\:*?/]", "", str(title)[:31])
@@ -31,7 +39,42 @@ def add_unique_worksheet(workbook, title):
             counter += 1
 
 
-class TimeBasedExportView(ExportView):
+class InterestExportMixin:
+    interest_sheet_title = 'Interested'
+
+    def get_interest_queryset(self):
+        return (
+            self.get_object()
+            .interests.filter(slot__isnull=True)
+            .select_related('user')
+            .order_by('created', 'pk')
+        )
+
+    def get_interest_row(self, interest):
+        row = []
+        for field, _name in INTEREST_EXPORT_FIELDS:
+            if field == 'status':
+                row.append(INTEREST_STATUS)
+            else:
+                row.append(prep_field(self.request, interest, field))
+        return row
+
+    def write_interest_sheet(self, workbook):
+        interests = list(self.get_interest_queryset())
+        if not interests:
+            return
+
+        worksheet = add_unique_worksheet(workbook, self.interest_sheet_title)
+        worksheet.set_column(0, len(INTEREST_EXPORT_FIELDS) - 1, 30)
+        worksheet.write_row(
+            0, 0, [name for _field, name in INTEREST_EXPORT_FIELDS]
+        )
+
+        for index, interest in enumerate(interests):
+            worksheet.write_row(index + 1, 0, self.get_interest_row(interest))
+
+
+class TimeBasedExportView(InterestExportMixin, ExportView):
     filename = "participants"
     fields = (
         ('user__email', 'Email'),
@@ -74,6 +117,10 @@ class TimeBasedExportView(ExportView):
         return self.get_object().contributors.instance_of(
             self.participant_model
         ).prefetch_related('user__segments').select_related('user')
+
+    def write_data(self, workbook):
+        super().write_data(workbook)
+        self.write_interest_sheet(workbook)
 
 
 class DeadlineParticipantExportView(TimeBasedExportView):
@@ -154,6 +201,8 @@ class TeamScheduleParticipantExportView(TimeBasedExportView):
             for index, row in enumerate(self.get_team_data(team)):
                 worksheet.write_row(index + 1, 0, row)
 
+        self.write_interest_sheet(workbook)
+
 
 class PeriodicParticipantExportView(TimeBasedExportView):
     model = PeriodicActivity
@@ -222,3 +271,12 @@ class DateParticipantExportView(TimeBasedExportView):
                 row = self.get_row(participant)
                 r += 1
                 worksheet.write_row(r, 0, row)
+
+        self.write_interest_sheet(workbook)
+
+    def get_interest_queryset(self):
+        return (
+            self.get_object()
+            .interests.select_related('user')
+            .order_by('created', 'pk')
+        )

@@ -26,7 +26,7 @@ from bluebottle.time_based.tests.factories import (
 )
 
 
-INTEREST_HEADERS = ('Email', 'Name', 'Registration Date', 'Status')
+INTEREST_HEADERS = ('Email', 'Name', 'Registration Date')
 
 
 def get_sheet_by_title(workbook, title):

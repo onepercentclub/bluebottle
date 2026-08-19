@@ -361,13 +361,13 @@ class MyInterestListAPITestCase(APITestCase):
             },
         )
 
-    def test_list_excludes_open_slot(self):
+    def test_list_includes_open_slot(self):
         open_slot = DateActivitySlotFactory.create(
             activity=self.date_activity,
             status='open',
             capacity=10,
         )
-        InterestFactory.create(
+        open_slot_interest = InterestFactory.create(
             user=self.user,
             activity=self.date_activity,
             slot=open_slot,
@@ -383,8 +383,40 @@ class MyInterestListAPITestCase(APITestCase):
                 str(self.deadline_interest.pk),
                 str(self.date_interest.pk),
                 str(self.open_interest.pk),
+                str(open_slot_interest.pk),
             },
         )
+
+    def test_list_excludes_cancelled_activity(self):
+        cancelled = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            status='full',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        InterestFactory.create(user=self.user, activity=cancelled)
+        cancelled.states.cancel(save=True)
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        interest_ids = {item['id'] for item in self.response.json()['data']}
+        included_activity_ids = {
+            item['id']
+            for item in self.response.json().get('included', [])
+            if item['type'].startswith('activities/')
+        }
+        self.assertEqual(
+            interest_ids,
+            {
+                str(self.deadline_interest.pk),
+                str(self.date_interest.pk),
+                str(self.open_interest.pk),
+            },
+        )
+        self.assertNotIn(str(cancelled.pk), included_activity_ids)
 
     def test_list_includes_activity_and_slot(self):
         self.perform_get(

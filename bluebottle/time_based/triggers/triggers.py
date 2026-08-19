@@ -357,7 +357,13 @@ def activity_will_be_full(effect):
 
 def activity_will_not_be_full(effect):
     """
-    the activity is full
+    The activity will have a free spot after this participant releases theirs.
+
+    Unlike activity_will_be_full (+1 for the participant being added), we cannot
+    mirror that with a simple -1: a rejected pending applicant never held a spot,
+    so subtracting one from accepted_participants would incorrectly unlock the
+    activity. spots_taken_after_release handles that asymmetry until FSM
+    conditions run after all transitions.
     """
     activity = effect.instance.activity
     if isinstance(activity, DateActivity):

@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from unittest.mock import Mock
 from django.core import mail
 from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone, now, make_aware
@@ -32,6 +33,8 @@ from bluebottle.time_based.tests.factories import (
     DateRegistrationFactory,
     DateActivitySlotFactory,
     DateParticipantFactory,
+    DeadlineActivityFactory,
+    DeadlineParticipantFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
     PeriodicSlotFactory,
@@ -39,6 +42,10 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     ScheduleSlotFactory, RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
     InterestFactory,
+)
+from bluebottle.time_based.triggers.triggers import (
+    activity_will_not_be_full,
+    spots_taken_after_release,
 )
 from tenant_extras.utils import TenantLanguage
 
@@ -1613,3 +1620,44 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
         self.assertStatus(self.model, 'cancelled')
         organizer = self.model.contributors.instance_of(Organizer).get()
         self.assertStatus(organizer, 'failed')
+
+
+class SpotsTakenAfterReleaseTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.activity = DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='full',
+            capacity=1,
+            review=True,
+        )
+        self.accepted = DeadlineParticipantFactory.create(
+            activity=self.activity,
+            status='accepted',
+        )
+        self.pending = DeadlineParticipantFactory.create(
+            activity=self.activity,
+            status='new',
+        )
+
+    def test_pending_participant_does_not_release_spot(self):
+        taken = self.activity.accepted_participants
+        self.assertEqual(
+            spots_taken_after_release(taken, self.pending),
+            1,
+        )
+
+    def test_accepted_participant_releases_spot(self):
+        taken = self.activity.accepted_participants
+        self.assertEqual(
+            spots_taken_after_release(taken, self.accepted),
+            0,
+        )
+
+    def test_activity_will_not_be_full_pending_reject(self):
+        effect = Mock(instance=self.pending)
+        self.assertFalse(activity_will_not_be_full(effect))
+
+    def test_activity_will_not_be_full_accepted_withdraw(self):
+        effect = Mock(instance=self.accepted)
+        self.assertTrue(activity_will_not_be_full(effect))

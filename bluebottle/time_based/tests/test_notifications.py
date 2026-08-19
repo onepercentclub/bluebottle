@@ -454,7 +454,6 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertRecipients([interested])
         self.assertSubject('A spot has opened up for an activity on Test.')
         self.assertBodyContains('Save the world!')
-        self.assertBodyContains(defaultfilters.date(activity.start))
         self.assertActionLink(activity.get_absolute_url() + '?spotOpened=true')
         self.assertActionTitle('View activity')
 
@@ -508,7 +507,7 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertBodyNotContains('https://example.com/secret-meeting')
         self.assertBodyNotContains(slot_location.formatted_address)
 
-    def test_deadline_activity_includes_date_and_location(self):
+    def test_deadline_activity_includes_location(self):
         interested = BlueBottleUserFactory.create(first_name='Ada')
         location = GeolocationFactory.create()
         start = date.today() + timedelta(days=7)
@@ -528,9 +527,9 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.message_class = SpotOpenedNotification
         self.create()
         self.assertRecipients([interested])
-        self.assertBodyContains(defaultfilters.date(start))
-        self.assertBodyContains(defaultfilters.date(deadline))
         self.assertBodyContains(location.formatted_address)
+        self.assertBodyNotContains(defaultfilters.date(start))
+        self.assertBodyNotContains(defaultfilters.date(deadline))
 
     def test_no_recipients_without_interest(self):
         self.obj = DeadlineActivityFactory.create(

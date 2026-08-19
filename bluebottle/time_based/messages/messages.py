@@ -978,12 +978,6 @@ class SpotOpenedNotification(TransitionMessage):
             else self.obj
         )
         context['title'] = activity.title
-        start = getattr(activity, 'start', None)
-        context['start'] = (
-            defaultfilters.date(start) if start else None
-        )
-        deadline = getattr(activity, 'deadline', None)
-        context['end'] = defaultfilters.date(deadline) if deadline else None
         context['is_online'] = getattr(activity, 'is_online', None)
         location = getattr(activity, 'location', None)
         if location and not context['is_online']:

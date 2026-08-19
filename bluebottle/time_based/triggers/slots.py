@@ -42,12 +42,12 @@ from bluebottle.time_based.states import (
 from bluebottle.time_based.states.participants import DateParticipantStateMachine
 
 
-def slot_registration_deadline_is_not_passed(effect):
+def activity_registration_deadline_is_not_passed(effect):
     """
-    activity registration deadline hasn't passed
+    Activity registration deadline hasn't passed (checked via the slot's activity).
     """
     deadline = effect.instance.activity.registration_deadline
-    return not (deadline and deadline < date.today())
+    return not (deadline and deadline <= date.today())
 
 
 @register(PeriodicSlot)
@@ -524,7 +524,7 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     SpotOpenedNotification,
-                    conditions=[slot_registration_deadline_is_not_passed],
+                    conditions=[activity_registration_deadline_is_not_passed],
                 ),
                 RelatedTransitionEffect(
                     "activity",

@@ -7,15 +7,6 @@
     </p>
     <p>
         <b>{{ title }}</b><br/>
-        {% if start or end %}
-            {% if start and end %}
-                {{ start }} – {{ end }}<br/>
-            {% elif start %}
-                {{ start }}<br/>
-            {% else %}
-                {{ end }}<br/>
-            {% endif %}
-        {% endif %}
         {% if is_online %}
             {% trans "Anywhere/Online" context "platform-email" %}
         {% elif location %}

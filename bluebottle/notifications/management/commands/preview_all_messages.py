@@ -254,18 +254,39 @@ class MockMember:
 class MockQueryset:
 
     def __init__(self, elements=None):
-        if not elements:
-            elements = []
-        self.elements = elements
+        self.elements = elements or []
+
+    def _clone(self, elements):
+        return MockQueryset(elements)
 
     def first(self):
-        return self.elements[0]
+        return self.elements[0] if self.elements else None
 
     def last(self):
-        return self.elements[-1]
+        return self.elements[-1] if self.elements else None
 
     def count(self):
         return len(self.elements)
+
+    def all(self):
+        return self._clone(self.elements)
+
+    def filter(self, **kwargs):
+        # SpotOpenedNotification only filters interests by slot; keep this
+        # minimal rather than mimicking the full Django ORM lookup API.
+        elements = self.elements
+        if kwargs.get('slot__isnull') is True:
+            elements = [element for element in elements if element.slot is None]
+        elif 'slot' in kwargs:
+            slot = kwargs['slot']
+            elements = [element for element in elements if element.slot == slot]
+        return self._clone(elements)
+
+    def select_related(self, *args):
+        return self._clone(self.elements)
+
+    def __iter__(self):
+        return iter(self.elements)
 
 
 class MockActivity:
@@ -290,12 +311,25 @@ class MockActivity:
         self.hour_registration_data = None
         self.even_data = None
         self.period = 'weeks'
+        self.is_online = True
+        self.location = None
+        self.interests = MockQueryset([MockInterest(language)])
 
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/details/deed/{self.id}/{self.slug}"
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/admin/activities/deed/{self.id}/{self.slug}"
+
+
+class MockInterest:
+    """Mock Interest object for spot-opened notifications"""
+
+    def __init__(self, language='en', slot=None):
+        self.id = 999
+        self.pk = 999
+        self.user = MockMember(language)
+        self.slot = slot
 
 
 class MockParticipant:
@@ -363,6 +397,8 @@ class MockSlot:
         self.is_online = True
         self.online_meeting_url = "https://example.goodup.com/en/meeting/vzzbxx"
         self.location_hint = ""
+        interest = MockInterest(language, slot=self)
+        self.interests = MockQueryset([interest])
 
     @property
     def owner(self):

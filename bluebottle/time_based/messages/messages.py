@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from urllib.parse import urlencode
+
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone
@@ -938,3 +940,48 @@ class SlotCancelledNotification(TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('platform-email', 'View this activity')
+
+
+class SpotOpenedNotification(TransitionMessage):
+    """
+    A spot opened on a previously full activity or date slot.
+    Interested members are notified on a first-come, first-served basis.
+    """
+    subject = pgettext(
+        'platform-email',
+        'A spot has opened up for an activity on {site_name}.'
+    )
+    template = 'messages/spot_opened'
+    action_title = pgettext('platform-email', 'View activity')
+
+    @property
+    def action_link(self):
+        if isinstance(self.obj, DateActivitySlot):
+            url = self.obj.activity.get_absolute_url()
+        else:
+            url = self.obj.get_absolute_url()
+        return '{}?{}'.format(url, urlencode({'spotOpened': 'true'}))
+
+    def get_recipients(self):
+        """interested members"""
+        if isinstance(self.obj, DateActivitySlot):
+            interests = self.obj.activity.interests.filter(slot=self.obj)
+        else:
+            interests = self.obj.interests.filter(slot__isnull=True)
+        return [interest.user for interest in interests]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        activity = (
+            self.obj.activity
+            if isinstance(self.obj, DateActivitySlot)
+            else self.obj
+        )
+        context['title'] = activity.title
+        context['is_online'] = getattr(activity, 'is_online', None)
+        location = getattr(activity, 'location', None)
+        if location and not context['is_online']:
+            context['location'] = location.formatted_address
+        else:
+            context['location'] = None
+        return context

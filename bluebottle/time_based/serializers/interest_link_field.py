@@ -1,5 +1,4 @@
 from django.db.models import Model
-from rest_framework.fields import empty
 from rest_framework_json_api.relations import HyperlinkedRelatedField
 
 
@@ -10,31 +9,33 @@ def _get_owners(instance):
     return owners
 
 
+def can_view_interests(request, instance):
+    if not request or not request.user.is_authenticated:
+        return False
+
+    owners = _get_owners(instance)
+    if not owners:
+        return False
+
+    return (
+        request.user in owners or
+        request.user.is_staff or
+        request.user.is_superuser
+    )
+
+
 def remove_interests_field_for_non_managers(serializer, instance):
     """
     Drop the interests field for unauthorized users.
 
-    get_attribute() alone is not enough: the JSON:API renderer builds
-    relationship links via get_links(), bypassing get_attribute().
+    The JSON:API renderer builds relationship links via get_links(), so the
+    field must be removed from the serializer to hide it completely.
     """
     if not isinstance(instance, Model) or 'interests' not in serializer.fields:
         return
 
     request = serializer.context.get('request')
-    if not request or not request.user.is_authenticated:
-        serializer.fields.pop('interests')
-        return
-
-    owners = _get_owners(instance)
-    if not owners:
-        serializer.fields.pop('interests')
-        return
-
-    if not (
-        request.user in owners
-        or request.user.is_staff
-        or request.user.is_superuser
-    ):
+    if not can_view_interests(request, instance):
         serializer.fields.pop('interests')
 
 
@@ -48,28 +49,12 @@ class InterestLinkField(HyperlinkedRelatedField):
         self.slot_level = slot_level
         super().__init__(**kwargs)
 
-    def _can_view_interests(self, instance):
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            return False
-
-        owners = _get_owners(instance)
-        if not owners:
-            return False
-
-        return (
-            request.user in owners or
-            request.user.is_staff or
-            request.user.is_superuser
+    def get_interests_queryset(self, obj):
+        return getattr(
+            obj, self.source or self.field_name or self.parent.field_name
         )
 
-    def get_attribute(self, instance):
-        if not self._can_view_interests(instance):
-            return empty
-        return getattr(instance, self.source or 'interests')
-
-    def get_count(self, instance):
-        queryset = getattr(instance, self.source or 'interests')
+    def get_count(self, queryset):
         if self.slot_level:
             return queryset.count()
         if self.activity_level_only:
@@ -77,12 +62,12 @@ class InterestLinkField(HyperlinkedRelatedField):
         return queryset.count()
 
     def get_links(self, obj=None, lookup_field="pk"):
-        if obj and not self._can_view_interests(obj):
-            return None
-        links = super().get_links(obj, lookup_field)
-        return {
-            'related': {
-                'href': links['related'],
-                'meta': {'count': self.get_count(obj)},
-            }
+        return_data = super().get_links(obj, lookup_field)
+        url = self.reverse(
+            self.related_link_view_name, args=(getattr(obj, lookup_field),)
+        )
+        return_data['related'] = {
+            'href': url,
+            'meta': {'count': self.get_count(self.get_interests_queryset(obj))},
         }
+        return return_data

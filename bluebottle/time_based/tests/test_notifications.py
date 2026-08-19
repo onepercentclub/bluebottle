@@ -18,6 +18,7 @@ from bluebottle.time_based.messages import (
     ManagerSlotParticipantRegisteredNotification,
     ManagerSlotParticipantWithdrewNotification,
     SpotOpenedNotification,
+    InterestRegisteredNotification,
 )
 from bluebottle.time_based.messages.activity_manager import PastActivityRegisteredNotification
 from bluebottle.time_based.messages.participants import RegisteredActivityParticipantAddedNotification
@@ -541,3 +542,48 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.message_class = SpotOpenedNotification
         self.create()
         self.assertRecipients([])
+
+
+class InterestRegisteredNotificationTestCase(NotificationTestCase):
+
+    def test_deadline_activity(self):
+        user = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DeadlineActivityFactory.create(
+            title="Save the world!",
+            status='full',
+            capacity=1,
+        )
+        self.obj = InterestFactory.create(activity=activity, user=user)
+
+        self.message_class = InterestRegisteredNotification
+        self.create()
+        self.assertRecipients([user])
+        self.assertSubject("You'll be notified if a spot opens up for Save the world!")
+        self.assertBodyContains("You've asked to be notified if a spot opens up for:")
+        self.assertBodyContains('Save the world!')
+        self.assertBodyContains('first-come, first-served')
+        self.assertBodyContains(
+            'Changed your mind? You can withdraw your interest at any time on the activity page.'
+        )
+        self.assertActionLink(activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+
+    def test_date_slot(self):
+        user = BlueBottleUserFactory.create(first_name='Ada')
+        activity = DateActivityFactory.create(
+            title="Save the world!",
+            slots=[],
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+        self.obj = InterestFactory.create(activity=activity, slot=slot, user=user)
+
+        self.message_class = InterestRegisteredNotification
+        self.create()
+        self.assertRecipients([user])
+        self.assertSubject("You'll be notified if a spot opens up for Save the world!")
+        self.assertActionLink(activity.get_absolute_url())
+        self.assertActionTitle('View activity')

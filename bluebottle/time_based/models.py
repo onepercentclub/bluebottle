@@ -2163,7 +2163,7 @@ class PeriodicParticipant(Participant, Contributor):
         resource_name = "contributors/time-based/periodic-participants"
 
 
-class Interest(models.Model):
+class Interest(TriggerMixin, models.Model):
     """
     A member registering interest in a full activity or date slot,
     to be notified when a spot opens up.

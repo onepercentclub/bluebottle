@@ -83,6 +83,7 @@ TRIGGER_MODULES = [
     'bluebottle.time_based.triggers.teams',
     'bluebottle.time_based.triggers.contributions',
     'bluebottle.time_based.triggers.activities',
+    'bluebottle.time_based.triggers.interests',
     'bluebottle.grant_management.triggers',
 ]
 
@@ -178,6 +179,31 @@ def analyze_triggers():
                     trigger_info = {
                         'transition': f'field_changed:{field_name}',
                         'state_machine': 'ModelChanged',
+                        'module': trigger_module_path.split('.')[-1],
+                        'full_module': trigger_module_path,
+                        'conditions': []
+                    }
+
+                    if message_class_name not in message_triggers:
+                        message_triggers[message_class_name] = []
+
+                    message_triggers[message_class_name].append(trigger_info)
+
+            # Also look for ModelCreatedTrigger
+            model_created_pattern = r'ModelCreatedTrigger\s*\(\s*effects=\[(.*?)\]'
+            model_created_matches = re.finditer(model_created_pattern, source_code, re.DOTALL)
+
+            for match in model_created_matches:
+                effects_block = match.group(1)
+
+                notification_matches = re.finditer(notification_pattern, effects_block)
+
+                for notif_match in notification_matches:
+                    message_class_name = notif_match.group(1).strip()
+
+                    trigger_info = {
+                        'transition': 'created',
+                        'state_machine': 'ModelCreated',
                         'module': trigger_module_path.split('.')[-1],
                         'full_module': trigger_module_path,
                         'conditions': []
@@ -323,12 +349,13 @@ class MockActivity:
 
 
 class MockInterest:
-    """Mock Interest object for spot-opened notifications"""
+    """Mock Interest object for interest notifications"""
 
     def __init__(self, language='en', slot=None):
         self.id = 999
         self.pk = 999
         self.user = MockMember(language)
+        self.activity = MockActivity(language)
         self.slot = slot
 
 
@@ -677,6 +704,7 @@ MOCK_OBJECT_MAP = {
     'Member': MockMember,
     'Registration': MockRegistration,
     'GrantPayout': MockGrantPayout,
+    'Interest': MockInterest,
 
 }
 
@@ -738,6 +766,10 @@ def get_mock_object_for_message(message_class, language='en'):
             return MockGrantApplication(language)
 
         if 'time_based' in module_name:
+            if 'Interest' in class_name:
+                from bluebottle.time_based.models import Interest
+                return get_real_or_mock_object(Interest, MockInterest, language)
+
             # Check for specific time-based types
             if 'Participant' in class_name or 'participant' in module_name:
                 from bluebottle.time_based.models import DateParticipant, PeriodParticipant

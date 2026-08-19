@@ -53,11 +53,13 @@ class InterestSerializer(ModelSerializer):
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/interests'
         included_resources = [
+            'user',
             'activity',
             'slot',
         ]
 
     included_serializers = {
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
         'slot': 'bluebottle.time_based.serializers.serializers.DateActivitySlotSerializer',
     }

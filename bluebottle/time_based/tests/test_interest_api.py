@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.models import Group
+from django.test import SimpleTestCase
 from django.utils import timezone
 from django.urls import reverse
 from rest_framework import status
@@ -29,6 +30,37 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     ScheduleRegistrationFactory,
 )
+
+
+class InterestSerializerIncludesTestCase(SimpleTestCase):
+    """
+    Guard against regressions where compound includes are dropped from the
+    shared InterestSerializer when adding new interest list endpoints.
+    """
+
+    def test_default_included_resources(self):
+        self.assertEqual(
+            set(InterestSerializer.JSONAPIMeta.included_resources),
+            {'user', 'activity', 'slot'},
+        )
+
+    def test_included_serializers(self):
+        self.assertEqual(
+            set(InterestSerializer.included_serializers.keys()),
+            {'user', 'activity', 'slot'},
+        )
+        self.assertIn(
+            'MemberSerializer',
+            InterestSerializer.included_serializers['user'],
+        )
+        self.assertIn(
+            'ActivitySerializer',
+            InterestSerializer.included_serializers['activity'],
+        )
+        self.assertIn(
+            'DateActivitySlotSerializer',
+            InterestSerializer.included_serializers['slot'],
+        )
 
 
 class InterestListAPITestCase(APITestCase):
@@ -428,6 +460,18 @@ class MyInterestListAPITestCase(APITestCase):
         included_types = {
             item['type'] for item in self.response.json().get('included', [])
         }
+        self.assertIn('activities/time-based/deadlines', included_types)
+        self.assertIn('activities/time-based/dates', included_types)
+        self.assertIn('activities/time-based/date-slots', included_types)
+
+    def test_my_list_includes_user_activity_and_slot_by_default(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        included_types = {
+            item['type'] for item in self.response.json().get('included', [])
+        }
+        self.assertIn('members', included_types)
         self.assertIn('activities/time-based/deadlines', included_types)
         self.assertIn('activities/time-based/dates', included_types)
         self.assertIn('activities/time-based/date-slots', included_types)
@@ -1353,6 +1397,25 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
                 for item in self.response.json().get('included', [])
             )
         )
+
+    def test_list_includes_user_by_default(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        included_types = {
+            item['type'] for item in self.response.json().get('included', [])
+        }
+        self.assertIn('members', included_types)
+
+        included_member_ids = {
+            item['id']
+            for item in self.response.json().get('included', [])
+            if item['type'] == 'members'
+        }
+        expected_member_ids = {
+            str(interest.user_id) for interest in self.interests
+        }
+        self.assertTrue(expected_member_ids.issubset(included_member_ids))
 
 
 class ScheduleInterestRelatedListAPITestCase(APITestCase):

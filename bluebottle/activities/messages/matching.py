@@ -22,6 +22,7 @@ class MatchingActivitiesNotification(TransitionMessage):
         '{first_name}, there are {count} activities on {site_name} matching your profile'
     )
     template = 'messages/matching/matching_activities'
+    send_once = True
 
     @property
     def action_link(self):
@@ -121,6 +122,15 @@ class MatchingActivitiesNotification(TransitionMessage):
             context['count'] = len(activities)
 
         return context
+
+    def already_send(self, recipient):
+        current = now()
+        return Message.objects.filter(
+            template=self.get_template(),
+            recipient=recipient,
+        ).filter(
+            Q(sent__year=current.year, sent__month=current.month) | Q(sent__isnull=True)
+        ).exists()
 
 
 class BaseDoGoodHoursReminderNotification(TransitionMessage):

@@ -132,16 +132,6 @@ class MatchingActivitiesNotification(TransitionMessage):
             Q(sent__year=current.year, sent__month=current.month) | Q(sent__isnull=True)
         ).exists()
 
-    def compose_and_send(self, **base_context):
-        for message in self.get_messages(**base_context):
-            context = self.get_context(message.recipient, **base_context)
-            reply_to = self.reply_to
-            if reply_to:
-                context['reply_to'] = reply_to
-            message.sent = now()
-            message.save()
-            message.send(**context)
-
 
 class BaseDoGoodHoursReminderNotification(TransitionMessage):
     """

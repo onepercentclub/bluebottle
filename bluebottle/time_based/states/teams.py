@@ -268,3 +268,12 @@ class TeamMemberStateMachine(ModelStateMachine):
         automatic=True,
         description=_("Restore this team member, because the team is restored."),
     )
+
+    resume = Transition(
+        [withdrawn, removed, cancelled, rejected],
+        active,
+        name=_("Resume"),
+        passed_label=_("resumed"),
+        automatic=True,
+        description=_("Resume this team member when they are added again."),
+    )

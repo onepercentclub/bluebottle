@@ -394,9 +394,9 @@ class SendTeamJoinEffect(Effect):
         return str(_('Notify source platform of team join'))
 
 
-class SendAddToTeamEffect(Effect):
+class SendTeamMemberJoinEffect(Effect):
     """
-    Sync a TeamMember as an Add activity to the supplier.
+    Sync a TeamMember as a Join of the Team to the supplier.
     """
     template = 'admin/activity_pub/send_join_effect.html'
     conditions = [team_member_activity_is_synced, team_member_is_local, team_member_is_not_captain]
@@ -405,7 +405,7 @@ class SendAddToTeamEffect(Effect):
         adapter.sync(self.instance)
 
     def __str__(self):
-        return str(_('Notify source platform of team member add'))
+        return str(_('Notify source platform of team member join'))
 
 
 class SendTeamLeaveEffect(Effect):

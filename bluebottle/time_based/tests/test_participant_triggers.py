@@ -106,6 +106,15 @@ class ParticipantTriggerTestCase:
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, "full")
 
+    def test_fill_change_capacity(self):
+        self.test_initial()
+
+        self.activity.capacity = 1
+        self.activity.save()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
     def test_withdraw_unfill(self):
         self.activity.capacity = 1
 

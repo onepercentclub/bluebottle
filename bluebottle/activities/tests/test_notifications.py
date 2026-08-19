@@ -1,7 +1,9 @@
 from datetime import timedelta
 
 from django.contrib.auth.models import Group
+from django.core import mail
 from django.utils.timezone import now
+from dateutil.relativedelta import relativedelta
 
 from bluebottle.activities.messages.activity_manager import (
     ActivityRejectedNotification, ActivityCancelledNotification,
@@ -15,11 +17,12 @@ from bluebottle.activities.messages.matching import (
     DoGoodHoursReminderQ2Notification,
     DoGoodHoursReminderQ3Notification,
     DoGoodHoursReminderQ4Notification,
+    MatchingActivitiesNotification,
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
     ActivityPublishedReviewerNotification
 from bluebottle.members.models import MemberPlatformSettings, Member
-from bluebottle.notifications.models import NotificationPlatformSettings
+from bluebottle.notifications.models import NotificationPlatformSettings, Message
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.tests.factories import (
@@ -293,3 +296,65 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
             'still time to make impact. Many causes would benefit from your time and skills.'
         )
         self.assertActionTitle('Find activities')
+
+
+class MatchingActivitiesNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.obj = BlueBottleUserFactory.create(subscribed=True)
+        self.activity = type('Activity', (), {
+            'pk': 1,
+            'title': 'Plant trees',
+            'image': None,
+            'expertise': None,
+            'is_online': True,
+            'start': None,
+            'deadline': None,
+            'location': None,
+            'initiative': type('Initiative', (), {
+                'pk': 1,
+                'theme': type('Theme', (), {'name': 'Environment'})(),
+            })(),
+            'get_absolute_url': lambda self: 'http://test.localhost/activities/1',
+        })()
+
+    def test_does_not_resend_same_month(self):
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 1)
+
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_does_not_resend_unsent_row(self):
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        Message.objects.filter(
+            template='messages/matching/matching_activities',
+            recipient=self.obj,
+        ).update(sent=None)
+        mail.outbox = []
+
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_sends_again_next_month(self):
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        Message.objects.filter(
+            template='messages/matching/matching_activities',
+            recipient=self.obj,
+        ).update(sent=now() - relativedelta(months=1))
+
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 2)

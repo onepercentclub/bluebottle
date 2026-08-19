@@ -1229,4 +1229,3 @@ class DateSlotInterestRelatedListAPITestCase(APITestCase):
         self.url = reverse(self.url_name, args=(999999,))
         self.perform_get(user=self.activity.owner)
         self.assertStatus(status.HTTP_404_NOT_FOUND)
-

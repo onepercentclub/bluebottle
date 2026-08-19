@@ -1647,7 +1647,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             initiative=initiative,
             slots=[],
             status='open',
-            slots=[],
         )
         for activity in matching:
             DateActivitySlotFactory.create_batch(
@@ -1661,7 +1660,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             initiative=initiative,
             slots=[],
             status='open',
-            slots=[],
         )
         for activity in other:
             DateActivitySlotFactory.create_batch(

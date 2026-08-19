@@ -70,4 +70,3 @@ class ScheduleRelatedInterestList(RelatedInterestListView):
 
 class PeriodicRelatedInterestList(RelatedInterestListView):
     pass
-

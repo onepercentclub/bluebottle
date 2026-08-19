@@ -1,4 +1,6 @@
 from future import standard_library
+
+from bluebottle.utils.models import Language, get_default_language
 standard_library.install_aliases()
 import json
 import mock
@@ -17,7 +19,9 @@ from bluebottle.test.utils import BluebottleTestCase
     'bluebottle.looker.utils.get_current_host',
     return_value='goodup.com'
 )
-@override_settings(LOOKER_SECRET='123456')
+@override_settings(
+    LOOKER_SECRET='123456'
+)
 class LookerEmbedDashboardTest(BluebottleTestCase):
     """
     Test main admin dashboard
@@ -25,6 +29,7 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
 
     def setUp(self):
         super(LookerEmbedDashboardTest, self).setUp()
+        get_default_language.delete_memoized()
         self.user = BlueBottleUserFactory.create(
             first_name='Test',
             last_name='De Tester'
@@ -61,6 +66,10 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
         self.assertEqual(
             json.loads(query['user_attributes'][0])['tenant'], 'test'
         )
+
+        self.assertEqual(
+            json.loads(query['user_attributes'][0])['language'], 'en'
+        )
         self.assertEqual(
             int(query['session_length'][0]), settings.LOOKER_SESSION_LENGTH
         )
@@ -79,4 +88,23 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
         self.assertEqual(url.scheme, 'https')
         self.assertEqual(
             url.netloc, 'looker.example.com'
+        )
+
+    def test_default_langauge(self, get_current_host):
+        english = Language.objects.get(code='en')
+        english.default = False
+        english.save()
+
+        dutch = Language.objects.get(code='nl')
+        dutch.default = True
+        dutch.save()
+
+        get_default_language.delete_memoized()
+
+        embed = LookerSSOEmbed(self.user, 'look', 1)
+        url = urlparse(embed.url)
+        query = parse_qs(url.query)
+
+        self.assertEqual(
+            json.loads(query['user_attributes'][0])['language'], 'nl'
         )

@@ -159,7 +159,11 @@ class CreateDateRegistrationEffect(Effect):
     def pre_save(self, **kwargs):
         if not self.instance.activity_id:
             self.instance.activity = self.instance.slot.activity
-        if self.instance.registration:
+        registration = self.instance.registration
+        if (
+            registration is not None and
+            registration.activity_id == self.instance.activity_id
+        ):
             return
         filters = self._registration_filters()
         if not filters:

@@ -250,6 +250,7 @@ class DateActivityRelatedLinkFieldsTestCase(
         ).count()
         self.assertEqual(links['total']['meta']['count'], expected)
 
+
 class DateSlotRelatedLinkFieldsTestCase(APITestCase):
     def setUp(self):
         super().setUp()

@@ -9,7 +9,6 @@ from elasticsearch_dsl.query import (
     Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
 )
 
-from bluebottle.celery import app
 from bluebottle.activities.messages.matching import (
     MatchingActivitiesNotification,
     DoGoodHoursReminderQ1Notification,
@@ -18,6 +17,7 @@ from bluebottle.activities.messages.matching import (
     DoGoodHoursReminderQ2Notification
 )
 from bluebottle.activities.models import Activity, Contributor
+from bluebottle.celery import app
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -142,13 +142,10 @@ def recommend():
             if settings.enable_matching_emails:
                 for user in Member.objects.filter(subscribed=True):
                     try:
-                        notification = MatchingActivitiesNotification(user)
-                        if notification.already_send(user):
-                            continue
-
                         activities = get_matching_activities(user)
 
                         if activities:
+                            notification = MatchingActivitiesNotification(user)
                             notification.compose_and_send(activities=activities)
                     except Exception as e:
                         logger.error(e)

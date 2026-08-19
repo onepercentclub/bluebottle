@@ -258,7 +258,6 @@ class TransitionMessage(object):
             if reply_to:
                 context['reply_to'] = reply_to
             message.save()
-
             message.send(**context)
 
     @property

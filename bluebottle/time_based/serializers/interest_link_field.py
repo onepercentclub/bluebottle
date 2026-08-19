@@ -1,3 +1,4 @@
+from django.db.models import Model
 from rest_framework.fields import empty
 from rest_framework_json_api.relations import HyperlinkedRelatedField
 
@@ -7,6 +8,34 @@ def _get_owners(instance):
     if owners is None and hasattr(instance, 'activity'):
         owners = getattr(instance.activity, 'owners', None)
     return owners
+
+
+def remove_interests_field_for_non_managers(serializer, instance):
+    """
+    Drop the interests field for unauthorized users.
+
+    get_attribute() alone is not enough: the JSON:API renderer builds
+    relationship links via get_links(), bypassing get_attribute().
+    """
+    if not isinstance(instance, Model) or 'interests' not in serializer.fields:
+        return
+
+    request = serializer.context.get('request')
+    if not request or not request.user.is_authenticated:
+        serializer.fields.pop('interests')
+        return
+
+    owners = _get_owners(instance)
+    if not owners:
+        serializer.fields.pop('interests')
+        return
+
+    if not (
+        request.user in owners
+        or request.user.is_staff
+        or request.user.is_superuser
+    ):
+        serializer.fields.pop('interests')
 
 
 class InterestLinkField(HyperlinkedRelatedField):
@@ -48,6 +77,8 @@ class InterestLinkField(HyperlinkedRelatedField):
         return queryset.count()
 
     def get_links(self, obj=None, lookup_field="pk"):
+        if obj and not self._can_view_interests(obj):
+            return None
         links = super().get_links(obj, lookup_field)
         return {
             'related': {

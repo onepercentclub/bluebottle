@@ -237,6 +237,52 @@ class ScheduleParticipantRelatedListAPITestCase(TimeBasedParticipantRelatedListA
     }
 
 
+class ScheduleParticipantListAPITestCase(APITestCase):
+    url_name = 'schedule-participant-create'
+    serializer = ScheduleParticipantSerializer
+    factory = ScheduleParticipantFactory
+    fields = ['activity']
+
+    def setUp(self):
+        super().setUp()
+        self.activity = ScheduleActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        self.url = reverse(self.url_name)
+        self.defaults = {
+            'activity': self.activity,
+        }
+
+    def test_create(self):
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertIncluded('activity')
+        self.assertIncluded('user')
+        self.assertEqual(self.model.user, self.user)
+        self.assertIsNotNone(self.model.registration)
+
+    def test_create_by_email_owner(self):
+        participant_user = BlueBottleUserFactory.create()
+        data = self.data
+        data['data']['attributes'] = {
+            'email': participant_user.email,
+            'send_messages': False,
+        }
+        self.perform_create(user=self.activity.owner, data=data)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.user, participant_user)
+        self.assertIsNotNone(self.model.registration)
+        self.assertEqual(self.model.registration.status, 'accepted')
+
+    def test_create_anonymous(self):
+        self.perform_create()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
 class ScheduleParticipantDetailAPITestCase(TimeBasedParticipantDetailAPITestCase, APITestCase):
     url_name = 'schedule-participant-detail'
     serializer = ScheduleParticipantSerializer

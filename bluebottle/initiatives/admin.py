@@ -307,6 +307,13 @@ class InitiativeSearchFilterInline(SortableTabularInline):
 
 
 class InitiativePlatformSettingsForm(forms.ModelForm):
+    class Meta:
+        model = InitiativePlatformSettings
+        fields = '__all__'
+        widgets = {
+            'hour_registration': forms.RadioSelect,
+        }
+
     available_office_restrictions = forms.MultipleChoiceField(
         choices=OfficeRestrictionChoices.choices,
         widget=forms.CheckboxSelectMultiple(),

@@ -123,7 +123,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
 
     def test_participant_registered_with_hour_registration(self):
         settings = InitiativePlatformSettings.load()
-        settings.hour_registration = 'generic'
+        settings.hour_registration = 'per_activity'
         settings.save()
         self.activity.hour_registration_data = 'https://example.com'
         self.activity.save()

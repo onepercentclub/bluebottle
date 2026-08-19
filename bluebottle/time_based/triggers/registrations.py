@@ -180,6 +180,13 @@ class RegistrationTriggers(TriggerManager):
     ]
 
 
+def _is_registration_withdraw_trigger(trigger):
+    return (
+        isinstance(trigger, TransitionTrigger)
+        and trigger.transition == RegistrationStateMachine.withdraw
+    )
+
+
 @register(DeadlineRegistration)
 class DeadlineRegistrationTriggers(RegistrationTriggers):
     triggers = RegistrationTriggers.triggers + [
@@ -609,7 +616,21 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
 
 @register(DateRegistration)
 class DateRegistrationTriggers(RegistrationTriggers):
-    triggers = RegistrationTriggers.triggers + [
+    triggers = [
+        trigger
+        for trigger in RegistrationTriggers.triggers
+        if not _is_registration_withdraw_trigger(trigger)
+    ] + [
+        TransitionTrigger(
+            RegistrationStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'withdrawable_participants',
+                    RegistrationParticipantStateMachine.withdraw,
+                ),
+                UnFollowActivityEffect,
+            ]
+        ),
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[

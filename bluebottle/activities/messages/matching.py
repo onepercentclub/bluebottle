@@ -7,6 +7,7 @@ from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
+from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -112,6 +113,7 @@ class MatchingActivitiesNotification(TransitionMessage):
             not (len(recipient.skills.all())) or
             not (recipient.place or recipient.location)
         )
+        context['opt_out_link'] = tenant_url('/member/profile?tab=notifications')
         if activities:
             context['activities'] = [
                 self.get_activity_context(activity) for activity in activities[:3]
@@ -145,7 +147,7 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         context = super(BaseDoGoodHoursReminderNotification, self).get_context(recipient)
         settings = MemberPlatformSettings.load()
         context['do_good_hours'] = settings.do_good_hours
-        context['opt_out_link'] = tenant_url('/member/profile')
+        context['opt_out_link'] = tenant_url('/member/profile?tab=notifications')
         return context
 
     def get_generic_context(self):
@@ -163,11 +165,26 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         return str(self.subject.format(**context))
 
     def already_send(self, recipient):
+        # Count messages for this year, including rows that were saved but never
+        # got `sent` set (worker kill / broker redelivery between save and send).
+        # Without this, the same reminder is mailed again on every task retry.
         return Message.objects.filter(
             template=self.get_template(),
             recipient=recipient,
-            sent__year=now().year
-        ).count() > 0
+        ).filter(
+            Q(sent__year=now().year) | Q(sent__isnull=True)
+        ).exists()
+
+    def compose_and_send(self, **base_context):
+        # Mark as sent before SMTP so a crash mid-send still dedupes on retry.
+        for message in self.get_messages(**base_context):
+            context = self.get_context(message.recipient, **base_context)
+            reply_to = self.reply_to
+            if reply_to:
+                context['reply_to'] = reply_to
+            message.sent = now()
+            message.save()
+            message.send(**context)
 
     def get_recipients(self):
         """members with do good hours"""

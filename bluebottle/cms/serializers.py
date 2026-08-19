@@ -753,6 +753,7 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = SitePlatformSettings
         fields = (
+            'platform_name',
             'contact_email',
             'contact_phone',
             'copyright',

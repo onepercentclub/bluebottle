@@ -2185,7 +2185,10 @@ class Interest(models.Model):
         blank=True,
         on_delete=models.CASCADE,
     )
-    created = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(
+        _('Date joined interest list'),
+        default=timezone.now
+    )
 
     class Meta:
         verbose_name = _('Interest')

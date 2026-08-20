@@ -55,11 +55,13 @@ class InterestSerializer(ModelSerializer):
         included_resources = [
             'user',
             'activity',
+            'slot',
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'slot': 'bluebottle.time_based.serializers.serializers.DateActivitySlotSerializer',
     }
 
     def _existing_interest(self, user, activity, slot):

@@ -2,12 +2,14 @@ from datetime import date, timedelta
 
 from django.contrib.auth.models import Group
 from django.core import mail
+from django.utils import timezone
 from django.urls import reverse
 from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
+from bluebottle.time_based.models import Interest
 from bluebottle.time_based.serializers.interests import InterestSerializer
 from bluebottle.time_based.serializers import (
     DateActivitySlotSerializer,
@@ -240,6 +242,265 @@ class InterestListAPITestCase(APITestCase):
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertEqual(self.model.activity, self.activity)
+
+
+class MyInterestListAPITestCase(APITestCase):
+    url_name = 'interest-list'
+    serializer = InterestSerializer
+    factory = InterestFactory
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(self.url_name)
+        self.initiative = InitiativeFactory.create(status='approved')
+
+        self.deadline = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            status='full',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        self.deadline_interest = InterestFactory.create(
+            user=self.user,
+            activity=self.deadline,
+        )
+
+        self.date_activity = DateActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            review=False,
+        )
+        self.date_slot = DateActivitySlotFactory.create(
+            activity=self.date_activity,
+            status='full',
+            capacity=1,
+        )
+        self.date_interest = InterestFactory.create(
+            user=self.user,
+            activity=self.date_activity,
+            slot=self.date_slot,
+        )
+
+        self.registration_closed = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            status='registration_closed',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=5),
+            deadline=date.today() + timedelta(days=15),
+        )
+        InterestFactory.create(user=self.user, activity=self.registration_closed)
+
+        self.succeeded = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            status='succeeded',
+            capacity=1,
+            review=False,
+            start=date.today() - timedelta(days=30),
+            deadline=date.today() - timedelta(days=20),
+        )
+        InterestFactory.create(user=self.user, activity=self.succeeded)
+
+        self.open_activity = PeriodicActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=3),
+            deadline=date.today() + timedelta(days=13),
+        )
+        self.open_interest = InterestFactory.create(
+            user=self.user,
+            activity=self.open_activity,
+        )
+
+        other = BlueBottleUserFactory.create()
+        InterestFactory.create(user=other, activity=self.deadline)
+
+    def test_list_own_interests(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        data = self.response.json()['data']
+        self.assertEqual(len(data), 3)
+        interest_ids = {item['id'] for item in data}
+        self.assertEqual(
+            interest_ids,
+            {
+                str(self.deadline_interest.pk),
+                str(self.date_interest.pk),
+                str(self.open_interest.pk),
+            },
+        )
+
+    def test_list_excludes_inactive_activities(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        included_activity_ids = {
+            item['id']
+            for item in self.response.json().get('included', [])
+            if item['type'].startswith('activities/')
+        }
+        self.assertNotIn(str(self.registration_closed.pk), included_activity_ids)
+        self.assertNotIn(str(self.succeeded.pk), included_activity_ids)
+
+    def test_list_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_list_excludes_registration_closed_slot(self):
+        closed_slot = DateActivitySlotFactory.create(
+            activity=self.date_activity,
+            status='registration_closed',
+            capacity=1,
+        )
+        InterestFactory.create(
+            user=self.user,
+            activity=self.date_activity,
+            slot=closed_slot,
+        )
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        interest_ids = {item['id'] for item in self.response.json()['data']}
+        self.assertEqual(
+            interest_ids,
+            {
+                str(self.deadline_interest.pk),
+                str(self.date_interest.pk),
+                str(self.open_interest.pk),
+            },
+        )
+
+    def test_list_includes_open_slot(self):
+        open_slot = DateActivitySlotFactory.create(
+            activity=self.date_activity,
+            status='open',
+            capacity=10,
+        )
+        open_slot_interest = InterestFactory.create(
+            user=self.user,
+            activity=self.date_activity,
+            slot=open_slot,
+        )
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        interest_ids = {item['id'] for item in self.response.json()['data']}
+        self.assertEqual(
+            interest_ids,
+            {
+                str(self.deadline_interest.pk),
+                str(self.date_interest.pk),
+                str(self.open_interest.pk),
+                str(open_slot_interest.pk),
+            },
+        )
+
+    def test_list_excludes_cancelled_activity(self):
+        cancelled = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            status='full',
+            capacity=1,
+            review=False,
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+        )
+        InterestFactory.create(user=self.user, activity=cancelled)
+        cancelled.states.cancel(save=True)
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        interest_ids = {item['id'] for item in self.response.json()['data']}
+        included_activity_ids = {
+            item['id']
+            for item in self.response.json().get('included', [])
+            if item['type'].startswith('activities/')
+        }
+        self.assertEqual(
+            interest_ids,
+            {
+                str(self.deadline_interest.pk),
+                str(self.date_interest.pk),
+                str(self.open_interest.pk),
+            },
+        )
+        self.assertNotIn(str(cancelled.pk), included_activity_ids)
+
+    def test_list_includes_activity_and_slot(self):
+        self.perform_get(
+            user=self.user,
+            query={'include': 'activity,slot'},
+        )
+        self.assertStatus(status.HTTP_200_OK)
+
+        included_types = {
+            item['type'] for item in self.response.json().get('included', [])
+        }
+        self.assertIn('activities/time-based/deadlines', included_types)
+        self.assertIn('activities/time-based/dates', included_types)
+        self.assertIn('activities/time-based/date-slots', included_types)
+
+    def test_my_list_includes_user_activity_and_slot_by_default(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        included_types = {
+            item['type'] for item in self.response.json().get('included', [])
+        }
+        self.assertIn('members', included_types)
+        self.assertIn('activities/time-based/deadlines', included_types)
+        self.assertIn('activities/time-based/dates', included_types)
+        self.assertIn('activities/time-based/date-slots', included_types)
+
+    def test_list_ordered_by_created_desc(self):
+        Interest.objects.filter(user=self.user).update(
+            created=timezone.now() - timedelta(days=10),
+        )
+        older = InterestFactory.create(
+            user=self.user,
+            activity=DeadlineActivityFactory.create(
+                initiative=self.initiative,
+                status='full',
+                capacity=1,
+                review=False,
+                start=date.today() + timedelta(days=1),
+                deadline=date.today() + timedelta(days=11),
+            ),
+        )
+        newer = InterestFactory.create(
+            user=self.user,
+            activity=DeadlineActivityFactory.create(
+                initiative=self.initiative,
+                status='full',
+                capacity=1,
+                review=False,
+                start=date.today() + timedelta(days=2),
+                deadline=date.today() + timedelta(days=12),
+            ),
+        )
+        Interest.objects.filter(pk=older.pk).update(
+            created=timezone.now() - timedelta(days=2),
+        )
+        Interest.objects.filter(pk=newer.pk).update(
+            created=timezone.now() - timedelta(days=1),
+        )
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        interest_ids = [item['id'] for item in self.response.json()['data']]
+        self.assertEqual(interest_ids[0], str(newer.pk))
+        self.assertLess(
+            interest_ids.index(str(newer.pk)),
+            interest_ids.index(str(older.pk)),
+        )
 
 
 class InterestDateSlotAPITestCase(APITestCase):
@@ -1133,6 +1394,25 @@ class DeadlineInterestRelatedListAPITestCase(APITestCase):
                 for item in self.response.json().get('included', [])
             )
         )
+
+    def test_list_includes_user_by_default(self):
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        included_types = {
+            item['type'] for item in self.response.json().get('included', [])
+        }
+        self.assertIn('members', included_types)
+
+        included_member_ids = {
+            item['id']
+            for item in self.response.json().get('included', [])
+            if item['type'] == 'members'
+        }
+        expected_member_ids = {
+            str(interest.user_id) for interest in self.interests
+        }
+        self.assertTrue(expected_member_ids.issubset(included_member_ids))
 
 
 class ScheduleInterestRelatedListAPITestCase(APITestCase):

@@ -1,24 +1,56 @@
+from django.db.models import Q
+
 from bluebottle.activities.permissions import (
     IsAdminPermission,
     RelatedActivityOwnerPermission,
 )
+from bluebottle.activities.views import ContributionPagination
 from bluebottle.time_based.models import Interest
 from bluebottle.time_based.permissions import RelatedActivityInterestListPermission
 from bluebottle.time_based.serializers.interests import InterestSerializer
 from bluebottle.time_based.views.mixins import AnonymizeMembersMixin
 from bluebottle.utils.permissions import OneOf, ResourceOwnerPermission
 from bluebottle.utils.views import (
-    CreateAPIView,
     JsonApiViewMixin,
     ListAPIView,
+    ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 
+INTEREST_VISIBLE_STATUSES = ('open', 'full')
 
-class InterestList(JsonApiViewMixin, CreateAPIView):
+
+class InterestList(JsonApiViewMixin, ListCreateAPIView):
     queryset = Interest.objects.prefetch_related('user', 'activity', 'slot')
     serializer_class = InterestSerializer
     permission_classes = (ResourceOwnerPermission,)
+    pagination_class = ContributionPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.request.method != 'GET':
+            return queryset
+
+        return queryset.filter(
+            user=self.request.user,
+        ).filter(
+            Q(
+                slot__isnull=True,
+                activity__status__in=INTEREST_VISIBLE_STATUSES,
+            ) | Q(
+                slot__isnull=False,
+                slot__status__in=INTEREST_VISIBLE_STATUSES,
+                activity__status__in=INTEREST_VISIBLE_STATUSES,
+            )
+        ).select_related(
+            'slot',
+        ).prefetch_related(
+            'activity',
+            'activity__image',
+            'activity__initiative',
+            'activity__initiative__image',
+        ).order_by('-created')
 
 
 class InterestDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

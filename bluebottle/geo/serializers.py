@@ -79,11 +79,290 @@ def activity_geolocation_display(geolocations, language=None):
     }
 
 
-def card_location_for_geolocation(geolocation, language=None, activity=None):
-    display = activity_geolocation_display([geolocation], language=language)
-    if not display:
+# ---------------------------------------------------------------------------
+# Activity card location formatting (geofeatures + card_location_display)
+# ---------------------------------------------------------------------------
+
+CARD_LOCATION_MODES = frozenset({
+    'neighbourhood',
+    'neighbourhood_city',
+    'city',
+    'city_region',
+    'city_country',
+})
+
+CARD_LOCATION_COMMON_LEVEL_CHECKS = {
+    'neighbourhood': (
+        ('neighborhood',),
+        ('locality',),
+        ('city',),
+        ('region',),
+        ('country',),
+    ),
+    'neighbourhood_city': (
+        ('neighborhood', 'city'),
+        ('locality', 'city'),
+        ('city',),
+        ('region',),
+        ('country',),
+    ),
+    'city': (
+        ('city',),
+        ('region',),
+        ('country',),
+    ),
+    'city_region': (
+        ('city', 'region'),
+        ('region',),
+        ('country',),
+    ),
+    'city_country': (
+        ('city', 'country'),
+        ('region', 'country'),
+        ('country',),
+    ),
+}
+
+
+def _card_attr(entry, key, default=None):
+    if entry is None:
+        return default
+    if isinstance(entry, dict):
+        return entry.get(key, default)
+    return getattr(entry, key, default)
+
+
+def _card_entries_for_language(entries, language):
+    if not isinstance(language, str):
+        language = 'en'
+
+    matched = [
+        entry for entry in entries
+        if _card_attr(entry, 'language') == language
+    ]
+    if matched:
+        return matched
+
+    prefix = language.split('-')[0]
+    return [
+        entry for entry in entries
+        if _card_attr(entry, 'language', '').startswith(prefix)
+    ]
+
+
+def _feature_name(geofeatures, feature_type):
+    feature = next(
+        (
+            item for item in geofeatures
+            if _card_attr(item, 'feature_type') == feature_type
+        ),
+        None,
+    )
+    return _card_attr(feature, 'name') if feature else None
+
+
+def _card_location_parts(activity, language_geofeatures, language):
+    place = _feature_name(language_geofeatures, 'place')
+    locality = _feature_name(language_geofeatures, 'locality')
+    city = place or locality
+
+    country_feature = next(
+        (
+            item for item in language_geofeatures
+            if _card_attr(item, 'feature_type') == 'country'
+        ),
+        None,
+    )
+    country = (
+        _card_attr(country_feature, 'name')
+        or _card_attr(country_feature, 'place_name')
+        or next(
+            (
+                _card_attr(item, 'country')
+                for item in language_geofeatures
+                if _card_attr(item, 'country')
+            ),
+            None,
+        )
+    )
+    if not country:
+        countries = _card_entries_for_language(
+            getattr(activity, 'country', None) or [],
+            language,
+        )
+        if countries:
+            country = _card_attr(countries[0], 'name')
+
+    country_code = (
+        _card_attr(country_feature, 'country_code')
+        or next(
+            (
+                _card_attr(item, 'country_code')
+                for item in language_geofeatures
+                if _card_attr(item, 'country_code')
+            ),
+            None,
+        )
+    )
+
+    return {
+        'neighborhood': _feature_name(language_geofeatures, 'neighborhood'),
+        'locality': locality,
+        'city': city,
+        'region': _feature_name(language_geofeatures, 'region'),
+        'country': country,
+        'country_code': country_code,
+    }
+
+
+def format_card_location_from_parts(mode, parts):
+    if mode not in CARD_LOCATION_MODES:
         return None
-    return display['formattedAddress']
+
+    country = parts.get('country')
+    country_code = parts.get('country_code')
+    country_label = country or country_code
+    country_abbrev = country_code or country
+
+    if mode == 'neighbourhood':
+        return (
+            parts.get('neighborhood')
+            or parts.get('city')
+            or parts.get('region')
+            or country
+            or country_code
+        )
+
+    if mode == 'neighbourhood_city':
+        neighborhood = parts.get('neighborhood')
+        locality = parts.get('locality')
+        city = parts.get('city')
+        if neighborhood and city:
+            return '{}, {}'.format(neighborhood, city)
+        if locality and city and locality != city:
+            return '{}, {}'.format(locality, city)
+        if city:
+            return city
+        if locality:
+            return locality
+        if neighborhood:
+            return neighborhood
+        return parts.get('region') or country_label or country_code
+
+    if mode == 'city':
+        return parts.get('city') or parts.get('region') or country or country_code
+
+    if mode == 'city_region':
+        city = parts.get('city')
+        region = parts.get('region')
+        if city and region:
+            return '{}, {}'.format(city, region)
+        if region:
+            return region
+        return country_label
+
+    if mode == 'city_country':
+        city = parts.get('city')
+        region = parts.get('region')
+        if city and country_abbrev:
+            return '{}, {}'.format(city, country_abbrev)
+        if region and country_abbrev:
+            return '{}, {}'.format(region, country_abbrev)
+        return country_label
+
+    return None
+
+
+def format_card_location_from_values(mode, **kwargs):
+    return format_card_location_from_parts(mode, kwargs)
+
+
+def card_location_parts_from_geofeatures(activity, geofeatures, language):
+    if not geofeatures:
+        return None
+    language_geofeatures = _card_entries_for_language(geofeatures, language)
+    if not language_geofeatures:
+        return None
+    return _card_location_parts(activity, language_geofeatures, language)
+
+
+def format_card_location(activity, card_location_display, language, geofeatures=None):
+    if card_location_display not in CARD_LOCATION_MODES:
+        return None
+
+    if geofeatures is None:
+        geofeatures = getattr(activity, 'geofeature', None)
+    if not geofeatures:
+        return None
+
+    language_geofeatures = _card_entries_for_language(geofeatures, language)
+    if not language_geofeatures:
+        return None
+
+    return format_card_location_from_parts(
+        card_location_display,
+        _card_location_parts(activity, language_geofeatures, language),
+    )
+
+
+def card_location_for_geolocation(geolocation, language=None, activity=None):
+    from bluebottle.activities.documents import geofeatures_for_geolocation
+    from bluebottle.initiatives.models import InitiativePlatformSettings
+
+    language = (language or get_current_language() or 'en').split(',')[0]
+    activity = activity or type('Activity', (), {'country': []})()
+    return format_card_location(
+        activity,
+        InitiativePlatformSettings.load().card_location_display,
+        language,
+        geofeatures=geofeatures_for_geolocation(geolocation),
+    )
+
+
+def _common_parts_for_keys(all_parts, keys):
+    if not all_parts:
+        return None
+
+    merged = {
+        'neighborhood': None,
+        'locality': None,
+        'city': None,
+        'region': None,
+        'country': None,
+        'country_code': None,
+    }
+
+    for key in keys:
+        if key == 'country':
+            country_keys = [
+                part.get('country_code') or part.get('country')
+                for part in all_parts
+            ]
+            if any(not value for value in country_keys) or len(set(country_keys)) != 1:
+                return None
+            merged['country'] = all_parts[0].get('country')
+            merged['country_code'] = all_parts[0].get('country_code')
+        else:
+            values = [part.get(key) for part in all_parts if part]
+            if any(not value for value in values) or len(set(values)) != 1:
+                return None
+            merged[key] = values[0]
+
+    return merged
+
+
+def format_common_card_location(activity, card_location_display, language, location_parts):
+    if card_location_display not in CARD_LOCATION_MODES or not location_parts:
+        return None
+
+    for keys in CARD_LOCATION_COMMON_LEVEL_CHECKS.get(card_location_display, ()):
+        common_parts = _common_parts_for_keys(location_parts, keys)
+        if not common_parts:
+            continue
+        formatted = format_card_location_from_parts(card_location_display, common_parts)
+        if formatted:
+            return formatted
+    return None
 
 
 class PointSerializer(serializers.CharField):

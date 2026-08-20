@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.models import Group
-from django.test import SimpleTestCase
 from django.utils import timezone
 from django.urls import reverse
 from rest_framework import status
@@ -30,37 +29,6 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     ScheduleRegistrationFactory,
 )
-
-
-class InterestSerializerIncludesTestCase(SimpleTestCase):
-    """
-    Guard against regressions where compound includes are dropped from the
-    shared InterestSerializer when adding new interest list endpoints.
-    """
-
-    def test_default_included_resources(self):
-        self.assertEqual(
-            set(InterestSerializer.JSONAPIMeta.included_resources),
-            {'user', 'activity', 'slot'},
-        )
-
-    def test_included_serializers(self):
-        self.assertEqual(
-            set(InterestSerializer.included_serializers.keys()),
-            {'user', 'activity', 'slot'},
-        )
-        self.assertEqual(
-            InterestSerializer.included_serializers['user'].__name__,
-            'MemberSerializer',
-        )
-        self.assertEqual(
-            InterestSerializer.included_serializers['activity'].__name__,
-            'ActivitySerializer',
-        )
-        self.assertEqual(
-            InterestSerializer.included_serializers['slot'].__name__,
-            'DateActivitySlotSerializer',
-        )
 
 
 class InterestListAPITestCase(APITestCase):

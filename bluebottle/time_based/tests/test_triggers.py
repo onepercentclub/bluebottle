@@ -26,7 +26,7 @@ from bluebottle.time_based.messages.registrations import ManagerRegistrationCrea
     UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification, UserRegistrationStoppedNotification, \
     UserRegistrationRestartedNotification, PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, \
     ScheduleUserJoinedNotification
-from bluebottle.time_based.models import DateRegistration
+from bluebottle.time_based.models import DateRegistration, Interest
 from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -1661,3 +1661,46 @@ class SpotsTakenAfterReleaseTestCase(BluebottleTestCase):
     def test_activity_will_not_be_full_accepted_withdraw(self):
         effect = Mock(instance=self.accepted)
         self.assertTrue(activity_will_not_be_full(effect))
+
+
+class InterestTriggerTestCase(BluebottleTestCase):
+
+    def test_create_sends_confirmation_email(self):
+        mail.outbox = []
+        user = BlueBottleUserFactory.create()
+        activity = DeadlineActivityFactory.create(
+            title='Save the world!',
+            status='full',
+            capacity=1,
+        )
+
+        Interest.objects.create(user=user, activity=activity)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [user.email])
+        self.assertEqual(
+            mail.outbox[0].subject,
+            "You'll be notified if a spot opens up for Save the world!",
+        )
+
+    def test_create_slot_interest_sends_confirmation_email(self):
+        mail.outbox = []
+        user = BlueBottleUserFactory.create()
+        activity = DateActivityFactory.create(
+            title='Save the world!',
+            slots=[],
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            status='full',
+            capacity=1,
+        )
+
+        Interest.objects.create(user=user, activity=activity, slot=slot)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [user.email])
+        self.assertEqual(
+            mail.outbox[0].subject,
+            "You'll be notified if a spot opens up for Save the world!",
+        )

@@ -38,7 +38,7 @@ from bluebottle.deeds.models import DeedParticipant
 from bluebottle.funding.models import Payout
 from bluebottle.initiatives.models import Theme
 from bluebottle.notifications.messages import TransitionMessage
-from bluebottle.time_based.models import DateParticipant, DateActivitySlot
+from bluebottle.time_based.models import DateParticipant, DateActivitySlot, Interest
 
 # Import all message modules
 MESSAGE_MODULES = {
@@ -83,6 +83,7 @@ TRIGGER_MODULES = [
     'bluebottle.time_based.triggers.teams',
     'bluebottle.time_based.triggers.contributions',
     'bluebottle.time_based.triggers.activities',
+    'bluebottle.time_based.triggers.interests',
     'bluebottle.grant_management.triggers',
 ]
 
@@ -178,6 +179,30 @@ def analyze_triggers():
                     trigger_info = {
                         'transition': f'field_changed:{field_name}',
                         'state_machine': 'ModelChanged',
+                        'module': trigger_module_path.split('.')[-1],
+                        'full_module': trigger_module_path,
+                        'conditions': []
+                    }
+
+                    if message_class_name not in message_triggers:
+                        message_triggers[message_class_name] = []
+
+                    message_triggers[message_class_name].append(trigger_info)
+
+            model_created_pattern = r'ModelCreatedTrigger\s*\(\s*effects=\[(.*?)\]'
+            model_created_matches = re.finditer(model_created_pattern, source_code, re.DOTALL)
+
+            for match in model_created_matches:
+                effects_block = match.group(1)
+
+                notification_matches = re.finditer(notification_pattern, effects_block)
+
+                for notif_match in notification_matches:
+                    message_class_name = notif_match.group(1).strip()
+
+                    trigger_info = {
+                        'transition': 'created',
+                        'state_machine': 'ModelCreated',
                         'module': trigger_module_path.split('.')[-1],
                         'full_module': trigger_module_path,
                         'conditions': []
@@ -313,7 +338,7 @@ class MockActivity:
         self.period = 'weeks'
         self.is_online = True
         self.location = None
-        self.interests = MockQueryset([MockInterest(language)])
+        self.interests = MockQueryset([MockInterest(language, activity=self)])
 
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/details/deed/{self.id}/{self.slug}"
@@ -323,12 +348,13 @@ class MockActivity:
 
 
 class MockInterest:
-    """Mock Interest object for spot-opened notifications"""
+    """Mock Interest object for interest notifications"""
 
-    def __init__(self, language='en', slot=None):
+    def __init__(self, language='en', slot=None, activity=None):
         self.id = 999
         self.pk = 999
         self.user = MockMember(language)
+        self.activity = activity
         self.slot = slot
 
 
@@ -397,7 +423,7 @@ class MockSlot:
         self.is_online = True
         self.online_meeting_url = "https://example.goodup.com/en/meeting/vzzbxx"
         self.location_hint = ""
-        interest = MockInterest(language, slot=self)
+        interest = MockInterest(language, slot=self, activity=self.activity)
         self.interests = MockQueryset([interest])
 
     @property
@@ -738,6 +764,16 @@ def get_mock_object_for_message(message_class, language='en'):
             return MockGrantApplication(language)
 
         if 'time_based' in module_name:
+            if 'Interest' in class_name:
+                try:
+                    obj = Interest.objects.filter().first()
+                    if obj:
+                        return obj
+                except Exception:
+                    pass
+                activity = MockActivity(language)
+                return MockInterest(language, activity=activity)
+
             # Check for specific time-based types
             if 'Participant' in class_name or 'participant' in module_name:
                 from bluebottle.time_based.models import DateParticipant, PeriodParticipant

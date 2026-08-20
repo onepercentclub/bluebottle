@@ -985,3 +985,29 @@ class SpotOpenedNotification(TransitionMessage):
         else:
             context['location'] = None
         return context
+
+
+class InterestRegisteredNotification(TransitionMessage):
+    """
+    A member joined the interested list for a full activity or date slot.
+    """
+    subject = pgettext(
+        'platform-email',
+        "You'll be notified if a spot opens up for {title}"
+    )
+    template = 'messages/interest_registered'
+    context = {'title': 'activity.title'}
+    action_title = pgettext('platform-email', 'View activity')
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    def get_recipients(self):
+        return [self.obj.user]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        activity = self.obj.activity
+        context['title'] = activity.title
+        return context

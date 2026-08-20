@@ -49,17 +49,17 @@ class InterestSerializerIncludesTestCase(SimpleTestCase):
             set(InterestSerializer.included_serializers.keys()),
             {'user', 'activity', 'slot'},
         )
-        self.assertIn(
+        self.assertEqual(
+            InterestSerializer.included_serializers['user'].__name__,
             'MemberSerializer',
-            InterestSerializer.included_serializers['user'],
         )
-        self.assertIn(
+        self.assertEqual(
+            InterestSerializer.included_serializers['activity'].__name__,
             'ActivitySerializer',
-            InterestSerializer.included_serializers['activity'],
         )
-        self.assertIn(
+        self.assertEqual(
+            InterestSerializer.included_serializers['slot'].__name__,
             'DateActivitySlotSerializer',
-            InterestSerializer.included_serializers['slot'],
         )
 
 

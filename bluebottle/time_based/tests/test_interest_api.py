@@ -267,10 +267,22 @@ class InterestDateSlotAPITestCase(APITestCase):
         }
 
     def test_create(self):
+        mail.outbox = []
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertEqual(self.model.slot, self.slot)
         self.assertEqual(self.model.activity, self.activity)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].to,
+            [self.user.email],
+        )
+        self.assertEqual(
+            mail.outbox[0].subject,
+            "You'll be notified if a spot opens up for {}".format(
+                self.activity.title
+            ),
+        )
 
     def test_create_idempotent(self):
         existing = InterestFactory.create(
@@ -278,9 +290,11 @@ class InterestDateSlotAPITestCase(APITestCase):
             activity=self.activity,
             slot=self.slot,
         )
+        mail.outbox = []
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertEqual(self.model.pk, existing.pk)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_create_without_slot(self):
         self.fields = ['activity']

@@ -585,5 +585,11 @@ class InterestRegisteredNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([user])
         self.assertSubject("You'll be notified if a spot opens up for Save the world!")
+        self.assertBodyContains("You've asked to be notified if a spot opens up for:")
+        self.assertBodyContains('Save the world!')
+        self.assertBodyContains('first-come, first-served')
+        self.assertBodyContains(
+            'Changed your mind? You can withdraw your interest at any time on the activity page.'
+        )
         self.assertActionLink(activity.get_absolute_url())
         self.assertActionTitle('View activity')

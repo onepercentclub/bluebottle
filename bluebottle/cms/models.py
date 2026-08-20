@@ -712,6 +712,12 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     def is_linking_activities(self):
         return Following.objects.filter(adoption_type='link').exists()
 
+    platform_name = models.CharField(
+        _('Platform name'),
+        max_length=255,
+        default='New platform'
+    )
+
     organization = models.ForeignKey(
         'organizations.Organization',
         verbose_name=_('GoodUp Connect name'),

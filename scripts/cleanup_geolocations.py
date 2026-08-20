@@ -8,6 +8,7 @@ from django.db.models import Count
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.geo.models import Geolocation
 
 
@@ -238,6 +239,9 @@ def run(*args):
 
     for tenant in tenant_list:
         with LocalTenant(tenant):
+            site_settings = SitePlatformSettings.load()
+            if site_settings.terminated:
+                continue
             total_before = Geolocation.objects.count()
             print('{}: {} geolocations before cleanup'.format(tenant.name, total_before), flush=True)
 

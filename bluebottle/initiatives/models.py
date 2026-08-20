@@ -3,8 +3,6 @@ from builtins import object, str
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
-from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL

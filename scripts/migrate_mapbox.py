@@ -9,6 +9,7 @@ from django.utils.translation import get_language
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.geo import mapbox as mapbox_utils
 from bluebottle.geo.models import Geolocation
 
@@ -368,6 +369,9 @@ def run(*args):
 
     for tenant in tenant_list:
         with LocalTenant(tenant):
+            site_settings = SitePlatformSettings.load()
+            if site_settings.terminated:
+                continue
             locations = Geolocation.objects.exclude(
                 Q(mapbox_id__isnull=True) |
                 Q(mapbox_id='') |

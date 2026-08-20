@@ -1894,7 +1894,17 @@ class SkillAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, Tr
 
 @admin.register(Interest)
 class InterestAdmin(admin.ModelAdmin):
-    list_display = ('user', 'activity', 'slot', 'created')
+    list_display = ('user', 'activity', 'slot', 'activity_status', 'created', 'activity_type')
     raw_id_fields = ('user', 'activity', 'slot')
-    readonly_fields = ('created',)
+    readonly_fields = ('created', 'activity_status', 'activity_type')
     search_fields = ('user__email', 'user__first_name', 'user__last_name', 'activity__title')
+
+    def activity_status(self, obj):
+        return obj.activity.get_real_instance().states.current_state.name
+
+    activity_status.short_description = _('Activity status')
+
+    def activity_type(self, obj):
+        return obj.activity.get_real_instance_class()._meta.verbose_name
+
+    activity_type.short_description = _('Activity type')

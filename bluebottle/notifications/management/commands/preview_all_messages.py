@@ -38,7 +38,7 @@ from bluebottle.deeds.models import DeedParticipant
 from bluebottle.funding.models import Payout
 from bluebottle.initiatives.models import Theme
 from bluebottle.notifications.messages import TransitionMessage
-from bluebottle.time_based.models import DateParticipant, DateActivitySlot
+from bluebottle.time_based.models import DateParticipant, DateActivitySlot, Interest
 
 # Import all message modules
 MESSAGE_MODULES = {
@@ -189,7 +189,6 @@ def analyze_triggers():
 
                     message_triggers[message_class_name].append(trigger_info)
 
-            # Also look for ModelCreatedTrigger
             model_created_pattern = r'ModelCreatedTrigger\s*\(\s*effects=\[(.*?)\]'
             model_created_matches = re.finditer(model_created_pattern, source_code, re.DOTALL)
 
@@ -766,7 +765,6 @@ def get_mock_object_for_message(message_class, language='en'):
 
         if 'time_based' in module_name:
             if 'Interest' in class_name:
-                from bluebottle.time_based.models import Interest
                 try:
                     obj = Interest.objects.filter().first()
                     if obj:

@@ -339,7 +339,7 @@ class MockActivity:
         self.period = 'weeks'
         self.is_online = True
         self.location = None
-        self.interests = MockQueryset([MockInterest(language)])
+        self.interests = MockQueryset([MockInterest(language, activity=self)])
 
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/details/deed/{self.id}/{self.slug}"
@@ -351,11 +351,11 @@ class MockActivity:
 class MockInterest:
     """Mock Interest object for interest notifications"""
 
-    def __init__(self, language='en', slot=None):
+    def __init__(self, language='en', slot=None, activity=None):
         self.id = 999
         self.pk = 999
         self.user = MockMember(language)
-        self.activity = MockActivity(language)
+        self.activity = activity
         self.slot = slot
 
 
@@ -424,7 +424,7 @@ class MockSlot:
         self.is_online = True
         self.online_meeting_url = "https://example.goodup.com/en/meeting/vzzbxx"
         self.location_hint = ""
-        interest = MockInterest(language, slot=self)
+        interest = MockInterest(language, slot=self, activity=self.activity)
         self.interests = MockQueryset([interest])
 
     @property
@@ -704,7 +704,6 @@ MOCK_OBJECT_MAP = {
     'Member': MockMember,
     'Registration': MockRegistration,
     'GrantPayout': MockGrantPayout,
-    'Interest': MockInterest,
 
 }
 
@@ -768,7 +767,14 @@ def get_mock_object_for_message(message_class, language='en'):
         if 'time_based' in module_name:
             if 'Interest' in class_name:
                 from bluebottle.time_based.models import Interest
-                return get_real_or_mock_object(Interest, MockInterest, language)
+                try:
+                    obj = Interest.objects.filter().first()
+                    if obj:
+                        return obj
+                except Exception:
+                    pass
+                activity = MockActivity(language)
+                return MockInterest(language, activity=activity)
 
             # Check for specific time-based types
             if 'Participant' in class_name or 'participant' in module_name:

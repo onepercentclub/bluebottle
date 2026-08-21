@@ -320,7 +320,9 @@ def card_location_for_geolocation(geolocation, language=None, activity=None):
 
 
 def _common_parts_for_keys(all_parts, keys):
-    if not all_parts:
+    # Slot locations without geofeatures yield None parts; those cannot share
+    # a common card label with the others.
+    if not all_parts or any(part is None for part in all_parts):
         return None
 
     merged = {
@@ -343,7 +345,7 @@ def _common_parts_for_keys(all_parts, keys):
             merged['country'] = all_parts[0].get('country')
             merged['country_code'] = all_parts[0].get('country_code')
         else:
-            values = [part.get(key) for part in all_parts if part]
+            values = [part.get(key) for part in all_parts]
             if any(not value for value in values) or len(set(values)) != 1:
                 return None
             merged[key] = values[0]

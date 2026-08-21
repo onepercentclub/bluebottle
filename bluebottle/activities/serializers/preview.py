@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 import dateutil
 from django.utils.timezone import get_current_timezone, now
@@ -21,27 +21,49 @@ LOCATION_TYPE_ORDER = (
 )
 
 
-class ActivityPreviewSlotSelection:
-    def __init__(self, activity, request):
-        self.activity = activity
-        self.request = request
+def _as_date(value):
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        return dateutil.parser.parse(value).date()
+    return value
 
-    def date_range(self):
-        tz = get_current_timezone()
-        try:
-            start, end = (
-                dateutil.parser.parse(date).astimezone(tz)
-                for date in self.request.GET.get('filter[date]').split(',')
-            )
-        except (ValueError, AttributeError):
-            return None, None
-        return start, end
+
+def preview_slot_filters_from_request(request):
+    """Parse optional slot filters from an activity-preview request."""
+    if request is None:
+        return False, None, None
+
+    upcoming = request.GET.get('filter[upcoming]', '0') == '1'
+    start = end = None
+    tz = get_current_timezone()
+    try:
+        start, end = (
+            dateutil.parser.parse(value).astimezone(tz)
+            for value in request.GET.get('filter[date]').split(',')
+        )
+    except (TypeError, ValueError, AttributeError):
+        pass
+    return upcoming, start, end
+
+
+class ActivityPreviewSlotSelection:
+    def __init__(self, activity, upcoming=False, start=None, end=None):
+        self.activity = activity
+        self.upcoming = bool(upcoming)
+        self.start = start
+        self.end = end
 
     def get_slots(self):
         if not getattr(self.activity, 'slots', None):
             return []
-        only_upcoming = self.request.GET.get('upcoming', False)
-        start, end = self.date_range()
+
+        start = _as_date(self.start)
+        end = _as_date(self.end)
 
         return [
             slot
@@ -49,22 +71,23 @@ class ActivityPreviewSlotSelection:
             if (
                 slot.status not in ['draft', 'cancelled']
                 and (
-                    not only_upcoming
+                    not self.upcoming
                     or datetime.fromisoformat(slot.start) >= now()
                 )
                 and (
                     not start
-                    or dateutil.parser.parse(slot.start).date() >= start.date()
+                    or _as_date(slot.start) >= start
                 )
                 and (
                     not end
-                    or dateutil.parser.parse(slot.end).date() <= end.date()
+                    or _as_date(slot.end) <= end
                 )
             )
         ]
 
     def distinct_location_ids(self, slots=None):
-        slots = self.get_slots()
+        if slots is None:
+            slots = self.get_slots()
         return {
             slot.location_id
             for slot in slots
@@ -74,15 +97,21 @@ class ActivityPreviewSlotSelection:
 
 class ActivityPreviewSlottedLocationSerializer(serializers.Serializer):
 
+    def _slot_selection(self, activity):
+        return ActivityPreviewSlotSelection(
+            activity,
+            upcoming=self.context.get('upcoming', False),
+            start=self.context.get('start'),
+            end=self.context.get('end'),
+        )
+
     def to_representation(self, activity):
-        slots = ActivityPreviewSlotSelection(
-            activity, self.context['request']
-        ).get_slots()
+        selection = self._slot_selection(activity)
+        slots = selection.get_slots()
 
         if not slots:
             return None
 
-        selection = ActivityPreviewSlotSelection(activity, self.context['request'])
         if len(selection.distinct_location_ids(slots)) <= 1:
             return self._single_location(activity, slots[0])
 
@@ -202,7 +231,10 @@ class ActivityPreviewLocationSerializer(serializers.Serializer):
             return False
 
         selection = ActivityPreviewSlotSelection(
-            activity, self.context['request']
+            activity,
+            upcoming=self.context.get('upcoming', False),
+            start=self.context.get('start'),
+            end=self.context.get('end'),
         )
         slots = selection.get_slots()
         if len(selection.distinct_location_ids(slots)) <= 1:

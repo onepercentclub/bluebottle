@@ -42,18 +42,25 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
         self.assertEqual(len(slot_locations), 1)
         self.assertEqual(slot_locations[0]['id'], location.id)
 
-    def test_prepare_geofeature_deduplicates_by_unique_slot_locations(self):
+    def test_prepare_geofeature_left_empty_to_avoid_nested_duplication(self):
         location = self.create_geolocation(locality='Leiden')
+        ensure_geolocation_geofeatures(location)
         activity = DateActivityFactory.create(slots=[])
         DateActivitySlotFactory.create(activity=activity, location=location)
         DateActivitySlotFactory.create(activity=activity, location=location)
 
         document = DateActivityDocument()
-        geofeatures = document.prepare_geofeature(activity)
+        self.assertEqual(document.prepare_geofeature(activity), [])
 
-        self.assertEqual(geofeatures, [])
+        locations = document.prepare_location(activity)
+        slot_locations = [
+            entry for entry in locations
+            if entry.get('id') == location.id
+        ]
+        self.assertEqual(len(slot_locations), 1)
+        self.assertGreater(len(slot_locations[0]['geofeatures']), 0)
 
-    def test_prepare_slots_includes_per_slot_geofeatures(self):
+    def test_prepare_slots_omits_geofeatures(self):
         location = self.create_geolocation(locality='Leiden')
         ensure_geolocation_geofeatures(location)
         activity = DateActivityFactory.create(slots=[])
@@ -70,7 +77,7 @@ class DateActivityDocumentTestCase(BluebottleTestCase):
         self.assertEqual(slots[0]['id'], str(slot.pk))
         self.assertEqual(slots[0]['location_id'], location.id)
         self.assertEqual(slots[0]['locality'], 'Leiden')
-        self.assertGreater(len(slots[0]['geofeatures']), 0)
+        self.assertNotIn('geofeatures', slots[0])
 
     def test_prepare_position_deduplicates_coordinates(self):
         location = self.create_geolocation(locality='Leiden')

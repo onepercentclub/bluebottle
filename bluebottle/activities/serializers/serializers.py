@@ -29,6 +29,7 @@ from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers.preview import (
     ActivityPreviewLocationSerializer,
     ActivityPreviewSlotSelection,
+    preview_slot_filters_from_request,
 )
 from bluebottle.collect.serializers import (
     CollectActivityListSerializer,
@@ -264,10 +265,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_start(self, obj):
         if hasattr(obj, "slots") and obj.slots:
-            selection = ActivityPreviewSlotSelection(
-                obj, self.context['request']
-            )
-            slots = selection.get_slots()
+            slots = self.get_filtered_slots(obj)
             if slots:
                 return slots[0].start
         elif obj.start and len(obj.start) == 1:
@@ -275,10 +273,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_end(self, obj):
         if hasattr(obj, "slots") and obj.slots:
-            selection = ActivityPreviewSlotSelection(
-                obj, self.context['request']
-            )
-            slots = selection.get_slots()
+            slots = self.get_filtered_slots(obj)
             if slots:
                 return max(slot.end for slot in slots)
         elif obj.end and len(obj.end) == 1:
@@ -353,7 +348,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_location(self, obj):
         return ActivityPreviewLocationSerializer(
-            context=self.context,
+            context=self._preview_location_context(),
         ).to_representation(obj)
 
     def get_image(self, obj):
@@ -432,9 +427,27 @@ class ActivityPreviewSerializer(ModelSerializer):
 
         return matching
 
+    def _slot_filters(self):
+        return preview_slot_filters_from_request(self.context.get('request'))
+
+    def _preview_location_context(self):
+        upcoming, start, end = self._slot_filters()
+        return {
+            **self.context,
+            'upcoming': upcoming,
+            'start': start,
+            'end': end,
+        }
+
     def get_filtered_slots(self, obj, only_upcoming=False):
+        upcoming, start, end = self._slot_filters()
+        if only_upcoming:
+            upcoming = True
         return ActivityPreviewSlotSelection(
-            obj, self.context['request']
+            obj,
+            upcoming=upcoming,
+            start=start,
+            end=end,
         ).get_slots()
 
     def get_slot_count(self, obj):
@@ -449,7 +462,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_has_multiple_locations(self, obj):
         return ActivityPreviewLocationSerializer(
-            context=self.context,
+            context=self._preview_location_context(),
         ).has_multiple_unresolved_locations(obj)
 
     def get_is_full(self, obj):

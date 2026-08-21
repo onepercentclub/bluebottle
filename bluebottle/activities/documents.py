@@ -28,7 +28,9 @@ activity = MultiTenantIndex('activity')
 # See Elasticsearch Indices API reference for available settings
 activity.settings(
     number_of_shards=1,
-    number_of_replicas=0
+    number_of_replicas=0,
+    # Geofeature translations × locations can exceed the ES default (10000).
+    **{'index.mapping.nested_objects.limit': 50000}
 )
 
 
@@ -244,8 +246,22 @@ class ActivityDocument(Document):
             'id': fields.LongField(),
             'name': TextField(),
             'city': TextField(),
+            'locality': TextField(),
+            'type': fields.KeywordField(),
+            'location_hint': fields.KeywordField(),
             'country': TextField(attr='country.name'),
             'country_code': TextField(attr='country.alpha2_code'),
+            'formatted_address': TextField(),
+            'geofeatures': fields.NestedField(properties={
+                'id': fields.LongField(),
+                'name': TextField(),
+                'place_name': TextField(),
+                'language': fields.KeywordField(),
+                'feature_type': fields.KeywordField(),
+                'is_primary': fields.BooleanField(),
+                'country': TextField(),
+                'country_code': TextField(),
+            }),
         }
     )
 

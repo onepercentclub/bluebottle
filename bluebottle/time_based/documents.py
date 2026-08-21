@@ -115,17 +115,6 @@ class DateActivityDocument(TimeBasedActivityDocument):
         'country': fields.KeywordField(attr='location.country.name'),
         'is_online': fields.BooleanField(),
         'location_id': fields.LongField(),
-        'geofeatures': fields.NestedField(properties={
-            'id': fields.LongField(),
-            'name': TextField(),
-            'mapbox_id': fields.KeywordField(),
-            'place_name': TextField(),
-            'language': fields.KeywordField(),
-            'feature_type': fields.KeywordField(),
-            'is_primary': fields.BooleanField(),
-            'country': TextField(),
-            'country_code': TextField(),
-        }),
     })
 
     def get_queryset(self):
@@ -162,10 +151,10 @@ class DateActivityDocument(TimeBasedActivityDocument):
         return deduplicate_locations(locations)
 
     def prepare_geofeature(self, instance):
-        geofeatures = []
-        for geolocation in unique_slot_geolocations(instance.slots.all()):
-            geofeatures.extend(geofeatures_for_geolocation(geolocation))
-        return deduplicate(geofeatures)
+        # Geofeatures live on unique location entries (see prepare_location /
+        # slot_location_entry). Duplicating them on every slot and again at the
+        # top level blows past index.mapping.nested_objects.limit.
+        return []
 
     def prepare_slots(self, instance):
         slots = []
@@ -191,12 +180,14 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 'country_code': country.alpha2_code if country else None,
                 'is_online': slot.is_online,
                 'location_id': location.id,
-                'geofeatures': geofeatures_for_geolocation(location),
             })
         return slots
 
     def prepare_start(self, instance):
-        return [slot.start for slot in instance.slots.all() if slot.status in ('open', 'full', 'finished', )]
+        return [
+            slot.start for slot in instance.slots.all()
+            if slot.start and slot.status in ('open', 'full', 'finished', )
+        ]
 
     def prepare_end(self, instance):
         return [

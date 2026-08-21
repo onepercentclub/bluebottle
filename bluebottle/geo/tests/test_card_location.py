@@ -129,3 +129,23 @@ class CardLocationFormatTestCase(BluebottleTestCase):
             ),
             'Berlijn, DE',
         )
+
+    def test_common_location_ignores_none_parts(self):
+        activity = type('Activity', (), {'country': []})()
+        parts = [
+            {
+                'neighborhood': None,
+                'locality': None,
+                'city': 'Amsterdam',
+                'region': None,
+                'country': 'Netherlands',
+                'country_code': 'NL',
+            },
+            None,
+        ]
+
+        self.assertIsNone(
+            location_serializers.format_common_card_location(
+                activity, 'city_country', 'en', parts
+            )
+        )

@@ -18,8 +18,25 @@ def set_geofeature_language(geofeature, language=None):
     if not geofeature:
         return None
     language = (language or get_current_language() or 'en').split(',')[0]
+    candidates = [language]
+    base = language.split('-')[0]
+    if base not in candidates:
+        candidates.append(base)
+    for code in candidates:
+        if geofeature.has_translation(code):
+            geofeature.set_current_language(code)
+            return geofeature
     geofeature.set_current_language(language)
     return geofeature
+
+
+def geofeature_translated_field(geofeature, field, language=None):
+    """Return a GeoFeature translation field for the current (or given) language."""
+    geofeature = set_geofeature_language(geofeature, language=language)
+    if not geofeature:
+        return None
+    language = geofeature.get_current_language()
+    return geofeature.safe_translation_getter(field, language_code=language) or None
 
 
 def common_geofeature_for_geolocations(geolocations):
@@ -62,17 +79,16 @@ def activity_geolocation_display(geolocations, language=None):
     if not geolocations:
         return None
 
-    geofeature = set_geofeature_language(
-        common_geofeature_for_geolocations(geolocations),
-        language=language,
-    )
+    geofeature = common_geofeature_for_geolocations(geolocations)
     if not geofeature:
         return None
 
     country = geolocations[0].country
     return {
-        'locality': geofeature.name,
-        'formattedAddress': geofeature.place_name,
+        'locality': geofeature_translated_field(geofeature, 'name', language=language),
+        'formattedAddress': geofeature_translated_field(
+            geofeature, 'place_name', language=language
+        ),
         'country': {
             'code': country.alpha2_code if country else None,
         },
@@ -551,19 +567,16 @@ class GeolocationSerializer(ModelSerializer):
                 return geolocation
         return super(GeolocationSerializer, self).create(validated_data)
 
-    def _geofeature(self, obj):
-        return set_geofeature_language(obj.geofeature)
-
     def get_formatted_address(self, obj):
-        geofeature = self._geofeature(obj)
-        if geofeature:
-            return geofeature.place_name
+        value = geofeature_translated_field(obj.geofeature, 'place_name')
+        if value:
+            return value
         return obj.formatted_address
 
     def get_locality(self, obj):
-        geofeature = self._geofeature(obj)
-        if geofeature:
-            return geofeature.name
+        value = geofeature_translated_field(obj.geofeature, 'name')
+        if value:
+            return value
         return obj.locality
 
     included_serializers = {

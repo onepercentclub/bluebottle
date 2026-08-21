@@ -110,8 +110,20 @@ def geofeature_place_name(feature_type, name, context=None, full_address=None, l
     context = context if isinstance(context, dict) else {}
     name = (name or '').strip()
 
-    if feature_type == 'address' and full_address:
-        return full_address.strip()
+    if feature_type == 'address':
+        if full_address:
+            return full_address.strip()
+        if not name:
+            return ''
+        postcode = _context_name(context, 'postcode', language)
+        city = (
+            _context_name(context, 'place', language)
+            or _context_name(context, 'locality', language)
+        )
+        country = _context_name(context, 'country', language)
+        locality = ' '.join(part for part in (postcode, city) if part)
+        return ', '.join(part for part in (name, locality, country) if part)
+
     if not name:
         return (full_address or '').strip()
     if feature_type == 'country':
@@ -140,6 +152,16 @@ def iter_geofeature_data(feature, language=None):
         properties, language, fallback_name=primary_fallback
     ) or primary_fallback
 
+    translated_address = (
+        _translated_field(properties, 'place_name', language)
+        or _translated_field(properties, 'full_address', language)
+    )
+    # Only reuse the default full_address when no language was requested;
+    # otherwise rebuild from context translations.
+    address_full = translated_address or (
+        None if language else properties.get('full_address')
+    )
+
     yield {
         'mapbox_id': properties.get('mapbox_id'),
         'feature_type': primary_type,
@@ -147,11 +169,7 @@ def iter_geofeature_data(feature, language=None):
             primary_type,
             primary_name,
             context,
-            full_address=(
-                _translated_field(properties, 'place_name', language)
-                or _translated_field(properties, 'full_address', language)
-                or properties.get('full_address')
-            ),
+            full_address=address_full,
             language=language,
         ),
         'name': primary_name,
@@ -215,27 +233,33 @@ def _apply_geofeature_translations(geofeature, data, primary_language):
 
     for lang_code in _platform_language_codes(primary_language):
         name_from_translation = _translated_field(data, 'name', lang_code)
+        address_from_translation = (
+            _translated_field(data, 'place_name', lang_code)
+            or _translated_field(data, 'full_address', lang_code)
+        )
         is_primary = lang_code in primary_keys or any(
             key in primary_keys for key in _language_keys(lang_code)
         )
 
-        if not name_from_translation and has_named_translations and not is_primary:
+        if (
+            not name_from_translation
+            and not address_from_translation
+            and has_named_translations
+            and not is_primary
+            and feature_type != 'address'
+        ):
             # Skip incomplete languages rather than mixing a local name with
-            # translated context ("Den Haag, Netherlands").
+            # translated context ("Den Haag, Netherlands"). Addresses always
+            # rebuild place_name from context when Mapbox omits a translation.
             continue
 
         translated_name = (name_from_translation or fallback_name)[:5000]
         if not translated_name:
             continue
 
-        full_address = None
-        if feature_type == 'address':
-            full_address = (
-                _translated_field(data, 'place_name', lang_code)
-                or _translated_field(data, 'full_address', lang_code)
-            )
-            if not full_address and is_primary:
-                full_address = data.get('place_name') or data.get('full_address')
+        # Only pass Mapbox's address string when it is language-specific.
+        # Never reuse the default full_address for other languages.
+        full_address = address_from_translation if feature_type == 'address' else None
 
         translated_place_name = geofeature_place_name(
             feature_type,

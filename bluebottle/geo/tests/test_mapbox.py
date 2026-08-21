@@ -47,6 +47,14 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands',
         )
         self.assertEqual(
+            mapbox_utils.geofeature_place_name(
+                'address',
+                'Brouwersdam Buitenzijde 20',
+                context,
+            ),
+            'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands',
+        )
+        self.assertEqual(
             mapbox_utils.geofeature_place_name('street', 'Brouwersdam Buitenzijde', context),
             'Brouwersdam Buitenzijde, Ouddorp, Netherlands',
         )
@@ -65,6 +73,55 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertEqual(
             mapbox_utils.geofeature_place_name('country', 'Netherlands', context),
             'Netherlands',
+        )
+
+    def test_geofeature_place_name_address_uses_translated_context(self):
+        context = {
+            'postcode': {'name': '2571 PB'},
+            'place': {
+                'name': 'Den Haag',
+                'translations': {
+                    'en': {'name': 'The Hague'},
+                    'nl': {'name': 'Den Haag'},
+                },
+            },
+            'country': {
+                'name': 'Netherlands',
+                'translations': {
+                    'en': {'name': 'Netherlands'},
+                    'nl': {'name': 'Nederland'},
+                },
+            },
+        }
+
+        self.assertEqual(
+            mapbox_utils.geofeature_place_name(
+                'address',
+                'Herman Costerstraat 80',
+                context,
+                language='en',
+            ),
+            'Herman Costerstraat 80, 2571 PB The Hague, Netherlands',
+        )
+        self.assertEqual(
+            mapbox_utils.geofeature_place_name(
+                'address',
+                'Herman Costerstraat 80',
+                context,
+                language='nl',
+            ),
+            'Herman Costerstraat 80, 2571 PB Den Haag, Nederland',
+        )
+        # Explicit Mapbox translation wins over rebuilt context.
+        self.assertEqual(
+            mapbox_utils.geofeature_place_name(
+                'address',
+                'Herman Costerstraat 80',
+                context,
+                full_address='Herman Costerstraat 80, The Hague, Netherlands',
+                language='en',
+            ),
+            'Herman Costerstraat 80, The Hague, Netherlands',
         )
 
     def test_parse_feature(self):
@@ -239,26 +296,19 @@ class MapboxUtilsTestCase(BluebottleTestCase):
                 'mapbox_id': 'dXJuOm1ieGFkcjpoaWxkZWJyYW5k',
                 'feature_type': 'address',
                 'name': 'Hildebrandstraat 62',
+                # Default full_address is Dutch — must not be copied into en.
                 'full_address': (
                     'Hildebrandstraat 62, 2524 VK Den Haag, Nederland'
                 ),
                 'translations': {
-                    'en': {
-                        'language': 'en',
-                        'name': 'Hildebrandstraat 62',
-                        'place_name': (
-                            'Hildebrandstraat 62, 2524 VK The Hague, Netherlands'
-                        ),
-                    },
-                    'nl': {
-                        'language': 'nl',
-                        'name': 'Hildebrandstraat 62',
-                        'place_name': (
-                            'Hildebrandstraat 62, 2524 VK Den Haag, Nederland'
-                        ),
-                    },
+                    'en': {'language': 'en', 'name': 'Hildebrandstraat 62'},
+                    'nl': {'language': 'nl', 'name': 'Hildebrandstraat 62'},
                 },
                 'context': {
+                    'postcode': {
+                        'mapbox_id': 'dXJuOm1ieHBvc3Q6MjUyNHZr',
+                        'name': '2524 VK',
+                    },
                     'street': {
                         'mapbox_id': 'dXJuOm1ieHN0cjpoaWxkZWJyYW5k',
                         'name': 'Hildebrandstraat',
@@ -289,6 +339,19 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         }
 
         mapbox_utils.sync_geofeatures(geolocation, feature, language='nl')
+
+        address = GeoFeature.objects.get(mapbox_id='dXJuOm1ieGFkcjpoaWxkZWJyYW5k')
+        address.set_current_language('en')
+        self.assertEqual(address.name, 'Hildebrandstraat 62')
+        self.assertEqual(
+            address.place_name,
+            'Hildebrandstraat 62, 2524 VK The Hague, Netherlands',
+        )
+        address.set_current_language('nl')
+        self.assertEqual(
+            address.place_name,
+            'Hildebrandstraat 62, 2524 VK Den Haag, Nederland',
+        )
 
         place = GeoFeature.objects.get(mapbox_id='dXJuOm1ieHBsYzpkZW5oYWdn')
         place.set_current_language('en')

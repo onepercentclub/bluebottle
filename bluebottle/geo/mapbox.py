@@ -61,15 +61,48 @@ def lookup_by_mapbox_id(mapbox_id, language=None):
     })
 
 
+def _language_keys(language):
+    """Mapbox and parler may use `en` or `en-GB`; try both."""
+    if not language:
+        return
+    yield language
+    base = language.split('-')[0]
+    if base != language:
+        yield base
+
+
+def _translated_field(data, field, language, default=''):
+    translations = (data or {}).get('translations') or {}
+    for key in _language_keys(language):
+        entry = translations.get(key)
+        if isinstance(entry, dict) and entry.get(field):
+            return entry[field]
+    return default
+
+
 def _context_name(context, feature_type, language=None):
     data = (context or {}).get(feature_type) or {}
     if not data:
         return ''
     if language:
-        localized = ((data.get('translations') or {}).get(language) or {}).get('name')
+        localized = _translated_field(data, 'name', language)
         if localized:
             return localized
-    return data.get('name', '')
+        if data.get('translations'):
+            # Translations exist but not for this language — avoid mixing
+            # e.g. "Den Haag" + "Netherlands".
+            return ''
+    return data.get('name', '') or ''
+
+
+def _feature_name_for_language(data, language, fallback_name=''):
+    translated = _translated_field(data, 'name', language)
+    if translated:
+        return translated.strip()
+    if language:
+        # Prefer leaving name empty over mixing languages; caller may skip.
+        return (fallback_name or '').strip()
+    return (fallback_name or data.get('name') or '').strip()
 
 
 def geofeature_place_name(feature_type, name, context=None, full_address=None, language=None):
@@ -102,7 +135,10 @@ def iter_geofeature_data(feature, language=None):
         context = {}
 
     primary_type = properties.get('feature_type', '')
-    primary_name = properties.get('name_preferred') or properties.get('name', '')
+    primary_fallback = properties.get('name_preferred') or properties.get('name', '')
+    primary_name = _feature_name_for_language(
+        properties, language, fallback_name=primary_fallback
+    ) or primary_fallback
 
     yield {
         'mapbox_id': properties.get('mapbox_id'),
@@ -111,12 +147,17 @@ def iter_geofeature_data(feature, language=None):
             primary_type,
             primary_name,
             context,
-            full_address=properties.get('full_address'),
+            full_address=(
+                _translated_field(properties, 'place_name', language)
+                or _translated_field(properties, 'full_address', language)
+                or properties.get('full_address')
+            ),
             language=language,
         ),
         'name': primary_name,
         'translations': properties.get('translations', {}),
         'context': context,
+        'full_address': properties.get('full_address'),
     }
 
     for feature_type in FEATURE_TYPE_HIERARCHY:
@@ -126,7 +167,10 @@ def iter_geofeature_data(feature, language=None):
         if context_data.get('mapbox_id') == properties.get('mapbox_id'):
             continue
 
-        context_name = context_data.get('name', '')
+        context_fallback = context_data.get('name', '')
+        context_name = _feature_name_for_language(
+            context_data, language, fallback_name=context_fallback
+        ) or context_fallback
         yield {
             'mapbox_id': context_data['mapbox_id'],
             'feature_type': feature_type,
@@ -150,26 +194,52 @@ def _set_geofeature_translation(geofeature, language, name, place_name):
     geofeature.save()
 
 
+def _platform_language_codes(primary_language=None):
+    from bluebottle.utils.models import Language
+
+    codes = []
+    for language in Language.objects.all():
+        if language.full_code not in codes:
+            codes.append(language.full_code)
+    if primary_language and primary_language not in codes:
+        codes.insert(0, primary_language)
+    return codes or ([primary_language] if primary_language else ['en'])
+
+
 def _apply_geofeature_translations(geofeature, data, primary_language):
     feature_type = data.get('feature_type', '')
     context = data.get('context', {})
-    name = (data.get('name') or '')[:5000]
-    place_name = (data.get('place_name') or '')[:5000]
+    fallback_name = (data.get('name') or '')[:5000]
+    primary_keys = set(_language_keys(primary_language))
+    has_named_translations = bool(data.get('translations'))
 
-    _set_geofeature_translation(geofeature, primary_language, name, place_name)
+    for lang_code in _platform_language_codes(primary_language):
+        name_from_translation = _translated_field(data, 'name', lang_code)
+        is_primary = lang_code in primary_keys or any(
+            key in primary_keys for key in _language_keys(lang_code)
+        )
 
-    for lang_code, translation in (data.get('translations') or {}).items():
-        if not isinstance(translation, dict) or lang_code == primary_language:
+        if not name_from_translation and has_named_translations and not is_primary:
+            # Skip incomplete languages rather than mixing a local name with
+            # translated context ("Den Haag, Netherlands").
             continue
 
-        translated_name = (translation.get('name') or name)[:5000]
+        translated_name = (name_from_translation or fallback_name)[:5000]
+        if not translated_name:
+            continue
+
         full_address = None
         if feature_type == 'address':
-            full_address = translation.get('place_name') or translation.get('full_address')
+            full_address = (
+                _translated_field(data, 'place_name', lang_code)
+                or _translated_field(data, 'full_address', lang_code)
+            )
+            if not full_address and is_primary:
+                full_address = data.get('place_name') or data.get('full_address')
 
         translated_place_name = geofeature_place_name(
             feature_type,
-            translation.get('name') or name,
+            translated_name,
             context,
             full_address=full_address,
             language=lang_code,

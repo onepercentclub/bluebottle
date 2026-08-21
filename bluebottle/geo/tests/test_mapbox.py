@@ -219,6 +219,99 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         country_feature.set_current_language('nl')
         self.assertEqual(country_feature.name, 'Nederland')
 
+    def test_sync_keeps_name_and_place_name_language_consistent(self):
+        """Avoid mixed labels like name=Den Haag with place_name=..., Netherlands."""
+        LanguageFactory.create(
+            code='en', language_name='English', native_name='English', default=True
+        )
+        LanguageFactory.create(
+            code='nl', language_name='Dutch', native_name='Nederlands'
+        )
+        country = CountryFactory.create(alpha2_code='NL')
+        geolocation = Geolocation.objects.create(
+            position=Point(4.3, 52.07),
+            country=country,
+        )
+
+        feature = {
+            'type': 'Feature',
+            'properties': {
+                'mapbox_id': 'dXJuOm1ieGFkcjpoaWxkZWJyYW5k',
+                'feature_type': 'address',
+                'name': 'Hildebrandstraat 62',
+                'full_address': (
+                    'Hildebrandstraat 62, 2524 VK Den Haag, Nederland'
+                ),
+                'translations': {
+                    'en': {
+                        'language': 'en',
+                        'name': 'Hildebrandstraat 62',
+                        'place_name': (
+                            'Hildebrandstraat 62, 2524 VK The Hague, Netherlands'
+                        ),
+                    },
+                    'nl': {
+                        'language': 'nl',
+                        'name': 'Hildebrandstraat 62',
+                        'place_name': (
+                            'Hildebrandstraat 62, 2524 VK Den Haag, Nederland'
+                        ),
+                    },
+                },
+                'context': {
+                    'street': {
+                        'mapbox_id': 'dXJuOm1ieHN0cjpoaWxkZWJyYW5k',
+                        'name': 'Hildebrandstraat',
+                        'translations': {
+                            'en': {'name': 'Hildebrandstraat'},
+                            'nl': {'name': 'Hildebrandstraat'},
+                        },
+                    },
+                    'place': {
+                        'mapbox_id': 'dXJuOm1ieHBsYzpkZW5oYWdn',
+                        # Default Mapbox name is often local-language.
+                        'name': 'Den Haag',
+                        'translations': {
+                            'en': {'name': 'The Hague'},
+                            'nl': {'name': 'Den Haag'},
+                        },
+                    },
+                    'country': {
+                        'mapbox_id': 'dXJuOm1ieHBsYzpubA',
+                        'name': 'Netherlands',
+                        'translations': {
+                            'en': {'name': 'Netherlands'},
+                            'nl': {'name': 'Nederland'},
+                        },
+                    },
+                },
+            },
+        }
+
+        mapbox_utils.sync_geofeatures(geolocation, feature, language='nl')
+
+        place = GeoFeature.objects.get(mapbox_id='dXJuOm1ieHBsYzpkZW5oYWdn')
+        place.set_current_language('en')
+        self.assertEqual(place.name, 'The Hague')
+        self.assertEqual(place.place_name, 'The Hague, Netherlands')
+
+        place.set_current_language('nl')
+        self.assertEqual(place.name, 'Den Haag')
+        self.assertEqual(place.place_name, 'Den Haag, Nederland')
+
+        street = GeoFeature.objects.get(mapbox_id='dXJuOm1ieHN0cjpoaWxkZWJyYW5k')
+        street.set_current_language('en')
+        self.assertEqual(street.name, 'Hildebrandstraat')
+        self.assertEqual(
+            street.place_name,
+            'Hildebrandstraat, The Hague, Netherlands',
+        )
+        street.set_current_language('nl')
+        self.assertEqual(
+            street.place_name,
+            'Hildebrandstraat, Den Haag, Nederland',
+        )
+
     @mock.patch('bluebottle.geo.mapbox.geocode_request')
     def test_lookup_by_mapbox_id_requests_platform_languages(self, mock_request):
         LanguageFactory.create(code='en', language_name='English', native_name='English', default=True)

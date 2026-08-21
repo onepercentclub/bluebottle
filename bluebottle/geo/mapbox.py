@@ -282,6 +282,42 @@ def select_primary_geofeature(geolocation):
     return GeoFeature.objects.filter(mapbox_id=geolocation.mapbox_id).first()
 
 
+def country_code_from_feature(feature):
+    """ISO alpha-2 from Mapbox feature context (e.g. NL)."""
+    properties = (feature or {}).get('properties') or {}
+    context = properties.get('context') or {}
+    if not isinstance(context, dict):
+        return ''
+    country = context.get('country') or {}
+    code = (country.get('country_code') or properties.get('country_code') or '')
+    return code.upper() if code else ''
+
+
+def apply_country_from_feature(geolocation, feature, overwrite=False):
+    """
+    Set geolocation.country from Mapbox context.country.country_code.
+
+    By default only fills when country is empty (backoffice add / unset).
+    """
+    from bluebottle.geo.models import Country, Geolocation
+
+    if geolocation.country_id and not overwrite:
+        return geolocation.country
+
+    country_code = country_code_from_feature(feature)
+    if not country_code:
+        return geolocation.country
+
+    country = Country.objects.filter(alpha2_code=country_code).first()
+    if not country:
+        return geolocation.country
+
+    if geolocation.pk:
+        Geolocation.objects.filter(pk=geolocation.pk).update(country=country)
+    geolocation.country = country
+    return country
+
+
 def sync_geofeatures(geolocation, feature, language=None):
     """Create/update GeoFeature rows from a Mapbox feature and link them."""
     from bluebottle.geo.models import GeoFeature, Geolocation
@@ -312,6 +348,7 @@ def sync_geofeatures(geolocation, feature, language=None):
     if geolocation.pk:
         geolocation.geofeatures.set(geofeature_ids)
         primary = select_primary_geofeature(geolocation)
+        apply_country_from_feature(geolocation, feature)
         Geolocation.objects.filter(pk=geolocation.pk).update(geofeature=primary)
         geolocation.geofeature = primary
 

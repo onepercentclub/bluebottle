@@ -211,6 +211,40 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             MAPBOX_V6_ADDRESS_FEATURE['properties']['full_address'],
         )
 
+    def test_sync_geofeatures_sets_country_from_mapbox_context(self):
+        country = CountryFactory.create(alpha2_code='NL')
+        geolocation = Geolocation.objects.create(
+            position=Point(3.851166, 51.762731),
+            mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
+        )
+        self.assertIsNone(geolocation.country_id)
+
+        mapbox_utils.sync_geofeatures(geolocation, MAPBOX_V6_ADDRESS_FEATURE)
+
+        geolocation.refresh_from_db()
+        self.assertEqual(geolocation.country_id, country.id)
+
+    def test_sync_geofeatures_does_not_overwrite_existing_country(self):
+        CountryFactory.create(alpha2_code='NL')
+        belgium = CountryFactory.create(alpha2_code='BE')
+        geolocation = Geolocation.objects.create(
+            position=Point(3.851166, 51.762731),
+            mapbox_id=MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
+            country=belgium,
+        )
+
+        mapbox_utils.sync_geofeatures(geolocation, MAPBOX_V6_ADDRESS_FEATURE)
+
+        geolocation.refresh_from_db()
+        self.assertEqual(geolocation.country_id, belgium.id)
+
+    def test_country_code_from_feature(self):
+        self.assertEqual(
+            mapbox_utils.country_code_from_feature(MAPBOX_V6_ADDRESS_FEATURE),
+            'NL',
+        )
+        self.assertEqual(mapbox_utils.country_code_from_feature({}), '')
+
     def test_sync_geofeatures_creates_translations_for_new_features(self):
         country = CountryFactory.create(alpha2_code='NL')
         geolocation = Geolocation.objects.create(

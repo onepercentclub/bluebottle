@@ -62,6 +62,12 @@ class CountryAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
     search_fields = ('translations__name', 'alpha2_code', 'alpha3_code')
     fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 class LocationMergeForm(forms.Form):
     to = forms.ModelChoiceField(

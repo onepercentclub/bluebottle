@@ -16,6 +16,7 @@ def tenant(request):
         'tenant': connection.tenant,
         'properties': properties,
         'logo': site_settings.logo,
+        'platform_name': site_settings.platform_name
     }
     if hasattr(request, 'user') and request.user.has_perm('looker.access_looker_embeds'):
         context['looker_items'] = LookerEmbed.objects.all()

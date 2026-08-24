@@ -29,11 +29,13 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
 
     def setUp(self):
         super(LookerEmbedDashboardTest, self).setUp()
-        get_default_language.delete_memoized()
         self.user = BlueBottleUserFactory.create(
             first_name='Test',
             last_name='De Tester'
         )
+
+    def tearDown(self):
+        get_default_language.delete_memoized()
 
     def test_url(self, get_current_host):
         embed = LookerSSOEmbed(self.user, 'look', '1')

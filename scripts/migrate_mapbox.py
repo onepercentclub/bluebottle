@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 
 HOUSE_NUMBER_LEADING_PATTERN = re.compile(r'^(\d+[a-zA-Z\-/]*)')
 HOUSE_NUMBER_BEFORE_COMMA_PATTERN = re.compile(r'\b(\d+[a-zA-Z\-/]*)\s*,')
+POSTCODE_PATTERN = re.compile(r'\b\d{4}\s*[A-Z]{2}\b', re.IGNORECASE)
+STREET_NUMBER_SUFFIX_PATTERN = re.compile(
+    r'^(?P<street>.+?)\s+(?P<number>\d+[a-zA-Z\-/]*)$'
+)
 
 
 def _housenumber_from_text(value):
@@ -44,6 +48,47 @@ def extract_housenumber(geolocation):
         return housenumber
 
     return _housenumber_from_text(geolocation.street)
+
+
+def clean_street_name(street, address_number=None):
+    """
+    Mapbox structured `street` must be a street name only.
+
+    Legacy rows often store "Street 12, 1234 AB City" in `street`.
+    """
+    text = (street or '').strip()
+    if not text:
+        return None
+
+    # Prefer the part before the first comma (street vs rest of address).
+    text = text.split(',', 1)[0].strip()
+    if not text:
+        return None
+
+    # Drop trailing house number when address_number is supplied separately.
+    if address_number:
+        suffix = STREET_NUMBER_SUFFIX_PATTERN.match(text)
+        if suffix and suffix.group('number').lower() == str(address_number).lower():
+            text = suffix.group('street').strip()
+
+    # Reject values that still look like a full address line.
+    if POSTCODE_PATTERN.search(text) or ',' in text:
+        return None
+
+    return text or None
+
+
+def clean_place_name(place):
+    """Mapbox structured `place` should be a city/town, not a venue+address."""
+    text = (place or '').strip()
+    if not text:
+        return None
+    if ',' in text or POSTCODE_PATTERN.search(text):
+        return None
+    # Venue-style labels often include a street name with a house number.
+    if STREET_NUMBER_SUFFIX_PATTERN.match(text):
+        return None
+    return text
 
 
 def _normalize_reverse_type(types):
@@ -109,7 +154,7 @@ def forward_v6(
 
 
 def _prefer_address_feature(response):
-    features = response.get('features', [])
+    features = (response or {}).get('features', [])
     for feature in features:
         properties = feature.get('properties', {})
         if properties.get('feature_type') == 'address':
@@ -205,13 +250,37 @@ def apply_parsed_feature(geolocation, parsed):
             geolocation.country = country
 
 
+def _try_forward_feature(**params):
+    try:
+        return _prefer_address_feature(forward_v6(**params))
+    except requests.RequestException as error:
+        logger.warning('Mapbox forward geocode failed: %s', error)
+        return None
+
+
 def resolve_geolocation_feature(geolocation, language=None):
     """Resolve a Mapbox v6 feature for legacy v5 / incomplete geolocations."""
     language = language or get_language() or 'en'
+    languages = mapbox_utils.platform_language_param()
 
     if geolocation.mapbox_id and mapbox_utils.is_v6_mapbox_id(geolocation.mapbox_id):
-        response = mapbox_utils.lookup_by_mapbox_id(geolocation.mapbox_id, language=language)
-        return mapbox_utils.first_feature(response)
+        try:
+            response = mapbox_utils.lookup_by_mapbox_id(
+                geolocation.mapbox_id, language=language
+            )
+            return mapbox_utils.first_feature(response)
+        except requests.RequestException as error:
+            logger.warning('Mapbox lookup by id failed: %s', error)
+
+    # Coordinates are the most reliable signal when address fields are dirty.
+    if geolocation.position:
+        feature = reverse_geocode_feature(
+            geolocation.position.x,
+            geolocation.position.y,
+            language=language,
+        )
+        if feature:
+            return feature
 
     if geolocation.mapbox_id and geolocation.mapbox_id.startswith('address.'):
         address_number = extract_housenumber(geolocation)
@@ -219,52 +288,64 @@ def resolve_geolocation_feature(geolocation, language=None):
         if geolocation.country_id and geolocation.country:
             country_code = geolocation.country.alpha2_code
 
-        params = {
-            'street': geolocation.street,
-            'postcode': geolocation.postal_code,
-            'place': geolocation.locality,
-            'region': geolocation.province,
-            'country': country_code,
+        street = clean_street_name(geolocation.street, address_number)
+        place = clean_place_name(geolocation.locality)
+        region = clean_place_name(geolocation.province)
+        postcode = (geolocation.postal_code or '').strip() or None
+
+        structured = {
             'types': ['address'],
-            'language': mapbox_utils.platform_language_param(),
+            'language': languages,
         }
         if address_number:
-            params['address_number'] = address_number
-            response = forward_v6(**params)
-            feature = _prefer_address_feature(response)
+            structured['address_number'] = address_number
+        if street:
+            structured['street'] = street
+        if postcode:
+            structured['postcode'] = postcode
+        if place:
+            structured['place'] = place
+        if region:
+            structured['region'] = region
+        if country_code:
+            structured['country'] = country_code
+
+        if street or postcode or place:
+            feature = _try_forward_feature(**structured)
             if feature:
                 return feature
 
         if geolocation.formatted_address:
-            response = forward_v6(
+            feature = _try_forward_feature(
                 query=geolocation.formatted_address,
                 types=['address'],
-                language=mapbox_utils.platform_language_param(),
+                language=languages,
+                country=country_code,
             )
-            feature = _prefer_address_feature(response)
             if feature:
                 return feature
 
     if geolocation.mapbox_id:
-        response = mapbox_utils.lookup_by_mapbox_id(geolocation.mapbox_id, language=language)
-        feature = mapbox_utils.first_feature(response)
-        if feature:
-            return feature
-
-    if geolocation.position:
-        return reverse_geocode_feature(
-            geolocation.position.x,
-            geolocation.position.y,
-            language=language,
-        )
+        try:
+            response = mapbox_utils.lookup_by_mapbox_id(
+                geolocation.mapbox_id, language=language
+            )
+            feature = mapbox_utils.first_feature(response)
+            if feature:
+                return feature
+        except requests.RequestException as error:
+            logger.warning('Mapbox lookup by id failed: %s', error)
 
     if geolocation.formatted_address:
-        response = forward_v6(
+        country_code = None
+        if geolocation.country_id and geolocation.country:
+            country_code = geolocation.country.alpha2_code
+        return _try_forward_feature(
             query=geolocation.formatted_address,
             types=['address'],
-            language=mapbox_utils.platform_language_param(),
+            language=languages,
+            country=country_code,
         )
-        return _prefer_address_feature(response)
 
     return None
 

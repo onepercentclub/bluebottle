@@ -3,6 +3,7 @@ from importlib.machinery import SourceFileLoader
 from pathlib import Path
 from unittest import mock
 
+import requests
 from django.contrib.gis.geos import Point
 
 from bluebottle.activities.documents import get_translated_geofeature_list
@@ -134,6 +135,25 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertEqual(parsed['street_number'], '20')
         self.assertEqual(parsed['country_code'], 'NL')
 
+    def test_clean_street_and_place_names(self):
+        self.assertEqual(
+            migrate_mapbox.clean_street_name(
+                'Tweede van der Helststraat 66, 1072 PG Amsterdam',
+                '66',
+            ),
+            'Tweede van der Helststraat',
+        )
+        self.assertEqual(
+            migrate_mapbox.clean_street_name('Hansenstraat', '30'),
+            'Hansenstraat',
+        )
+        self.assertIsNone(
+            migrate_mapbox.clean_place_name(
+                'Buurbuik De Pijp, Tweede van der Helststraat 66 Amsterdam'
+            )
+        )
+        self.assertEqual(migrate_mapbox.clean_place_name('Amsterdam'), 'Amsterdam')
+
     @mock.patch('migrate_mapbox.forward_v6')
     def test_resolve_geolocation_feature_for_address_v5_id(self, mock_forward):
         country = CountryFactory.create(alpha2_code='NL')
@@ -154,6 +174,73 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertEqual(mock_forward.call_args.kwargs['address_number'], '30')
         self.assertEqual(mock_forward.call_args.kwargs['street'], 'Hansenstraat')
         self.assertEqual(mock_forward.call_args.kwargs['types'], ['address'])
+
+    @mock.patch('migrate_mapbox.forward_v6')
+    def test_resolve_cleans_dirty_structured_address_fields(self, mock_forward):
+        country = CountryFactory.create(alpha2_code='NL')
+        geolocation = Geolocation(
+            mapbox_id='address.123',
+            street='Tweede van der Helststraat 66, 1072 PG Amsterdam',
+            street_number='66',
+            locality='Buurbuik De Pijp, Tweede van der Helststraat 66 Amsterdam',
+            postal_code='1072 PG',
+            province='Amsterdam',
+            country=country,
+        )
+        mock_forward.return_value = {'features': [MAPBOX_V6_ADDRESS_FEATURE]}
+
+        migrate_mapbox.resolve_geolocation_feature(geolocation)
+
+        kwargs = mock_forward.call_args.kwargs
+        self.assertEqual(kwargs['street'], 'Tweede van der Helststraat')
+        self.assertEqual(kwargs['address_number'], '66')
+        self.assertEqual(kwargs['postcode'], '1072 PG')
+        self.assertNotIn('place', kwargs)
+        self.assertNotIn('region', kwargs)
+
+    @mock.patch('migrate_mapbox.reverse_geocode_feature')
+    @mock.patch('migrate_mapbox.forward_v6')
+    def test_resolve_prefers_reverse_when_position_exists(
+        self, mock_forward, mock_reverse
+    ):
+        mock_reverse.return_value = MAPBOX_V6_ADDRESS_FEATURE
+        geolocation = Geolocation(
+            mapbox_id='address.123',
+            street='dirty street value with commas, 1234 AB',
+            position=Point(4.89, 52.37),
+        )
+
+        feature = migrate_mapbox.resolve_geolocation_feature(geolocation)
+
+        self.assertEqual(feature, MAPBOX_V6_ADDRESS_FEATURE)
+        mock_reverse.assert_called_once()
+        mock_forward.assert_not_called()
+
+    @mock.patch('migrate_mapbox.forward_v6')
+    def test_resolve_falls_back_when_structured_forward_errors(self, mock_forward):
+        country = CountryFactory.create(alpha2_code='NL')
+        geolocation = Geolocation(
+            mapbox_id='address.123',
+            street='Hansenstraat',
+            street_number='30',
+            locality='Leiden',
+            postal_code='2312',
+            formatted_address='Hansenstraat 30, Leiden',
+            country=country,
+        )
+        mock_forward.side_effect = [
+            requests.HTTPError('422'),
+            {'features': [MAPBOX_V6_ADDRESS_FEATURE]},
+        ]
+
+        feature = migrate_mapbox.resolve_geolocation_feature(geolocation)
+
+        self.assertEqual(feature, MAPBOX_V6_ADDRESS_FEATURE)
+        self.assertEqual(mock_forward.call_count, 2)
+        self.assertEqual(
+            mock_forward.call_args_list[1].kwargs['query'],
+            'Hansenstraat 30, Leiden',
+        )
 
     def test_sync_geofeatures(self):
         country = CountryFactory.create(alpha2_code='NL')

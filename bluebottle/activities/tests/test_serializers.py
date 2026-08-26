@@ -318,7 +318,6 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
             geofeature=[],
         )
         serializer = ActivityPreviewLocationSerializer(context=self._context())
-        serializer.context = self._context()
 
         self.assertEqual(serializer.to_representation(activity), 'Netherlands')
         self.assertFalse(serializer.has_multiple_unresolved_locations(activity))

@@ -452,7 +452,11 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_slot_count(self, obj):
         if hasattr(obj, "slots") and obj.slots:
-            return len(self.get_filtered_slots(obj, only_upcoming=True))
+            upcoming = self.get_filtered_slots(obj, only_upcoming=True)
+            if upcoming:
+                return len(upcoming)
+            # Succeeded / past activities: fall back to all visible slots.
+            return len(self.get_filtered_slots(obj, only_upcoming=False))
 
     def get_is_online(self, obj):
         if hasattr(obj, "slots") and obj.slots:

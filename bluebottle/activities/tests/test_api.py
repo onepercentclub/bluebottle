@@ -1546,32 +1546,41 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 
+        # Initiative place countries are indexed too; keep them out of facet counts.
+        # DeadlineActivityFactory also creates a default location — override that
+        # when testing office_location so CountryFactory alpha2 collisions cannot
+        # inflate the matching-country facet.
+        initiative = InitiativeFactory(place=GeolocationFactory(country=None))
+
         matching = [
             DeadlineActivityFactory.create(
+                initiative=initiative,
                 office_location=LocationFactory.create(country=matching_country),
-                initiative=None,
+                location=None,
                 status='open',
             ),
             DeadlineActivityFactory.create(
+                initiative=initiative,
                 location=GeolocationFactory.create(country=matching_country),
-                initiative=None,
                 status='open',
             ),
             FundingFactory.create(
+                initiative=initiative,
                 impact_location=GeolocationFactory.create(country=matching_country),
-                initiative=None,
                 status='open'
 
             ),
             DeedFactory.create(
+                initiative=initiative,
                 office_location=LocationFactory.create(country=matching_country),
-                initiative=None,
                 status='open'
             )
         ]
 
         date_activity = DateActivityFactory.create(
-            slots=[], status='open', initiative=None,
+            initiative=initiative,
+            slots=[],
+            status='open',
         )
         DateActivitySlotFactory.create(
             activity=date_activity,
@@ -1583,11 +1592,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         other = DeadlineActivityFactory.create_batch(
             3,
+            initiative=initiative,
             office_location=LocationFactory.create(country=other_country),
+            location=None,
             status='open',
         )
         DeadlineActivityFactory.create_batch(
             3,
+            initiative=initiative,
             location=GeolocationFactory.create(country=None),
             status='open',
         )

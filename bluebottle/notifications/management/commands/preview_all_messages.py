@@ -249,6 +249,9 @@ class MockMember:
         self.email = "jane.doe@example.com"
         self.primary_language = language
         self.favourite_themes = Theme.objects.none()
+        self.skills = Theme.objects.none()
+        self.place = None
+        self.location = None
 
 
 class MockQueryset:
@@ -664,8 +667,9 @@ def get_mock_object_for_message(message_class, language='en'):
     # Try to use real database objects when available
     try:
         # Check module name first for better matching
-        if 'Matching' in class_name:
-            return MockQueryset([MockActivity(language)])
+        if class_name == 'MatchingActivitiesNotification':
+            # Notification object is the recipient (member), not activities.
+            return MockMember(language)
 
         if 'updates' in module_name:
             from bluebottle.updates.models import Update

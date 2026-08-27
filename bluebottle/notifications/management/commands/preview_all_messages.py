@@ -815,6 +815,47 @@ def discover_message_classes(module_path):
         return []
 
 
+def matching_activities_preview_context():
+    """Sample context for MatchingActivitiesNotification mail previews."""
+    return {
+        'count': 3,
+        'profile_incomplete': True,
+        'opt_out_link': '/member/profile?tab=notifications',
+        'activities': [
+            {
+                'title': 'Clean up the local park',
+                'url': 'https://example.goodup.com/en/activities/details/deed/123/clean-up-the-local-park',
+                'image': '/static/assets/news/default-blog-image.png',
+                'expertise': 'Gardening',
+                'theme': 'Environment',
+                'is_online': False,
+                'location': 'Amsterdam',
+                'when': '24 May 2026 10:00 - 13:00',
+            },
+            {
+                'title': 'Teach coding to kids',
+                'url': 'https://example.goodup.com/en/activities/details/deed/124/teach-coding',
+                'image': '/static/assets/news/default-blog-image.png',
+                'expertise': 'Teaching',
+                'theme': 'Education',
+                'is_online': True,
+                'location': None,
+                'when': '1 Jun 2026 14:00 - 16:00',
+            },
+            {
+                'title': 'Community kitchen volunteer',
+                'url': 'https://example.goodup.com/en/activities/details/deed/125/community-kitchen',
+                'image': '/static/assets/news/default-blog-image.png',
+                'expertise': None,
+                'theme': 'Social inclusion',
+                'is_online': False,
+                'location': 'Rotterdam',
+                'when': 'starts immediately - runs indefinitely',
+            },
+        ],
+    }
+
+
 def preview_message(message_class_name, message_class, language='en', output_format='html', verbose=False):
     """Generate preview for a single message"""
     if verbose:
@@ -833,7 +874,10 @@ def preview_message(message_class_name, message_class, language='en', output_for
         print(f"Using: {mock_obj.__class__.__name__} ({obj_type})")
     # Create message instance
     try:
-        message_instance = message_class(mock_obj)
+        preview_options = {}
+        if message_class_name == 'MatchingActivitiesNotification':
+            preview_options['context'] = matching_activities_preview_context()
+        message_instance = message_class(mock_obj, **preview_options)
     except Exception as e:
         print(f"❌ Could not instantiate {message_class_name}: {e}")
         return None

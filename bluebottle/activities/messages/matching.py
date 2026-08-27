@@ -38,49 +38,6 @@ class MatchingActivitiesNotification(TransitionMessage):
         """user"""
         return [self.obj]
 
-    def get_preview_activities(self):
-        return [
-            {
-                'title': 'Clean up the local park',
-                'url': 'https://example.goodup.com/en/activities/details/deed/123/clean-up-the-local-park',
-                'image': '/static/assets/news/default-blog-image.png',
-                'expertise': 'Gardening',
-                'theme': 'Environment',
-                'is_online': False,
-                'location': 'Amsterdam',
-                'when': '24 May 2026 10:00 - 13:00',
-            },
-            {
-                'title': 'Teach coding to kids',
-                'url': 'https://example.goodup.com/en/activities/details/deed/124/teach-coding',
-                'image': '/static/assets/news/default-blog-image.png',
-                'expertise': 'Teaching',
-                'theme': 'Education',
-                'is_online': True,
-                'location': None,
-                'when': '1 Jun 2026 14:00 - 16:00',
-            },
-            {
-                'title': 'Community kitchen volunteer',
-                'url': 'https://example.goodup.com/en/activities/details/deed/125/community-kitchen',
-                'image': '/static/assets/news/default-blog-image.png',
-                'expertise': None,
-                'theme': 'Social inclusion',
-                'is_online': False,
-                'location': 'Rotterdam',
-                'when': 'starts immediately - runs indefinitely',
-            },
-        ]
-
-    def get_generic_context(self):
-        context = super().get_generic_context()
-        context['first_name'] = 'Jane'
-        context['count'] = 3
-        context['profile_incomplete'] = True
-        context['opt_out_link'] = '/member/profile?tab=notifications'
-        context['activities'] = self.get_preview_activities()
-        return context
-
     def get_activity_context(self, activity):
         from bluebottle.time_based.models import DateActivity
 
@@ -163,11 +120,7 @@ class MatchingActivitiesNotification(TransitionMessage):
                 self.get_activity_context(activity) for activity in activities[:3]
             ]
             context['count'] = len(activities)
-        else:
-            # Preview / generic render without activity list.
-            preview = self.get_generic_context()
-            context['activities'] = preview['activities']
-            context['count'] = preview['count']
+
         return context
 
     def already_send(self, recipient):

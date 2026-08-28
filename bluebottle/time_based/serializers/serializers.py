@@ -110,8 +110,8 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
         related_link_url_kwarg="slot_id",
         include_my=True,
         statuses={
-            "active": ["accepted", "succeeded", "running"],
-            "failed": ["failed", "rejected", "expired", "cancelled", "withdrawn"],
+            "active": ["accepted", "succeeded"],
+            "failed": ["rejected", "withdrawn", "removed", "cancelled"],
         },
     )
 

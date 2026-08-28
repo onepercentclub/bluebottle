@@ -956,34 +956,40 @@ class SpotOpenedNotification(TransitionMessage):
 
     @property
     def action_link(self):
-        if isinstance(self.obj, DateActivitySlot):
-            url = self.obj.activity.get_absolute_url()
-        else:
-            url = self.obj.get_absolute_url()
-        return '{}?{}'.format(url, urlencode({'spotOpened': 'true'}))
+        url = self.obj.get_absolute_url()
+        separator = '&' if '?' in url else '?'
+        return '{}{}{}'.format(url, separator, urlencode({'spotOpened': 'true'}))
 
     def get_recipients(self):
         """interested members"""
         if isinstance(self.obj, DateActivitySlot):
-            interests = self.obj.activity.interests.filter(slot=self.obj)
+            interests = self.obj.interests.all()
         else:
             interests = self.obj.interests.filter(slot__isnull=True)
         return [interest.user for interest in interests]
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        activity = (
-            self.obj.activity
-            if isinstance(self.obj, DateActivitySlot)
-            else self.obj
-        )
-        context['title'] = activity.title
-        context['is_online'] = getattr(activity, 'is_online', None)
-        location = getattr(activity, 'location', None)
-        if location and not context['is_online']:
-            context['location'] = location.formatted_address
+        if isinstance(self.obj, DateActivitySlot):
+            activity = self.obj.activity
+            slot_info = get_slot_info(self.obj)
+            if slot_info:
+                slot_info = dict(slot_info)
+                slot_info['online_meeting_url'] = None
+                context['slots'] = [slot_info]
+            else:
+                context['slots'] = []
+            context['is_online'] = self.obj.is_online
+            location = self.obj.location if not self.obj.is_online else None
         else:
-            context['location'] = None
+            activity = self.obj
+            context['slots'] = []
+            context['is_online'] = getattr(activity, 'is_online', None)
+            location = getattr(activity, 'location', None)
+            if context['is_online']:
+                location = None
+        context['title'] = activity.title
+        context['location'] = location.formatted_address if location else None
         return context
 
 

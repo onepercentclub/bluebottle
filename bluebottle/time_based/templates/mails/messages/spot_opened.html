@@ -7,7 +7,11 @@
     </p>
     <p>
         <b>{{ title }}</b><br/>
-        {% if is_online %}
+        {% if slots %}
+            {% for slot in slots %}
+                {% include 'mails/messages/partial/slot.html' %}
+            {% endfor %}
+        {% elif is_online %}
             {% trans "Anywhere/Online" context "platform-email" %}
         {% elif location %}
             {{ location }}

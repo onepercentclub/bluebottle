@@ -19,6 +19,7 @@ from bluebottle.time_based.serializers import (
 )
 from bluebottle.time_based.views import RelatedRegistrationListView
 from bluebottle.time_based.views.mixins import BaseSlotIcalView
+from bluebottle.time_based.views.exports import InterestExportMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -128,7 +129,7 @@ class ActivitySlotIcalView(BaseSlotIcalView):
     )
 
 
-class SlotParticipantExportView(ExportView):
+class SlotParticipantExportView(InterestExportMixin, ExportView):
     filename = "participants"
 
     model = DateActivitySlot
@@ -149,6 +150,17 @@ class SlotParticipantExportView(ExportView):
                 ('participant__motivation', question),
             )
         return fields
+
+    def get_interest_queryset(self):
+        return (
+            self.get_object()
+            .interests.select_related('user')
+            .order_by('created', 'pk')
+        )
+
+    def write_data(self, workbook):
+        super().write_data(workbook)
+        self.write_interest_sheet(workbook)
 
 
 class SkillPagination(JsonApiPagination):

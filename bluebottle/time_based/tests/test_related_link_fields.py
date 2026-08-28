@@ -300,3 +300,24 @@ class DateSlotRelatedLinkFieldsTestCase(APITestCase):
         response = self.client.get(href, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 2)
+
+    def test_slot_list_includes_interests_count_for_manager(self):
+        self.url = reverse('related-date-slots', args=(self.activity.pk,))
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        slot = next(
+            item for item in self.response.json()['data']
+            if item['id'] == str(self.slot.pk)
+        )
+        links = slot['relationships']['interests']['links']
+        self.assertEqual(links['related']['meta']['count'], 2)
+
+    def test_slot_list_hides_interests_for_member(self):
+        member = BlueBottleUserFactory.create()
+        self.url = reverse('related-date-slots', args=(self.activity.pk,))
+        self.perform_get(user=member)
+        self.assertStatus(status.HTTP_200_OK)
+
+        for item in self.response.json()['data']:
+            self.assertNotIn('interests', item.get('relationships', {}))

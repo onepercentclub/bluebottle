@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from bluebottle.redirects.models import Redirect
 
 
@@ -8,5 +9,7 @@ class RedirectAdmin(admin.ModelAdmin):
         'old_path',
         'new_path',
     )
+
+    fields = ('old_path', 'new_path')
 
     search_fields = ('old_path', 'new_path')

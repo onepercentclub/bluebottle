@@ -301,6 +301,34 @@ class DateSlotRelatedLinkFieldsTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 2)
 
+    def test_slot_participant_counts_exclude_removed_from_active(self):
+        DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            status='accepted',
+        )
+        DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            status='removed',
+        )
+
+        self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        links = self.response.json()['data']['relationships']['participants']['links']
+        self.assertEqual(links['active']['meta']['count'], 1)
+        self.assertEqual(links['failed']['meta']['count'], 1)
+        self.assertIn('removed', links['failed']['href'])
+
+        response = self.client.get(links['failed']['href'], user=self.activity.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 1)
+        self.assertEqual(
+            response.json()['data'][0]['meta']['current-status']['value'],
+            'removed',
+        )
+
     def test_slot_list_includes_interests_count_for_manager(self):
         self.url = reverse('related-date-slots', args=(self.activity.pk,))
         self.perform_get(user=self.activity.owner)

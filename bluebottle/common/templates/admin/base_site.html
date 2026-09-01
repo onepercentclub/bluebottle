@@ -4,9 +4,4 @@
 {% block title %}{{ title }} | {% trans 'Django site admin' %}{% endblock %}
 
 {% block branding %}
-    <h1 id="site-name">
-        {% if platform_name %}
-            <span class="segment-label segment-label-{{ tenant.slug }}">{{platform_name}}</span>
-        {% endif %}
-    </h1>
 {% endblock %}

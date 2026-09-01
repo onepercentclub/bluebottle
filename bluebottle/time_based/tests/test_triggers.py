@@ -693,6 +693,47 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             any(other_interested.email in message.to for message in mail.outbox)
         )
 
+    def test_unlock_notifies_interested_with_multiple_slots(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=self.slot,
+            user=interested,
+        )
+
+        registration = DateRegistrationFactory.create(
+            activity=self.activity, status='accepted'
+        )
+        participant = DateParticipantFactory.create(
+            registration=registration, slot=self.slot
+        )
+        self.assertStatus(self.slot, "full")
+        self.assertStatus(self.activity, "open")
+
+        mail.outbox = []
+        participant.states.withdraw(save=True)
+        self.slot.refresh_from_db()
+        self.assertStatus(self.slot, "open")
+
+        spot_messages = [
+            message for message in mail.outbox
+            if 'A spot has opened up for an activity on Test.' in message.subject
+            and interested.email in message.to
+        ]
+        self.assertEqual(len(spot_messages), 1)
+        html = ''
+        if spot_messages[0].alternatives:
+            html = spot_messages[0].alternatives[0][0]
+        self.assertIn(
+            'slotId={}'.format(self.slot.pk),
+            spot_messages[0].body + html,
+        )
+
     def test_fill_cancel_slot(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
 

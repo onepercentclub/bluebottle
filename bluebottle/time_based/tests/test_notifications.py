@@ -455,7 +455,8 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertRecipients([interested])
         self.assertSubject('A spot has opened up for an activity on Test.')
         self.assertBodyContains('Save the world!')
-        self.assertActionLink(activity.get_absolute_url() + '?spotOpened=true')
+        self.assertBodyContains(self.obj.title)
+        self.assertActionLink(self.obj.get_absolute_url() + '&spotOpened=true')
         self.assertActionTitle('View activity')
 
     def test_date_slot_only_notifies_interested_users_for_that_slot(self):
@@ -503,7 +504,8 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([interested])
         context = self.message.get_context(interested)
-        self.assertNotIn('slots', context)
+        self.assertEqual(len(context['slots']), 1)
+        self.assertFalse(context['slots'][0].get('online_meeting_url'))
         self.assertNotIn('online_meeting_url', context)
         self.assertBodyNotContains('https://example.com/secret-meeting')
         self.assertBodyNotContains(slot_location.formatted_address)

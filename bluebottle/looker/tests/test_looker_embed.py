@@ -28,6 +28,7 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
     """
 
     def setUp(self):
+        get_default_language.delete_memoized()
         super(LookerEmbedDashboardTest, self).setUp()
         self.user = BlueBottleUserFactory.create(
             first_name='Test',
@@ -82,16 +83,6 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
             json.loads(query['models'][0]), list(LookerSSOEmbed.models)
         )
 
-    @override_settings(LOOKER_HOST='looker.example.com')
-    def test_host_in_settings(self, get_current_host):
-        embed = LookerSSOEmbed(self.user, 'look', 1)
-        url = urlparse(embed.url)
-
-        self.assertEqual(url.scheme, 'https')
-        self.assertEqual(
-            url.netloc, 'looker.example.com'
-        )
-
     def test_default_langauge(self, get_current_host):
         english = Language.objects.get(code='en')
         english.default = False
@@ -109,4 +100,14 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
 
         self.assertEqual(
             json.loads(query['user_attributes'][0])['language'], 'nl'
+        )
+
+    @override_settings(LOOKER_HOST='looker.example.com')
+    def test_host_in_settings(self, get_current_host):
+        embed = LookerSSOEmbed(self.user, 'look', 1)
+        url = urlparse(embed.url)
+
+        self.assertEqual(url.scheme, 'https')
+        self.assertEqual(
+            url.netloc, 'looker.example.com'
         )

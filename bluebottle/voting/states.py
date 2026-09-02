@@ -53,7 +53,7 @@ class PollStateMachine(ModelStateMachine):
         closed,
         name=_('Close'),
         description=_('Close the poll so voting is no longer possible.'),
-        automatic=False,
+        automatic=True,
     )
 
     cancel = Transition(

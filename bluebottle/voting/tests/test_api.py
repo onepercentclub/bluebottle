@@ -61,7 +61,43 @@ class PollDetailAPITestCase(APITestCase):
         )
 
     def test_get_closed_poll(self):
+        other = PollOptionFactory.create(poll=self.poll, title='Green')
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        PollVoteFactory.create(poll=self.poll, option=other)
         self.poll.status = 'closed'
+        self.poll.save()
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertAttribute('status', 'closed')
+        self.assertAttribute('votes_cast', 3)
+
+        options = {
+            included['id']: included['attributes']
+            for included in self.response.json()['included']
+            if included['type'] == 'polls/options'
+        }
+        self.assertEqual(options[str(self.option.pk)]['votes'], 2)
+        self.assertEqual(options[str(self.option.pk)]['percentage'], 67)
+        self.assertTrue(options[str(self.option.pk)]['winner'])
+        self.assertEqual(options[str(other.pk)]['votes'], 1)
+        self.assertEqual(options[str(other.pk)]['percentage'], 33)
+        self.assertFalse(options[str(other.pk)]['winner'])
+
+    def test_get_open_poll_omits_option_results(self):
+        PollVoteFactory.create(poll=self.poll, option=self.option)
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        option = [
+            included for included in self.response.json()['included']
+            if included['type'] == 'polls/options'
+        ][0]
+        self.assertIsNone(option['attributes']['votes'])
+        self.assertIsNone(option['attributes']['percentage'])
+        self.assertIsNone(option['attributes']['winner'])
+
+    def test_get_draft_poll(self):
+        self.poll.status = 'draft'
         self.poll.save()
         self.perform_get()
         self.assertStatus(status.HTTP_404_NOT_FOUND)

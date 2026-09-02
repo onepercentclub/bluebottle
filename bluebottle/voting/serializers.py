@@ -1,3 +1,4 @@
+from django.db.models import Count
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodResourceRelatedField
@@ -11,17 +12,46 @@ from bluebottle.utils.utils import clean_html
 from bluebottle.voting.models import Poll, PollOption, PollVote
 
 
+def get_option_results(poll):
+    results = getattr(poll, '_option_results', None)
+    if results is not None:
+        return results
+
+    if poll.status != 'closed':
+        poll._option_results = {}
+        return poll._option_results
+
+    counts = dict(
+        poll.options.annotate(vote_count=Count('votes')).values_list('id', 'vote_count')
+    )
+    total = sum(counts.values())
+    max_count = max(counts.values()) if counts else 0
+    poll._option_results = {
+        option_id: {
+            'votes': vote_count,
+            'percentage': round(100.0 * vote_count / total) if total else 0,
+            'winner': max_count > 0 and vote_count == max_count,
+        }
+        for option_id, vote_count in counts.items()
+    }
+    return poll._option_results
+
+
 class PollOptionSerializer(ModelSerializer):
     title = serializers.CharField()
     description = serializers.SerializerMethodField()
     image = ImageSerializer(required=False, allow_null=True)
     video_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     sequence = serializers.IntegerField(read_only=True)
+    votes = serializers.SerializerMethodField()
+    percentage = serializers.SerializerMethodField()
+    winner = serializers.SerializerMethodField()
 
     class Meta:
         model = PollOption
         fields = (
-            'id', 'title', 'description', 'image', 'video_url', 'sequence'
+            'id', 'title', 'description', 'image', 'video_url', 'sequence',
+            'votes', 'percentage', 'winner',
         )
 
     class JSONAPIMeta:
@@ -35,6 +65,24 @@ class PollOptionSerializer(ModelSerializer):
         if not html:
             return ''
         return clean_html(html)
+
+    def _option_result(self, obj, field):
+        results = get_option_results(obj.poll)
+        if not results:
+            return None
+        result = results.get(obj.id)
+        if not result:
+            return False if field == 'winner' else 0
+        return result[field]
+
+    def get_votes(self, obj):
+        return self._option_result(obj, 'votes')
+
+    def get_percentage(self, obj):
+        return self._option_result(obj, 'percentage')
+
+    def get_winner(self, obj):
+        return self._option_result(obj, 'winner')
 
 
 class PollVoteSerializer(ModelSerializer):

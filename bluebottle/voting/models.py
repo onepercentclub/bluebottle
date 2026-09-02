@@ -140,3 +140,6 @@ class PollVote(models.Model):
 
     def __str__(self):
         return _('Vote {pk}').format(pk=self.pk)
+
+
+from bluebottle.voting.periodic_tasks import *  # noqa

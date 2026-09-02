@@ -13,7 +13,7 @@ from bluebottle.voting.serializers import PollSerializer, PollVoteSerializer
 
 
 class PollDetail(JsonApiViewMixin, RetrieveAPIView):
-    queryset = Poll.objects.filter(status='open')
+    queryset = Poll.objects.filter(status__in=['open', 'closed'])
     serializer_class = PollSerializer
 
     def get_queryset(self):

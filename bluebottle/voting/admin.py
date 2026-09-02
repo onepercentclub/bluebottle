@@ -9,7 +9,7 @@ from bluebottle.fsm.admin import StateMachineAdminMixin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
-from bluebottle.voting.models import Poll, PollOption
+from bluebottle.voting.models import Poll, PollOption, PollVote
 
 
 class PollAdminFormMetaClass(StateMachineModelFormMetaClass, TranslatableModelFormMetaclass):
@@ -37,6 +37,21 @@ class PollOptionInline(SortableStackedInline, TranslatableStackedInline):
     )
 
 
+class PollVoteInline(admin.TabularInline):
+    model = PollVote
+    extra = 0
+    raw_id_fields = ('owner',)
+    readonly_fields = ('created', 'updated')
+    fields = ('owner', 'option', 'created', 'updated')
+    ordering = ('-created',)
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == 'option' and getattr(request, '_poll_obj', None):
+            field.queryset = field.queryset.filter(poll=request._poll_obj)
+        return field
+
+
 @admin.register(Poll)
 class PollAdmin(
     TranslatableLabelAdminMixin,
@@ -48,8 +63,8 @@ class PollAdmin(
 ):
     model = Poll
     form = PollAdminForm
-    inlines = (PollOptionInline,)
-    list_display = ('title', 'end_date', 'state_name')
+    inlines = (PollOptionInline, PollVoteInline)
+    list_display = ('title', 'end_date', 'state_name', 'vote_count')
     list_filter = (StateMachineFilter, 'end_date')
     search_fields = ('translations__title', 'translations__subtitle')
     translatable_ordering = 'translations__title'
@@ -72,3 +87,12 @@ class PollAdmin(
                 (_('Super admin'), {'fields': self.superadmin_fields}),
             )
         return fieldsets
+
+    def get_formsets_with_inlines(self, request, obj=None):
+        request._poll_obj = obj
+        return super().get_formsets_with_inlines(request, obj)
+
+    def vote_count(self, obj):
+        return obj.votes.count()
+
+    vote_count.short_description = _('votes')

@@ -7,9 +7,10 @@ from rest_framework_json_api.serializers import ModelSerializer
 
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer, PrivateFileSerializer
 from bluebottle.utils.utils import clean_html
 from bluebottle.voting.models import Poll, PollOption, PollVote
+from bluebottle.voting.permissions import CanExportVotesPermission
 
 
 def get_option_results(poll):
@@ -142,12 +143,19 @@ class PollSerializer(ModelSerializer):
         read_only=True,
         source='get_my_vote',
     )
+    results_export_url = PrivateFileSerializer(
+        'poll-vote-export',
+        url_args=('pk',),
+        filename='votes.xlsx',
+        permission=CanExportVotesPermission,
+        read_only=True
+    )
 
     class Meta:
         model = Poll
         fields = (
             'id', 'title', 'subtitle', 'end_date', 'status', 'options',
-            'votes_cast', 'my_vote',
+            'votes_cast', 'my_vote', 'results_export_url',
         )
 
     class JSONAPIMeta:

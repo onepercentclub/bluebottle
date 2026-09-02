@@ -264,9 +264,8 @@ JET_SIDE_MENU_ITEMS = [
             },
             {"name": "slides.slide", "permissions": ["slides.change_slide"]},
             {
-                "name": "cms.resultpage",
-                "label": _("Result page"),
-                "permissions": ["cms.change_resultpage"],
+                "name": "voting.poll",
+                "permissions": ["voting.change_poll"],
             },
             {
                 "name": "cms.sitelinks",

@@ -78,7 +78,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'NewsBlockPlugin',
         'QuotesBlockPlugin',
         'PeopleBlockPlugin',
-        'DonateButtonBlockPlugin'
+        'DonateButtonBlockPlugin',
+        'PollBlockPlugin',
 
     ])
     translations = TranslatedFields()
@@ -401,6 +402,27 @@ class DonateButtonContent(TitledContent):
 
     def __str__(self):
         return str(self.funding.title)
+
+
+class PollContent(ContentItem):
+    type = 'poll'
+    preview_template = 'admin/cms/preview/default.html'
+
+    poll = models.ForeignKey(
+        'voting.Poll',
+        verbose_name=_('Poll'),
+        on_delete=models.CASCADE,
+        limit_choices_to={'status': 'open'}
+    )
+
+    class Meta:
+        verbose_name = _('Poll')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/poll'
+
+    def __str__(self):
+        return str(self.poll)
 
 
 class ProjectsContent(TitledContent):

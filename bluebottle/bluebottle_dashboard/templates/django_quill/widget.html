@@ -8,56 +8,135 @@
 <script type="text/javascript" src="{% static "admin/js/quill.imageUploader.min.js" %}"></script>
 <div class="vLargeTextField django-quill-widget-container form-row {{ class }}">
     <div id="quill-{{ id }}" class="django-quill-widget" data-config="{{ config }}" data-type="django-quill"></div>
-    <input id="quill-input-{{ id }}" name="{{ name }}" type="hidden">
+    <input id="quill-input-{{ id }}" name="{{ name }}" type="hidden"{% if value %} value="{{ value|escape }}"{% endif %}>
     <script>
-
         (function () {
-            var config = JSON.parse('{{ config|safe|escapejs }}');
+            window.djq = window.djq || {};
 
-            async function upload(file) {
-                const response = await fetch(
-                    '/api/files/images',
-                    {
-                        method: "POST",
-                        body: file,
-                        headers: {
-                            "Content-Disposition": 'attachement; filename="' + file.name + '"'
+            function buildQuillConfig(config) {
+                async function upload(file) {
+                    const response = await fetch(
+                        '/api/files/images',
+                        {
+                            method: "POST",
+                            body: file,
+                            headers: {
+                                "Content-Disposition": 'attachement; filename="' + file.name + '"'
+                            }
                         }
-                    }
+                    )
+                    const data = await response.json()
+                    return data.links.cover
+                }
+
+                config.modules = config.modules || {};
+                config.modules.imageUploader = {
+                    upload: upload
+                }
+
+                Quill.register(
+                    { 'modules/imageUploader': ImageUploader },
+                    true,
                 )
-                const data = await response.json()
-                return data.links.cover
+                return config;
             }
 
-            config.modules.imageUploader = {
-                upload: upload
+            function syncQuillInput(wrapper) {
+                if (!wrapper || !wrapper.quill || !wrapper.targetInput || !wrapper.targetDiv) {
+                    return;
+                }
+                var delta = JSON.stringify(wrapper.quill.getContents());
+                var html = wrapper.targetDiv.getElementsByClassName('ql-editor')[0].innerHTML;
+                wrapper.targetInput.value = JSON.stringify({delta: delta, html: html});
             }
 
-            Quill.register(
-                { 'modules/imageUploader': ImageUploader },
-                true,
-            )
+            function initBluebottleQuill(fieldId, initial) {
+                initial = initial || {};
+                var editorId = 'quill-' + fieldId;
+                var inputId = 'quill-input-' + fieldId;
+                var editor = document.getElementById(editorId);
+                var input = document.getElementById(inputId);
 
-            var wrapper = new QuillWrapper('quill-{{ id }}', 'quill-input-{{ id }}', config);
-            {% if quill and quill.delta %}
-                // try django_quill/quill.py/Quill instance
-                var contents = JSON.parse('{{ quill.delta|safe|escapejs }}');
-                wrapper.quill.setContents(contents);
-            {% elif quill and quill.html %}
-                wrapper.quill.clipboard.dangerouslyPasteHTML(0, `{{ quill.html|safe }}`)
-            {% elif value %}
-                // try Parsing value as JSON
-                try {
-                    var value = JSON.parse('{{ value|safe|escapejs }}');
-                    wrapper.quill.setContents(JSON.parse(value['delta']));
+                if (!editor || !input) {
+                    return null;
                 }
-                // When a parsing error occurs, the contents are regarded as HTML and the contents of the editor are filled.
-                catch (e) {
-                    wrapper.quill.clipboard.dangerouslyPasteHTML(0, `{{ value|safe }}`)
+                if (fieldId.indexOf('__prefix__') !== -1) {
+                    return null;
                 }
+                if (editor.closest('.empty-form')) {
+                    return null;
+                }
+                if (editor.classList.contains('ql-container') || window.djq[fieldId]) {
+                    return window.djq[fieldId] || null;
+                }
+
+                var config = buildQuillConfig(JSON.parse(editor.getAttribute('data-config')));
+                var wrapper = new QuillWrapper(editorId, inputId, config);
+
+                if (initial.quill && initial.quill.delta) {
+                    wrapper.quill.setContents(JSON.parse(initial.quill.delta));
+                } else if (initial.quill && initial.quill.html) {
+                    wrapper.quill.clipboard.dangerouslyPasteHTML(0, initial.quill.html);
+                } else if (initial.value) {
+                    try {
+                        var value = JSON.parse(initial.value);
+                        wrapper.quill.setContents(JSON.parse(value['delta']));
+                    } catch (e) {
+                        wrapper.quill.clipboard.dangerouslyPasteHTML(0, initial.value);
+                    }
+                } else if (input.value) {
+                    try {
+                        var stored = JSON.parse(input.value);
+                        wrapper.quill.setContents(JSON.parse(stored['delta']));
+                    } catch (e) {
+                    }
+                }
+
+                syncQuillInput(wrapper);
+                window.djq[fieldId] = wrapper;
+                return wrapper;
+            }
+
+            window.initBluebottleQuill = initBluebottleQuill;
+
+            if (!window._bluebottleQuillFormsetBound) {
+                window._bluebottleQuillFormsetBound = true;
+
+                document.addEventListener('formset:added', function (event) {
+                    var row = event.target;
+                    if (!row || !row.querySelectorAll) {
+                        return;
+                    }
+                    row.querySelectorAll('.django-quill-widget[data-type="django-quill"]').forEach(function (editor) {
+                        var fieldId = editor.id.replace(/^quill-/, '');
+                        initBluebottleQuill(fieldId);
+                    });
+                });
+
+                document.addEventListener('submit', function (event) {
+                    var form = event.target;
+                    if (!form || !form.querySelectorAll) {
+                        return;
+                    }
+                    Object.keys(window.djq).forEach(function (fieldId) {
+                        syncQuillInput(window.djq[fieldId]);
+                    });
+                }, true);
+            }
+
+            {% if quill or value %}
+            initBluebottleQuill('{{ id }}', {
+                {% if quill and quill.delta %}
+                quill: {delta: '{{ quill.delta|safe|escapejs }}'}
+                {% elif quill and quill.html %}
+                quill: {html: '{{ quill.html|safe|escapejs }}'}
+                {% elif value %}
+                value: '{{ value|safe|escapejs }}'
+                {% endif %}
+            });
+            {% else %}
+            initBluebottleQuill('{{ id }}');
             {% endif %}
-            // Allow quill object interaction outer scope
-            djq['{{ id }}'] = wrapper;
         })();
     </script>
 </div>

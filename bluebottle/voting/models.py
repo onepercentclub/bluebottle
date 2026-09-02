@@ -93,3 +93,50 @@ class PollOption(SortableMixin, TranslatableModel):
             any_language=True,
         )
         return title or _('Option {pk}').format(pk=self.pk)
+
+
+class PollVote(models.Model):
+    poll = models.ForeignKey(
+        Poll,
+        related_name='votes',
+        on_delete=models.CASCADE,
+        verbose_name=_('poll'),
+    )
+    option = models.ForeignKey(
+        PollOption,
+        related_name='votes',
+        on_delete=models.CASCADE,
+        verbose_name=_('option'),
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='poll_votes',
+        on_delete=models.CASCADE,
+        verbose_name=_('user'),
+    )
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
+
+    class Meta:
+        verbose_name = _('poll vote')
+        verbose_name_plural = _('poll votes')
+        ordering = ('-created',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['poll', 'owner'],
+                name='unique_vote_per_poll_user',
+            ),
+        ]
+        permissions = (
+            ('api_read_pollvote', 'Can view poll votes through the API'),
+            ('api_read_own_pollvote', 'Can view own poll votes through the API'),
+            ('api_add_own_pollvote', 'Can add own poll votes through the API'),
+            ('api_change_own_pollvote', 'Can change own poll votes through the API'),
+            ('api_delete_own_pollvote', 'Can delete own poll votes through the API'),
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'polls/votes'
+
+    def __str__(self):
+        return _('Vote {pk}').format(pk=self.pk)

@@ -239,7 +239,7 @@ class PollBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = PollContent
         fields = ('id', 'block_type', 'poll')
-        included_resources = ['poll', 'poll.options']
+        included_resources = ['poll', 'poll.options', 'poll.my_vote']
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/poll'
@@ -247,6 +247,7 @@ class PollBlockSerializer(BaseBlockSerializer):
     included_serializers = {
         'poll': 'bluebottle.voting.serializers.PollSerializer',
         'poll.options': 'bluebottle.voting.serializers.PollOptionSerializer',
+        'poll.my_vote': 'bluebottle.voting.serializers.PollVoteSerializer',
     }
 
 
@@ -672,6 +673,7 @@ class BaseCMSSerializer(ModelSerializer):
             'blocks.funding.image',
             'blocks.poll',
             'blocks.poll.options',
+            'blocks.poll.my_vote',
             'blocks.logos',
             'blocks.categories',
         ]
@@ -687,6 +689,7 @@ class BaseCMSSerializer(ModelSerializer):
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'poll': 'bluebottle.voting.serializers.PollSerializer',
         'options': 'bluebottle.voting.serializers.PollOptionSerializer',
+        'my_vote': 'bluebottle.voting.serializers.PollVoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }

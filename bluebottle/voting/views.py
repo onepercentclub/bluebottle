@@ -1,8 +1,15 @@
-from django.utils.translation import get_language
+from django.db import IntegrityError, transaction
+from django.db.models import Count, Prefetch
+from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 
-from bluebottle.utils.views import JsonApiViewMixin, RetrieveAPIView
-from bluebottle.voting.models import Poll
-from bluebottle.voting.serializers import PollSerializer
+from bluebottle.utils.permissions import OneOf, ResourceOwnerPermission, ResourcePermission
+from bluebottle.utils.views import (
+    CreateAPIView, JsonApiViewMixin, RetrieveAPIView, RetrieveUpdateDestroyAPIView
+)
+from bluebottle.voting.models import Poll, PollVote
+from bluebottle.voting.serializers import PollSerializer, PollVoteSerializer
 
 
 class PollDetail(JsonApiViewMixin, RetrieveAPIView):
@@ -10,6 +17,51 @@ class PollDetail(JsonApiViewMixin, RetrieveAPIView):
     serializer_class = PollSerializer
 
     def get_queryset(self):
-        return self.queryset.translated(get_language()).prefetch_related(
+        queryset = self.queryset.prefetch_related(
             'options'
-        )
+        ).annotate(votes_cast=Count('votes'))
+
+        user = self.request.user
+        if user and user.is_authenticated:
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    'votes',
+                    queryset=PollVote.objects.filter(owner=user),
+                    to_attr='user_votes',
+                )
+            )
+
+        return queryset
+
+
+class PollVoteList(JsonApiViewMixin, CreateAPIView):
+    queryset = PollVote.objects.all()
+    serializer_class = PollVoteSerializer
+    permission_classes = (
+        IsAuthenticated,
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+
+    def perform_create(self, serializer):
+        serializer.validated_data['owner'] = self.request.user
+        try:
+            with transaction.atomic():
+                super().perform_create(serializer)
+        except IntegrityError:
+            raise ValidationError(
+                _('You have already voted in this poll')
+            )
+
+
+class PollVoteDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    queryset = PollVote.objects.all()
+    serializer_class = PollVoteSerializer
+    permission_classes = (
+        IsAuthenticated,
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+
+    def perform_destroy(self, instance):
+        if instance.poll.status != 'open':
+            raise ValidationError(_('This poll is not open for voting'))
+        super().perform_destroy(instance)

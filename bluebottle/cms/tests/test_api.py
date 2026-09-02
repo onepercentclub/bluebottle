@@ -257,6 +257,8 @@ class HomeTestCase(APITestCase):
         included_poll = get_include(response, 'polls')
         self.assertEqual(included_poll['attributes']['title'], 'Favourite colour')
         self.assertEqual(included_poll['attributes']['subtitle'], 'Pick one')
+        self.assertEqual(included_poll['attributes']['votes-cast'], 0)
+        self.assertEqual(included_poll['relationships']['my-vote']['data'], None)
 
     def test_logos(self):
         block = LogosContent.objects.create_for_placeholder(self.placeholder)

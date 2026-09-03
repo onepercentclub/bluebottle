@@ -1,0 +1,106 @@
+.platform-color-contrast {
+    margin-top: 0.5rem;
+    max-width: 42rem;
+}
+
+.platform-color-contrast__pairs {
+    display: grid;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.platform-color-contrast__pair {
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 7rem 4.5rem auto 1fr;
+    padding: 0.5rem 0.75rem;
+}
+
+.platform-color-contrast__pair.is-pass {
+    border-color: #8bc48b;
+    background: #f3faf3;
+}
+
+.platform-color-contrast__pair.is-fail {
+    border-color: #e0a0a0;
+    background: #fff6f6;
+}
+
+.platform-color-contrast__pair.is-skipped {
+    background: #fafafa;
+    color: #666;
+}
+
+.platform-color-contrast__label {
+    font-weight: 600;
+}
+
+.platform-color-contrast__ratio {
+    font-family: monospace;
+}
+
+.platform-color-contrast__badge {
+    border-radius: 3px;
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.4rem;
+    text-transform: uppercase;
+}
+
+.platform-color-contrast__pair.is-pass .platform-color-contrast__badge {
+    background: #d8f0d8;
+    color: #1f6b1f;
+}
+
+.platform-color-contrast__pair.is-fail .platform-color-contrast__badge {
+    background: #f8d4d4;
+    color: #8a1f1f;
+}
+
+.platform-color-contrast__pair.is-skipped .platform-color-contrast__badge {
+    background: #ececec;
+    color: #555;
+}
+
+.platform-color-contrast__hint {
+    color: #8a1f1f;
+    font-size: 0.85rem;
+    grid-column: 1 / -1;
+}
+
+.platform-color-contrast__preview {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.platform-color-contrast__button,
+.platform-color-contrast__description,
+.platform-color-contrast__link,
+.platform-color-contrast__footer {
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    text-align: center;
+}
+
+.platform-color-contrast__button,
+.platform-color-contrast__description {
+    font-weight: 600;
+}
+
+.platform-color-contrast__link {
+    text-decoration: underline;
+}
+
+.platform-color-contrast__footer {
+    grid-column: 1 / -1;
+}

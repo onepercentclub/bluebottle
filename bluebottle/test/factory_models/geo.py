@@ -26,6 +26,7 @@ class SubRegionFactory(factory.DjangoModelFactory):
 class CountryFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Country
+        django_get_or_create = ("alpha2_code",)
 
     name = factory.Faker('country')
     alpha2_code = factory.Faker('country_code')
@@ -70,6 +71,6 @@ class GeolocationFactory(factory.DjangoModelFactory):
     mapbox_id = 'some-mapbox-id'
     formatted_address = factory.LazyAttribute(
         lambda o: '{} {} {} {}'.format(
-            o.street, o.street_number, o.locality, o.country.name
+            o.street, o.street_number, o.locality, o.country.name if o.country else ''
         )
     )

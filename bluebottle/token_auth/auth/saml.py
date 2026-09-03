@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_saml_request(request):
-    http_host = request.META.get('HTTP_HOST', None)
-    if 'HTTP_X_FORWARDED_FOR' in request.META:
+    http_host = request.headers.get('host', None)
+    if 'x-forwarded-for' in request.headers:
         server_port = None
-        https = request.META.get('HTTP_X_FORWARDED_PROTO') == 'https'
+        https = request.headers.get('x-forwarded-proto') == 'https'
     else:
         server_port = request.META.get('SERVER_PORT')
         https = request.is_secure()
@@ -62,9 +62,10 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
             if (
                 (parsed.scheme.startswith('http') and parsed.netloc == self.request.get_host()) or
-                (not parsed.scheme and not parsed.netloc and parsed.path.startswith('/'))
+                (((not parsed.scheme and not parsed.netloc) or parsed.scheme == 'https') and
+                 parsed.path.startswith('/'))
             ):
-                return relay_state
+                return parsed.path
 
     def get_metadata(self):
         base_path = self.settings.get('base_path', None)
@@ -121,10 +122,10 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
         if self.auth.is_authenticated():
             # del self.request.session['saml_request_id']
-            user_data = self.auth.get_attributes()
-            user_data['nameId'] = [self.auth.get_nameid()]
+            self.attributes = self.auth.get_attributes()
+            self.attributes['nameId'] = [self.auth.get_nameid()]
 
-            return self.parse_user(user_data)
+            return self.parse_user(self.attributes)
         else:
             error = "Saml login error: {}, reason: {}, assertions: {}".format(
                 self.auth.get_errors(),

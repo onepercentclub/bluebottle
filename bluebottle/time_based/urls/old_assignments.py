@@ -1,17 +1,17 @@
-from django.urls import re_path
+from django.urls import path
 
 from bluebottle.time_based.views import (
     SkillList, SkillDetail
 )
 
 urlpatterns = [
-    re_path(
-        r'^/skills$',
+    path(
+        '/skills',
         SkillList.as_view(),
         name='assignment-skill-list'
     ),
-    re_path(
-        r'^/skills/(?P<pk>\d+)$',
+    path(
+        '/skills/<int:pk>',
         SkillDetail.as_view(),
         name='assignment-skill'
     ),

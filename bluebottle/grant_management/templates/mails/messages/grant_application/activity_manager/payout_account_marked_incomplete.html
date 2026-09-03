@@ -3,18 +3,21 @@
 
 {% block message %}
     <p class="donation-intro">
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             You are working on a grant application on {{ site_name }}.
             <br/><br/>
-            Earlier, you submitted information to verify your identity. In some cases, we need extra information from you.
-            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.
+
+            You submitted some information to verify you or an organisations identity, but in some cases we need extra
+            information for a successful verification.
+            <br/></br>
+            Please provide this as soon as possible to avoid issues with your grant application or to resolve them quickly.
         {% endblocktrans %}
     </p>
 
-{% endblock content %}
+{% endblock %}
 
 {% block action %}
     <a href="{{ site }}/activities/stripe/kyc/{{ obj.pk }}" class="action-email">
-       {% trans 'Provide additional details' context 'email' %}
+        {% trans 'Provide details' context 'platform-email' %}
     </a>
 {% endblock %}`

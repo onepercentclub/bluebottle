@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import logging
 from builtins import object
 
@@ -32,6 +33,7 @@ class GrantProvider(TriggerMixin, models.Model):
     """
     A provider of grants, e.g. a foundation or government body.
     """
+    include_in_documentation = True
 
     FREQUENCY_CHOICES = (
         ("1", _("Every week")),
@@ -96,6 +98,7 @@ class GrantPayment(TriggerMixin, models.Model):
     """
     A payment made to a grant donor.
     """
+    include_in_documentation = True
 
     total = MoneyField(default=Money(0, "EUR"), null=True, blank=True)
     status = models.CharField(max_length=40)
@@ -106,6 +109,7 @@ class GrantPayment(TriggerMixin, models.Model):
         on_delete=models.SET_NULL
     )
     checkout_id = models.CharField(max_length=500, null=True, blank=True)
+    intent_id = models.CharField(max_length=500, null=True, blank=True)
     payment_link = models.URLField(max_length=500, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -136,63 +140,108 @@ class GrantPayment(TriggerMixin, models.Model):
         return None
 
     def check_status(self):
-        if self.checkout_id:
-            stripe = get_stripe()
-            session = stripe.checkout.Session.retrieve(self.checkout_id)
-            if session.payment_intent:
-                intent = stripe.PaymentIntent.retrieve(session.payment_intent)
-                if intent.status == "succeeded":
+        if not self.checkout_id:
+            return None
+
+        stripe = get_stripe()
+        session = stripe.checkout.Session.retrieve(self.checkout_id)
+        if not session.payment_intent:
+            return None
+
+        intent = stripe.PaymentIntent.retrieve(
+            session.payment_intent,
+            expand=['latest_charge']
+        )
+        if not self.intent_id:
+            self.intent_id = intent.id
+            self.save()
+
+        if intent.status == "requires_action":
+            self.states.wait(save=True)
+            return None
+
+        if intent.status == "succeeded":
+            charge_id = intent.latest_charge.id if intent.latest_charge else None
+            if not charge_id:
+                return None
+
+            charge = stripe.Charge.retrieve(
+                charge_id,
+                expand=["balance_transaction"]
+            )
+            balance_transaction = charge.balance_transaction
+
+            if balance_transaction and balance_transaction.available_on:
+                import time
+                now = int(time.time())
+                if balance_transaction.available_on <= now:
+                    # Funds are actually available for payout
                     self.states.succeed(save=True)
-                if intent.status == "requires_action":
+                elif self.status != 'pending':
+                    date = datetime.datetime.fromtimestamp(
+                        balance_transaction.available_on
+                    ).strftime('%Y-%m-%d %H:%M:%S')
                     self.states.wait(save=True)
+                    raise Exception(f"Will become available on {date}")
+
         return None
 
     def generate_payment_link(self):
         stripe = get_stripe()
-        currency = str(self.total.currency)
+        currency = str(self.total.currency).lower()
+
+        donations = list(GrantDonor.objects.filter(payout__payment=self).all())
+        donation_currencies = {str(d.amount.currency).lower() for d in donations}
+        if len(donation_currencies) != 1:
+            raise ValueError(
+                f"All line items must use the same currency for bank transfer. "
+                f"Found: {sorted(donation_currencies)}"
+            )
+        if currency not in donation_currencies:
+            raise ValueError(
+                f"Total currency ({currency}) must match line item currency ({list(donation_currencies)[0]})."
+            )
+
+        if donations:
+            total_amount = sum(
+                (donation.amount for donation in donations),
+                Money(0, donations[0].amount.currency),
+            )
+            if self.total != total_amount:
+                self.total = total_amount
+                self.save(update_fields=["total", "updated"])
+
         metadata = {
             "tenant_name": connection.tenant.client_name,
             "tenant_domain": connection.tenant.domain_url,
             "grant_payment_id": self.id,
             "grant_provider": self.grant_provider.name,
         }
-        init_args = {
-            'payment_intent_data': {
-                'metadata': metadata
-            },
-            'metadata': metadata
-        }
-        bank_transfer_type = "eu_bank_transfer"
-        if currency == "USD":
-            bank_transfer_type = "us_bank_transfer"
-        elif currency == "GBP":
-            bank_transfer_type = "gb_bank_transfer"
-        elif currency == "MXN":
-            bank_transfer_type = "mx_bank_transfer"
 
-        if currency == "EUR":
-            init_args["payment_method_options"] = {
-                "customer_balance": {
-                    "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": bank_transfer_type,
-                        "eu_bank_transfer": {"country": "NL"},
-                    },
-                },
-            }
+        bank_transfer_type = {
+            "eur": "eu_bank_transfer",
+            "usd": "us_bank_transfer",
+            "gbp": "gb_bank_transfer",
+            "mxn": "mx_bank_transfer",
+            "jpy": "jp_bank_transfer",
+        }.get(currency, None)
+
+        if not bank_transfer_type:
+            payment_method_types = ["card", "ideal"]
+            payment_method_options = {}
         else:
-            init_args["payment_method_options"] = {
+            payment_method_types = ["customer_balance", "card", "ideal"]
+            bank_transfer_opts = {"type": bank_transfer_type}
+            if currency == "eur":
+                bank_transfer_opts["eu_bank_transfer"] = {"country": "NL"}
+            payment_method_options = {
                 "customer_balance": {
                     "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": bank_transfer_type,
-                    },
-                },
+                    "bank_transfer": bank_transfer_opts,
+                }
             }
 
         line_items = []
-        donations = GrantDonor.objects.filter(payout__payment=self).all()
-
         for donation in donations:
             product = stripe.Product.create(
                 name=donation.activity.title,
@@ -200,23 +249,25 @@ class GrantPayment(TriggerMixin, models.Model):
             )
             price = stripe.Price.create(
                 unit_amount=int(donation.amount.amount * 100),
-                currency=donation.amount.currency,
+                currency=currency,
                 product=product["id"],
             )
-            line_items.append(
-                {
-                    "price": price.id,
-                    "quantity": 1,
-                }
-            )
+            line_items.append({"price": price['id'], "quantity": 1})
 
-        init_args["payment_method_types"] = ["customer_balance", "ideal", "card"]
-        init_args["line_items"] = line_items
-        init_args["customer"] = self.grant_provider.stripe_customer_id
-        init_args["success_url"] = (
-            get_current_host() +
-            reverse('admin:grant_management_grantpayment_change', args=(self.pk,))
-        )
+        init_args = {
+            "payment_intent_data": {"metadata": metadata},
+            "metadata": metadata,
+            "payment_method_types": payment_method_types,
+            "payment_method_options": payment_method_options,
+            "line_items": line_items,
+            "customer": self.grant_provider.stripe_customer_id,  # REQUIRED for bank transfer in Checkout
+            "success_url": (
+                get_current_host()
+                + reverse("admin:grant_management_grantpayment_change", args=(self.pk,))
+            ),
+            "cancel_url": get_current_host(),  # pick a sensible cancel target
+        }
+
         checkout = stripe.checkout.Session.create(mode="payment", **init_args)
         self.checkout_id = checkout.id
         self.payment_link = checkout.url
@@ -234,6 +285,11 @@ class GrantPayment(TriggerMixin, models.Model):
 
 
 class GrantPayout(TriggerMixin, models.Model):
+    """
+    The payout of a awarded grant
+    """
+    include_in_documentation = True
+
     activity = models.ForeignKey(
         'grant_management.GrantApplication',
         verbose_name=_("Grant application"),
@@ -306,6 +362,14 @@ class GrantPayout(TriggerMixin, models.Model):
             return Money(self.grants.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
         return self.grants.aggregate(total=Sum('amount'))['total']
 
+    @property
+    def grant(self):
+        return self.grants.first()
+
+    def get_admin_url(self):
+        from django.urls import reverse
+        return get_current_host() + reverse('admin:grant_management_grantpayout_change', args=[self.pk])
+
     class Meta(object):
         verbose_name = _('Grant payout')
         verbose_name_plural = _('Grant payouts')
@@ -315,6 +379,11 @@ class GrantPayout(TriggerMixin, models.Model):
 
 
 class GrantApplication(Activity):
+    """
+    An application for a grant. This is a type of activity.
+    """
+    include_in_documentation = True
+
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
 
     impact_location = models.ForeignKey(
@@ -509,6 +578,11 @@ class GrantFund(models.Model):
 
 
 class LedgerItem(TriggerMixin, models.Model):
+    """
+    Ledger item for a grant. For accounting purposes.
+    """
+    include_in_documentation = True
+
     status = models.CharField(max_length=40)
 
     amount = MoneyField()
@@ -532,6 +606,11 @@ class LedgerItem(TriggerMixin, models.Model):
 
 
 class GrantDonor(Contributor):
+    """
+    The granted amount to a grant application. This is a type of contribution.
+    """
+    include_in_documentation = True
+
     amount = MoneyField()
     fund = models.ForeignKey(
         GrantFund,
@@ -595,7 +674,10 @@ class GrantDonor(Contributor):
         return f'{self.activity.title} - {self.amount}'
 
 
-class GrantDeposit(TriggerMixin, models.Model):
+class GrantTransaction(models.Model):
+    class Meta:
+        abstract = True
+
     status = models.CharField(max_length=40)
     amount = MoneyField()
 
@@ -614,6 +696,14 @@ class GrantDeposit(TriggerMixin, models.Model):
             raise ValidationError({'amount': _('Currency should match fund currency')})
 
         super().clean()
+
+
+class GrantDeposit(TriggerMixin, GrantTransaction):
+    pass
+
+
+class GrantWithdrawal(TriggerMixin, GrantTransaction):
+    pass
 
 
 from .periodic_tasks import *  # noqa

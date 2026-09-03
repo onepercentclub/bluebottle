@@ -4,10 +4,13 @@ from bluebottle.activities.messages.reviewer import ReviewerActivityNotification
 
 
 class FundingSubmittedReviewerMessage(ReviewerActivityNotification):
+    """
+    Notify platform managers that a new crowdfunding campaign has been submitted as is ready to be reviewed.
+    """
     subject = pgettext(
-        "email",
+        "platform-email",
         "A new crowdfunding campaign is ready to be reviewed on {site_name}"
     )
     template = 'messages/funding/reviewer/campaign_submitted'
 
-    action_title = pgettext("email", "View campaign")
+    action_title = pgettext("platform-email", "View campaign")

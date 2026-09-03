@@ -1,9 +1,13 @@
+from django.contrib.auth.models import Group
+
 from djmoney.money import Money
 
+from bluebottle.activities.messages.activity_manager import TermsOfServiceNotification
 from bluebottle.grant_management.messages.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationRejectedMessage, GrantApplicationSubmittedMessage, GrantApplicationCancelledMessage
 from bluebottle.grant_management.messages.grant_provider import GrantPaymentRequestMessage
-from bluebottle.grant_management.messages.reviewer import GrantApplicationSubmittedReviewerMessage
+from bluebottle.grant_management.messages.reviewer import GrantApplicationSubmittedReviewerMessage, \
+    PayoutReadyForApprovalMessage
 from bluebottle.grant_management.tests.factories import GrantApplicationFactory, GrantPaymentFactory, \
     GrantPayoutFactory, GrantDonorFactory, GrantProviderFactory, GrantFundFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -45,6 +49,15 @@ class GrantApplicationNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('You have submitted a grant application on Test')
         self.assertBodyContains('has been submitted')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View application')
+
+    def test_activity_terms_notification(self):
+        self.message_class = TermsOfServiceNotification
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Terms of service')
+        self.assertBodyContains('Thanks for creating a grant application for')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View application')
 
@@ -121,3 +134,62 @@ class GrantPaymentNotificationTestCase(NotificationTestCase):
         self.assertSubject('A grant payment request is ready on Test')
         self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('Pay now')
+
+
+class GrantPayoutNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+        finance_manager = BlueBottleUserFactory.create()
+        provider = GrantProviderFactory.create(
+            name="Test Provider",
+            owner=finance_manager
+        )
+        fund = GrantFundFactory.create(
+            name="Test Fund",
+            grant_provider=provider
+        )
+
+        self.grant_application = GrantApplicationFactory.create(
+            title="Save the whales!",
+            status='granted'
+        )
+        self.obj = GrantPayoutFactory.create(
+            activity=self.grant_application,
+            status='new',
+        )
+        GrantDonorFactory.create(
+            payout=self.obj,
+            activity=self.grant_application,
+            fund=fund,
+            amount=Money(5000, 'EUR')
+        )
+
+    def test_payout_ready_for_approval_notification(self):
+        self.message_class = PayoutReadyForApprovalMessage
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('You have grant payout to approve on Test')
+        self.assertBodyContains('Save the whales!')
+        self.assertBodyContains('Test Fund')
+        self.assertBodyContains(self.grant_application.owner.full_name)
+        self.assertBodyContains('Granted amount')
+        self.assertActionLink(self.obj.get_admin_url())
+        self.assertActionTitle('Complete payout')
+
+    def test_payout_ready_for_approval_notification_non_staff_reviewer(self):
+        reviewer = BlueBottleUserFactory.create(
+            submitted_initiative_notifications=True,
+            is_staff=False,
+        )
+        reviewer.groups.add(Group.objects.get(name='Staff'))
+        self.message_class = PayoutReadyForApprovalMessage
+        self.create()
+        self.assertIn(reviewer, self.message.get_recipients())
+        html = self.message.get_content_html(reviewer)
+        self.assertIn('Save the whales!', html)
+        self.assertIn(self.obj.get_admin_url(), html)
+        self.assertNotIn(self.grant_application.get_absolute_url(), html)

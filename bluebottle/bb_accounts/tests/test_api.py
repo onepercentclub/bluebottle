@@ -1,10 +1,12 @@
 from future import standard_library
+
 standard_library.install_aliases()
 
 from builtins import str
 import json
 import re
 import urllib.parse
+from unittest.mock import patch
 
 import httmock
 
@@ -62,9 +64,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.user_with_partner_organization.save()
 
         self.current_user_api_url = reverse('user-current')
-        self.profile_url = reverse('member-profile-detail', args=(self.user_1.pk, ))
+        self.profile_url = reverse('member-profile-detail', args=(self.user_1.pk,))
         self.profile_url_with_partner_organization = reverse(
-            'member-profile-detail', args=(self.user_with_partner_organization.pk, )
+            'member-profile-detail', args=(self.user_with_partner_organization.pk,)
         )
         self.user_create_api_url = reverse('member-signup')
         self.user_password_reset_api_url = reverse('password-reset')
@@ -459,7 +461,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['nijntje27@hetkonijntje.nl'])
-        self.assertTrue("[Take me there](https://testserver?" in welcome_email.body)
+        self.assertTrue("[Get started](https://test.localhost?" in welcome_email.body, welcome_email.body)
 
     @override_settings(SEND_WELCOME_MAIL=True)
     def test_user_create_closed_site(self):
@@ -550,6 +552,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
             'A user with this email address already exists'
         )
 
+    @patch('bluebottle.bb_accounts.views.PasswordReset.throttle_classes', [])
     def test_password_reset(self):
         # Setup: create a user.
         data = {
@@ -612,35 +615,41 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_reset_rate_limit(self):
-        # Setup: create a user.
-        data = {
-            'data': {
-                'type': 'auth/signup',
-                'attributes': {
-                    'email': 'nijntje27@hetkonijntje.nl',
-                    'password': 'some-password'
-                }
-            }
-        }
-        response = self.client.post(
-            self.user_create_api_url, data
-        )
-
-        for _ in range(12):
-            response = self.client.post(
-                self.user_password_reset_api_url,
-                {
-                    'data': {
-                        'attributes': {
-                            'email': 'nijntje27@hetkonijntje.nl'
-                        },
-                        'type': 'reset-tokens'
+        with self.settings(REST_FRAMEWORK={'DEFAULT_THROTTLE_RATES': {'user': '10/hour'}}):
+            # Setup: create a user.
+            data = {
+                'data': {
+                    'type': 'auth/signup',
+                    'attributes': {
+                        'email': 'nijntje27@hetkonijntje.nl',
+                        'password': 'some-password'
                     }
                 }
+            }
+            response = self.client.post(
+                self.user_create_api_url, data,
+                REMOTE_ADDR='127.0.0.1'
             )
 
-        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+            statuses = []
+            for _ in range(12):
+                response = self.client.post(
+                    self.user_password_reset_api_url,
+                    {
+                        'data': {
+                            'attributes': {
+                                'email': 'nijntje27@hetkonijntje.nl'
+                            },
+                            'type': 'reset-tokens'
+                        },
+                    },
+                    REMOTE_ADDR='127.0.0.1'
+                )
+                statuses.append(response.status_code)
 
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    @patch('bluebottle.bb_accounts.views.PasswordReset.throttle_classes', [])
     def test_password_reset_inactive(self):
         # Setup: create a user.
         client = JSONAPITestClient()
@@ -656,7 +665,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
     def test_password_reset_validation(self):
         client = JSONAPITestClient()
-        token = default_token_generator.make_token(self.user_1)       # Setup: create a user.
+        token = default_token_generator.make_token(self.user_1)  # Setup: create a user.
         uidb36 = int_to_base36(self.user_1.pk)
         reset_confirm_url = reverse('password-reset-confirm')
 
@@ -668,7 +677,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
             {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(b'Password should at least be 8 characters.' in response.content)
+        self.assertTrue(b'Password should at least be 10 characters.' in response.content)
 
     def test_deactivate(self):
         response = self.client.delete(
@@ -842,7 +851,7 @@ class LoginJsonApiTestCase(BluebottleTestCase):
         expected = {
             'errors': [{
                 'code': 'invalid',
-                'detail': 'Unable to log in with provided credentials.',
+                'detail': 'We are unable to log you in with the provided email address and password combination.',
                 'source': {
                     'pointer': '/data'
                 },

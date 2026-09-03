@@ -1,8 +1,8 @@
-from django.urls import re_path
+from django.urls import path
 
 from bluebottle.clients.views import SettingsView, Robots
 
 urlpatterns = [
-    re_path(r'^$', SettingsView.as_view(), name='settings'),
-    re_path(r'^/robots$', Robots.as_view(), name='robots')
+    path('', SettingsView.as_view(), name='settings'),
+    path('/robots', Robots.as_view(), name='robots')
 ]

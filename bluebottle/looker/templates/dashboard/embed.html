@@ -7,10 +7,18 @@
 {% block content_title %}
 {% endblock %}
 {% block content %}
-    <iframe src="{{ looker_embed_url }}" id="looker" width="100%" height="880px" frameborder="0" scrolling="no"></iframe>
-    <script>
-        document.getElementById('looker').height = window.innerHeight - 120
-    </script>
+    {% if looker_embed_url %}
+        <iframe src="{{ looker_embed_url }}" id="looker" width="100%" height="880px" frameborder="0" scrolling="no">
+        </iframe>
+        <script>
+          document.getElementById('looker').height = window.innerHeight - 120
+        </script>
+    {% else %}
+        <div>
+            <h2>No access</h2>
+            <p>You don't have access to reporting from this platform/server.</p>
+        </div>
+    {% endif %}
 {% endblock %}
 
 

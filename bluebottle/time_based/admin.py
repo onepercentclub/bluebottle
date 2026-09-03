@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, StackedInline, widgets
@@ -7,7 +9,8 @@ from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, T
 from django.http import HttpResponseRedirect
 from django.template import defaultfilters, loader
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
@@ -21,9 +24,9 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 from pytz import timezone
-from urllib.parse import urlencode
 
 from bluebottle.activities.admin import (
+    ActivityBulkAddForm,
     ActivityChildAdmin,
     BaseContributorInline,
     BulkAddMixin,
@@ -70,6 +73,7 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import (
     TranslatableAdminOrderingMixin,
     admin_info_box,
@@ -143,7 +147,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'image',
         'video_url',
         'organization',
-        'theme',
         'categories',
     )
 
@@ -179,8 +182,18 @@ class TimeBasedAdmin(ActivityChildAdmin):
         fields = super().get_registration_fields(request, obj)
         settings = InitiativePlatformSettings.load()
         if settings.hour_registration == 'per_activity':
-            fields = ('hour_registration_data',) + fields
+            fields = ['hour_registration_data'] + list(fields)
         return fields
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        settings = InitiativePlatformSettings.load()
+        if (
+            settings.hour_registration == 'per_activity'
+            and settings.hour_registration_data
+        ):
+            initial['hour_registration_data'] = settings.hour_registration_data
+        return initial
 
     def registration_link(self, obj):
         return admin_info_box(
@@ -404,8 +417,24 @@ class TeamScheduleSlotAdminInline(BaseSlotAdminInline):
     model = TeamScheduleSlot
 
 
+class TeamBulkAddForm(ActivityBulkAddForm):
+    send_messages = forms.BooleanField(
+        label=_('Send messages'),
+        help_text=_('Email participants that they have been added to this team.'),
+        initial=True,
+        required=False
+    )
+
+    title = _('Bulk add participants')
+
+
 @admin.register(Team)
-class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMachineAdmin):
+class TeamAdmin(
+    PolymorphicInlineSupportMixin,
+    RegionManagerAdminMixin,
+    BulkAddMixin,
+    StateMachineAdmin,
+):
     model = Team
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
@@ -420,6 +449,8 @@ class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMac
 
     list_filter = [StateMachineFilter]
     office_subregion_path = 'activity__office_location__subregion'
+
+    bulk_add_form = TeamBulkAddForm
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
@@ -768,7 +799,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     def get_registration_fields(self, request, obj):
         fields = super().get_registration_fields(request, obj)
         if obj and obj.registrations.count():
-            fields = ("team_registration_warning",) + fields
+            fields = ["team_registration_warning"] + list(fields)
         return fields
 
     def get_fieldsets(self, request, obj=None):
@@ -1287,8 +1318,8 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
         urls = super(DateSlotAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/duplicate/$',
+            path(
+                '<int:pk>/duplicate/',
                 self.admin_site.admin_view(self.duplicate_slot),
                 name='time_based_dateactivityslot_duplicate'
             )
@@ -1827,8 +1858,8 @@ class ScheduleRegistrationAdmin(RegistrationChildAdmin):
 
 @admin.register(TeamScheduleRegistration)
 class TeamScheduleRegistrationAdmin(RegistrationChildAdmin):
-    readonly_fields = RegistrationChildAdmin.readonly_fields + ['team']
-    fields = ['team', 'states', 'answer', 'document']
+    readonly_fields = RegistrationChildAdmin.readonly_fields + ['teams']
+    fields = ['teams', 'states', 'answer', 'document']
     verbose_name = _('Team registration')
     verbose_name_plural = _('Team registrations')
 
@@ -1839,7 +1870,7 @@ class PeriodicRegistrationAdmin(RegistrationChildAdmin):
 
 
 @admin.register(Skill)
-class SkillAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
+class SkillAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = ('name', 'member_link')
     readonly_fields = ('member_link',)
     fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')

@@ -1,8 +1,6 @@
 Project Bluebottle
 ==================
 
-.. image:: https://travis-ci.org/onepercentclub/bluebottle.png?branch=master
-   :target: https://travis-ci.org/onepercentclub/bluebottle
 .. image:: https://coveralls.io/repos/github/onepercentclub/bluebottle/badge.svg?branch=master
    :target: https://coveralls.io/github/onepercentclub/bluebottle?branch=master
 .. image:: https://requires.io/github/onepercentclub/bluebottle/requirements.svg?branch=master
@@ -170,6 +168,20 @@ The BlueBottle test suite can be run completely using:
 
     $ python manage.py test -k
 
+Faster local runs (skip Elasticsearch index setup; exclude search tests)::
+
+    $ export BLUEBOTTLE_SKIP_ES_TEST_SETUP=1
+    $ python manage.py test --keepdb --exclude-tag=elasticsearch --settings=bluebottle.settings.runner
+
+Parallel run with coverage (CI-style)::
+
+    $ coverage run --parallel-mode manage.py test --parallel 12 --keepdb --settings bluebottle.settings.runner -v1
+    $ coverage combine && coverage report
+
+Coverage scope excludes unmaintained legacy apps (``payments_*``, ``orders``, ``donations``,
+``bb_projects``, ``projects``, etc.) listed in ``.coveragerc``. See ``docs/coverage-baseline-top-missed.md``
+for the phased plan to raise coverage on active code.
+
 
 Translating
 ------------
@@ -185,4 +197,3 @@ To pull messages simply do
     $ crowdin pull
 
 And commit the changes after that command
-

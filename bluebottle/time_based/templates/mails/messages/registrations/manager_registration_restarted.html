@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}
-    {% blocktrans with user=obj.user.full_name context 'email' %}
+    {% blocktrans with user=obj.user.full_name context 'platform-email' %}
     <p>{user} have restarted your contribution to "{{ title }}".</p>
     {% endblocktrans %}
 {% endblock %}

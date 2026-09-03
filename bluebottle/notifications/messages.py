@@ -5,17 +5,17 @@ from builtins import str
 from functools import partial
 from operator import attrgetter
 
-import icalendar
-from celery import shared_task
 from django.contrib.admin.options import get_content_type_for_model
 from django.core.cache import cache
 from django.db import connection
 from django.template import loader
+from django.utils import translation as django_translation
 from django.utils.html import format_html
-from django.utils.timezone import now
 from future.utils import python_2_unicode_compatible
 
+from bluebottle.celery import app
 from bluebottle.clients import properties
+from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language, to_text, get_tenant_name
@@ -45,6 +45,10 @@ class TransitionMessage(object):
     @property
     def task_id(self):
         return f'{self.__class__.__name__}-{self.obj.id}'
+
+    @property
+    def action_link(self):
+        return ''
 
     def get_generic_context(self):
         language = get_current_language()
@@ -88,53 +92,56 @@ class TransitionMessage(object):
     def generic_content_text(self):
         return to_text.handle(self.generic_content_html)
 
-    def get_content_html(self, recipient):
+    def get_content_html(self, recipient, obj=None):
+        django_translation.activate(recipient.primary_language)
         context = self.get_context(recipient)
+        if obj:
+            context['obj'] = obj
         template = loader.get_template("mails/{}.html".format(self.template))
         return template.render(context)
 
     def get_content_text(self, recipient):
         return to_text.handle(self.get_content_html(recipient))
 
-    def get_event_data(self, recipient):
-        return None
+    def get_first_recipient(self):
+        recipients = list(filter(None, self.get_recipients()))
+        return recipients[0] if recipients else None
 
-    def get_event_item(self, event):
-        event_item = icalendar.Event()
-        event_item.add('prodid', 'goodup')
-        event_item.add('version', '2.0')
-        event_item.add('method', 'request')
+    def get_message_block_html(self, recipient=None):
+        if recipient is None:
+            recipient = self.get_first_recipient()
 
-        event_item.add('uid', event['uid'])
-        event_item.add('sequence', now().timestamp())
-        event_item.add('summary', event['summary'])
-        event_item.add('organizer', event['organizer'])
-        event_item.add('description', event['description'])
-        event_item.add('url', event['url'])
-        event_item.add('location', event['location'])
-        event_item.add('dtstamp', now())
-        event_item.add('dtstart', event['start_time'])
-        event_item.add('dtend', event['end_time'])
-        return event_item
+        if recipient:
+            with translation.override(recipient.primary_language):
+                django_translation.activate(recipient.primary_language)
+                context = self.get_context(recipient)
+                custom_template = self.get_message_template()
+                if custom_template:
+                    custom_template.set_current_language(recipient.primary_language)
+                    try:
+                        return str(format_html(custom_template.body_html.html, **context))
+                    except custom_template.DoesNotExist:
+                        pass
+                return self._render_message_block_html(context)
 
-    def get_calendar_attachments(self, recipient):
-        events = []
-        event_data = self.get_event_data(recipient)
-        if type(event_data) == list:
-            for event in event_data:
-                if not event:
-                    continue
-                cal = icalendar.Calendar()
-                cal.add_component(self.get_event_item(event))
-                ical_data = cal.to_ical()
-                events.append((f"event-{event['uid']}.ics", ical_data, 'text/calendar'))
-        else:
-            event = event_data
-            cal = icalendar.Calendar()
-            cal.add_component(self.get_event_item(event))
-            ical_data = cal.to_ical()
-            events.append((f"event-{event['uid']}.ics", ical_data, 'text/calendar'))
-        return events
+        return self._render_message_block_html(self.get_generic_context())
+
+    def get_message_block_text(self, recipient=None):
+        if recipient is None:
+            recipient = self.get_first_recipient()
+        return to_text.handle(self.get_message_block_html(recipient)).strip()
+
+    def get_default_custom_message(self, recipient=None):
+        return self.get_message_block_text(recipient)
+
+    def _render_message_block_html(self, context):
+        context = dict(context)
+        context['only_message'] = True
+        template = loader.get_template("mails/{}.html".format(self.template))
+        return template.render(context)
+
+    def attachments(self, recipients):
+        pass
 
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
@@ -145,7 +152,7 @@ class TransitionMessage(object):
             "contact_email": properties.CONTACT_EMAIL,
             "recipient_name": recipient.first_name,
             "first_name": recipient.first_name,
-            "action_link": getattr(self, "action_link", None),
+            "action_link": self.get_action_link(recipient),
             "action_title": getattr(self, "action_title", None),
             "utm_campaign": self.__class__.__name__,
         }
@@ -154,14 +161,19 @@ class TransitionMessage(object):
                 context[key] = attrgetter(item)(self.obj)
             except AttributeError:
                 context[key] = None
+            except Exception:
+                context[key] = None
 
         if 'context' in self.options:
             context.update(self.options['context'])
 
-        if self.get_event_data(recipient):
-            context['attachments'] = self.get_calendar_attachments(recipient)
-
+        attachments = self.attachments(recipient)
+        if attachments:
+            context['attachments'] = attachments
         return context
+
+    def get_action_link(self, recipient):
+        return getattr(self, "action_link", None)
 
     def __init__(self, obj, **options):
         self.obj = obj
@@ -169,6 +181,11 @@ class TransitionMessage(object):
 
     def __str__(self):
         return self.subject
+
+    @property
+    def reply_to(self):
+        mail_settings = MailPlatformSettings.load()
+        return mail_settings.reply_to
 
     def get_template(self):
         return self.template
@@ -194,8 +211,11 @@ class TransitionMessage(object):
                 if self.send_once and self.already_send(recipient):
                     continue
 
+                # Explicitly activate language to force lazy translation evaluation
+                django_translation.activate(recipient.primary_language)
                 context = self.get_context(recipient, **base_context)
-                subject = str(self.subject.format(**context))
+                # Force evaluation of lazy translation string in correct language context
+                subject = str(self.subject).format(**context)
 
                 body_html = None
                 insert_method = 'append'
@@ -203,6 +223,8 @@ class TransitionMessage(object):
                 if not custom_message and custom_template:
                     custom_template.set_current_language(recipient.primary_language)
                     try:
+                        # Force language activation for custom template formatting
+                        django_translation.activate(recipient.primary_language)
                         subject = custom_template.subject.format(**context)
                         body_html = format_html(custom_template.body_html.html, **context)
                         insert_method = custom_template.insert_method
@@ -231,6 +253,9 @@ class TransitionMessage(object):
     def compose_and_send(self, **base_context):
         for message in self.get_messages(**base_context):
             context = self.get_context(message.recipient, **base_context)
+            reply_to = self.reply_to
+            if reply_to:
+                context['reply_to'] = reply_to
             message.save()
 
             message.send(**context)
@@ -242,6 +267,11 @@ class TransitionMessage(object):
     def send_delayed(self):
         cache.set(self.task_id, True, self.delay)
 
+        from django.conf import settings
+        if getattr(settings, 'TESTING', False) or getattr(settings, 'CELERY_ALWAYS_EAGER', False):
+            compose_and_send(self, connection.tenant)
+            return
+
         compose_and_send.apply_async(
             [self, connection.tenant],
             countdown=self.delay,
@@ -249,12 +279,15 @@ class TransitionMessage(object):
         )
 
 
-@shared_task
+@app.task(acks_late=True)
 def compose_and_send(message, tenant):
     from bluebottle.clients.utils import LocalTenant
 
     with LocalTenant(tenant, clear_tenant=True):
         try:
+            if getattr(message, 'obj', None) and getattr(message.obj, 'id', None):
+                message.obj.refresh_from_db()
             message.compose_and_send()
-        except Exception as e:
-            logger.error(e)
+        except Exception:
+            logger.exception('Failed to send notification %s', message)
+            raise

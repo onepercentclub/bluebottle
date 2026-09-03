@@ -1,5 +1,6 @@
 import hashlib
 import re
+
 from django.http.response import HttpResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -10,6 +11,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ActivitySegmentPermission
 )
+from bluebottle.activities.views import ActivityDetailView
 from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
@@ -24,7 +26,6 @@ from bluebottle.funding.serializers import (
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.filters import SearchFilterBackend
@@ -110,24 +111,14 @@ class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         'owner': ['owner'],
     }
 
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
 
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
+class FundingDetail(ActivityDetailView):
+    queryset = Funding.objects.all()
 
-        serializer.save(owner=self.request.user)
-
-
-class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = Funding.objects.select_related(
-        'initiative', 'initiative__owner',
-    ).prefetch_related('rewards')
+    def get_queryset(self, *args, **kwargs):
+        qs = super().get_queryset(*args, **kwargs)
+        qs = qs.prefetch_related('rewards')
+        return qs
 
     serializer_class = FundingSerializer
     permission_classes = (
@@ -135,15 +126,6 @@ class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefet
         ActivitySegmentPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
-
-    prefetch_for_includes = {
-        'initiative': ['initiative'],
-        'owner': ['owner'],
-        'rewards': ['reward'],
-        'budgetlines': ['budgetlines'],
-        'payment_methods': ['payment_methods'],
-        'fundraisers': ['fundraisers']
-    }
 
 
 class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -276,9 +258,6 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'fundraiser': ['fundraiser'],
     }
 
-    def perform_create(self, serializer):
-        serializer.save(user=(self.request.user if self.request.user.is_authenticated else None))
-
 
 class ActivityDonationList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     queryset = Donor.objects.all()
@@ -359,9 +338,9 @@ class SupportersExportView(PrivateFileView):
             for segment_type in self.get_segment_types():
                 if donor.user:
                     segments = ", ".join(
-                        donor.user.segments.filter(
-                            segment_type=segment_type
-                        ).values_list('name', flat=True)
+                        [
+                            s.name for s in donor.user.segments.filter(segment_type=segment_type)
+                        ]
                     )
                     row.append(segments)
             sheet.append(row)

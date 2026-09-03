@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.time_based.views import (
@@ -10,60 +11,60 @@ from bluebottle.time_based.views import (
 )
 
 urlpatterns = [
-    re_path(
-        r'^$',
+    path(
+        '',
         DeadlineActivityListView.as_view(),
         name='deadline-list'
     ),
-    re_path(
-        r'^/(?P<pk>\d+)$',
+    path(
+        '/<int:pk>',
         DeadlineActivityDetailView.as_view(),
         name='deadline-detail'
     ),
-    re_path(
-        r'^/transitions$',
+    path(
+        '/transitions',
         DeadlineTransitionList.as_view(),
         name='deadline-transition-list'
     ),
 
-    re_path(
-        r'^/(?P<activity_id>\d+)/registrations/$',
+    path(
+        '/<int:activity_id>/registrations/',
         DeadlineRelatedRegistrationList.as_view(),
         name='related-deadline-registrations'
     ),
-    re_path(
-        r'^/registrations/$',
+    path(
+        '/registrations/',
         DeadlineRegistrationList.as_view(),
         name='deadline-registration-list'
     ),
-    re_path(
-        r'^/registrations/transitions$',
+    path(
+        '/registrations/transitions',
         DeadlineRegistrationTransitionList.as_view(),
         name='deadline-registration-transitions'),
-    re_path(
-        r'^/registrations/(?P<pk>\d+)$',
+    path(
+        '/registrations/<int:pk>',
         DeadlineRegistrationDetail.as_view(),
         name='deadline-registration-detail'
     ),
 
-    re_path(
-        r'^/(?P<activity_id>\d+)/participants$',
+    path(
+        '/<int:activity_id>/participants',
         DeadlineRelatedParticipantList.as_view(),
         name='deadline-participants'
     ),
-    re_path(
-        r'^/participants$',
+    path(
+        '/participants',
         DeadlineParticipantList.as_view(),
         name='deadline-participant-create'
     ),
 
-    re_path(
-        r'^/participants/transitions$',
+    path(
+        '/participants/transitions',
         DeadlineParticipantTransitionList.as_view(),
         name='deadline-participant-transitions'
     ),
-    re_path(
-        r'^/participants/(?P<pk>\d+)$',
+    path(
+        '/participants/<int:pk>',
         DeadlineParticipantDetail.as_view(),
         name='deadline-participant-detail'
     ),

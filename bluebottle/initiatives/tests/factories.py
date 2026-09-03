@@ -19,7 +19,6 @@ class InitiativeFactory(factory.DjangoModelFactory):
     story = factory.LazyFunction(generate_rich_text)
     pitch = factory.Faker('text')
     owner = factory.SubFactory(BlueBottleUserFactory)
-    activity_managers = factory.SubFactory(BlueBottleUserFactory)
     has_organization = False
 
     theme = factory.SubFactory(ThemeFactory)
@@ -39,6 +38,5 @@ class InitiativeFactory(factory.DjangoModelFactory):
 
 
 class InitiativePlatformSettingsFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = InitiativePlatformSettings

@@ -9,9 +9,9 @@ JET_DEFAULT_THEME = "goodup"
 
 JET_SIDE_MENU_ITEMS = [
     {
-        "label": _("Initiatives & Activity"),
+        "label": _("Initiatives & Activities"),
         "app_label": "activities",
-        "permissions": ["activities.change_activities"],
+        "permissions": ["activities.change_activity"],
         "items": [
             {
                 "name": "initiatives.initiative",
@@ -47,7 +47,7 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "organizations.organization",
                 "permissions": ["organizations.change_organization"],
             },
-            {"name": "geo.location", "permissions": ["geo.location"]},
+            {"name": "geo.location", "permissions": ["geo.change_location"]},
         ],
     },
     {
@@ -162,6 +162,49 @@ JET_SIDE_MENU_ITEMS = [
         ],
     },
     {
+        "label": _("GoodUp Connect"),
+        "app_label": "activity_pub",
+        "permissions": ["activity_pub.change_event"],
+        "enabled": "cms.SitePlatformSettings.is_sharing_activities",
+        "items": [
+            {
+                "name": "activity_pub.publishedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
+                "url": "/en/admin/activity_pub/follower/",
+                "label": _("Connected consumers"),
+            },
+            {
+                "name": "activity_pub.receivedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
+                "url": "/en/admin/activity_pub/following/",
+                "label": _("Connected suppliers"),
+            },
+            {
+                "name": "activity_pub.publishedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
+                "url": "/en/admin/activity_pub/publishedactivity/",
+                "label": _("Shared activities"),
+            },
+            {
+                "name": "activity_pub.receivedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
+                "url": "/en/admin/activity_pub/receivedactivity/",
+                "label": _("Received activities"),
+            },
+            {
+                "name": "activity_links.linkedactivity",
+                "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_linking_activities",
+                # "url": "/en/admin/activity_pub/following/",
+                "label": _("Linked activities"),
+            },
+        ],
+    },
+    {
         "label": _("Users"),
         "app_label": "members",
         "permissions": ["members.change_member"],
@@ -183,7 +226,7 @@ JET_SIDE_MENU_ITEMS = [
         ],  # Segment type items are added programmatically in bluebottle_dashboard/utils.py
     },
     {
-        "label": _("Offices"),
+        "label": _("Work locations"),
         "permissions": ["offices.change_officeregion"],
         "enabled": "initiatives.InitiativePlatformSettings.enable_office_regions",
         "items": [
@@ -202,6 +245,7 @@ JET_SIDE_MENU_ITEMS = [
         "label": _("Content"),
         "permissions": ["pages.change_page"],
         "items": [
+            {"name": "pages.platformpage", "permissions": ["pages.change_platformpage"]},
             {"name": "pages.page", "permissions": ["pages.change_page"]},
             {
                 "name": "news.newsitem",
@@ -289,10 +333,6 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "label": _("Manage Reporting"),
                 "name": "looker.lookerembed",
-            },
-            {
-                "name": "utils.translationplatformsettings",
-                "permissions": ["utils.change_translationplatformsettings"],
             },
             {
                 "name": "scim.scimplatformsettings",

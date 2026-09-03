@@ -9,7 +9,7 @@ from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.time_based.models import Team
 from bluebottle.time_based.models import TeamMember
-from bluebottle.time_based.permissions import InviteCodePermission, TeamMemberPermission
+from bluebottle.time_based.permissions import TeamMemberPermission, InviteCodePermission
 from bluebottle.time_based.serializers import TeamSerializer, TeamMemberTransitionSerializer
 from bluebottle.time_based.serializers import TeamTransitionSerializer
 from bluebottle.time_based.serializers.teams import TeamMemberSerializer
@@ -50,7 +50,7 @@ class TeamList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
                 queryset = queryset.filter(user=self.request.user)
             else:
                 queryset = queryset.none()
-        return queryset
+        return queryset.order_by('-created', 'pk')
 
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
     queryset = Team.objects.prefetch_related("activity", "owner", "registration")
@@ -71,7 +71,18 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
         my = self.request.query_params.get("filter[my]")
         if my:
             if self.request.user.is_authenticated:
-                queryset = queryset.filter(team_members__user=self.request.user)
+                queryset = queryset.filter(
+                    team_members__user=self.request.user
+                ).exclude(
+                    user=self.request.user
+                )
+            else:
+                queryset = queryset.none()
+
+        owned = self.request.query_params.get("filter[owned]")
+        if owned:
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(user=self.request.user)
             else:
                 queryset = queryset.none()
 
@@ -89,7 +100,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
         context["display_member_names"] = (
-            MemberPlatformSettings.objects.get().display_member_names
+            MemberPlatformSettings.load().display_member_names
         )
 
         activity = Activity.objects.get(pk=self.kwargs["activity_id"])
@@ -157,19 +168,12 @@ class TeamMemberExportView(ExportView):
         return fields
 
 
-class TeamMemberList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
-
-    permission_classes = (InviteCodePermission,)
-    queryset = Team.objects.prefetch_related("team", "user", "participants")
+class TeamMemberList(
+    JsonApiViewMixin, CreateAPIView, CreatePermissionMixin
+):
+    permission_classes = (InviteCodePermission, )
+    queryset = TeamMember.objects.prefetch_related("team", "user", "participants")
     serializer_class = TeamMemberSerializer
-
-    def perform_create(self, serializer):
-        if hasattr(serializer.Meta, 'model'):
-            self.check_object_permissions(
-                self.request,
-                serializer.Meta.model(**serializer.validated_data)
-            )
-        serializer.save(user=self.request.user)
 
 
 class TeamMemberDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

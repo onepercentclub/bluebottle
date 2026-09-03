@@ -6,11 +6,17 @@
     {% if body_html and insert_method == 'replace' %}
         {{ body_html }}
     {% else %}
-        <p>
-            {% blocktrans context 'email' %}Hi {{ recipient_name }},{% endblocktrans %}
-        </p>
-        {% block message %}
-        {% endblock message %}
+        {% if not only_message %}
+            <p>
+                {% blocktrans context 'platform-email' %}Hi {{ recipient_name }},{% endblocktrans %}
+            </p>
+            {% if custom_message %}
+                <div>{{ custom_message|safe }}</div>
+            {% endif %}
+        {% endif %}
+        {% if only_message or not custom_message %}
+            {% block message %}{% endblock %}
+        {% endif %}
         {% if body_html and insert_method == 'append' %}
             <p>
             {{ body_html }}
@@ -21,4 +27,4 @@
 
 {% block action %}
     <a href="{% message_url action_link %}" class="action-email">{{ action_title }}</a>
-{% endblock %}`
+{% endblock action %}

@@ -1,12 +1,15 @@
 import re
-from bluebottle.segments.filters import ActivitySegmentAdminMixin
+
 from django import forms
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
@@ -41,9 +44,16 @@ from bluebottle.activities.models import (
     Team,
     TextAnswer,
     TextQuestion,
+    ConfirmationQuestion,
+    ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
-from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.activity_pub.admin import adapter
+from bluebottle.activity_pub.forms import SharePublishForm
+from bluebottle.activity_pub.models import Follow as ActivityPubFollow, Recipient
+from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.bluebottle_dashboard.decorators import admin_form, confirmation_form
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.models import Follow
@@ -58,7 +68,9 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
-from bluebottle.segments.models import SegmentType
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
+from bluebottle.segments.models import Segment, SegmentType
+from bluebottle.segments.widgets import SegmentAutocompleteSelectMultiple
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
@@ -73,8 +85,10 @@ from bluebottle.time_based.models import (
     TeamScheduleParticipant,
     TimeContribution,
 )
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
+from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import get_human_readable_duration
 
 
@@ -344,11 +358,18 @@ class EffortContributionAdmin(ContributionChildAdmin):
 class ActivityFormMetaClass(StateMachineModelFormMetaClass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs and connection.tenant.schema_name != 'public':
-            for segment_type in SegmentType.objects.all():
+            segments_field = attrs['Meta'].model._meta.get_field('segments')
+            segment_types = SegmentType.objects.prefetch_related('translations')
+
+            for segment_type in segment_types:
                 attrs[segment_type.field_name] = forms.ModelMultipleChoiceField(
                     required=False,
                     label=segment_type.name,
-                    queryset=segment_type.segments,
+                    queryset=Segment.objects.filter(segment_type=segment_type),
+                    widget=SegmentAutocompleteSelectMultiple(
+                        segments_field,
+                        segment_type.id,
+                    ),
                 )
 
         return super().__new__(cls, name, bases, attrs)
@@ -361,11 +382,15 @@ class ActivityForm(StateMachineModelForm, metaclass=ActivityFormMetaClass):
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
 
-        if connection.tenant.schema_name != 'public':
+        if connection.tenant.schema_name != 'public' and self.instance.pk:
+            selected_by_type = {}
+            for segment in self.instance.segments.all():
+                selected_by_type.setdefault(segment.segment_type_id, []).append(segment)
             for segment_type in SegmentType.objects.all():
-                if self.instance.pk:
-                    self.initial[segment_type.field_name] = self.instance.segments.filter(
-                        segment_type=segment_type).all()
+                if segment_type.field_name in self.fields:
+                    self.initial[segment_type.field_name] = selected_by_type.get(
+                        segment_type.id, []
+                    )
 
 
 class TeamInline(admin.TabularInline):
@@ -441,7 +466,6 @@ class ActivityBulkAddForm(forms.Form):
 
 
 class BulkAddMixin(object):
-
     bulk_add_form = ActivityBulkAddForm
     bulk_add_template = 'admin/activities/bulk_add.html'
 
@@ -449,8 +473,8 @@ class BulkAddMixin(object):
         urls = super(BulkAddMixin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^(?P<pk>\d+)/bulk_add/$',
+            path(
+                '<int:pk>/bulk_add/',
                 self.admin_site.admin_view(self.bulk_add_participants),
                 name='{}_{}_bulk_add'.format(
                     self.model._meta.app_label,
@@ -540,8 +564,13 @@ class ActivityAnswerInline(StackedPolymorphicInline):
     class TextAnswerInline(StackedPolymorphicInline.Child):
         model = TextAnswer
 
+    class ConfirmationAnswerInline(StackedPolymorphicInline.Child):
+        model = ConfirmationAnswer
+
     class SegmentAnswerInline(StackedPolymorphicInline.Child):
         model = SegmentAnswer
+        autocomplete_fields = ('segment',)
+        raw_id_fields = ('question',)
 
     class FileUploadAnswerInline(StackedPolymorphicInline.Child):
         model = FileUploadAnswer
@@ -550,6 +579,7 @@ class ActivityAnswerInline(StackedPolymorphicInline):
 
     child_inlines = (
         TextAnswerInline,
+        ConfirmationAnswerInline,
         SegmentAnswerInline,
         FileUploadAnswerInline,
     )
@@ -622,6 +652,10 @@ class ActivityChildAdmin(
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
+        'origin',
+        'activity_pub',
+        'event',
+        'host_organization'
     ]
 
     office_fields = (
@@ -650,6 +684,10 @@ class ActivityChildAdmin(
         'states',
     )
 
+    activity_pub_fields = (
+        'activity_pub',
+    )
+
     registration_fields = None
 
     def get_registration_fields(self, request, obj):
@@ -657,13 +695,13 @@ class ActivityChildAdmin(
 
     def get_inline_instances(self, request, obj=None):
         inlines = super(ActivityChildAdmin, self).get_inline_instances(request, obj)
-        if InitiativePlatformSettings.objects.get().enable_impact:
+        if InitiativePlatformSettings.load().enable_impact:
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
             inlines.append(impact_goal_inline)
 
         if not obj or (
-            obj.team_activity != Activity.TeamActivityChoices.teams or
-            obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
+                obj.team_activity != Activity.TeamActivityChoices.teams or
+                obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
         ):
             inlines = [
                 inline for inline in inlines if not isinstance(inline, TeamInline)
@@ -673,7 +711,7 @@ class ActivityChildAdmin(
 
     def get_list_filter(self, request):
         filters = list(self.list_filter)
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
@@ -705,7 +743,7 @@ class ActivityChildAdmin(
         return fields
 
     def get_detail_fields(self, request, obj):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         detail_fields = self.detail_fields
         if isinstance(detail_fields, list):
             detail_fields = tuple(detail_fields)
@@ -724,14 +762,111 @@ class ActivityChildAdmin(
                 reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
                 obj.initiative
             )
+
     initiative_link.short_description = _('Initiative')
 
+    def event(self, obj):
+        if obj.event:
+            return format_html(
+                '<a href="{}">{}</a>',
+                reverse('admin:activity_pub_event_change', args=(obj.event.id,)),
+                obj.event
+            )
+
+    def event_url(self, obj):
+        if obj.event:
+            return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
+
+    def activity_pub(self, obj):
+
+        recipients = []
+        try:
+            event = obj.event
+            if event:
+                publishes = event.create_set.all().prefetch_related("recipients__actor")
+                for publish in publishes:
+                    for recipient in publish.recipients.all():
+                        actor = recipient.actor
+                        recipients.append(
+                            {
+                                "actor": actor,
+                                "adopted": event.accept_set.filter(actor=actor).exists(),
+                            }
+                        )
+        except ObjectDoesNotExist:
+            pass
+
+        share_link = None
+        partners = ActivityPubFollow.objects.filter(
+            object=get_platform_actor(),
+            accept__isnull=False,
+        )
+        if partners.count() > len(recipients):
+            share_link = reverse('admin:{}_{}_share_activity'.format(
+                obj._meta.app_label,
+                obj._meta.model_name
+            ), args=(obj.id,))
+
+        return render_to_string(
+            "admin/activity_pub/event/recipients_list.html",
+            {"recipients": recipients, "share_link": share_link},
+        )
+
+    activity_pub.short_description = _('Share activity')
+
+    @admin_form(SharePublishForm, Activity, 'admin/activities/share_publish.html')
+    def share_activity(self, request, activity, form):
+        if not request.user.has_perm("activity.add_activity"):
+            raise PermissionDenied
+
+        if not hasattr(activity, 'event'):
+            adapter.create_or_update_event(activity)
+
+        publish = activity.event.create_set.first()
+        new_recipients = form.cleaned_data.get('recipients') or []
+        for actor in new_recipients:
+            Recipient.objects.get_or_create(actor=actor, activity=publish)
+
+        self.message_user(
+            request,
+            f'Successfully shared activity "{activity.title}".',
+            level="success",
+        )
+        return HttpResponseRedirect(
+            reverse("admin:activities_activity_change", args=[activity.pk])
+        )
+
+    def get_activity_pub_fields(self, request, obj=None):
+        if obj:
+            if obj.origin:
+                return (
+                    'origin',
+                    'host_organization',
+                )
+            else:
+                return (
+                    'activity_pub',
+                )
+        return []
+
     def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
         ]
+        site_settings = SitePlatformSettings.load()
+        if (
+            site_settings.share_activities and
+            request.user.has_perm("activity_pub.add_event") and (
+                site_settings.is_publishing_activities or
+                (obj and obj.origin)
+            )
+        ):
+            fieldsets.append(
+                (_("GoodUp Connect"), {"fields": self.get_activity_pub_fields(request, obj)})
+            )
+
         if self.get_registration_fields(request, obj):
             fieldsets.append(
                 (
@@ -747,10 +882,10 @@ class ActivityChildAdmin(
                         'office_restriction',
                     )
                 fieldsets.append((
-                    _('Office'), {'fields': self.office_fields}
+                    _('Work location'), {'fields': self.office_fields}
                 ))
 
-        if SegmentType.objects.count():
+        if SegmentType.objects.exists():
             fieldsets.append((
                 _('Segments'), {
                     'fields': [
@@ -810,14 +945,22 @@ class ActivityChildAdmin(
         urls = super(ActivityChildAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(
-                r'^send-impact-reminder-message/(?P<pk>\d+)/$',
+            path(
+                '<int:pk>/send-impact-reminder-message',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
                     self.model._meta.app_label,
                     self.model._meta.model_name
                 ),
-            )
+            ),
+            path(
+                '<int:pk>/share_activity',
+                self.admin_site.admin_view(self.share_activity),
+                name='{}_{}_share_activity'.format(
+                    self.model._meta.app_label,
+                    self.model._meta.model_name
+                ),
+            ),
         ]
         return extra_urls + urls
 
@@ -888,7 +1031,7 @@ class ActivityAdmin(
         ScheduleActivity,
         RegisteredDateActivity
     )
-    readonly_fields = ['link', 'review_status']
+    readonly_fields = ['link', 'review_status', 'activity_pub_url']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
     def lookup_allowed(self, key, value):
@@ -902,7 +1045,7 @@ class ActivityAdmin(
         return super(ActivityAdmin, self).lookup_allowed(key, value)
 
     def get_list_filter(self, request):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         filters = list(self.list_filter)
         from bluebottle.geo.models import Location
         if Location.objects.count():
@@ -917,8 +1060,7 @@ class ActivityAdmin(
             filters = filters + ['team_activity']
         return filters
 
-    list_display = ['__str__', 'created', 'type', 'state_name',
-                    'link', 'highlight']
+    list_display = ['__str__', 'created', 'type', 'state_name', 'highlight']
 
     def location_link(self, obj):
         if not obj.office_location:
@@ -926,7 +1068,7 @@ class ActivityAdmin(
         url = reverse('admin:geo_location_change', args=(obj.office_location.id,))
         return format_html('<a href="{}">{}</a>', url, obj.office_location)
 
-    location_link.short_description = _('office')
+    location_link.short_description = _('work location')
 
     def get_list_display(self, request):
         fields = list(self.list_display)
@@ -1066,21 +1208,28 @@ class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
     base_model = ActivityQuestion
     child_models = (
         TextQuestion,
+        ConfirmationQuestion,
         SegmentQuestion,
         FileUploadQuestion
     )
-    list_display = ['name', 'question', 'activity_types']
+    list_display = ['name', 'question', 'visibility', 'activity_types']
 
 
-class ActivityQuestionChildAdmin(TranslatableAdmin, PolymorphicChildModelAdmin):
+class ActivityQuestionChildAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, PolymorphicChildModelAdmin):
     base_model = ActivityQuestion
-    fields = ['name', 'question', 'help_text', 'required', 'activity_types']
+    fields = ['name', 'question', 'help_text', 'required', 'visibility', 'activity_types']
     list_fields = ['question', 'help_text']
 
 
 @admin.register(TextQuestion)
 class TextQuestionAdmin(ActivityQuestionChildAdmin):
     model = TextQuestion
+
+
+@admin.register(ConfirmationQuestion)
+class ConfirmationQuestionAdmin(ActivityQuestionChildAdmin):
+    model = ConfirmationQuestion
+    fields = ActivityQuestionChildAdmin.fields + ['text']
 
 
 @admin.register(SegmentQuestion)

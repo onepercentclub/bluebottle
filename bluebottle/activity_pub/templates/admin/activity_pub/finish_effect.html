@@ -1,0 +1,14 @@
+{% load i18n %}
+<h3>{% trans "Notify other platforms that the activity is finished" %}</h3>
+
+<p>
+    {% blocktrans %}
+        This activity is finished automatically notify these platforms:
+    {% endblocktrans %}
+
+<ul>
+    {% for follower in effects.0.followers %}
+        <li>{{ follower.actor.name }}</li>
+    {% endfor %}
+</ul>
+<br/>

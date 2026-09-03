@@ -9,10 +9,12 @@ from bluebottle.fsm.state import (
     register,
 )
 from bluebottle.funding.states import PayoutStateMachine
-from bluebottle.grant_management.forms import GrantApplicationApproveForm, GrantPayoutApproveForm
+from bluebottle.grant_management.forms import GrantApplicationApproveForm, GrantPayoutApproveForm, \
+    GrantApplicationRejectedForm, GrantApplicationNeedsWorkForm
 from bluebottle.grant_management.models import (
     GrantApplication,
     GrantDeposit,
+    GrantWithdrawal,
     GrantDonor,
     GrantPayment,
     GrantPayout,
@@ -22,9 +24,9 @@ from bluebottle.grant_management.models import (
 
 @register(GrantApplication)
 class GrantApplicationStateMachine(ActivityStateMachine):
-    granted = State(_("Granted"), "granted", _("The grant application was approved, now waiting bank details."))
+    granted = State(_("Granted"), "granted", _("The grant application was approved."))
     succeeded = State(
-        _("Completed"), "succeeded", _("The grant application was approved and has been paid out to the applicant.")
+        _("Succeeded"), "succeeded", _("The grant application was approved and has been paid out to the applicant.")
     )
 
     def has_no_payouts(self):
@@ -77,6 +79,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
         permission=can_approve,
         form=GrantApplicationApproveForm,
         conditions=[
+            ActivityStateMachine.is_not_api_request,
             ActivityStateMachine.initiative_is_approved,
             ActivityStateMachine.is_valid,
             ActivityStateMachine.is_complete,
@@ -94,6 +97,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
             "can edit and resubmit the application. Don't forget to inform the activity "
             "manager of the necessary adjustments."
         ),
+        form=GrantApplicationNeedsWorkForm,
         automatic=False,
         permission=can_approve
     )
@@ -112,6 +116,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
             "on the search page in the front end. The application will still be available in the "
             "back office and appear in your reporting."
         ),
+        form=GrantApplicationRejectedForm,
         automatic=False,
         permission=ActivityStateMachine.is_staff,
     )
@@ -128,12 +133,14 @@ class GrantApplicationStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
+            granted,
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted,
             ActivityStateMachine.open,
         ],
         ActivityStateMachine.cancelled,
+        permission=can_approve,
         name=_('Cancel'),
         description=_("The grant application has been cancelled and it will no longer be up for review."),
         automatic=False,
@@ -376,8 +383,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
 
-@register(GrantDeposit)
-class GrantDepositStateMachine(ModelStateMachine):
+class GrantTransactionStateMachine(ModelStateMachine):
     pending = State(
         _('pending'),
         'pending',
@@ -415,6 +421,16 @@ class GrantDepositStateMachine(ModelStateMachine):
         description=_("Cancel the deposit"),
         name=_("cancel"),
     )
+
+
+@register(GrantDeposit)
+class GrantDepositStateMachine(GrantTransactionStateMachine):
+    pass
+
+
+@register(GrantWithdrawal)
+class GrantWithdrawalStateMachine(GrantTransactionStateMachine):
+    pass
 
 
 @register(LedgerItem)

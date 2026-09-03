@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import pgettext
+from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.notifications.messages import TransitionMessage
@@ -12,14 +11,16 @@ class GrantApplicationManagerMessage(TransitionMessage):
         'title': 'title',
     }
 
-    action_title = pgettext('email', 'View application')
+    action_title = pgettext('platform-email', 'View application')
 
     def get_context(self, recipient):
         if isinstance(self.obj, StripePayoutAccount):
             self.obj = self.obj.funding.first() or self.obj.grant_application.first()
 
         context = super(GrantApplicationManagerMessage, self).get_context(recipient)
-        context['partner_organization'] = self.obj.organization and self.obj.organization.name
+        # Safely access organization attribute
+        organization = getattr(self.obj, 'organization', None)
+        context['partner_organization'] = organization and getattr(organization, 'name', None)
         return context
 
     @property
@@ -30,34 +31,37 @@ class GrantApplicationManagerMessage(TransitionMessage):
         """the activity organizer"""
         return [self.obj.owner]
 
+    class Meta:
+        abstract = True
+
 
 class GrantApplicationRejectedMessage(GrantApplicationManagerMessage):
-    subject = _("Your grant application on {site_name} has been rejected")
+    subject = pgettext('platform-email', "Your grant application on {site_name} has been rejected")
     template = 'messages/grant_application/activity_manager/application_rejected'
 
 
 class GrantApplicationSubmittedMessage(GrantApplicationManagerMessage):
-    subject = _("You have submitted a grant application on {site_name}")
+    subject = pgettext('platform-email', "You have submitted a grant application on {site_name}")
     template = 'messages/grant_application/activity_manager/application_submitted'
 
 
 class GrantApplicationNeedsWorkMessage(GrantApplicationManagerMessage):
-    subject = _(u"The grant application you submitted on {site_name} needs work")
+    subject = pgettext('platform-email', u"The grant application you submitted on {site_name} needs work")
     template = 'messages/grant_application/activity_manager/application_needs_work'
 
 
 class GrantApplicationApprovedMessage(GrantApplicationManagerMessage):
-    subject = _('Your grant application on {site_name} has been approved!')
+    subject = pgettext('platform-email', 'Your grant application on {site_name} has been approved!')
     template = 'messages/grant_application/activity_manager/application_approved'
 
 
 class GrantApplicationCancelledMessage(GrantApplicationManagerMessage):
-    subject = _(u'Your grant application on {site_name} has been cancelled')
+    subject = pgettext('platform-email', u'Your grant application on {site_name} has been cancelled')
     template = 'messages/grant_application/activity_manager/application_cancelled'
 
 
 class GrantApplicationPayoutAccountRejected(GrantApplicationManagerMessage):
-    subject = _(u'Action required for your grant application')
+    subject = pgettext('platform-email', u'Action required for your grant application')
     template = 'messages/grant_application/activity_manager/payout_account_rejected'
 
     @property
@@ -66,7 +70,7 @@ class GrantApplicationPayoutAccountRejected(GrantApplicationManagerMessage):
 
 
 class GrantApplicationPayoutAccountMarkedIncomplete(GrantApplicationManagerMessage):
-    subject = _("Action required for your grant application")
+    subject = pgettext('platform-email', "Action required for your grant application")
     template = "messages/grant_application/activity_manager/payout_account_marked_incomplete"
 
     @property
@@ -75,9 +79,9 @@ class GrantApplicationPayoutAccountMarkedIncomplete(GrantApplicationManagerMessa
 
 
 class GrantApplicationPayoutAccountVerified(GrantApplicationManagerMessage):
-    subject = _(u'Your identity has been verified')
+    subject = pgettext('platform-email', u'Your identity has been verified')
     template = 'messages/grant_application/activity_manager/payout_account_verified'
 
     @property
     def action_link(self):
-        return self.obj.grant_applications.order_by('-created').first().get_absolute_url()
+        return self.obj.grant_application.get_absolute_url()

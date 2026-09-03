@@ -1,0 +1,56 @@
+{% load i18n %}
+<div class="inline-group">
+    {% if recipients %}
+    <table class="tabular">
+        <thead>
+        <tr>
+            <th class="column-actor">
+                {% trans "Shared to" %}
+
+            </th>
+
+            <th class="column-adopted">
+                {% trans "Adopted" %}
+            </th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {% for row in recipients %}
+            <tr class="form-row has_original">
+                <td>{{ row.actor }}</td>
+                <td>
+                    {% if row.adopted %}
+                        <img src="/static/assets/admin/img/icon-yes.svg" alt="True">
+                    {% else %}
+                        <img src="/static/assets/admin/img/icon-no.svg" alt="False">
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        {% if share_link %}
+            {% trans "Click the button bellow to share this to your connected partners." %} <br/>
+            {% trans "In the next step you can select to which partners you want to share." %}
+        {% endif %}
+    {% endif %}
+</div>
+<br/><br/>
+
+{% if share_link %}
+    <a href="{{ share_link }}" class="button">
+        {% trans "Share to partners" %}
+    </a>
+{% else %}
+    <b>
+        {% trans "No connected consumers" %}
+    </b>
+    <br/>
+    {% if recipients %}
+        {% trans "You already shared this with all the connected partners." %}
+    {% else %}
+        {% trans "Partners need to connect to your platform to receive activities" %}
+    {% endif %}
+{% endif %}

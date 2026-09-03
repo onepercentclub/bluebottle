@@ -1,9 +1,11 @@
 from datetime import datetime
+
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donor
+from bluebottle.initiatives.documents import deduplicate, get_translated_list
 
 SCORE_MAP = {
     'open': 1,
@@ -40,6 +42,53 @@ class FundingDocument(ActivityDocument):
         if isinstance(related_instance, Donor):
             return Funding.objects.filter(contributors=related_instance)
 
+    def prepare_location(self, instance):
+        locations = []
+        if hasattr(instance, 'impact_location') and instance.impact_location:
+            country = instance.impact_location.country
+            locations.append({
+                'id': instance.impact_location.id,
+                'name': instance.impact_location.formatted_address,
+                'locality': instance.impact_location.locality,
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
+                'type': 'location'
+            })
+        elif instance.initiative and instance.initiative.place:
+            if instance.initiative.place.country:
+                country = instance.initiative.place.country
+                locations.append({
+                    'locality': instance.initiative.place.locality,
+                    'country_code': country.alpha2_code if country else None,
+                    'country': country.name if country else None,
+                    'type': 'impact_location'
+                })
+            else:
+                locations.append({
+                    'locality': instance.initiative.place.locality,
+                    'type': 'impact_location'
+                })
+        return locations
+
+    def prepare_position(self, instance):
+        positions = []
+        if hasattr(instance, 'impact_location') and instance.impact_location and instance.impact_location.position:
+            positions.append(
+                {'lat': instance.impact_location.position.y, 'lon': instance.impact_location.position.x}
+            )
+        if instance.initiative and instance.initiative.place:
+            positions.append(
+                {'lat': instance.initiative.place.position.y, 'lon': instance.initiative.place.position.x}
+            )
+        return positions
+
+    def prepare_country(self, instance):
+        countries = super().prepare_country(instance)
+        if instance.impact_location and instance.impact_location.country:
+            countries += get_translated_list(instance.impact_location.country)
+
+        return deduplicate(countries)
+
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
 
@@ -68,4 +117,8 @@ class FundingDocument(ActivityDocument):
         return self.prepare_amount(instance.amount_raised)
 
     def prepare_is_online(self, instance):
+        if instance.impact_location:
+            return False
+        if instance.initiative and instance.initiative.place:
+            return False
         return True

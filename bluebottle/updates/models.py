@@ -2,11 +2,17 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 
 from bluebottle.activities.models import Activity
-from bluebottle.files.fields import ImageField
+from bluebottle.files.fields import ImageField, DocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.members.models import Member
+
+
+class AudienceChoices(models.TextChoices):
+    everyone = 'everyone', _('Everyone')
+    contributors = 'contributors', _('Participants')
 
 
 class Update(TriggerMixin, models.Model):
@@ -44,7 +50,7 @@ class Update(TriggerMixin, models.Model):
         null=True
     )
 
-    message = models.TextField(_('message'), blank=True, null=True)
+    message = QuillField(_('Message'), blank=True, null=True)
     image = ImageField(blank=True, null=True)
     video_url = models.URLField(max_length=100, blank=True, default='')
 
@@ -53,6 +59,19 @@ class Update(TriggerMixin, models.Model):
     created = models.DateTimeField(_("created"), default=now)
 
     notify = models.BooleanField(_('notify supporters'), default=False)
+
+    audience = models.CharField(
+        _('Audience'),
+        max_length=20,
+        choices=AudienceChoices.choices,
+        default=AudienceChoices.everyone,
+    )
+
+    @property
+    def update_type(self):
+        if self.activity and self.author in self.activity.owners and not self.contribution:
+            return 'activity-update'
+        return 'message'
 
     @property
     def fake_name(self):
@@ -65,9 +84,25 @@ class Update(TriggerMixin, models.Model):
 
         super().save(*args, **kwargs)
 
+    @property
+    def has_media(self):
+        if self.images.exists() or self.documents.exists() or self.video_url:
+            return True
+        return False
+
+    @property
+    def author_role(self):
+        if self.author in self.activity.owners:
+            return 'activity-manager'
+        if self.author.is_staff:
+            return 'platform-manager'
+        if self.author.is_superuser:
+            return 'administrator'
+        return ''
+
     class Meta:
         verbose_name = _('Update')
-        ordering = ('created',)
+        ordering = ('-created',)
 
     class JSONAPIMeta():
         resource_name = 'updates'
@@ -88,3 +123,15 @@ class UpdateImage(models.Model):
 
     class JSONAPIMeta():
         resource_name = 'updates/images'
+
+
+class UpdateDocument(models.Model):
+    document = DocumentField(null=True)
+    update = models.ForeignKey(
+        Update,
+        related_name='documents',
+        on_delete=models.CASCADE
+    )
+
+    class JSONAPIMeta():
+        resource_name = 'updates/documents'

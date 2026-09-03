@@ -7,6 +7,7 @@ from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
+from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -17,10 +18,11 @@ class MatchingActivitiesNotification(TransitionMessage):
     Send a list of matching activities to user
     """
     subject = pgettext(
-        'email',
+        'platform-email',
         '{first_name}, there are {count} activities on {site_name} matching your profile'
     )
     template = 'messages/matching/matching_activities'
+    send_once = True
 
     @property
     def action_link(self):
@@ -30,7 +32,7 @@ class MatchingActivitiesNotification(TransitionMessage):
             domain, language
         )
 
-    action_title = pgettext('email', 'View more activities')
+    action_title = pgettext('platform-email', 'View more activities')
 
     def get_recipients(self):
         """user"""
@@ -49,7 +51,11 @@ class MatchingActivitiesNotification(TransitionMessage):
                     "initiative-image", args=(activity.initiative.pk, "200x200")
                 )
             ),
-            'expertise': activity.expertise.name if activity.expertise else None,
+            'expertise': (
+                activity.expertise.name
+                if activity.expertise
+                else None
+            ),
             'theme': activity.initiative.theme.name,
         }
         if isinstance(activity, DateActivity):
@@ -62,10 +68,10 @@ class MatchingActivitiesNotification(TransitionMessage):
                 if len(locations) == 1:
                     context['location'] = locations[0]
                 else:
-                    context['location'] = pgettext('email', 'Multiple locations')
+                    context['location'] = pgettext('platform-email', 'Multiple locations')
 
             if len(slots) > 1:
-                context['when'] = pgettext('email', 'Mutliple time slots')
+                context['when'] = pgettext('platform-email', 'Mutliple time slots')
             else:
                 slot = slots[0]
 
@@ -76,10 +82,10 @@ class MatchingActivitiesNotification(TransitionMessage):
 
                 start = '{} {}'.format(
                     date(slot.start.astimezone(tz)), time(slot.start.astimezone(tz))
-                ) if slot.start else pgettext('email', 'Starts immediately')
+                ) if slot.start else pgettext('platform-email', 'Starts immediately')
                 end = '{} {}'.format(
                     date(slot.end.astimezone(tz)), time(slot.end)
-                ) if slot.end else pgettext('email', 'runs indefinitely')
+                ) if slot.end else pgettext('platform-email', 'runs indefinitely')
                 context['when'] = '{start_date} {start_time} - {end_time} ({timezone})'.format(
                     start_date=date(slot.start.astimezone(tz)),
                     start_time=time(slot.start.astimezone(tz)),
@@ -94,8 +100,8 @@ class MatchingActivitiesNotification(TransitionMessage):
             else:
                 context['location'] = activity.location
 
-            start = date(activity.start) if activity.start else pgettext('email', 'starts immediately')
-            end = date(activity.deadline) if activity.deadline else pgettext('email', 'runs indefinitely')
+            start = date(activity.start) if activity.start else pgettext('platform-email', 'starts immediately')
+            end = date(activity.deadline) if activity.deadline else pgettext('platform-email', 'runs indefinitely')
 
             context['when'] = '{} - {}'.format(start, end)
 
@@ -108,6 +114,7 @@ class MatchingActivitiesNotification(TransitionMessage):
             not (len(recipient.skills.all())) or
             not (recipient.place or recipient.location)
         )
+        context['opt_out_link'] = tenant_url('/member/profile?tab=notifications')
         if activities:
             context['activities'] = [
                 self.get_activity_context(activity) for activity in activities[:3]
@@ -116,15 +123,30 @@ class MatchingActivitiesNotification(TransitionMessage):
 
         return context
 
+    def already_send(self, recipient):
+        current = now()
+        return Message.objects.filter(
+            template=self.get_template(),
+            recipient=recipient,
+        ).filter(
+            Q(sent__year=current.year, sent__month=current.month) | Q(sent__isnull=True)
+        ).exists()
+
 
 class BaseDoGoodHoursReminderNotification(TransitionMessage):
+    """
+    Base class for all notifications do-good hours reminders.
+    """
+
+    class Meta:
+        abstract = True
 
     @property
     def action_link(self):
         from bluebottle.clients.utils import tenant_url
         return tenant_url('/initiatives/activities/list')
 
-    action_title = pgettext('email', 'Find activities')
+    action_title = pgettext('platform-email', 'Find activities')
 
     send_once = True
 
@@ -135,7 +157,13 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         context = super(BaseDoGoodHoursReminderNotification, self).get_context(recipient)
         settings = MemberPlatformSettings.load()
         context['do_good_hours'] = settings.do_good_hours
-        context['opt_out_link'] = tenant_url('/member/profile')
+        context['opt_out_link'] = tenant_url('/member/profile?tab=notifications')
+        return context
+
+    def get_generic_context(self):
+        context = super().get_generic_context()
+        context['first_name'] = 'Test'
+
         return context
 
     @property
@@ -147,11 +175,26 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         return str(self.subject.format(**context))
 
     def already_send(self, recipient):
+        # Count messages for this year, including rows that were saved but never
+        # got `sent` set (worker kill / broker redelivery between save and send).
+        # Without this, the same reminder is mailed again on every task retry.
         return Message.objects.filter(
             template=self.get_template(),
             recipient=recipient,
-            sent__year=now().year
-        ).count() > 0
+        ).filter(
+            Q(sent__year=now().year) | Q(sent__isnull=True)
+        ).exists()
+
+    def compose_and_send(self, **base_context):
+        # Mark as sent before SMTP so a crash mid-send still dedupes on retry.
+        for message in self.get_messages(**base_context):
+            context = self.get_context(message.recipient, **base_context)
+            reply_to = self.reply_to
+            if reply_to:
+                context['reply_to'] = reply_to
+            message.sent = now()
+            message.save()
+            message.send(**context)
 
     def get_recipients(self):
         """members with do good hours"""
@@ -178,20 +221,32 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
 
 
 class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "It’s a new year, let's make some impact!")
+    """
+    Send a reminder in Q1 to platform user to spend their do-good hours.
+    """
+    subject = pgettext('platform-email', "{first_name}, a new year, a new chance to make impact!")
     template = 'messages/matching/reminder-q1'
 
 
 class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Haven’t joined an activity yet? Let’s get started!")
+    """
+    Send a reminder in Q2 to platform user to spend their do-good hours.
+    """
+    subject = pgettext('platform-email', "{first_name}, your impact starts here!")
     template = 'messages/matching/reminder-q2'
 
 
 class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Half way through the year and still plenty of activities to join")
+    """
+    Send a reminder in Q3 to platform user to spend their do-good hours.
+    """
+    subject = pgettext('platform-email', "{first_name}, there's still time to make your mark this year!")
     template = 'messages/matching/reminder-q3'
 
 
 class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Make use of your {do_good_hours} hours of impact!")
+    """
+    Send a reminder in Q4 to platform user to spend their do-good hours.
+    """
+    subject = pgettext('platform-email', "{first_name}, use your {do_good_hours} hours to make a difference!")
     template = 'messages/matching/reminder-q4'

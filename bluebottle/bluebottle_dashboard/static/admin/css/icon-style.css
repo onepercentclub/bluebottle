@@ -20,7 +20,6 @@
   font-style: normal;
 }
 
-.inline-deletelink,
 [class^="bb-icon-"], [class*=" bb-icon-"],
 [class^="cp-item-"], [class*=" cp-item-"] {
   /* use !important to prevent issues with browser extensions that change fonts */

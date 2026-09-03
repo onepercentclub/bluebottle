@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.funding_telesom.views import (
@@ -6,13 +7,13 @@ from bluebottle.funding_telesom.views import (
     TelesomBankAccountAccountDetail)
 
 urlpatterns = [
-    re_path(
-        r'^/payments/$',
+    path(
+        '/payments/',
         TelesomPaymentList.as_view(),
         name='telesom-payment-list'
     ),
-    re_path(
-        r'^/bank-accounts/$',
+    path(
+        '/bank-accounts/',
         TelesomBankAccountAccountList.as_view(),
         name='telesom-external-account-list'
     ),

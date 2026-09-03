@@ -1,4 +1,5 @@
 *.py[co]
+.python-version
 
 # Ignore engagement analysis excel reports
 *.xlsx
@@ -27,6 +28,7 @@ pip-log.txt
 
 # Unit test / coverage reports
 .coverage
+coverage.xml
 .tox
 
 # JS testing
@@ -49,6 +51,8 @@ frontend/static/refactor-sass/lib
 # Local settings overrides
 bluebottle/settings/local.py
 bluebottle/settings/secrets.py
+
+mails/++
 
 # Misc stuff
 data
@@ -126,3 +130,5 @@ reef-prod-current.sql.bz2
 bluebottle-data
 elasticsearch-data
 postgres-data
+
+**/*.code-workspace

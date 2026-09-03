@@ -29,6 +29,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('deeds', '0009_auto_20211004_1150'),
+        ('activities', '0040_auto_20210224_1508'),
     ]
 
     operations = [

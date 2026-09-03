@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title|escape }}</title>
+  <style>
+  {{ inline_css|safe }}
+  </style>
+</head>
+<body>
+<div class="container" id="top">
+  <header>
+    <h1>FSM Documentation</h1>
+    <p>states, transitions, triggers and effects</p>
+    <p class="jump-to">Jump to: {% for link in jump_links %}<a href="{{ link.href }}">{{ link.label }}</a>{% if not forloop.last %} | {% endif %}{% endfor %}</p>
+  </header>
+
+  <nav>
+    <ul>
+      {% for group in nav_groups %}
+        <li class="nav-app-group"><strong>{{ group.app_label|escape }}</strong></li>
+        {% for m in group.models %}
+          <li><a href="#{{ m.id|escape }}">{{ m.label|escape }}</a></li>
+        {% endfor %}
+      {% endfor %}
+    </ul>
+  </nav>
+
+  {% for section in sections %}
+    <div class="fsm-block" id="{{ section.base_id|escape }}">
+      <div class="fsm-block-sticky-header">
+        <div class="fsm-block-header">
+          <h1>{{ section.label|escape }}</h1>
+        </div>
+      </div>
+      <p class="fsm-class-path"><code>{{ section.class_path|escape }}</code></p>
+      {% if section.model_doc %}
+        <p class="model-description">{{ section.model_doc|escape }}</p>
+      {% endif %}
+
+      {# States #}
+      <section class="fsm-section states-section" id="{{ section.base_id }}-states">
+        <h2>States</h2>
+        <ul class="state-list">
+          {% for s in section.doc.states %}
+            <li class="state-item" id="{{ section.base_id }}-state-{{ s.id }}">
+              <a href="#{{ section.base_id }}-state-{{ s.id }}" class="state-link">
+                <span class="state-name">{{ s.name }}</span>
+              </a>
+              <p class="state-desc">{{ s.description }}</p>
+              {% for st_name, st_links in section.state_links.items %}
+                {% if st_name == s.name %}
+                  {% if st_links.from_transitions or st_links.to_transitions %}
+                  <p class="state-trans">
+                    {% if st_links.from_transitions %}From here: {% for tname, tid in st_links.from_transitions %}<a href="#{{ tid }}">{{ tname }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
+                    {% if st_links.from_transitions and st_links.to_transitions %} &middot; {% endif %}
+                    {% if st_links.to_transitions %}To here: {% for tname, tid in st_links.to_transitions %}<a href="#{{ tid }}">{{ tname }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
+                  </p>
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {# Transitions #}
+      <section class="fsm-section transitions-section" id="{{ section.base_id }}-transitions">
+        <h2>Transitions</h2>
+        <p class="help">Click a transition to see triggers, conditions and effects.</p>
+        <ul class="transition-list">
+          {% for t in section.doc.transitions %}
+            <li class="transition-item" id="{{ section.base_id }}-trans-{{ t.id }}">
+              <a href="#{{ section.base_id }}-trans-{{ t.id }}" class="transition-link">
+                <span class="trans-name">{{ t.name }}</span>
+                <span class="trans-arrow">
+                  {% if t.from_states %}{{ t.from_states|join:' | ' }}{% else %}(new){% endif %} → {{ t.to }}
+                </span>
+                <span class="trans-type">{{ t.manual }}</span>
+              </a>
+              <div class="transition-detail" id="{{ section.base_id }}-trans-{{ t.id }}-detail">
+                <p class="trans-description">{{ t.description }}</p>
+                {% if t.conditions %}
+                  <p><strong>Conditions:</strong></p>
+                  <ul>
+                    {% for c in t.conditions %}
+                      <li>{{ c }}</li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+                {% if t.permission_doc %}
+                  <p><strong>Permission:</strong> {{ t.permission_doc }}</p>
+                {% endif %}
+                <p><strong>When this transition runs, effects:</strong></p>
+                <ul>
+                  {% for e in t.effects %}
+                    <li>
+                      {{ e.summary }}
+                      {% if e.detail %}
+                        {% if e.detail.show_doc and e.detail.doc %}
+                        <p class="effect-doc"><em>{{ e.detail.doc }}</em></p>
+                        {% endif %}
+                        {% if e.detail.notification %}
+                        <p class="effect-notification">
+                          <strong>Notification:</strong> {{ e.detail.notification.message_class }}
+                          {% if e.detail.notification.subject %} &middot; subject: <code>{{ e.detail.notification.subject }}</code>{% endif %}
+                          {% if e.detail.notification.recipients_doc %}<br><strong>Recipients:</strong> {{ e.detail.notification.recipients_doc }}{% endif %}
+                          {% if e.detail.notification.show_message_doc %}<br><em>{{ e.detail.notification.message_doc }}</em>{% endif %}
+                        </p>
+                        {% if e.detail.notification.template_rendered %}
+                        <div class="effect-template-preview"><strong>Template preview:</strong><div class="effect-template-body">{{ e.detail.notification.template_rendered|safe }}</div></div>
+                        {% endif %}
+                        {% endif %}
+                        {% if e.detail.transition %}
+                        <p class="effect-related">
+                          <strong>Transition:</strong>
+                          {% if e.detail.transition.sources %}
+                            {% for src in e.detail.transition.sources %}
+                              {% for st in section.doc.states %}{% if st.name == src %}<a href="#{{ section.base_id }}-state-{{ st.id }}" class="state-link-inline">{{ src }}</a>{% endif %}{% endfor %}{% if not forloop.last %} | {% endif %}
+                            {% endfor %}
+                            →
+                          {% else %}
+                            →
+                          {% endif %}
+                          {% for st in section.doc.states %}{% if st.name == e.detail.transition.target %}<a href="#{{ section.base_id }}-state-{{ st.id }}" class="state-link-inline">{{ e.detail.transition.target }}</a>{% endif %}{% endfor %}
+                          {% for trans in section.doc.transitions %}{% if trans.name == e.detail.transition.transition_name %} via <em><a href="#{{ section.base_id }}-trans-{{ trans.id }}" class="transition-link-inline">{{ e.detail.transition.transition_name }}</a></em>{% endif %}{% endfor %}
+                        </p>
+                        {% endif %}
+                        {% if e.detail.related %}
+                        <p class="effect-related">
+                          <strong>Related transition:</strong> relation <code>{{ e.detail.related.relation }}</code>
+                          {% if e.detail.related.sources %} ({{ e.detail.related.sources|join:' | ' }} → {{ e.detail.related.target }}){% else %} → {{ e.detail.related.target }}{% endif %}
+                          via transition <em>{{ e.detail.related.transition_name }}</em>
+                        </p>
+                        {% endif %}
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+                {% if t.caused_by %}
+                  <p><strong>Also triggered by:</strong></p>
+                  <ul>
+                    {% for cb in t.caused_by %}
+                      <li>
+                        {{ cb.trigger }}
+                        {% if cb.conditions %}
+                          <em>if {{ cb.conditions|join:' and ' }}</em>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {# Other triggers (non-transition) #}
+      {% if section.doc.triggers %}
+        <section class="fsm-section other-triggers-section" id="{{ section.base_id }}-triggers">
+          <h2>Other triggers (e.g. field changes)</h2>
+          <ul class="trigger-list">
+            {% for tr in section.doc.triggers %}
+              <li class="trigger-item" id="{{ section.base_id }}-trigger-{{ tr.id }}">
+                <strong>{{ tr.when }}</strong>
+                <ul>
+                  {% for e in tr.effects %}
+                    <li>
+                      {{ e.summary }}
+                      {% if e.detail %}{% if e.detail.show_doc and e.detail.doc %}<p class="effect-doc"><em>{{ e.detail.doc }}</em></p>{% endif %}{% if e.detail.notification %}<p class="effect-notification"><strong>Notification:</strong> {{ e.detail.notification.message_class }}{% if e.detail.notification.subject %} &middot; subject: <code>{{ e.detail.notification.subject }}</code>{% endif %}{% if e.detail.notification.recipients_doc %}<br><strong>Recipients:</strong> {{ e.detail.notification.recipients_doc }}{% endif %}{% if e.detail.notification.show_message_doc %}<br><em>{{ e.detail.notification.message_doc }}</em>{% endif %}</p>{% if e.detail.notification.template_rendered %}<div class="effect-template-preview"><strong>Template preview:</strong><div class="effect-template-body">{{ e.detail.notification.template_rendered|safe }}</div></div>{% endif %}{% endif %}{% if e.detail.transition %}<p class="effect-related"><strong>Transition:</strong> {% if e.detail.transition.sources %}{% for src in e.detail.transition.sources %}{% for st in section.doc.states %}{% if st.name == src %}<a href="#{{ section.base_id }}-state-{{ st.id }}" class="state-link-inline">{{ src }}</a>{% endif %}{% endfor %}{% if not forloop.last %} | {% endif %}{% endfor %}→{% else %}→{% endif %} {% for st in section.doc.states %}{% if st.name == e.detail.transition.target %}<a href="#{{ section.base_id }}-state-{{ st.id }}" class="state-link-inline">{{ e.detail.transition.target }}</a>{% endif %}{% endfor %} {% for trans in section.doc.transitions %}{% if trans.name == e.detail.transition.transition_name %} via <em><a href="#{{ section.base_id }}-trans-{{ trans.id }}" class="transition-link-inline">{{ e.detail.transition.transition_name }}</a></em>{% endif %}{% endfor %}</p>{% endif %}{% if e.detail.related %}<p class="effect-related"><strong>Related transition:</strong> relation <code>{{ e.detail.related.relation }}</code>{% if e.detail.related.sources %} ({{ e.detail.related.sources|join:' | ' }} → {{ e.detail.related.target }}){% else %} → {{ e.detail.related.target }}{% endif %} via transition <em>{{ e.detail.related.transition_name }}</em></p>{% endif %}{% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
+      {# Periodic tasks #}
+      {% if section.doc.periodic_tasks %}
+        <section class="fsm-section periodic-tasks-section" id="{{ section.base_id }}-periodic-tasks">
+          <h2>Periodic tasks</h2>
+          <p class="help">
+            Scheduled tasks that run (e.g. via cron) and apply effects to matching instances.
+          </p>
+          <ul class="trigger-list">
+            {% for pt in section.doc.periodic_tasks %}
+              <li class="trigger-item" id="{{ section.base_id }}-periodic-{{ pt.id }}">
+                <strong>{{ pt.name }}</strong>
+                {% if pt.description %}
+                  <p class="task-description">{{ pt.description }}</p>
+                {% endif %}
+                <ul>
+                  {% for e in pt.effects %}
+                    <li>
+                      {{ e.summary }}
+                      {% if e.detail %}{% if e.detail.show_doc and e.detail.doc %}<p class="effect-doc"><em>{{ e.detail.doc }}</em></p>{% endif %}{% if e.detail.notification %}<p class="effect-notification"><strong>Notification:</strong> {{ e.detail.notification.message_class }}{% if e.detail.notification.subject %} &middot; subject: <code>{{ e.detail.notification.subject }}</code>{% endif %}{% if e.detail.notification.recipients_doc %}<br><strong>Recipients:</strong> {{ e.detail.notification.recipients_doc }}{% endif %}{% if e.detail.notification.show_message_doc %}<br><em>{{ e.detail.notification.message_doc }}</em>{% endif %}</p>{% if e.detail.notification.template_rendered %}<div class="effect-template-preview"><strong>Template preview:</strong><div class="effect-template-body">{{ e.detail.notification.template_rendered|safe }}</div></div>{% endif %}{% endif %}{% if e.detail.transition %}<p class="effect-related"><strong>Transition:</strong> {% if e.detail.transition.sources %}{% for src in e.detail.transition.sources %}{% for st in section.doc.states %}{% if st.name == src %}<a href="#{{ section.base_id }}-state-{{ st.id }}" class="state-link-inline">{{ src }}</a>{% endif %}{% endfor %}{% if not forloop.last %} | {% endif %}{% endfor %}→{% else %}→{% endif %} {% for st in section.doc.states %}{% if st.name == e.detail.transition.target %}<a href="#{{ section.base_id }}-state-{{ st.id }}" class="state-link-inline">{{ e.detail.transition.target }}</a>{% endif %}{% endfor %} {% for trans in section.doc.transitions %}{% if trans.name == e.detail.transition.transition_name %} via <em><a href="#{{ section.base_id }}-trans-{{ trans.id }}" class="transition-link-inline">{{ e.detail.transition.transition_name }}</a></em>{% endif %}{% endfor %}</p>{% endif %}{% if e.detail.related %}<p class="effect-related"><strong>Related transition:</strong> relation <code>{{ e.detail.related.relation }}</code>{% if e.detail.related.sources %} ({{ e.detail.related.sources|join:' | ' }} → {{ e.detail.related.target }}){% else %} → {{ e.detail.related.target }}{% endif %} via transition <em>{{ e.detail.related.transition_name }}</em></p>{% endif %}{% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+<a href="#top" class="back-to-top-fixed" aria-label="Back to top">Back to top</a>
+<script>
+(function(){
+  function openDetail(id) {
+    var detail = document.getElementById(id + '-detail');
+    if (detail) {
+      document.querySelectorAll('.transition-detail').forEach(function(d){ d.style.display = 'none'; });
+      detail.style.display = 'block';
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+  function onHashChange() {
+    var hash = window.location.hash.slice(1);
+    if (hash && hash.endsWith('-detail')) hash = hash.slice(0, -7);
+    if (hash) openDetail(hash);
+  }
+  if (window.location.hash) onHashChange();
+  window.addEventListener('hashchange', onHashChange);
+  document.querySelectorAll('.transition-link').forEach(function(a){
+    a.addEventListener('click', function(e){
+      var id = this.getAttribute('href').slice(1);
+      var detail = document.getElementById(id + '-detail');
+      if (detail) {
+        var open = detail.style.display === 'block';
+        document.querySelectorAll('.transition-detail').forEach(function(d){ d.style.display = 'none'; });
+        if (!open) { detail.style.display = 'block'; window.location.hash = id; }
+      }
+    });
+  });
+  function updateStickyHeaders() {
+    document.querySelectorAll('.fsm-block-sticky-header').forEach(function(header) {
+      var rect = header.getBoundingClientClientRect ? header.getBoundingClientRect() : null;
+      if (!rect) return;
+      if (rect.top <= 2) {
+        header.classList.add('is-stuck');
+      } else {
+        header.classList.remove('is-stuck');
+      }
+    });
+  }
+  var scrollTicking = false;
+  window.addEventListener('scroll', function() {
+    if (!scrollTicking) {
+      window.requestAnimationFrame(function() {
+        updateStickyHeaders();
+        scrollTicking = false;
+      });
+      scrollTicking = true;
+    }
+  }, { passive: true });
+  updateStickyHeaders();
+})();
+</script>
+</body>
+</html>

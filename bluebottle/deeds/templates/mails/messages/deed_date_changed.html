@@ -2,14 +2,14 @@
 {% load i18n %}
 {% block message %}
 <p>
-    {% blocktrans context 'email' %}The start and/or end date of the activity "{{ title }}", in which you are participating, has changed.{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}The start and/or end date of the activity "{{ title }}", in which you are participating, has changed.{% endblocktrans %}
 </p>
 <p>
-    {% blocktrans context 'email' %}Start: {{ start }}{% endblocktrans %}<br/>
-    {% blocktrans context 'email' %}End: {{ end }}{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}Start: {{ start }}{% endblocktrans %}<br/>
+    {% blocktrans context 'platform-email' %}End: {{ end }}{% endblocktrans %}
 </p>
 <p>
-    {% blocktrans context 'email' %}Head over to the activity page for more information.{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}Head over to the activity page for more information.{% endblocktrans %}
 </p>
 {% endblock %}
 

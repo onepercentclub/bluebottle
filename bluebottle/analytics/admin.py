@@ -12,7 +12,7 @@ class AnalyticsPlatformSettingsAdmin(BasePlatformSettingsAdmin):
             _('General'),
             {
                 'fields': [
-                    'platform_type', 'plausible_embed_link', 'terminated',
+                    'platform_type', 'plausible_embed_link',
 
                 ]
             }

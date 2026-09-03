@@ -119,7 +119,8 @@ class ApiClient(RestAPIClient):
             extra['HTTP_HOST'] = self.tenant.domain_url
 
         return super(ApiClient, self).post(
-            path, data=data, format=format, content_type=content_type, **extra)
+            path, data=data, format=format, content_type=content_type, **extra
+        )
 
     def put(self, path, data=None, format='json', content_type=None, **extra):
         if 'token' in extra:
@@ -130,7 +131,8 @@ class ApiClient(RestAPIClient):
             extra['HTTP_HOST'] = self.tenant.domain_url
 
         return super(ApiClient, self).put(
-            path, data=data, format=format, content_type=content_type, **extra)
+            path, data=data, format=format, content_type=content_type, **extra
+        )
 
     def patch(self, path, data=None, format='json', content_type=None, **extra):
         if 'token' in extra:
@@ -141,7 +143,8 @@ class ApiClient(RestAPIClient):
             extra['HTTP_HOST'] = self.tenant.domain_url
 
         return super(ApiClient, self).patch(
-            path, data=data, format=format, content_type=content_type, **extra)
+            path, data=data, format=format, content_type=content_type, **extra
+        )
 
     def delete(self, path, data=None, format='json', content_type=None,
                **extra):
@@ -153,7 +156,8 @@ class ApiClient(RestAPIClient):
             extra['HTTP_HOST'] = self.tenant.domain_url
 
         return super(ApiClient, self).delete(
-            path, data=data, format=format, content_type=content_type, **extra)
+            path, data=data, format=format, content_type=content_type, **extra
+        )
 
 
 @override_settings(DEBUG=True)
@@ -568,6 +572,15 @@ class APITestCase(BluebottleTestCase):
             [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
         )
 
+    def assertNotTransition(self, transition):
+        """
+        Assert that it is possible to perform the transition with the name `transition`
+        """
+        self.assertNotIn(
+            transition,
+            [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
+        )
+
     def assertMeta(self, attr, expected=None, data=None):
         """
         Assert that `attr` is present in the resource's meta
@@ -891,6 +904,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
     """
 
     def setUp(self):
+        super().setUp()
         self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
         self.staff_member = BlueBottleUserFactory.create(is_staff=True)
@@ -916,7 +930,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
                 form.field_order.append((name, new))
 
 
-@ override_settings(
+@override_settings(
     CELERY_ALWAYS_EAGER=True,
     CELERY_EAGER_PROPAGATES_EXCEPTIONS=True
 )
@@ -929,7 +943,7 @@ class CeleryTestCase(SimpleTestCase):
         for factory in self.factories:
             factory._meta.model.objects.all().delete()
 
-    @ classmethod
+    @classmethod
     def setUpClass(cls):
         from celery.contrib.testing.tasks import ping  # noqa
 
@@ -939,7 +953,7 @@ class CeleryTestCase(SimpleTestCase):
 
         super().setUpClass()
 
-    @ classmethod
+    @classmethod
     def tearDownClass(cls):
         cls.celery_worker.__exit__(None, None, None)
         app.conf.task_always_eager = True
@@ -1018,6 +1032,9 @@ class override_properties(object):
 
 class JSONAPITestClient(Client):
 
+    def get(self, path, data='', follow=False, secure=False, **extra):
+        return super(JSONAPITestClient, self).get(path, data, follow, secure, **extra)
+
     def patch(self, path, data='',
               content_type='application/vnd.api+json',
               follow=False, secure=False, **extra):
@@ -1039,6 +1056,17 @@ class JSONAPITestClient(Client):
         if user:
             extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
         return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
+
+    def _base_environ(self, **request):
+        env = super()._base_environ(**request)
+        env['SERVER_NAME'] = connection.tenant.domain_url
+        env['HTTP_HOST'] = connection.tenant.domain_url
+        return env
+
+    def request(self, **kwargs):
+        kwargs['SERVER_NAME'] = connection.tenant.domain_url
+        kwargs['HTTP_HOST'] = connection.tenant.domain_url  # Added this line
+        return super().request(**kwargs)
 
 
 def get_first_included_by_type(response, type):

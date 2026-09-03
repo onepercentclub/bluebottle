@@ -15,23 +15,20 @@ from django.http import HttpResponse
 from django.template import loader
 from django.utils.encoding import smart_str
 from djmoney.money import Money
-from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
 from bluebottle.activities.models import Contributor
 from bluebottle.clients import properties
 from bluebottle.members.models import Member
 from bluebottle.utils.exchange_rates import convert
-from .models import Language, TranslationPlatformSettings
+from .models import Language
 from ..segments.models import SegmentType
 
 
+@admin.register(Language)
 class LanguageAdmin(admin.ModelAdmin):
     model = Language
     list_display = ('code', 'language_name', 'native_name')
-
-
-admin.site.register(Language, LanguageAdmin)
 
 
 def prep_field(request, obj, field, manyToManySep=';'):
@@ -44,6 +41,11 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
         for bit in bits:
             obj = getattr(obj, bit, None)
+            if callable(obj):
+                try:
+                    obj = obj()
+                except TypeError:
+                    pass
 
             if obj is None:
                 return ""
@@ -111,7 +113,9 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             row = labels if labels else field_names
             if queryset.model is Member or issubclass(queryset.model, Contributor):
                 for segment_type in SegmentType.objects.all():
-                    labels.append(segment_type.name)
+                    # Get translated name for segment type
+                    segment_type_name = segment_type.name
+                    labels.append(segment_type_name)
             writer.writerow([escape_csv_formulas(item) for item in row])
 
         if queryset.model is Member:
@@ -125,14 +129,22 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             # Write extra field data
             if queryset.model is Member:
                 for segment_type in SegmentType.objects.all():
-                    segments = " | ".join(obj.segments.filter(
-                        segment_type=segment_type).values_list('name', flat=True))
+                    # Get translated names for segments
+                    segment_list = []
+                    for segment in obj.segments.filter(segment_type=segment_type):
+                        segment_name = segment.name
+                        segment_list.append(segment_name)
+                    segments = " | ".join(segment_list)
                     row.append(segments)
             if issubclass(queryset.model, Contributor):
                 for segment_type in SegmentType.objects.all():
                     if obj.user:
-                        segments = " | ".join(obj.user.segments.filter(
-                            segment_type=segment_type).values_list('name', flat=True))
+                        # Get translated names for segments
+                        segment_list = []
+                        for segment in obj.user.segments.filter(segment_type=segment_type):
+                            segment_name = segment.name
+                            segment_list.append(segment_name)
+                        segments = " | ".join(segment_list)
                     else:
                         segments = ''
                     row.append(segments)
@@ -179,13 +191,7 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
     )
 
 
-@admin.register(TranslationPlatformSettings)
-class TranslationPlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
-    pass
-
-
 class TranslatableAdminOrderingMixin(object):
-
     translatable_ordering = 'translations__name'
 
     def get_queryset(self, request):
@@ -201,9 +207,10 @@ class TranslatableAdminOrderingMixin(object):
         ).order_by(self.translatable_ordering)
 
 
-def admin_info_box(text):
+def admin_info_box(text, class_name=None):
     template = loader.get_template('admin/info_box.html')
     context = {
         'text': text,
+        'class_name': class_name,
     }
     return template.render(context)

@@ -1,4 +1,4 @@
-from django.urls import re_path
+from django.urls import path
 
 from bluebottle.impact.views import (
     ImpactTypeList,
@@ -7,15 +7,15 @@ from bluebottle.impact.views import (
 )
 
 urlpatterns = [
-    re_path(r'^types$', ImpactTypeList.as_view(), name='impact-type-list'),
-    re_path(
-        r'^types/(?P<pk>\d+)$',
+    path('types', ImpactTypeList.as_view(), name='impact-type-list'),
+    path(
+        'types/<int:pk>',
         ImpactTypeDetail.as_view(),
         name='impact-details'
     ),
-    re_path(r'^goals$', ImpactGoalList.as_view(), name='impact-goal-list'),
-    re_path(
-        r'^goals/(?P<pk>\d+)$',
+    path('goals', ImpactGoalList.as_view(), name='impact-goal-list'),
+    path(
+        'goals/<int:pk>',
         ImpactGoalDetail.as_view(),
         name='impact-goal-details'
     )

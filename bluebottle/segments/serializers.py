@@ -43,6 +43,8 @@ class SegmentListSerializer(ModelSerializer):
         'segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
     }
 
+    tag_line = serializers.CharField(source='slogan', required=False, allow_blank=True, allow_null=True)
+
     class Meta(object):
         model = Segment
         fields = (

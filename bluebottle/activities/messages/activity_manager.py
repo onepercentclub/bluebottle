@@ -1,11 +1,17 @@
+from django.utils.html import format_html
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.funding.models import Funding
+from bluebottle.grant_management.models import GrantApplication
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
-from django.utils.html import format_html
 
 
 class OwnerActivityNotification(TransitionMessage):
+    """
+    Base class for all notifications to activity managers.
+    """
+
     context = {
         'title': 'title',
     }
@@ -14,15 +20,39 @@ class OwnerActivityNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if isinstance(self.obj, Funding):
+            context['activity_type'] = pgettext('platform-email', 'crowdfunding campaign')
+        elif isinstance(self.obj, GrantApplication):
+            context['activity_type'] = pgettext('platform-email', 'grant application')
+        else:
+            context['activity_type'] = pgettext('platform-email', 'activity')
+
+        return context
+
+    @property
+    def action_title(self):
+        if isinstance(self.obj, Funding):
+            return pgettext('platform-email', 'View campaign')
+        elif isinstance(self.obj, GrantApplication):
+            return pgettext('platform-email', 'View application')
+        else:
+            return pgettext('platform-email', 'View activity')
 
     def get_recipients(self):
         """activity owner"""
         return [self.obj.owner]
 
+    class Meta:
+        abstract = True
+
 
 class ImpactReminderMessage(OwnerActivityNotification):
-    subject = pgettext('email', 'Please share the impact results for your activity "{title}".')
+    """
+    Remind the activity manager to add impact results to their activity.
+    """
+    subject = pgettext('platform-email', 'Please share the impact results for your activity "{title}".')
     template = 'messages/activity_manager/activity_impact_reminder'
     context = {
         'title': 'title'
@@ -31,78 +61,81 @@ class ImpactReminderMessage(OwnerActivityNotification):
 
 class ActivitySucceededNotification(OwnerActivityNotification):
     """
-    The activity succeeded
+    Notify the activity manager that the activity succeeded.
     """
-    subject = pgettext('email', 'Your activity "{title}" has succeeded 🎉')
+    subject = pgettext('platform-email', 'Your activity "{title}" has succeeded 🎉')
     template = 'messages/activity_manager/activity_succeeded'
 
 
 class ActivityRestoredNotification(OwnerActivityNotification):
     """
-    The activity was restored
+    Notify the activity manager that the activity was restored
     """
-    subject = pgettext('email', 'The activity "{title}" has been restored')
+    subject = pgettext('platform-email', 'The activity "{title}" has been restored')
     template = 'messages/activity_manager/activity_restored'
 
 
 class ActivityRejectedNotification(OwnerActivityNotification):
     """
-    The activity was rejected
+    Notify the activity manager that the activity was rejected
     """
-    subject = pgettext('email', 'Your activity "{title}" has been rejected')
+    subject = pgettext('platform-email', 'Your activity "{title}" has been rejected')
     template = 'messages/activity_manager/activity_rejected'
 
 
 class ActivityCancelledNotification(OwnerActivityNotification):
     """
-    The activity got cancelled
+    Notify the activity manager that the activity got cancelled
     """
-    subject = pgettext('email', 'Your activity "{title}" has been cancelled')
+    subject = pgettext('platform-email', 'Your activity "{title}" has been cancelled')
     template = 'messages/activity_manager/activity_cancelled'
 
 
 class ActivityExpiredNotification(OwnerActivityNotification):
     """
-    The activity expired (no sign-ups before registration deadline or start date)
+    Notify the activity manager that the activity expired (no sign-ups before registration deadline or start date)
     """
-    subject = pgettext('email', 'The registration deadline for your activity "{title}" has expired')
+    subject = pgettext('platform-email', 'The registration deadline for your activity "{title}" has expired')
     template = 'messages/activity_manager/activity_expired'
 
 
 class ActivityPublishedNotification(OwnerActivityNotification):
     """
-    The activity was published
+    Notify the activity manager that the activity was published
     """
-    subject = pgettext('email', "Your activity on {site_name} has been published!")
+    subject = pgettext('platform-email', "Your activity on {site_name} has been published!")
     template = 'messages/activity_manager/activity_published'
 
 
 class ActivitySubmittedNotification(OwnerActivityNotification):
     """
-    The activity was submitted
+    Notify the activity manager that the activity was submitted
     """
-    subject = pgettext('email', "You submitted an activity on {site_name}")
+    subject = pgettext('platform-email', "You submitted an activity on {site_name}")
     template = 'messages/activity_manager/activity_submitted'
 
 
 class ActivityApprovedNotification(OwnerActivityNotification):
     """
-    The activity was approved
+    Notify the activity manager that the activity was approved
     """
-    subject = pgettext('email', "Your activity on {site_name} has been approved!")
+    subject = pgettext('platform-email', "Your activity on {site_name} has been approved!")
     template = 'messages/activity_manager/activity_approved'
 
 
 class ActivityNeedsWorkNotification(OwnerActivityNotification):
     """
-    The activity needs work
+    Notify the activity manager that the activity needs work
     """
-    subject = pgettext('email', "The activity you submitted on {site_name} needs work")
+    subject = pgettext('platform-email', "The activity you submitted on {site_name} needs work")
     template = 'messages/activity_manager/activity_needs_work'
 
 
 class PublishActivityReminderNotification(OwnerActivityNotification):
-    subject = pgettext('email', 'Publish your activity "{title}"')
+    """
+    Notify the activity manager that an activity still needs to be published
+    """
+    subject = pgettext('platform-email', 'Publish your activity "{title}"')
     template = 'messages/activity_manager/publish_activity_reminder'
     send_once = True
 
@@ -110,11 +143,52 @@ class PublishActivityReminderNotification(OwnerActivityNotification):
         'title': 'title',
     }
 
-    action_title = pgettext('email', 'Publish your activity')
+    action_title = pgettext('platform-email', 'Publish your activity')
+
+
+class ContactActivityManagerNotification(TransitionMessage):
+    """
+    Notify the activity manager that someone sent a message via the contact form.
+    """
+    subject = pgettext(
+        'platform-email',
+        'Someone is trying to get in touch with you about your activity on "{site_name}"',
+    )
+    template = 'messages/activity_manager/activity_message_to_manager'
+
+    context = {
+        'message_text': 'message',
+    }
+
+    @property
+    def reply_to(self):
+        sender = self.obj.sender
+        return f'{sender.full_name} <{sender.email}>'
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    def get_recipients(self):
+        return [self.obj.activity.owner]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        sender = self.obj.sender
+        context.update({
+            'sender_name': sender.first_name,
+            'title': self.obj.activity.title,
+            'recipient_name': recipient.first_name,
+        })
+        return context
 
 
 class TermsOfServiceNotification(OwnerActivityNotification):
-    subject = pgettext('email', 'Terms of service')
+    """
+    Notify the activity manager about the terms of service they accepted.
+    A BCC will be sent to other email address if configured.
+    """
+    subject = pgettext('platform-email', 'Terms of service')
     template = 'messages/activity_manager/terms_of_service'
     send_once = False
 
@@ -130,8 +204,10 @@ class TermsOfServiceNotification(OwnerActivityNotification):
         context['partner_organization'] = (
             self.obj.organization and self.obj.organization.name or self.obj.owner.full_name
         )
+        # This
+        fallback_text = "Please contact your platform manager to share the Terms of Service."
         settings = InitiativePlatformSettings.load()
-        template = settings.terms_of_service_mail_text or settings.terms_of_service
+        template = settings.terms_of_service_mail_text or settings.terms_of_service or fallback_text
         template = template.replace('\n', '<br />')
         context['terms_of_service'] = format_html(template, **context)
         return context

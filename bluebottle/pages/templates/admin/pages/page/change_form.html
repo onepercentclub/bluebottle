@@ -1,0 +1,16 @@
+{% extends 'admin/change_form.html' %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    {% if translate_url %}
+        <a href="{{ translate_url }}" class="button">
+            {% trans 'Translate page' %}
+        </a>
+    {% endif %}
+    {% if export_url %}
+        <a href="{{ export_url }}" class="button">
+            {% trans 'Export page' %}
+        </a>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}

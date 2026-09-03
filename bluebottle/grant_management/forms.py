@@ -1,7 +1,13 @@
 from django.core.exceptions import ValidationError
-from django.forms import CharField, ModelChoiceField, Textarea
+from django.forms import CharField, ModelChoiceField, Textarea, BooleanField
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from .messages.activity_manager import (
+    GrantApplicationApprovedMessage,
+    GrantApplicationNeedsWorkMessage,
+    GrantApplicationRejectedMessage,
+)
 from .models import GrantDonor, GrantFund
 from ..utils.fields import MoneyFormField
 from ..utils.forms import TransitionConfirmationForm
@@ -11,13 +17,6 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
     """
     Form for creating a GrantDonor object for a GrantApplication.
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if self.instance and self.instance.target:
-            self.fields["amount"].initial = self.instance.target
-
     fund = ModelChoiceField(
         queryset=GrantFund.objects.all(),
         label=_("Grant Fund"),
@@ -31,6 +30,22 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         required=True,
     )
 
+    message_class = GrantApplicationApprovedMessage
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.target:
+            self.fields["amount"].initial = self.instance.target
+
+        settings = InitiativePlatformSettings.load()
+        if settings.vet_organizations and self.instance.organization:
+            self.fields['vet_organizations'] = BooleanField(
+                label=_("Due diligence"),
+                help_text=_("All the required checks have been completed."),
+                required=False
+            )
+
     def clean(self):
         amount = self.cleaned_data['amount']
         fund = self.cleaned_data['fund']
@@ -41,6 +56,16 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         if amount.amount > fund.eventual_balance().amount:
             raise ValidationError({'amount': _('Insufficient funds')})
 
+        settings = InitiativePlatformSettings.load()
+        if (
+            settings.vet_organizations and
+            self.instance.organization and
+            not self.cleaned_data.get('vet_organizations')
+        ):
+            raise ValidationError({
+                'vet_organizations': _('Please verify that all required checks have been completed')}
+            )
+
     def save(self, user=None):
         """
         Create and save a GrantDonor object.
@@ -48,20 +73,32 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         if not self.is_valid():
             raise ValueError("Form must be valid before saving")
 
+        super().save()
+
         fund = self.cleaned_data["fund"]
         amount = self.cleaned_data["amount"]
 
         grant_donor = GrantDonor.objects.create(
             activity=self.instance, fund=fund, amount=amount, user=user
         )
-
         return grant_donor
+
+
+class GrantApplicationNeedsWorkForm(TransitionConfirmationForm):
+    title = _('Grant application needs work')
+    message_class = GrantApplicationNeedsWorkMessage
+
+
+class GrantApplicationRejectedForm(TransitionConfirmationForm):
+    title = _('Grant application rejected')
+    message_class = GrantApplicationRejectedMessage
 
 
 class GrantPayoutApproveForm(TransitionConfirmationForm):
     """
     Form for approving a grant payout with extra check
     """
+    include_custom_message = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

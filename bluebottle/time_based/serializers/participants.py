@@ -14,6 +14,7 @@ from bluebottle.time_based.models import (
     PeriodicRegistration,
     ScheduleParticipant,
     ScheduleRegistration,
+    ScheduleSlot,
     TeamScheduleParticipant,
     TeamScheduleRegistration,
     DateActivitySlot, RegisteredDateParticipant
@@ -61,7 +62,8 @@ class DateParticipantSerializer(ParticipantSerializer):
         email = data.get('email', None)
         if data['slot'].status != 'open' and not email:
             raise ValidationError('Participants cannot sign up for full slots')
-        return data
+
+        return super().validate(data)
 
     class Meta(ParticipantSerializer.Meta):
         model = DateParticipant
@@ -126,10 +128,15 @@ class RegisteredDateParticipantSerializer(ParticipantSerializer):
 
 class ScheduleParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('schedule-participant-detail', view_args=('pk',))
-    registration = ResourceRelatedField(queryset=ScheduleRegistration.objects.all())
+    registration = ResourceRelatedField(
+        queryset=ScheduleRegistration.objects.all(), required=False
+    )
+    slot = ResourceRelatedField(
+        queryset=ScheduleSlot.objects.all(), required=False
+    )
 
     class Meta(ParticipantSerializer.Meta):
-        fields = ParticipantSerializer.Meta.fields + ("slot",)
+        fields = ParticipantSerializer.Meta.fields + ("slot", "contributions")
         model = ScheduleParticipant
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):

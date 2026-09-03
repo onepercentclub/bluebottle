@@ -207,6 +207,13 @@ class TriggerMixin(object):
         if 'send_messages' not in options:
             options['send_messages'] = self._send_messages
 
+        if 'message' not in options:
+            for transition in getattr(self, '_transitions', []):
+                custom_message = getattr(transition, 'custom_message', None)
+                if custom_message:
+                    options['message'] = custom_message
+                    break
+
         if hasattr(self, '_state_machines'):
             for machine_name in self._state_machines:
                 machine = getattr(self, machine_name)

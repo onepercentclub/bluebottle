@@ -3,6 +3,7 @@ from django.contrib.gis.geos import Point
 from django.core import mail
 from django.test import tag
 from django.test.utils import override_settings
+from django.utils.translation import activate
 from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 
@@ -10,6 +11,7 @@ from bluebottle.activities.models import Contributor, Contribution
 from bluebottle.activities.tasks import (
     recommend, get_matching_activities, data_retention_contribution_task
 )
+from bluebottle.notifications.models import Message
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -40,6 +42,7 @@ from bluebottle.time_based.tests.factories import (
 class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super().setUp()
+        activate('en')
         self.settings = InitiativePlatformSettingsFactory.create(enable_matching_emails=True)
 
         self.amsterdam = Point(x=4.8981734, y=52.3790565)
@@ -120,6 +123,36 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
     def test_recommend(self):
         recommend()
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_recommend_does_not_resend_same_month(self):
+        recommend()
+        self.assertEqual(len(mail.outbox), 1)
+
+        recommend()
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_recommend_does_not_resend_unsent_row(self):
+        recommend()
+        self.assertEqual(len(mail.outbox), 1)
+        Message.objects.filter(
+            template='messages/matching/matching_activities',
+            recipient=self.user,
+        ).update(sent=None)
+        mail.outbox = []
+
+        recommend()
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_recommend_sends_again_next_month(self):
+        recommend()
+        self.assertEqual(len(mail.outbox), 1)
+        Message.objects.filter(
+            template='messages/matching/matching_activities',
+            recipient=self.user,
+        ).update(sent=now() - relativedelta(months=1))
+
+        recommend()
+        self.assertEqual(len(mail.outbox), 2)
 
     def test_recommend_no_matching(self):
         for activity in self.matching:

@@ -2,15 +2,14 @@ import logging
 from datetime import date, datetime
 
 from celery.schedules import crontab
-from celery.task import periodic_task
 from dateutil.relativedelta import relativedelta
-from django.db.models import Count, Case, When
+from django.db.models import Case, Count, When
 from django.utils.timezone import now
 from elasticsearch_dsl.query import (
     Nested, Q, ConstantScore, MatchAll, Term, Terms, GeoDistance
 )
 
-from bluebottle.activities.documents import activity
+from bluebottle.celery import app
 from bluebottle.activities.messages.matching import (
     MatchingActivitiesNotification,
     DoGoodHoursReminderQ1Notification,
@@ -29,7 +28,7 @@ logger = logging.getLogger('bluebottle')
 
 
 def get_matching_activities(user):
-    settings = InitiativePlatformSettings.objects.get()
+    settings = InitiativePlatformSettings.load()
 
     query = ConstantScore(
         filter=Nested(
@@ -44,6 +43,7 @@ def get_matching_activities(user):
         )
     ) | ConstantScore(boost=0.5, filter=MatchAll())
 
+    from bluebottle.activities.documents import activity
     search = activity.search().filter(
         Q('terms', status=['open', 'running']) &
         (
@@ -134,36 +134,39 @@ def get_matching_activities(user):
     ).order_by(preserved)
 
 
-@periodic_task(
-    run_every=(crontab(0, 0, day_of_month='2')),
-    name="recommend",
-    ignore_result=True
-)
+@app.task(ack_late=False)
+def recommend_user(tenant, user):
+    with LocalTenant(tenant, clear_tenant=True):
+        try:
+            activities = get_matching_activities(user)
+
+            if activities:
+                notification = MatchingActivitiesNotification(user)
+                notification.compose_and_send(activities=activities)
+        except Exception as e:
+            logger.error(e)
+
+
+@app.task(ack_late=False)
+def recommend_tenant(tenant):
+    with LocalTenant(tenant, clear_tenant=True):
+        settings = InitiativePlatformSettings.load()
+        if settings.enable_matching_emails:
+            for user in Member.objects.filter(subscribed=True):
+                recommend_user(tenant, user)
+
+
+@app.task(ack_late=False)
 def recommend():
     for tenant in Client.objects.all():
-        with LocalTenant(tenant, clear_tenant=True):
-            settings = InitiativePlatformSettings.objects.get()
-            if settings.enable_matching_emails:
-                for user in Member.objects.filter(subscribed=True):
-                    try:
-                        activities = get_matching_activities(user)
-
-                        if activities:
-                            notification = MatchingActivitiesNotification(user)
-                            notification.compose_and_send(activities=activities)
-                    except Exception as e:
-                        logger.error(e)
+        recommend_tenant.apply_async(args=[tenant])
 
 
-@periodic_task(
-    run_every=(crontab(minute=0, hour=10)),
-    name="do_good_hours_reminder",
-    ignore_result=True
-)
+@app.task
 def do_good_hours_reminder():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            settings = MemberPlatformSettings.objects.get()
+            settings = MemberPlatformSettings.load()
             if settings.do_good_hours:
                 offset = settings.fiscal_month_offset
                 today = date.today()
@@ -174,11 +177,11 @@ def do_good_hours_reminder():
                 notification = None
                 if settings.reminder_q1 and today == q1:
                     notification = DoGoodHoursReminderQ1Notification(settings)
-                if settings.reminder_q2 and today == q2:
+                elif settings.reminder_q2 and today == q2:
                     notification = DoGoodHoursReminderQ2Notification(settings)
-                if settings.reminder_q3 and today == q3:
+                elif settings.reminder_q3 and today == q3:
                     notification = DoGoodHoursReminderQ3Notification(settings)
-                if settings.reminder_q4 and today == q4:
+                elif settings.reminder_q4 and today == q4:
                     notification = DoGoodHoursReminderQ4Notification(settings)
 
                 if notification:
@@ -188,15 +191,11 @@ def do_good_hours_reminder():
                         logger.error(e)
 
 
-@periodic_task(
-    run_every=(crontab(minute=0, hour=10)),
-    name="data_retention_contributions",
-    ignore_result=True
-)
+@app.task
 def data_retention_contribution_task():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            settings = MemberPlatformSettings.objects.get()
+            settings = MemberPlatformSettings.load()
             if settings.retention_anonymize:
                 history = now() - relativedelta(months=settings.retention_anonymize)
                 Activity.objects.filter(created__lt=history, has_deleted_data=False).update(has_deleted_data=True)
@@ -232,7 +231,9 @@ def data_retention_contribution_task():
                 history = now() - relativedelta(months=settings.retention_delete)
                 contributors = Contributor.objects.filter(created__lt=history)
                 if contributors.count():
-                    logger.info(f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count()} contributors')
+                    logger.info(
+                        f'DATA RETENTION: {tenant.schema_name} deleting {contributors.count()} contributors'
+                    )
                     successful = contributors.filter(contributions__status='succeeded').values('activity_id').\
                         annotate(total=Count('activity_id')).order_by('activity_id')
                     for success in successful:
@@ -250,3 +251,49 @@ def data_retention_contribution_task():
                         f"DATA RETENTION: {tenant.schema_name} deleting {team_members.count()} team members"
                     )
                     team_members.delete()
+
+
+@app.task(name='bluebottle.activities.tasks.send_activity_message_notification_email')
+def send_activity_message_notification_email(activity_message_id, tenant):
+    from bluebottle.activities.messages.activity_manager import (
+        ContactActivityManagerNotification,
+    )
+    from bluebottle.activities.models import ActivityMessage
+    from bluebottle.clients.utils import LocalTenant
+
+    with LocalTenant(tenant, clear_tenant=True):
+        try:
+            instance = ActivityMessage.objects.select_related(
+                'sender',
+                'activity',
+                'activity__owner',
+            ).get(pk=activity_message_id)
+        except ActivityMessage.DoesNotExist:
+            logger.warning(
+                'ActivityMessage id=%s not found for notification email',
+                activity_message_id,
+            )
+            return
+
+        try:
+            ContactActivityManagerNotification(instance).compose_and_send()
+        except Exception:
+            logger.exception(
+                'Failed to send activity message notification to activity owner'
+            )
+
+
+app.add_periodic_task(
+    crontab(0, 0, day_of_month='2'),
+    recommend.s()
+)
+
+app.add_periodic_task(
+    crontab(minute=0, hour=10),
+    do_good_hours_reminder.s()
+)
+
+app.add_periodic_task(
+    crontab(minute=0, hour=10),
+    data_retention_contribution_task.s()
+)

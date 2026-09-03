@@ -1,7 +1,7 @@
+from datetime import timedelta
 from unittest import mock
 
 import stripe
-from datetime import timedelta
 from django.utils.timezone import now
 from djmoney.money import Money
 
@@ -23,6 +23,7 @@ from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory
     BankAccountFactory, PlainPayoutAccountFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentFactory,
 )
@@ -79,9 +80,49 @@ class PlainFundingTriggerTests(BluebottleTestCase):
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
 
+    def test_trigger_target_reached(self):
+        FundingPlatformSettings.objects.update_or_create(fixed_target=True)
+        self.funding.states.approve(save=True)
+        self.funding.target = Money(500, 'EUR')
+        self.funding.save()
 
-class DonorTriggerTests(BluebottleTestCase):
+        donation = DonorFactory.create(activity=self.funding, amount=Money(400, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+
+        donation = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+
+    def test_trigger_overfunding(self):
+        self.funding.states.approve(save=True)
+        self.funding.target = Money(500, 'EUR')
+        self.funding.save()
+
+        donation = DonorFactory.create(activity=self.funding, amount=Money(400, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+
+        donation = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+
+        donation = DonorFactory.create(activity=self.funding, amount=Money(400, 'EUR'))
+        PledgePaymentFactory.create(donation=donation)
+
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, FundingStateMachine.open.value)
+
+
+class DonorTriggerTests(FundingStripeMixin, BluebottleTestCase):
     def setUp(self):
+        super(DonorTriggerTests, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
@@ -100,10 +141,6 @@ class DonorTriggerTests(BluebottleTestCase):
         self.payment.states.succeed(save=True)
 
     def test_succeed_anonymous_reward(self):
-        settings = FundingPlatformSettings.load()
-        settings.allow_anonymous_rewards = False
-        settings.save()
-
         donor = DonorFactory.create(
             activity=self.funding, amount=Money(500, 'EUR'), reward=RewardFactory.create(), user=None
         )
@@ -113,21 +150,6 @@ class DonorTriggerTests(BluebottleTestCase):
         donor.refresh_from_db()
         self.assertEqual(donor.status, 'succeeded')
         self.assertIsNone(donor.reward)
-
-    def test_succeed_anonymous_reward_allowed(self):
-
-        reward = RewardFactory.create()
-        donor = DonorFactory.create(
-            activity=self.funding, amount=Money(500, 'EUR'), reward=reward, user=None
-        )
-        self.assertEqual(donor.reward, reward)
-        payment = StripePaymentFactory.create(donation=donor)
-        payment.states.succeed(save=True)
-
-        donor.refresh_from_db()
-
-        self.assertEqual(donor.status, 'succeeded')
-        self.assertEqual(donor.reward, reward)
 
     def test_change_donor_amount(self):
         self.assertEqual(self.donor.amount, Money(500, 'EUR'))

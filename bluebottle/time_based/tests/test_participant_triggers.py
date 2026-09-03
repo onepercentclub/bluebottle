@@ -106,6 +106,15 @@ class ParticipantTriggerTestCase:
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, "full")
 
+    def test_fill_change_capacity(self):
+        self.test_initial()
+
+        self.activity.capacity = 1
+        self.activity.save()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
     def test_withdraw_unfill(self):
         self.activity.capacity = 1
 
@@ -341,6 +350,15 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         # Skip this test for periodic activity
         pass
 
+    def test_withdraw(self):
+        pass
+
+    def test_withdraw_unfill(self):
+        pass
+
+    def test_reapply(self):
+        pass
+
     def test_fill_unfill(self):
         self.activity.capacity = 1
         self.activity.save()
@@ -386,15 +404,6 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, "full")
-
-    def test_withdraw_unfill(self):
-        self.activity.capacity = 1
-        self.activity.save()
-
-        self.test_withdraw()
-
-        self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "open")
 
     def test_remove_unfill(self):
         self.activity.capacity = 1

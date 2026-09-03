@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import include, re_path
 from django.contrib import admin
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfirmView
@@ -34,23 +35,23 @@ urlpatterns = [
         TwoFactorSetupView.as_view(),
         name='setup',
     ),
-    re_path(r'^admin/', include(tf_urls)),
+    path('admin/', include(tf_urls)),
 
     # Django JET URLS
-    re_path(r'^admin/jet/', include('jet.urls', 'jet')),
-    re_path(r'^admin/jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
-    re_path(r'^admin/locked/$', locked_out, name='admin-locked-out'),
+    path('admin/jet/', include('jet.urls', 'jet')),
+    path('admin/jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
+    path('admin/locked/', locked_out, name='admin-locked-out'),
 
     re_path('admin/logout/', admin_logout),
 
     # Django Admin, docs and password reset
-    re_path(
-        r'^admin/password_reset/$',
+    path(
+        'admin/password_reset/',
         admin_password_reset,
         name='admin_password_reset'
     ),
-    re_path(
-        r'^admin/password_reset/done/$',
+    path(
+        'admin/password_reset/done/',
         PasswordResetDoneView.as_view(),
         name='password_reset_done'
     ),
@@ -66,12 +67,12 @@ urlpatterns = [
     ),
     re_path(r'^admin/', admin.site.urls),
 
-    re_path(r'^admin/utils/tinymce/', include('tinymce.urls')),
-    re_path(r'^admin/utils/admintools/', include('admin_tools.urls')),
+    path('admin/utils/tinymce/', include('tinymce.urls')),
+    path('admin/utils/admintools/', include('admin_tools.urls')),
 
     # account login/logout, password reset, and password change
-    re_path(
-        r'^accounts/',
+    path(
+        'accounts/',
         include('django.contrib.auth.urls'),
     ),
 

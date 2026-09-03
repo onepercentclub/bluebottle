@@ -1,23 +1,19 @@
-from django.utils.translation import gettext_lazy as _
-
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
+    DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission, ActivityManagerPermission
 )
-from bluebottle.activities.views import RelatedContributorListView, ParticipantCreateMixin
+from bluebottle.activities.views import RelatedContributorListView, ActivityDetailView
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
-from bluebottle.time_based.permissions import CreateByEmailPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
+    ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     JsonApiViewMixin, ExportView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
     IcalView
 )
@@ -32,24 +28,13 @@ class CollectActivityListView(JsonApiViewMixin, ListCreateAPIView):
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
 
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        serializer.save(owner=self.request.user)
-
-
-class CollectActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
+class CollectActivityDetailView(ActivityDetailView):
     permission_classes = (
         ActivityStatusPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
-        DeleteActivityPermission, ActivitySegmentPermission
+        DeleteActivityPermission,
+        ActivitySegmentPermission
     )
 
     queryset = CollectActivity.objects.all()
@@ -70,10 +55,9 @@ class CollectActivityRelatedCollectContributorList(RelatedContributorListView):
     serializer_class = CollectContributorSerializer
 
 
-class CollectContributorList(JsonApiViewMixin, ParticipantCreateMixin, ListCreateAPIView):
+class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-        CreateByEmailPermission
+        OneOf(ResourcePermission, ResourceOwnerPermission, ActivityManagerPermission),
     )
     queryset = CollectContributor.objects.all()
     serializer_class = CollectContributorSerializer
@@ -128,7 +112,3 @@ class CollectIcalView(IcalView):
     queryset = CollectActivity.objects.exclude(
         status__in=['cancelled', 'deleted', 'rejected'],
     )
-
-    @property
-    def details(self):
-        return super().details + _('\nCollecting {type}').format(type=self.get_object().collect_type)

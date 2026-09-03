@@ -8,15 +8,15 @@ import logging
 import requests
 
 from urllib.parse import urljoin
-from celery import shared_task
 from sorl.thumbnail.shortcuts import get_thumbnail
 
+from bluebottle.celery import app
 from bluebottle.clients.utils import LocalTenant, tenant_url
 
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@app.task
 def _send_celery_mail(msg, tenant=None, send=False):
     """
         Async function to send emails or do logging. For the logging we encode
@@ -64,7 +64,7 @@ def _send_celery_mail(msg, tenant=None, send=False):
             )
 
 
-@shared_task
+@app.task
 def _post_to_facebook(instance, tenant=None):
     """ Post a Wallpost to users Facebook page using Celery """
     logger.info("FB post for:")

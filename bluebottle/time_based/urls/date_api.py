@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 
 from bluebottle.time_based.views import (
@@ -17,92 +18,92 @@ from bluebottle.time_based.views import (
 )
 
 urlpatterns = [
-    re_path(
-        r'^$',
+    path(
+        '',
         DateActivityListView.as_view(),
         name='date-list'
     ),
-    re_path(
-        r'^/(?P<pk>\d+)$',
+    path(
+        '/<int:pk>',
         DateActivityDetailView.as_view(),
         name='date-detail'
     ),
-    re_path(
-        r'^/transitions$',
+    path(
+        '/transitions',
         DateTransitionList.as_view(),
         name='date-transition-list'
     ),
 
-    re_path(
-        r'^/registrations/$',
+    path(
+        '/registrations/',
         DateRegistrationList.as_view(),
         name='date-registration-list'
     ),
 
-    re_path(
-        r'^/(?P<activity_id>\d+)/registrations/$',
+    path(
+        '/<int:activity_id>/registrations/',
         DateRelatedRegistrationList.as_view(),
         name='related-date-registrations'
     ),
-    re_path(
-        r'^/registrations/transitions$',
+    path(
+        '/registrations/transitions',
         DateRegistrationTransitionList.as_view(),
         name='date-registration-transitions'
     ),
-    re_path(
-        r'^/registrations/(?P<pk>\d+)$',
+    path(
+        '/registrations/<int:pk>',
         DateRegistrationDetail.as_view(),
         name='date-registration-detail'
     ),
-    re_path(
-        r'^/registrations/(?P<registration_id>\d+)/participants$',
+    path(
+        '/registrations/<int:registration_id>/participants',
         DateRegistrationRelatedParticipantView.as_view(),
         name='date-registration-related-participants'
     ),
 
-    re_path(
-        r'^/(?P<activity_id>\d+)/participants$',
+    path(
+        '/<int:activity_id>/participants',
         DateRelatedParticipantList.as_view(),
         name='date-participants'
     ),
 
-    re_path(
-        r'^/participants$',
+    path(
+        '/participants',
         DateParticipantList.as_view(),
         name='date-participant-list'
     ),
 
-    re_path(
-        r'^/participants/transitions$',
+    path(
+        '/participants/transitions',
         DateParticipantTransitionList.as_view(),
         name='date-participant-transitions'
     ),
-    re_path(
-        r'^/participants/(?P<pk>\d+)$',
+    path(
+        '/participants/<int:pk>',
         DateParticipantDetail.as_view(),
         name='date-participant-detail'
     ),
 
-    re_path(
-        r'^/slots$',
+    path(
+        '/slots',
         DateSlotListView.as_view(),
         name='date-slot-list'
     ),
 
-    re_path(
-        r'^/(?P<activity_id>\d+)/slots$',
+    path(
+        '/<int:activity_id>/slots',
         RelatedDateSlotListView.as_view(),
         name='related-date-slots'
     ),
 
-    re_path(
-        r'^/slots/(?P<pk>\d+)$',
+    path(
+        '/slots/<int:pk>',
         DateSlotDetailView.as_view(),
         name='date-slot-detail'
     ),
 
-    re_path(
-        r'^/slots/(?P<slot_id>\d+)/participants$',
+    path(
+        '/slots/<int:slot_id>/participants',
         DateSlotRelatedParticipantView.as_view(),
         name='date-slot-related-participants'
     ),
@@ -113,14 +114,14 @@ urlpatterns = [
         name='date-participant-export'
     ),
 
-    re_path(
-        r'^/ical/(?P<pk>\d+)/(?P<user_id>\d+)$',
+    path(
+        '/ical/<int:pk>/<int:user_id>',
         DateActivityIcalView.as_view(),
         name='date-ical'
     ),
 
-    re_path(
-        r'^/slot/ical/(?P<pk>\d+)$',
+    path(
+        '/slot/ical/<int:pk>',
         ActivitySlotIcalView.as_view(),
         name='slot-ical'
     ),

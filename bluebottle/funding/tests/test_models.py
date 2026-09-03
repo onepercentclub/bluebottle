@@ -10,6 +10,7 @@ from bluebottle.funding.models import Payout
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, RewardFactory, DonorFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentFactory
 )
@@ -22,7 +23,7 @@ class FundingTestCase(BluebottleTestCase):
 
     def test_absolute_url(self):
         funding = FundingFactory()
-        expected = 'http://testserver/en/activities/details' \
+        expected = 'http://test.localhost/en/activities/details' \
                    '/funding/{}/{}'.format(funding.id, funding.slug)
         self.assertEqual(funding.get_absolute_url(), expected)
 
@@ -148,9 +149,10 @@ class FundingTestCase(BluebottleTestCase):
         )
 
 
-class PayoutTestCase(BluebottleTestCase):
+class PayoutTestCase(FundingStripeMixin, BluebottleTestCase):
 
     def setUp(self):
+        super(PayoutTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)

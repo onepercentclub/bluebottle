@@ -5,7 +5,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.utils.timezone import now
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.activities.models import Team
+from bluebottle.activities.models import Activity, Team
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.triggers import TransitionTrigger
@@ -63,6 +63,9 @@ def setup_instance(model):
     instance = model(
         **model_args
     )
+
+    if isinstance(instance, Activity) and getattr(instance, 'title', None) is None:
+        instance.title = "[activity title]"
 
     if isinstance(instance, Initiative):
         instance.title = "[initiative title]"

@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block message %}
 <p>
-    {% blocktrans context 'email' %}You joined an activity on <b>{{ site_name }}</b>{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}You joined an activity on <b>{{ site_name }}</b>{% endblocktrans %}
 </p>
 
 <p>
@@ -11,10 +11,10 @@
 
 <p>
 {% if start %}
-    {% blocktrans context 'email' %}Starts on {{ start }}{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}Starts on {{ start }}{% endblocktrans %}
 {% endif %}
 {% if end %}
-    {% blocktrans context 'email' %}Ends on {{ end }}{% endblocktrans %}
+    {% blocktrans context 'platform-email' %}Ends on {{ end }}{% endblocktrans %}
 {% endif %}
 </p>
 {% endblock %}

@@ -3,7 +3,7 @@
 
 {% block message %}
     <p class="donation-intro">
-        {% blocktrans context 'email' %}
+        {% blocktrans context 'platform-email' %}
             You are working on a crowdfunding campaign on {{ site_name }}.
             <br/>
             <br/>
@@ -19,6 +19,6 @@
 
 {% block action %}
     <a href="{{ site }}/activities/stripe/kyc/{{ obj.pk }}" class="action-email">
-       {% trans 'Check your details' context 'email' %}
+       {% trans 'Check your details' context 'platform-email' %}
     </a>
 {% endblock %}`

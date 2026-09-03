@@ -16,6 +16,7 @@ from bluebottle.funding.tests.factories import (
 )
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.funding_stripe.tests.base import FundingStripeMixin
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -92,7 +93,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.funding.amount_raised, Money(100, 'EUR'))
 
 
-class DonationAdminTestCase(BluebottleAdminTestCase):
+class DonationAdminTestCase(FundingStripeMixin, BluebottleAdminTestCase):
 
     def setUp(self):
         super(DonationAdminTestCase, self).setUp()
@@ -120,7 +121,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         response = self.client.get(self.admin_url)
         self.assertTrue(
-            u'Total amount:  <b>0.60 €</b>'.encode('utf-8') in response.content
+            u'Total amount:  <b>€0.60</b>'.encode('utf-8') in response.content
         )
 
     def test_donation_admin_pledge_filter(self):
@@ -157,7 +158,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.assertFalse(third.title in response.content.decode('utf-8'))
 
 
-class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
+class PayoutAccountAdminTestCase(FundingStripeMixin, BluebottleAdminTestCase):
 
     def setUp(self):
         super(PayoutAccountAdminTestCase, self).setUp()

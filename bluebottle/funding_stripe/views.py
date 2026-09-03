@@ -1,11 +1,11 @@
-import uuid
 import logging
+import uuid
 
+from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
-from django.core.exceptions import PermissionDenied
 from django.views.generic import View
 from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import status
@@ -20,8 +20,8 @@ from bluebottle.funding.authentication import (
     DonorAuthentication,
     ClientSecretAuthentication,
 )
-from bluebottle.funding.permissions import PaymentPermission, IntentPermission
 from bluebottle.funding.models import Donor, FundingPlatformSettings
+from bluebottle.funding.permissions import PaymentPermission, IntentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
@@ -42,6 +42,7 @@ from bluebottle.funding_stripe.serializers import (
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.grant_management.models import GrantPayment
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.views import (
     ListAPIView,
     RetrieveUpdateAPIView,
@@ -50,7 +51,6 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
-from bluebottle.utils.utils import get_current_host
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
 
         payment_provider = StripePaymentProvider.objects.first()
 
-        platform_currency = payment_provider.get_default_currency()[0].lower()
+        platform_currency = payment_provider.currency.lower()
 
         if 'card_payments' in connect_account.account.capabilities:
             # Only do  on_behalf_of when card_payments are enabled
@@ -132,10 +132,9 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
         intent = stripe.PaymentIntent.create(
             **init_args
         )
-        serializer.save(
-            intent_id=intent.id,
-            client_secret=intent.client_secret,
-        )
+        serializer.validated_data['intent_id'] = intent.id
+        serializer.validated_data['client_secret'] = intent.client_secret
+        super().perform_create(serializer)
 
 
 class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
@@ -244,15 +243,18 @@ class StripeBankTransferList(PaymentList):
         intent = stripe.PaymentIntent.create(
             **init_args
         )
-        intent = serializer.save(
-            intent_id=intent.id,
-            client_secret=intent.client_secret,
-            instructions=intent.next_action
-        )
-        donation.payment_intent = intent
+
+        serializer.validated_data['intent_id'] = intent.id
+        serializer.validated_data['client_secret'] = intent.client_secret
+        serializer.validated_data['instructions'] = intent.next_action
+
+        super().perform_create(serializer)
+
+        donation.payment_intent = serializer.instance
         donation.save()
+
         StripePayment.objects.create(
-            payment_intent=intent,
+            payment_intent=serializer.instance,
             donation=donation,
         )
 
@@ -272,7 +274,8 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         return self.queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -383,7 +386,7 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
     related_permission_classes = {"connect_account": [IsOwner]}
 
     def get_queryset(self):
-        settings = FundingPlatformSettings.objects.get()
+        settings = FundingPlatformSettings.load()
         if settings.public_accounts:
             return self.queryset.order_by("-created").filter(
                 connect_account__public=True,
@@ -404,7 +407,8 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
             self.check_object_permissions(
                 self.request, serializer.Meta.model(**validated_data)
             )
-        serializer.save()
+
+        super().perform_create(serializer)
 
 
 class ExternalAccountDetails(
@@ -424,13 +428,13 @@ class ExternalAccountDetails(
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
         serializer.instance.update(token)
-        serializer.save()
+        super().perform_update(serializer)
 
 
 class IntentWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
 
         try:
@@ -444,11 +448,16 @@ class IntentWebHookView(View):
         try:
             if event.type == 'payment_intent.succeeded':
                 payment = self.get_payment(event.data.object.id)
-                if payment.status != payment.states.succeeded.value:
-                    payment.states.succeed()
-                    payment.update()
-                    payment.donation.save()
-                    payment.save()
+                if payment:
+                    if payment.status != payment.states.succeeded.value:
+                        payment.states.succeed()
+                        payment.update()
+                        payment.donation.save()
+                        payment.save()
+                else:
+                    grant_payment = self.get_grant_payment(event.data.object.id)
+                    if grant_payment:
+                        grant_payment.check_status()
 
                 return HttpResponse('Updated payment to succeeded')
 
@@ -484,23 +493,27 @@ class IntentWebHookView(View):
             return HttpResponse('Payment not found', status=400)
 
     def get_payment(self, payment_id):
-        intent = PaymentIntent.objects.get(intent_id=payment_id)
-        try:
-            return intent.payment
-        except StripePayment.DoesNotExist:
+        if PaymentIntent.objects.filter(intent_id=payment_id).exists():
+            intent = PaymentIntent.objects.get(intent_id=payment_id)
             try:
-                intent.donation.payment.payment_intent = intent
-                intent.donation.payment.save()
                 return intent.payment
-            except Donor.payment.RelatedObjectDoesNotExist:
-                payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
-                return payment
+            except StripePayment.DoesNotExist:
+                try:
+                    intent.donation.payment.payment_intent = intent
+                    intent.donation.payment.save()
+                    return intent.payment
+                except Donor.payment.RelatedObjectDoesNotExist:
+                    payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
+                    return payment
+
+    def get_grant_payment(self, payment_id):
+        return GrantPayment.objects.filter(intent_id=payment_id).first()
 
 
 class SessionWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
 
         try:
@@ -522,7 +535,7 @@ class ConnectWebHookView(View):
     def post(self, request, **kwargs):
 
         payload = request.body
-        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        signature_header = request.headers['stripe-signature']
         stripe = get_stripe()
         try:
             event = stripe.Webhook.construct_event(
@@ -572,9 +585,10 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            error = "Payout not found"
+            tenant = connection.tenant
+            error = f"Payout account not found {event.data.object.id} on {tenant.name}"
             logger.error(error)
-            return HttpResponse(error, status=400)
+            return HttpResponse("Skipped event {}, account not found".format(event.type))
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)

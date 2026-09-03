@@ -19,8 +19,10 @@ from django.utils.encoding import force_bytes
 from moneyed import Money
 from parler import appsettings
 
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
@@ -36,8 +38,6 @@ from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.storage import TenantFileSystemStorage
 from bluebottle.utils.utils import clean_for_hashtag, get_client_ip
 from ..email_backend import send_mail, create_message
-
-from bluebottle.mails.models import MailPlatformSettings
 
 
 def generate_random_slug():
@@ -190,13 +190,19 @@ class SendMailTestCase(BluebottleTestCase):
                          format(self.user.email))
 
     @mock.patch('bluebottle.utils.email_backend.logger')
-    def test_no_template(self, logger):
-        send_mail(to=self.user)
+    @mock.patch('bluebottle.utils.email_backend.create_message')
+    def test_terminated(self, create_message, logger):
+        settings = SitePlatformSettings.load()
+        settings.terminated = True
+        settings.save()
+
+        send_mail(to=self.user, template_name='utils/test')
         self.assertTrue(logger.error.called)
         self.assertEqual(
             logger.error.call_args[0][0],
-            'Exception while rendering email template: None.html, in None'
+            'Trying to send email on terminated platform: testuser@example.com'
         )
+        self.assertFalse(create_message.called)
 
     @mock.patch('bluebottle.common.tasks._send_celery_mail')
     @override_settings(LANGUAGE_CODE='nl',
@@ -246,7 +252,8 @@ ZWwmp8Nkdeirc0wsQ41fR+SNVfw7mlzzvN5ucxNEkWcCGCngccwnHZ+iEbkCQQC8
 3QjW7VSsDTjh9IlNfiMEoVCe/NcA+efXNvUzhF0vf+w52p0NuEQeoHlyTkze23fU
 ShoJXy+7HBXhw27EqkAhAkEAvizvS5bTzkAi7T94zWYoS0rbO/pSqzcGcNGjyisM
 pk501YSTBeanQ7Y9PL17TLQjXquz0u5oqhGlRujFnt9HwA==
------END RSA PRIVATE KEY----"""
+-----END RSA PRIVATE KEY-----
+"""
 
 DKIM_PUBLIC_KEY = b"""MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcw49R0Dy
 5F8mkP31iCQdgHl9TzZV8n9puQf4pYl0GnHcnj+josc9s1PRMI9rxvYFdM7Vxpw9w2ryxe
@@ -254,7 +261,8 @@ jzWuxXPMNhn5m9Z1XNVRaxTIVEsQAYemMFMBGVnyfELBS9QR+ewNCy7E8maIFW3CLpeMtB
 nGIqOjhR2zLfswkVaXQ+89QIDAQAB"""
 
 
-class Testtenantawaremailserver(BluebottleTestCase):
+class TestTenantAwareMailserver(BluebottleTestCase):
+
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
         EMAIL_HOST='somehost',
@@ -262,21 +270,25 @@ class Testtenantawaremailserver(BluebottleTestCase):
     @mock.patch("smtplib.SMTP")
     def test_settings_config(self, smtp):
         """ Test simple / traditional case where config comes from settings """
-        be = TenantAwareBackend()
-        msg = EmailMultiAlternatives(subject="test", body="test",
-                                     to=["test@example.com"])
+        with mock.patch("bluebottle.utils.email_backend.properties",
+                        new=mock.Mock([])) as properties:
+            # Mock properties without DKIM settings to test non-DKIM case
+            properties.MAIL_CONFIG = None
+            be = TenantAwareBackend()
+            msg = EmailMultiAlternatives(subject="test", body="test",
+                                         to=["test@example.com"])
 
-        # open the connection explicitly so we can get the
-        # connection reference. It will be cleared once closed
-        # in send_messages
-        be.open()
-        connection = be.connection
+            # open the connection explicitly so we can get the
+            # connection reference. It will be cleared once closed
+            # in send_messages
+            be.open()
+            connection = be.connection
 
-        be.send_messages([msg])
+            be.send_messages([msg])
 
-        self.assertTrue(smtp.called)
-        self.assertEqual(smtp.call_args[0], ('somehost', 1337))
-        self.assertTrue(connection.sendmail.called)
+            self.assertTrue(smtp.called)
+            self.assertEqual(smtp.call_args[0], ('somehost', 1337))
+            self.assertTrue(connection.sendmail.called)
 
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
@@ -291,7 +303,7 @@ class Testtenantawaremailserver(BluebottleTestCase):
             properties.MAIL_CONFIG = {'HOST': 'tenanthost', 'PORT': 4242}
 
             properties.DKIM_SELECTOR = b"key2"
-            properties.DKIM_DOMAIN = b"testserver"
+            properties.DKIM_DOMAIN = b"test.localhost"
             properties.DKIM_PRIVATE_KEY = DKIM_PRIVATE_KEY
 
             be = TenantAwareBackend()
@@ -315,7 +327,7 @@ class Testtenantawaremailserver(BluebottleTestCase):
                 )
             )
 
-            self.assertTrue(signed_msg.find(b"d=testserver") >= 0)
+            self.assertTrue(signed_msg.find(b"d=test.localhost") >= 0)
             self.assertTrue(signed_msg.find(b"s=key2") >= 0)
             self.assertTrue(dkim_check, "Email should be signed by tenant")
 
@@ -602,6 +614,35 @@ class TestOneOfPermission(BluebottleTestCase):
             self.permission.has_object_action_permission(
                 'GET', self.user, obj=self.initiative
             )
+        )
+
+
+class RelatedResourceOwnerPermissionTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(RelatedResourceOwnerPermissionTestCase, self).setUp()
+        self.permission = RelatedResourceOwnerPermission()
+        self.owner = BlueBottleUserFactory.create()
+        self.other_user = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory.create(owner=self.owner)
+
+    def test_has_parent_permission_for_owner(self):
+        self.assertTrue(
+            self.permission.has_parent_permission('GET', self.owner, self.initiative)
+        )
+
+    def test_has_parent_permission_denies_other_user(self):
+        self.assertFalse(
+            self.permission.has_parent_permission('GET', self.other_user, self.initiative)
+        )
+
+    def test_has_object_action_permission_uses_parent_owner(self):
+        child = mock.Mock()
+        child.parent = self.initiative
+        self.assertTrue(
+            self.permission.has_object_action_permission('GET', self.owner, child)
+        )
+        self.assertFalse(
+            self.permission.has_object_action_permission('GET', self.other_user, child)
         )
 
 

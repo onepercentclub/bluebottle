@@ -11,6 +11,6 @@ logging.getLogger('factory').setLevel(logging.WARN)
 fake = Faker()
 
 
-def generate_rich_text(*args, **kwargs):
-
-    return json.dumps({'html': fake.text(), 'delta': ''})
+def generate_rich_text(*args, text=None, **kwargs):
+    text = text or fake.text()
+    return json.dumps({'html': text, 'delta': ''})

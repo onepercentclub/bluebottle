@@ -1,11 +1,11 @@
 from bluebottle.deeds.tests.factories import DeedParticipantFactory
-
+from bluebottle.files.tests.factories import ImageFactory
+from bluebottle.test.utils import NotificationTestCase
 from bluebottle.updates.messages import (
     OwnerNotification, FollowersNotification, ParentNotification
 )
+from bluebottle.updates.models import UpdateImage
 from bluebottle.updates.tests.factories import UpdateFactory
-
-from bluebottle.test.utils import NotificationTestCase
 
 
 class FollowerNotificationTestCase(NotificationTestCase):
@@ -22,6 +22,13 @@ class FollowerNotificationTestCase(NotificationTestCase):
 
     def test_recipients(self):
         self.assertRecipients([participant.user for participant in self.participants])
+
+    def test_has_media_after_refresh(self):
+        self.assertFalse(self.obj.has_media)
+        notification = FollowersNotification(self.obj)
+        UpdateImage.objects.create(update_id=self.obj.id, image=ImageFactory.create())
+        notification.obj.refresh_from_db()
+        self.assertTrue(notification.obj.has_media)
 
 
 class OwnerNotificationTestCase(NotificationTestCase):

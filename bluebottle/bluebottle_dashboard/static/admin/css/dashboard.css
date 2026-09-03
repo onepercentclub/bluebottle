@@ -209,12 +209,12 @@ label + div {
     padding-left: 50px;
 }
 
-.js-inline-admin-formset.nested-inline {
+.cp-content .js-inline-admin-formset.nested-inline {
     display: inline-block;
     margin-left: 60px;
 }
 
-.js-inline-admin-formset fieldset {
+.cp-content .js-inline-admin-formset fieldset {
     padding: 4px
 }
 
@@ -517,6 +517,175 @@ div.inline.radiolist {
 #participants-group .field-checked .inline-deletelink {
     display: none !important;
 }
+
+#login-form input[type=checkbox] {
+    display: block;
+}
+
+.flex-row {
+    display: flex;
+}
+
+/* Radio button styling */
+input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #281E50;
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    background-color: #fff;
+    vertical-align: middle;
+    margin: 0 8px 0 0;
+    border-color: #281E50;
+}
+
+input[type="radio"]:checked {
+    border-color: #281E50;
+}
+
+input[type="radio"]:checked::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #34323d;
+}
+
+input[type="radio"]:hover {
+    border-color: #333;
+}
+
+input[type="radio"]:focus {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Radio button labels */
+
+.radiolist label,
+ul.radiolist label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 0;
+    font-size: 14px;
+}
+
+ul.radiolist {
+    padding-left: 0;
+    list-style: none;
+}
+
+ul.radiolist li {
+    padding: 4px 0;
+}
+
+.radiolist.inline {
+    margin-bottom: 8px;
+}
+
+.checkbox_help {
+    display: block;
+}
+
+.checkbox_help + .checkbox_help {
+    display: block;
+    margin-left: 12.85714rem;
+    color: #9b9b9b;
+    font-size: 0.85714rem;
+    margin-top: 8px;
+}
+
+form .aligned p.help {
+    margin-top: 8px;
+}
+
+input[type=email],
+.vTextField {
+    width: 400px
+}
+
+
+label.translatable-field:before {
+    content: '🌐';
+    display: inline-block;
+    float: right;
+    margin-top: 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.dynamic-array-widget .array-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.field-activity_pub label {
+    display: none;
+}
+
+a.button, a.button:hover {
+    text-decoration: none;
+}
+
+.empty-comment {
+    font-style: italic;
+    color: #aaa;
+}
+
+#homepage_form label[for=id_content],
+#page_form label[for=id_body],
+#platformpage_form label[for=id_body] {
+    display: none;
+}
+
+.cp-content .js-inline-admin-formset {
+    margin: 0 64px;
+}
+
+.cp-content .js-inline-admin-formset .inline-related {
+    margin: 16px 0;
+    width: auto;
+}
+
+.form-row.categories select {
+    height: 300px;
+}
+
+.cp-content .js-inline-admin-formset .inline-related h3 .inline-deletelink:before {
+    display: none !important;
+}
+
+
+.js-inline-admin-formset .inline-related h3 {
+    padding: 4px;
+}
+
+.js-inline-admin-formset .inline-related h3 .inline-deletelink {
+    display: none !important;
+}
+
+.js-inline-admin-formset .inline-related h3 .inline-deletelink:hover {
+    background-color: #b30000
+}
+
+.js-inline-admin-formset .inline-related .form-row {
+    padding: 6px 12px;
+}
+
+.js-inline-admin-formset span.delete {
+    display: none;
+}
+
 
 
 .aligned .field-body label,

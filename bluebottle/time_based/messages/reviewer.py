@@ -5,7 +5,7 @@ from bluebottle.activities.messages.reviewer import ReviewerActivityNotification
 
 class ActivityRegisteredReviewerNotification(ReviewerActivityNotification):
 
-    subject = pgettext("email", "A new activity has been registered on {site_name}")
+    subject = pgettext("platform-email", "A new activity has been registered on {site_name}")
     template = "messages/reviewer/activity_registered"
 
     @property

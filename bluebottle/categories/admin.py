@@ -12,6 +12,7 @@ from sorl.thumbnail.admin import AdminImageMixin
 from bluebottle.initiatives.models import Initiative
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Category, CategoryContent
+from ..translations.admin import TranslatableLabelAdminMixin
 from ..utils.admin import TranslatableAdminOrderingMixin
 
 
@@ -32,12 +33,15 @@ class CategoryInitiativesInline(TabularInline):
     extra = 0
 
 
-class CategoryAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin, AdminImageMixin, NonSortableParentAdmin):
+@admin.register(Category)
+class CategoryAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, TranslatableAdmin, AdminImageMixin,
+                    NonSortableParentAdmin):
     model = Category
     list_display = ('title', 'slug', 'initiatives')
     inlines = (CategoryContentInline, CategoryInitiativesInline)
     translatable_ordering = 'translations__title'
     search_fields = ('title', )
+    fields = ['title', 'slug', 'image', 'image_logo', 'description']
 
     def initiatives(self, obj):
         url = reverse('admin:initiatives_initiative_changelist')
@@ -45,6 +49,3 @@ class CategoryAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin, AdminImag
         return format_html(
             '<a href="{}?categories__id={}">{} {}</a>',
             url, obj.id, count, _('initiatives'))
-
-
-admin.site.register(Category, CategoryAdmin)

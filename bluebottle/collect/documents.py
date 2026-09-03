@@ -15,9 +15,9 @@ SCORE_MAP = {
 @activity.doc_type
 class CollectDocument(ActivityDocument):
     collect_type = fields.NestedField(
-        attr='initiative.theme',
+        attr='collect_type.name',
         properties={
-            'id': fields.KeywordField(),
+            'language': fields.KeywordField(),
             'name': fields.KeywordField(),
         }
     )

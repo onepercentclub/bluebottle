@@ -4,6 +4,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ActivitySegmentPermission
 )
+from bluebottle.activities.views import ActivityDetailView
 from bluebottle.funding.views import PayoutDetails
 from bluebottle.grant_management.models import (
     GrantApplication, GrantPayout
@@ -11,11 +12,10 @@ from bluebottle.grant_management.models import (
 from bluebottle.grant_management.serializers import (
     GrantApplicationSerializer, GrantApplicationTransitionSerializer, GrantPayoutSerializer
 )
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import OneOf, ResourcePermission
 from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin
+    ListCreateAPIView, JsonApiViewMixin
 )
 
 
@@ -34,26 +34,12 @@ class GrantApplicationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIVie
     }
 
     def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        serializer.save(owner=self.request.user)
+        serializer.validated_data['owner'] = self.request.user
+        super().perform_create(serializer)
 
 
-class GrantApplicationDetail(
-    JsonApiViewMixin, ClosedSegmentActivityViewMixin,
-    AutoPrefetchMixin, RetrieveUpdateAPIView
-):
-    queryset = GrantApplication.objects.select_related(
-        'initiative', 'initiative__owner',
-    )
+class GrantApplicationDetail(ActivityDetailView):
+    queryset = GrantApplication.objects.all()
 
     serializer_class = GrantApplicationSerializer
     permission_classes = (
@@ -61,11 +47,6 @@ class GrantApplicationDetail(
         ActivitySegmentPermission,
         OneOf(ResourcePermission, ActivityOwnerPermission),
     )
-
-    prefetch_for_includes = {
-        'initiative': ['initiative'],
-        'owner': ['owner'],
-    }
 
 
 class GrantPayoutDetails(PayoutDetails):

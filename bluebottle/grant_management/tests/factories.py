@@ -3,7 +3,7 @@ from builtins import object
 from moneyed import Money
 
 from bluebottle.grant_management.models import (
-    GrantApplication, GrantDonor, GrantFund, GrantDeposit, GrantPayment
+    GrantApplication, GrantDonor, GrantFund, GrantDeposit, GrantWithdrawal, GrantPayment
 )
 from bluebottle.grant_management.models import (
     GrantProvider, GrantPayout
@@ -55,7 +55,7 @@ class GrantPayoutFactory(factory.DjangoModelFactory):
         model = GrantPayout
 
     activity = factory.SubFactory(GrantApplicationFactory)
-    provider = factory.SubFactory(GrantProviderFactory)
+    provider = 'stripe'
     currency = 'EUR'
     status = 'approved'
 
@@ -73,6 +73,13 @@ class GrantDonorFactory(factory.DjangoModelFactory):
 class GrantDepositFactory(factory.DjangoModelFactory):
     class Meta:
         model = GrantDeposit
+
+    amount = Money(5000, 'EUR')
+
+
+class GrantWithdrawalFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = GrantWithdrawal
 
     amount = Money(5000, 'EUR')
 

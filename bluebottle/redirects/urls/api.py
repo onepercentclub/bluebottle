@@ -1,7 +1,7 @@
-from django.urls import re_path
+from django.urls import path
 
 from bluebottle.redirects.views import RedirectListView
 
 urlpatterns = [
-    re_path(r'^$', RedirectListView.as_view(), name='redirect-list')
+    path('', RedirectListView.as_view(), name='redirect-list')
 ]

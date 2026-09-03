@@ -5,6 +5,7 @@ from bluebottle.time_based.models import DateActivitySlot
 
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import DateParticipant, DateRegistration
+from bluebottle.utils.widgets import get_time_factors
 
 
 def nth_weekday(date):
@@ -68,3 +69,10 @@ def bulk_add_slot_participants(slot, emails):
         except Member.DoesNotExist:
             pass
     return count
+
+
+def duration_to_hours(value):
+    days, hours, minutes, seconds = get_time_factors(value)
+    total_hours = days * 24 + hours + (minutes / 60) + (seconds / 3600)
+
+    return round(total_hours)

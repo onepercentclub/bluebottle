@@ -1,4 +1,5 @@
 from datetime import date
+
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.activity_manager import (
@@ -13,6 +14,9 @@ from bluebottle.activities.messages.reviewer import (
 )
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
+from bluebottle.activity_pub.effects import (
+    PublishAdoptionEffect, CreateEffect, CancelEffect, FinishEffect, UpdateEventEffect
+)
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
 from bluebottle.notifications.effects import NotificationEffect
@@ -41,7 +45,8 @@ from bluebottle.time_based.states import (
     ParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
-    RegisteredDateActivityStateMachine, RegisteredDateParticipantStateMachine
+    RegisteredDateActivityStateMachine, RegisteredDateParticipantStateMachine, SlotStateMachine,
+    DateActivitySlotStateMachine
 )
 from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
@@ -242,6 +247,7 @@ class TimeBasedTriggers(ActivityTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.publish,
             effects=[
+                CreateEffect,
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
             ]
         ),
@@ -251,6 +257,7 @@ class TimeBasedTriggers(ActivityTriggers):
             effects=[
                 NotificationEffect(ActivitySucceededNotification),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
+                FinishEffect
             ]
         ),
 
@@ -267,6 +274,16 @@ class TimeBasedTriggers(ActivityTriggers):
                 NotificationEffect(ActivityCancelledNotification),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                CancelEffect
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.auto_cancel,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                RelatedTransitionEffect('slots', SlotStateMachine.auto_cancel),
+                RelatedTransitionEffect('slots', DateActivitySlotStateMachine.auto_cancel),
+                CancelEffect
             ]
         ),
 
@@ -282,6 +299,7 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.expire,
             effects=[
                 NotificationEffect(ActivityExpiredNotification),
+                CancelEffect
             ]
         ),
         ModelChangedTrigger(
@@ -316,6 +334,7 @@ class DateActivityTriggers(TimeBasedTriggers):
                 ),
 
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
+                CancelEffect
             ],
         ),
 
@@ -349,8 +368,18 @@ class DateActivityTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
+            RegistrationActivityStateMachine.approve,
+            effects=[
+                PublishAdoptionEffect,
+                CreateEffect
+            ]
+        ),
+
+        TransitionTrigger(
             DateStateMachine.publish,
             effects=[
+                PublishAdoptionEffect,
+                CreateEffect,
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.succeed,
@@ -497,6 +526,20 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
                 ),
             ],
         ),
+        TransitionTrigger(
+            RegistrationActivityStateMachine.approve,
+            effects=[
+                PublishAdoptionEffect,
+                CreateEffect
+            ]
+        ),
+        TransitionTrigger(
+            RegistrationActivityStateMachine.publish,
+            effects=[
+                PublishAdoptionEffect,
+                CreateEffect
+            ]
+        ),
     ]
 
 
@@ -571,6 +614,12 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
                 CreateFirstSlotEffect,
             ]
         ),
+        ModelChangedTrigger(
+            ['title', 'description', 'start', 'deadline', 'location', 'duration', 'period'],
+            effects=[
+                UpdateEventEffect,
+            ]
+        )
     ]
 
 
@@ -609,6 +658,8 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.auto_publish,
             effects=[
+                PublishAdoptionEffect,
+                CreateEffect,
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,
                     conditions=[
@@ -626,6 +677,8 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.approve,
             effects=[
+                CreateEffect,
+                PublishAdoptionEffect,
                 NotificationEffect(
                     PastActivityApprovedNotification
                 ),
@@ -717,8 +770,14 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         ModelChangedTrigger(
             'duration',
             effects=[
+                UpdateEventEffect,
                 RescheduleRelatedTimeContributionsEffect,
             ]
+        ),
+        ModelChangedTrigger(
+            ['title', 'description', 'start', 'location', 'duration'],
+            effects=[
+                UpdateEventEffect,
+            ]
         )
-
     ]

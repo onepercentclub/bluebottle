@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 import datetime
 from django.db import migrations, models
-from django.utils.timezone import utc
 import django_extensions.db.fields
 
 
@@ -18,7 +17,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='survey',
             name='created',
-            field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, default=datetime.datetime(2016, 9, 19, 14, 9, 46, 140406, tzinfo=utc)),
+            field=django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, default=datetime.datetime(2016, 9, 19, 14, 9, 46, 140406, tzinfo=datetime.timezone.utc)),
             preserve_default=False,
         ),
         migrations.AddField(
@@ -29,7 +28,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='survey',
             name='updated',
-            field=django_extensions.db.fields.ModificationDateTimeField(auto_now=True, default=datetime.datetime(2016, 9, 19, 14, 9, 58, 435909, tzinfo=utc)),
+            field=django_extensions.db.fields.ModificationDateTimeField(auto_now=True, default=datetime.datetime(2016, 9, 19, 14, 9, 58, 435909, tzinfo=datetime.timezone.utc)),
             preserve_default=False,
         ),
     ]

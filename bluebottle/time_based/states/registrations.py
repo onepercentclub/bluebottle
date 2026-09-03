@@ -81,7 +81,7 @@ class RegistrationStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        [new, accepted],
+        new,
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant of this activity."),
@@ -100,8 +100,20 @@ class RegistrationStateMachine(ModelStateMachine):
         description=_(
             "Cancel your participation in the activity. Participation hours will not be counted."
         ),
-        automatic=False,
+        automatic=True,
         permission=is_user,
+        hide_from_admin=True,
+    )
+
+    restore = Transition(
+        withdrawn,
+        new,
+        name=_("Restore"),
+        passed_label=_("restored"),
+        description=_(
+            "Restore after being withdrawn."
+        ),
+        automatic=True,
         hide_from_admin=True,
     )
 

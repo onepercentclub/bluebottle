@@ -1,6 +1,11 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.funding.messages.funding.activity_manager import (
+    FundingApprovedMessage,
+    FundingNeedsWorkMessage,
+    FundingRejectedMessage, FundingRefundedMessage, FundingCancelledMessage,
+)
 from bluebottle.utils.forms import TransitionConfirmationForm
 
 
@@ -9,19 +14,25 @@ class RefundConfirmationForm(forms.Form):
 
 
 class FundingNeedsWorkForm(TransitionConfirmationForm):
-    title = _('Funding needs work')
+    title = _('Crowdfunding campaign needs work')
+    message_class = FundingNeedsWorkMessage
 
-    custom_message = forms.CharField(
-        widget=forms.Textarea,
-        label=_('Custom message'),
-        required=False,
-        help_text=_('You can provide a custom message to the campaign owner explaining why the funding needs work.'),
-    )
 
-    def save(self, **kwargs):
-        """
-        Save the form data and return the custom message if provided.
-        """
-        if self.cleaned_data.get('custom_message'):
-            self.transition.custom_message = self.cleaned_data['custom_message']
-        return None
+class FundingRejectedForm(TransitionConfirmationForm):
+    title = _('Crowdfunding campaign rejected')
+    message_class = FundingRejectedMessage
+
+
+class FundingAcceptedForm(TransitionConfirmationForm):
+    title = _('Crowdfunding campaign accepted')
+    message_class = FundingApprovedMessage
+
+
+class RefundCampaignForm(TransitionConfirmationForm):
+    title = _('Refund crowdfunding campaign')
+    message_class = FundingRefundedMessage
+
+
+class CancelCampaignForm(TransitionConfirmationForm):
+    title = _('Cancel crowdfunding campaign')
+    message_class = FundingCancelledMessage

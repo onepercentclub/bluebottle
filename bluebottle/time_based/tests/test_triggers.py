@@ -25,6 +25,7 @@ from bluebottle.time_based.messages.registrations import ManagerRegistrationCrea
     UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification, UserRegistrationStoppedNotification, \
     UserRegistrationRestartedNotification, PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, \
     ScheduleUserJoinedNotification
+from bluebottle.time_based.models import DateRegistration
 from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -64,8 +65,6 @@ class TimeBasedActivityTriggerTestCase():
 
     def test_reject(self):
         self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-        self.activity.states.publish(save=True)
         mail.outbox = []
 
         self.activity.states.reject(save=True)
@@ -256,6 +255,75 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot, "open")
         self.assertStatus(self.activity, "open")
 
+    def test_fill_slot(self):
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+
+        self.participant = DateParticipantFactory.create(registration=first, slot=self.slot)
+        DateParticipantFactory.create(registration=second, slot=self.slot)
+
+        self.assertStatus(self.slot, "full")
+
+    def test_fill_slot_review(self):
+        self.activity.review = True
+        self.activity.save()
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateRegistrationFactory.create(activity=self.activity)
+        second = DateRegistrationFactory.create(activity=self.activity)
+
+        self.participant = DateParticipantFactory.create(registration=first, slot=self.slot)
+
+        self.assertStatus(self.slot, "open")
+
+        DateParticipantFactory.create(registration=second, slot=self.slot)
+        first.states.accept(save=True)
+        second.states.accept(save=True)
+
+        self.assertStatus(self.slot, "full")
+
+    def test_reopen_slot_review(self):
+        self.test_fill_slot_review()
+
+        self.participant.registration.states.reject(save=True)
+        self.assertStatus(self.slot, "open")
+
+    def test_fill_slot_reaccept(self):
+        self.test_reopen_slot_review()
+
+        self.participant.registration.states.accept(save=True)
+        self.assertStatus(self.slot, "full")
+
+    def test_reopen_slot(self):
+        self.test_fill_slot()
+        self.participant.states.withdraw(save=True)
+
+        self.assertStatus(self.slot, "open")
+
+    def test_fill_reapply(self):
+        self.test_reopen_slot()
+        self.participant.states.reapply(save=True)
+
+        self.assertStatus(self.slot, "full")
+
+    def test_fill_slot_change_capacity(self):
+
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+
+        DateParticipantFactory.create(registration=first, slot=self.slot)
+        DateParticipantFactory.create(registration=second, slot=self.slot)
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        self.assertStatus(self.slot, "full")
+
     def test_fill_free(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
 
@@ -276,6 +344,25 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot, "full")
         self.assertStatus(self.slot2, "full")
         self.assertStatus(self.activity, "full")
+
+    def test_unlock_on_delete(self):
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+        participant2 = DateParticipantFactory.create(registration=first, slot=self.slot2)
+        participant = DateParticipantFactory.create(registration=first, slot=self.slot)
+        DateParticipantFactory.create(registration=second, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+        participant.delete()
+        self.assertStatus(self.slot, "open")
+        self.assertTrue(DateRegistration.objects.filter(pk=first.pk).exists())
+        participant2.delete()
+        self.assertFalse(DateRegistration.objects.filter(pk=first.pk).exists())
 
     def test_fill_cancel_slot(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)

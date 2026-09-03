@@ -1,4 +1,4 @@
-from django.urls import re_path
+from django.urls import path
 from django.contrib import admin
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.urls import reverse
@@ -23,8 +23,8 @@ class SCIMPlatformSettingsAdmin(BasePlatformSettingsAdmin):
     def get_urls(self):
         urls = super(SCIMPlatformSettingsAdmin, self).get_urls()
         custom_urls = [
-            re_path(
-                r'^(?P<pk>.+)/reset-token/$',
+            path(
+                '<path:pk>/reset-token/',
                 self.admin_site.admin_view(self.reset_token),
                 name='scim-platform-settings-reset-token',
             ),

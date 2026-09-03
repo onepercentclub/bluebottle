@@ -1,15 +1,16 @@
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activities.forms import ActivityRejectedForm, ActivityAcceptedForm, ActivityNeedsWorkForm, \
+    ActivityCancelledForm, ActivityRestoredForm
 from bluebottle.activities.models import EffortContribution, Organizer
 from bluebottle.fsm.state import (
-    AllStates,
     EmptyState,
     ModelStateMachine,
     State,
     Transition,
-    register,
-)
+    register, )
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.utils.utils import is_api_request
 
 
 class ActivityStateMachine(ModelStateMachine):
@@ -75,6 +76,10 @@ class ActivityStateMachine(ModelStateMachine):
     def is_complete(self):
         """all required information has been submitted"""
         return not list(self.instance.required)
+
+    def is_not_api_request(self):
+        """the request is not an api request"""
+        return not is_api_request()
 
     def is_valid(self):
         """all fields passed validation and are correct"""
@@ -142,6 +147,18 @@ class ActivityStateMachine(ModelStateMachine):
         """user is a staff member"""
         return user.is_staff or user.is_superuser
 
+    def can_approve(self, user):
+        """user has approve permission"""
+        from bluebottle.activities.permissions import user_can_review_activity
+
+        if not user.is_authenticated:
+            return False
+
+        if user_can_review_activity(user, self.instance):
+            return True
+
+        return user.is_staff or user.is_superuser
+
     def is_owner(self, user):
         """user is the owner"""
         return (
@@ -187,7 +204,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        AllStates(),
+        [draft, needs_work, submitted],
         rejected,
         name=_("Reject"),
         description=_(
@@ -196,8 +213,9 @@ class ActivityStateMachine(ModelStateMachine):
             "not appear on the search page in the frontend. The activity will still "
             "be available in the back office and appear in your reporting."
         ),
+        form=ActivityRejectedForm,
         automatic=False,
-        permission=is_staff,
+        permission=can_approve,
     )
 
     publish = Transition(
@@ -248,11 +266,13 @@ class ActivityStateMachine(ModelStateMachine):
         ],
         open,
         name=_("Approve"),
+        form=ActivityAcceptedForm,
         automatic=False,
-        permission=is_staff,
+        permission=can_approve,
         description=_(
             "The activity will be published and visible in the frontend for people to contribute to,"
         ),
+        conditions=[is_complete, is_valid, should_auto_approve],
     )
 
     request_changes = Transition(
@@ -264,15 +284,18 @@ class ActivityStateMachine(ModelStateMachine):
             "Inform the activity manager of the changes required. "
             "The activity manager will then be able to edit and resubmit the activity."
         ),
+        form=ActivityNeedsWorkForm,
         conditions=[],
         automatic=False,
-        permission=is_staff,
+        permission=can_approve,
     )
 
     cancel = Transition(
         [
+            draft,
+            submitted,
             open,
-            succeeded,
+            needs_work,
         ],
         cancelled,
         name=_("Cancel"),
@@ -283,11 +306,24 @@ class ActivityStateMachine(ModelStateMachine):
             "The activity will still be visible in the back office "
             "and appear in your reporting."
         ),
+        form=ActivityCancelledForm,
         description_front_end=_(
             "The activity ends and people no longer register. All current participants will fail too."
         ),
         permission=is_owner,
         automatic=False,
+    )
+
+    auto_cancel = Transition(
+        [draft, needs_work, submitted, open],
+        cancelled,
+        name=_("Auto cancel"),
+        description=_(
+            "Cancel the activity automatically, because the initiative is cancelled."
+        ),
+        automatic=True,
+        premissop=is_owner,
+        conditions=[],
     )
 
     restore = Transition(
@@ -307,6 +343,7 @@ class ActivityStateMachine(ModelStateMachine):
             "The activity will be set to the status ‘Needs work’. "
             "Then you can make changes to the activity and submit it again."
         ),
+        form=ActivityRestoredForm,
         automatic=False,
         permission=is_owner,
     )

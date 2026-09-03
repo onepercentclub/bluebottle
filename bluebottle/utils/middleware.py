@@ -27,7 +27,7 @@ class APILanguageMiddleware(middleware.SessionMiddleware):
     def process_request(self, request):
         if request.path.startswith('/api'):
             try:
-                language = request.META['HTTP_X_APPLICATION_LANGUAGE']
+                language = request.headers['x-application-language']
                 if language not in [lang.full_code for lang in get_languages()]:
                     language = get_default_language()
             except KeyError:

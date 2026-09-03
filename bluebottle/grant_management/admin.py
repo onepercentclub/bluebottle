@@ -1,15 +1,19 @@
 from __future__ import division
 
 import logging
-from django import forms
 
+from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.template import loader
-from django.urls import re_path, reverse
+from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
+
 from stripe import StripeError
 
 from bluebottle.activities.admin import (
@@ -26,6 +30,7 @@ from bluebottle.geo.models import Location
 from bluebottle.grant_management.models import (
     GrantApplication,
     GrantDeposit,
+    GrantWithdrawal,
     GrantDonor,
     GrantFund,
     GrantPayment,
@@ -135,14 +140,30 @@ class GrantDepositInline(StateMachineAdminMixin, admin.StackedInline):
         return formset
 
 
+class GrantWithdrawalInline(StateMachineAdminMixin, admin.StackedInline):
+    model = GrantWithdrawal
+    readonly_fields = ["created", "state_name"]
+    fields = ['amount', 'reference', ] + readonly_fields
+    extra = 0
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj and obj.currency:
+            formset.form.base_fields["amount"].initial = (None, obj.currency)
+        return formset
+
+
 class GrantFundForm(forms.ModelForm):
     class Meta:
         model = GrantFund
         fields = '__all__'
         help_texts = {
             'total_debit': _("The total amount of money that has been added to this fund over time."),
-            'balance': _("The amount you can still use for new grants, pending payments are already deducted."),
-            'total_pending': _("Amount for approved grants waiting to be paid out."),
+            'balance': _("The amount you can still use for new grants, pending payments have not been deducted."),
+            'total_pending': _("Amount for approved applications waiting to be paid out."),
             'total_credit': _("The total amount that has been paid out from this fund."),
             'pending_applications': _("Grant applications that are submitted or approved, but not yet paid out."),
             'paid_applications': _("Grant applications that have been paid out."),
@@ -151,7 +172,7 @@ class GrantFundForm(forms.ModelForm):
 
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
-    inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline]
+    inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline, GrantWithdrawalInline]
     model = GrantFund
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
@@ -172,7 +193,7 @@ class GrantFundAdmin(admin.ModelAdmin):
     def approved_grants(self, obj):
         return obj.grants.count()
 
-    approved_grants.short_description = _('Approved grants')
+    approved_grants.short_description = _('Approved applications')
 
     fieldsets = [
         (_('General'), {
@@ -232,6 +253,7 @@ class GrantPayoutAdmin(StateMachineAdmin):
             })
         except StripeError as e:
             return "Error retrieving details: {}".format(e)
+
     bank_details.short_description = _('Bank details')
 
     def account_details(self, obj):
@@ -249,6 +271,7 @@ class GrantPayoutAdmin(StateMachineAdmin):
             )
             return template.render({'info': business})
         return _("Bank account details not available")
+
     account_details.short_description = _('KYC details')
 
     def get_fieldsets(self, request, obj=None):
@@ -288,7 +311,6 @@ class GrantPayoutAdmin(StateMachineAdmin):
 
 
 class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
-
     model = GrantPayout
     readonly_fields = [
         "payout_link",
@@ -352,8 +374,8 @@ class GrantProviderAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            re_path(
-                r"^(?P<pk>.+)/create-payments/$",
+            path(
+                "<path:pk>/create-payments/",
                 self.admin_site.admin_view(self.create_payment),
                 name="funding_grantprovider_create_payments",
             ),
@@ -396,6 +418,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
         "grant_provider",
         "state_name",
         "checkout_id",
+        "intent_id",
         "get_payment_link",
     ]
     fields = readonly_fields
@@ -410,7 +433,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
                 )
             title = _("Pay now")
             return format_html(
-                f'<a class="button default" href="{obj.checkout_link }" target="_blank">{title}</a>'
+                f'<a class="button default" href="{obj.checkout_link}" target="_blank">{title}</a>'
             )
         return "-"
 
@@ -419,13 +442,13 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            re_path(
-                r"^(?P<pk>.+)/generate-payment-link/$",
+            path(
+                "<path:pk>/generate-payment-link/",
                 self.admin_site.admin_view(self.generate_payment_link_view),
                 name="grant_management_grantpayment_generate_payment_link",
             ),
-            re_path(
-                r"^(?P<pk>.+)/check-status/$",
+            path(
+                "<path:pk>/check-status/",
                 self.admin_site.admin_view(self.check_status_view),
                 name="grant_management_grantpayment_check_status",
             ),
@@ -460,6 +483,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
             payment.check_status()
             self.message_user(request, _("Successfully checked payment status"))
         except Exception as e:
+            logger.error(e)
             self.message_user(request, str(e), level=messages.ERROR)
 
         return HttpResponseRedirect(
@@ -478,7 +502,8 @@ class GrantApplicationAdmin(ActivityChildAdmin):
     list_display = [
         "title",
         "target",
-        "status",
+        "state_name",
+        "submitted"
     ]
 
     def get_list_display(self, request):
@@ -500,6 +525,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         "updated",
         'started',
         "has_deleted_data",
+        "valid",
         "status",
         "states",
     )
@@ -517,7 +543,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
     ]
 
     def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
@@ -526,12 +552,12 @@ class GrantApplicationAdmin(ActivityChildAdmin):
             if settings.enable_office_restrictions:
                 if "office_restriction" not in self.office_fields:
                     self.office_fields += ("office_restriction",)
-                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+                fieldsets.append((_("Work location"), {"fields": self.office_fields}))
 
         if request.user.is_superuser:
             fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
 
-        if SegmentType.objects.count():
+        if SegmentType.objects.exists():
             fieldsets.append(
                 (
                     _("Segments"),
@@ -544,6 +570,21 @@ class GrantApplicationAdmin(ActivityChildAdmin):
                 )
             )
         return fieldsets
+
+    def submitted(self, obj):
+        entry = LogEntry.objects.filter(
+            action_flag=9,
+            object_id=str(obj.pk),
+            content_type=ContentType.objects.get_for_model(obj),
+            change_message="Changed status to submitted"
+        ).order_by(
+            '-action_time'
+        ).first()
+        if entry:
+            return entry.action_time
+        return None
+
+    submitted.short_description = _("Submitted")
 
     export_to_csv_fields = (
         ('title', 'Title'),

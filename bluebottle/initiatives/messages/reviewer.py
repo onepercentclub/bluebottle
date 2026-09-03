@@ -1,5 +1,5 @@
 from django.db.models import Q
-from django.utils.translation import gettext_lazy as _, pgettext
+from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
 
@@ -15,7 +15,7 @@ class InitiativeReviewerMessage(TransitionMessage):
     def action_link(self):
         return self.obj.get_admin_url()
 
-    action_title = pgettext('email', 'View initiative')
+    action_title = pgettext('platform-email', 'View initiative')
 
     def get_recipients(self):
         """enabled staff members"""
@@ -33,14 +33,17 @@ class InitiativeReviewerMessage(TransitionMessage):
 
         return list(recipients)
 
+    class Meta:
+        abstract = True
+
 
 class InitiativeSubmittedReviewerMessage(InitiativeReviewerMessage):
-    subject = _('A new initiative is ready to be reviewed on {site_name}')
+    subject = pgettext('platform-email', 'A new initiative is ready to be reviewed on {site_name}')
     template = 'messages/reviewer/initiative_submitted'
 
 
 class InitiativePublishedReviewerMessage(InitiativeReviewerMessage):
-    subject = _('A new initiative has been published on {site_name}!')
+    subject = pgettext('platform-email', 'A new initiative has been published on {site_name}!')
     template = 'messages/reviewer/initiative_published'
 
     @property
@@ -49,7 +52,7 @@ class InitiativePublishedReviewerMessage(InitiativeReviewerMessage):
 
 
 class AssignedReviewerMessage(InitiativeReviewerMessage):
-    subject = _('You are assigned to review "{title}".')
+    subject = pgettext('platform-email', 'You are assigned to review "{title}".')
     template = 'messages/reviewer/assigned_reviewer'
 
     send_once = True

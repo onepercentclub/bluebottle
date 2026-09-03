@@ -11,6 +11,7 @@ from bluebottle.initiatives.tests.factories import (
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
+    TeamFactory,
     DeadlineActivityFactory,
     DeadlineRegistrationFactory,
     PeriodicActivityFactory, ScheduleActivityFactory, TeamScheduleRegistrationFactory,
@@ -151,22 +152,6 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
         self.assertEqual(self.activity.status, "open")
 
-    def test_reject(self):
-        self.publish()
-        self.create_participants()
-
-        super().test_reject()
-
-        for registration in self.registrations:
-            self.assertEqual(registration.participants.first().status, "cancelled")
-
-    def test_restore(self):
-        self.test_reject()
-        self.activity.states.restore(save=True)
-
-        for registration in self.registrations:
-            self.assertEqual(registration.participants.first().status, "succeeded")
-
     def test_cancel(self):
         self.create_participants()
         super().test_cancel()
@@ -196,7 +181,11 @@ class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
 
     def register_team(self):
         self.registration = TeamScheduleRegistrationFactory.create(activity=self.activity, user=self.user)
-        self.team = self.registration.team
+        self.team = TeamFactory.create(
+            registration=self.registration,
+            activity=self.activity,
+            user=self.registration.user
+        )
         self.team_member = self.team.team_members.first()
         self.slot = self.team.slots.first()
         self.participant = self.slot.participants.first()

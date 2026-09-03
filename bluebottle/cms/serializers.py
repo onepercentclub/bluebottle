@@ -19,16 +19,18 @@ from bluebottle.cms.models import (
     ProjectsMapContent, CategoriesContent, StepsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, NewsContent
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
+from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import (
     Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem,
     ScaledImageTextItem, TextOnlyItem
 )
 from bluebottle.slides.models import Slide
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, RichTextField, SafeField
+from bluebottle.utils.models import get_default_language
 
 
 class QuoteSerializer(ModelSerializer):
@@ -319,6 +321,16 @@ class QuotesBlockSerializer(BaseBlockSerializer):
         ]
 
 
+class NewsBlockSerializer(BaseBlockSerializer):
+
+    class Meta(object):
+        model = NewsContent
+        fields = ('id', 'block_type', 'title', 'sub_title')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/news'
+
+
 class PeopleBlockSerializer(BaseBlockSerializer):
     persons = ResourceRelatedField(
         many=True,
@@ -520,7 +532,6 @@ class ColumnBlockSerializer(BaseBlockSerializer):
 
 class FallbackBlockSerializer(serializers.Serializer):
     def to_representation(self, instance):
-        print(instance.__class__)
         return {'id': instance.pk, 'block_type': self.JSONAPIMeta.resource_name}
 
     class Meta(object):
@@ -558,6 +569,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         StatsBlockSerializer,
         QuotesBlockSerializer,
         PeopleBlockSerializer,
+        NewsBlockSerializer,
         LogosBlockSerializer,
         CategoriesBlockSerializer,
         TextBlockSerializer,
@@ -595,7 +607,7 @@ class BlockSerializer(PolymorphicModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'funding',
-            'full_page', 'persons',
+            'full_page', 'persons'
 
         ]
 
@@ -622,7 +634,11 @@ class BaseCMSSerializer(ModelSerializer):
     content_attribute = 'content'
 
     def get_blocks(self, obj):
-        return obj.content.contentitems.all().translated()
+        blocks = obj.content.contentitems.all().translated()
+        if blocks.exists():
+            return blocks
+        default_language = get_default_language()
+        return obj.content.contentitems.all().translated(default_language)
 
     class Meta(object):
         fields = ('id', 'blocks')
@@ -677,9 +693,29 @@ class PageSerializer(BaseCMSSerializer):
         resource_name = 'pages'
 
 
+class PlatformPageSerializer(BaseCMSSerializer):
+    id = serializers.CharField(source='slug', read_only=True)
+
+    def get_blocks(self, obj):
+        blocks = obj.body.contentitems.all().translated()
+        if blocks.exists():
+            return blocks
+
+        default_language = get_default_language()
+        return obj.body.contentitems.all().translated(default_language)
+
+    class Meta(BaseCMSSerializer.Meta):
+        model = Page
+        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
+
+    class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
+        resource_name = 'pages'
+
+
 class NewsItemSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     main_image = SorlImageField('1920')
+    summary = serializers.CharField()
 
     content_attribute = 'contents'
 
@@ -687,9 +723,9 @@ class NewsItemSerializer(BaseCMSSerializer):
         return obj.contents.contentitems.all()
 
     class Meta(BaseCMSSerializer.Meta):
-        model = Page
+        model = NewsItem
         fields = BaseCMSSerializer.Meta.fields + (
-            'title', 'author', 'publication_date', 'slug', 'main_image'
+            'title', 'author', 'publication_date', 'slug', 'main_image', 'summary'
         )
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
@@ -724,6 +760,7 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = SitePlatformSettings
         fields = (
+            'platform_name',
             'contact_email',
             'contact_phone',
             'copyright',

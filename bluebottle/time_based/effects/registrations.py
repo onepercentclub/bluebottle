@@ -3,7 +3,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import PeriodicSlot, Team
+from bluebottle.time_based.models import PeriodicSlot, DateRegistration
 
 
 class CreateParticipantEffect(Effect):
@@ -28,12 +28,13 @@ class CreateSlotParticipantEffect(Effect):
     def post_save(self, **kwargs):
         if self.instance.activity.slots.count() == 1:
             slot = self.instance.activity.slots.first()
-            self.instance.participants.create(
-                activity=self.instance.activity,
-                user=self.instance.user,
-                slot=slot,
-                registration=self.instance,
-            )
+            if not slot.participants.filter(user=self.instance.user).exists():
+                self.instance.participants.create(
+                    activity=self.instance.activity,
+                    user=self.instance.user,
+                    slot=slot,
+                    registration=self.instance,
+                )
 
     def is_valid(self):
         return not self.instance.activity.slots.count() == 1
@@ -103,16 +104,21 @@ class AdjustInitialPeriodicParticipantEffect(Effect):
         return not self.instance.participants.filter(slot__isnull=False).exists()
 
 
-class CreateTeamEffect(Effect):
-    title = _('Create team for this registration')
-    template = 'admin/create_team.html'
+class DeleteRegistrationEffect(Effect):
+
+    title = _('Delete registration if it no longer has participants')
+    template = 'admin/delete_registration.html'
 
     def post_save(self, **kwargs):
-        self.instance.team = Team.objects.create(
-            activity=self.instance.activity,
-            user=self.instance.user,
-            registration=self.instance,
-        )
+        try:
+            registration = self.instance.registration
+            if not registration.participants.exists():
+                registration.delete()
+        except DateRegistration.DoesNotExist:
+            pass
 
     def is_valid(self):
-        return not self.instance.team
+        if not self.instance.registration_id:
+            return False
+        registration = self.instance.registration
+        return not registration.participants.exists()

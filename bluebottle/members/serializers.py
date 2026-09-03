@@ -14,9 +14,9 @@ from rest_framework_json_api.serializers import Serializer, ModelSerializer, Res
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.files.serializers import ImageField
 from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.clients import properties
+from bluebottle.files.serializers import ImageField
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import OldPlaceSerializer
 from bluebottle.initiatives.models import Theme
@@ -25,7 +25,7 @@ from bluebottle.organizations.serializers import OrganizationSerializer
 from bluebottle.segments.models import Segment
 from bluebottle.segments.serializers import SegmentTypeSerializer
 from bluebottle.time_based.models import Skill
-from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField
+from bluebottle.utils.serializers import PermissionField, TruncatedCharField, CaptchaField, UserPermissionField
 
 BB_USER_MODEL = get_user_model()
 
@@ -62,7 +62,9 @@ class AxesJSONWebTokenSerializer(JSONWebTokenSerializer):
                     'user': user
                 }
             else:
-                msg = _('Unable to log in with provided credentials.')
+                msg = _(
+                    'We are unable to log you in with the provided email address and password combination.'
+                )
                 raise serializers.ValidationError(msg)
         else:
             msg = _('Must include "{username_field}" and "password".')
@@ -220,11 +222,11 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
         representation = BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
         if not (
-                user.is_staff or
-                user.is_superuser
+            user.is_staff or
+            user.is_superuser
         ) and (
-                self.hide_last_name and
-                MemberPlatformSettings.objects.get().display_member_names == 'first_name'
+            self.hide_last_name and
+            MemberPlatformSettings.load().display_member_names == 'first_name'
         ):
             del representation['last_name']
             representation['full_name'] = representation['first_name']
@@ -253,12 +255,14 @@ class UserPermissionsSerializer(serializers.Serializer):
     project_list = PermissionField('initiative-list')
     project_manage_list = PermissionField('initiative-list')
     homepage = PermissionField('home-detail')
+    review_activities = UserPermissionField('activities.api_review_activity')
 
     class Meta(object):
         fields = [
             'project_list',
             'project_manage_list',
-            'homepage'
+            'homepage',
+            'review_activities'
         ]
 
 
@@ -366,6 +370,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
             'subscribed', 'segments', 'can_pledge', 'can_do_bank_transfer',
+            'translate_user_content',
         )
 
 
@@ -467,35 +472,75 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=254)
     url = serializers.CharField(required=False, allow_blank=True)
     segment_id = serializers.CharField(required=False, allow_blank=True)
+    accepted = serializers.BooleanField(read_only=True)
+    access_code = serializers.CharField(required=False)
 
     def create(self, validated_data):
+        member_settings = MemberPlatformSettings.load()
+        email = validated_data.get('email', '')
+        email_domain = email.split('@')[-1]
+        accepted = True
+        if (
+            member_settings.account_creation_rules == 'whitelist'
+            and email_domain not in member_settings.email_domains
+        ):
+            accepted = False
         (instance, _) = BB_USER_MODEL.objects.get_or_create(
             email__iexact=validated_data['email'],
-            defaults={'is_active': False, 'email': validated_data['email']}
+            defaults={
+                'is_active': False,
+                'accepted': accepted,
+                'email': validated_data['email']
+            }
         )
         return instance
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'email', 'url', 'segment_id')
+        fields = ('id', 'email', 'url', 'segment_id', 'accepted', 'access_code')
 
     def validate_email(self, email):
-        settings = MemberPlatformSettings.objects.get()
-        if (
-                settings.email_domain and
-                not email.endswith('@{}'.format(settings.email_domain))
-        ):
-            raise serializers.ValidationError(
-                ('Only emails for the domain {} are allowed').format(
-                    settings.email_domain)
-            )
-
-        if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):
-            raise serializers.ValidationError(
-                'A member with this email address already exists.',
-                code='email_in_use',
-            )
+        member = Member.objects.filter(email__iexact=email).first()
+        if member:
+            if member.is_active:
+                raise serializers.ValidationError(
+                    'A member with this email address already exists.',
+                    code='email_in_use',
+                )
         return email
+
+    def validate(self, attrs):
+        email = attrs.get('email', '')
+        access_code = attrs.get('access_code', '')
+        settings = MemberPlatformSettings.load()
+        email_domain = email.split('@')[1]
+        email_domains = settings.email_domains
+
+        if (
+            settings.account_creation_rules in ['whitelist', 'whitelist_and_request']
+            and len(email_domains)
+            and email_domain not in email_domains
+        ):
+            if settings.account_creation_rules == 'whitelist_and_request':
+                if access_code:
+                    if settings.request_access_code != access_code:
+                        raise serializers.ValidationError(
+                            _('The access link you supplied is invalid. '
+                              'Please contact us to request a new access link.'),
+                            code='invalid_access_code'
+                        )
+                else:
+                    raise serializers.ValidationError(
+                        _('This email is not whitelisted, please contact us to request access.'),
+                        code='request_access'
+                    )
+            else:
+                raise serializers.ValidationError(
+                    _('Only emails for specified domains are allowed. Please use your work e-mail address.'),
+                    code='non_whitelisted_domain'
+                )
+
+        return attrs
 
     class JSONAPIMeta:
         resource_name = 'signup-tokens'
@@ -585,7 +630,7 @@ class MemberSignUpSerializer(serializers.ModelSerializer):
         return super(MemberSignUpSerializer, self).errors
 
     def validate(self, data):
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
         if settings.confirm_signup:
             raise serializers.ValidationError(
                 {'email': _('Signup requires a confirmation token.')}
@@ -670,7 +715,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(_('Email confirmation mismatch'))
             del data['email_confirmation']
 
-        settings = MemberPlatformSettings.objects.get()
+        settings = MemberPlatformSettings.load()
 
         if settings.confirm_signup:
             raise serializers.ValidationError(
@@ -727,7 +772,8 @@ class MemberProfileSerializer(ModelSerializer):
             'search_distance', 'any_search_distance', 'exclude_online',
             'matching_options_set', 'remote_id', 'avatar',
             'subscribed', 'receive_reminder_emails', 'campaign_notifications',
-            'has_usable_password', 'avatar', 'gender'
+            'has_usable_password', 'avatar', 'gender', 'translate_user_content',
+            'terms_accepted'
         )
 
     class JSONAPIMeta():
@@ -820,12 +866,20 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
     new_password = PasswordField(
         write_only=True, required=True, max_length=128)
 
-    def save(self):
-        self.instance.set_password(self.validated_data['new_password'])
-        self.instance.save()
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        attrs['password'] = attrs.pop('new_password')
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['password'])
+        instance.save()
+
+        return instance
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
-        fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
+        fields = ('new_password',) + PasswordProtectedMemberSerializer.Meta.fields
 
     class JSONAPIMeta:
         resource_name = 'profile-password'
@@ -862,12 +916,23 @@ class UserVerificationSerializer(serializers.Serializer):
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     background = SorlImageField('1408x1080', crop='center')
     read_only_fields = serializers.SerializerMethodField()
+    social_login_methods = serializers.SerializerMethodField()
+    reminder_emails_enabled = serializers.SerializerMethodField()
 
     def get_read_only_fields(self, obj):
         try:
             return properties.TOKEN_AUTH['assertion_mapping'].keys()
         except (AttributeError, IndexError):
             return []
+
+    def get_social_login_methods(self, obj):
+        return [
+            {'key': method.client_id, 'backend': method.backend}
+            for method in obj.social_login_methods.all()
+        ]
+
+    def get_reminder_emails_enabled(self, obj):
+        return any([obj.reminder_q1, obj.reminder_q2, obj.reminder_q3, obj.reminder_q4])
 
     class Meta(object):
         model = MemberPlatformSettings
@@ -876,9 +941,13 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'disable_cookie_consent',
             'gtm_code',
             'closed',
-            'email_domain',
+            'email_domains',
             'session_only',
             'confirm_signup',
+            'account_creation_rules',
+            'request_access_method',
+            'request_access_instructions',
+            'request_access_email',
             'login_methods',
             'background',
             'enable_gender',
@@ -892,13 +961,17 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'require_phone_number',
             'create_initiatives',
             'do_good_hours',
+            'reminder_emails_enabled',
             'fiscal_month_offset',
             'fiscal_year',
             'fiscal_year_start',
             'fiscal_year_end',
             'retention_anonymize',
             'retention_delete',
-            'read_only_fields'
+            'read_only_fields',
+            'translate_user_content',
+            'social_login_methods',
+            'explicit_terms'
         )
 
 

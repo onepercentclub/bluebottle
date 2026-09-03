@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}
-{% blocktrans context 'email' %}
+{% blocktrans context 'platform-email' %}
 A grant payment request of {{ total }} is ready on {{ site_name }}.<br>
 
 Here's a summary of the payment request:
@@ -12,7 +12,7 @@ Here's a summary of the payment request:
     <table class="padded">
         <tr>
             <td>
-                {% trans 'Grant application' %}
+                {% trans 'Grant application' context "platform-email" %}
             </td>
             <td>
                 {{ payout.title }}
@@ -20,7 +20,7 @@ Here's a summary of the payment request:
         </tr>
         <tr>
             <td>
-                {% trans 'Grant fund' %}
+                {% trans 'Grant fund' context "platform-email" %}
             </td>
             <td>
                 {{ payout.fund }}
@@ -28,7 +28,7 @@ Here's a summary of the payment request:
         </tr>
         <tr>
             <td>
-                {% trans 'Amount' %}
+                {% trans 'Amount' context "platform-email"%}
             </td>
             <td>
                 {{ payout.amount }}

@@ -1,21 +1,85 @@
-import json
 import datetime
+import json
 from datetime import timedelta
 
-from django.contrib.admin import AdminSite
+from django.contrib.admin.sites import AdminSite
+from django.test import RequestFactory
 from django.urls import reverse
 from django.utils.timezone import now
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleAdminTestCase
-from bluebottle.time_based.admin import SkillAdmin
-from bluebottle.time_based.models import DateActivity, Skill
+from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
+from bluebottle.time_based.admin import ScheduleActivityAdmin, SkillAdmin
+from bluebottle.time_based.models import DateActivity, ScheduleActivity, Skill
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, DateRegistrationFactory
+    DateParticipantFactory, DateRegistrationFactory,
+    ScheduleActivityFactory, ScheduleRegistrationFactory,
 )
+
+
+class ScheduleActivityAdminRegistrationFieldsTest(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.request = RequestFactory().get('/')
+        self.request.user = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
+        self.schedule_admin = ScheduleActivityAdmin(ScheduleActivity, AdminSite())
+
+    def test_registration_fields_without_registrations(self):
+        activity = ScheduleActivityFactory.create()
+
+        fields = self.schedule_admin.get_registration_fields(self.request, activity)
+
+        self.assertNotIn('team_registration_warning', fields)
+
+    def test_registration_fields_with_registrations(self):
+        activity = ScheduleActivityFactory.create()
+        ScheduleRegistrationFactory.create(activity=activity)
+
+        fields = self.schedule_admin.get_registration_fields(self.request, activity)
+
+        self.assertEqual(fields[0], 'team_registration_warning')
+        self.assertIn('team_activity', fields)
+
+    def test_get_fieldsets_includes_warning_when_registrations_exist(self):
+        activity = ScheduleActivityFactory.create()
+        ScheduleRegistrationFactory.create(activity=activity)
+
+        fieldsets = self.schedule_admin.get_fieldsets(self.request, activity)
+        participation_fields = None
+        for _title, options in fieldsets:
+            fields = options.get('fields')
+            if fields and 'team_activity' in fields:
+                participation_fields = fields
+                break
+
+        self.assertIsNotNone(participation_fields)
+        self.assertEqual(participation_fields[0], 'team_registration_warning')
+
+
+class ScheduleActivityAdminRegistrationWarningTest(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.app.set_user(self.staff_member)
+
+    def test_change_form_shows_warning_when_registrations_exist(self):
+        activity = ScheduleActivityFactory.create()
+        ScheduleRegistrationFactory.create(activity=activity)
+
+        url = reverse('admin:time_based_scheduleactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(
+            "change between teams/individuals anymore because there are already registrations",
+            page.text,
+        )
 
 
 class DateActivityAdminTestCase(BluebottleAdminTestCase):
@@ -131,6 +195,66 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(slot.participants.count(), 1)
 
+    def test_duplicate_activity(self):
+        """Test that the 'Duplicate' button in DateActivity admin works correctly."""
+        activity = DateActivityFactory.create(
+            initiative=self.initiative,
+            title='Original Activity',
+            description=json.dumps({'html': 'Original description', 'delta': ''}),
+            slots=[]
+        )
+        slot1 = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now().replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=5),
+            capacity=10
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
+            start=now().replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=6),
+            capacity=15
+        )
+        registration = DateRegistrationFactory.create(activity=activity)
+        DateParticipantFactory.create(slot=slot1, activity=activity, registration=registration)
+
+        original_activity_count = DateActivity.objects.count()
+        original_slot_count = activity.slots.count()
+        original_registration_count = activity.registrations.count()
+
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+        self.assertEqual(page.status, '200 OK')
+
+        form = page.forms['dateactivity_form']
+        page = form.submit(name='_saveasnew')
+        if 'confirm' in page.forms:
+            page.forms['confirm'].submit().follow()
+        else:
+            page.follow()
+
+        self.assertEqual(DateActivity.objects.count(), original_activity_count + 1)
+
+        new_activities = DateActivity.objects.exclude(pk=activity.pk)
+        self.assertEqual(new_activities.count(), 1)
+        new_activity = new_activities.last()
+
+        self.assertEqual(new_activity.title, activity.title)
+
+        self.assertEqual(new_activity.slots.count(), original_slot_count)
+        self.assertEqual(new_activity.slots.count(), 2)
+
+        new_slots = list(new_activity.slots.order_by('start'))
+        original_slots = list(activity.slots.order_by('start'))
+        for slot in new_slots:
+            self.assertEqual(slot.activity_id, new_activity.pk)
+        self.assertEqual(new_slots[0].start, original_slots[0].start)
+        self.assertEqual(new_slots[1].start, original_slots[1].start)
+        self.assertNotEqual(new_slots[0].pk, original_slots[0].pk)
+        self.assertNotEqual(new_slots[1].pk, original_slots[1].pk)
+
+        self.assertEqual(new_activity.registrations.count(), 0)
+        activity.refresh_from_db()
+        self.assertEqual(activity.registrations.count(), original_registration_count)
+
 
 class DateParticipantAdminTestCase(BluebottleAdminTestCase):
     extra_environ = {}
@@ -171,7 +295,7 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
 
         self.assertTrue(
             link.attrs['href'].startswith(
-                reverse('registration-document', args=(self.registration.pk, ))
+                reverse('registration-document', args=(self.registration.pk,))
             )
         )
 

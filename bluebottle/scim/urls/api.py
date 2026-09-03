@@ -1,3 +1,4 @@
+from django.urls import path
 from django.urls import re_path
 from bluebottle.scim.views import (
     ServiceProviderConfigView, SchemaListView, SchemaRetrieveView,
@@ -8,13 +9,13 @@ from bluebottle.scim.views import (
 
 
 urlpatterns = [
-    re_path(
-        r'^ServiceProviderConfig$',
+    path(
+        'ServiceProviderConfig',
         ServiceProviderConfigView.as_view(),
         name='scim-service-provider-config'
     ),
-    re_path(
-        r'^Schemas$',
+    path(
+        'Schemas',
         SchemaListView.as_view(),
         name='scim-schema-list'
     ),
@@ -23,8 +24,8 @@ urlpatterns = [
         SchemaRetrieveView.as_view(),
         name='scim-schema-detail'
     ),
-    re_path(
-        r'^ResourceTypes$',
+    path(
+        'ResourceTypes',
         ResourceTypeListView.as_view(),
         name='scim-resource-type-list'
     ),
@@ -33,8 +34,8 @@ urlpatterns = [
         ResourceTypeRetrieveView.as_view(),
         name='scim-resource-type-detail'
     ),
-    re_path(
-        r'^Users$',
+    path(
+        'Users',
         UserListView.as_view(),
         name='scim-user-list'
     ),
@@ -43,8 +44,8 @@ urlpatterns = [
         UserDetailView.as_view(),
         name='scim-user-detail'
     ),
-    re_path(
-        r'^Groups$',
+    path(
+        'Groups',
         GroupListView.as_view(),
         name='scim-group-list'
     ),

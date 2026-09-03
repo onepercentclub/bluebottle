@@ -1,6 +1,8 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
-from bluebottle.segments.filters import ActivitySegmentAdminMixin
+
+from django import forms
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
@@ -20,6 +22,9 @@ from bluebottle.initiatives.models import (
 )
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.offices.admin import RegionManagerAdminMixin
+from bluebottle.offices.models import OfficeRestrictionChoices
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import (
     BasePlatformSettingsAdmin,
     TranslatableAdminOrderingMixin,
@@ -105,6 +110,24 @@ class ActivityManagersInline(admin.TabularInline):
     exclude = ("member",)
 
 
+class ArchivedFilter(admin.SimpleListFilter):
+    title = _('Hide archived activities')
+    parameter_name = 'archived'
+
+    def lookups(self, request, model_admin):
+        return [
+            (True, 'Show archived activities'),
+        ]
+
+    def queryset(self, request, queryset):
+        if not self.value():
+            return queryset.exclude(
+                status='archived'
+            )
+        else:
+            return queryset
+
+
 @admin.register(Initiative)
 class InitiativeAdmin(
     PolymorphicInlineSupportMixin,
@@ -129,6 +152,7 @@ class InitiativeAdmin(
     list_display = ["__str__", "created", "owner", "state_name"]
 
     list_filter = [
+        ArchivedFilter,
         InitiativeReviewerFilter,
         ("categories", SortedRelatedFieldListFilter),
         ("theme", SortedRelatedFieldListFilter),
@@ -161,13 +185,19 @@ class InitiativeAdmin(
         ("organization", "Organization"),
         ("owner__full_name", "Owner"),
         ("owner__email", "Owner email"),
-        ("promotor__full_name", "Promotor"),
-        ("promotor__email", "Promotor email"),
+        ("promoter__full_name", "Promoter"),
+        ("promoter__email", "Promoter email"),
         ("reviewer__full_name", "Reviewer"),
         ("reviewer__email", "Reviewer email"),
     )
 
-    actions = [export_as_csv_action(fields=export_to_csv_fields)]
+    actions = [export_as_csv_action(fields=export_to_csv_fields), 'archive']
+
+    def archive(self, request, queryset):
+        for initiative in queryset:
+            initiative.states.archive(save=True)
+
+    archive.short_description = _("Archive selected initiatives")
 
     def get_fieldsets(self, request, obj=None):
         detail_fields = [
@@ -182,7 +212,7 @@ class InitiativeAdmin(
         ]
         detail_fields.append("place")
 
-        if InitiativePlatformSettings.objects.get().enable_open_initiatives:
+        if InitiativePlatformSettings.load().enable_open_initiatives:
             detail_fields.append("is_open")
 
         fieldsets = (
@@ -277,12 +307,42 @@ class InitiativeSearchFilterInline(SortableTabularInline):
         return format_html('<div style="font-size: 20px">⠿</div>')
 
 
+class InitiativePlatformSettingsForm(forms.ModelForm):
+    class Meta:
+        model = InitiativePlatformSettings
+        fields = '__all__'
+        widgets = {
+            'hour_registration': forms.RadioSelect,
+        }
+
+    available_office_restrictions = forms.MultipleChoiceField(
+        choices=OfficeRestrictionChoices.choices,
+        widget=forms.CheckboxSelectMultiple(),
+        label=_('Available work location restrictions')
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if (
+            'default_office_restriction' in cleaned_data and
+            'available_office_restrictions' in cleaned_data and
+            cleaned_data['default_office_restriction'] not in cleaned_data['available_office_restrictions']
+        ):
+            raise ValidationError({
+                'default_office_restriction': 'Value not available'
+            })
+
+        return cleaned_data
+
+
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(
     NonSortableParentAdmin, BasePlatformSettingsAdmin
 ):
     inlines = [ActivitySearchFilterInline, InitiativeSearchFilterInline]
     readonly_fields = ['terms_of_service_help_text']
+    form = InitiativePlatformSettingsForm
 
     def terms_of_service_help_text(self, obj):
         return admin_info_box(_(
@@ -301,12 +361,27 @@ class InitiativePlatformSettingsAdmin(
             },
         ),
         (
-            _("Offices"),
+            _("Work locations"),
             {
                 "fields": (
                     "enable_office_regions",
                     "enable_office_restrictions",
+                    "available_office_restrictions",
                     "default_office_restriction",
+                    "allow_disable_office_filter",
+                )
+            },
+        ),
+        (
+            _("Management"),
+            {
+                "fields": (
+                    "enable_reviewing",
+                    "contact_method",
+                    "vet_organizations",
+                    "enable_impact",
+                    "enable_open_initiatives",
+                    "enable_participant_exports",
                 )
             },
         ),
@@ -314,14 +389,10 @@ class InitiativePlatformSettingsAdmin(
             _("Options"),
             {
                 "fields": (
-                    "contact_method",
-                    "require_organization",
-                    "enable_impact",
-                    "enable_open_initiatives",
-                    "enable_participant_exports",
+                    "contact_activity_manager",
                     "enable_matching_emails",
                     "include_full_activities",
-                    "enable_reviewing",
+                    "restrict_updates",
                 )
             },
         ),
@@ -350,7 +421,7 @@ class InitiativePlatformSettingsAdmin(
 
 
 @admin.register(Theme)
-class ThemeAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
+class ThemeAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + (
         "slug",
         "disabled",

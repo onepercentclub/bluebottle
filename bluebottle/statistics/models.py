@@ -8,12 +8,12 @@ from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
-from memoize import memoize
 from parler.models import TranslatedFields, TranslatableModel
 from polymorphic.models import PolymorphicModel
 
 from bluebottle.impact.models import ICONS
 from bluebottle.statistics.statistics import Statistics
+from bluebottle.utils.cache import memoize
 from bluebottle.utils.managers import TranslatablePolymorphicManager
 from bluebottle.utils.models import get_language_choices
 

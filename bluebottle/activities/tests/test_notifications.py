@@ -1,6 +1,9 @@
 from datetime import timedelta
 
+from django.contrib.auth.models import Group
+from django.core import mail
 from django.utils.timezone import now
+from dateutil.relativedelta import relativedelta
 
 from bluebottle.activities.messages.activity_manager import (
     ActivityRejectedNotification, ActivityCancelledNotification,
@@ -14,11 +17,12 @@ from bluebottle.activities.messages.matching import (
     DoGoodHoursReminderQ2Notification,
     DoGoodHoursReminderQ3Notification,
     DoGoodHoursReminderQ4Notification,
+    MatchingActivitiesNotification,
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
     ActivityPublishedReviewerNotification
 from bluebottle.members.models import MemberPlatformSettings, Member
-from bluebottle.notifications.models import NotificationPlatformSettings
+from bluebottle.notifications.models import NotificationPlatformSettings, Message
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.tests.factories import (
@@ -35,8 +39,9 @@ class ActivityNotificationTestCase(NotificationTestCase):
         )
         self.reviewer = BlueBottleUserFactory.create(
             is_staff=True,
-            submitted_initiative_notifications=True
+            submitted_initiative_notifications=True,
         )
+        self.reviewer.groups.add(Group.objects.get(name='Staff'))
 
     def test_activity_submitted_reviewer_notification(self):
         self.message_class = ActivitySubmittedReviewerNotification
@@ -46,6 +51,36 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Please take a moment to review this activity')
         self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('View this activity')
+
+    def test_activity_submitted_frontend_reviewer_notification(self):
+        self.reviewer.submitted_initiative_notifications = True
+        self.reviewer.is_staff = False
+        self.reviewer.subregion_manager.set([])
+        self.reviewer.segment_manager.set([])
+        self.reviewer.save()
+        self.message_class = ActivitySubmittedReviewerNotification
+        self.create()
+
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new activity is ready to be reviewed on Test')
+        self.assertBodyContains('Please take a moment to review this activity')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View this activity')
+
+    def test_activity_submitted_frontend_reviewer_no_notifications(self):
+        self.reviewer.submitted_initiative_notifications = False
+        self.reviewer.is_staff = False
+        self.reviewer.subregion_manager.set([])
+        self.reviewer.segment_manager.set([])
+        self.reviewer.save()
+        other_reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True,
+        )
+        self.message_class = ActivitySubmittedReviewerNotification
+        self.create()
+
+        self.assertRecipients([other_reviewer])
 
     def test_activity_published_reviewer_notification(self):
         self.message_class = ActivityPublishedReviewerNotification
@@ -62,7 +97,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('You submitted an activity on Test')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_published_notification(self):
         self.message_class = ActivityPublishedNotification
@@ -70,7 +105,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('Your activity on Test has been published!')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_approved_notification(self):
         self.message_class = ActivityApprovedNotification
@@ -78,7 +113,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('Your activity on Test has been approved!')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_needs_work_notification(self):
         self.message_class = ActivityNeedsWorkNotification
@@ -86,7 +121,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('The activity you submitted on Test needs work')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_rejected_notification(self):
         self.message_class = ActivityRejectedNotification
@@ -95,7 +130,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertSubject('Your activity "Save the world!" has been rejected')
         self.assertBodyContains('Unfortunately your activity "Save the world!" has been rejected.')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_cancelled_notification(self):
         self.message_class = ActivityCancelledNotification
@@ -104,7 +139,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertSubject('Your activity "Save the world!" has been cancelled')
         self.assertBodyContains('Unfortunately your activity "Save the world!" has been cancelled.')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_restored_notification(self):
         self.message_class = ActivityRestoredNotification
@@ -113,7 +148,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertSubject('The activity "Save the world!" has been restored')
         self.assertBodyContains('Your activity "Save the world!" has been restored.')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_expired_notification(self):
         self.message_class = ActivityExpiredNotification
@@ -125,7 +160,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
             '"Save the world!" before the deadline to apply. '
             'That’s why we have cancelled your activity.')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_succeeded_notification(self):
         self.message_class = ActivitySucceededNotification
@@ -136,7 +171,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
             'You did it! Your activity "Save the world!" has succeeded, '
             'that calls for a celebration!')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
 
 class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
@@ -213,27 +248,41 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ1Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("It’s a new year, let's make some impact!")
-        self.assertBodyContains('Can you spend 8 hours making an impact this year?')
+        self.assertSubject("Test, a new year, a new chance to make impact!")
+        self.assertBodyContains(
+            "Ready to make an impact from day one? On Test "
+            "you’ll find many activities waiting for you."
+        )
         self.assertActionTitle('Find activities')
-        self.assertActionLink('https://testserver/initiatives/activities/list')
-        self.assertBodyContains('https://testserver/member/profile')
+        self.assertActionLink('http://test.localhost:3000/initiatives/activities/list')
+        self.assertBodyContains(
+            "Don't want to receive these updates? Unsubscribe via the"
+        )
+        self.assertBodyContains(
+            'http://test.localhost:3000/member/profile?tab=notifications'
+        )
 
     def test_reminder_q2(self):
         self.message_class = DoGoodHoursReminderQ2Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Haven’t joined an activity yet? Let’s get started!")
-        self.assertBodyContains('The first step is always the hardest')
+        self.assertSubject("Test, your impact starts here!")
+        self.assertBodyContains(
+            "We know that getting started can sometimes be the hardest part. "
+            "That’s why we’ve made it simple to find activities that match your "
+            "interests and time."
+        )
         self.assertActionTitle('Find activities')
 
     def test_reminder_q3(self):
         self.message_class = DoGoodHoursReminderQ3Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Half way through the year and still plenty of activities to join")
+        self.assertSubject("Test, there's still time to make your mark this year!")
         self.assertBodyContains(
-            'There’s still so much time to reach the target of 8 hours making an impact this year.'
+            "We’re halfway through the year and there’s still lots of opportunity to "
+            "make impact. Whether you’ve got a few minutes or a few hours, your efforts "
+            "can make a real difference."
         )
         self.assertActionTitle('Find activities')
 
@@ -241,9 +290,71 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.message_class = DoGoodHoursReminderQ4Notification
         self.create()
         self.assertRecipients([self.moderate_user, self.passive_user])
-        self.assertSubject("Make use of your 8 hours of impact!")
+        self.assertSubject("Test, use your 8 hours to make a difference!")
         self.assertBodyContains(
-            'Get involved with some good causes before the year ends, '
-            'there are plenty of activities that need your help!'
+            'As we approach the final months of the year, there’s '
+            'still time to make impact. Many causes would benefit from your time and skills.'
         )
         self.assertActionTitle('Find activities')
+
+
+class MatchingActivitiesNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.obj = BlueBottleUserFactory.create(subscribed=True)
+        self.activity = type('Activity', (), {
+            'pk': 1,
+            'title': 'Plant trees',
+            'image': None,
+            'expertise': None,
+            'is_online': True,
+            'start': None,
+            'deadline': None,
+            'location': None,
+            'initiative': type('Initiative', (), {
+                'pk': 1,
+                'theme': type('Theme', (), {'name': 'Environment'})(),
+            })(),
+            'get_absolute_url': lambda self: 'http://test.localhost/activities/1',
+        })()
+
+    def test_does_not_resend_same_month(self):
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 1)
+
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_does_not_resend_unsent_row(self):
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        Message.objects.filter(
+            template='messages/matching/matching_activities',
+            recipient=self.obj,
+        ).update(sent=None)
+        mail.outbox = []
+
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_sends_again_next_month(self):
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        Message.objects.filter(
+            template='messages/matching/matching_activities',
+            recipient=self.obj,
+        ).update(sent=now() - relativedelta(months=1))
+
+        MatchingActivitiesNotification(self.obj).compose_and_send(
+            activities=[self.activity]
+        )
+        self.assertEqual(len(mail.outbox), 2)

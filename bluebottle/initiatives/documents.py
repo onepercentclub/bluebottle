@@ -12,7 +12,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     DateActivity,
 )
-from bluebottle.utils.documents import MultiTenantIndex
+from bluebottle.utils.documents import MultiTenantIndex, TextField
 from bluebottle.utils.models import Language
 
 SCORE_MAP = {
@@ -40,6 +40,7 @@ def deduplicate(items):
 
 def get_translated_list(obj, field='name'):
     data = []
+    current_language = obj._current_language
 
     for lang in Language.objects.all():
         obj.set_current_language(lang.full_code)
@@ -50,6 +51,29 @@ def get_translated_list(obj, field='name'):
                 'language': lang.full_code
             }
         )
+    obj._current_language = current_language
+    return data
+
+
+def get_translated_segments(segment):
+    data = []
+    current_language = segment._current_language
+
+    for lang in Language.objects.all():
+        segment.set_current_language(lang.full_code)
+        name = segment.name
+        if name is None:
+            continue
+        data.append(
+            {
+                'id': segment.pk,
+                'type': segment.segment_type.slug,
+                'name': name,
+                'language': lang.full_code,
+                'closed': segment.closed
+            }
+        )
+    segment._current_language = current_language
     return data
 
 
@@ -57,11 +81,11 @@ def get_translated_list(obj, field='name'):
 @initiative.document
 class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
-    title = fields.TextField(fielddata=True)
+    title = TextField(fielddata=True)
     slug = fields.KeywordField()
-    story = fields.TextField(attr='story.html')
+    story = TextField(attr='story.html')
 
-    pitch = fields.TextField()
+    pitch = TextField()
     status = fields.KeywordField()
     created = fields.DateField()
 
@@ -112,6 +136,7 @@ class InitiativeDocument(Document):
             'type': fields.KeywordField(attr='segment_type.slug'),
             'name': fields.KeywordField(),
             'closed': fields.BooleanField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -126,17 +151,17 @@ class InitiativeDocument(Document):
     succeeded_activities_count = fields.IntegerField()
 
     place = fields.NestedField(properties={
-        'province': fields.TextField(),
-        'locality': fields.TextField(),
-        'street': fields.TextField(),
-        'postal_code': fields.TextField(),
+        'province': TextField(),
+        'locality': TextField(),
+        'street': TextField(),
+        'postal_code': TextField(),
     })
 
     location = fields.NestedField(
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
-            'city': fields.TextField(),
+            'city': TextField(),
         }
     )
 
@@ -293,15 +318,8 @@ class InitiativeDocument(Document):
         segments = []
 
         for activity in instance.activities.all():
-            segments += [
-                {
-                    'id': segment.pk,
-                    'type': segment.segment_type.slug,
-                    'name': segment.name,
-                    'closed': segment.closed,
-                }
-                for segment in activity.segments.all()
-            ]
+            for segment in activity.segments.all():
+                segments += get_translated_segments(segment)
 
         return deduplicate(segments)
 

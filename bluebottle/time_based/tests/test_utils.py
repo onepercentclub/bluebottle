@@ -1,10 +1,11 @@
+
 import datetime
 
 from django.utils.timezone import get_current_timezone, make_aware
 
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
-from bluebottle.time_based.utils import duplicate_slot
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
+from bluebottle.time_based.utils import duplicate_slot, duration_to_hours
 
 
 tz = get_current_timezone()
@@ -100,4 +101,29 @@ class DuplicateSlotTestCase(BluebottleTestCase):
                 '2022-05-15', '2022-06-19', '2022-07-17',
                 '2022-08-21', '2022-09-18',
             ]
+        )
+
+
+class TestDurationToHours(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.activity = DeadlineActivityFactory.create(
+            duration=datetime.timedelta(hours=12)
+        )
+
+    def test_hours(self):
+        self.assertEqual(
+            duration_to_hours(self.activity.duration), 12
+        )
+
+    def test_half_hours(self):
+        self.activity.duration = datetime.timedelta(hours=12, minutes=40)
+        self.assertEqual(
+            duration_to_hours(self.activity.duration), 13
+        )
+
+    def test_more_then_day(self):
+        self.activity.duration = datetime.timedelta(days=1, hours=18)
+        self.assertEqual(
+            duration_to_hours(self.activity.duration), 42
         )

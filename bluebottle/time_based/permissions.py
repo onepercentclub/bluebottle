@@ -1,8 +1,8 @@
 from rest_framework import permissions
 
+from bluebottle.activities.models import Activity
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import Team
-from bluebottle.activities.models import Activity
 from bluebottle.utils.permissions import (
     IsOwner,
     BasePermission,
@@ -52,9 +52,14 @@ class CreateByEmailPermission(IsOwner):
 
 
 class InviteCodePermission(BasePermission):
-
     def has_object_permission(self, request, view, obj):
-        return str(obj.invite_code) == str(obj.team.invite_code)
+        return (
+            str(obj.invite_code) == str(obj.team.invite_code) or
+            request.user.is_staff or
+            request.user.is_superuser or
+            request.user == obj.team.owner or
+            request.user in obj.team.activity.owners
+        )
 
     def has_action_permission(self, action, user, model_cls):
         return True

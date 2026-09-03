@@ -3,7 +3,7 @@ from builtins import object
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.options import csrf_protect_m
-from django.contrib.contenttypes.admin import GenericTabularInline
+from django.contrib.contenttypes.admin import GenericStackedInline
 from django.db import router, transaction
 from django.forms import TextInput
 from django.template.loader import render_to_string
@@ -15,18 +15,23 @@ from parler.forms import TranslatableModelForm, TranslatedField
 
 from bluebottle.notifications.models import Message, NotificationPlatformSettings, MessageTemplate
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
+from bluebottle.utils.utils import to_text
 
 
-class MessageAdminInline(GenericTabularInline):
+class MessageAdminInline(GenericStackedInline):
     model = Message
 
-    readonly_fields = ['sent', 'subject', 'recipient']
+    readonly_fields = ['sent', 'subject', 'recipient', 'message']
     fields = readonly_fields
+
+    def message(self, obj):
+        return to_text.handle(obj.custom_message)
 
     def has_add_permission(self, request, obj=None):
         return False
 
     extra = 0
+    ordering = ('-sent',)
 
     can_delete = False
 

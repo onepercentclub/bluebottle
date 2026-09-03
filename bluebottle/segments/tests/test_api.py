@@ -1,10 +1,12 @@
 # coding=utf-8
-import json
-
 import datetime
+import json
+import os
 from builtins import range
 from builtins import str
 
+from django.core.cache import cache
+from django.db import connection
 from django.urls import reverse
 from django.utils.timezone import now
 from moneyed import Money
@@ -15,11 +17,12 @@ from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.segments.models import Segment, SegmentType
+from bluebottle.segments.models import SegmentType
 from bluebottle.segments.serializers import SegmentDetailSerializer, SegmentPublicDetailSerializer
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from bluebottle.utils.models import Language
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -48,7 +51,11 @@ class SegmentTypeListAPITestCase(BluebottleTestCase):
             )
 
     def test_list(self):
-        response = self.client.get(self.url, user=self.user)
+        response = self.client.get(
+            self.url,
+            user=self.user,
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -105,26 +112,59 @@ class SegmentListAPITestCase(BluebottleTestCase):
         self.url = reverse('segment-list')
         self.user = BlueBottleUserFactory()
         self.segment_type = SegmentTypeFactory.create()
-        self.segments = SegmentFactory.create_batch(
-            20,
-            segment_type=self.segment_type
+        # Use a process-unique name so parallel workers don't overwrite or share cache
+        self.expected_segment_name = 'Segment list test segment {}'.format(os.getpid())
+        self.named_segment = SegmentFactory.create(
+            segment_type=self.segment_type,
+            name=self.expected_segment_name
+        )
+        self.named_segment.set_current_language('en')
+        self.named_segment.name = self.expected_segment_name
+        self.named_segment.save()
+        self.named_segment.set_current_language('nl')
+        self.named_segment.name = 'Segment lijst test segment'
+        self.named_segment.save()
+        # Clear segment name cache so parallel test workers don't see a stale
+        # value from another worker (cache key is segment_name_{pk}_{schema}_{lang})
+        schema = getattr(getattr(connection, 'tenant', None), 'schema_name', None) or 'public'
+        for lang in Language.objects.all():
+            cache_key = 'segment_name_{}_{}_{}'.format(
+                self.named_segment.pk,
+                schema,
+                lang.code,
+            )
+            cache.delete(cache_key)
+        self.segments = [self.named_segment] + list(
+            SegmentFactory.create_batch(
+                19,
+                segment_type=self.segment_type
+            )
         )
 
     def test_list(self):
-        response = self.client.get(self.url, user=self.user)
+        response = self.client.get(
+            self.url, user=self.user,
+            HTTP_ACCEPT_LANGUAGE='en'
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(
             len(response.json()['data']), 20
         )
-        result = response.json()['data'][0]
+        expected = self.named_segment
+        result = next(
+            item for item in response.json()['data']
+            if item['id'] == str(expected.pk)
+        )
 
-        segment = Segment.objects.get(pk=result['id'])
-
-        self.assertEqual(segment.name, result['attributes']['name'])
         self.assertEqual(
-            str(segment.segment_type_id),
+            result['attributes']['name'],
+            self.expected_segment_name,
+            'Segment list API should return the segment name we set (parallel-safe)',
+        )
+        self.assertEqual(
+            str(expected.segment_type_id),
             result['relationships']['segment-type']['data']['id']
         )
 
@@ -180,7 +220,7 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertAttribute('name', self.model.name)
         self.assertAttribute('slug', self.model.slug)
         self.assertAttribute('email-domains', self.model.email_domains)
-        self.assertAttribute('tag-line', self.model.tag_line)
+        self.assertAttribute('tag-line', self.model.slogan)
         self.assertAttribute('story', self.model.story.html)
         self.assertAttribute('background-color', self.model.background_color)
         self.assertAttribute('text-color', self.model.text_color)

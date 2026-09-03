@@ -6,8 +6,7 @@ from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.time_based.models import DateActivity, DateActivitySlot
 
 
-def api_create_date_activity(test, initiative, attributes,
-                             request_user=None, status_code=201, msg=None):
+def api_create_date_activity(test, initiative, attributes, request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = initiative.owner
     test.data = {
@@ -37,8 +36,7 @@ def api_create_date_activity(test, initiative, attributes,
         return DateActivity.objects.get(id=response.data['id'])
 
 
-def api_update_date_activity(test, activity, attributes,
-                             request_user=None, status_code=200, msg=None):
+def api_update_date_activity(test, activity, attributes, request_user=None, status_code=200, msg=None):
     if not request_user:
         request_user = activity.owner
     test.data = {

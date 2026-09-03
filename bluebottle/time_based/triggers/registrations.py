@@ -7,7 +7,7 @@ from bluebottle.time_based.effects import LockFilledSlotsEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    CreateTeamEffect, AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
+    AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
@@ -78,7 +78,7 @@ def is_admin(effect):
     """Is not user"""
     user = effect.options.get("user")
     return (
-        user and effect.instance.user != user and (user.is_staff or user.is_superuser)
+        user and effect.instance.user_id and effect.instance.user != user and (user.is_staff or user.is_superuser)
     )
 
 
@@ -123,7 +123,7 @@ class RegistrationTriggers(TriggerManager):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    'participants',
+                    'unreviewed_participants',
                     RegistrationParticipantStateMachine.accept,
                 ),
                 FollowActivityEffect,
@@ -148,6 +148,15 @@ class RegistrationTriggers(TriggerManager):
             ]
         ),
         TransitionTrigger(
+            RegistrationStateMachine.restore,
+            effects=[
+                TransitionEffect(
+                    RegistrationStateMachine.accept,
+                    conditions=[no_review_needed]
+                ),
+            ]
+        ),
+        TransitionTrigger(
             RegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
@@ -167,9 +176,15 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 UnFollowActivityEffect,
             ]
-        )
-
+        ),
     ]
+
+
+def _is_registration_withdraw_trigger(trigger):
+    return (
+        isinstance(trigger, TransitionTrigger)
+        and trigger.transition == RegistrationStateMachine.withdraw
+    )
 
 
 @register(DeadlineRegistration)
@@ -331,6 +346,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     conditions=[activity_no_spots_left],
                 ),
                 AdjustInitialPeriodicParticipantEffect,
+                RelatedTransitionEffect(
+                    "participants",
+                    PeriodicParticipantStateMachine.accept,
+                ),
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),
@@ -495,7 +514,6 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
-                CreateTeamEffect,
                 NotificationEffect(
                     ManagerTeamRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],
@@ -527,7 +545,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
@@ -548,7 +566,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
@@ -562,7 +580,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.add,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
@@ -576,7 +594,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "team",
+                    "teams",
                     TeamStateMachine.reject,
                 ),
                 RelatedTransitionEffect(
@@ -598,7 +616,21 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
 
 @register(DateRegistration)
 class DateRegistrationTriggers(RegistrationTriggers):
-    triggers = RegistrationTriggers.triggers + [
+    triggers = [
+        trigger
+        for trigger in RegistrationTriggers.triggers
+        if not _is_registration_withdraw_trigger(trigger)
+    ] + [
+        TransitionTrigger(
+            RegistrationStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'withdrawable_participants',
+                    RegistrationParticipantStateMachine.withdraw,
+                ),
+                UnFollowActivityEffect,
+            ]
+        ),
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[

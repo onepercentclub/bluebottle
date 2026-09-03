@@ -1,18 +1,19 @@
 import mock
+import munch
 import stripe
 from moneyed import Money
-import munch
 
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, BudgetLineFactory
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentFactory, StripePayoutAccountFactory, ExternalAccountFactory,
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
 
 
-class StripePaymentTransitionsTestCase(BluebottleTestCase):
+class StripePaymentTransitionsTestCase(FundingStripeTestCase):
     def setUp(self):
+        super(StripePaymentTransitionsTestCase, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
@@ -39,7 +40,6 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
         )
 
         self.payment = StripePaymentFactory.create(donation=donation)
-        super(StripePaymentTransitionsTestCase, self).setUp()
 
     def test_refund(self):
         self.payment.states.succeed(save=True)
@@ -55,13 +55,16 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
         self.assertTrue(refund_mock.called_once)
 
     def test_change_business_type(self):
-        self.payout_account.business_type = 'company'
         stripe_payout_account = stripe.Account('some account id')
+        stripe_payout_account.business_type = 'individual'
         stripe_payout_account.individual = munch.munchify({'verification': {'status': 'verified'}})
         stripe_payout_account.requirements = munch.munchify({'eventually_due': []})
         stripe_payout_account.charges_enabled = True
         stripe_payout_account.payouts_enabled = True
 
+        self.payout_account.business_type = 'company'
+
         with mock.patch("stripe.Account.modify", return_value=stripe_payout_account) as update_mock:
-            self.payout_account.save()
-            update_mock.assert_called_with(self.payout_account.account_id, business_type='company')
+            with mock.patch("stripe.Account.retrieve", return_value=stripe_payout_account):
+                self.payout_account.save()
+                update_mock.assert_called_with(self.payout_account.account_id, business_type='company')

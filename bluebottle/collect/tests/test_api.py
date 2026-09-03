@@ -17,8 +17,8 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase
 
 
@@ -45,7 +45,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
             'location', 'theme'
         ]
 
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.append('collect')
         settings.save()
 
@@ -102,7 +102,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_create_disabled_activity_type(self):
-        settings = InitiativePlatformSettings.objects.get()
+        settings = InitiativePlatformSettings.load()
         settings.activity_types.remove('collect')
         settings.save()
 

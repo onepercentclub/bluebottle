@@ -1,20 +1,23 @@
 import munch
+import stripe
+from django.contrib.auth.models import Group
 from django.core import mail
 from djmoney.money import Money
 from mock import patch
-import stripe
 
+from bluebottle.activities.messages.reviewer import get_reviewers_for_activity
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
-from bluebottle.funding_stripe.models import StripePayoutAccount
+from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
+from bluebottle.funding_stripe.tests.base import FundingStripeTestCase
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
-    StripePaymentFactory, ExternalAccountFactory
+    StripePaymentFactory, ExternalAccountFactory, StripePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
 
 
-class BaseStripePaymentStateMachineTests(BluebottleTestCase):
+class BaseStripePaymentStateMachineTests(FundingStripeTestCase):
     def setUp(self):
+        super(BaseStripePaymentStateMachineTests, self).setUp()
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
@@ -116,9 +119,17 @@ class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
             self.assertEqual(payment.status, "refund_requested")
 
 
-class StripePayoutAccountStateMachineTests(BluebottleTestCase):
+class StripePayoutAccountStateMachineTests(FundingStripeTestCase):
+
+    ACTIVITY_INCOMPLETE_SUBJECT = (
+        "Action required for your crowdfunding campaign on Test"
+    )
+    LIVE_INCOMPLETE_SUBJECT = (
+        "Failed identity verification for a running crowdfunding campaign on Test ⚠️"
+    )
 
     def setUp(self):
+        super(StripePayoutAccountStateMachineTests, self).setUp()
         account_id = 'some-connect-id'
         self.user = BlueBottleUserFactory.create()
         self.account = StripePayoutAccountFactory.create(
@@ -131,6 +142,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
             {
                 "country": "NL",
                 "charges_enabled": True,
+                "business_type": "individual",
                 "individual": munch.munchify(
                     {
                         "email": "jhon@example.com",
@@ -167,8 +179,14 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
                 "external_accounts": munch.munchify({"total_count": 0, "data": []}),
             }
         )
+        self.stripe_account.email = "jhon@example.com"
+        self.stripe_account.business_profile = munch.munchify({
+            "mcc": "8398",
+            "product_description": "Not applicable - test state machine.",
+            "url": "https://goodup.com",
+        })
 
-        self.account.update(self.stripe_account)
+        self._save_local_payout_from_stripe_state()
         self.bank_account = ExternalAccountFactory.create(
             connect_account=self.account,
             status='verified',
@@ -178,6 +196,31 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
             bank_account=self.bank_account,
             target=Money(1000, "EUR")
         )
+        self.reviewer = BlueBottleUserFactory.create(
+            submitted_initiative_notifications=True,
+        )
+        self.reviewer.groups.add(Group.objects.get(name='Staff'))
+
+    def open_funding(self):
+        self.funding.initiative.status = "approved"
+        self.funding.initiative.save()
+        self.funding.status = "open"
+        self.funding.save()
+
+    def assert_activity_incomplete_notifications(self):
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, self.ACTIVITY_INCOMPLETE_SUBJECT)
+
+    def assert_live_incomplete_notifications(self):
+        recipients = get_reviewers_for_activity(self.funding)
+        self.assertEqual(len(mail.outbox), len(recipients))
+        for message in mail.outbox:
+            self.assertEqual(message.subject, self.LIVE_INCOMPLETE_SUBJECT)
+
+    def _save_local_payout_from_stripe_state(self):
+        with patch("stripe.Account.retrieve", return_value=self.stripe_account), \
+                patch("stripe.Account.modify", return_value=self.stripe_account):
+            self.account.update(self.stripe_account)
 
     def simulate_webhook(
         self,
@@ -202,10 +245,10 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         if verification_status:
             self.stripe_account.individual.verification.status = verification_status
 
-        self.account.update(self.stripe_account)
+        self._save_local_payout_from_stripe_state()
 
     def test_initial(self):
-        self.assertEqual(self.account.status, 'new')
+        self.assertEqual(self.account.status, 'incomplete')
 
     def test_pending(self):
         self.simulate_webhook([])
@@ -218,41 +261,47 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         self.simulate_webhook(["individual.verification.document"])
         self.assertEqual(self.account.status, "incomplete")
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
-        )
+        self.assert_activity_incomplete_notifications()
+
+    def test_needs_verification_open(self):
+        self.test_pending()
+        self.open_funding()
+
+        self.simulate_webhook(["individual.verification.document"])
+        self.assertEqual(self.account.status, "incomplete")
+
+        self.assert_live_incomplete_notifications()
 
     def test_verify(self):
         self.simulate_webhook([], verification_status="verified")
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, "Your identity has been verified")
+        self.assertEqual(mail.outbox[0].subject, "Your identity has been verified on Test")
 
     def test_needs_verification_pending(self):
-        self.test_needs_verification()
+        self.test_needs_verification_open()
         mail.outbox = []
 
         self.simulate_webhook([], verification_status="verified")
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified')
+        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified on Test')
 
     def test_reject(self):
         self.test_verify()
         mail.outbox = []
+        self.open_funding()
 
         self.simulate_webhook(
             ["individual.verification.document"], verification_status="rejected"
         )
 
         self.assertEqual(self.account.status, "incomplete")
-        self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
-        )
+        self.assert_live_incomplete_notifications()
 
     def test_reject_disable_payments(self):
         self.test_verify()
         mail.outbox = []
+        self.open_funding()
 
         self.simulate_webhook(
             ["individual.verification.document"],
@@ -261,15 +310,16 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         )
 
         self.assertEqual(self.account.status, "disabled")
-        self.assertEqual(
-            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
-        )
+        self.assert_live_incomplete_notifications()
 
 
-class StripeBankAccountStateMachineTests(BluebottleTestCase):
+class StripeBankAccountStateMachineTests(FundingStripeTestCase):
 
     def setUp(self):
+        super(StripeBankAccountStateMachineTests, self).setUp()
         account_id = 'some-connect-id'
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
         self.user = BlueBottleUserFactory.create()
         self.account = StripePayoutAccount(
             owner=self.user,

@@ -1,5 +1,6 @@
 import uuid
 from builtins import object, str
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import SET_NULL
@@ -14,10 +15,10 @@ from multiselectfield import MultiSelectField
 from parler.managers import TranslatableManager, TranslatableQuerySet
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.managers import PolymorphicManager
-from polymorphic.models import PolymorphicModel
+from polymorphic.models import PolymorphicModel, PolymorphicTypeInvalid
 from polymorphic.query import PolymorphicQuerySet
 
-from bluebottle.files.fields import ImageField, DocumentField
+from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
@@ -69,16 +70,26 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     organization = models.ForeignKey(
         Organization,
-        verbose_name=_('Partner organization'),
+        verbose_name=_('Partner organisation'),
         null=True,
         blank=True,
         on_delete=SET_NULL,
         related_name="activities",
     )
 
+    host_organization = models.ForeignKey(
+        Organization,
+        verbose_name=_('Host organisation'),
+        help_text=_('The organisation that shared this activity from another platform'),
+        null=True,
+        blank=True,
+        on_delete=SET_NULL,
+        related_name="hosted_activities",
+    )
+
     office_location = models.ForeignKey(
         "geo.Location",
-        verbose_name=_("Host office"),
+        verbose_name=_("Host work location"),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -118,9 +129,13 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
     image = ImageField(blank=True, null=True)
 
+    origin = models.ForeignKey(
+        'activity_pub.Event', null=True, related_name="adopted_activities", on_delete=models.SET_NULL
+    )
+
     video_url = models.URLField(
         _("video"),
-        max_length=100,
+        max_length=2048,
         blank=True,
         null=True,
         default="",
@@ -190,6 +205,27 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     @property
+    def link(self):
+        return None
+
+    @property
+    def event(self):
+        from bluebottle.activity_pub.models import Event
+        return Event.objects.get(object=self)
+
+    @property
+    def activity_pub_url(self):
+        from bluebottle.activity_pub.models import Event
+        try:
+            return self.event.iri or self.event.pub_url
+        except Event.DoesNotExist:
+            return None
+
+    @property
+    def details(self):
+        return f"{self.description.html}, {self.get_absolute_url()}"
+
+    @property
     def owners(self):
         if self.owner_id:
             yield self.owner
@@ -229,11 +265,15 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         for field in super().required:
             yield field
 
-        for question in self.questions.filter(required=True):
-            try:
-                self.answers.get(question=question)
-            except ActivityAnswer.DoesNotExist:
-                yield f'answers.{question.id}'
+        if self.pk:
+            for question in self.questions.filter(required=True):
+                try:
+                    answer = self.answers.get(question=question)
+                    if not answer.is_valid:
+                        yield f'answers.{question.id}'
+
+                except ActivityAnswer.DoesNotExist:
+                    yield f'answers.{question.id}'
 
     @property
     def questions(self):
@@ -245,6 +285,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         permissions = (
             ("api_read_activity", "Can view activity through the API"),
             ("api_read_own_activity", "Can view own activity through the API"),
+            ("api_review_activity", "Can review activities through the API"),
         )
 
     def __str__(self):
@@ -271,7 +312,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        type = self.get_real_instance().__class__.__name__.lower()
+        try:
+            type = self.get_real_instance().__class__.__name__.lower()
+        except PolymorphicTypeInvalid:
+            type = self.__class__.__name__.lower()
         return (
             f"{domain}/{language}/activities/details/{type}/{self.id}/{self.slug}"
         )
@@ -471,6 +515,16 @@ class TranslatedPolymorphicManager(PolymorphicManager, TranslatableManager):
 class ActivityQuestion(PolymorphicModel, TranslatableModel):
     objects = TranslatablePolymorphicManager()
 
+    VISIBILITY_CHOICES = (
+        ('all', _("Everyone")),
+        ('managers', _("Managers")),
+    )
+
+    class VisibilityChoices(DjangoChoices):
+
+        all = ChoiceItem('all', label=_("Everyone"))
+        managers = ChoiceItem('managers', label=_("Managers"))
+
     translations = TranslatedFields(
         name=models.CharField(
             _('Label'),
@@ -490,6 +544,12 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
     )
 
     required = models.BooleanField(default=True)
+    visibility = models.CharField(
+        _('Who can see the answers?'),
+        max_length=255,
+        choices=VisibilityChoices.choices,
+        default=VisibilityChoices.all
+    )
 
     def __str__(self):
         return self.question
@@ -499,8 +559,37 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
         verbose_name_plural = _("Form questions")
 
 
+def POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
+    return models.CASCADE(collector, field, sub_objs.non_polymorphic(), using)
+
+
+class ActivityMessage(models.Model):
+    sender = models.ForeignKey(
+        "members.Member",
+        related_name="activity_messages_sent",
+        on_delete=models.CASCADE,
+    )
+    activity = models.ForeignKey(
+        Activity,
+        related_name="activity_messages",
+        on_delete=POLYMORPHIC_CASCADE,
+    )
+    message = models.TextField(_("Message"), max_length=5000)
+    created = models.DateTimeField(default=timezone.now)
+
+    class Meta(object):
+        ordering = ("-created",)
+        verbose_name = _("Activity message")
+        verbose_name_plural = _("Activity messages")
+
+    class JSONAPIMeta(object):
+        resource_name = "activity-messages"
+
+
 class ActivityAnswer(PolymorphicModel):
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='answers')
+    activity = models.ForeignKey(
+        Activity, on_delete=POLYMORPHIC_CASCADE, related_name='answers'
+    )
     question = models.ForeignKey(ActivityQuestion, on_delete=models.CASCADE)
 
     class Meta:
@@ -518,6 +607,28 @@ class TextAnswer(ActivityAnswer):
     class JSONAPIMeta:
         resource_name = 'text-answers'
 
+    @property
+    def is_valid(self):
+        return len(self.answer) > 0
+
+
+class ConfirmationQuestion(ActivityQuestion, TranslatableModel):
+    text = models.TextField()
+
+    class JSONAPIMeta:
+        resource_name = 'confirmation-questions'
+
+
+class ConfirmationAnswer(ActivityAnswer):
+    confirmed = models.BooleanField(default=False)
+
+    class JSONAPIMeta:
+        resource_name = 'confirmation-answers'
+
+    @property
+    def is_valid(self):
+        return self.confirmed
+
 
 class SegmentQuestion(ActivityQuestion, TranslatableModel):
     segment_type = models.ForeignKey(SegmentType, on_delete=models.CASCADE)
@@ -531,6 +642,10 @@ class SegmentAnswer(ActivityAnswer):
 
     class JSONAPIMeta:
         resource_name = 'segment-answers'
+
+    @property
+    def is_valid(self):
+        return self.segment
 
     def save(self, *args, **kwargs):
         current_segments = self.activity.segments.filter(
@@ -552,11 +667,15 @@ class FileUploadQuestion(ActivityQuestion, TranslatableModel):
 
 
 class FileUploadAnswer(ActivityAnswer):
-    file = DocumentField(on_delete=models.CASCADE)
+    file = PrivateDocumentField(on_delete=models.CASCADE)
 
     class JSONAPIMeta:
         resource_name = 'file-upload-answers'
 
+    @property
+    def is_valid(self):
+        return self.file
 
-from bluebottle.activities.signals import *  # noqa
+
 from bluebottle.activities.states import *  # noqa
+from bluebottle.activities.signals import *  # noqa

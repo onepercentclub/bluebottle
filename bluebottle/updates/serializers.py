@@ -12,7 +12,7 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivitySerializer, ContributorSerializer
+from bluebottle.activities.serializers.serializers import ActivitySerializer, ContributorSerializer
 from bluebottle.files.models import Document, Image
 from bluebottle.files.serializers import ImageSerializer, ORIGINAL_SIZE
 from bluebottle.funding.models import FundingPlatformSettings

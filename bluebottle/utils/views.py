@@ -492,7 +492,7 @@ class ExportView(PrivateFileView):
         raise NotImplementedError()
 
     def write_data(self, workbook):
-        title = re.sub("[\[\]\\:*?/]", '', str(self.get_object())[:30])
+        title = re.sub(r"[\[\]\\:*?/]", '', str(self.get_object())[:30])
         worksheet = workbook.add_worksheet(title)
         worksheet.set_column(0, 10, 30)
         worksheet.write_row(0, 0, [field[1] for field in self.get_fields()])

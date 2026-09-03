@@ -209,7 +209,7 @@ class DateParticipantExportView(TimeBasedExportView):
 
         for slot in slots:
             title = f"{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
-            title = re.sub("[\[\]\\:*?/]", '', str(title)[:30])
+            title = re.sub(r"[\[\]\\:*?/]", '', str(title)[:30])
             worksheet = workbook.add_worksheet(title)
             worksheet.set_column(0, 4, 30)
             c = 0

@@ -14,7 +14,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
-@httmock.urlmatch(netloc="graph.facebook.com", path="/[v0-9\.]+/me")
+@httmock.urlmatch(netloc="graph.facebook.com", path=r"/[v0-9\.]+/me")
 def facebook_me_mock(url, request):
     return json.dumps(
         {"first_name": "First", "last_name": "Last", "email": "test@goodup.com"}
@@ -99,7 +99,7 @@ class SocialTokenAPITestCase(BluebottleTestCase):
         load_signed_request_mock,
     )
     def test_token_empty_email_address(self):
-        @httmock.urlmatch(netloc="graph.facebook.com", path="/[v0-9\.]+/me")
+        @httmock.urlmatch(netloc="graph.facebook.com", path=r"/[v0-9\.]+/me")
         def facebook_me_mock(url, request):
             return json.dumps({"first_name": "First", "last_name": "Last", "email": ""})
 

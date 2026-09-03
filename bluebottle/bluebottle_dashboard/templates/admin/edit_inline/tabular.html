@@ -70,11 +70,12 @@
      </tbody>
    </table>
 
-    {# Change to include the pagination #}
+    {# Only show pagination for TabularInlinePaginated formsets #}
+    {% if inline_admin_formset.formset.page %}
     <div class="admin-tabular-inline-pagination">
         {% include 'admin/tabular_paginator.html' %}
     </div>
-    {# End change #}
+    {% endif %}
 
 </fieldset>
   </div>

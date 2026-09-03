@@ -49,6 +49,13 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
 )
 
+_real_geolocation_save = Geolocation.save
+
+
+def _geolocation_save_skip_mapbox(self, *args, **kwargs):
+    kwargs['skip_mapbox_sync'] = True
+    return _real_geolocation_save(self, *args, **kwargs)
+
 
 class ActivityPubClient(TestClient):
     def _base_environ(self, **request):
@@ -319,7 +326,9 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(Geolocation, 'update_location'):
+                with mock.patch.object(
+                    Geolocation, 'save', _geolocation_save_skip_mapbox
+                ):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
@@ -351,7 +360,9 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(Geolocation, 'update_location'):
+                with mock.patch.object(
+                    Geolocation, 'save', _geolocation_save_skip_mapbox
+                ):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 

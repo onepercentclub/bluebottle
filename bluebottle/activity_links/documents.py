@@ -6,7 +6,7 @@ from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity, \
     LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity, LinkedScheduleActivity, \
     LinkedGrantApplication
-from bluebottle.initiatives.documents import get_translated_list
+from bluebottle.initiatives.documents import get_translated_country_list
 from bluebottle.utils.documents import TextField
 from bluebottle.utils.models import get_default_language
 
@@ -115,6 +115,9 @@ class LinkedActivityDocument(ActivityDocument):
         return []
 
     def prepare_location(self, instance):
+        return []
+
+    def prepare_geofeature(self, instance):
         return []
 
     def prepare_office(self, instance):
@@ -257,7 +260,7 @@ class LinkedFundingDocument(LinkedActivityDocument):
     def prepare_country(self, instance):
         countries = []
         if instance.location and instance.location.country:
-            countries += get_translated_list(instance.location.country)
+            countries += get_translated_country_list(instance.location.country)
         return countries
 
     def prepare_location(self, instance):
@@ -265,8 +268,8 @@ class LinkedFundingDocument(LinkedActivityDocument):
         if hasattr(instance, 'location') and instance.location:
             locations.append({
                 'id': instance.location.id,
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code if instance.location.country else None,
                 'country': instance.location.country.name if instance.location.country else None,
                 'type': 'location'
@@ -313,7 +316,7 @@ class LinkedGrantApplicationDocument(LinkedActivityDocument):
     def prepare_country(self, instance):
         countries = []
         if instance.location and instance.location.country:
-            countries += get_translated_list(instance.location.country)
+            countries += get_translated_country_list(instance.location.country)
         return countries
 
     def prepare_location(self, instance):
@@ -321,8 +324,8 @@ class LinkedGrantApplicationDocument(LinkedActivityDocument):
         if hasattr(instance, 'location') and instance.location:
             locations.append({
                 'id': instance.location.id,
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code if instance.location.country else None,
                 'country': instance.location.country.name if instance.location.country else None,
                 'type': 'location'
@@ -374,8 +377,8 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
         locations = []
         locations += [
             {
-                'name': slot.location.formatted_address,
-                'locality': slot.location.locality,
+                'name': slot.location.geofeature.place_name,
+                'locality': slot.location.geofeature.name,
                 'country_code': slot.location.country.alpha2_code,
                 'country': slot.location.country.name,
                 'type': 'location'
@@ -390,7 +393,7 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
         countries = []
         for slot in instance.slots.all():
             if slot.location and slot.location.country:
-                countries += get_translated_list(slot.location.country)
+                countries += get_translated_country_list(slot.location.country)
         return countries
 
     def prepare_start(self, instance):
@@ -455,8 +458,8 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
     def prepare_location(self, instance):
         locations = [
             {
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code,
                 'country': instance.location.country.name,
                 'type': 'location'
@@ -468,7 +471,7 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
     def prepare_country(self, instance):
         countries = []
         if instance.location and instance.location.country:
-            countries += get_translated_list(instance.location.country)
+            countries += get_translated_country_list(instance.location.country)
         return countries
 
     def prepare_start(self, instance):
@@ -531,8 +534,8 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
     def prepare_location(self, instance):
         locations = [
             {
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code,
                 'country': instance.location.country.name,
                 'type': 'location'
@@ -544,7 +547,7 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
     def prepare_country(self, instance):
         countries = []
         if instance.location and instance.location.country:
-            countries += get_translated_list(instance.location.country)
+            countries += get_translated_country_list(instance.location.country)
         return countries
 
     def prepare_start(self, instance):
@@ -607,8 +610,8 @@ class LinkedPeriodicActivityDocument(LinkedActivityDocument):
     def prepare_location(self, instance):
         locations = [
             {
-                'name': instance.location.formatted_address,
-                'locality': instance.location.locality,
+                'name': instance.location.geofeature.place_name,
+                'locality': instance.location.geofeature.name,
                 'country_code': instance.location.country.alpha2_code,
                 'country': instance.location.country.name,
                 'type': 'location'
@@ -620,7 +623,7 @@ class LinkedPeriodicActivityDocument(LinkedActivityDocument):
     def prepare_country(self, instance):
         countries = []
         if instance.location and instance.location.country:
-            countries += get_translated_list(instance.location.country)
+            countries += get_translated_country_list(instance.location.country)
         return countries
 
     def prepare_start(self, instance):

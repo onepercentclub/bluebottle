@@ -2834,11 +2834,11 @@ msgid "username"
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:116
-msgid "staff status"
+msgid "Back office access"
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:118
-msgid "Designates whether the user can log into this admin site."
+msgid "Allow this user to access the back office."
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42

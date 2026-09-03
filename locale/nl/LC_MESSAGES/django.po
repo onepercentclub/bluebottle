@@ -2758,12 +2758,12 @@ msgid "username"
 msgstr "gebruikersnaam"
 
 #: bluebottle/bb_accounts/models.py:116
-msgid "staff status"
-msgstr "stafstatus"
+msgid "Back office access"
+msgstr "Backoffice toegang"
 
 #: bluebottle/bb_accounts/models.py:118
-msgid "Designates whether the user can log into this admin site."
-msgstr "Bepaald of een gebruiker kan inloggen in deze admin site."
+msgid "Allow this user to access the back office."
+msgstr "Geef deze gebruiker toegang tot de backoffice."
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42
 msgid "active"

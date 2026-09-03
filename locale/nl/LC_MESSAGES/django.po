@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-19 13:11+0200\n"
-"PO-Revision-Date: 2026-08-19 11:12\n"
+"PO-Revision-Date: 2026-09-03 13:14\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -1469,7 +1469,7 @@ msgstr "Geen zorgen, je kunt altijd een nieuwe activiteit starten en het opnieuw
 #, python-format
 msgctxt "platform-email"
 msgid "Need some tips to make your activity stand out? Reach out to the platform manager at %(contact_email)s."
-msgstr "Heb je tips nodig om je activiteit op te laten vallen? Neem contact op met de platformbeheerder via %(contact_email)s."
+msgstr "Heb je tips nodig om je activiteit op te laten vallen? Neem contact op met de platformbeheerder op %(contact_email)s."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_impact_reminder.html:6
 msgctxt "platform-email"
@@ -2759,11 +2759,11 @@ msgstr "gebruikersnaam"
 
 #: bluebottle/bb_accounts/models.py:116
 msgid "Back office access"
-msgstr "Backoffice toegang"
+msgstr "Toegang tot het kantoor"
 
 #: bluebottle/bb_accounts/models.py:118
 msgid "Allow this user to access the back office."
-msgstr "Geef deze gebruiker toegang tot de backoffice."
+msgstr "Sta deze gebruiker toe toegang te krijgen tot het kantoor."
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42
 msgid "active"

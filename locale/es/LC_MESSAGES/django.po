@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-19 13:11+0200\n"
-"PO-Revision-Date: 2026-08-19 11:12\n"
+"PO-Revision-Date: 2026-09-03 13:14\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -1469,7 +1469,7 @@ msgstr "No te preocupes, puedes crear una actividad nueva en cualquier momento y
 #, python-format
 msgctxt "platform-email"
 msgid "Need some tips to make your activity stand out? Reach out to the platform manager at %(contact_email)s."
-msgstr "¿Necesitas consejos para que tu actividad se destaque? Contacta con el administrador de la plataforma en %(contact_email)s."
+msgstr "¿Necesitas consejos para destacar tu actividad? Contacta con el administrador de la plataforma en %(contact_email)s."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_impact_reminder.html:6
 msgctxt "platform-email"
@@ -2766,11 +2766,11 @@ msgstr "nombre de usuario"
 
 #: bluebottle/bb_accounts/models.py:116
 msgid "Back office access"
-msgstr "Acceso al back office"
+msgstr "Acceso a la oficina."
 
 #: bluebottle/bb_accounts/models.py:118
 msgid "Allow this user to access the back office."
-msgstr "Permitir que este usuario acceda al back office."
+msgstr "Permitir que este usuario acceda a la oficina."
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42
 msgid "active"

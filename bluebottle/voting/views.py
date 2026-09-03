@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.utils.permissions import OneOf, ResourceOwnerPermission, ResourcePermission
 from bluebottle.utils.views import (
-    CreateAPIView, ExportView, JsonApiViewMixin, RetrieveAPIView,
+    ExportView, JsonApiViewMixin, ListCreateAPIView, RetrieveAPIView,
     RetrieveUpdateDestroyAPIView
 )
 from bluebottle.voting.models import Poll, PollVote
@@ -35,13 +35,30 @@ class PollDetail(JsonApiViewMixin, RetrieveAPIView):
         return queryset
 
 
-class PollVoteList(JsonApiViewMixin, CreateAPIView):
+class PollVoteList(JsonApiViewMixin, ListCreateAPIView):
     queryset = PollVote.objects.all()
     serializer_class = PollVoteSerializer
     permission_classes = (
         IsAuthenticated,
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+
+    def get_queryset(self):
+        polls = Poll.objects.annotate(votes_cast=Count('votes')).prefetch_related(
+            'options'
+        )
+        queryset = (
+            self.queryset.filter(owner=self.request.user)
+            .select_related('option')
+            .prefetch_related(Prefetch('poll', queryset=polls))
+            .order_by('-created')
+        )
+
+        poll_status = self.request.query_params.get('filter[status]')
+        if poll_status in ['open', 'closed']:
+            queryset = queryset.filter(poll__status=poll_status)
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.validated_data['owner'] = self.request.user

@@ -187,6 +187,63 @@ class PollVoteListAPITestCase(APITestCase):
         }
         self.url = reverse('poll-vote-list')
 
+    def test_list_own_votes(self):
+        own = PollVoteFactory.create(
+            poll=self.poll, option=self.option, owner=self.user
+        )
+        PollVoteFactory.create(poll=self.poll, option=self.other_option)
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 1)
+        self.assertEqual(self.response.json()['data'][0]['id'], str(own.pk))
+        self.assertIncluded('poll', self.poll)
+        self.assertIncluded('option', self.option)
+
+    def test_list_includes_closed_poll_results(self):
+        closed_poll = PollFactory.create(status='closed', title='Closed poll')
+        winning = PollOptionFactory.create(poll=closed_poll, title='Winning')
+        losing = PollOptionFactory.create(poll=closed_poll, title='Losing')
+        PollVoteFactory.create(
+            poll=closed_poll, option=winning, owner=self.user
+        )
+        PollVoteFactory.create(poll=closed_poll, option=winning)
+        PollVoteFactory.create(poll=closed_poll, option=losing)
+
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        options = {
+            included['id']: included['attributes']
+            for included in self.response.json()['included']
+            if included['type'] == 'polls/options'
+            and included['id'] in {str(winning.pk), str(losing.pk)}
+        }
+        self.assertEqual(options[str(winning.pk)]['votes'], 2)
+        self.assertTrue(options[str(winning.pk)]['winner'])
+        self.assertEqual(options[str(losing.pk)]['votes'], 1)
+        self.assertFalse(options[str(losing.pk)]['winner'])
+
+    def test_list_filter_by_status(self):
+        closed_poll = PollFactory.create(status='closed')
+        closed_option = PollOptionFactory.create(poll=closed_poll)
+        PollVoteFactory.create(
+            poll=self.poll, option=self.option, owner=self.user
+        )
+        closed_vote = PollVoteFactory.create(
+            poll=closed_poll, option=closed_option, owner=self.user
+        )
+
+        self.perform_get(user=self.user, query={'filter[status]': 'closed'})
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 1)
+        self.assertEqual(
+            self.response.json()['data'][0]['id'], str(closed_vote.pk)
+        )
+
+    def test_list_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
     def test_create(self):
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)

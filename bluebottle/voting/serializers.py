@@ -89,20 +89,22 @@ class PollOptionSerializer(ModelSerializer):
 class PollVoteSerializer(ModelSerializer):
     poll = ResourceRelatedField(queryset=Poll.objects.all())
     option = ResourceRelatedField(queryset=PollOption.objects.all())
+    created = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = PollVote
         fields = (
-            'id', 'poll', 'option'
+            'id', 'poll', 'option', 'created',
         )
 
     class JSONAPIMeta:
         resource_name = 'polls/votes'
-        included_resources = ['option']
+        included_resources = ['option', 'poll', 'poll.options']
 
     included_serializers = {
         'option': 'bluebottle.voting.serializers.PollOptionSerializer',
         'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'poll.options': 'bluebottle.voting.serializers.PollOptionSerializer',
     }
 
     def validate(self, data):

@@ -536,8 +536,7 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
     def test_back_office_batch_add_locks_activity_at_capacity(self):
         """
         Adding multiple participants via the back-office inline should lock the
-        activity when capacity is reached. Lock currently runs before registrations
-        exist and before batch saves complete.
+        activity once all participants are saved and registrations exist.
         """
         self._create_accepted_registrations(2)
         participants = []
@@ -596,8 +595,8 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
     def test_back_office_inline_add_evaluates_lock_before_registrations_exist(self):
         """
-        Lock is evaluated while triggers run, but schedule registrations are
-        only created in post_save after the participant is saved.
+        During trigger evaluation the activity stays open because schedule
+        registrations are only created in post_save after the participant is saved.
         """
         self._create_accepted_registrations(2)
 

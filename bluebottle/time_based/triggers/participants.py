@@ -651,11 +651,6 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
-                    "activity",
-                    ScheduleActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
-                ),
-                RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.reset,
                 ),
@@ -678,11 +673,6 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     InactiveParticipantAddedNotification,
                     conditions=[is_not_self, participant_is_inactive]
                 ),
-                RelatedTransitionEffect(
-                    "activity",
-                    ScheduleActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
-                ),
                 LockScheduleActivityIfFullEffect,
             ],
         ),
@@ -690,11 +680,6 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.readd,
             effects=[
                 FollowActivityEffect,
-                RelatedTransitionEffect(
-                    "activity",
-                    ScheduleActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
-                ),
                 LockScheduleActivityIfFullEffect,
             ],
         ),

@@ -423,17 +423,23 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
         """Activity has no spots left after this effect"""
         if not effect.instance.activity.capacity:
             return False
-        return (
-            effect.instance.activity.capacity
-            <= effect.instance.activity.accepted_participants.count() + 1
-        )
+
+        accepted = effect.instance.activity.registrations.filter(
+            status="accepted"
+        ).count()
+
+        return effect.instance.activity.capacity <= accepted + 1
 
     def activity_spots_left(effect):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return True
+
+        accepted = effect.instance.activity.registrations.filter(
+            status="accepted"
+        )
         return effect.instance.activity.capacity > spots_taken_after_release(
-            effect.instance.activity.accepted_participants, effect.instance
+            accepted, effect.instance
         )
 
     triggers = RegistrationTriggers.triggers + [

@@ -49,11 +49,14 @@ class PollVoteInline(admin.TabularInline):
     fields = ('owner', 'option', 'created', 'updated')
     ordering = ('-created',)
 
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
-        if db_field.name == 'option' and getattr(request, '_poll_obj', None):
-            field.queryset = field.queryset.filter(poll=request._poll_obj)
-        return field
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        option_field = formset.form.base_fields['option']
+        if obj:
+            option_field.queryset = option_field.queryset.filter(poll=obj)
+        else:
+            option_field.queryset = option_field.queryset.none()
+        return formset
 
 
 @admin.register(Poll)
@@ -92,10 +95,6 @@ class PollAdmin(
                 (_('Super admin'), {'fields': self.superadmin_fields}),
             )
         return fieldsets
-
-    def get_formsets_with_inlines(self, request, obj=None):
-        request._poll_obj = obj
-        return super().get_formsets_with_inlines(request, obj)
 
     def vote_count(self, obj):
         return obj.votes.count()

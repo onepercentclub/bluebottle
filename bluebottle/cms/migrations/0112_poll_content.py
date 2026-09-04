@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('cms', '0111_platform_name'),
+        ('fluent_contents', '0001_initial'),
         ('voting', '0002_poll_content'),
     ]
 

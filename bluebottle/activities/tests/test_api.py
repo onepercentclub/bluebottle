@@ -1538,27 +1538,39 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 
+        # CountryFactory get-or-creates on alpha2_code, and both InitiativeFactory
+        # and DeadlineActivityFactory create extra locations by default. Those
+        # random countries can collide with matching_country and inflate facets.
         matching = [
             DeadlineActivityFactory.create(
+                initiative=None,
+                location=None,
                 office_location=LocationFactory.create(country=matching_country),
                 status='open',
             ),
             DeadlineActivityFactory.create(
+                initiative=None,
                 location=GeolocationFactory.create(country=matching_country),
                 status='open',
             ),
             FundingFactory.create(
+                initiative=None,
                 impact_location=GeolocationFactory.create(country=matching_country),
                 status='open'
 
             ),
             DeedFactory.create(
+                initiative=None,
                 office_location=LocationFactory.create(country=matching_country),
                 status='open'
             )
         ]
 
-        date_activity = DateActivityFactory.create(slots=[], status='open')
+        date_activity = DateActivityFactory.create(
+            initiative=None,
+            slots=[],
+            status='open',
+        )
         DateActivitySlotFactory.create(
             activity=date_activity,
             is_online=False,
@@ -1569,11 +1581,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         other = DeadlineActivityFactory.create_batch(
             3,
+            initiative=None,
+            location=None,
             office_location=LocationFactory.create(country=other_country),
             status='open',
         )
         DeadlineActivityFactory.create_batch(
             3,
+            initiative=None,
             location=GeolocationFactory.create(country=None),
             status='open',
         )

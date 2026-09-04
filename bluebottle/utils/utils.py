@@ -34,11 +34,16 @@ to_text.body_width = 0
 to_text.ignore_emphasis = True
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',
-        'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u', 'img']
+        'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u', 'img', 'button',]
 ATTRIBUTES = {
-    'a': ['target', 'href', 'rel'],
+    'a': ['target', 'href', 'rel', 'class'],
     'img': ['src', 'alt', 'width', 'height', 'align'],
-    'li': ['data-list', 'class']
+    'li': ['data-list', 'class'],
+    'button': ['class'],
+    'h2': ['class'],
+    'h3': ['class'],
+    'h4': ['class'],
+    'span': ['style'],
 }
 EMPTY = ['hr', 'a', 'br', 'img']
 

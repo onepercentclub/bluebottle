@@ -79,7 +79,7 @@ class HomePage(SingletonModel, TranslatableModel):
         'QuotesBlockPlugin',
         'PeopleBlockPlugin',
         'DonateButtonBlockPlugin'
-
+        'TextOnlyPlugin',
     ])
     translations = TranslatedFields()
 

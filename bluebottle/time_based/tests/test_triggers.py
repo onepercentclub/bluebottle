@@ -1572,6 +1572,11 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
     activity_factory = ScheduleActivityFactory
     user_joined_notification = ScheduleUserJoinedNotification
 
+    def setUp(self):
+        super().setUp()
+        self.activity.capacity = 4
+        self.activity.save()
+
     def test_manager_schedules_slot(self):
         self.test_join()
         slot = ScheduleSlotFactory.create(
@@ -1585,6 +1590,74 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
             self.assertNotificationEffect(
                 UserScheduledNotification
             )
+
+    def test_fill_join(self):
+        ScheduleRegistrationFactory.create_batch(
+            self.activity.capacity - 1,
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        ScheduleRegistrationFactory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+
+    def test_fill_accept(self):
+        self.activity.review = True
+        self.activity.save()
+
+        for registration in ScheduleRegistrationFactory.create_batch(
+            self.activity.capacity - 1,
+            activity=self.activity,
+        ):
+            registration.states.accept(save=True)
+
+        registration = ScheduleRegistrationFactory.create(
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+        )
+        registration.states.accept(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+
+    def test_remove_unfill(self):
+        ScheduleRegistrationFactory.create_batch(
+            self.activity.capacity,
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+
+        registration = self.activity.registrations.first()
+        registration.participants.first().states.remove(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
+    def test_added_by_staff_at_capacity(self):
+        ScheduleRegistrationFactory.create_batch(
+            self.activity.capacity - 1,
+            activity=self.activity,
+            user=BlueBottleUserFactory.create(),
+            as_relation='user',
+        )
+        user = BlueBottleUserFactory.create()
+        registration = ScheduleRegistrationFactory.build(
+            activity=self.activity,
+            user=user,
+        )
+        registration.execute_triggers(user=self.staff)
+        registration.save()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
 
 
 class RegisteredDateActivityTriggerTestCase(TriggerTestCase):

@@ -143,6 +143,23 @@ class CreateRegistrationEffect(Effect):
     ]
 
 
+class LockScheduleActivityIfFullEffect(Effect):
+    """
+    Lock the activity after the participant is saved, when registrations that
+    count toward capacity have been created.
+    """
+    display = False
+
+    def post_save(self, **kwargs):
+        activity = self.instance.activity
+        if (
+            activity.capacity
+            and activity.capacity <= activity.accepted_participants.count()
+            and activity.status not in ('full', 'registration_closed')
+        ):
+            activity.states.lock(save=True)
+
+
 class CreateDateRegistrationEffect(Effect):
     title = _('Create or assign registration for this participant')
     template = 'admin/create_date_registration.html'

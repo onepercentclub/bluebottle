@@ -9,7 +9,7 @@ from bluebottle.initiatives.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.models import TimeContribution
+from bluebottle.time_based.models import ScheduleParticipant, ScheduleRegistration, TimeContribution
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
@@ -491,6 +491,140 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.test_remove()
 
         self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
+    def _create_accepted_registrations(self, count):
+        for _ in range(count):
+            user = BlueBottleUserFactory.create()
+            ScheduleRegistrationFactory.create(
+                activity=self.activity,
+                user=user,
+                as_user=user,
+            )
+
+    def _add_participants_via_back_office_inline(self, count):
+        """
+        Simulate StateMachineAdmin.save_formset: run triggers for all inline
+        forms before saving any of them.
+        """
+        participants = []
+        for _ in range(count):
+            user = BlueBottleUserFactory.create()
+            participant = ScheduleParticipant(activity=self.activity, user=user)
+            participant.execute_triggers(user=self.admin_user)
+            participants.append(participant)
+
+        for participant in participants:
+            participant.save()
+
+        return participants
+
+    def _add_participants_via_back_office_sequential(self, count):
+        """
+        Simulate adding participants one at a time with save after each trigger run.
+        """
+        participants = []
+        for _ in range(count):
+            user = BlueBottleUserFactory.create()
+            participant = ScheduleParticipant(activity=self.activity, user=user)
+            participant.execute_triggers(user=self.admin_user)
+            participant.save()
+            participants.append(participant)
+
+        return participants
+
+    def test_back_office_batch_add_locks_activity_at_capacity(self):
+        """
+        Adding multiple participants via the back-office inline should lock the
+        activity when capacity is reached. Lock currently runs before registrations
+        exist and before batch saves complete.
+        """
+        self._create_accepted_registrations(2)
+        participants = []
+
+        for _ in range(2):
+            user = BlueBottleUserFactory.create()
+            participant = ScheduleParticipant(activity=self.activity, user=user)
+            participant.execute_triggers(user=self.admin_user)
+            participants.append(participant)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.accepted_participants.count(), 2)
+        self.assertEqual(self.activity.status, "open")
+
+        for participant in participants:
+            participant.save()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.accepted_participants.count(), 4)
+        self.assertEqual(self.activity.status, "full")
+
+    def test_back_office_sequential_add_locks_activity_at_capacity(self):
+        """
+        Adding participants one at a time evaluates lock with an accurate count
+        on the final add, because each participant is saved before the next trigger run.
+        """
+        self._create_accepted_registrations(2)
+
+        self._add_participants_via_back_office_sequential(2)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.accepted_participants.count(), 4)
+        self.assertEqual(self.activity.status, "full")
+
+    def test_capacity_change_then_back_office_inline_add_locks_activity(self):
+        """
+        Reproduce the reported steps: start at capacity 2, increase to 4,
+        then add two participants via the back-office inline.
+        """
+        self.activity.capacity = 2
+        self.activity.save()
+        self._create_accepted_registrations(2)
+
+        self.activity.capacity = 4
+        self.activity.save()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.accepted_participants.count(), 2)
+        self.assertEqual(self.activity.status, "open")
+
+        self._add_participants_via_back_office_inline(2)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.accepted_participants.count(), 4)
+        self.assertEqual(self.activity.status, "full")
+
+    def test_back_office_inline_add_evaluates_lock_before_registrations_exist(self):
+        """
+        Lock is evaluated while triggers run, but schedule registrations are
+        only created in post_save after the participant is saved.
+        """
+        self._create_accepted_registrations(2)
+
+        user = BlueBottleUserFactory.create()
+        participant = ScheduleParticipant(activity=self.activity, user=user)
+
+        participant.execute_triggers(user=self.admin_user)
+
+        self.assertEqual(self.activity.accepted_participants.count(), 2)
+        self.assertFalse(
+            ScheduleRegistration.objects.filter(
+                activity=self.activity,
+                user=user,
+            ).exists()
+        )
+        self.assertEqual(self.activity.status, "open")
+
+        participant.save()
+
+        self.activity.refresh_from_db()
+        self.assertTrue(
+            ScheduleRegistration.objects.filter(
+                activity=self.activity,
+                user=user,
+            ).exists()
+        )
+        self.assertEqual(self.activity.accepted_participants.count(), 3)
         self.assertEqual(self.activity.status, "open")
 
     def test_schedule(self):

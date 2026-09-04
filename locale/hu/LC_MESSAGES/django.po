@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-19 13:11+0200\n"
-"PO-Revision-Date: 2026-08-19 11:12\n"
+"PO-Revision-Date: 2026-09-03 12:27\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -1457,19 +1457,18 @@ msgstr "Ha bármilyen kérdésed van, kapcsolatba léphetsz a platformmenedzserr
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:6
 #, python-format
 msgctxt "platform-email"
-msgid "Unfortunately, nobody applied to your activity \"%(title)s\" before the deadline to apply. That’s why we have cancelled your activity."
-msgstr "Sajnos senki sem jelentkezett a(z) „%(title)s” tevékenységedre a jelentkezési határidő előtt. Ezért töröltük a tevékenységedet."
+msgid "Unfortunately, no one signed up for your activity \"%(title)s\" before the deadline passed. That’s why we have cancelled the activity."
+msgstr "Sajnos senki sem jelentkezett a(z) „%(title)s” tevékenységedre a jelentkezési határidő után. Ezért töröltük a tevékenységet."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:10
 msgctxt "platform-email"
-msgid "Don’t worry, you can always create a new activity and try again."
-msgstr "Ne aggódj, bármikor létrehozhatsz egy új tevékenységet, és megpróbálhatod újra."
+msgid "No worries, you can always reopen the activity by extending the deadline or start a new activity and try again."
+msgstr "Ne aggódj, mindig újra megnyithatod a tevékenységet a határidő meghosszabbításával, vagy kezdhetsz egy új tevékenységet, és próbálkozhatsz újra."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:14
-#, python-format
 msgctxt "platform-email"
-msgid "Need some tips to make your activity stand out? Reach out to the platform manager at %(contact_email)s."
-msgstr "Szükséged van néhány tippre, hogy a tevékenységed kitűnjön? Vedd fel a kapcsolatot a platformmenedzserrel a(z) %(contact_email)s címen."
+msgid "Do you need tips to make your activity stand out? Get in touch with the platform manager by replying to this email."
+msgstr "Szükséged van néhány tippre, hogy a tevékenységed kitűnjön? Erre az e-mailre válaszolva vedd fel a kapcsolatot a platformmenedzserrel."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_impact_reminder.html:6
 msgctxt "platform-email"

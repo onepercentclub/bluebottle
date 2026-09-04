@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 09:40+0200\n"
-"PO-Revision-Date: 2026-09-04 07:43\n"
+"POT-Creation-Date: 2026-09-04 11:49+0200\n"
+"PO-Revision-Date: 2026-09-04 09:49\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -36,7 +36,7 @@ msgstr "Bewerken"
 #: bluebottle/activities/admin.py:221 bluebottle/activities/admin.py:344
 #: bluebottle/activity_links/admin.py:20 bluebottle/funding_stripe/admin.py:203
 #: bluebottle/funding_stripe/admin.py:275 bluebottle/time_based/admin.py:318
-#: bluebottle/time_based/admin.py:466 bluebottle/voting/admin.py:83
+#: bluebottle/time_based/admin.py:466 bluebottle/voting/admin.py:88
 msgid "Details"
 msgstr "Details"
 
@@ -50,7 +50,7 @@ msgstr "Details"
 #: bluebottle/time_based/admin.py:322 bluebottle/time_based/admin.py:470
 #: bluebottle/time_based/admin.py:851 bluebottle/time_based/admin.py:898
 #: bluebottle/time_based/admin.py:1168 bluebottle/time_based/admin.py:1836
-#: bluebottle/voting/admin.py:87
+#: bluebottle/voting/admin.py:92
 msgid "Super admin"
 msgstr "Super admin"
 
@@ -179,7 +179,7 @@ msgstr "Werklocatie"
 msgid "Segments"
 msgstr "Segmenten"
 
-#: bluebottle/activities/admin.py:914 bluebottle/cms/models.py:340
+#: bluebottle/activities/admin.py:914 bluebottle/cms/models.py:343
 #: bluebottle/settings/admin_dashboard.py:262
 #: bluebottle/statistics/models.py:45
 msgid "Statistics"
@@ -656,7 +656,7 @@ msgid "Number of deleted successful contributors"
 msgstr "Aantal succesvolle bijdragers verwijderd"
 
 #: bluebottle/activities/models.py:119 bluebottle/cms/models.py:51
-#: bluebottle/cms/models.py:128 bluebottle/cms/models.py:145
+#: bluebottle/cms/models.py:131 bluebottle/cms/models.py:148
 #: bluebottle/funding/models.py:349 bluebottle/news/models.py:22
 #: bluebottle/pages/models.py:232 bluebottle/pages/models.py:326
 #: bluebottle/slides/models.py:46 bluebottle/statistics/models.py:235
@@ -739,7 +739,7 @@ msgstr "Zijn de gebruiksvoorwaarden geaccepteerd?"
 
 #: bluebottle/activities/models.py:284
 #: bluebottle/bluebottle_dashboard/templates/admin/base.html:87
-#: bluebottle/cms/models.py:377 bluebottle/segments/admin.py:189
+#: bluebottle/cms/models.py:380 bluebottle/segments/admin.py:189
 msgid "Activities"
 msgstr "Activiteiten"
 
@@ -752,7 +752,7 @@ msgstr "-leeg-"
 msgid "Old team"
 msgstr "Oud team"
 
-#: bluebottle/activities/models.py:363 bluebottle/voting/models.py:115
+#: bluebottle/activities/models.py:363 bluebottle/voting/models.py:139
 msgid "user"
 msgstr "gebruiker"
 
@@ -1109,6 +1109,7 @@ msgstr "De status van de activiteit wordt gewijzigd naar 'Aanpassingen nodig'. D
 #: bluebottle/deeds/states.py:71 bluebottle/time_based/states/slots.py:228
 #: bluebottle/time_based/states/states.py:57
 #: bluebottle/time_based/states/states.py:70 bluebottle/voting/states.py:70
+#: bluebottle/voting/states.py:78
 msgid "Reopen"
 msgstr "Heropen"
 
@@ -2091,8 +2092,8 @@ msgstr "Coördinaten"
 msgid "Location"
 msgstr "Locatie"
 
-#: bluebottle/activity_pub/admin.py:764 bluebottle/cms/models.py:582
-#: bluebottle/cms/models.py:585
+#: bluebottle/activity_pub/admin.py:764 bluebottle/cms/models.py:585
+#: bluebottle/cms/models.py:588
 msgid "Locations"
 msgstr "Locaties"
 
@@ -2100,10 +2101,10 @@ msgstr "Locaties"
 msgid "Linked"
 msgstr "Gekoppeld"
 
-#: bluebottle/activity_pub/admin.py:840 bluebottle/cms/models.py:208
-#: bluebottle/cms/models.py:231 bluebottle/cms/models.py:524
-#: bluebottle/cms/models.py:605 bluebottle/cms/models.py:643
-#: bluebottle/cms/models.py:931 bluebottle/cms/models.py:991
+#: bluebottle/activity_pub/admin.py:840 bluebottle/cms/models.py:211
+#: bluebottle/cms/models.py:234 bluebottle/cms/models.py:527
+#: bluebottle/cms/models.py:608 bluebottle/cms/models.py:646
+#: bluebottle/cms/models.py:934 bluebottle/cms/models.py:994
 #: bluebottle/pages/models.py:109 bluebottle/pages/models.py:167
 #: bluebottle/pages/models.py:200
 msgid "Image"
@@ -2230,7 +2231,7 @@ msgstr "Ontvangen activiteit"
 msgid "Received activities"
 msgstr "Ontvangen activiteiten"
 
-#: bluebottle/activity_pub/models.py:322 bluebottle/cms/models.py:356
+#: bluebottle/activity_pub/models.py:322 bluebottle/cms/models.py:359
 #: bluebottle/deeds/models.py:38 bluebottle/settings/admin_dashboard.py:103
 msgid "Deeds"
 msgstr "Daden"
@@ -2276,8 +2277,8 @@ msgstr "Toon aangenomen activiteiten als links naar het partnerplatform."
 msgid "Template"
 msgstr "Template"
 
-#: bluebottle/activity_pub/models.py:428 bluebottle/cms/models.py:146
-#: bluebottle/cms/models.py:539
+#: bluebottle/activity_pub/models.py:428 bluebottle/cms/models.py:149
+#: bluebottle/cms/models.py:542
 msgid "Link"
 msgstr "Link"
 
@@ -2329,7 +2330,7 @@ msgstr "Verbinding"
 msgid "Connections"
 msgstr "Consument"
 
-#: bluebottle/activity_pub/models.py:659 bluebottle/cms/models.py:709
+#: bluebottle/activity_pub/models.py:659 bluebottle/cms/models.py:712
 msgid "Consumer"
 msgstr "Consument"
 
@@ -2337,7 +2338,7 @@ msgstr "Consument"
 msgid "Consumers"
 msgstr "Consumenten"
 
-#: bluebottle/activity_pub/models.py:666 bluebottle/cms/models.py:708
+#: bluebottle/activity_pub/models.py:666 bluebottle/cms/models.py:711
 msgid "Supplier"
 msgstr "Leverancier"
 
@@ -2764,7 +2765,7 @@ msgstr "stafstatus"
 
 #: bluebottle/bb_accounts/models.py:118
 msgid "Designates whether the user can log into this admin site."
-msgstr "Bepaalt of een gebruiker kan inloggen in deze admin site."
+msgstr "Bepaald of een gebruiker kan inloggen in deze admin site."
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42
 msgid "active"
@@ -2781,7 +2782,7 @@ msgstr "datum registratie"
 #: bluebottle/bb_accounts/models.py:128 bluebottle/clients/models.py:15
 #: bluebottle/funding/models.py:688 bluebottle/organizations/models.py:27
 #: bluebottle/organizations/models.py:98 bluebottle/terms/models.py:14
-#: bluebottle/voting/models.py:118
+#: bluebottle/voting/models.py:142
 msgid "updated"
 msgstr "aangepast"
 
@@ -3374,7 +3375,7 @@ msgid "slug"
 msgstr "url"
 
 #: bluebottle/categories/models.py:21 bluebottle/categories/models.py:113
-#: bluebottle/geo/models.py:162 bluebottle/voting/models.py:58
+#: bluebottle/geo/models.py:162 bluebottle/voting/models.py:63
 msgid "image"
 msgstr "afbeelding"
 
@@ -3408,7 +3409,7 @@ msgstr "naam"
 #: bluebottle/geo/models.py:122 bluebottle/geo/models.py:160
 #: bluebottle/initiatives/models.py:630 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:24
-#: bluebottle/time_based/models.py:1149 bluebottle/voting/models.py:54
+#: bluebottle/time_based/models.py:1149 bluebottle/voting/models.py:59
 msgid "description"
 msgstr "omschrijving"
 
@@ -3422,8 +3423,8 @@ msgstr "categorieën"
 
 #: bluebottle/categories/models.py:87 bluebottle/funding/models.py:427
 #: bluebottle/initiatives/models.py:38 bluebottle/pages/models.py:58
-#: bluebottle/time_based/models.py:295 bluebottle/voting/models.py:15
-#: bluebottle/voting/models.py:53
+#: bluebottle/time_based/models.py:295 bluebottle/voting/models.py:16
+#: bluebottle/voting/models.py:58
 msgid "title"
 msgstr "titel"
 
@@ -3464,7 +3465,7 @@ msgstr "content blokken"
 #: bluebottle/clients/models.py:14 bluebottle/files/models.py:26
 #: bluebottle/funding/models.py:687 bluebottle/organizations/models.py:26
 #: bluebottle/organizations/models.py:97 bluebottle/terms/models.py:13
-#: bluebottle/updates/models.py:59 bluebottle/voting/models.py:117
+#: bluebottle/updates/models.py:59 bluebottle/voting/models.py:141
 msgid "created"
 msgstr "aangemaakt"
 
@@ -3504,7 +3505,7 @@ msgstr "Opmaak"
 #: bluebottle/cms/content_plugins.py:134 bluebottle/cms/content_plugins.py:141
 #: bluebottle/cms/content_plugins.py:148 bluebottle/cms/content_plugins.py:155
 #: bluebottle/cms/content_plugins.py:162 bluebottle/cms/content_plugins.py:168
-#: bluebottle/settings/admin_dashboard.py:257
+#: bluebottle/cms/models.py:96 bluebottle/settings/admin_dashboard.py:257
 msgid "Homepage"
 msgstr "Startpagina"
 
@@ -3532,62 +3533,62 @@ msgstr "Resultaten"
 msgid "Header image"
 msgstr "Header afbeelding"
 
-#: bluebottle/cms/models.py:98
+#: bluebottle/cms/models.py:101
 msgid "A dot separated app name and permission codename."
 msgstr "Een door punt gescheiden naam en codenaam voor de toestemming."
 
-#: bluebottle/cms/models.py:100
+#: bluebottle/cms/models.py:103
 msgid "Should the permission be present or not to access the link?"
 msgstr "Moet de toestemming aanwezig zijn of niet om toegang te krijgen tot de link?"
 
-#: bluebottle/cms/models.py:111
+#: bluebottle/cms/models.py:114
 msgid "Site links"
 msgstr "Website links"
 
-#: bluebottle/cms/models.py:119 bluebottle/members/admin.py:586
+#: bluebottle/cms/models.py:122 bluebottle/members/admin.py:586
 msgid "Main"
 msgstr "Hoofd"
 
-#: bluebottle/cms/models.py:120
+#: bluebottle/cms/models.py:123
 msgid "About"
 msgstr "Over 1%%Club"
 
-#: bluebottle/cms/models.py:121 bluebottle/geo/admin.py:134
+#: bluebottle/cms/models.py:124 bluebottle/geo/admin.py:134
 #: bluebottle/geo/admin.py:186
 msgid "Info"
 msgstr "Info"
 
-#: bluebottle/cms/models.py:122
+#: bluebottle/cms/models.py:125
 msgid "Discover"
 msgstr "Ontdek"
 
-#: bluebottle/cms/models.py:123
+#: bluebottle/cms/models.py:126
 msgid "Social"
 msgstr "Sociaal"
 
-#: bluebottle/cms/models.py:141
+#: bluebottle/cms/models.py:144
 msgid "Groups that can see this link. Leave empty if it should be visible to everyone."
 msgstr "Groepen die deze link kunnen zien. Laat leeg als deze voor iedereen zichtbaar moet zijn."
 
-#: bluebottle/cms/models.py:143
+#: bluebottle/cms/models.py:146
 msgid "Display the link as a button"
 msgstr "Links als button weergeven"
 
-#: bluebottle/cms/models.py:144 bluebottle/cms/models.py:543
-#: bluebottle/cms/models.py:616
+#: bluebottle/cms/models.py:147 bluebottle/cms/models.py:546
+#: bluebottle/cms/models.py:619
 msgid "Open the link in a new browser tab"
 msgstr "Link in een nieuw tabblad openen"
 
-#: bluebottle/cms/models.py:158
+#: bluebottle/cms/models.py:161
 msgid "Manual input"
 msgstr "Handmatige invoer"
 
-#: bluebottle/cms/models.py:159 bluebottle/statistics/models.py:80
+#: bluebottle/cms/models.py:162 bluebottle/statistics/models.py:80
 #: bluebottle/statistics/models.py:228
 msgid "People involved"
 msgstr "Mensen betrokken"
 
-#: bluebottle/cms/models.py:160 bluebottle/collect/admin.py:36
+#: bluebottle/cms/models.py:163 bluebottle/collect/admin.py:36
 #: bluebottle/collect/admin.py:58 bluebottle/deeds/admin.py:31
 #: bluebottle/deeds/admin.py:52 bluebottle/statistics/models.py:81
 #: bluebottle/statistics/models.py:229 bluebottle/time_based/admin.py:88
@@ -3598,408 +3599,408 @@ msgstr "Mensen betrokken"
 msgid "Participants"
 msgstr "Deelnemers"
 
-#: bluebottle/cms/models.py:162 bluebottle/statistics/models.py:83
+#: bluebottle/cms/models.py:165 bluebottle/statistics/models.py:83
 msgid "Activities succeeded"
 msgstr "Activiteiten succesvol"
 
-#: bluebottle/cms/models.py:163
+#: bluebottle/cms/models.py:166
 msgid "Tasks succeeded"
 msgstr "Taken succesvol"
 
-#: bluebottle/cms/models.py:164
+#: bluebottle/cms/models.py:167
 msgid "Events succeeded"
 msgstr "Evenementen succesvol"
 
-#: bluebottle/cms/models.py:165
+#: bluebottle/cms/models.py:168
 msgid "Funding activities succeeded"
 msgstr "Funding activiteiten succesvol"
 
-#: bluebottle/cms/models.py:167
+#: bluebottle/cms/models.py:170
 msgid "Task applicants"
 msgstr "Taak kandidaten"
 
-#: bluebottle/cms/models.py:168
+#: bluebottle/cms/models.py:171
 msgid "Event participants"
 msgstr "Evenement deelnemers"
 
-#: bluebottle/cms/models.py:170
+#: bluebottle/cms/models.py:173
 msgid "Tasks online"
 msgstr "Taken online"
 
-#: bluebottle/cms/models.py:171
+#: bluebottle/cms/models.py:174
 msgid "Events online"
 msgstr "Evenementen online"
 
-#: bluebottle/cms/models.py:172 bluebottle/statistics/models.py:92
+#: bluebottle/cms/models.py:175 bluebottle/statistics/models.py:92
 msgid "Funding activities online"
 msgstr "Crowdfunding campagnes online"
 
-#: bluebottle/cms/models.py:174 bluebottle/funding/admin.py:317
+#: bluebottle/cms/models.py:177 bluebottle/funding/admin.py:317
 #: bluebottle/funding/models.py:583 bluebottle/statistics/models.py:94
 msgid "Donations"
 msgstr "Donaties"
 
-#: bluebottle/cms/models.py:175 bluebottle/statistics/models.py:95
+#: bluebottle/cms/models.py:178 bluebottle/statistics/models.py:95
 #: bluebottle/statistics/models.py:222
 msgid "Donated total"
 msgstr "Totaal gedoneerd"
 
-#: bluebottle/cms/models.py:176 bluebottle/statistics/models.py:96
+#: bluebottle/cms/models.py:179 bluebottle/statistics/models.py:96
 #: bluebottle/statistics/models.py:223
 msgid "Pledged total"
 msgstr "Totaal toegezegd"
 
-#: bluebottle/cms/models.py:177 bluebottle/statistics/models.py:97
+#: bluebottle/cms/models.py:180 bluebottle/statistics/models.py:97
 msgid "Amount matched"
 msgstr "Bedrag gematched"
 
-#: bluebottle/cms/models.py:178 bluebottle/statistics/models.py:98
+#: bluebottle/cms/models.py:181 bluebottle/statistics/models.py:98
 msgid "Activities Online"
 msgstr "Activiteiten online"
 
-#: bluebottle/cms/models.py:179
+#: bluebottle/cms/models.py:182
 msgid "Votes casts"
 msgstr "Stemmen"
 
-#: bluebottle/cms/models.py:180 bluebottle/statistics/models.py:99
+#: bluebottle/cms/models.py:183 bluebottle/statistics/models.py:99
 msgid "Time spent"
 msgstr "Tijd besteed"
 
-#: bluebottle/cms/models.py:181 bluebottle/statistics/models.py:102
+#: bluebottle/cms/models.py:184 bluebottle/statistics/models.py:102
 #: bluebottle/statistics/models.py:233
 msgid "Number of members"
 msgstr "Aantal members"
 
-#: bluebottle/cms/models.py:189
+#: bluebottle/cms/models.py:192
 msgid "Use this for 'manual' input or the override the calculated value."
 msgstr "Gebruik dit voor ‘handmatige’ invoer of overschrijf de berekende waarde."
 
-#: bluebottle/cms/models.py:225 bluebottle/contact/models.py:31
+#: bluebottle/cms/models.py:228 bluebottle/contact/models.py:31
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:4
 #: bluebottle/organizations/templates/admin/merge_preview.html:11
 #: bluebottle/statistics/models.py:52 bluebottle/statistics/models.py:105
 msgid "Name"
 msgstr "Naam"
 
-#: bluebottle/cms/models.py:226
+#: bluebottle/cms/models.py:229
 msgid "Role"
 msgstr "Rol"
 
-#: bluebottle/cms/models.py:227 bluebottle/contact/models.py:32
+#: bluebottle/cms/models.py:230 bluebottle/contact/models.py:32
 #: bluebottle/notifications/models.py:60
 #: bluebottle/organizations/templates/admin/merge_preview.html:12
 msgid "Email"
 msgstr "E-mail"
 
-#: bluebottle/cms/models.py:228 bluebottle/members/models.py:301
+#: bluebottle/cms/models.py:231 bluebottle/members/models.py:301
 msgid "Phone number"
 msgstr "Telefoonnummer"
 
-#: bluebottle/cms/models.py:261
+#: bluebottle/cms/models.py:264
 msgid "Quotes"
 msgstr "Citaten"
 
-#: bluebottle/cms/models.py:279
+#: bluebottle/cms/models.py:282
 msgid "Persons"
 msgstr "Personen"
 
-#: bluebottle/cms/models.py:297 bluebottle/cms/models.py:300
+#: bluebottle/cms/models.py:300 bluebottle/cms/models.py:303
 msgid "News items"
 msgstr "Nieuwsberichten"
 
-#: bluebottle/cms/models.py:309
+#: bluebottle/cms/models.py:312
 msgid "Platform Statistics"
 msgstr "Platformstatistieken"
 
-#: bluebottle/cms/models.py:325 bluebottle/funding/filters.py:17
+#: bluebottle/cms/models.py:328 bluebottle/funding/filters.py:17
 #: bluebottle/funding/filters.py:44 bluebottle/time_based/admin.py:1181
 #: bluebottle/time_based/models.py:203
 msgid "All"
 msgstr "Alle"
 
-#: bluebottle/cms/models.py:326 bluebottle/cms/models.py:471
+#: bluebottle/cms/models.py:329 bluebottle/cms/models.py:474
 msgid "Group"
 msgstr "Groep"
 
-#: bluebottle/cms/models.py:327 bluebottle/cms/models.py:472
+#: bluebottle/cms/models.py:330 bluebottle/cms/models.py:475
 msgid "Region"
 msgstr "Regio"
 
-#: bluebottle/cms/models.py:330
+#: bluebottle/cms/models.py:333
 msgid "Statistics view"
 msgstr "Statistiekenweergave"
 
-#: bluebottle/cms/models.py:335
+#: bluebottle/cms/models.py:338
 msgid "Set the default statistics view. Users will see this first but can switch views anytime."
 msgstr "Stel de standaard statistiekenweergave in. Gebruikers zien dit als eerste, maar kunnen altijd van weergave wisselen."
 
-#: bluebottle/cms/models.py:353
+#: bluebottle/cms/models.py:356
 msgid "Highlighted"
 msgstr "Gemarkeerd"
 
-#: bluebottle/cms/models.py:354
+#: bluebottle/cms/models.py:357
 msgid "Matching preferences"
 msgstr "Matching voorkeuren"
 
-#: bluebottle/cms/models.py:355
+#: bluebottle/cms/models.py:358
 msgid "Time based"
 msgstr "Tijdgebonden"
 
-#: bluebottle/cms/models.py:357
+#: bluebottle/cms/models.py:360
 msgid "Crowdfunding"
 msgstr "Crowdfunding"
 
-#: bluebottle/cms/models.py:358
+#: bluebottle/cms/models.py:361
 msgid "Collecting"
 msgstr "Inzamelingsacties"
 
-#: bluebottle/cms/models.py:362
+#: bluebottle/cms/models.py:365
 msgid "Find more activities"
 msgstr "Vind meer activiteiten"
 
-#: bluebottle/cms/models.py:391
+#: bluebottle/cms/models.py:394
 msgid "Campaign"
 msgstr "Campagne"
 
-#: bluebottle/cms/models.py:398
+#: bluebottle/cms/models.py:401
 msgid "Donate button"
 msgstr "Doneer knop"
 
-#: bluebottle/cms/models.py:413 bluebottle/cms/models.py:419
+#: bluebottle/cms/models.py:416 bluebottle/cms/models.py:422
 msgid "Poll"
-msgstr "Peiling"
+msgstr ""
 
-#: bluebottle/cms/models.py:431 bluebottle/cms/models.py:556
+#: bluebottle/cms/models.py:434 bluebottle/cms/models.py:559
 msgid "Start your own project"
 msgstr "Start je eigen project"
 
-#: bluebottle/cms/models.py:441
+#: bluebottle/cms/models.py:444
 msgid "Projects"
 msgstr "Projecten"
 
-#: bluebottle/cms/models.py:459
+#: bluebottle/cms/models.py:462
 msgid "Share Results"
 msgstr "Deel deze resultaten"
 
-#: bluebottle/cms/models.py:470
+#: bluebottle/cms/models.py:473
 msgid "Global"
 msgstr "Wereldwijd"
 
-#: bluebottle/cms/models.py:475
+#: bluebottle/cms/models.py:478
 msgid "Map view"
 msgstr "Kaartweergave"
 
-#: bluebottle/cms/models.py:480
+#: bluebottle/cms/models.py:483
 msgid "Set the default map view that shows where all activities are taking place. Users will see this first but can switch views anytime."
 msgstr "Stel de standaard kaartweergave in die laat zien waar alle activiteiten plaatsvinden. Gebruikers zien dit als eerste, maar kunnen altijd van weergave wisselen."
 
-#: bluebottle/cms/models.py:486
+#: bluebottle/cms/models.py:489
 msgid "Activities Map"
 msgstr "Activiteitenkaart"
 
-#: bluebottle/cms/models.py:502
+#: bluebottle/cms/models.py:505
 msgid "Supporter total"
 msgstr "Supporter totaal"
 
-#: bluebottle/cms/models.py:512 bluebottle/cms/models.py:518
+#: bluebottle/cms/models.py:515 bluebottle/cms/models.py:521
 msgid "Slides"
 msgstr "Slides"
 
-#: bluebottle/cms/models.py:534
+#: bluebottle/cms/models.py:537
 msgid "You can upload an image with a 16:9 aspect ratio for best results or an illustration/icon as a square."
 msgstr "Je kunt een afbeelding uploaden met een beeldverhouding van 16:9 voor de beste resultaten of een vierkante illustratie/icoon."
 
-#: bluebottle/cms/models.py:537
+#: bluebottle/cms/models.py:540
 msgid "Header"
 msgstr "Header"
 
-#: bluebottle/cms/models.py:538 bluebottle/translations/admin.py:75
+#: bluebottle/cms/models.py:541 bluebottle/translations/admin.py:75
 msgid "Text"
 msgstr "Tekst"
 
-#: bluebottle/cms/models.py:542
+#: bluebottle/cms/models.py:545
 msgid "Open in new tab"
 msgstr "Openen in nieuw tabblad"
 
-#: bluebottle/cms/models.py:564 bluebottle/cms/models.py:570
+#: bluebottle/cms/models.py:567 bluebottle/cms/models.py:573
 msgid "Steps"
 msgstr "Stappen"
 
-#: bluebottle/cms/models.py:593 bluebottle/cms/models.py:596
+#: bluebottle/cms/models.py:596 bluebottle/cms/models.py:599
 msgid "Categories"
 msgstr "Categorieën"
 
-#: bluebottle/cms/models.py:631 bluebottle/cms/models.py:634
+#: bluebottle/cms/models.py:634 bluebottle/cms/models.py:637
 msgid "Logos"
 msgstr "Logo's"
 
-#: bluebottle/cms/models.py:671 bluebottle/cms/models.py:677
+#: bluebottle/cms/models.py:674 bluebottle/cms/models.py:680
 msgid "Links"
 msgstr "Links"
 
-#: bluebottle/cms/models.py:692 bluebottle/cms/models.py:695
+#: bluebottle/cms/models.py:695 bluebottle/cms/models.py:698
 msgid "Welcome"
 msgstr "Welkom"
 
-#: bluebottle/cms/models.py:713
+#: bluebottle/cms/models.py:716
 msgid "Enable GoodUp Connect"
 msgstr "Schakel GoodUp Connect in"
 
-#: bluebottle/cms/models.py:715
+#: bluebottle/cms/models.py:718
 msgid "Allow sharing and/or receiving activities with other connected partners."
 msgstr "Sta delen en/of ontvangen van activiteiten met andere verbonden partners toe."
 
-#: bluebottle/cms/models.py:738
+#: bluebottle/cms/models.py:741
 msgid "Platform name"
 msgstr "Platformnaam"
 
-#: bluebottle/cms/models.py:745
+#: bluebottle/cms/models.py:748
 msgid "GoodUp Connect name"
 msgstr "GoodUp Connect naam"
 
-#: bluebottle/cms/models.py:748
+#: bluebottle/cms/models.py:751
 msgid "This is the name other partners will see when you send connection requests or share activities. Use your organisation's official name to ensure partners recognise you."
 msgstr "Dit is de naam die andere partners zullen zien wanneer je verbindingsverzoeken verzendt of activiteiten deelt. Gebruik de officiële naam van je organisatie zodat partners jou herkennen."
 
-#: bluebottle/cms/models.py:755
+#: bluebottle/cms/models.py:758
 msgid "Action colour"
 msgstr "Actie kleur"
 
-#: bluebottle/cms/models.py:757
+#: bluebottle/cms/models.py:760
 msgid "Colour for action buttons and links"
 msgstr "Kleur voor actieknoppen en links"
 
-#: bluebottle/cms/models.py:761
+#: bluebottle/cms/models.py:764
 msgid "Action text colour"
 msgstr "Actietext kleur"
 
-#: bluebottle/cms/models.py:763
+#: bluebottle/cms/models.py:766
 msgid "If the action colour is quite light, you could set this to a darker colour for better contrast"
 msgstr "Als de actiekleur vrij licht is, kunt u dit instellen op een donkere kleur voor beter contrast"
 
-#: bluebottle/cms/models.py:767
+#: bluebottle/cms/models.py:770
 msgid "Alternative link colour"
 msgstr "Alternatieve link kleur"
 
-#: bluebottle/cms/models.py:770
+#: bluebottle/cms/models.py:773
 msgid "If the action colour is quite light, you can set this colour to use for text links"
 msgstr "Als de actiekleur vrij licht is, kunt u dit instellen op een donkere kleur voor beter contrast"
 
-#: bluebottle/cms/models.py:775
+#: bluebottle/cms/models.py:778
 msgid "Terminated"
 msgstr "Beëindigd"
 
-#: bluebottle/cms/models.py:777
+#: bluebottle/cms/models.py:780
 msgid "Is the platform terminated?"
 msgstr "Is het platform gestopt?"
 
-#: bluebottle/cms/models.py:785
+#: bluebottle/cms/models.py:788
 msgid "Description colour"
 msgstr "Beschrijving kleur"
 
-#: bluebottle/cms/models.py:787
+#: bluebottle/cms/models.py:790
 msgid "Colour for descriptive and secondary buttons"
 msgstr "Kleur voor beschrijvende en secundaire knoppen"
 
-#: bluebottle/cms/models.py:791
+#: bluebottle/cms/models.py:794
 msgid "Description text colour"
 msgstr "Beschrijving tekstkleur"
 
-#: bluebottle/cms/models.py:793
+#: bluebottle/cms/models.py:796
 msgid "If the description colour is quite light, you could set this to a darker colour for better contrast"
 msgstr "Als de beschrijvingkleur vrij licht is, kunt u dit instellen op een donkere kleur voor beter contrast"
 
-#: bluebottle/cms/models.py:797
+#: bluebottle/cms/models.py:800
 msgid "Footer colour"
 msgstr "Footer kleur"
 
-#: bluebottle/cms/models.py:800
+#: bluebottle/cms/models.py:803
 msgid "Colour for platform footer"
 msgstr "Kleur voor platformvoettekst"
 
-#: bluebottle/cms/models.py:804
+#: bluebottle/cms/models.py:807
 msgid "Footer text colour"
 msgstr "Voettekst kleur"
 
-#: bluebottle/cms/models.py:806
+#: bluebottle/cms/models.py:809
 msgid "If the footer colour is quite light, you could set this to a darker colour for better contrast"
 msgstr "Als de voettekstkleur redelijk licht is, kun je dit instellen op een donkere kleur voor beter contrast"
 
-#: bluebottle/cms/models.py:811
+#: bluebottle/cms/models.py:814
 msgid "Footer banner"
 msgstr "Voettekst banner"
 
-#: bluebottle/cms/models.py:812
+#: bluebottle/cms/models.py:815
 msgid "Banner shown just above the footer"
 msgstr "Banner wordt net boven de voettekst getoond"
 
-#: bluebottle/cms/models.py:823
+#: bluebottle/cms/models.py:826
 msgid "Title font"
 msgstr "Titellettertype"
 
-#: bluebottle/cms/models.py:825
+#: bluebottle/cms/models.py:828
 msgid "Font to use for titles. Should be .woff2 type"
 msgstr "Lettertype om te gebruiken voor titels. Moet .woff2-type zijn"
 
-#: bluebottle/cms/models.py:831
+#: bluebottle/cms/models.py:834
 msgid "Body font"
 msgstr "Tekst-lettertype"
 
-#: bluebottle/cms/models.py:833
+#: bluebottle/cms/models.py:836
 msgid "Font to use for paragraph texts. Should be .woff2 type. Deprecated: Do not override body font for new tenants"
 msgstr "Lettertype om te gebruiken voor alinea-teksten. Moet het .woff2-type zijn. Afgekeurd: Overschrijf: Overschrijft het body lettertype niet voor nieuwe tenants"
 
-#: bluebottle/cms/models.py:883
+#: bluebottle/cms/models.py:886
 msgid "Slug of the start initiative page"
 msgstr "Slug van de start initiatief pagina"
 
-#: bluebottle/cms/models.py:902 bluebottle/cms/models.py:903
+#: bluebottle/cms/models.py:905 bluebottle/cms/models.py:906
 msgid "site platform settings"
 msgstr "platform instellingen"
 
-#: bluebottle/cms/models.py:915 bluebottle/cms/models.py:916
+#: bluebottle/cms/models.py:918 bluebottle/cms/models.py:919
 msgid "Plain Text"
 msgstr "Platte Tekst"
 
-#: bluebottle/cms/models.py:943 bluebottle/cms/models.py:1003
+#: bluebottle/cms/models.py:946 bluebottle/cms/models.py:1006
 msgid "Video URL"
 msgstr "Video URL"
 
-#: bluebottle/cms/models.py:961 bluebottle/pages/models.py:120
+#: bluebottle/cms/models.py:964 bluebottle/pages/models.py:120
 #: bluebottle/pages/models.py:210
 msgid "Left"
 msgstr "Links"
 
-#: bluebottle/cms/models.py:962 bluebottle/pages/models.py:121
+#: bluebottle/cms/models.py:965 bluebottle/pages/models.py:121
 #: bluebottle/pages/models.py:211
 msgid "Right"
 msgstr "Rechts"
 
-#: bluebottle/cms/models.py:966
+#: bluebottle/cms/models.py:969
 msgid "1:2 (Text twice as wide)"
 msgstr "1:2 (tekst twee keer zo breed)"
 
-#: bluebottle/cms/models.py:967 bluebottle/pages/models.py:126
+#: bluebottle/cms/models.py:970 bluebottle/pages/models.py:126
 msgid "1:1 (Equal width)"
 msgstr "1:1 (gelijke breedte)"
 
-#: bluebottle/cms/models.py:968
+#: bluebottle/cms/models.py:971
 msgid "2:1 (Media twice as wide)"
 msgstr "2:1 (media twee keer zo groot)"
 
-#: bluebottle/cms/models.py:971 bluebottle/pages/models.py:130
+#: bluebottle/cms/models.py:974 bluebottle/pages/models.py:130
 msgid "Picture placement"
 msgstr "Plaatsing van afbeeldingen"
 
-#: bluebottle/cms/models.py:972 bluebottle/pages/models.py:131
+#: bluebottle/cms/models.py:975 bluebottle/pages/models.py:131
 msgid "Picture / Text ratio"
 msgstr "Beeld / tekstverhouding"
 
-#: bluebottle/cms/models.py:976 bluebottle/cms/models.py:977
+#: bluebottle/cms/models.py:979 bluebottle/cms/models.py:980
 msgid "Text + Media"
 msgstr "Tekst + media"
 
-#: bluebottle/cms/models.py:1013 bluebottle/cms/models.py:1014
+#: bluebottle/cms/models.py:1016 bluebottle/cms/models.py:1017
 msgid "Image or video"
 msgstr "Afbeelding of video"
 
@@ -14456,115 +14457,119 @@ msgid_plural "Seconds"
 msgstr[0] "Seconde"
 msgstr[1] "Seconden"
 
-#: bluebottle/voting/admin.py:98
+#: bluebottle/voting/admin.py:103
 msgid "votes"
-msgstr "stemmen"
+msgstr ""
 
-#: bluebottle/voting/models.py:17
+#: bluebottle/voting/admin.py:140
+msgid "Pages with this poll"
+msgstr ""
+
+#: bluebottle/voting/models.py:18
 msgid "subtitle"
-msgstr "subtitel"
+msgstr ""
 
-#: bluebottle/voting/models.py:21
+#: bluebottle/voting/models.py:22
 msgid "end date"
-msgstr "einddatum"
+msgstr ""
 
-#: bluebottle/voting/models.py:25 bluebottle/voting/models.py:49
-#: bluebottle/voting/models.py:103
+#: bluebottle/voting/models.py:26 bluebottle/voting/models.py:54
+#: bluebottle/voting/models.py:127
 msgid "poll"
-msgstr "peiling"
+msgstr ""
 
-#: bluebottle/voting/models.py:26
+#: bluebottle/voting/models.py:27
 msgid "polls"
-msgstr "peilingen"
+msgstr ""
 
-#: bluebottle/voting/models.py:41
+#: bluebottle/voting/models.py:46
 #, python-brace-format
 msgid "Poll {pk}"
-msgstr "Peiling {pk}"
+msgstr ""
 
-#: bluebottle/voting/models.py:71
+#: bluebottle/voting/models.py:76
 msgid "video URL"
-msgstr "video URL"
+msgstr ""
 
-#: bluebottle/voting/models.py:82
+#: bluebottle/voting/models.py:106
 msgid "poll option"
-msgstr "keuze uit de peiling"
+msgstr ""
 
-#: bluebottle/voting/models.py:83
+#: bluebottle/voting/models.py:107
 msgid "poll options"
-msgstr "keuzes uit de peiling"
+msgstr ""
 
-#: bluebottle/voting/models.py:95
+#: bluebottle/voting/models.py:119
 #, python-brace-format
 msgid "Option {pk}"
-msgstr "Optie {pk}"
+msgstr ""
 
-#: bluebottle/voting/models.py:109
+#: bluebottle/voting/models.py:133
 msgid "option"
-msgstr "optie"
+msgstr ""
 
-#: bluebottle/voting/models.py:121
+#: bluebottle/voting/models.py:145
 msgid "poll vote"
-msgstr "stem uit peiling"
+msgstr ""
 
-#: bluebottle/voting/models.py:122
+#: bluebottle/voting/models.py:146
 msgid "poll votes"
-msgstr "stemmen uit peiling"
+msgstr ""
 
-#: bluebottle/voting/models.py:142
+#: bluebottle/voting/models.py:166
 #, python-brace-format
 msgid "Vote {pk}"
-msgstr "Stem {pk}"
+msgstr ""
 
 #: bluebottle/voting/periodic_tasks.py:24
 msgid "Close the poll when the deadline has passed"
-msgstr "Sluit de peiling wanneer de deadline is verstreken"
+msgstr ""
 
-#: bluebottle/voting/serializers.py:121
+#: bluebottle/voting/serializers.py:77
 msgid "This option does not belong to this poll"
-msgstr "Deze optie behoort niet tot deze peiling"
+msgstr ""
 
-#: bluebottle/voting/serializers.py:126 bluebottle/voting/views.py:66
+#: bluebottle/voting/serializers.py:82 bluebottle/voting/views.py:48
 msgid "This poll is not open for voting"
-msgstr "Deze peiling is niet open voor stemmen"
+msgstr ""
 
 #: bluebottle/voting/states.py:18
 msgid "The poll is being prepared and is not yet open for voting."
-msgstr "De peiling wordt voorbereid en is nog niet open voor stemmen."
+msgstr ""
 
 #: bluebottle/voting/states.py:23
 msgid "The poll is open and people can vote."
-msgstr "De peiling is open en mensen kunnen stemmen."
+msgstr ""
 
 #: bluebottle/voting/states.py:28
 msgid "The poll is closed and voting is no longer possible."
-msgstr "De peiling is gesloten en stemmen is niet meer mogelijk."
+msgstr ""
 
 #: bluebottle/voting/states.py:33
 msgid "The poll has been cancelled."
-msgstr "De peiling is geannuleerd."
+msgstr ""
 
 #: bluebottle/voting/states.py:40
 msgid "The poll was created."
-msgstr "De peiling is aangemaakt."
+msgstr ""
 
 #: bluebottle/voting/states.py:47
 msgid "Open the poll for voting."
-msgstr "Open de peiling voor stemmen."
+msgstr ""
 
 #: bluebottle/voting/states.py:55
 msgid "Close the poll so voting is no longer possible."
-msgstr "Sluit de peiling zodat stemmen niet meer mogelijk is."
+msgstr ""
 
 #: bluebottle/voting/states.py:63
 msgid "Cancel the poll."
-msgstr "Annuleer de peiling."
+msgstr ""
 
-#: bluebottle/voting/states.py:71
+#: bluebottle/voting/states.py:71 bluebottle/voting/states.py:79
 msgid "Reopen the poll for voting."
-msgstr "Heropen de peiling voor stemmen."
+msgstr ""
 
-#: bluebottle/voting/views.py:52
+#: bluebottle/voting/views.py:34
 msgid "You have already voted in this poll"
-msgstr "Je hebt al gestemd in deze peiling"
+msgstr ""
 

@@ -137,4 +137,4 @@ class PollAdmin(
             format_html_join(mark_safe('<br />'), '{}', ((link,) for link in links)),
         )
 
-    pages.short_description = _('Pages')
+    pages.short_description = _('Pages with this poll')

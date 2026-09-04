@@ -23,6 +23,7 @@ from bluebottle.time_based.effects.participants import (
     CreateScheduleContributionEffect,
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
+    LockScheduleActivityIfFullEffect,
     CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, CreateDateRegistrationEffect,
     CreateRegisteredTimeContributionEffect,
 )
@@ -642,6 +643,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleParticipantStateMachine.accept,
                     conditions=[is_accepted],
                 ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
@@ -661,6 +663,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleParticipantStateMachine.schedule,
                     conditions=[has_scheduled_slot]
                 ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
@@ -680,6 +683,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
@@ -691,6 +695,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(

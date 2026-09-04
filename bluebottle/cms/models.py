@@ -92,6 +92,9 @@ class HomePage(SingletonModel, TranslatableModel):
             ('api_delete_homepage', 'Can delete homepages through the API'),
         )
 
+    def __str__(self):
+        return str(_('Homepage'))
+
 
 class LinkPermission(models.Model):
     permission = models.CharField(max_length=255, null=False,

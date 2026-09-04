@@ -1,10 +1,14 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableStackedInline
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html, format_html_join
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin, TranslatableModelForm, TranslatableStackedInline
 from parler.forms import TranslatableModelFormMetaclass
 from sorl.thumbnail.admin import AdminImageMixin
 
+from bluebottle.cms.models import PollContent
 from bluebottle.fsm.admin import StateMachineAdminMixin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
@@ -54,11 +58,14 @@ class PollVoteInline(admin.TabularInline):
     fields = ('owner', 'option', 'created', 'updated')
     ordering = ('-created',)
 
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        field = super().formfield_for_foreignkey(db_field, request, **kwargs)
-        if db_field.name == 'option' and getattr(request, '_poll_obj', None):
-            field.queryset = field.queryset.filter(poll=request._poll_obj)
-        return field
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        option_field = formset.form.base_fields['option']
+        if obj:
+            option_field.queryset = option_field.queryset.filter(poll=obj)
+        else:
+            option_field.queryset = option_field.queryset.none()
+        return formset
 
 
 @admin.register(Poll)
@@ -77,13 +84,14 @@ class PollAdmin(
     list_filter = (StateMachineFilter, 'end_date')
     search_fields = ('translations__title', 'translations__subtitle')
     translatable_ordering = 'translations__title'
-    readonly_fields = ('status',)
+    readonly_fields = ('status', 'pages')
     fields = (
         'title',
         'subtitle',
         'end_date',
         'status',
         'states',
+        'pages',
     )
     superadmin_fields = ('force_status',)
 
@@ -97,11 +105,39 @@ class PollAdmin(
             )
         return fieldsets
 
-    def get_formsets_with_inlines(self, request, obj=None):
-        request._poll_obj = obj
-        return super().get_formsets_with_inlines(request, obj)
-
     def vote_count(self, obj):
         return obj.votes.count()
 
     vote_count.short_description = _('votes')
+
+    def pages(self, obj):
+        if not obj or not obj.pk:
+            return '-'
+
+        links = []
+        blocks = PollContent.objects.filter(poll=obj).select_related(
+            'placeholder', 'placeholder__parent_type'
+        )
+        for block in blocks:
+            placeholder = block.placeholder
+            if not placeholder or not placeholder.parent_id:
+                continue
+            parent = placeholder.parent
+            if parent is None:
+                continue
+            url = reverse(
+                'admin:{}_{}_change'.format(
+                    parent._meta.app_label, parent._meta.model_name
+                ),
+                args=(parent.pk,),
+            )
+            links.append(format_html('<a href="{}">{}</a>', url, parent))
+
+        if not links:
+            return '-'
+        return format_html(
+            '<div>{}</div>',
+            format_html_join(mark_safe('<br />'), '{}', ((link,) for link in links)),
+        )
+
+    pages.short_description = _('Pages with this poll')

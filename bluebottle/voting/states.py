@@ -57,7 +57,7 @@ class PollStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        [draft, open],
+        [draft, open, closed],
         cancelled,
         name=_('Cancel'),
         description=_('Cancel the poll.'),
@@ -66,6 +66,14 @@ class PollStateMachine(ModelStateMachine):
 
     reopen = Transition(
         [closed, cancelled],
+        open,
+        name=_('Reopen'),
+        description=_('Reopen the poll for voting.'),
+        automatic=True,
+    )
+
+    restore = Transition(
+        [cancelled],
         open,
         name=_('Reopen'),
         description=_('Reopen the poll for voting.'),

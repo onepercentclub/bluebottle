@@ -64,9 +64,15 @@ class DateActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('The registration deadline for your activity "Save the world!" has expired')
         self.assertBodyContains(
-            'Unfortunately, nobody applied to your activity '
-            '"Save the world!" before the deadline to apply. '
-            'That’s why we have cancelled your activity.')
+            'Unfortunately, no one signed up for your activity '
+            '"Save the world!" before the deadline passed. '
+            'That’s why we have cancelled the activity.')
+        self.assertBodyContains(
+            'No worries, you can always reopen the activity by extending the deadline '
+            'or start a new activity and try again.')
+        self.assertBodyContains(
+            'Do you need tips to make your activity stand out? '
+            'Get in touch with the platform manager by replying to this email.')
         self.assertActionLink(self.obj.get_absolute_url())
 
     def test_activity_succeeded_notification(self):

@@ -33,12 +33,21 @@ class PollAdminForm(
 class PollOptionInline(SortableStackedInline, TranslatableStackedInline):
     model = PollOption
     extra = 0
+    readonly_fields = ('vote_count',)
     fields = (
         'title',
         'description',
         'image',
         'video_url',
+        'vote_count',
     )
+
+    def vote_count(self, obj):
+        if not obj.pk:
+            return 0
+        return obj.votes.count()
+
+    vote_count.short_description = _('votes')
 
 
 class PollVoteInline(admin.TabularInline):

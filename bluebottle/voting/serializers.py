@@ -1,3 +1,4 @@
+from django_tools.middlewares.ThreadLocal import get_current_user
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
@@ -7,8 +8,10 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.utils.fields import RichTextField
 from bluebottle.voting.models import Poll, PollOption, PollVote
+from bluebottle.voting.permissions import CanExportVotesPermission
 
 
 class PollOptionSerializer(ModelSerializer):
@@ -97,12 +100,19 @@ class PollSerializer(ModelSerializer):
         many=False,
         read_only=True,
     )
+    results_export_url = PrivateFileSerializer(
+        'poll-vote-export',
+        url_args=('pk',),
+        filename='votes.xlsx',
+        permission=CanExportVotesPermission,
+        read_only=True
+    )
 
     class Meta:
         model = Poll
         fields = (
             'id', 'title', 'subtitle', 'end_date', 'status', 'options',
-            'votes_cast', 'my_vote',
+            'votes_cast', 'my_vote', 'results_export_url',
         )
 
     class JSONAPIMeta:

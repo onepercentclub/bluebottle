@@ -71,3 +71,11 @@ class PollStateMachine(ModelStateMachine):
         description=_('Reopen the poll for voting.'),
         automatic=True,
     )
+
+    restore = Transition(
+        [cancelled],
+        open,
+        name=_('Reopen'),
+        description=_('Reopen the poll for voting.'),
+        automatic=False,
+    )

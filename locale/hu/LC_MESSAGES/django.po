@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-04 11:49+0200\n"
-"PO-Revision-Date: 2026-09-04 09:49\n"
+"PO-Revision-Date: 2026-09-04 09:58\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -3777,7 +3777,7 @@ msgstr "Adomány gomb"
 
 #: bluebottle/cms/models.py:416 bluebottle/cms/models.py:422
 msgid "Poll"
-msgstr ""
+msgstr "Szavazás"
 
 #: bluebottle/cms/models.py:434 bluebottle/cms/models.py:559
 msgid "Start your own project"
@@ -14479,117 +14479,117 @@ msgstr[1] "Másodpercek"
 
 #: bluebottle/voting/admin.py:103
 msgid "votes"
-msgstr ""
+msgstr "szavazat"
 
 #: bluebottle/voting/admin.py:140
 msgid "Pages with this poll"
-msgstr ""
+msgstr "Oldalak ezzel a szavazással"
 
 #: bluebottle/voting/models.py:18
 msgid "subtitle"
-msgstr ""
+msgstr "alcím"
 
 #: bluebottle/voting/models.py:22
 msgid "end date"
-msgstr ""
+msgstr "befejezési dátum"
 
 #: bluebottle/voting/models.py:26 bluebottle/voting/models.py:54
 #: bluebottle/voting/models.py:127
 msgid "poll"
-msgstr ""
+msgstr "szavazás"
 
 #: bluebottle/voting/models.py:27
 msgid "polls"
-msgstr ""
+msgstr "szavazások"
 
 #: bluebottle/voting/models.py:46
 #, python-brace-format
 msgid "Poll {pk}"
-msgstr ""
+msgstr "Szavazás {pk}"
 
 #: bluebottle/voting/models.py:76
 msgid "video URL"
-msgstr ""
+msgstr "videó URL"
 
 #: bluebottle/voting/models.py:106
 msgid "poll option"
-msgstr ""
+msgstr "szavazási lehetőség"
 
 #: bluebottle/voting/models.py:107
 msgid "poll options"
-msgstr ""
+msgstr "szavazási lehetőségek"
 
 #: bluebottle/voting/models.py:119
 #, python-brace-format
 msgid "Option {pk}"
-msgstr ""
+msgstr "Lehetőség {pk}"
 
 #: bluebottle/voting/models.py:133
 msgid "option"
-msgstr ""
+msgstr "lehetőség"
 
 #: bluebottle/voting/models.py:145
 msgid "poll vote"
-msgstr ""
+msgstr "szavazás"
 
 #: bluebottle/voting/models.py:146
 msgid "poll votes"
-msgstr ""
+msgstr "szavazások"
 
 #: bluebottle/voting/models.py:166
 #, python-brace-format
 msgid "Vote {pk}"
-msgstr ""
+msgstr "Szavazat {pk}"
 
 #: bluebottle/voting/periodic_tasks.py:24
 msgid "Close the poll when the deadline has passed"
-msgstr ""
+msgstr "Zárja le a szavazást a határidő lejárta után"
 
 #: bluebottle/voting/serializers.py:77
 msgid "This option does not belong to this poll"
-msgstr ""
+msgstr "Ez a lehetőség nem tartozik ehhez a szavazáshoz"
 
 #: bluebottle/voting/serializers.py:82 bluebottle/voting/views.py:48
 msgid "This poll is not open for voting"
-msgstr ""
+msgstr "Ez a szavazás nem nyitott a szavazásra"
 
 #: bluebottle/voting/states.py:18
 msgid "The poll is being prepared and is not yet open for voting."
-msgstr ""
+msgstr "A szavazás előkészítés alatt áll, és még nem nyitott a szavazásra."
 
 #: bluebottle/voting/states.py:23
 msgid "The poll is open and people can vote."
-msgstr ""
+msgstr "A szavazás nyitva áll, és az emberek szavazhatnak."
 
 #: bluebottle/voting/states.py:28
 msgid "The poll is closed and voting is no longer possible."
-msgstr ""
+msgstr "A szavazás le van zárva, és a szavazás már nem lehetséges."
 
 #: bluebottle/voting/states.py:33
 msgid "The poll has been cancelled."
-msgstr ""
+msgstr "A szavazás törlésre került."
 
 #: bluebottle/voting/states.py:40
 msgid "The poll was created."
-msgstr ""
+msgstr "A szavazás létrejött."
 
 #: bluebottle/voting/states.py:47
 msgid "Open the poll for voting."
-msgstr ""
+msgstr "Nyissa meg a szavazást a szavazásra."
 
 #: bluebottle/voting/states.py:55
 msgid "Close the poll so voting is no longer possible."
-msgstr ""
+msgstr "Zárja le a szavazást, hogy a szavazás már ne legyen lehetséges."
 
 #: bluebottle/voting/states.py:63
 msgid "Cancel the poll."
-msgstr ""
+msgstr "Törölje a szavazást."
 
 #: bluebottle/voting/states.py:71 bluebottle/voting/states.py:79
 msgid "Reopen the poll for voting."
-msgstr ""
+msgstr "Nyissa meg újra a szavazást a szavazásra."
 
 #: bluebottle/voting/views.py:34
 msgid "You have already voted in this poll"
-msgstr ""
+msgstr "Már szavazott ebben a szavazásban"
 

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-04 11:49+0200\n"
-"PO-Revision-Date: 2026-09-04 09:49\n"
+"PO-Revision-Date: 2026-09-04 09:58\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -3777,7 +3777,7 @@ msgstr "Bouton Faire un don"
 
 #: bluebottle/cms/models.py:416 bluebottle/cms/models.py:422
 msgid "Poll"
-msgstr ""
+msgstr "Sondage"
 
 #: bluebottle/cms/models.py:434 bluebottle/cms/models.py:559
 msgid "Start your own project"
@@ -14488,117 +14488,117 @@ msgstr[1] "Secondes"
 
 #: bluebottle/voting/admin.py:103
 msgid "votes"
-msgstr ""
+msgstr "votes"
 
 #: bluebottle/voting/admin.py:140
 msgid "Pages with this poll"
-msgstr ""
+msgstr "Pages avec ce sondage"
 
 #: bluebottle/voting/models.py:18
 msgid "subtitle"
-msgstr ""
+msgstr "sous-titre"
 
 #: bluebottle/voting/models.py:22
 msgid "end date"
-msgstr ""
+msgstr "date de fin"
 
 #: bluebottle/voting/models.py:26 bluebottle/voting/models.py:54
 #: bluebottle/voting/models.py:127
 msgid "poll"
-msgstr ""
+msgstr "sondage"
 
 #: bluebottle/voting/models.py:27
 msgid "polls"
-msgstr ""
+msgstr "sondages"
 
 #: bluebottle/voting/models.py:46
 #, python-brace-format
 msgid "Poll {pk}"
-msgstr ""
+msgstr "Sondage {pk}"
 
 #: bluebottle/voting/models.py:76
 msgid "video URL"
-msgstr ""
+msgstr "uRL de la vidéo"
 
 #: bluebottle/voting/models.py:106
 msgid "poll option"
-msgstr ""
+msgstr "option de sondage"
 
 #: bluebottle/voting/models.py:107
 msgid "poll options"
-msgstr ""
+msgstr "options de sondage"
 
 #: bluebottle/voting/models.py:119
 #, python-brace-format
 msgid "Option {pk}"
-msgstr ""
+msgstr "Option {pk}"
 
 #: bluebottle/voting/models.py:133
 msgid "option"
-msgstr ""
+msgstr "option"
 
 #: bluebottle/voting/models.py:145
 msgid "poll vote"
-msgstr ""
+msgstr "vote de sondage"
 
 #: bluebottle/voting/models.py:146
 msgid "poll votes"
-msgstr ""
+msgstr "votes de sondage"
 
 #: bluebottle/voting/models.py:166
 #, python-brace-format
 msgid "Vote {pk}"
-msgstr ""
+msgstr "Vote {pk}"
 
 #: bluebottle/voting/periodic_tasks.py:24
 msgid "Close the poll when the deadline has passed"
-msgstr ""
+msgstr "Fermez le sondage lorsque la date limite est passée"
 
 #: bluebottle/voting/serializers.py:77
 msgid "This option does not belong to this poll"
-msgstr ""
+msgstr "Cette option n'appartient pas à ce sondage"
 
 #: bluebottle/voting/serializers.py:82 bluebottle/voting/views.py:48
 msgid "This poll is not open for voting"
-msgstr ""
+msgstr "Ce sondage n'est pas ouvert aux votes"
 
 #: bluebottle/voting/states.py:18
 msgid "The poll is being prepared and is not yet open for voting."
-msgstr ""
+msgstr "Le sondage est en cours de préparation et n'est pas encore ouvert au vote."
 
 #: bluebottle/voting/states.py:23
 msgid "The poll is open and people can vote."
-msgstr ""
+msgstr "Le sondage est ouvert et les gens peuvent voter."
 
 #: bluebottle/voting/states.py:28
 msgid "The poll is closed and voting is no longer possible."
-msgstr ""
+msgstr "Le sondage est fermé et le vote n'est plus possible."
 
 #: bluebottle/voting/states.py:33
 msgid "The poll has been cancelled."
-msgstr ""
+msgstr "Le sondage a été annulé."
 
 #: bluebottle/voting/states.py:40
 msgid "The poll was created."
-msgstr ""
+msgstr "Le sondage a été créé."
 
 #: bluebottle/voting/states.py:47
 msgid "Open the poll for voting."
-msgstr ""
+msgstr "Ouvrez le sondage pour le vote."
 
 #: bluebottle/voting/states.py:55
 msgid "Close the poll so voting is no longer possible."
-msgstr ""
+msgstr "Fermez le sondage pour que le vote ne soit plus possible."
 
 #: bluebottle/voting/states.py:63
 msgid "Cancel the poll."
-msgstr ""
+msgstr "Annulez le sondage."
 
 #: bluebottle/voting/states.py:71 bluebottle/voting/states.py:79
 msgid "Reopen the poll for voting."
-msgstr ""
+msgstr "Rouvrez le sondage pour le vote."
 
 #: bluebottle/voting/views.py:34
 msgid "You have already voted in this poll"
-msgstr ""
+msgstr "Vous avez déjà voté dans ce sondage"
 

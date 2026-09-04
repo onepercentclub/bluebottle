@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-04 11:49+0200\n"
-"PO-Revision-Date: 2026-09-04 09:49\n"
+"PO-Revision-Date: 2026-09-04 09:58\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -3768,7 +3768,7 @@ msgstr "Doneer knop"
 
 #: bluebottle/cms/models.py:416 bluebottle/cms/models.py:422
 msgid "Poll"
-msgstr ""
+msgstr "Peiling"
 
 #: bluebottle/cms/models.py:434 bluebottle/cms/models.py:559
 msgid "Start your own project"
@@ -14459,117 +14459,117 @@ msgstr[1] "Seconden"
 
 #: bluebottle/voting/admin.py:103
 msgid "votes"
-msgstr ""
+msgstr "stemmen"
 
 #: bluebottle/voting/admin.py:140
 msgid "Pages with this poll"
-msgstr ""
+msgstr "Pagina's met deze peiling"
 
 #: bluebottle/voting/models.py:18
 msgid "subtitle"
-msgstr ""
+msgstr "subtitel"
 
 #: bluebottle/voting/models.py:22
 msgid "end date"
-msgstr ""
+msgstr "einddatum"
 
 #: bluebottle/voting/models.py:26 bluebottle/voting/models.py:54
 #: bluebottle/voting/models.py:127
 msgid "poll"
-msgstr ""
+msgstr "peiling"
 
 #: bluebottle/voting/models.py:27
 msgid "polls"
-msgstr ""
+msgstr "peilingen"
 
 #: bluebottle/voting/models.py:46
 #, python-brace-format
 msgid "Poll {pk}"
-msgstr ""
+msgstr "Peiling {pk}"
 
 #: bluebottle/voting/models.py:76
 msgid "video URL"
-msgstr ""
+msgstr "video URL"
 
 #: bluebottle/voting/models.py:106
 msgid "poll option"
-msgstr ""
+msgstr "peiling optie"
 
 #: bluebottle/voting/models.py:107
 msgid "poll options"
-msgstr ""
+msgstr "peiling opties"
 
 #: bluebottle/voting/models.py:119
 #, python-brace-format
 msgid "Option {pk}"
-msgstr ""
+msgstr "Optie {pk}"
 
 #: bluebottle/voting/models.py:133
 msgid "option"
-msgstr ""
+msgstr "optie"
 
 #: bluebottle/voting/models.py:145
 msgid "poll vote"
-msgstr ""
+msgstr "peilingstem"
 
 #: bluebottle/voting/models.py:146
 msgid "poll votes"
-msgstr ""
+msgstr "peilingstemmen"
 
 #: bluebottle/voting/models.py:166
 #, python-brace-format
 msgid "Vote {pk}"
-msgstr ""
+msgstr "Stem {pk}"
 
 #: bluebottle/voting/periodic_tasks.py:24
 msgid "Close the poll when the deadline has passed"
-msgstr ""
+msgstr "Sluit de peiling wanneer de deadline is verstreken"
 
 #: bluebottle/voting/serializers.py:77
 msgid "This option does not belong to this poll"
-msgstr ""
+msgstr "Deze optie behoort niet tot deze peiling"
 
 #: bluebottle/voting/serializers.py:82 bluebottle/voting/views.py:48
 msgid "This poll is not open for voting"
-msgstr ""
+msgstr "Deze peiling is niet open voor stemmen"
 
 #: bluebottle/voting/states.py:18
 msgid "The poll is being prepared and is not yet open for voting."
-msgstr ""
+msgstr "De peiling wordt voorbereid en is nog niet open voor stemmen."
 
 #: bluebottle/voting/states.py:23
 msgid "The poll is open and people can vote."
-msgstr ""
+msgstr "De peiling is open en mensen kunnen stemmen."
 
 #: bluebottle/voting/states.py:28
 msgid "The poll is closed and voting is no longer possible."
-msgstr ""
+msgstr "De peiling is gesloten en stemmen is niet meer mogelijk."
 
 #: bluebottle/voting/states.py:33
 msgid "The poll has been cancelled."
-msgstr ""
+msgstr "De peiling is geannuleerd."
 
 #: bluebottle/voting/states.py:40
 msgid "The poll was created."
-msgstr ""
+msgstr "De peiling is aangemaakt."
 
 #: bluebottle/voting/states.py:47
 msgid "Open the poll for voting."
-msgstr ""
+msgstr "Open de peiling voor stemmen."
 
 #: bluebottle/voting/states.py:55
 msgid "Close the poll so voting is no longer possible."
-msgstr ""
+msgstr "Sluit de peiling zodat stemmen niet meer mogelijk is."
 
 #: bluebottle/voting/states.py:63
 msgid "Cancel the poll."
-msgstr ""
+msgstr "Annuleer de peiling."
 
 #: bluebottle/voting/states.py:71 bluebottle/voting/states.py:79
 msgid "Reopen the poll for voting."
-msgstr ""
+msgstr "Heropen de peiling voor stemmen."
 
 #: bluebottle/voting/views.py:34
 msgid "You have already voted in this poll"
-msgstr ""
+msgstr "Je hebt al gestemd in deze peiling"
 

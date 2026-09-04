@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-04 11:49+0200\n"
-"PO-Revision-Date: 2026-09-04 09:49\n"
+"PO-Revision-Date: 2026-09-04 09:58\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -3776,7 +3776,7 @@ msgstr "Spenden-Taste"
 
 #: bluebottle/cms/models.py:416 bluebottle/cms/models.py:422
 msgid "Poll"
-msgstr ""
+msgstr "Umfrage"
 
 #: bluebottle/cms/models.py:434 bluebottle/cms/models.py:559
 msgid "Start your own project"
@@ -14489,117 +14489,117 @@ msgstr[1] "Sekunden"
 
 #: bluebottle/voting/admin.py:103
 msgid "votes"
-msgstr ""
+msgstr "Stimmen"
 
 #: bluebottle/voting/admin.py:140
 msgid "Pages with this poll"
-msgstr ""
+msgstr "Seiten mit dieser Umfrage"
 
 #: bluebottle/voting/models.py:18
 msgid "subtitle"
-msgstr ""
+msgstr "Untertitel"
 
 #: bluebottle/voting/models.py:22
 msgid "end date"
-msgstr ""
+msgstr "Enddatum"
 
 #: bluebottle/voting/models.py:26 bluebottle/voting/models.py:54
 #: bluebottle/voting/models.py:127
 msgid "poll"
-msgstr ""
+msgstr "Umfrage"
 
 #: bluebottle/voting/models.py:27
 msgid "polls"
-msgstr ""
+msgstr "Umfragen"
 
 #: bluebottle/voting/models.py:46
 #, python-brace-format
 msgid "Poll {pk}"
-msgstr ""
+msgstr "Umfrage {pk}"
 
 #: bluebottle/voting/models.py:76
 msgid "video URL"
-msgstr ""
+msgstr "Video-URL"
 
 #: bluebottle/voting/models.py:106
 msgid "poll option"
-msgstr ""
+msgstr "Umfrageoption"
 
 #: bluebottle/voting/models.py:107
 msgid "poll options"
-msgstr ""
+msgstr "Umfrageoptionen"
 
 #: bluebottle/voting/models.py:119
 #, python-brace-format
 msgid "Option {pk}"
-msgstr ""
+msgstr "Option {pk}"
 
 #: bluebottle/voting/models.py:133
 msgid "option"
-msgstr ""
+msgstr "Option"
 
 #: bluebottle/voting/models.py:145
 msgid "poll vote"
-msgstr ""
+msgstr "Umfrageabstimmung"
 
 #: bluebottle/voting/models.py:146
 msgid "poll votes"
-msgstr ""
+msgstr "Umfrageabstimmungen"
 
 #: bluebottle/voting/models.py:166
 #, python-brace-format
 msgid "Vote {pk}"
-msgstr ""
+msgstr "Abstimmung {pk}"
 
 #: bluebottle/voting/periodic_tasks.py:24
 msgid "Close the poll when the deadline has passed"
-msgstr ""
+msgstr "Schließe die Umfrage, wenn die Frist abgelaufen ist"
 
 #: bluebottle/voting/serializers.py:77
 msgid "This option does not belong to this poll"
-msgstr ""
+msgstr "Diese Option gehört nicht zu dieser Umfrage"
 
 #: bluebottle/voting/serializers.py:82 bluebottle/voting/views.py:48
 msgid "This poll is not open for voting"
-msgstr ""
+msgstr "Diese Umfrage ist nicht für Abstimmungen geöffnet"
 
 #: bluebottle/voting/states.py:18
 msgid "The poll is being prepared and is not yet open for voting."
-msgstr ""
+msgstr "Die Umfrage wird vorbereitet und ist noch nicht für Abstimmungen geöffnet."
 
 #: bluebottle/voting/states.py:23
 msgid "The poll is open and people can vote."
-msgstr ""
+msgstr "Die Umfrage ist geöffnet und die Leute können abstimmen."
 
 #: bluebottle/voting/states.py:28
 msgid "The poll is closed and voting is no longer possible."
-msgstr ""
+msgstr "Die Umfrage ist geschlossen und Abstimmungen sind nicht mehr möglich."
 
 #: bluebottle/voting/states.py:33
 msgid "The poll has been cancelled."
-msgstr ""
+msgstr "Die Umfrage wurde abgebrochen."
 
 #: bluebottle/voting/states.py:40
 msgid "The poll was created."
-msgstr ""
+msgstr "Die Umfrage wurde erstellt."
 
 #: bluebottle/voting/states.py:47
 msgid "Open the poll for voting."
-msgstr ""
+msgstr "Öffne die Umfrage für Abstimmungen."
 
 #: bluebottle/voting/states.py:55
 msgid "Close the poll so voting is no longer possible."
-msgstr ""
+msgstr "Schließe die Umfrage, damit Abstimmungen nicht mehr möglich sind."
 
 #: bluebottle/voting/states.py:63
 msgid "Cancel the poll."
-msgstr ""
+msgstr "Storniere die Umfrage."
 
 #: bluebottle/voting/states.py:71 bluebottle/voting/states.py:79
 msgid "Reopen the poll for voting."
-msgstr ""
+msgstr "Öffne die Umfrage erneut für Abstimmungen."
 
 #: bluebottle/voting/views.py:34
 msgid "You have already voted in this poll"
-msgstr ""
+msgstr "Du hast bereits an dieser Umfrage teilgenommen"
 

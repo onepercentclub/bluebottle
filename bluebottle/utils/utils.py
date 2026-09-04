@@ -1,5 +1,3 @@
-from symbol import import_from
-
 from future import standard_library
 
 standard_library.install_aliases()

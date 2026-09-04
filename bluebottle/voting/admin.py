@@ -106,7 +106,6 @@ class PollAdmin(
             return '-'
 
         links = []
-        seen = set()
         blocks = PollContent.objects.filter(poll=obj).select_related(
             'placeholder', 'placeholder__parent_type'
         )
@@ -114,10 +113,6 @@ class PollAdmin(
             placeholder = block.placeholder
             if not placeholder or not placeholder.parent_id:
                 continue
-            key = (placeholder.parent_type_id, placeholder.parent_id)
-            if key in seen:
-                continue
-            seen.add(key)
             parent = placeholder.parent
             if parent is None:
                 continue

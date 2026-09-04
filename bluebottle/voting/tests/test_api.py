@@ -92,9 +92,9 @@ class PollDetailAPITestCase(APITestCase):
             included for included in self.response.json()['included']
             if included['type'] == 'polls/options'
         ][0]
-        self.assertIsNone(option['attributes']['votes'])
-        self.assertIsNone(option['attributes']['percentage'])
-        self.assertIsNone(option['attributes']['winner'])
+        self.assertNotIn('votes', option['attributes'])
+        self.assertNotIn('percentage', option['attributes'])
+        self.assertNotIn('winner', option['attributes'])
 
     def test_get_draft_poll(self):
         self.poll.status = 'draft'

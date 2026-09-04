@@ -1,51 +1,34 @@
-from django.db.models import Count
+from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodResourceRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
-from django.utils.translation import gettext_lazy as _
-
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
-from bluebottle.utils.utils import clean_html
+from bluebottle.utils.fields import RichTextField
 from bluebottle.voting.models import Poll, PollOption, PollVote
-
-
-def get_option_results(poll):
-    results = getattr(poll, '_option_results', None)
-    if results is not None:
-        return results
-
-    if poll.status != 'closed':
-        poll._option_results = {}
-        return poll._option_results
-
-    counts = dict(
-        poll.options.annotate(vote_count=Count('votes')).values_list('id', 'vote_count')
-    )
-    total = sum(counts.values())
-    max_count = max(counts.values()) if counts else 0
-    poll._option_results = {
-        option_id: {
-            'votes': vote_count,
-            'percentage': round(100.0 * vote_count / total) if total else 0,
-            'winner': max_count > 0 and vote_count == max_count,
-        }
-        for option_id, vote_count in counts.items()
-    }
-    return poll._option_results
 
 
 class PollOptionSerializer(ModelSerializer):
     title = serializers.CharField()
-    description = serializers.SerializerMethodField()
+    description = RichTextField(required=False, allow_blank=True)
     image = ImageSerializer(required=False, allow_null=True)
     video_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     sequence = serializers.IntegerField(read_only=True)
-    votes = serializers.SerializerMethodField()
-    percentage = serializers.SerializerMethodField()
-    winner = serializers.SerializerMethodField()
+    votes = serializers.IntegerField(read_only=True, source='vote_count', allow_null=True)
+    percentage = serializers.IntegerField(read_only=True, allow_null=True)
+    winner = serializers.BooleanField(read_only=True, allow_null=True)
+
+    def get_fields(self):
+        fields = super().get_fields()
+        poll = getattr(self.instance, 'poll', None)
+        if poll is not None and poll.status != 'closed':
+            del fields['votes']
+            del fields['percentage']
+            del fields['winner']
+        return fields
 
     class Meta:
         model = PollOption
@@ -56,33 +39,6 @@ class PollOptionSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = 'polls/options'
-
-    def get_description(self, obj):
-        value = obj.description
-        if not value:
-            return ''
-        html = getattr(value, 'html', None)
-        if not html:
-            return ''
-        return clean_html(html)
-
-    def _option_result(self, obj, field):
-        results = get_option_results(obj.poll)
-        if not results:
-            return None
-        result = results.get(obj.id)
-        if not result:
-            return False if field == 'winner' else 0
-        return result[field]
-
-    def get_votes(self, obj):
-        return self._option_result(obj, 'votes')
-
-    def get_percentage(self, obj):
-        return self._option_result(obj, 'percentage')
-
-    def get_winner(self, obj):
-        return self._option_result(obj, 'winner')
 
 
 class PollVoteSerializer(ModelSerializer):
@@ -135,12 +91,11 @@ class PollSerializer(ModelSerializer):
     end_date = serializers.DateField(required=False, allow_null=True)
     status = serializers.CharField(read_only=True)
     options = ResourceRelatedField(many=True, read_only=True)
-    votes_cast = serializers.SerializerMethodField()
+    votes_cast = serializers.IntegerField(read_only=True)
     my_vote = SerializerMethodResourceRelatedField(
         model=PollVote,
         many=False,
         read_only=True,
-        source='get_my_vote',
     )
 
     class Meta:
@@ -159,18 +114,8 @@ class PollSerializer(ModelSerializer):
         'my_vote': 'bluebottle.voting.serializers.PollVoteSerializer',
     }
 
-    def get_votes_cast(self, obj):
-        votes_cast = getattr(obj, 'votes_cast', None)
-        if isinstance(votes_cast, int):
-            return votes_cast
-        return obj.votes.count()
-
     def get_my_vote(self, obj):
-        if hasattr(obj, 'user_votes'):
-            return obj.user_votes[0] if obj.user_votes else None
-
-        request = self.context.get('request')
-        user = getattr(request, 'user', None)
-        if not user or not user.is_authenticated:
-            return None
-        return obj.votes.filter(owner=user).first()
+        user = get_current_user()
+        if user and user.is_authenticated:
+            return obj.votes.filter(owner=user).first()
+        return None

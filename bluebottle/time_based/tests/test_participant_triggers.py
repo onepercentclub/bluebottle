@@ -20,6 +20,7 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     TeamFactory,
     TeamMemberFactory,
+    InterestFactory,
 )
 
 
@@ -300,6 +301,84 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
             'A participant has been removed from your activity "{}"'.format(
                 self.activity.title
             ),
+        )
+
+    def test_withdraw_unfill_notifies_interested(self):
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(activity=self.activity, user=interested)
+
+        self.activity.capacity = 1
+        self.activity.save()
+        self.register()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+        mail.outbox = []
+        self.participant.states.withdraw(save=True)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+        self.assertTrue(
+            any(interested.email in message.to for message in mail.outbox)
+        )
+
+    def test_remove_unfill_notifies_interested(self):
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(activity=self.activity, user=interested)
+
+        self.activity.capacity = 1
+        self.activity.save()
+        self.register()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+        mail.outbox = []
+        self.participant.states.remove(save=True)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+        self.assertTrue(
+            any(interested.email in message.to for message in mail.outbox)
+        )
+
+    def test_reject_pending_applicant_does_not_notify_interested(self):
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(activity=self.activity, user=interested)
+
+        self.activity.review = True
+        self.activity.capacity = 1
+        self.activity.save()
+
+        self.register()
+        self.participant.registration.states.accept(save=True)
+
+        self.register()
+        pending = self.participant
+        self.assertEqual(pending.status, "new")
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+        mail.outbox = []
+        pending.states.reject(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
         )
 
     def test_initial_succeed_activity(self):

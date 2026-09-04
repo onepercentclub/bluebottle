@@ -4,6 +4,7 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import LockFilledSlotsEffect
+from bluebottle.time_based.effects.interests import DeleteInterestEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
@@ -56,6 +57,7 @@ from bluebottle.time_based.states.registrations import (
     ScheduleRegistrationStateMachine,
 )
 from bluebottle.time_based.states.states import PeriodicActivityStateMachine
+from bluebottle.time_based.triggers.triggers import spots_taken_after_release
 
 
 def review_needed(effect):
@@ -98,6 +100,7 @@ class RegistrationTriggers(TriggerManager):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
+                DeleteInterestEffect,
                 TransitionEffect(
                     RegistrationStateMachine.auto_accept,
                     conditions=[
@@ -275,8 +278,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             return True
         accepted = effect.instance.activity.registrations.filter(
             status="accepted"
-        ).count()
-        return effect.instance.activity.capacity > accepted - 1
+        )
+        return effect.instance.activity.capacity > spots_taken_after_release(
+            accepted, effect.instance
+        )
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
@@ -507,8 +512,10 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
 
         accepted = effect.instance.activity.registrations.filter(
             status="accepted"
-        ).count()
-        return effect.instance.activity.capacity > accepted - 1
+        )
+        return effect.instance.activity.capacity > spots_taken_after_release(
+            accepted, effect.instance
+        )
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(

@@ -1136,7 +1136,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_upcoming(self):
         matching = (
             DeadlineActivityFactory.create_batch(2, status='open') +
-            DeadlineActivityFactory.create_batch(2, status='full')
+            DeadlineActivityFactory.create_batch(2, status='full') +
+            DeadlineActivityFactory.create_batch(2, status='registration_closed')
         )
         DeadlineActivityFactory.create_batch(2, status='succeeded')
         DeadlineActivityFactory.create_batch(2, status='draft')
@@ -1151,6 +1152,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         initiative_settings.save()
         matching = DeadlineActivityFactory.create_batch(2, status='open')
         DeadlineActivityFactory.create_batch(2, status='full')
+        DeadlineActivityFactory.create_batch(2, status='registration_closed')
         DeadlineActivityFactory.create_batch(2, status='succeeded')
         DeadlineActivityFactory.create_batch(2, status='draft')
         DeadlineActivityFactory.create_batch(2, status='needs_work')
@@ -1162,7 +1164,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching = (
             DeadlineActivityFactory.create_batch(2, status='open') +
             DeadlineActivityFactory.create_batch(2, status='full') +
-            DeadlineActivityFactory.create_batch(2, status='full') +
+            DeadlineActivityFactory.create_batch(2, status='registration_closed') +
             FundingFactory.create_batch(2, status='partially_funded')
         )
         DeadlineActivityFactory.create_batch(2, status='draft')
@@ -1538,27 +1540,38 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 
+        # Initiative place countries are indexed too; keep them out of facet counts.
+        initiative = InitiativeFactory(place=GeolocationFactory(country=None))
+
         matching = [
             DeadlineActivityFactory.create(
+                initiative=initiative,
                 office_location=LocationFactory.create(country=matching_country),
                 status='open',
             ),
             DeadlineActivityFactory.create(
+                initiative=initiative,
                 location=GeolocationFactory.create(country=matching_country),
                 status='open',
             ),
             FundingFactory.create(
+                initiative=initiative,
                 impact_location=GeolocationFactory.create(country=matching_country),
                 status='open'
 
             ),
             DeedFactory.create(
+                initiative=initiative,
                 office_location=LocationFactory.create(country=matching_country),
                 status='open'
             )
         ]
 
-        date_activity = DateActivityFactory.create(slots=[], status='open')
+        date_activity = DateActivityFactory.create(
+            initiative=initiative,
+            slots=[],
+            status='open',
+        )
         DateActivitySlotFactory.create(
             activity=date_activity,
             is_online=False,
@@ -1569,11 +1582,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         other = DeadlineActivityFactory.create_batch(
             3,
+            initiative=initiative,
             office_location=LocationFactory.create(country=other_country),
             status='open',
         )
         DeadlineActivityFactory.create_batch(
             3,
+            initiative=initiative,
             location=GeolocationFactory.create(country=None),
             status='open',
         )
@@ -1621,8 +1636,16 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create(alpha2_code='NL')
         other_country = CountryFactory.create(alpha2_code='DE')
 
+        # Initiative place countries are indexed too; keep them out of facet counts.
+        initiative = InitiativeFactory(place=GeolocationFactory(country=None))
+
+        # `DateActivityFactory` creates default slots with random locations.
+        # For deterministic facet counts we must start without slots and
+        # create the slots explicitly with the countries under test.
         matching = DateActivityFactory.create_batch(
             2,
+            initiative=initiative,
+            slots=[],
             status='open',
         )
         for activity in matching:
@@ -1634,6 +1657,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         other = DateActivityFactory.create_batch(
             3,
+            initiative=initiative,
+            slots=[],
             status='open',
         )
         for activity in other:

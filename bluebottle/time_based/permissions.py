@@ -1,6 +1,8 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 
 from bluebottle.activities.models import Activity
+from bluebottle.time_based.models import DateActivitySlot
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.models import Team
 from bluebottle.utils.permissions import (
@@ -102,6 +104,22 @@ class ParticipantDocumentPermission(permissions.DjangoModelPermissions):
         ):
             return True
         return False
+
+
+class RelatedActivityInterestListPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_staff or user.is_superuser:
+            return True
+
+        if 'slot_id' in view.kwargs:
+            slot = get_object_or_404(DateActivitySlot, pk=view.kwargs['slot_id'])
+            return user in slot.activity.owners
+
+        activity = get_object_or_404(Activity, pk=view.kwargs['activity_id'])
+        return user in activity.owners
 
 
 class CanExportParticipantsPermission(IsOwner):

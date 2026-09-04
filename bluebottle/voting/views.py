@@ -1,5 +1,4 @@
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Prefetch
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -16,23 +15,6 @@ from bluebottle.voting.serializers import PollSerializer, PollVoteSerializer
 class PollDetail(JsonApiViewMixin, RetrieveAPIView):
     queryset = Poll.objects.filter(status__in=['open', 'closed'])
     serializer_class = PollSerializer
-
-    def get_queryset(self):
-        queryset = self.queryset.prefetch_related(
-            'options'
-        ).annotate(votes_cast=Count('votes'))
-
-        user = self.request.user
-        if user and user.is_authenticated:
-            queryset = queryset.prefetch_related(
-                Prefetch(
-                    'votes',
-                    queryset=PollVote.objects.filter(owner=user),
-                    to_attr='user_votes',
-                )
-            )
-
-        return queryset
 
 
 class PollVoteList(JsonApiViewMixin, CreateAPIView):

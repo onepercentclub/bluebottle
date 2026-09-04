@@ -1,6 +1,7 @@
 from adminsortable.models import SortableMixin
 from django.conf import settings
 from django.db import models
+from django.db.models.aggregates import Count
 from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
 from parler.models import TranslatableModel, TranslatedFields
@@ -31,6 +32,10 @@ class Poll(TriggerMixin, TranslatableModel):
 
     class JSONAPIMeta:
         resource_name = 'polls'
+
+    @property
+    def votes_cast(self):
+        return self.votes.count()
 
     def __str__(self):
         title = self.safe_translation_getter(
@@ -77,6 +82,25 @@ class PollOption(SortableMixin, TranslatableModel):
     sequence = models.PositiveIntegerField(
         default=0, editable=False, db_index=True
     )
+
+    @property
+    def vote_count(self):
+        return self.votes.count()
+
+    @property
+    def percentage(self):
+        total = self.poll.votes.count()
+        return round(100.0 * self.votes.count() / total) if total else 0
+
+    @property
+    def winner(self):
+        max_count = max(
+            self.poll.options.annotate(
+                vote_count=Count('votes')
+            ).values_list('vote_count', flat=True),
+            default=0,
+        )
+        return max_count > 0 and self.votes.count() == max_count
 
     class Meta:
         verbose_name = _('poll option')

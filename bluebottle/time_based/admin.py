@@ -615,12 +615,67 @@ class PeriodicRegistrationAdminInline(BaseRegistrationAdminInline):
     model = PeriodicRegistration
 
 
+class BaseInterestAdminInline(TabularInlinePaginated):
+    model = Interest
+    raw_id_fields = ['user']
+    readonly_fields = ['edit', 'created']
+    fields = ['edit', 'created', 'user']
+    extra = 0
+    per_page = 10
+    ordering = ['-created']
+    can_delete = True
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def edit(self, obj):
+        if not obj.pk:
+            return '-'
+        url = reverse('admin:time_based_interest_change', args=(obj.pk,))
+        return format_html('<a href="{}">{}</a>', url, _('Edit'))
+
+    edit.short_description = _('Edit')
+
+
+class ActivityInterestAdminInline(BaseInterestAdminInline):
+    fk_name = 'activity'
+    verbose_name = _('Interested member')
+    verbose_name_plural = _('Interested members')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(slot__isnull=True)
+
+    def save_new(self, form, commit=True):
+        interest = super().save_new(form, commit=False)
+        interest.slot = None
+        if commit:
+            interest.save()
+        return interest
+
+
+class SlotInterestAdminInline(BaseInterestAdminInline):
+    fk_name = 'slot'
+    verbose_name = _('Interested member')
+    verbose_name_plural = _('Interested members')
+
+    def save_new(self, form, commit=True):
+        interest = super().save_new(form, commit=False)
+        interest.activity = interest.slot.activity
+        if commit:
+            interest.save()
+        return interest
+
+
 @admin.register(DateActivity)
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     inlines = (
         DateActivitySlotInline,
         DateRegistrationAdminInline,
+        ActivityInterestAdminInline,
     ) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
     save_as = True
@@ -654,7 +709,10 @@ class DateActivityAdmin(TimeBasedAdmin):
 class DeadlineActivityAdmin(TimeBasedAdmin):
     base_model = DeadlineActivity
 
-    inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (
+        DeadlineParticipantAdminInline,
+        ActivityInterestAdminInline,
+    ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
     list_filter = TimeBasedAdmin.list_filter + [
@@ -746,6 +804,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
+        interest_inline = (ActivityInterestAdminInline,)
         if obj and obj.id:
             # get the stored object, so you can switch between teams/individuals
             # without getting a form error, because of switching inlines
@@ -754,10 +813,10 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
                 return (
                     TeamAdminInline,
                     TeamScheduleParticipantAdminInline,
-                ) + inlines
+                ) + inlines + interest_inline
             else:
-                return (ScheduleParticipantAdminInline,) + inlines
-        return inlines
+                return (ScheduleParticipantAdminInline,) + inlines + interest_inline
+        return inlines + interest_inline
 
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
@@ -980,7 +1039,11 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         PeriodicSlot,
     ]
 
-    inlines = (PeriodicRegistrationAdminInline, PeriodicSlotAdminInline) + TimeBasedAdmin.inlines
+    inlines = (
+        PeriodicRegistrationAdminInline,
+        PeriodicSlotAdminInline,
+        ActivityInterestAdminInline,
+    ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
     list_filter = TimeBasedAdmin.list_filter + [
@@ -1283,7 +1346,7 @@ class SlotBulkAddForm(forms.Form):
 @admin.register(DateActivitySlot)
 class DateSlotAdmin(BulkAddMixin, SlotAdmin):
     model = DateActivitySlot
-    inlines = [DateParticipantInline, MessageAdminInline]
+    inlines = [DateParticipantInline, SlotInterestAdminInline, MessageAdminInline]
     save_as = True
 
     date_hierarchy = 'start'

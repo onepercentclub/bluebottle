@@ -5,7 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.utils.permissions import OneOf, ResourceOwnerPermission, ResourcePermission
 from bluebottle.utils.views import (
-    CreateAPIView, JsonApiViewMixin, RetrieveAPIView, RetrieveUpdateDestroyAPIView
+    CreateAPIView, ExportView, JsonApiViewMixin, RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView
 )
 from bluebottle.voting.models import Poll, PollVote
 from bluebottle.voting.serializers import PollSerializer, PollVoteSerializer
@@ -47,3 +48,18 @@ class PollVoteDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
         if instance.poll.status != 'open':
             raise ValidationError(_('This poll is not open for voting'))
         super().perform_destroy(instance)
+
+
+class PollVoteExportView(ExportView):
+    fields = (
+        ('owner__full_name', 'Name'),
+        ('owner__email', 'Email'),
+        ('created', 'Date'),
+        ('option__title', 'Option'),
+    )
+
+    model = Poll
+    filename = 'votes'
+
+    def get_instances(self):
+        return self.get_object().votes.select_related('owner', 'option').all()

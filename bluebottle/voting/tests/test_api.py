@@ -1,6 +1,10 @@
+import io
+
 from django.urls import reverse
+from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.voting.models import PollVote
@@ -109,6 +113,62 @@ class PollDetailAPITestCase(APITestCase):
         )
         self.assertStatus(status.HTTP_200_OK)
         self.assertAttribute('title', 'Favourite colour')
+
+
+class PollVoteExportViewAPITestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+
+        self.poll = PollFactory.create(status='open', title='Favourite colour')
+        self.option = PollOptionFactory.create(poll=self.poll, title='Blue')
+        self.votes = PollVoteFactory.create_batch(
+            3, poll=self.poll, option=self.option
+        )
+        self.staff = BlueBottleUserFactory.create(is_staff=True)
+        self.url = reverse('poll-detail', args=(self.poll.pk,))
+
+    @property
+    def export_url(self):
+        if self.response and self.response.json()['data']['attributes']['results-export-url']:
+            return self.response.json()['data']['attributes']['results-export-url']['url']
+
+    def test_get_staff(self):
+        self.perform_get(user=self.staff)
+        self.assertStatus(status.HTTP_200_OK)
+        response = self.client.get(self.export_url)
+
+        sheet = load_workbook(filename=io.BytesIO(response.content)).get_active_sheet()
+        rows = list(sheet.values)
+        self.assertEqual(
+            rows[0], ('Name', 'Email', 'Date', 'Option')
+        )
+        self.assertEqual(len(rows), 4)
+        self.assertEqual(rows[1][3], 'Blue')
+
+    def test_get_staff_incorrect_hash(self):
+        self.perform_get(user=self.staff)
+        self.assertStatus(status.HTTP_200_OK)
+        response = self.client.get(self.export_url + 'test')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_regular_user(self):
+        self.perform_get(user=self.user)
+        self.assertIsNone(self.export_url)
+
+    def test_get_no_user(self):
+        self.perform_get()
+        self.assertIsNone(self.export_url)
+
+    def test_get_exports_disabled(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = False
+        initiative_settings.save()
+        self.perform_get(user=self.staff)
+        self.assertIsNone(self.export_url)
 
 
 class PollVoteListAPITestCase(APITestCase):

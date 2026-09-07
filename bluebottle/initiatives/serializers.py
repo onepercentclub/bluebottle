@@ -32,6 +32,7 @@ from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
+from bluebottle.members.utils import jwt_is_impersonated
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
@@ -142,6 +143,7 @@ class CurrentMemberSerializer(MemberSerializer):
     has_initiatives = serializers.SerializerMethodField()
     can_pledge = serializers.BooleanField(read_only=True)
     can_do_bank_transfer = serializers.BooleanField(read_only=True)
+    impersonated = serializers.SerializerMethodField()
 
     payout_account = SerializerMethodResourceRelatedField(
         model=StripePayoutAccount,
@@ -154,6 +156,9 @@ class CurrentMemberSerializer(MemberSerializer):
 
     def get_has_initiatives(self, obj):
         return obj.is_initiator
+
+    def get_impersonated(self, obj):
+        return jwt_is_impersonated(self.context.get('request'))
 
     class Meta(MemberSerializer.Meta):
         fields = MemberSerializer.Meta.fields + (
@@ -169,7 +174,7 @@ class CurrentMemberSerializer(MemberSerializer):
             "primary_language",
             "translate_user_content"
         )
-        meta_fields = ('permissions',)
+        meta_fields = ('permissions', 'impersonated')
 
     class JSONAPIMeta:
         resource_name = 'members'

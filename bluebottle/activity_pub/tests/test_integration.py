@@ -19,7 +19,7 @@ from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event,
-    Recipient, RepetitionModeChoices
+    Recipient, RepetitionModeChoices, GoodDeed
 )
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -525,6 +525,11 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
     def test_link_manual_succeeded(self):
         self.test_accept()
 
+        with LocalTenant(self.other_tenant):
+            follow = Follow.objects.get()
+            follow.automatic_adoption_activity_types = []
+            follow.save()
+
         @httmock.urlmatch(netloc='test.localhost')
         def image_mock(url, request):
             return self.mock_response
@@ -537,6 +542,11 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
+            event = GoodDeed.objects.get()
+
+            with httmock.HTTMock(image_mock):
+                adapter.link(event)
+
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'succeeded')
 

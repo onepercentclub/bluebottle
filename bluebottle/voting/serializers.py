@@ -53,7 +53,7 @@ class PollVoteSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = 'polls/votes'
-        included_resources = ['option']
+        included_resources = ['option', 'poll']
 
     included_serializers = {
         'option': 'bluebottle.voting.serializers.PollOptionSerializer',

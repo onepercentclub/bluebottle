@@ -133,6 +133,16 @@ class PollVoteListAPITestCase(APITestCase):
         self.assertRelationship('poll', [self.poll])
         self.assertRelationship('option', [self.option])
         self.assertEqual(PollVote.objects.filter(owner=self.user).count(), 1)
+        self.assertIncluded('poll', self.poll)
+        included_poll = [
+            included for included in self.response.json()['included']
+            if included['type'] == 'polls'
+        ][0]
+        self.assertEqual(included_poll['attributes']['votes-cast'], 1)
+        self.assertEqual(
+            included_poll['relationships']['my-vote']['data']['id'],
+            str(PollVote.objects.get(owner=self.user).pk)
+        )
 
     def test_create_anonymous(self):
         self.perform_create()
@@ -182,6 +192,7 @@ class PollVoteDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
         self.assertRelationship('option', [self.other_option])
         self.assertEqual(PollVote.objects.filter(owner=self.user).count(), 1)
+        self.assertIncluded('poll', self.poll)
 
     def test_update_anonymous(self):
         self.perform_update(to_change={'option': self.other_option})

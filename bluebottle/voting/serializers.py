@@ -1,4 +1,3 @@
-from django_tools.middlewares.ThreadLocal import get_current_user
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers

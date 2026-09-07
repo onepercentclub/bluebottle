@@ -183,6 +183,64 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, "full")
 
+    def test_extend_registration_deadline_notifies_interested(self):
+        self.publish()
+        self.create_participants()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(activity=self.activity, user=interested)
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+        mail.outbox = []
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "open")
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+        self.assertTrue(
+            any(interested.email in message.to for message in mail.outbox)
+        )
+
+    def test_extend_registration_deadline_at_capacity_does_not_notify(self):
+        self.publish()
+        self.create_participants()
+
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(activity=self.activity, user=interested)
+
+        self.activity.capacity = len(self.registrations)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "registration_closed")
+
+        mail.outbox = []
+        self.activity = self.factory._meta.model.objects.get(pk=self.activity.pk)
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "full")
+        subjects = [message.subject for message in mail.outbox]
+        self.assertNotIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+
     def test_withdraw_while_registration_closed_does_not_reopen(self):
         self.publish()
         self.create_participants()

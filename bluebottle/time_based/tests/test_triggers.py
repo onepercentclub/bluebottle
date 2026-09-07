@@ -213,6 +213,45 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.assertEqual(self.activity.status, "open")
         self.assertEqual(slot.status, "open")
 
+    def test_registration_deadline_reopen_notifies_interested(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
+
+        slot = self.activity.slots.first()
+        interested = BlueBottleUserFactory.create()
+        InterestFactory.create(
+            activity=self.activity,
+            slot=slot,
+            user=interested,
+        )
+
+        self.activity.registration_deadline = date.today() - timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "registration_closed")
+        self.assertEqual(slot.status, "registration_closed")
+
+        mail.outbox = []
+        self.activity.registration_deadline = date.today() + timedelta(days=1)
+        self.activity.save()
+        self.activity.refresh_from_db()
+        slot.refresh_from_db()
+
+        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(slot.status, "open")
+
+        subjects = [message.subject for message in mail.outbox]
+        self.assertIn(
+            'A spot has opened up for an activity on Test.',
+            subjects,
+        )
+        self.assertTrue(
+            any(interested.email in message.to for message in mail.outbox)
+        )
+
     def test_registration_closed_reopens_to_full_when_slot_at_capacity(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)

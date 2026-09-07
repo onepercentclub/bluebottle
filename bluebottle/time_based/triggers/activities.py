@@ -303,6 +303,13 @@ class TimeBasedTriggers(ActivityTriggers):
             TimeBasedStateMachine.reopen,
             effects=[
                 ReopenRegistrationClosedSlotsEffect,
+                NotificationEffect(
+                    SpotOpenedNotification,
+                    conditions=[
+                        registration_deadline_is_not_passed,
+                        is_not_full,
+                    ],
+                ),
             ]
         ),
         TransitionTrigger(

@@ -86,7 +86,6 @@ class DonateButtonBlockPlugin(CMSContentPlugin):
 class PollBlockPlugin(CMSContentPlugin):
     model = PollContent
     category = _('Multimedia')
-    raw_id_fields = ('poll',)
 
 
 @plugin_pool.register

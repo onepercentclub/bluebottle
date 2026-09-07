@@ -84,10 +84,7 @@ class ReopenRegistrationClosedSlotsEffect(Effect):
             return
 
         for slot in self.reopened_slots:
-            slot.save(run_triggers=False)
-            while slot._postponed_effects:
-                effect = slot._postponed_effects.pop()
-                effect.post_save()
+            slot.save()
 
         activity = self.instance
         if activity.status not in ('open', 'full'):

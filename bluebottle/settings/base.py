@@ -162,6 +162,8 @@ MIDDLEWARE = (
     'django.middleware.cache.FetchFromCacheMiddleware',
     'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'hijack.middleware.HijackUserMiddleware',
+    'bluebottle.auth.middleware.HijackOTPSessionMiddleware',
     'bluebottle.auth.middleware.OTPMiddleware',
     'axes.middleware.AxesMiddleware',
 )
@@ -209,6 +211,9 @@ JWT_EXPIRATION_DELTA = datetime.timedelta(days=7)
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
                           '/media', '/downloads', '/login-with',
                           '/surveys', '/token', '/jet', '/.well-known')
+
+HIJACK_PERMISSION_CHECK = 'bluebottle.members.hijack.can_hijack'
+HIJACK_INSERT_BEFORE = None
 
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
 
@@ -325,6 +330,7 @@ TENANT_APPS = (
 
     'bluebottle.fsm',
     'django.contrib.admin',
+    'hijack',
     'django.contrib.sites',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -335,6 +341,7 @@ TENANT_APPS = (
     'bluebottle.looker',
 
     'bluebottle.members',
+    'hijack.contrib.admin',
     'bluebottle.projects',
     'bluebottle.organizations',
     'bluebottle.impact',

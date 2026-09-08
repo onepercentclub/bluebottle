@@ -41,6 +41,7 @@ class ActivityRelatedLinkFieldsMixin:
     registration_factory = None
     activity_kwargs = None
     participating_relationship = 'contributors'
+    create_participant = True
 
     def setUp(self):
         super().setUp()
@@ -56,9 +57,10 @@ class ActivityRelatedLinkFieldsMixin:
 
         self.activity = self.activity_factory.create(**kwargs)
         self.before_participant_setup()
-        participant_kwargs = {'activity': self.activity, 'status': 'succeeded'}
-        participant_kwargs.update(self.get_participant_kwargs())
-        self.participant = self.participant_factory.create(**participant_kwargs)
+        if self.create_participant:
+            participant_kwargs = {'activity': self.activity, 'status': 'succeeded'}
+            participant_kwargs.update(self.get_participant_kwargs())
+            self.participant = self.participant_factory.create(**participant_kwargs)
         self.registration_factory.create(
             activity=self.activity,
             status='new',
@@ -230,6 +232,7 @@ class PeriodicActivityRelatedLinkFieldsTestCase(
     participant_factory = PeriodicParticipantFactory
     registration_factory = PeriodicRegistrationFactory
     participating_relationship = 'registrations'
+    create_participant = False
     activity_kwargs = {
         'start': date.today() + timedelta(days=10),
         'deadline': date.today() + timedelta(days=20),

@@ -1,6 +1,7 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from django.urls import reverse
+from django.utils.timezone import get_current_timezone, make_aware
 from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -18,6 +19,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicActivityFactory,
     PeriodicParticipantFactory,
     PeriodicRegistrationFactory,
+    PeriodicSlotFactory,
     RegisteredDateActivityFactory,
     RegisteredDateParticipantFactory,
     ScheduleActivityFactory,
@@ -240,9 +242,14 @@ class PeriodicActivityRelatedLinkFieldsTestCase(
 
     def setUp(self):
         super().setUp()
-        self.participant = self.registration_factory.create(
+        self.participant = self.activity.registrations.get(status='accepted')
+        PeriodicSlotFactory.create(
             activity=self.activity,
-            status='accepted',
+            start=make_aware(
+                datetime.combine(self.activity.start, datetime.min.time()),
+                get_current_timezone(),
+            ),
+            duration=self.activity.duration,
         )
 
     def test_participating_link_excludes_withdrawn_participant(self):

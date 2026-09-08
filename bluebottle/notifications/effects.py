@@ -33,7 +33,7 @@ class BaseNotificationEffect(Effect):
         message = self.message(self.instance)
 
         try:
-            recipients = message.get_recipients()
+            recipients = message.get_actual_recipients()
             recipients_text = (u', ').join(
                 recipient.email for recipient in recipients[:2])
 
@@ -55,7 +55,7 @@ class BaseNotificationEffect(Effect):
     def is_valid(self):
         return (
             all([condition(self) for condition in self.conditions]) and
-            len(self.message(self.instance, **self.options).get_recipients()) > 0
+            len(self.message(self.instance, **self.options).get_actual_recipients()) > 0
         )
 
     def to_html(self):
@@ -70,9 +70,7 @@ class BaseNotificationEffect(Effect):
         message = effects[0].message(effects[0].instance)
         recipients = [
             recipient.email for effect in effects
-            for recipient in effect.message(effect.instance).get_recipients()
-            if recipient
-
+            for recipient in effect.message(effect.instance).get_actual_recipients()
         ]
 
         context = {
@@ -86,7 +84,7 @@ class BaseNotificationEffect(Effect):
     @property
     def help(self):
         message = self.message(self.instance)
-        recipients = message.get_recipients()
+        recipients = message.get_actual_recipients()
         recipients_text = u', '.join(
             recipient.email for recipient in recipients[:2])
 

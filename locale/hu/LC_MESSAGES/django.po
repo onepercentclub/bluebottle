@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-04 10:20+0200\n"
-"PO-Revision-Date: 2026-09-04 08:20\n"
+"PO-Revision-Date: 2026-09-08 13:19\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -2768,7 +2768,7 @@ msgstr "Háttéri irodai hozzáférés"
 
 #: bluebottle/bb_accounts/models.py:118
 msgid "Allow this user to access the back office."
-msgstr "Engedélyezze ennek a felhasználónak a háttéri irodai hozzáférést."
+msgstr "Engedélyezze ennek a felhasználónak a háttéri iroda elérését."
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42
 msgid "active"
@@ -10328,7 +10328,7 @@ msgstr "Hírek"
 
 #: bluebottle/settings/admin_dashboard.py:268
 msgid "Result page"
-msgstr "Eredmény oldal"
+msgstr "Eredményoldal"
 
 #: bluebottle/settings/admin_dashboard.py:273
 msgid "Header & footer"

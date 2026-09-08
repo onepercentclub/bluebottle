@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-04 10:20+0200\n"
-"PO-Revision-Date: 2026-09-04 08:20\n"
+"PO-Revision-Date: 2026-09-08 13:19\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -2764,11 +2764,11 @@ msgstr "benutzername"
 
 #: bluebottle/bb_accounts/models.py:116
 msgid "Back office access"
-msgstr "Zugang zum Büro"
+msgstr "Zugang zum Backoffice"
 
 #: bluebottle/bb_accounts/models.py:118
 msgid "Allow this user to access the back office."
-msgstr "Erlauben Sie diesem Benutzer den Zugang zum Büro."
+msgstr "Diesen Benutzer den Zugang zum Backoffice erlauben."
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42
 msgid "active"

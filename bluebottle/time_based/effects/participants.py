@@ -149,13 +149,6 @@ class CreateDateRegistrationEffect(Effect):
     title = _('Create or assign registration for this participant')
     template = 'admin/create_date_registration.html'
 
-    def _registration_filters(self):
-        if self.instance.remote_user_id:
-            return {'remote_user': self.instance.remote_user}
-        if self.instance.user_id:
-            return {'user': self.instance.user}
-        return None
-
     def pre_save(self, **kwargs):
         if not self.instance.activity_id:
             self.instance.activity = self.instance.slot.activity
@@ -165,17 +158,19 @@ class CreateDateRegistrationEffect(Effect):
             registration.activity_id == self.instance.activity_id
         ):
             return
-        filters = self._registration_filters()
-        if not filters:
-            return
-        self.instance.registration = self.instance.activity.registrations.filter(
-            **filters
-        ).first()
+        if self.instance.remote_user:
+            self.instance.registration = self.instance.activity.registrations.filter(
+                remote_user=self.instance.remote_user
+            ).first()
+        elif self.instance.user:
+            self.instance.registration = self.instance.activity.registrations.filter(
+                user=self.instance.user
+            ).first()
 
     def post_save(self, **kwargs):
         if self.instance.registration:
             return
-        if not self._registration_filters():
+        if not (self.instance.user or self.instance.remote_user):
             return
         self.instance.registration = DateRegistration.objects.create(
             activity=self.instance.activity,

@@ -97,11 +97,14 @@ class FederatedObjectSerializer(PolymorphicSerializer):
             from bluebottle.activity_pub.utils import resource_iri
 
             object_ref = mapping.get('object')
-            if isinstance(object_ref, dict) and object_ref.get('type') == 'Team':
-                return 'TeamMember'
             object_iri = resource_iri(object_ref)
             obj = ActivityPubModel.objects.from_iri(object_iri) if object_iri else None
-            if isinstance(obj, ActivityPubTeam):
+            is_team = isinstance(obj, ActivityPubTeam) or (
+                obj is None and
+                isinstance(object_ref, dict) and
+                object_ref.get('type') == 'Team'
+            )
+            if is_team:
                 return 'TeamMember'
 
         if resource_type == 'DoGoodEvent':

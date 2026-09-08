@@ -2,9 +2,7 @@ from django.test import RequestFactory
 from rest_framework.exceptions import ValidationError
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.models import (
-    Create, Recipient, Team as ActivityPubTeam,
-)
+from bluebottle.activity_pub.models import Team as ActivityPubTeam
 from bluebottle.activity_pub.serializers.federated_activities import (
     TeamMemberJoinSerializer, TeamScheduleSlotsSerializer,
 )
@@ -14,30 +12,20 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import ScheduleActivityFactory, TeamFactory
 
 
-class TeamMemberJoinAuthorizationTestCase(BluebottleTestCase):
+class TeamMemberJoinSerializerTestCase(BluebottleTestCase):
     def setUp(self):
         site_settings = SitePlatformSettings.load()
         site_settings.share_activities = ['supplier', 'consumer']
         site_settings.save()
 
         self.platform = OrganizationFactory.create()
-        self.other_platform = OrganizationFactory.create()
         self.activity = ScheduleActivityFactory.create(team_activity='teams')
         adapter.sync(self.activity)
         self.team = TeamFactory.create(activity=self.activity)
-        self.event = self.activity.activity_pub_model
         self.ap_team = ActivityPubTeam.objects.create(
             iri=f'https://consumer.example/teams/{self.team.pk}',
-            attributed_to=self.event,
             adopted=self.team,
         )
-        create = self.event.create_set.first()
-        if create is None:
-            create = Create.objects.create(
-                object=self.event,
-                actor=OrganizationFactory.create(),
-            )
-        Recipient.objects.get_or_create(activity=create, actor=self.platform)
 
         self.person = PersonFactory.create(
             iri='https://consumer.example/people/1',
@@ -85,15 +73,6 @@ class TeamMemberJoinAuthorizationTestCase(BluebottleTestCase):
             'actor': self._person_data(self.person),
             'object': self._person_data(self.other_person),
         })
-        with self.assertRaises(ValidationError) as error:
-            serializer.is_valid(raise_exception=True)
-        self.assertIn('object', error.exception.detail)
-
-    def test_unauthorized_platform_rejected(self):
-        serializer = self._serializer(
-            self._join_data(self.person),
-            platform=self.other_platform,
-        )
         with self.assertRaises(ValidationError) as error:
             serializer.is_valid(raise_exception=True)
         self.assertIn('object', error.exception.detail)

@@ -17,10 +17,13 @@ from bluebottle.fsm.serializers import (
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import DateActivitySlot, Interest, Skill, TimeContribution
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
-from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
+from bluebottle.time_based.serializers.activities import RelatedLinkFieldByStatus
 from bluebottle.time_based.serializers.interest_link_field import (
     InterestLinkField,
     remove_interests_field_for_non_managers,
+)
+from bluebottle.time_based.serializers.interest_validators import (
+    PARTICIPATING_DATE_SLOT_PARTICIPANT_STATUSES,
 )
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
@@ -113,6 +116,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
             "active": ["accepted", "succeeded"],
             "failed": ["rejected", "withdrawn", "removed", "cancelled"],
         },
+        participating_statuses=PARTICIPATING_DATE_SLOT_PARTICIPANT_STATUSES,
     )
 
     my_interest = SerializerMethodResourceRelatedField(

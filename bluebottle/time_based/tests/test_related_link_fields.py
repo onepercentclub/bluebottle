@@ -38,6 +38,7 @@ class ActivityRelatedLinkFieldsMixin:
     participant_factory = None
     registration_factory = None
     activity_kwargs = None
+    participating_relationship = 'contributors'
 
     def setUp(self):
         super().setUp()
@@ -55,7 +56,7 @@ class ActivityRelatedLinkFieldsMixin:
         self.before_participant_setup()
         participant_kwargs = {'activity': self.activity, 'status': 'succeeded'}
         participant_kwargs.update(self.get_participant_kwargs())
-        self.participant_factory.create(**participant_kwargs)
+        self.participant = self.participant_factory.create(**participant_kwargs)
         self.registration_factory.create(
             activity=self.activity,
             status='new',
@@ -114,6 +115,40 @@ class ActivityRelatedLinkFieldsMixin:
 
         href = self._relationships()['registrations']['links']['accepted']['href']
         response = self.client.get(href, user=self.activity.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 1)
+
+    def test_participating_link_for_active_participant(self):
+        self.perform_get(user=self.participant.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        links = self._relationships()[self.participating_relationship]['links']
+        self.assertIn('participating', links)
+        self.assertEqual(links['participating']['meta']['count'], 1)
+        self.assertIn('filter[my]=true', links['participating']['href'])
+        self.assertIn('filter[status]=', links['participating']['href'])
+
+    def test_participating_link_excludes_withdrawn_participant(self):
+        user = BlueBottleUserFactory.create()
+        withdrawn_kwargs = {'activity': self.activity, 'user': user, 'status': 'withdrawn'}
+        withdrawn_kwargs.update(self.get_participant_kwargs())
+        self.participant_factory.create(**withdrawn_kwargs)
+
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        links = self._relationships()[self.participating_relationship]['links']
+        self.assertEqual(links['participating']['meta']['count'], 0)
+        self.assertEqual(links['my']['meta']['count'], 1)
+
+    def test_participating_filtered_link_is_usable(self):
+        self.perform_get(user=self.participant.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        href = self._relationships()[self.participating_relationship]['links'][
+            'participating'
+        ]['href']
+        response = self.client.get(href, user=self.participant.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 1)
 
@@ -192,10 +227,33 @@ class PeriodicActivityRelatedLinkFieldsTestCase(
     interests_list_url_name = 'periodic-interests'
     participant_factory = PeriodicParticipantFactory
     registration_factory = PeriodicRegistrationFactory
+    participating_relationship = 'registrations'
     activity_kwargs = {
         'start': date.today() + timedelta(days=10),
         'deadline': date.today() + timedelta(days=20),
     }
+
+    def setUp(self):
+        super().setUp()
+        self.participant = self.registration_factory.create(
+            activity=self.activity,
+            status='accepted',
+        )
+
+    def test_participating_link_excludes_withdrawn_participant(self):
+        user = BlueBottleUserFactory.create()
+        self.registration_factory.create(
+            activity=self.activity,
+            user=user,
+            status='withdrawn',
+        )
+
+        self.perform_get(user=user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        links = self._relationships()['registrations']['links']
+        self.assertEqual(links['participating']['meta']['count'], 0)
+        self.assertEqual(links['my']['meta']['count'], 1)
 
 
 class DateActivityRelatedLinkFieldsTestCase(

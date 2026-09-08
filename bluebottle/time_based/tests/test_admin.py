@@ -47,10 +47,12 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(page.status_code, 200)
         self.assertIn('Interested members', page.text)
-        self.assertIn(activity_interest.user.email, page.text)
+        self.assertIn(str(activity_interest.user), page.text)
 
         inline = ActivityInterestAdminInline(InterestFactory._meta.model, AdminSite())
-        queryset = inline.get_queryset(RequestFactory().get('/')).filter(
+        request = RequestFactory().get('/')
+        request.user = self.staff_member
+        queryset = inline.get_queryset(request).filter(
             activity=activity
         )
         self.assertEqual(list(queryset), [activity_interest])
@@ -66,10 +68,12 @@ class InterestAdminInlineTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(page.status_code, 200)
         self.assertIn('Interested members', page.text)
-        self.assertIn(slot_interest.user.email, page.text)
+        self.assertIn(str(slot_interest.user), page.text)
 
         inline = SlotInterestAdminInline(InterestFactory._meta.model, AdminSite())
-        queryset = inline.get_queryset(RequestFactory().get('/')).filter(
+        request = RequestFactory().get('/')
+        request.user = self.staff_member
+        queryset = inline.get_queryset(request).filter(
             slot=slot
         )
         self.assertEqual(list(queryset), [slot_interest])

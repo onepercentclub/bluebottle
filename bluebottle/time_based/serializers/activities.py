@@ -30,6 +30,14 @@ from bluebottle.time_based.serializers.interest_link_field import (
     InterestLinkField,
     remove_interests_field_for_non_managers,
 )
+from bluebottle.time_based.serializers.interest_validators import (
+    PARTICIPATING_DATE_PARTICIPANT_STATUSES,
+    PARTICIPATING_DATE_REGISTRATION_STATUSES,
+    PARTICIPATING_DEADLINE_PARTICIPANT_STATUSES,
+    PARTICIPATING_PERIODIC_REGISTRATION_STATUSES,
+    PARTICIPATING_REGISTERED_DATE_PARTICIPANT_STATUSES,
+    PARTICIPATING_SCHEDULE_PARTICIPANT_STATUSES,
+)
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -147,13 +155,14 @@ class PeriodActivitySerializer(ModelSerializer):
 class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
     model = DeadlineParticipant
 
-    def __init__(self, include_my=True, *args, **kwargs):
+    def __init__(self, include_my=True, participating_statuses=None, *args, **kwargs):
         self.statuses = kwargs.pop("statuses") or {}
         self.related_link_team_view_name = kwargs.pop(
             "related_link_team_view_name",
             None
         )
         self.include_my = include_my
+        self.participating_statuses = participating_statuses or []
         super().__init__(*args, **kwargs)
 
     def filter_my(self, queryset):
@@ -212,6 +221,25 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
 
                 }
 
+        if self.participating_statuses:
+            statuses_param = ','.join(self.participating_statuses)
+            participating_href = (
+                f'{url}?filter[my]=true&filter[status]={statuses_param}'
+            )
+            if self.context['request'].user.is_authenticated:
+                participating_count = self.filter_my(queryset).filter(
+                    status__in=self.participating_statuses
+                ).count()
+            else:
+                participating_count = 0
+
+            return_data['participating'] = {
+                'href': participating_href,
+                'meta': {
+                    'count': participating_count
+                }
+            }
+
         return_data['related'] = url
 
         return return_data
@@ -234,6 +262,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
             "active": ["succeeded"],
             "failed": ["rejected", "withdrawn", "removed"],
         },
+        participating_statuses=PARTICIPATING_DEADLINE_PARTICIPANT_STATUSES,
     )
     registrations = RelatedLinkFieldByStatus(
         read_only=True,
@@ -292,6 +321,7 @@ class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
             "active": ["succeeded", "accepted", "new"],
             "failed": ["rejected", "withdrawn", "removed"],
         },
+        participating_statuses=PARTICIPATING_REGISTERED_DATE_PARTICIPANT_STATUSES,
     )
 
     class Meta(TimeBasedBaseSerializer.Meta):
@@ -377,6 +407,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
             "succeeded": ["succeeded"],
             "failed": ["rejected", "withdrawn", "removed", "cancelled"],
         },
+        participating_statuses=PARTICIPATING_SCHEDULE_PARTICIPANT_STATUSES,
     )
 
     teams = RelatedTeamsLinkField(
@@ -471,6 +502,7 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
             "accepted": ["accepted"],
             "rejected": ["rejected", "stopped", "removed"],
         },
+        participating_statuses=PARTICIPATING_PERIODIC_REGISTRATION_STATUSES,
     )
     interests = InterestLinkField(
         read_only=True,
@@ -532,6 +564,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             "active": ["new", "succeeded"],
             "failed": ["rejected", "withdrawn", "removed"],
         },
+        participating_statuses=PARTICIPATING_DATE_PARTICIPANT_STATUSES,
     )
 
     registrations = RelatedLinkFieldByStatus(
@@ -543,6 +576,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             "accepted": ["accepted"],
             "rejected": ["rejected", "removed", "withdrawn"]
         },
+        participating_statuses=PARTICIPATING_DATE_REGISTRATION_STATUSES,
     )
 
     slots = RelatedLinkFieldByStatus(

@@ -17,6 +17,46 @@ ACTIVE_PARTICIPANT_STATUSES = (
     'running',
 )
 
+PARTICIPATING_DEADLINE_PARTICIPANT_STATUSES = (
+    'new',
+    'accepted',
+    'succeeded',
+)
+
+PARTICIPATING_SCHEDULE_PARTICIPANT_STATUSES = (
+    'new',
+    'accepted',
+    'succeeded',
+    'scheduled',
+)
+
+PARTICIPATING_PERIODIC_REGISTRATION_STATUSES = (
+    'new',
+    'accepted',
+    'stopped',
+)
+
+PARTICIPATING_DATE_REGISTRATION_STATUSES = (
+    'new',
+    'accepted',
+)
+
+PARTICIPATING_DATE_PARTICIPANT_STATUSES = (
+    'new',
+    'accepted',
+    'succeeded',
+)
+
+PARTICIPATING_DATE_SLOT_PARTICIPANT_STATUSES = (
+    'new',
+    'accepted',
+)
+
+PARTICIPATING_REGISTERED_DATE_PARTICIPANT_STATUSES = (
+    'new',
+    'succeeded',
+)
+
 
 class ActiveSlotParticipantValidator:
     def is_involved(self, user, slot):

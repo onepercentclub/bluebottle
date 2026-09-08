@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 11:49+0200\n"
-"PO-Revision-Date: 2026-09-04 09:58\n"
+"POT-Creation-Date: 2026-09-07 09:34+0200\n"
+"PO-Revision-Date: 2026-09-07 07:34\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -36,7 +36,7 @@ msgstr "Editer"
 #: bluebottle/activities/admin.py:221 bluebottle/activities/admin.py:344
 #: bluebottle/activity_links/admin.py:20 bluebottle/funding_stripe/admin.py:203
 #: bluebottle/funding_stripe/admin.py:275 bluebottle/time_based/admin.py:318
-#: bluebottle/time_based/admin.py:466 bluebottle/voting/admin.py:88
+#: bluebottle/time_based/admin.py:466 bluebottle/voting/admin.py:91
 msgid "Details"
 msgstr "Détails du produit"
 
@@ -50,7 +50,7 @@ msgstr "Détails du produit"
 #: bluebottle/time_based/admin.py:322 bluebottle/time_based/admin.py:470
 #: bluebottle/time_based/admin.py:851 bluebottle/time_based/admin.py:898
 #: bluebottle/time_based/admin.py:1168 bluebottle/time_based/admin.py:1836
-#: bluebottle/voting/admin.py:92
+#: bluebottle/voting/admin.py:95
 msgid "Super admin"
 msgstr "Super administrateur"
 
@@ -2766,12 +2766,12 @@ msgid "username"
 msgstr "nom d'utilisateur"
 
 #: bluebottle/bb_accounts/models.py:116
-msgid "staff status"
-msgstr "statut du personnel"
+msgid "Back office access"
+msgstr "Accès au back office"
 
 #: bluebottle/bb_accounts/models.py:118
-msgid "Designates whether the user can log into this admin site."
-msgstr "Indique si l'utilisateur peut se connecter à ce site d'administration."
+msgid "Allow this user to access the back office."
+msgstr "Autoriser cet utilisateur à accéder au back office."
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42
 msgid "active"
@@ -14486,11 +14486,11 @@ msgid_plural "Seconds"
 msgstr[0] "Seconde"
 msgstr[1] "Secondes"
 
-#: bluebottle/voting/admin.py:103
+#: bluebottle/voting/admin.py:102
 msgid "votes"
 msgstr "votes"
 
-#: bluebottle/voting/admin.py:140
+#: bluebottle/voting/admin.py:134
 msgid "Pages with this poll"
 msgstr "Pages avec ce sondage"
 

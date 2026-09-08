@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 11:49+0200\n"
+"POT-Creation-Date: 2026-09-07 09:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,7 +37,7 @@ msgstr ""
 #: bluebottle/activities/admin.py:221 bluebottle/activities/admin.py:344
 #: bluebottle/activity_links/admin.py:20 bluebottle/funding_stripe/admin.py:203
 #: bluebottle/funding_stripe/admin.py:275 bluebottle/time_based/admin.py:318
-#: bluebottle/time_based/admin.py:466 bluebottle/voting/admin.py:88
+#: bluebottle/time_based/admin.py:466 bluebottle/voting/admin.py:91
 msgid "Details"
 msgstr ""
 
@@ -51,7 +51,7 @@ msgstr ""
 #: bluebottle/time_based/admin.py:322 bluebottle/time_based/admin.py:470
 #: bluebottle/time_based/admin.py:851 bluebottle/time_based/admin.py:898
 #: bluebottle/time_based/admin.py:1168 bluebottle/time_based/admin.py:1836
-#: bluebottle/voting/admin.py:92
+#: bluebottle/voting/admin.py:95
 msgid "Super admin"
 msgstr ""
 
@@ -2838,11 +2838,11 @@ msgid "username"
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:116
-msgid "staff status"
+msgid "Back office access"
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:118
-msgid "Designates whether the user can log into this admin site."
+msgid "Allow this user to access the back office."
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42
@@ -14803,11 +14803,11 @@ msgid_plural "Seconds"
 msgstr[0] ""
 msgstr[1] ""
 
-#: bluebottle/voting/admin.py:103
+#: bluebottle/voting/admin.py:102
 msgid "votes"
 msgstr ""
 
-#: bluebottle/voting/admin.py:140
+#: bluebottle/voting/admin.py:134
 msgid "Pages with this poll"
 msgstr ""
 

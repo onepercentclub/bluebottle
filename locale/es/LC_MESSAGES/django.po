@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 11:49+0200\n"
-"PO-Revision-Date: 2026-09-04 09:58\n"
+"POT-Creation-Date: 2026-09-07 09:34+0200\n"
+"PO-Revision-Date: 2026-09-07 07:35\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -36,7 +36,7 @@ msgstr "Editar"
 #: bluebottle/activities/admin.py:221 bluebottle/activities/admin.py:344
 #: bluebottle/activity_links/admin.py:20 bluebottle/funding_stripe/admin.py:203
 #: bluebottle/funding_stripe/admin.py:275 bluebottle/time_based/admin.py:318
-#: bluebottle/time_based/admin.py:466 bluebottle/voting/admin.py:88
+#: bluebottle/time_based/admin.py:466 bluebottle/voting/admin.py:91
 msgid "Details"
 msgstr "Detalles"
 
@@ -50,7 +50,7 @@ msgstr "Detalles"
 #: bluebottle/time_based/admin.py:322 bluebottle/time_based/admin.py:470
 #: bluebottle/time_based/admin.py:851 bluebottle/time_based/admin.py:898
 #: bluebottle/time_based/admin.py:1168 bluebottle/time_based/admin.py:1836
-#: bluebottle/voting/admin.py:92
+#: bluebottle/voting/admin.py:95
 msgid "Super admin"
 msgstr "Súper administrador"
 
@@ -2767,12 +2767,12 @@ msgid "username"
 msgstr "nombre de usuario"
 
 #: bluebottle/bb_accounts/models.py:116
-msgid "staff status"
-msgstr "estado del personal"
+msgid "Back office access"
+msgstr "Acceso a la oficina administrativa"
 
 #: bluebottle/bb_accounts/models.py:118
-msgid "Designates whether the user can log into this admin site."
-msgstr "Diseña si el usuario puede iniciar sesión en este sitio de administración."
+msgid "Allow this user to access the back office."
+msgstr "Permitir que este usuario acceda a la oficina administrativa."
 
 #: bluebottle/bb_accounts/models.py:119 bluebottle/impact/models.py:42
 msgid "active"
@@ -14488,11 +14488,11 @@ msgid_plural "Seconds"
 msgstr[0] "Segundo"
 msgstr[1] "Segundos"
 
-#: bluebottle/voting/admin.py:103
+#: bluebottle/voting/admin.py:102
 msgid "votes"
 msgstr "votos"
 
-#: bluebottle/voting/admin.py:140
+#: bluebottle/voting/admin.py:134
 msgid "Pages with this poll"
 msgstr "Páginas con esta encuesta"
 

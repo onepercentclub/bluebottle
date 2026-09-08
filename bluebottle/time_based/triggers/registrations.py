@@ -419,6 +419,29 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
 
 @register(ScheduleRegistration)
 class ScheduleRegistrationTriggers(RegistrationTriggers):
+    def activity_no_spots_left(effect):
+        """Activity has no spots left after this effect"""
+        if not effect.instance.activity.capacity:
+            return False
+
+        accepted = effect.instance.activity.registrations.filter(
+            status="accepted"
+        ).count()
+
+        return effect.instance.activity.capacity <= accepted + 1
+
+    def activity_spots_left(effect):
+        """Activity has spots available after this effect"""
+        if not effect.instance.activity.capacity:
+            return True
+
+        accepted = effect.instance.activity.registrations.filter(
+            status="accepted"
+        )
+        return effect.instance.activity.capacity > spots_taken_after_release(
+            accepted, effect.instance
+        )
+
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
             RegistrationStateMachine.initiate,
@@ -454,6 +477,11 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -462,6 +490,11 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.accept,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
                 ),
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
@@ -475,6 +508,11 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                     "participants",
                     ScheduleParticipantStateMachine.accept,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -483,6 +521,11 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.reject,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
                 ),
                 NotificationEffect(
                     UserRegistrationRejectedNotification,

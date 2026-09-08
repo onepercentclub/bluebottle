@@ -844,7 +844,8 @@ class NotificationTestCase(BluebottleTestCase):
             self.fail("Text body does not contain '{}'".format(text))
 
     def assertHtmlBodyContains(self, text):
-        if text not in self.html_content:
+        html_text = self._html.get_text()
+        if text not in self.html_content and text not in html_text:
             self.fail("HTML body does not contain '{}'".format(text))
 
     def assertBodyNotContains(self, text):
@@ -856,7 +857,8 @@ class NotificationTestCase(BluebottleTestCase):
             self.fail("Text body does contain '{}'".format(text))
 
     def assertHtmlBodyNotContains(self, text):
-        if text in self.html_content:
+        html_text = self._html.get_text()
+        if text in self.html_content or text in html_text:
             self.fail("HTML body does contain '{}'".format(text))
 
     @property

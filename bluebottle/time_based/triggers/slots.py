@@ -536,6 +536,13 @@ class DateActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             DateActivitySlotStateMachine.reopen,
             effects=[
+                NotificationEffect(
+                    SpotOpenedNotification,
+                    conditions=[
+                        activity_registration_deadline_is_not_passed,
+                        slot_is_not_full,
+                    ],
+                ),
                 TransitionEffect(
                     DateActivitySlotStateMachine.lock,
                     conditions=[slot_is_full]

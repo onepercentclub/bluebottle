@@ -84,7 +84,10 @@ class Statistics(object):
 
         activity_owner_ids = Activity .objects.filter(
             self.date_filter('created'),
-            status__in=['open', 'full', 'running', 'succeeded', 'partially_funded']
+            status__in=[
+                'open', 'full', 'registration_closed', 'running',
+                'succeeded', 'partially_funded'
+            ]
         ).order_by(
             'owner__id'
         ).distinct('owner').values_list('owner_id', flat=True)
@@ -197,7 +200,11 @@ class Statistics(object):
         ]
 
         return sum(
-            len(self.filter_activities(model, date_field, ['open', 'full', 'running']))
+            len(
+                self.filter_activities(
+                    model, date_field, ['open', 'full', 'registration_closed', 'running']
+                )
+            )
             for model, date_field in activity_filters
         )
 

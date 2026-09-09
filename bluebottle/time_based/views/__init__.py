@@ -5,3 +5,4 @@ from .slots import *  # noqa
 from .views import *  # noqa
 from .exports import *  # noqa
 from .teams import *  # noqa
+from .interests import *  # noqa

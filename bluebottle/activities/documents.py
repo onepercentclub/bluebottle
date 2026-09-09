@@ -415,7 +415,7 @@ class ActivityDocument(Document):
             return instance.is_online
 
     def prepare_is_upcoming(self, instance):
-        return instance.status in ['open', 'full']
+        return instance.status in ['open', 'full', 'registration_closed']
 
     def prepare_position(self, instance):
         return []

@@ -22,6 +22,15 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
     def get_indent(self, *args, **kwargs):
         return 4
 
+    @classmethod
+    def extract_relationships(cls, fields, resource, resource_instance):
+        from bluebottle.time_based.serializers.interest_link_field import (
+            omit_interests_if_unauthorized,
+        )
+
+        fields = omit_interests_if_unauthorized(fields, resource_instance)
+        return super().extract_relationships(fields, resource, resource_instance)
+
     def extract_included(
         cls, fields, resource, resource_instance, included_resources, included_cache
     ):
@@ -35,6 +44,12 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
         current_serializer = fields.serializer
         context = current_serializer.context
+
+        from bluebottle.time_based.serializers.interest_link_field import (
+            omit_interests_if_unauthorized,
+        )
+
+        fields = omit_interests_if_unauthorized(fields, resource_instance)
 
         included_serializers = getattr(
             current_serializer, "included_serializers", dict()

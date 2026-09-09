@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
-    Accept, Follow, Lock, Start, Cancel, Delete, Finish, Leave,
+    Accept, Follow, Lock, Start, Cancel, Delete, Finish, Leave, Remove,
     Event, Join, Reject, Create, Update
 )
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -352,6 +352,34 @@ class SendLeaveEffect(Effect):
         Leave.objects.create(
             actor=self.instance.user.activity_pub_model,
             object=self.instance.activity.origin,
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of leave'))
+
+
+class SendRemoveEffect(Effect):
+    """
+    Send a remove activity to the other platform when a user is removed an activity
+    """
+    template = 'admin/activity_pub/send_remove_effect.html'
+
+    def post_save(self, **kwargs):
+        activity = self.instance.slot if getattr(self.instance, 'slot') else self.instance.activity
+        if self.instance.remote_user:
+            actor = self.instance.remote_user.origin
+            object = activity.activity_pub_model
+        else:
+            actor = self.instance.user.activity_pub_model
+            object = activity.origin
+
+        Remove.objects.create(actor=actor, object=object)
+
+    @property
+    def is_valid(self):
+        return (
+            not self.options.get('ap_prevent_recursion') and
+            (self.instance.remote_user is not None or self.instance.activity.origin is not None)
         )
 
     def __str__(self):

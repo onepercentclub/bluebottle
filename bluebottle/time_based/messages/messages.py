@@ -11,7 +11,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
-    DateParticipant, PeriodParticipant, DateActivitySlot
+    DateParticipant, DateActivitySlot
 )
 
 
@@ -46,7 +46,7 @@ class TimeBasedInfoMixin(object):
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        if isinstance(self.obj, (DateParticipant, PeriodParticipant)):
+        if isinstance(self.obj, (DateParticipant, )):
             participant = self.obj
         elif isinstance(self.obj, DateActivitySlot):
             participant = self.obj.activity.participants.filter(user=recipient).first()
@@ -63,11 +63,6 @@ class TimeBasedInfoMixin(object):
 
             context.update({'slots': slots})
 
-        elif isinstance(participant, PeriodParticipant):
-            context.update({
-                'start': participant.activity.start,
-                'end': participant.activity.deadline,
-            })
         return context
 
 

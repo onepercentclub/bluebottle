@@ -540,6 +540,26 @@ class SyncTestCase(ActivityPubTestCase):
             self.synced_participant.status, self.expected_participant_status
         )
 
+    def test_remove_supplier(self):
+        self.test_join()
+
+        self.synced_participant.states.remove(save=True)
+        self.assertEqual(self.synced_participant.status, self.removed_status)
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assertStatus(self.participant, self.removed_status)
+
+    def test_remove_consumer(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.participant.states.remove(save=True)
+            self.assertEqual(self.participant.status, self.removed_status)
+
+        self.synced_participant.refresh_from_db()
+        self.assertStatus(self.synced_participant, self.removed_status)
+
     def test_cancel_adoption(self):
         self.test_join()
 
@@ -772,6 +792,7 @@ class SyncDeedTestCase(SyncTestCase, BluebottleTestCase):
     factory = DeedFactory
     participant_factory = DeedParticipantFactory
     expected_participant_status = 'accepted'
+    removed_status = 'rejected'
 
     def create(self, **kwargs):
         super().create(
@@ -788,6 +809,7 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = DeadlineActivityFactory
     participant_factory = DeadlineParticipantFactory
     expected_participant_status = 'succeeded'
+    removed_status = 'removed'
 
     motivation = 'Some motivation'
 
@@ -854,6 +876,7 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
     participant_factory = ScheduleParticipantFactory
     expected_participant_status = 'accepted'
+    removed_status = 'removed'
 
     def create(self, **kwargs):
         super().create(
@@ -913,6 +936,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = PeriodicActivityFactory
     participant_factory = PeriodicRegistrationFactory
     expected_participant_status = 'accepted'
+    removed_status = 'removed'
 
     def create(self, **kwargs):
         super().create(
@@ -997,6 +1021,7 @@ class SyncCollectActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = CollectActivityFactory
     participant_factory = CollectContributorFactory
     expected_participant_status = 'accepted'
+    removed_status = 'rejected'
 
     def create(self, **kwargs):
         super().create(
@@ -1690,6 +1715,7 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
     motivation = 'I would really like to join'
     participant_factory = DateParticipantFactory
     expected_participant_status = 'accepted'
+    removed_status = 'removed'
 
     def create(self, **kwargs):
         super().create(slots=[], organization=None, **kwargs)

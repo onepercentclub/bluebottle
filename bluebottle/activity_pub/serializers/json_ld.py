@@ -23,6 +23,7 @@ from bluebottle.activity_pub.models import (
     Lock,
     Join,
     Leave,
+    Remove,
     Add,
     Team,
     Organization,
@@ -566,8 +567,7 @@ class TeamSerializer(BaseActivityPubSerializer):
         )
 
 
-class LeaveSerializer(BaseActivitySerializer):
-    type = TypeField('Leave')
+class TransitionSerializer(BaseActivitySerializer):
     object = RelatedResourceField(
         type=(
             'Event', 'GoodDeed', 'CrowdFunding', 'GrantApplication',
@@ -575,8 +575,19 @@ class LeaveSerializer(BaseActivitySerializer):
         )
     )
 
+
+class LeaveSerializer(TransitionSerializer):
+    type = TypeField('Leave')
+
     class Meta(BaseActivitySerializer.Meta):
         model = Leave
+
+
+class RemoveSerializer(TransitionSerializer):
+    type = TypeField('Remove')
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = Remove
 
 
 from bluebottle.activity_pub.serializers.federated_activities import *  # noqa

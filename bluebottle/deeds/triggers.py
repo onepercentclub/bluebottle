@@ -18,7 +18,7 @@ from bluebottle.activities.triggers import (
 )
 from bluebottle.activity_pub.effects import (
     PublishAdoptionEffect, CancelEffect, StartEffect, SyncRelatedEvent, UpdateEventEffect, FinishEffect,
-    SendJoinEffect, SendLeaveEffect, UnpublishAdoptionEffect
+    SendJoinEffect, SendLeaveEffect, SendRemoveEffect, UnpublishAdoptionEffect
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
@@ -380,7 +380,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 ),
                 UnFollowActivityEffect,
                 # Notify source platform of leave for synced deeds
-                SendLeaveEffect,
+                SendRemoveEffect,
                 SyncRelatedEvent
             ]
         ),

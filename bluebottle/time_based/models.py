@@ -158,7 +158,6 @@ class TimeBasedActivity(Activity):
     def participants(self):
         if self.pk:
             return self.contributors.instance_of(
-                PeriodParticipant,
                 DateParticipant,
                 DeadlineParticipant,
                 PeriodicParticipant,
@@ -1202,7 +1201,7 @@ class DateParticipant(Participant):
         resource_name = 'contributors/time-based/date-participants'
 
 
-class PeriodParticipant(Participant, Contributor):
+class PeriodParticipant(Participant):
     """
     A participant in a recurring activity.
     """
@@ -1594,7 +1593,7 @@ class PeriodicRegistration(Registration):
         ).count()
 
 
-class DeadlineParticipant(Participant, Contributor):
+class DeadlineParticipant(Participant):
     """
     A candidate for a flexible activity.
     """
@@ -1906,7 +1905,7 @@ class TeamMember(TriggerMixin, models.Model):
             return ''
 
 
-class ScheduleParticipant(Participant, Contributor):
+class ScheduleParticipant(Participant):
     """
     A participant in an activity that is scheduled after sign-up
     """
@@ -1928,7 +1927,7 @@ class ScheduleParticipant(Participant, Contributor):
         blank=True,
     )
 
-    class Meta(Contributor.Meta):
+    class Meta:
         verbose_name = _("Participant to schedule activities")
         verbose_name_plural = _("Participants to schedule activities")
 
@@ -1965,7 +1964,7 @@ class ScheduleParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/schedule-participants'
 
 
-class TeamScheduleParticipant(Participant, Contributor):
+class TeamScheduleParticipant(Participant):
     """
     A team participation in an activity that is scheduled after sign-up
     """
@@ -2316,7 +2315,7 @@ class TeamScheduleSlot(BaseScheduleSlot):
         return self.team.owner
 
 
-class PeriodicParticipant(Participant, Contributor):
+class PeriodicParticipant(Participant):
     """
     A participant in a slot of a periodic activity, e.g. the participant joined this week.
     """

@@ -193,6 +193,7 @@ class SlotRelatedParticipantListView(
                     "succeeded",
                     "rejected",
                     "withdrawn",
+                    "removed",
                     "cancelled",
                 )
 

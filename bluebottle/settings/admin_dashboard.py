@@ -80,6 +80,7 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["time_based.change_scheduleactivity"],
             },
             {"name": "time_based.skill", "permissions": ["time_based.change_skill"]},
+            {"name": "time_based.interest", "permissions": ["time_based.change_interest"]},
         ],
     },
     {

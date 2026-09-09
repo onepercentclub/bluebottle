@@ -268,6 +268,7 @@ class InitiativeDocument(Document):
                     'open',
                     'partially_funded',
                     'full',
+                    'registration_closed',
                     'running'
                 )
             )

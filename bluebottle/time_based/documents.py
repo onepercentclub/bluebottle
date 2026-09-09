@@ -27,8 +27,11 @@ SCORE_MAP = {
     'open': 1,
     'running': 0.7,
     'full': 0.6,
+    'registration_closed': 0.6,
     'succeeded': 0.5,
 }
+
+INDEXABLE_SLOT_STATUSES = ('open', 'full', 'registration_closed', 'finished')
 
 
 class TimeBasedActivityDocument(ActivityDocument):
@@ -186,14 +189,14 @@ class DateActivityDocument(TimeBasedActivityDocument):
     def prepare_start(self, instance):
         return [
             slot.start for slot in instance.slots.all()
-            if slot.start and slot.status in ('open', 'full', 'finished', )
+            if slot.status in INDEXABLE_SLOT_STATUSES
         ]
 
     def prepare_end(self, instance):
         return [
             slot.start + slot.duration
             for slot in instance.slots.all()
-            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
+            if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
         ]
 
     def prepare_dates(self, instance):
@@ -204,14 +207,14 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 'status': slot.status
             }
             for slot in instance.slots.all()
-            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
+            if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
         ]
 
     def prepare_duration(self, instance):
         return [
             {'gte': slot.start, 'lte': slot.end}
             for slot in instance.slots.all()
-            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished')
+            if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
         ]
 
     def prepare_contribution_duration(self, instance):
@@ -222,7 +225,7 @@ class DateActivityDocument(TimeBasedActivityDocument):
                 'value': slot.duration.seconds / (60 * 60) + slot.duration.days * 24
             }
             for slot in instance.slots.all()
-            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished')
+            if slot.start and slot.duration and slot.status in INDEXABLE_SLOT_STATUSES
         ]
 
     def prepare_country(self, instance):

@@ -30,8 +30,8 @@
                     <span class="segment-label segment-label-{{ segment.slug }}">{{ subregion.name }}</span> &middot;
                 {% endfor %}
             {% endif %}
-            {% if tenant %}
-                <span class="segment-label segment-label-{{ tenant.slug }}">{{ tenant.name }}</span>
+            {% if platform_name %}
+                <span class="segment-label segment-label-{{ tenant.slug }}">{{platform_name}}</span>
             {% endif %}
         </div>
     {% else %}
@@ -53,7 +53,7 @@
 
 {% block userlinks %}
     {% if site_url %}
-        <a href="{{ site_url }}">{% trans 'View site' %}</a> 
+        <a href="{{ site_url }}">{% trans 'View site' %}</a>
     {% endif %}
     {% if user.has_usable_password %}
     <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /

@@ -3,7 +3,7 @@ from unittest import expectedFailure
 
 from django.contrib.auth.models import Group
 from django.core import mail
-from django.utils import timezone
+from django.utils.timezone import now, timezone
 from django.urls import reverse
 from rest_framework import status
 
@@ -30,6 +30,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
     ScheduleRegistrationFactory,
+    ScheduleSlotFactory,
 )
 
 
@@ -332,6 +333,135 @@ class PeriodicPreviousSlotInterestAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertEqual(self.model.user, user)
         self.assertEqual(self.model.activity, self.activity)
+
+    def test_accepted_registration_still_blocks_periodic_waiting_list(self):
+        user = BlueBottleUserFactory.create()
+        PeriodicRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            status='accepted',
+        )
+        self.activity.status = 'full'
+        self.activity.save()
+
+        self.perform_create(user=user)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['code'],
+            'already_involved',
+        )
+        self.assertFalse(
+            Interest.objects.filter(user=user, activity=self.activity).exists()
+        )
+
+
+class SchedulePreviousSlotInterestAPITestCase(APITestCase):
+    """
+    Schedule activities with slot history should allow waiting list signup once
+    the registration is no longer active.
+
+    The blocking test documents the current bug; the expectedFailure test
+    captures the desired behaviour after the validator is fixed.
+    """
+
+    url_name = 'interest-list'
+    serializer = InterestSerializer
+    factory = InterestFactory
+    fields = ['activity']
+
+    def setUp(self):
+        super().setUp()
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.activity = ScheduleActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            capacity=2,
+            review=False,
+            start=date.today() - timedelta(days=14),
+            deadline=date.today() + timedelta(days=20),
+        )
+        self.url = reverse(self.url_name)
+        self.defaults = {'activity': self.activity}
+
+    def _create_former_slot_participant(self):
+        user = BlueBottleUserFactory.create()
+        registration = ScheduleRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user,
+        )
+        participant = registration.participants.first()
+        slot = ScheduleSlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=2),
+        )
+        participant.slot = slot
+        participant.save()
+        slot.start = now() - timedelta(days=2)
+        slot.save()
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, 'succeeded')
+        registration.states.withdraw(save=True)
+        registration.refresh_from_db()
+        self.assertEqual(registration.status, 'withdrawn')
+        return user, registration, participant
+
+    def _fill_activity(self):
+        ScheduleRegistrationFactory.create_batch(
+            2, activity=self.activity, status='accepted'
+        )
+        self.activity.status = 'full'
+        self.activity.save()
+
+    def test_succeeded_previous_slot_participation_blocks_waiting_list(self):
+        user, registration, participant = self._create_former_slot_participant()
+        self._fill_activity()
+
+        self.perform_create(user=user)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['code'],
+            'already_involved',
+        )
+        self.assertFalse(
+            Interest.objects.filter(user=user, activity=self.activity).exists()
+        )
+        self.assertEqual(registration.status, 'withdrawn')
+        self.assertEqual(participant.status, 'succeeded')
+
+    @expectedFailure
+    def test_former_slot_participant_should_be_able_to_join_waiting_list(self):
+        user, _registration, _participant = self._create_former_slot_participant()
+        self._fill_activity()
+
+        self.perform_create(user=user)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.user, user)
+        self.assertEqual(self.model.activity, self.activity)
+
+    def test_accepted_registration_still_blocks_schedule_waiting_list(self):
+        user = BlueBottleUserFactory.create()
+        ScheduleRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            status='accepted',
+        )
+        self.activity.status = 'full'
+        self.activity.save()
+
+        self.perform_create(user=user)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['code'],
+            'already_involved',
+        )
+        self.assertFalse(
+            Interest.objects.filter(user=user, activity=self.activity).exists()
+        )
 
 
 class MyInterestListAPITestCase(APITestCase):

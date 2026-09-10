@@ -20,7 +20,7 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
-from bluebottle.time_based.models import Registration, PeriodicRegistration
+from bluebottle.time_based.models import Registration
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
 
 
@@ -645,14 +645,16 @@ class Team(ActivityPubModel):
         related_name='origin',
     )
 
-    def save(self, *args, **kwargs):
-        if not self.attributed_to_id:
-            local_team = self.adopted or self.origin
-            activity = getattr(local_team, 'activity', None)
-            ap_activity = getattr(activity, 'activity_pub_model', None)
-            if ap_activity is not None:
-                self.attributed_to = ap_activity
-        super().save(*args, **kwargs)
+    @property
+    def event(self):
+        local_team = self.origin or self.adopted
+        activity = getattr(local_team, 'activity', None)
+        if activity is None:
+            return None
+        return (
+            getattr(activity, 'activity_pub_model', None) or
+            getattr(activity, 'origin', None)
+        )
 
     def __str__(self):
         return self.name or f'Team {self.pk}'
@@ -1046,15 +1048,7 @@ class Join(Activity):
         super().save(*args, **kwargs)
 
         if not self.is_local:
-            adopted = adapter.adopt(self)
-            if (
-                isinstance(adopted, PeriodicRegistration) and
-                adopted.status == 'stopped'
-            ):
-                try:
-                    adopted.states.start(save=True)
-                except TransitionNotPossible:
-                    pass
+            adapter.adopt(self)
 
     @property
     def default_recipients(self):
@@ -1064,7 +1058,7 @@ class Join(Activity):
 
         create = None
         if isinstance(self.object, Team):
-            event = self.object.attributed_to
+            event = self.object.event
             create = event.create_set.first() if event else None
         else:
             create = self.object.create_set.first()
@@ -1103,7 +1097,7 @@ class Leave(Transition):
     def default_recipients(self):
         obj = self.object
         if isinstance(obj, Team):
-            event = obj.attributed_to
+            event = obj.event
             create = event.create_set.first() if event else None
         elif isinstance(obj, SubEvent):
             parent = obj.parent

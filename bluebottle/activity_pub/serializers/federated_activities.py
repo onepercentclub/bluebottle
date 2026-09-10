@@ -23,10 +23,7 @@ from bluebottle.activity_pub.models import (
 )
 from bluebottle.activity_pub.serializers.base import FederatedObjectBaseSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField, MoneyField, TypeField
-from bluebottle.activity_pub.utils import (
-    is_local, resource_iri, event_for_team, platform_may_modify_event,
-    sending_platform,
-)
+from bluebottle.activity_pub.utils import is_local, resource_iri
 from bluebottle.collect.models import CollectActivity, CollectType, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.files.models import Image
@@ -202,9 +199,6 @@ class MemberSerializer(FederatedObjectBaseSerializer):
         fields = FederatedObjectBaseSerializer.Meta.fields + (
             'name', 'family_name', 'given_name', 'email', 'summary', 'icon'
         )
-
-    lookup_field = 'origin__iri'
-    lookup_url_kwarg = 'id'
 
     def get_queryset(self):
         return RemoteMember.objects.all()
@@ -1270,7 +1264,11 @@ class TeamMemberJoinSerializer(FederatedObjectBaseSerializer):
                 'object': 'Join object team is required',
             })
 
-        event = event_for_team(team)
+        activity = getattr(team, 'activity', None)
+        event = (
+            getattr(activity, 'activity_pub_model', None) or
+            getattr(activity, 'origin', None)
+        )
         if event is None:
             raise serializers.ValidationError({
                 'object': 'Join object team is not attributed to an activity',
@@ -1282,35 +1280,9 @@ class TeamMemberJoinSerializer(FederatedObjectBaseSerializer):
                 'object': 'Join object team does not belong to the attributed activity',
             })
 
-        request = self.context.get('request') if self.context else None
-        platform = sending_platform(
-            request=request,
-            activity_iri=resource_iri(self.initial_data.get('id')),
-        )
-        if platform is None:
-            raise serializers.ValidationError(
-                'Join platform could not be determined'
-            )
-
-        if not platform_may_modify_event(platform, event):
-            raise serializers.ValidationError({
-                'object': 'Platform is not authorized to add members to this team',
-            })
-
-        remote_user = attrs.get('remote_user')
-        if remote_user is None:
+        if attrs.get('remote_user') is None:
             raise serializers.ValidationError({
                 'actor': 'Join actor is required',
-            })
-
-        person = getattr(remote_user, 'origin', None)
-        if (
-            person is not None and
-            person.source_id and
-            person.source_id != platform.id
-        ):
-            raise serializers.ValidationError({
-                'actor': 'Person does not belong to the sending platform',
             })
 
         return attrs

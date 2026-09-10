@@ -85,16 +85,6 @@ def resource_iri(value):
     return None
 
 
-def event_for_team(team):
-    from bluebottle.activity_pub.models import Team as ActivityPubTeam
-
-    ap_team = getattr(team, 'origin', None)
-    if isinstance(ap_team, ActivityPubTeam) and ap_team.attributed_to_id:
-        return ap_team.attributed_to
-    activity = getattr(team, 'activity', None)
-    return getattr(activity, 'activity_pub_model', None)
-
-
 def platform_may_modify_event(platform, event):
     from bluebottle.activity_pub.models import Create, Follow
 
@@ -105,14 +95,6 @@ def platform_may_modify_event(platform, event):
     for create in event.create_set.all():
         if Follow.objects.filter(actor=platform, object=create.actor).exists():
             return True
+        if Follow.objects.filter(actor=create.actor, object=platform).exists():
+            return True
     return False
-
-
-def sending_platform(request=None, activity_iri=None):
-    if request is not None and getattr(request, 'auth', None):
-        return request.auth
-
-    from bluebottle.activity_pub.models import ActivityPubModel
-
-    activity = ActivityPubModel.objects.from_iri(activity_iri) if activity_iri else None
-    return getattr(activity, 'platform', None)

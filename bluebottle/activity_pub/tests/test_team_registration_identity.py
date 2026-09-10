@@ -183,7 +183,6 @@ class TeamScheduleRegistrationSerializerCreateTestCase(BluebottleTestCase):
         })
         ap_team.refresh_from_db()
         self.assertEqual(ap_team.adopted_id, registration.teams.get().id)
-        self.assertEqual(ap_team.attributed_to_id, self.activity.activity_pub_model.id)
 
     def test_create_rejoins_withdrawn_team(self):
         registration = self.serializer.create({

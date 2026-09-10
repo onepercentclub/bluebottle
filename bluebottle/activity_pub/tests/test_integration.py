@@ -2135,7 +2135,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.team_member.states.remove(save=True)
 
         # Supplier does not receive remove via federation; mirror the removed
-        # state so Add → readd has a removed target to restore.
+        # state so Join → readd has a removed target to restore.
         if remote_member.status != 'removed':
             remote_member.states.remove(save=True)
 

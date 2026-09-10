@@ -1,6 +1,7 @@
 from rest_framework import permissions
 
 from bluebottle.activity_pub.models import ActivityPubModel, Follow, Accept, Join
+from bluebottle.activity_pub.utils import platform_may_modify_event, resource_iri
 from bluebottle.members.models import MemberPlatformSettings
 
 
@@ -28,13 +29,14 @@ class InboxPermission(permissions.BasePermission):
                     return True
                 if request.data['type'] in (
                     'Create', 'Update', 'Start', 'Cancel', 'Finish', 'Lock', 'Delete',
-                    'Join', 'Leave', 'Reject', 'Add'
+                    'Reject',
                 ):
                     # Only actors we follow can post publish activities
-                    return (
-                        Follow.objects.filter(object=request.auth).exists() or
-                        Follow.objects.filter(actor=request.auth).exists()
-                    )
+                    return self._followed_platform(request)
+                if request.data['type'] in ('Join', 'Leave'):
+                    if not self._followed_platform(request):
+                        return False
+                    return self._may_modify_team_object(request)
                 if request.data['type'] in ('Accept', ):
                     # Only actors that we accepted us can announce
                     try:
@@ -55,3 +57,21 @@ class InboxPermission(permissions.BasePermission):
             return False
         else:
             return True
+
+    def _followed_platform(self, request):
+        return (
+            Follow.objects.filter(object=request.auth).exists() or
+            Follow.objects.filter(actor=request.auth).exists()
+        )
+
+    def _may_modify_team_object(self, request):
+        from bluebottle.activity_pub.models import Team
+
+        object_iri = resource_iri(request.data.get('object'))
+        obj = ActivityPubModel.objects.from_iri(object_iri) if object_iri else None
+        if not isinstance(obj, Team):
+            return True
+        event = obj.event
+        if event is None:
+            return True
+        return platform_may_modify_event(request.auth, event)

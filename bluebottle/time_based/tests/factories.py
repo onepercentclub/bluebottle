@@ -225,6 +225,17 @@ class DateParticipantFactory(FSMModelFactory):
             if 'activity' not in kwargs:
                 kwargs['activity'] = kwargs['registration'].activity
 
+        if 'registration' not in kwargs:
+            registration_kwargs = {}
+            if kwargs.get('activity') is not None:
+                registration_kwargs['activity'] = kwargs['activity']
+            if kwargs.get('user') is not None:
+                registration_kwargs['user'] = kwargs['user']
+            if registration_kwargs:
+                kwargs['registration'] = DateRegistrationFactory.create(
+                    **registration_kwargs
+                )
+
         if 'slot' not in kwargs:
             activity = kwargs.get('activity') or DateActivityFactory.create()
             kwargs['slot'] = DateActivitySlotFactory.create(

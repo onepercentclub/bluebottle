@@ -1,3 +1,4 @@
+from djmoney.contrib.django_rest_framework.fields import MoneyField as DjangoMoneyField
 from rest_framework import serializers
 
 
@@ -50,3 +51,10 @@ class TypeField(serializers.CharField):
 
     def to_internal_value(self, value):
         return {'type': self.type}
+
+
+class MoneyField(DjangoMoneyField):
+    def __init__(self, **kwargs):
+        kwargs.setdefault('max_digits', 10)
+        kwargs.setdefault('decimal_places', 2)
+        super().__init__(**kwargs)

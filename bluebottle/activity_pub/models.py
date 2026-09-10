@@ -645,6 +645,17 @@ class Team(ActivityPubModel):
         related_name='origin',
     )
 
+    @property
+    def event(self):
+        local_team = self.origin or self.adopted
+        activity = getattr(local_team, 'activity', None)
+        if activity is None:
+            return None
+        return (
+            getattr(activity, 'activity_pub_model', None) or
+            getattr(activity, 'origin', None)
+        )
+
     def __str__(self):
         return self.name or f'Team {self.pk}'
 
@@ -1022,7 +1033,7 @@ class Join(Activity):
     """Sent by a follower when a user joins an Event"""
     object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
     motivation = models.TextField(null=True, blank=True)
-    instrument = models.ForeignKey(
+    team = models.ForeignKey(
         'activity_pub.Team',
         null=True,
         blank=True,
@@ -1045,45 +1056,17 @@ class Join(Activity):
             yield self.actor
             return
 
-        create = self.object.create_set.first()
-        if create is None and getattr(self.object, 'parent', None):
-            create = self.object.parent.create_set.first()
+        create = None
+        if isinstance(self.object, Team):
+            event = self.object.event
+            create = event.create_set.first() if event else None
+        else:
+            create = self.object.create_set.first()
+            if create is None and getattr(self.object, 'parent', None):
+                create = self.object.parent.create_set.first()
 
         if create and not create.actor.is_local:
             yield create.actor
-
-
-class Add(Activity):
-    """Add a Person to a Team (team member join on the local platform)."""
-    object = models.ForeignKey(
-        Person,
-        on_delete=models.CASCADE,
-        related_name='added_by',
-    )
-    target = models.ForeignKey(
-        Team,
-        on_delete=models.CASCADE,
-        related_name='adds',
-    )
-    platform = models.ForeignKey(Organization, null=True, on_delete=models.CASCADE)
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-        if not self.is_local:
-            adapter.adopt(self)
-
-    @property
-    def default_recipients(self):
-        if not self.actor.is_local:
-            yield self.actor
-            return
-
-        event = self.target.attributed_to
-        if event:
-            create = event.create_set.first()
-            if create and not create.actor.is_local:
-                yield create.actor
 
 
 class Transition(Activity):
@@ -1114,7 +1097,7 @@ class Leave(Transition):
     def default_recipients(self):
         obj = self.object
         if isinstance(obj, Team):
-            event = obj.attributed_to
+            event = obj.event
             create = event.create_set.first() if event else None
         elif isinstance(obj, SubEvent):
             parent = obj.parent

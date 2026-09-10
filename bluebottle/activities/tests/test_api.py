@@ -13,7 +13,6 @@ from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
-from django_elasticsearch_dsl.test import ESTestCase
 from pytz import UTC
 from rest_framework import status
 
@@ -45,6 +44,7 @@ from bluebottle.test.factory_models.geo import (
     PlaceFactory,
 )
 from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.elasticsearch import ElasticsearchTestCase
 from bluebottle.test.geo_utils import save_built_geolocation
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.tests.factories import (
@@ -58,15 +58,10 @@ from bluebottle.time_based.tests.factories import (
 )
 
 
-@override_settings(
-    ELASTICSEARCH_DSL_AUTOSYNC=True,
-    ELASTICSEARCH_DSL_AUTO_REFRESH=True
-)
 @tag('elasticsearch')
-class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
+class ActivityListSearchAPITestCase(ElasticsearchTestCase):
     def setUp(self):
         super(ActivityListSearchAPITestCase, self).setUp()
-        self.client = JSONAPITestClient()
         self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
 
@@ -1672,7 +1667,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 activity=activity,
                 location=GeolocationFactory.create(country=matching_country),
             )
-            matching.append(activity)
 
         other = DateActivityFactory.create_batch(
             3,
@@ -1686,7 +1680,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 activity=activity,
                 location=GeolocationFactory.create(country=other_country),
             )
-            other.append(activity)
 
         self.search({'country': matching_country.pk})
 

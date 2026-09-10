@@ -67,7 +67,7 @@ def run(*args):
             if site_settings.terminated:
                 continue
             locations = Geolocation.objects.filter(
-                geofeature__isnull=True
+                geofeatures__isnull=True
             )
 
             total = locations.count()

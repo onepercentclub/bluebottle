@@ -160,6 +160,17 @@ class MapboxUtilsTestCase(BluebottleTestCase):
             )
         )
         self.assertEqual(migrate_mapbox.clean_place_name('Amsterdam'), 'Amsterdam')
+        self.assertIsNone(
+            migrate_mapbox.clean_region_name(
+                'Amsterdam',
+                locality='Buurbuik De Pijp, Tweede van der Helststraat 66 Amsterdam',
+                street='Tweede van der Helststraat 66, 1072 PG Amsterdam',
+            )
+        )
+        self.assertEqual(
+            migrate_mapbox.clean_region_name('North Holland', locality='Amsterdam'),
+            'North Holland',
+        )
 
     @mock.patch('migrate_mapbox.forward_v6')
     def test_resolve_geolocation_feature_for_address_v5_id(self, mock_forward):

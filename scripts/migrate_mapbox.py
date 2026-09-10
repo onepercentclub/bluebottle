@@ -91,6 +91,31 @@ def clean_place_name(place):
     return text
 
 
+def clean_region_name(province, locality=None, street=None, formatted_address=None):
+    """Mapbox structured `region` should be a state/province, not a city."""
+    region = clean_place_name(province)
+    if not region:
+        return None
+
+    region_lower = region.lower()
+    for value in (locality, street, formatted_address):
+        text = (value or '').strip()
+        if not text:
+            continue
+        if text.lower() == region_lower:
+            return None
+        for part in text.split(','):
+            part = part.strip()
+            if not part:
+                continue
+            if part.lower() == region_lower:
+                return None
+            tokens = part.split()
+            if tokens and tokens[-1].lower() == region_lower:
+                return None
+    return region
+
+
 def _normalize_reverse_type(types):
     if not types:
         return None
@@ -290,7 +315,12 @@ def resolve_geolocation_feature(geolocation, language=None):
 
         street = clean_street_name(geolocation.street, address_number)
         place = clean_place_name(geolocation.locality)
-        region = clean_place_name(geolocation.province)
+        region = clean_region_name(
+            geolocation.province,
+            locality=geolocation.locality,
+            street=geolocation.street,
+            formatted_address=geolocation.formatted_address,
+        )
         postcode = (geolocation.postal_code or '').strip() or None
 
         structured = {

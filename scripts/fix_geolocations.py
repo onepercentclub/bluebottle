@@ -85,9 +85,7 @@ def run(*args):
                         migrate_geolocation(geolocation)
                     status = 'updated'
                 except Exception as error:
-                    status = 'error'
                     print('ERROR: ', error)
-                    detail = str(error)
                     failed += 1
                 else:
                     if status == 'updated':

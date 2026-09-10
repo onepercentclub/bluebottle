@@ -84,7 +84,7 @@ class DateActivitySlotFactory(factory.DjangoModelFactory):
     capacity = 10
     is_online = False
 
-    location = factory.SubFactory(GeolocationFactory)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
     start = now() + timedelta(weeks=4)
     duration = timedelta(hours=2)
 
@@ -118,7 +118,7 @@ class DeadlineActivityFactory(TimeBasedFactory):
     registration_deadline = date.today() - timedelta(weeks=4)
     duration = timedelta(hours=4)
     is_online = False
-    location = factory.SubFactory(GeolocationFactory)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
     expertise = factory.SubFactory(SkillFactory)
 
     start = (now() - timedelta(weeks=2)).date()
@@ -131,7 +131,7 @@ class ScheduleActivityFactory(TimeBasedFactory):
     deadline = date.today() + timedelta(weeks=4)
     registration_deadline = date.today() - timedelta(weeks=4)
     is_online = False
-    location = factory.SubFactory(GeolocationFactory)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
     expertise = factory.SubFactory(SkillFactory)
     duration = timedelta(hours=2)
 
@@ -147,7 +147,7 @@ class PeriodicActivityFactory(TimeBasedFactory):
     duration = timedelta(hours=4)
     period = 'weeks'
     is_online = False
-    location = factory.SubFactory(GeolocationFactory)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
     expertise = factory.SubFactory(SkillFactory)
 
     start = (now() - timedelta(weeks=2)).date()
@@ -314,7 +314,7 @@ class ScheduleSlotFactory(factory.DjangoModelFactory):
     is_online = False
 
     activity = factory.SubFactory(ScheduleActivityFactory)
-    location = factory.SubFactory(GeolocationFactory)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
     start = now() + timedelta(weeks=4)
     duration = timedelta(hours=2)
 

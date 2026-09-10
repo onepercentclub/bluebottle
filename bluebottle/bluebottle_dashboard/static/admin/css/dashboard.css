@@ -659,12 +659,15 @@ a.button, a.button:hover {
     width: auto;
 }
 
-.form-row.categories select {
+.cp-content .form-row.categories select {
     height: 300px;
 }
 
 .cp-content .js-inline-admin-formset .inline-related h3 .inline-deletelink:before {
-    display: none !important;
+    font-family: 'dashboard' !important;
+    font-size: 10px;
+    margin-right: 8px;
+    color: #ffffff;
 }
 
 

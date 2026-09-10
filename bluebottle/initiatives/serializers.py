@@ -11,7 +11,7 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivityListSerializer
+from bluebottle.activities.serializers.serializers import ActivityListSerializer
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.activities.utils import get_stats_for_activities
 from bluebottle.bluebottle_drf2.serializers import (

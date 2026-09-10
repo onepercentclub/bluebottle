@@ -1,7 +1,11 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
-from bluebottle.time_based.models import DateParticipant
+from bluebottle.time_based.models import (
+    DateParticipant,
+    PeriodicParticipant,
+    ScheduleParticipant, PeriodicActivity, ScheduleActivity,
+)
 
 ACTIVE_REGISTRATION_STATUSES = (
     'new',
@@ -81,6 +85,42 @@ class ActiveActivityParticipantValidator:
             user=user,
             status__in=ACTIVE_PARTICIPANT_STATUSES,
         ).exists()
+
+
+class ActiveRegistrationLinkedParticipantValidator:
+    """
+    Only count participants tied to an active registration.
+
+    Used for activities with slot history (recurring, schedule) so past
+    succeeded slot records do not block waiting list signup after the
+    registration was stopped or withdrawn.
+    """
+
+    def is_involved(self, user, activity):
+        participant_filters = {
+            'user': user,
+            'activity': activity,
+            'status__in': ACTIVE_PARTICIPANT_STATUSES,
+            'registration__status__in': ACTIVE_REGISTRATION_STATUSES,
+        }
+        return (
+            PeriodicParticipant.objects.filter(**participant_filters).exists()
+            or ScheduleParticipant.objects.filter(**participant_filters).exists()
+        )
+
+
+def get_interest_involvement_validator(activity, slot=None):
+    if slot:
+        return UserAlreadyInvolvedValidator()
+
+    if isinstance(activity, (PeriodicActivity, ScheduleActivity)):
+        return UserAlreadyInvolvedValidator(
+            activity_participant_validator=(
+                ActiveRegistrationLinkedParticipantValidator()
+            ),
+        )
+
+    return UserAlreadyInvolvedValidator()
 
 
 class UserAlreadyInvolvedValidator:

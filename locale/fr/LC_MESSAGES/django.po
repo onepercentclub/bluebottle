@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-09 14:58+0200\n"
-"PO-Revision-Date: 2026-09-09 13:10\n"
+"POT-Creation-Date: 2026-09-10 09:07+0200\n"
+"PO-Revision-Date: 2026-09-10 07:43\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -2095,8 +2095,8 @@ msgid "Coordinates"
 msgstr "Coordonnées"
 
 #: bluebottle/activity_pub/admin.py:763 bluebottle/activity_pub/admin.py:1106
-#: bluebottle/geo/admin.py:26 bluebottle/geo/admin.py:220
-#: bluebottle/geo/admin.py:258
+#: bluebottle/geo/admin.py:26 bluebottle/geo/admin.py:230
+#: bluebottle/geo/admin.py:268
 msgid "Location"
 msgstr "Localisation"
 
@@ -6840,11 +6840,11 @@ msgstr "Nom du lieu"
 msgid "Geolocation"
 msgstr "Géolocalisation"
 
-#: bluebottle/geo/admin.py:263 bluebottle/geo/admin.py:283
+#: bluebottle/geo/admin.py:273 bluebottle/geo/admin.py:293
 msgid "Related objects"
 msgstr "Objets associés"
 
-#: bluebottle/geo/admin.py:267
+#: bluebottle/geo/admin.py:277
 msgid "Old info"
 msgstr "Anciennes informations"
 

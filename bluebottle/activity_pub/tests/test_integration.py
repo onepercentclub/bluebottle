@@ -19,7 +19,7 @@ from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event,
-    Recipient, RepetitionModeChoices
+    Recipient, RepetitionModeChoices, GoodDeed
 )
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -48,6 +48,13 @@ from bluebottle.time_based.tests.factories import (
     PeriodicActivityFactory,
     ScheduleActivityFactory,
 )
+
+_real_geolocation_save = Geolocation.save
+
+
+def _geolocation_save_skip_mapbox(self, *args, **kwargs):
+    kwargs['skip_mapbox_sync'] = True
+    return _real_geolocation_save(self, *args, **kwargs)
 
 
 class ActivityPubClient(TestClient):
@@ -319,7 +326,9 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(Geolocation, 'update_location'):
+                with mock.patch.object(
+                    Geolocation, 'save', _geolocation_save_skip_mapbox
+                ):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
@@ -351,7 +360,9 @@ class AdoptTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with mock.patch('requests.get', return_value=self.mock_response):
-                with mock.patch.object(Geolocation, 'update_location'):
+                with mock.patch.object(
+                    Geolocation, 'save', _geolocation_save_skip_mapbox
+                ):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
@@ -525,6 +536,11 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
     def test_link_manual_succeeded(self):
         self.test_accept()
 
+        with LocalTenant(self.other_tenant):
+            follow = Follow.objects.get()
+            follow.automatic_adoption_activity_types = []
+            follow.save()
+
         @httmock.urlmatch(netloc='test.localhost')
         def image_mock(url, request):
             return self.mock_response
@@ -537,6 +553,11 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
+            event = GoodDeed.objects.get()
+
+            with httmock.HTTMock(image_mock):
+                adapter.link(event)
+
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'succeeded')
 

@@ -120,6 +120,14 @@ class IcalTestMixin:
 
         super().setUp()
 
+    def escape_ical(self, value):
+        return (
+            value
+            .replace('\\', '\\\\')
+            .replace(',', '\\,')
+            .replace(';', '\\;')
+        )
+
     def assert_field(self, field, value):
         for line in self.ics.replace('\r\n ', '').splitlines():
             if line.startswith(field):
@@ -154,7 +162,7 @@ class IcalTestMixin:
 
         self.assert_field(
             'DESCRIPTION',
-            f'{escaped}\, {self.model.get_absolute_url()}'
+            rf'{escaped}\, {self.model.get_absolute_url()}'
         )
 
     def test_orgnanizer(self):
@@ -201,7 +209,7 @@ class CollectIcalTestCase(IcalTestMixin, BluebottleTestCase):
         )[:-1]
         self.assert_field(
             'DESCRIPTION',
-            f'{description}\, Collecting {self.model.collect_type}\, {self.model.get_absolute_url()}'
+            rf'{description}\, Collecting {self.model.collect_type}\, {self.model.get_absolute_url()}'
         )
 
 
@@ -216,9 +224,8 @@ class ScheduleSlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
         }
 
     def test_location(self):
-        self.assert_field(
-            'LOCATION', f'{self.model.location.formatted_address} ({self.model.location_hint})'
-        )
+        location = f'{self.model.location.formatted_address} ({self.model.location_hint})'
+        self.assert_field('LOCATION', self.escape_ical(location))
 
 
 class DateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
@@ -233,9 +240,8 @@ class DateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
         }
 
     def test_location(self):
-        self.assert_field(
-            'LOCATION', f'{self.model.location.formatted_address} ({self.model.location_hint})'
-        )
+        location = f'{self.model.location.formatted_address} ({self.model.location_hint})'
+        self.assert_field('LOCATION', self.escape_ical(location))
 
 
 class OnlineDateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
@@ -255,5 +261,5 @@ class OnlineDateActivitySlotIcalTestCase(IcalTestMixin, BluebottleTestCase):
         )[:-1]
         self.assert_field(
             'DESCRIPTION',
-            f'{description}\, {self.model.get_absolute_url()} Join: {self.model.online_meeting_url}'
+            rf'{description}\, {self.model.get_absolute_url()} Join: {self.model.online_meeting_url}'
         )

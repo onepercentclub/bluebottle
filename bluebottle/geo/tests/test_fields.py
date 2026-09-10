@@ -14,5 +14,5 @@ class PointFieldTest(BluebottleTestCase):
             mapbox_id='some-id',
             country=country
         )
-        geolocation.save()
+        geolocation.save(skip_mapbox_sync=True)
         self.assertEqual(geolocation.position.wkt, Point(23.6764778, 43.0682267).wkt)

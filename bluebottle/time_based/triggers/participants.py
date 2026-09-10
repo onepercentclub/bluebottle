@@ -18,10 +18,12 @@ from bluebottle.time_based.effects import CreatePreparationTimeContributionEffec
 from bluebottle.time_based.effects.effects import (
     CreateSchedulePreparationTimeContributionEffect,
 )
+from bluebottle.time_based.effects.interests import DeleteInterestEffect
 from bluebottle.time_based.effects.participants import (
     CreateScheduleContributionEffect,
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
+    LockScheduleActivityIfFullEffect,
     CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, CreateDateRegistrationEffect,
     CreateRegisteredTimeContributionEffect,
 )
@@ -42,6 +44,7 @@ from bluebottle.time_based.messages.participants import (
     ManagerParticipantWithdrewNotification, UserScheduledNotification, RegisteredActivityParticipantAddedNotification,
     UserDateParticipantWithdrewNotification,
 )
+from bluebottle.time_based.triggers.triggers import spots_taken_after_release
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
     DeadlineParticipantStateMachine,
@@ -237,7 +240,9 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         """ Activity has spots available after this effect """
         if not effect.instance.activity.capacity:
             return True
-        return effect.instance.activity.capacity > effect.instance.activity.accepted_participants.count() - 1
+        return effect.instance.activity.capacity > spots_taken_after_release(
+            effect.instance.activity.accepted_participants, effect.instance
+        )
 
     def activity_has_started(effect):
         """ Activity has started """
@@ -601,9 +606,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return True
-        return (
-            effect.instance.activity.capacity
-            > effect.instance.activity.accepted_participants.count() - 1
+        return effect.instance.activity.capacity > spots_taken_after_release(
+            effect.instance.activity.accepted_participants, effect.instance
         )
 
     def has_scheduled_slot(effect):
@@ -639,17 +643,13 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleParticipantStateMachine.accept,
                     conditions=[is_accepted],
                 ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
             ScheduleParticipantStateMachine.accept,
             effects=[
                 FollowActivityEffect,
-                RelatedTransitionEffect(
-                    "activity",
-                    ScheduleActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
-                ),
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.reset,
@@ -658,6 +658,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleParticipantStateMachine.schedule,
                     conditions=[has_scheduled_slot]
                 ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
@@ -672,22 +673,14 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     InactiveParticipantAddedNotification,
                     conditions=[is_not_self, participant_is_inactive]
                 ),
-                RelatedTransitionEffect(
-                    "activity",
-                    ScheduleActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
-                ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
             ScheduleParticipantStateMachine.readd,
             effects=[
                 FollowActivityEffect,
-                RelatedTransitionEffect(
-                    "activity",
-                    ScheduleActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
-                ),
+                LockScheduleActivityIfFullEffect,
             ],
         ),
         TransitionTrigger(
@@ -1150,11 +1143,15 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         if not hasattr(effect.instance, 'slot') or not effect.instance.slot:
             return False
 
-        participant_count = effect.instance.slot.participants.filter(
-            status='accepted',
-            registration__status='accepted'
-        ).count()
-        if effect.instance.slot.capacity and participant_count - 1 < effect.instance.slot.capacity:
+        slot = effect.instance.slot
+        participant_count = spots_taken_after_release(
+            slot.participants.filter(
+                status='accepted',
+                registration__status='accepted'
+            ),
+            effect.instance
+        )
+        if slot.capacity and participant_count < slot.capacity:
             return True
         return False
 
@@ -1206,6 +1203,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.initiate,
             effects=[
+                DeleteInterestEffect,
                 CreateDateRegistrationEffect,
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(

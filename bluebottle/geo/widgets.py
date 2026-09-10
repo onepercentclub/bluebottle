@@ -3,23 +3,6 @@ from mapwidgets.settings import mw_settings
 from mapwidgets.widgets import MapboxPointFieldWidget
 
 
-class CustomMapboxPointFieldWidget(MapboxPointFieldWidget):
-
-    @property
-    def media(self):
-        return self._media(
-            extra_js=[
-                "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js",
-                "/static/assets/admin/js/mapbox-sdk.min.js",
-                "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js",
-            ],
-            extra_css=[
-                "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css",
-                "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css",
-            ],
-        )
-
-
 class GeolocationMapboxPointFieldWidget(MapboxPointFieldWidget):
 
     @property
@@ -40,3 +23,7 @@ class GeolocationMapboxPointFieldWidget(MapboxPointFieldWidget):
             "admin/js/geolocation-map-widget.js",
         ]
         return forms.Media(css={"all": css_paths}, js=js_paths)
+
+
+class CustomMapboxPointFieldWidget(GeolocationMapboxPointFieldWidget):
+    pass

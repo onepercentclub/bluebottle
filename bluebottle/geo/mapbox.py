@@ -24,7 +24,25 @@ GEOFEATURE_TYPE_RANK = {
 
 
 def is_v6_mapbox_id(value):
-    return bool(value and value.startswith('dXJuOm1ie'))
+    return bool(value and str(value).startswith('dXJu'))
+
+
+def is_mapbox_lookup_id(value):
+    """IDs Geocoding v6 accepts for retrieve-by-id.
+
+    Some streets still have v5-style ``address.<number>`` IDs in v6 responses.
+    """
+    if not value:
+        return False
+    value = str(value)
+    return value.startswith('dXJu') or value.startswith('address.')
+
+
+def feature_mapbox_id(feature):
+    if not feature:
+        return None
+    properties = feature.get('properties') or {}
+    return properties.get('mapbox_id') or feature.get('id') or None
 
 
 def geocode_request(path, params):
@@ -163,7 +181,7 @@ def iter_geofeature_data(feature, language=None):
     )
 
     yield {
-        'mapbox_id': properties.get('mapbox_id'),
+        'mapbox_id': feature_mapbox_id(feature),
         'feature_type': primary_type,
         'place_name': geofeature_place_name(
             primary_type,
@@ -182,7 +200,7 @@ def iter_geofeature_data(feature, language=None):
         context_data = context.get(feature_type)
         if not context_data or not context_data.get('mapbox_id'):
             continue
-        if context_data.get('mapbox_id') == properties.get('mapbox_id'):
+        if context_data.get('mapbox_id') == feature_mapbox_id(feature):
             continue
 
         context_fallback = context_data.get('name', '')
@@ -274,12 +292,25 @@ def _apply_geofeature_translations(geofeature, data, primary_language):
         )
 
 
-def select_primary_geofeature(geolocation):
+def select_primary_geofeature(geolocation, feature=None, geofeature_ids=None):
     from bluebottle.geo.models import GeoFeature
 
-    if not geolocation.mapbox_id:
-        return None
-    return GeoFeature.objects.filter(mapbox_id=geolocation.mapbox_id).first()
+    candidate_ids = []
+    for value in (feature_mapbox_id(feature), geolocation.mapbox_id):
+        if value and value not in candidate_ids:
+            candidate_ids.append(value)
+
+    for mapbox_id in candidate_ids:
+        primary = GeoFeature.objects.filter(mapbox_id=mapbox_id).first()
+        if primary:
+            return primary
+
+    if geofeature_ids:
+        return GeoFeature.objects.filter(pk=geofeature_ids[0]).first()
+
+    if geolocation.pk:
+        return geolocation.geofeatures.ordered_by_type().first()
+    return None
 
 
 def country_code_from_feature(feature):
@@ -347,9 +378,15 @@ def sync_geofeatures(geolocation, feature, language=None):
 
     if geolocation.pk:
         geolocation.geofeatures.set(geofeature_ids)
-        primary = select_primary_geofeature(geolocation)
+        primary = select_primary_geofeature(
+            geolocation, feature=feature, geofeature_ids=geofeature_ids
+        )
         apply_country_from_feature(geolocation, feature)
-        Geolocation.objects.filter(pk=geolocation.pk).update(geofeature=primary)
+        updates = {'geofeature': primary}
+        if primary and primary.mapbox_id and primary.mapbox_id != geolocation.mapbox_id:
+            updates['mapbox_id'] = primary.mapbox_id
+            geolocation.mapbox_id = primary.mapbox_id
+        Geolocation.objects.filter(pk=geolocation.pk).update(**updates)
         geolocation.geofeature = primary
 
 
@@ -359,7 +396,7 @@ def sync_geolocation(geolocation, language=None, feature=None):
 
     Safe to call from Geolocation.save(); ignores non-v6 ids and request errors.
     """
-    if not geolocation.mapbox_id or not is_v6_mapbox_id(geolocation.mapbox_id):
+    if not geolocation.mapbox_id or not is_mapbox_lookup_id(geolocation.mapbox_id):
         return
 
     try:

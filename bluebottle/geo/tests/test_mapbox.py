@@ -24,8 +24,15 @@ class MapboxUtilsTestCase(BluebottleTestCase):
 
     def test_is_v6_mapbox_id(self):
         self.assertTrue(mapbox_utils.is_v6_mapbox_id('dXJuOm1ieGFkcjox'))
+        self.assertTrue(mapbox_utils.is_v6_mapbox_id('dXJuOm1ieHBsYzp4Y2lv'))
         self.assertFalse(mapbox_utils.is_v6_mapbox_id('address.123'))
         self.assertFalse(mapbox_utils.is_v6_mapbox_id(''))
+
+    def test_is_mapbox_lookup_id(self):
+        self.assertTrue(mapbox_utils.is_mapbox_lookup_id('dXJuOm1ieGFkcjox'))
+        self.assertTrue(mapbox_utils.is_mapbox_lookup_id('address.5012299785582626'))
+        self.assertFalse(mapbox_utils.is_mapbox_lookup_id('place.123'))
+        self.assertFalse(mapbox_utils.is_mapbox_lookup_id(''))
 
     def test_extract_housenumber_from_street_number(self):
         geolocation = Geolocation(street_number='30')
@@ -296,6 +303,67 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertEqual(
             str(geolocation),
             MAPBOX_V6_ADDRESS_FEATURE['properties']['full_address'],
+        )
+
+    def test_sync_sets_primary_when_stored_mapbox_id_differs(self):
+        country = CountryFactory.create(alpha2_code='NL')
+        geolocation = Geolocation(
+            position=Point(3.851166, 51.762731),
+            mapbox_id='dXJuOm1ieGFkcjoldid',
+            country=country,
+        )
+        geolocation.save(skip_mapbox_sync=True)
+
+        mapbox_utils.sync_geofeatures(geolocation, MAPBOX_V6_ADDRESS_FEATURE)
+
+        geolocation.refresh_from_db()
+        self.assertIsNotNone(geolocation.geofeature_id)
+        self.assertEqual(
+            geolocation.mapbox_id,
+            MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
+        )
+        self.assertEqual(geolocation.geofeature.feature_type, 'address')
+
+    def test_sync_sets_primary_from_feature_id(self):
+        country = CountryFactory.create(alpha2_code='NL')
+        feature = deepcopy(MAPBOX_V6_ADDRESS_FEATURE)
+        mapbox_id = feature['properties'].pop('mapbox_id')
+        feature['id'] = mapbox_id
+        geolocation = Geolocation(
+            position=Point(3.851166, 51.762731),
+            mapbox_id='dXJuOm1ieGFkcjoldid',
+            country=country,
+        )
+        geolocation.save(skip_mapbox_sync=True)
+
+        mapbox_utils.sync_geofeatures(geolocation, feature)
+
+        geolocation.refresh_from_db()
+        self.assertEqual(geolocation.geofeature.mapbox_id, mapbox_id)
+        self.assertEqual(geolocation.mapbox_id, mapbox_id)
+
+    @mock.patch.object(
+        migrate_mapbox,
+        'resolve_geolocation_feature',
+        return_value=MAPBOX_V6_ADDRESS_FEATURE,
+    )
+    def test_migrate_geolocation_sets_primary_geofeature(self, mock_resolve):
+        country = CountryFactory.create(alpha2_code='NL')
+        geolocation = Geolocation(
+            position=Point(3.851166, 51.762731),
+            mapbox_id='address.5221966149504774',
+            country=country,
+        )
+        geolocation.save(skip_mapbox_sync=True)
+
+        status, detail = migrate_mapbox.migrate_geolocation(geolocation)
+
+        self.assertEqual(status, 'updated')
+        geolocation.refresh_from_db()
+        self.assertIsNotNone(geolocation.geofeature_id)
+        self.assertEqual(
+            geolocation.mapbox_id,
+            MAPBOX_V6_ADDRESS_FEATURE['properties']['mapbox_id'],
         )
 
     def test_sync_geofeatures_sets_country_from_mapbox_context(self):
@@ -574,3 +642,27 @@ class MapboxUtilsTestCase(BluebottleTestCase):
         self.assertGreater(geolocation.geofeatures.count(), 0)
         geolocation.refresh_from_db()
         self.assertEqual(geolocation.geofeature.feature_type, 'address')
+
+    @mock.patch('bluebottle.geo.mapbox.lookup_by_mapbox_id')
+    def test_geolocation_save_syncs_v6_street_with_address_id(self, mock_lookup):
+        street_id = 'address.5012299785582626'
+        street_feature = deepcopy(MAPBOX_V6_ADDRESS_FEATURE)
+        street_feature['id'] = street_id
+        street_feature['properties']['mapbox_id'] = street_id
+        street_feature['properties']['feature_type'] = 'street'
+        street_feature['properties']['name'] = 'Perimeter Road'
+        mock_lookup.return_value = {'features': [street_feature]}
+
+        country = CountryFactory.create(alpha2_code='GB')
+        geolocation = Geolocation(
+            position=Point(-1.7213966, 52.4492986),
+            mapbox_id=street_id,
+            country=country,
+        )
+        geolocation.save()
+
+        mock_lookup.assert_called_once()
+        geolocation.refresh_from_db()
+        self.assertEqual(geolocation.mapbox_id, street_id)
+        self.assertEqual(geolocation.geofeature.feature_type, 'street')
+        self.assertEqual(geolocation.geofeature.mapbox_id, street_id)

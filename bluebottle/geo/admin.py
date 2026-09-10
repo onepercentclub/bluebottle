@@ -213,7 +213,17 @@ class GeolocationAdmin(admin.ModelAdmin):
         return str(obj)
 
     list_filter = ('country', )
-    search_fields = ('mapbox_id', 'geofeatures__translations__name', 'geofeature__translations__name')
+    search_fields = (
+        'formatted_address',
+        'locality',
+        'street',
+        'postal_code',
+        'geofeatures__translations__name',
+        'geofeatures__translations__place_name',
+        'geofeature__translations__name',
+        'geofeature__translations__place_name',
+        'mapbox_id',
+    )
     inlines = (GeolocationGeoFeatureInline,)
 
     fieldsets = (

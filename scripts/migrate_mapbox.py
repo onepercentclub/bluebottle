@@ -203,7 +203,7 @@ def parse_feature(feature):
         country_code = country_code.upper()
 
     return {
-        'mapbox_id': properties.get('mapbox_id'),
+        'mapbox_id': mapbox_utils.feature_mapbox_id(feature),
         'formatted_address': mapbox_utils.geofeature_place_name(
             properties.get('feature_type', ''),
             properties.get('name_preferred') or properties.get('name', ''),
@@ -369,10 +369,12 @@ def migrate_geolocation(geolocation, dry_run=False):
 
     apply_parsed_feature(geolocation, parsed)
     geolocation.save(mapbox_feature=feature)
+    if not geolocation.geofeature_id:
+        mapbox_utils.sync_geofeatures(geolocation, feature)
     geolocation.refresh_from_db()
     if not geolocation.geofeature_id:
         return 'failed', 'primary geofeature not set'
-    return 'updated', parsed['mapbox_id']
+    return 'updated', geolocation.mapbox_id
 
 
 def backfill_primary_geofeature(geolocation, dry_run=False):
@@ -387,14 +389,19 @@ def backfill_primary_geofeature(geolocation, dry_run=False):
     if not feature:
         return 'failed', 'no feature found'
 
+    parsed = parse_feature(feature)
     if dry_run:
-        return 'dry-run', 'sync geofeatures'
+        return 'dry-run', parsed.get('mapbox_id') or 'sync geofeatures'
+
+    if parsed.get('mapbox_id'):
+        apply_parsed_feature(geolocation, parsed)
+        geolocation.save(skip_mapbox_sync=True)
 
     mapbox_utils.sync_geofeatures(geolocation, feature)
     geolocation.refresh_from_db()
     if not geolocation.geofeature_id:
         return 'failed', 'primary geofeature not set'
-    return 'updated', 'synced geofeatures'
+    return 'updated', geolocation.mapbox_id
 
 
 def _normalize_script_args(args):

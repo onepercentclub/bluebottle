@@ -39,6 +39,12 @@
         return field && field.value ? field.value.trim() : '';
     }
 
+    function isLookupableMapboxId(value) {
+        return Boolean(
+            value && (value.indexOf('dXJu') === 0 || value.indexOf('address.') === 0)
+        );
+    }
+
     function forwardGeocodeByMapboxIdV6(mapboxId, accessToken) {
         const url = new URL('https://api.mapbox.com/search/geocode/v6/forward');
         url.searchParams.set('q', mapboxId);
@@ -53,39 +59,6 @@
             .then(function (data) {
                 return preferAddressFeature(data.features || []);
             });
-    }
-
-    function loadExistingGeolocation(widget) {
-        const latitude = widget.djangoGeoJSONValue.lat;
-        const longitude = widget.djangoGeoJSONValue.lng;
-        const mapboxId = getExistingMapboxId();
-        const locationName = getExistingLocationName();
-
-        function showMarker(displayLatitude, displayLongitude) {
-            widget.addMarkerToMap(displayLatitude, displayLongitude);
-            widget.fitBoundMarker();
-            widget.enableClearBtn();
-            if (widget.addressAutoCompleteInput) {
-                widget.addressAutoCompleteInput.val(locationName);
-            }
-        }
-
-        if (mapboxId) {
-            forwardGeocodeByMapboxIdV6(mapboxId, mapboxgl.accessToken).then(function (feature) {
-                if (feature && feature.geometry && feature.geometry.coordinates) {
-                    const coordinates = feature.geometry.coordinates;
-                    showMarker(coordinates[1], coordinates[0]);
-                    if (widget.addressAutoCompleteInput && !locationName) {
-                        widget.addressAutoCompleteInput.val(featureLabel(feature));
-                    }
-                } else {
-                    showMarker(latitude, longitude);
-                }
-            });
-            return;
-        }
-
-        showMarker(latitude, longitude);
     }
 
     function buildReverseUrl(longitude, latitude, accessToken, types, limit) {
@@ -121,6 +94,59 @@
                         return preferAddressFeature(fallbackData.features || []);
                     });
             });
+    }
+
+    function loadExistingGeolocation(widget) {
+        const latitude = widget.djangoGeoJSONValue.lat;
+        const longitude = widget.djangoGeoJSONValue.lng;
+        const mapboxId = getExistingMapboxId();
+        const locationName = getExistingLocationName();
+
+        function showMarker(displayLatitude, displayLongitude, name) {
+            widget.addMarkerToMap(displayLatitude, displayLongitude);
+            widget.fitBoundMarker();
+            widget.enableClearBtn();
+            if (widget.addressAutoCompleteInput) {
+                widget.addressAutoCompleteInput.val(name || '');
+            }
+        }
+
+        function applyFeature(feature) {
+            if (feature && feature.properties && feature.properties.mapbox_id) {
+                setMapboxId(feature.properties.mapbox_id);
+            }
+            const label = locationName || (feature ? featureLabel(feature) : '');
+            if (feature && feature.geometry && feature.geometry.coordinates) {
+                const coordinates = feature.geometry.coordinates;
+                showMarker(coordinates[1], coordinates[0], label);
+                return;
+            }
+            showMarker(latitude, longitude, label);
+        }
+
+        if (isLookupableMapboxId(mapboxId)) {
+            forwardGeocodeByMapboxIdV6(mapboxId, mapboxgl.accessToken).then(function (feature) {
+                if (feature) {
+                    applyFeature(feature);
+                    return;
+                }
+                showMarker(latitude, longitude, locationName);
+            });
+            return;
+        }
+
+        if (latitude && longitude) {
+            reverseGeocodeV6(longitude, latitude, mapboxgl.accessToken).then(function (feature) {
+                if (feature) {
+                    applyFeature(feature);
+                    return;
+                }
+                showMarker(latitude, longitude, locationName);
+            });
+            return;
+        }
+
+        showMarker(latitude, longitude, locationName);
     }
 
     function forwardGeocodeV6(query, accessToken) {

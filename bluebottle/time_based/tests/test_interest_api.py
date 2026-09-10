@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from unittest import expectedFailure
 
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -241,6 +242,95 @@ class InterestListAPITestCase(APITestCase):
         self.activity.save()
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.activity, self.activity)
+
+
+class PeriodicPreviousSlotInterestAPITestCase(APITestCase):
+    """
+    Users who completed a previous recurring slot should be able to join the
+    waiting list when the activity is full again.
+
+    The tests below document the current bug: succeeded slot participations
+    still count as "already involved" even after the registration was stopped.
+    """
+
+    url_name = 'interest-list'
+    serializer = InterestSerializer
+    factory = InterestFactory
+    fields = ['activity']
+
+    def setUp(self):
+        super().setUp()
+        self.initiative = InitiativeFactory.create(status='approved')
+        self.activity = PeriodicActivityFactory.create(
+            initiative=self.initiative,
+            status='open',
+            capacity=2,
+            review=False,
+            start=date.today() - timedelta(days=14),
+            deadline=date.today() + timedelta(days=20),
+        )
+        self.url = reverse(self.url_name)
+        self.defaults = {'activity': self.activity}
+
+    def _create_former_slot_participant(self):
+        user = BlueBottleUserFactory.create()
+        registration = PeriodicRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user,
+        )
+        participant = registration.participants.first()
+        slot = participant.slot
+        if slot.status in ('new', 'scheduled'):
+            slot.states.start(save=True)
+        slot.states.finish(save=True)
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, 'succeeded')
+        registration.states.stop(save=True)
+        registration.refresh_from_db()
+        self.assertEqual(registration.status, 'stopped')
+        return user, registration, participant
+
+    def _fill_activity(self):
+        PeriodicRegistrationFactory.create_batch(
+            2, activity=self.activity, status='accepted'
+        )
+        self.activity.status = 'full'
+        self.activity.save()
+
+    def test_succeeded_previous_slot_participation_blocks_waiting_list(self):
+        user, registration, participant = self._create_former_slot_participant()
+        self._fill_activity()
+
+        self.perform_create(user=user)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()['errors'][0]['code'],
+            'already_involved',
+        )
+        self.assertFalse(
+            Interest.objects.filter(user=user, activity=self.activity).exists()
+        )
+        self.assertEqual(registration.status, 'stopped')
+        self.assertEqual(participant.status, 'succeeded')
+
+    @expectedFailure
+    def test_former_slot_participant_should_be_able_to_join_waiting_list(self):
+        """
+        Desired behaviour once the validator ignores past slot participations.
+
+        Marked expectedFailure while succeeded PeriodicParticipant records are
+        still treated as active involvement.
+        """
+        user, _registration, _participant = self._create_former_slot_participant()
+        self._fill_activity()
+
+        self.perform_create(user=user)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(self.model.user, user)
         self.assertEqual(self.model.activity, self.activity)
 
 

@@ -16,13 +16,17 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
     SubEvent, RepetitionModeChoices, SlotModeChoices
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
-from bluebottle.activity_pub.serializers.fields import FederatedIdField, IdentifierField
+from bluebottle.activity_pub.serializers.fields import (
+    FederatedIdField,
+    IdentifierField,
+    mapbox_id_from_federated_identifiers,
+)
 from bluebottle.collect.models import CollectActivity, CollectType
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
-from bluebottle.geo.models import Country, Geolocation, mapbox_id_from_federated_identifiers, FEDERATED_PLACE_TYPES
+from bluebottle.geo.models import Country, Geolocation
 from bluebottle.grant_management.models import GrantApplication
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
@@ -177,9 +181,7 @@ class LocationSerializer(FederatedObjectSerializer):
 
     def get_place_type(self, obj):
         if obj.geofeature and obj.geofeature.feature_type:
-            return FEDERATED_PLACE_TYPES.get(
-                obj.geofeature.feature_type, obj.geofeature.feature_type
-            )
+            obj.geofeature.feature_type
         return None
 
     address = AddressSerializer(source='*', allow_null=True)

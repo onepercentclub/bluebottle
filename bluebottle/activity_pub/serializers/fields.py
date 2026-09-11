@@ -59,6 +59,17 @@ class TypeField(serializers.CharField):
         return {'type': self.type}
 
 
+def mapbox_id_from_federated_identifiers(identifiers):
+    for item in identifiers or []:
+        if not isinstance(item, dict):
+            continue
+        property_id = item.get('propertyID') or item.get('property_id')
+        value = item.get('value')
+        if property_id == 'mapbox-feature-id' and value:
+            return value
+    return None
+
+
 class IdentifierField(serializers.Field):
     def get_attribute(self, instance):
         identifier = getattr(instance, 'identifier', None)
@@ -107,3 +118,8 @@ def normalize_identifier(item):
         'propertyID': property_id,
         'value': value,
     }
+
+
+class MapboxIdField(IdentifierField):
+    def to_internal_value(self, data):
+        return mapbox_id_from_federated_identifiers(super().to_internal_value(data))

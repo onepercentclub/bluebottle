@@ -1,7 +1,6 @@
 from io import BytesIO
 
 import requests
-from django.contrib.gis.geos import Point
 from django.core.files import File
 from django.db import models
 from rest_framework import serializers
@@ -13,9 +12,10 @@ from bluebottle.activity_links.models import (
     LinkedScheduleActivity, LinkedGrantApplication
 )
 from bluebottle.activity_pub.models import Image as ActivityPubImage
+from bluebottle.activity_pub.serializers.fields import MapboxIdField
 from bluebottle.files.models import Image
 from bluebottle.geo.models import Geolocation, Country
-from bluebottle.geo.serializers import GeolocationSerializer
+from bluebottle.geo.serializers import GeolocationSerializer, PointSerializer
 from bluebottle.utils.fields import RichTextField
 
 
@@ -55,48 +55,52 @@ class LinkedActivityImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'url', 'name')
 
 
+class LatLongPositionField(PointSerializer):
+    def get_value(self, dictionary):
+        if not isinstance(dictionary, dict):
+            return serializers.empty
+        if 'latitude' not in dictionary and 'longitude' not in dictionary:
+            return serializers.empty
+        return {
+            'latitude': dictionary.get('latitude'),
+            'longitude': dictionary.get('longitude'),
+        }
+
+
 class AddressSerializer(serializers.Serializer):
-    street_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    street_address = serializers.CharField(
+        source='street', required=False, allow_null=True, allow_blank=True
+    )
     postal_code = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-
     locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    region = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    country = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-
-    class Meta:
-        fields = (
-            'street_address', 'postal_code', 'locality', 'region', 'country',
-        )
+    region = serializers.CharField(
+        source='province', required=False, allow_null=True, allow_blank=True
+    )
+    country = serializers.SlugRelatedField(
+        queryset=Country.objects.all(),
+        slug_field='alpha2_code',
+        required=False,
+        allow_null=True,
+    )
 
 
 class LinkedLocationSerializer(GeolocationSerializer):
-    address = AddressSerializer(write_only=True, required=False)
-    name = serializers.CharField(source='formatted_address', write_only=True, required=False)
-    latitude = serializers.FloatField(write_only=True, required=False)
-    longitude = serializers.FloatField(write_only=True, required=False)
+    address = AddressSerializer(source='*', write_only=True, required=False)
+    name = serializers.CharField(
+        source='formatted_address', write_only=True, required=False, allow_null=True
+    )
+    position = LatLongPositionField(write_only=True, required=False)
+    identifier = MapboxIdField(source='mapbox_id', write_only=True, required=False)
 
-    def to_internal_value(self, data):
-        result = dict(**super().to_internal_value(data))
-
-        address = result['address']
-
-        country = Country.objects.filter(alpha2_code=address['country']).first()
-
-        return {
-            'position': Point(
-                result['longitude'], result['latitude']
-            ),
-            'formatted_address': result['formatted_address'],
-            'locality': address['locality'],
-            'street': address['street_address'],
-            'postal_code': address['postal_code'],
-            'country': country
-        }
+    def validate(self, attrs):
+        if not attrs.get('locality'):
+            attrs['locality'] = attrs.get('formatted_address')
+        return attrs
 
     class Meta:
         model = Geolocation
         fields = (
-            'address', 'name', 'longitude', 'latitude'
+            'address', 'name', 'position', 'identifier',
         )
 
 

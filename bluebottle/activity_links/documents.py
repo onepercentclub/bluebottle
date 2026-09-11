@@ -385,7 +385,7 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
 
             }
             for slot in instance.slots.all()
-            if slot.location
+            if slot.location and slot.location.geofeature
         ]
         return locations
 

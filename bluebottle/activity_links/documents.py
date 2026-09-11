@@ -265,7 +265,7 @@ class LinkedFundingDocument(LinkedActivityDocument):
 
     def prepare_location(self, instance):
         locations = []
-        if hasattr(instance, 'location') and instance.location:
+        if hasattr(instance, 'location') and instance.location and instance.location.geofeature:
             locations.append({
                 'id': instance.location.id,
                 'name': instance.location.geofeature.place_name,
@@ -321,7 +321,7 @@ class LinkedGrantApplicationDocument(LinkedActivityDocument):
 
     def prepare_location(self, instance):
         locations = []
-        if hasattr(instance, 'location') and instance.location:
+        if hasattr(instance, 'location') and instance.location and instance.location.geofeature:
             locations.append({
                 'id': instance.location.id,
                 'name': instance.location.geofeature.place_name,
@@ -465,7 +465,7 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
                 'type': 'location'
 
             }
-        ] if instance.location_id else []
+        ] if instance.location_id and instance.location.geofeature else []
         return locations
 
     def prepare_country(self, instance):
@@ -541,7 +541,7 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
                 'type': 'location'
 
             }
-        ] if instance.location_id else []
+        ] if instance.location_id and instance.location.geofeature else []
         return locations
 
     def prepare_country(self, instance):
@@ -617,7 +617,7 @@ class LinkedPeriodicActivityDocument(LinkedActivityDocument):
                 'type': 'location'
 
             }
-        ] if instance.location_id else []
+        ] if instance.location_id and instance.location.geofeature else []
         return locations
 
     def prepare_country(self, instance):

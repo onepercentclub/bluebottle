@@ -334,6 +334,12 @@ class Geolocation(models.Model):
     )
 
     @property
+    def place_name(self):
+        if not self.geofeature:
+            return self.formatted_address or self.locality or '-'
+        return self.geofeature.safe_translation_getter('place_name') or self.geofeature.safe_translation_getter('name')
+
+    @property
     def activity_pub_url(self):
         return None
 
@@ -341,12 +347,6 @@ class Geolocation(models.Model):
 
     class JSONAPIMeta(object):
         resource_name = 'geolocations'
-
-    @property
-    def place_name(self):
-        if self.geofeature:
-            return self.geofeature.place_name
-        return self.formatted_address or self.locality or '-'
 
     def __str__(self):
         geofeature = self.geofeature

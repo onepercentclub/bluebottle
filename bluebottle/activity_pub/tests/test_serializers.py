@@ -2,10 +2,13 @@ from decimal import Decimal
 from io import BytesIO
 
 import mock
+from django.contrib.gis.geos import Point
 from django.test import RequestFactory
+from django.test.utils import override_settings
 from djmoney.money import Money
 from requests import Response
 
+from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import GoodDeed, CrowdFunding, GrantApplication
 from bluebottle.activity_pub.serializers.federated_activities import (
     FederatedDateActivitySerializer,
@@ -18,7 +21,8 @@ from bluebottle.activity_pub.tests.factories import (
     DoGoodEventFactory
 )
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.geo.models import GeoFeature, Geolocation
+from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.funding.tests.factories import FundingFactory
@@ -243,6 +247,68 @@ class FederatedFundingSerializerTestCase(BluebottleTestCase):
 
         self.assertEqual(crowd_funding.donated, Decimal('120.00'))
         self.assertEqual(crowd_funding.donated_currency, 'EUR')
+
+
+@override_settings(MAPBOX_API_KEY=None)
+class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
+    def setUp(self):
+        SitePlatformSettings.objects.create(
+            share_activities=['supplier', 'consumer']
+        )
+        self.country = CountryFactory.create(alpha2_code='NL')
+
+    @property
+    def context(self):
+        request = RequestFactory().get('/')
+        request.user = BlueBottleUserFactory.create()
+        return {'request': request}
+
+    def create_geolocation_from_geofeatures(self):
+        place = GeoFeature.objects.create(
+            mapbox_id='dXJu-test-amsterdam-place',
+            feature_type='place',
+        )
+        place.set_current_language('en')
+        place.name = 'Amsterdam'
+        place.place_name = 'Amsterdam, Netherlands'
+        place.save()
+
+        geolocation = Geolocation(
+            country=self.country,
+            position=Point(4.9, 52.37),
+            formatted_address=None,
+            locality=None,
+            street=None,
+            street_number=None,
+            postal_code=None,
+            mapbox_id=place.mapbox_id,
+            geofeature=place,
+        )
+        geolocation.save(skip_mapbox_sync=True)
+        geolocation.geofeatures.add(place)
+        return geolocation, place
+
+    def test_share_funding_uses_geofeature_when_address_fields_are_empty(self):
+        geolocation, place = self.create_geolocation_from_geofeatures()
+        funding = FundingFactory.create(impact_location=geolocation)
+
+        federated_data = FederatedFundingSerializer(
+            instance=funding,
+            context=self.context,
+        ).data
+        self.assertEqual(federated_data['location']['name'], place.place_name)
+        self.assertFalse(federated_data['location']['address'].get('locality'))
+
+        activity_pub_serializer = CrowdFundingSerializer(
+            data=federated_data,
+            context=self.context,
+        )
+        self.assertTrue(activity_pub_serializer.is_valid(raise_exception=True))
+
+        event = adapter.create_or_update_event(funding)
+        self.assertEqual(event.location.name, place.place_name)
+        self.assertEqual(event.location.latitude, geolocation.position.x)
+        self.assertEqual(event.location.longitude, geolocation.position.y)
 
 
 class GoodDeedSerializerTest(BluebottleTestCase):

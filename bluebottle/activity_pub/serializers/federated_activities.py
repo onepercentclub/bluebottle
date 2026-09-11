@@ -140,6 +140,11 @@ class AddressSerializer(FederatedObjectSerializer):
             'region', 'country'
         )
 
+    def to_internal_value(self, data):
+        result = super().to_internal_value(data)
+        result.pop('id', None)
+        return result
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if not data.get('locality'):
@@ -181,7 +186,9 @@ class LocationSerializer(FederatedObjectSerializer):
 
     def get_place_type(self, obj):
         if obj.geofeature and obj.geofeature.feature_type:
-            obj.geofeature.feature_type
+            if obj.geofeature.feature_type == 'place':
+                return 'city'
+            return obj.geofeature.feature_type
         return None
 
     address = AddressSerializer(source='*', allow_null=True)

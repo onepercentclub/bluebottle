@@ -12,7 +12,6 @@ class Migration(migrations.Migration):
         ('fundraisers', '0008_auto_20210302_1417'),
         ('payments_lipisha', '0003_auto_20210302_1417'),
         ('donations', '0012_auto_20210302_1417'),
-        ('votes', '0003_auto_20210302_1417'),
         ('suggestions', '0005_auto_20210302_1417'),
         ('projects', '0094_merge_20191107_0943'),
         ('tasks', '0045_auto_20210302_0940'),

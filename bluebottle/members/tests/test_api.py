@@ -30,6 +30,7 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
     DateRegistrationFactory
 )
+from bluebottle.voting.tests.factories import PollVoteFactory
 
 
 class LoginTestCase(BluebottleTestCase):
@@ -1374,6 +1375,23 @@ class CurrentMemberAPITestCase(APITestCase):
     def test_get_logged_out(self):
         self.perform_get()
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_has_votes_false(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(
+            self.response.json()['data']['attributes']['has-votes'],
+            False
+        )
+
+    def test_has_votes_true(self):
+        PollVoteFactory.create(owner=self.user)
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(
+            self.response.json()['data']['attributes']['has-votes'],
+            True
+        )
 
 
 class MemberProfileJSONAPITestCase(APITestCase):

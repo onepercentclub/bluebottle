@@ -389,8 +389,8 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
             instance=funding,
             context=self.context,
         ).data['location']
-        self.assertNotIn('place_type', location)
-        self.assertNotIn('identifier', location)
+        self.assertIsNone(location['place_type'])
+        self.assertEqual(location['identifier'], [])
         self.assertEqual(location['name'], 'Amsterdam')
         self.assertEqual(location['address']['locality'], 'Amsterdam')
 
@@ -402,7 +402,7 @@ class ShareActivityGeofeatureLocationTestCase(BluebottleTestCase):
             instance=funding,
             context=self.context,
         ).data['location']
-        self.assertNotIn('place_type', location)
+        self.assertIsNone(location['place_type'])
         self.assertEqual(location['address']['locality'], geolocation.locality)
         self.assertEqual(
             location['identifier'],

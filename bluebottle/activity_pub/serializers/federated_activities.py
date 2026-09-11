@@ -190,23 +190,6 @@ class LocationSerializer(FederatedObjectSerializer):
             'id', 'latitude', 'longitude', 'name', 'place_type', 'identifier', 'address',
         )
 
-    def to_internal_value(self, data):
-        extra = {}
-        if isinstance(data, dict):
-            extra['name'] = data.get('name')
-            extra['place_type'] = data.get('place_type')
-        result = super().to_internal_value(data)
-        result.update(extra)
-        return result
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        if not data.get('place_type'):
-            data.pop('place_type', None)
-        if not data.get('identifier'):
-            data.pop('identifier', None)
-        return data
-
     def create(self, validated_data):
         if not validated_data:
             return None

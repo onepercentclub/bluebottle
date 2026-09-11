@@ -164,7 +164,7 @@ class LocationSerializer(FederatedObjectSerializer):
     id = FederatedIdField('json-ld:place')
     latitude = serializers.FloatField(source='position.x', allow_null=True)
     longitude = serializers.FloatField(source='position.y', allow_null=True)
-    name = serializers.CharField(source='formatted_address', allow_null=True)
+    name = serializers.CharField(source='place_name', allow_null=True)
 
     address = AddressSerializer(source='*', allow_null=True)
 

@@ -16,13 +16,13 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
     SubEvent, RepetitionModeChoices, SlotModeChoices
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
-from bluebottle.activity_pub.serializers.fields import FederatedIdField
+from bluebottle.activity_pub.serializers.fields import FederatedIdField, IdentifierField
 from bluebottle.collect.models import CollectActivity, CollectType
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
-from bluebottle.geo.models import Country, Geolocation
+from bluebottle.geo.models import Country, Geolocation, mapbox_id_from_federated_identifiers, FEDERATED_PLACE_TYPES
 from bluebottle.grant_management.models import GrantApplication
 from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity, RegisteredDateActivity, \
@@ -136,12 +136,14 @@ class AddressSerializer(FederatedObjectSerializer):
             'region', 'country'
         )
 
-    def to_internal_value(self, data):
-        if not data:
-            return {}
-        result = super().to_internal_value(data)
-        del result['id']
-        return result
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data.get('locality'):
+            for feature in instance.geofeatures.all():
+                if feature.feature_type in ('place', 'locality') and feature.name:
+                    data['locality'] = feature.name
+                    break
+        return data
 
 
 class OrganizationSerializer(FederatedObjectSerializer):
@@ -165,17 +167,45 @@ class LocationSerializer(FederatedObjectSerializer):
     latitude = serializers.FloatField(source='position.x', allow_null=True)
     longitude = serializers.FloatField(source='position.y', allow_null=True)
     name = serializers.SerializerMethodField()
+    place_type = serializers.SerializerMethodField()
+    identifier = IdentifierField(required=False, allow_null=True)
 
     def get_name(self, obj):
         if obj.geofeature:
             return obj.geofeature.place_name
         return obj.formatted_address or obj.locality or '-'
 
+    def get_place_type(self, obj):
+        if obj.geofeature and obj.geofeature.feature_type:
+            return FEDERATED_PLACE_TYPES.get(
+                obj.geofeature.feature_type, obj.geofeature.feature_type
+            )
+        return None
+
     address = AddressSerializer(source='*', allow_null=True)
 
     class Meta:
         model = Geolocation
-        fields = ('id', 'latitude', 'longitude', 'name', 'address',)
+        fields = (
+            'id', 'latitude', 'longitude', 'name', 'place_type', 'identifier', 'address',
+        )
+
+    def to_internal_value(self, data):
+        extra = {}
+        if isinstance(data, dict):
+            extra['name'] = data.get('name')
+            extra['place_type'] = data.get('place_type')
+        result = super().to_internal_value(data)
+        result.update(extra)
+        return result
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data.get('place_type'):
+            data.pop('place_type', None)
+        if not data.get('identifier'):
+            data.pop('identifier', None)
+        return data
 
     def create(self, validated_data):
         if not validated_data:
@@ -192,6 +222,15 @@ class LocationSerializer(FederatedObjectSerializer):
             )
         except KeyError:
             pass
+
+        identifiers = validated_data.pop('identifier', None)
+        validated_data.pop('place_type', None)
+        name = validated_data.pop('name', None)
+        mapbox_id = mapbox_id_from_federated_identifiers(identifiers)
+        if mapbox_id:
+            validated_data['mapbox_id'] = mapbox_id
+        if name:
+            validated_data.setdefault('formatted_address', name)
 
         return super().create(validated_data)
 

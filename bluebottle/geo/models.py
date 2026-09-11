@@ -22,6 +22,40 @@ from ..utils.models import SortableTranslatableModel
 
 tf = TimezoneFinder()
 
+FEDERATED_PLACE_TYPES = {
+    'address': 'address',
+    'street': 'street',
+    'postcode': 'postcode',
+    'neighborhood': 'neighborhood',
+    'locality': 'locality',
+    'place': 'city',
+    'district': 'district',
+    'region': 'region',
+    'country': 'country',
+}
+
+MAPBOX_FEATURE_ID_PROPERTY = 'mapbox-feature-id'
+
+
+def geofeature_display_name(geofeature):
+    if not geofeature:
+        return None
+    return (
+        geofeature.safe_translation_getter('name', any_language=True)
+        or geofeature.safe_translation_getter('place_name', any_language=True)
+    )
+
+
+def mapbox_id_from_federated_identifiers(identifiers):
+    for item in identifiers or []:
+        if not isinstance(item, dict):
+            continue
+        property_id = item.get('propertyID') or item.get('property_id')
+        value = item.get('value')
+        if property_id == MAPBOX_FEATURE_ID_PROPERTY and value:
+            return value
+    return None
+
 
 @python_2_unicode_compatible
 class GeoBaseModel(SortableTranslatableModel):

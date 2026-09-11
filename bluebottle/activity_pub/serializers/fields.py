@@ -57,3 +57,53 @@ class TypeField(serializers.CharField):
 
     def to_internal_value(self, value):
         return {'type': self.type}
+
+
+class IdentifierField(serializers.Field):
+    def get_attribute(self, instance):
+        identifier = getattr(instance, 'identifier', None)
+        if identifier:
+            return identifier
+        mapbox_id = getattr(instance, 'mapbox_id', None)
+        geofeature = getattr(instance, 'geofeature', None)
+        if geofeature and getattr(geofeature, 'mapbox_id', None):
+            mapbox_id = geofeature.mapbox_id
+        if not mapbox_id:
+            return []
+        return [{
+            'type': 'PropertyValue',
+            'propertyID': 'mapbox-feature-id',
+            'value': mapbox_id,
+        }]
+
+    def to_representation(self, value):
+        return [
+            item for item in (normalize_identifier(entry) for entry in (value or []))
+            if item
+        ]
+
+    def to_internal_value(self, data):
+        if not data:
+            return []
+        if isinstance(data, dict):
+            data = [data]
+        if not isinstance(data, list):
+            raise serializers.ValidationError('Expected a list of identifiers')
+        return [
+            item for item in (normalize_identifier(entry) for entry in data)
+            if item
+        ]
+
+
+def normalize_identifier(item):
+    if not isinstance(item, dict):
+        return None
+    property_id = item.get('propertyID') or item.get('property_id')
+    value = item.get('value')
+    if not property_id or value in (None, ''):
+        return None
+    return {
+        'type': 'PropertyValue',
+        'propertyID': property_id,
+        'value': value,
+    }

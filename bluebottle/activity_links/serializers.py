@@ -14,7 +14,11 @@ from bluebottle.activity_links.models import (
 )
 from bluebottle.activity_pub.models import Image as ActivityPubImage
 from bluebottle.files.models import Image
-from bluebottle.geo.models import Geolocation, Country
+from bluebottle.geo.models import (
+    Geolocation,
+    Country,
+    mapbox_id_from_federated_identifiers,
+)
 from bluebottle.geo.serializers import GeolocationSerializer
 from bluebottle.utils.fields import RichTextField
 
@@ -78,19 +82,27 @@ class LinkedLocationSerializer(GeolocationSerializer):
     def to_internal_value(self, data):
         result = dict(**super().to_internal_value(data))
 
-        address = result['address']
+        address = result.get('address') or {}
 
-        country = Country.objects.filter(alpha2_code=address['country']).first()
+        country_code = address.get('country')
+        country = (
+            Country.objects.filter(alpha2_code=country_code).first()
+            if country_code else None
+        )
+        formatted_address = result.get('formatted_address')
+        locality = address.get('locality') or formatted_address
+        payload = data if isinstance(data, dict) else {}
 
         return {
             'position': Point(
                 result['longitude'], result['latitude']
             ),
-            'formatted_address': result['formatted_address'],
-            'locality': address['locality'],
-            'street': address['street_address'],
-            'postal_code': address['postal_code'],
-            'country': country
+            'formatted_address': formatted_address,
+            'locality': locality,
+            'street': address.get('street_address'),
+            'postal_code': address.get('postal_code'),
+            'country': country,
+            'mapbox_id': mapbox_id_from_federated_identifiers(payload.get('identifier')),
         }
 
     class Meta:

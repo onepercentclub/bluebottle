@@ -218,3 +218,35 @@ class JSONLDProcessorTestCase(BluebottleTestCase):
             address_attributes,
             set(address.keys())
         )
+
+    def test_expand_place_identifier(self):
+        data = {
+            '@context': default_context,
+            'id': 'https://example.com/place',
+            'type': 'Place',
+            'name': 'Van der Werfpark',
+            'latitude': 52.15782,
+            'longitude': 4.49075,
+            'placeType': 'city',
+            'identifier': [{
+                'type': 'PropertyValue',
+                'propertyID': 'mapbox-feature-id',
+                'value': 'dXJu-test',
+            }],
+        }
+        result = self.expand(data)
+        self.assertEqual(result['@type'], ['https://www.w3.org/ns/activitystreams#Place'])
+        self.assertEqual(
+            result['https://goodup.com/json-ld#placeType'][0]['@value'],
+            'city',
+        )
+        identifier = result['https://schema.org/identifier'][0]
+        self.assertEqual(identifier['@type'], ['https://schema.org/PropertyValue'])
+        self.assertEqual(
+            identifier['https://schema.org/propertyID'][0]['@value'],
+            'mapbox-feature-id',
+        )
+        self.assertEqual(
+            identifier['https://schema.org/value'][0]['@value'],
+            'dXJu-test',
+        )

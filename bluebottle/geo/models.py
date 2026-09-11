@@ -348,12 +348,6 @@ class Geolocation(models.Model):
     class JSONAPIMeta(object):
         resource_name = 'geolocations'
 
-    @property
-    def place_name(self):
-        if self.geofeature:
-            return self.geofeature.place_name
-        return self.formatted_address or self.locality or '-'
-
     def __str__(self):
         geofeature = self.geofeature
         if geofeature:

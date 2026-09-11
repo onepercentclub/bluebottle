@@ -1,4 +1,6 @@
 from django.db import IntegrityError, transaction
+from django.db.models.aggregates import Count
+from django.db.models.query import Prefetch
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -26,7 +28,7 @@ class PollVoteList(JsonApiViewMixin, ListCreateAPIView):
     )
 
     def get_queryset(self):
-        polls = Poll.objects.annotate(votes_cast=Count('votes')).prefetch_related(
+        polls = Poll.objects.annotate(_votes_cast=Count('votes')).prefetch_related(
             'options'
         )
         queryset = (

@@ -240,6 +240,19 @@ class PollVoteListAPITestCase(APITestCase):
             self.response.json()['data'][0]['id'], str(closed_vote.pk)
         )
 
+        self.perform_get(user=self.user, query={'filter[status]': 'open'})
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertEqual(len(self.response.json()['data']), 1)
+        self.assertEqual(
+            self.response.json()['data'][0]['relationships']['poll']['data']['id'],
+            str(self.poll.pk)
+        )
+        included_poll = [
+            included for included in self.response.json()['included']
+            if included['type'] == 'polls' and included['id'] == str(self.poll.pk)
+        ][0]
+        self.assertEqual(included_poll['attributes']['votes-cast'], 1)
+
     def test_list_anonymous(self):
         self.perform_get()
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)

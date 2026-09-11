@@ -35,6 +35,9 @@ class Poll(TriggerMixin, TranslatableModel):
 
     @property
     def votes_cast(self):
+        annotated = getattr(self, '_votes_cast', None)
+        if annotated is not None:
+            return annotated
         return self.votes.count()
 
     def __str__(self):

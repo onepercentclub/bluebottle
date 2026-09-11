@@ -140,6 +140,7 @@ class CurrentMemberSerializer(MemberSerializer):
     )
     segments = ResourceRelatedField(many=True, read_only=True)
     has_initiatives = serializers.SerializerMethodField()
+    has_votes = serializers.SerializerMethodField()
     can_pledge = serializers.BooleanField(read_only=True)
     can_do_bank_transfer = serializers.BooleanField(read_only=True)
 
@@ -155,13 +156,16 @@ class CurrentMemberSerializer(MemberSerializer):
     def get_has_initiatives(self, obj):
         return obj.is_initiator
 
+    def get_has_votes(self, obj):
+        return obj.poll_votes.exists()
+
     class Meta(MemberSerializer.Meta):
         fields = MemberSerializer.Meta.fields + (
             "hours_spent",
             "hours_planned",
             "has_initiatives",
+            "has_votes",
             "segments",
-            "has_initiatives",
             "profile",
             "can_pledge",
             "can_do_bank_transfer",

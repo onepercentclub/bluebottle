@@ -20,7 +20,8 @@ from bluebottle.cms.models import (
     ProjectsMapContent, CategoriesContent, StepsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, NewsContent
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, NewsContent,
+    PollContent
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
@@ -226,6 +227,27 @@ class DonateButtonBlockSerializer(BaseBlockSerializer):
 
     included_serializers = {
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
+    }
+
+
+class PollBlockSerializer(BaseBlockSerializer):
+
+    poll = ResourceRelatedField(
+        read_only=True
+    )
+
+    class Meta(object):
+        model = PollContent
+        fields = ('id', 'block_type', 'poll')
+        included_resources = ['poll', 'poll.options', 'poll.my_vote']
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/poll'
+
+    included_serializers = {
+        'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'poll.options': 'bluebottle.voting.serializers.PollOptionSerializer',
+        'poll.my_vote': 'bluebottle.voting.serializers.PollVoteSerializer',
     }
 
 
@@ -557,6 +579,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         StepsBlockSerializer,
         ActivitiesBlockSerializer,
         DonateButtonBlockSerializer,
+        PollBlockSerializer,
         ProjectsMapBlockSerializer,
         LinksBlockSerializer,
         StatsBlockSerializer,
@@ -600,7 +623,7 @@ class BlockSerializer(PolymorphicModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'funding',
-            'full_page', 'persons'
+            'poll', 'poll.options', 'full_page', 'persons'
 
         ]
 
@@ -611,6 +634,8 @@ class BlockSerializer(PolymorphicModelSerializer):
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
         'persons': 'bluebottle.cms.serializers.PersonSerializer',
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
+        'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'poll.options': 'bluebottle.voting.serializers.PollOptionSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
@@ -646,6 +671,9 @@ class BaseCMSSerializer(ModelSerializer):
             'blocks.persons',
             'blocks.funding',
             'blocks.funding.image',
+            'blocks.poll',
+            'blocks.poll.options',
+            'blocks.poll.my_vote',
             'blocks.logos',
             'blocks.categories',
         ]
@@ -659,6 +687,9 @@ class BaseCMSSerializer(ModelSerializer):
         'persons': 'bluebottle.cms.serializers.PersonSerializer',
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'poll': 'bluebottle.voting.serializers.PollSerializer',
+        'options': 'bluebottle.voting.serializers.PollOptionSerializer',
+        'my_vote': 'bluebottle.voting.serializers.PollVoteSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }

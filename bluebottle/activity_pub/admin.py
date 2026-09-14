@@ -874,6 +874,12 @@ class EventAdminMixin:
         return obj.source
     source.short_description = _("Partner")
 
+    def get_adopt_owner(self, event, request):
+        follow = event.source.follow if event.source else None
+        if follow and follow.default_owner:
+            return follow.default_owner
+        return request.user
+
     def change_view(self, request, object_id, form_url="", extra_context=None):
         event = get_object_or_404(Event, pk=unquote(object_id))
         extra_context = extra_context or {}
@@ -941,7 +947,7 @@ class EventAdminMixin:
             )
 
         try:
-            activity = adapter.adopt(event, owner=request.user)
+            activity = adapter.adopt(event, owner=self.get_adopt_owner(event, request))
 
             self.message_user(
                 request,
@@ -975,7 +981,7 @@ class EventAdminMixin:
             )
 
         try:
-            activity = adapter.adopt(event, owner=request.user)
+            activity = adapter.adopt(event, owner=self.get_adopt_owner(event, request))
             self.message_user(
                 request,
                 f'Successfully adopted activity "{event.name}".',
@@ -1090,7 +1096,7 @@ def adopt_events(modeladmin, request, events):
         elif follow.adoption_type == 'clone':
             adapter.clone(event, request)
         elif follow.adoption_type == 'sync':
-            adapter.adopt(event, owner=request.user)
+            adapter.adopt(event, owner=modeladmin.get_adopt_owner(event, request))
     modeladmin.message_user(
         request,
         _('{amount} activities have been adopted.').format(amount=len(events)),

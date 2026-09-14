@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 
 import httmock
 import mock
+from django.contrib.admin.sites import AdminSite
+from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
@@ -16,6 +18,7 @@ from requests import Request, Response
 
 from bluebottle.activity_links.models import LinkedActivity, LinkedFunding, LinkedGrantApplication
 from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.admin import EventPolymorphicAdmin
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event, Place,
@@ -193,6 +196,19 @@ class ActivityPubTestCase:
 
     def build_absolute_url(self, path):
         return connection.tenant.build_absolute_url(path)
+
+    def admin_adopt(self, action):
+        event = Event.objects.get()
+        admin_user = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
+        request = RequestFactory().get('/')
+        request.user = admin_user
+        request.session = {}
+        request._messages = FallbackStorage(request)
+        admin = EventPolymorphicAdmin(Event, AdminSite())
+        with mock.patch.object(Geolocation, 'update_location'):
+            getattr(admin, action)(request, str(event.pk))
+        event.refresh_from_db()
+        return event.adopted, admin_user
 
     def test_platform_organization(self):
         site_settings = SitePlatformSettings.load()
@@ -402,6 +418,19 @@ class TemplateTestCase(ActivityPubTestCase):
                     self.adopted = adapter.adopt(self.event)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
+    def test_admin_clone_uses_default_owner(self):
+        self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            default_owner = BlueBottleUserFactory.create()
+            follow = Follow.objects.get()
+            follow.default_owner = default_owner
+            follow.save()
+
+            adopted, admin_user = self.admin_adopt('clone_event')
+            self.assertEqual(adopted.owner, default_owner)
+            self.assertNotEqual(adopted.owner, admin_user)
+
 
 class SyncTestCase(ActivityPubTestCase):
     def test_follow(self):
@@ -462,6 +491,19 @@ class SyncTestCase(ActivityPubTestCase):
 
         accept = Accept.objects.first()
         self.assertTrue(accept)
+
+    def test_admin_adopt_uses_default_owner(self):
+        self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            default_owner = BlueBottleUserFactory.create()
+            follow = Follow.objects.get()
+            follow.default_owner = default_owner
+            follow.save()
+
+            adopted, admin_user = self.admin_adopt('adopt_event')
+            self.assertEqual(adopted.owner, default_owner)
+            self.assertNotEqual(adopted.owner, admin_user)
 
     def join(self):
         self.participant = self.participant_factory.create(activity=self.adopted)

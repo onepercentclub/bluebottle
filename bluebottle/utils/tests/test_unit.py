@@ -10,6 +10,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.core.exceptions import SuspiciousFileOperation, ValidationError
+from django.core.mail.message import sanitize_address
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import connection
@@ -378,6 +379,31 @@ class TestTenantAwareMailserver(BluebottleTestCase):
         )
         self.assertEqual(msg.extra_headers['Reply-To'], reply_to)
         self.assertEqual(msg.from_email, 'Info Tester <info@example.com>')
+
+    def test_from_header_when_sender_is_the_address(self):
+        mail_settings = MailPlatformSettings.load()
+        mail_settings.address = 'corporate.citizen.nl@goodup.com'
+        mail_settings.sender = 'corporate.citizen.nl@goodup.com'
+        mail_settings.save()
+
+        msg = EmailMultiAlternatives(
+            subject="test", body="test",
+            to=["test@example.com"]
+        )
+        self.assertEqual(msg.from_email, 'corporate.citizen.nl@goodup.com')
+        sanitize_address(msg.from_email, 'utf-8')
+
+    def test_from_header_when_sender_is_empty(self):
+        mail_settings = MailPlatformSettings.load()
+        mail_settings.address = 'info@example.com'
+        mail_settings.sender = ''
+        mail_settings.save()
+
+        msg = EmailMultiAlternatives(
+            subject="test", body="test",
+            to=["test@example.com"]
+        )
+        self.assertEqual(msg.from_email, 'info@example.com')
 
 
 class MoneySerializerTestCase(BluebottleTestCase):

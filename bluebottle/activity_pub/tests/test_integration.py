@@ -573,6 +573,22 @@ class SyncTestCase(ActivityPubTestCase):
             self.adopted.refresh_from_db()
             self.assertEqual(self.adopted.title, 'Some new title')
 
+    def test_update_title_when_image_has_no_origin(self):
+        self.test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            origin = self.adopted.image.origin
+            origin.adopted = None
+            origin.save()
+
+        with httmock.HTTMock(image_mock):
+            self.model.title = 'Some new title'
+            self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.adopted.title, 'Some new title')
+
     def test_update_image(self):
         self.test_adopt()
 

@@ -415,7 +415,7 @@ class PollContent(ContentItem):
         'voting.Poll',
         verbose_name=_('Poll'),
         on_delete=models.CASCADE,
-        limit_choices_to={'status': 'open'}
+        limit_choices_to={'status__in': ['open', 'closed']}
     )
 
     class Meta:

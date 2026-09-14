@@ -402,6 +402,22 @@ class TemplateTestCase(ActivityPubTestCase):
                     self.adopted = adapter.adopt(self.event)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
+    def test_update_title_when_image_has_no_origin(self):
+        self.test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            origin = self.adopted.image.origin
+            origin.adopted = None
+            origin.save()
+
+        with httmock.HTTMock(image_mock):
+            self.model.title = 'Some new title'
+            self.model.save()
+
+        with LocalTenant(self.other_tenant):
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.adopted.title, 'Some new title')
+
 
 class SyncTestCase(ActivityPubTestCase):
     def test_follow(self):
@@ -570,6 +586,22 @@ class SyncTestCase(ActivityPubTestCase):
         with LocalTenant(self.other_tenant):
             self.event.refresh_from_db()
             self.assertEqual(self.event.name, 'Some new title')
+            self.adopted.refresh_from_db()
+            self.assertEqual(self.adopted.title, 'Some new title')
+
+    def test_update_title_when_image_has_no_origin(self):
+        self.test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            origin = self.adopted.image.origin
+            origin.adopted = None
+            origin.save()
+
+        with httmock.HTTMock(image_mock):
+            self.model.title = 'Some new title'
+            self.model.save()
+
+        with LocalTenant(self.other_tenant):
             self.adopted.refresh_from_db()
             self.assertEqual(self.adopted.title, 'Some new title')
 

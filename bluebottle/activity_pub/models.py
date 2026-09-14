@@ -979,12 +979,11 @@ class Update(Activity):
     object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
-        created = not self.pk
         super().save(*args, **kwargs)
-        if created and not self.object.is_local:
-            if hasattr(self.object, 'adopted') and self.object.adopted:
+        if not self.object.is_local:
+            if getattr(self.object, 'adopted', None):
                 adapter.adopt(self.object)
-            elif hasattr(self.object, 'link') and self.object.link:
+            elif getattr(self.object, 'link', None):
                 adapter.link(self.object)
 
     @property

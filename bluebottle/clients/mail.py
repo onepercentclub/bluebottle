@@ -1,5 +1,3 @@
-from email.utils import formataddr
-
 from django.core.mail import \
     EmailMultiAlternatives as BaseEmailMultiAlternatives
 
@@ -20,15 +18,10 @@ def construct_from_header():
     # properties has not be initialised yet.
     settings = MailPlatformSettings.load()
 
-    address = (settings.address or '').strip()
-    if not address:
+    if not settings.address:
         return None
 
-    sender = (settings.sender or '').strip()
-    if not sender or sender.casefold() == address.casefold() or '@' in sender:
-        return address
-
-    return formataddr((sender, address))
+    return f"{settings.sender} <{settings.address}>"
 
 
 class EmailMultiAlternatives(BaseEmailMultiAlternatives):

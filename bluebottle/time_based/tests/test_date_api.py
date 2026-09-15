@@ -62,6 +62,26 @@ class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase)
     def setUp(self):
         super().setUp()
 
+    def test_create_with_answers_relationship(self):
+        """
+        Posting an `answers` relationship should not return a 500.
+
+        `answers` is the reverse side of ActivityAnswer.activity, and the
+        object permission check used to build an unsaved instance out of every
+        validated field, which Django refuses for a to-many relation.
+        See BB-30082.
+        """
+        data = self.data
+        data['relationships']['answers'] = {'data': []}
+
+        self.perform_create(user=self.defaults['initiative'].owner, data=data)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertEqual(
+            self.response.json()['data']['relationships']['answers']['data'], []
+        )
+        self.assertEqual(self.model.answers.count(), 0)
+
     def test_create_complete(self, user=None, data=None):
         user = self.defaults['initiative'].owner
         self.perform_create(user=user)

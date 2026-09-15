@@ -23,6 +23,7 @@ from django.views import View
 from elasticsearch_dsl.utils import AttrList
 from rest_framework import generics
 from rest_framework.exceptions import APIException
+from rest_framework.utils import model_meta
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
@@ -176,18 +177,36 @@ class LogUpdateMixin:
         super().perform_update(serializer)
 
 
+def build_permission_check_instance(serializer):
+    """
+    Build an unsaved instance from the validated data, so that object level
+    permissions can be checked before the object actually exists.
+
+    To-many relations (reverse foreign keys and many to many fields) cannot be
+    assigned on an unsaved instance: Django raises "Direct assignment to the
+    reverse side of a related set is prohibited". So leave them off -- none of
+    our object permissions inspect a to-many relation when creating. See
+    BB-30082.
+    """
+    model = serializer.Meta.model
+    relations = model_meta.get_field_info(model).relations
+
+    data = dict(
+        (key, value) for key, value in serializer.validated_data.items()
+        if getattr(model, key, None) and not getattr(relations.get(key), 'to_many', False)
+    )
+
+    return model(**data)
+
+
 class ListCreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, LogUpdateMixin, generics.ListCreateAPIView):
     permission_classes = (ResourcePermission,)
 
     def perform_create(self, serializer, **kwargs):
         if hasattr(serializer.Meta, 'model'):
-            data = dict(
-                (key, value) for key, value in serializer.validated_data.items()
-                if getattr(serializer.Meta.model, key, None)
-            )
             self.check_object_permissions(
                 self.request,
-                serializer.Meta.model(**data)
+                build_permission_check_instance(serializer)
             )
 
         super().perform_create(serializer)
@@ -198,13 +217,9 @@ class CreateAPIView(RelatedPermissionMixin, ViewPermissionsMixin, generics.Creat
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, 'model'):
-            data = dict(
-                (key, value) for key, value in serializer.validated_data.items()
-                if getattr(serializer.Meta.model, key, None)
-            )
             self.check_object_permissions(
                 self.request,
-                serializer.Meta.model(**data)
+                build_permission_check_instance(serializer)
             )
 
         super().perform_create(serializer)

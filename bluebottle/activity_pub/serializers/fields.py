@@ -109,7 +109,7 @@ class IdentifierField(serializers.Field):
 def normalize_identifier(item):
     if not isinstance(item, dict):
         return None
-    property_id = item.get('propertyID') or item.get('property_id')
+    property_id = item.get('propertyID')
     value = item.get('value')
     if not property_id or value in (None, ''):
         return None

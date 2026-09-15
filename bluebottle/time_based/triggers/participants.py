@@ -6,7 +6,7 @@ from bluebottle.activities.triggers import (
     ContributorTriggers
 )
 from bluebottle.activity_pub.effects import (
-    SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect, SyncRelatedEvent, SendRemoveEffect
+    SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect, SendJoinDateSlotEffect, SyncRelatedEvent, SendRemoveEffect
 )
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -655,7 +655,6 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 CreateScheduleContributionEffect,
                 CreateRegistrationEffect,
                 CreateScheduleSlotEffect,
-                SendJoinEffect,
                 SendJoinSlotEffect,
                 SyncRelatedEvent,
                 TransitionEffect(
@@ -1304,7 +1303,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                         is_participant
                     ]
                 ),
-                SendJoinEffect,
+                SendJoinDateSlotEffect,
                 SyncRelatedEvent
             ]
         ),
@@ -1356,7 +1355,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.add,
             effects=[
-                SendJoinEffect,
+                SendJoinDateSlotEffect,
                 TransitionEffect(
                     RegistrationParticipantStateMachine.succeed,
                     conditions=[participant_slot_is_finished]
@@ -1441,7 +1440,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.reapply,
             effects=[
-                SendJoinEffect,
+                SendJoinDateSlotEffect,
                 SyncRelatedEvent,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
@@ -1479,7 +1478,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.readd,
             effects=[
-                SendJoinEffect,
+                SendJoinDateSlotEffect,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,
@@ -1510,7 +1509,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.restore,
             effects=[
-                SendJoinEffect,
+                SendJoinDateSlotEffect,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,

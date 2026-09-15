@@ -463,6 +463,7 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(
                     ScheduleUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
+                SendJoinEffect
             ],
         ),
         TransitionTrigger(

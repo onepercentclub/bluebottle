@@ -41,6 +41,7 @@ def create_task(request, tenant):
         )
 
         serializer.is_valid(raise_exception=True)
+        print(request.auth, serializer.initial_data.get('type'), serializer.initial_data.get('id'))
 
         try:
             serializer.save()

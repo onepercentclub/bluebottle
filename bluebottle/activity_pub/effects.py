@@ -310,7 +310,11 @@ class SendJoinEffect(Effect):
     conditions = [activity_is_synced, contributor_is_local]
 
     def post_save(self, **kwargs):
-        adapter.sync(self.instance)
+        Join.objects.create(
+            actor=adapter.sync(self.instance.user),
+            object=self.instance.activity.origin,
+            motivation=getattr(self.instance, 'answer', None)
+        )
 
     @property
     def is_valid(self):
@@ -336,6 +340,27 @@ class SendJoinSlotEffect(Effect):
     @property
     def is_valid(self):
         return self.instance.remote_user is not None
+
+    def __str__(self):
+        return str(_('Notify source platform of join'))
+
+
+class SendJoinDateSlotEffect(Effect):
+    """
+    Send a Join activity to the source platform when a user joins a synced deed.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+
+    def post_save(self, **kwargs):
+        if self.instance.slot:
+            Join.objects.create(
+                actor=self.instance.user.activity_pub_model,
+                object=self.instance.slot.origin
+            )
+
+    @property
+    def is_valid(self):
+        return self.instance.remote_user is None
 
     def __str__(self):
         return str(_('Notify source platform of join'))

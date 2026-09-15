@@ -71,8 +71,9 @@ class CreateInitialPeriodicParticipantEffect(Effect):
             slot=None if self.instance.activity.review else self.instance.activity.slots.last()
         )
 
+    @property
     def is_valid(self):
-        return not self.instance.participants.exists()
+        return not len(self.instance.participants) and not hasattr(self.instance.activity, 'origin')
 
 
 class AdjustInitialPeriodicParticipantEffect(Effect):

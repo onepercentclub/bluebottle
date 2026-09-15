@@ -16,7 +16,11 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices, \
     SubEvent, RepetitionModeChoices, SlotModeChoices
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
-from bluebottle.activity_pub.serializers.fields import FederatedIdField
+from bluebottle.activity_pub.serializers.fields import (
+    FederatedIdField,
+    IdentifierField,
+    mapbox_id_from_federated_identifiers,
+)
 from bluebottle.collect.models import CollectActivity, CollectType
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
@@ -137,11 +141,18 @@ class AddressSerializer(FederatedObjectSerializer):
         )
 
     def to_internal_value(self, data):
-        if not data:
-            return {}
         result = super().to_internal_value(data)
-        del result['id']
+        result.pop('id', None)
         return result
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not data.get('locality'):
+            for feature in instance.geofeatures.all():
+                if feature.feature_type in ('place', 'locality') and feature.name:
+                    data['locality'] = feature.name
+                    break
+        return data
 
 
 class OrganizationSerializer(FederatedObjectSerializer):
@@ -165,17 +176,28 @@ class LocationSerializer(FederatedObjectSerializer):
     latitude = serializers.FloatField(source='position.x', allow_null=True)
     longitude = serializers.FloatField(source='position.y', allow_null=True)
     name = serializers.SerializerMethodField()
+    place_type = serializers.SerializerMethodField()
+    identifier = IdentifierField(required=False, allow_null=True)
 
     def get_name(self, obj):
         if obj.geofeature:
             return obj.geofeature.place_name
         return obj.formatted_address or obj.locality or '-'
 
+    def get_place_type(self, obj):
+        if obj.geofeature and obj.geofeature.feature_type:
+            if obj.geofeature.feature_type == 'place':
+                return 'city'
+            return obj.geofeature.feature_type
+        return None
+
     address = AddressSerializer(source='*', allow_null=True)
 
     class Meta:
         model = Geolocation
-        fields = ('id', 'latitude', 'longitude', 'name', 'address',)
+        fields = (
+            'id', 'latitude', 'longitude', 'name', 'place_type', 'identifier', 'address',
+        )
 
     def create(self, validated_data):
         if not validated_data:
@@ -192,6 +214,15 @@ class LocationSerializer(FederatedObjectSerializer):
             )
         except KeyError:
             pass
+
+        identifiers = validated_data.pop('identifier', None)
+        validated_data.pop('place_type', None)
+        name = validated_data.pop('name', None)
+        mapbox_id = mapbox_id_from_federated_identifiers(identifiers)
+        if mapbox_id:
+            validated_data['mapbox_id'] = mapbox_id
+        if name:
+            validated_data.setdefault('formatted_address', name)
 
         return super().create(validated_data)
 

@@ -40,7 +40,7 @@ def run(*args):
                 contributor__in=DateParticipant.objects.filter(
                     registration__status__in=('accepted', 'new'),
                     status__in=('succeeded', 'new', 'accepted'),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
             succeeded_periodic_contributions = TimeContribution.objects.filter(
@@ -54,7 +54,7 @@ def run(*args):
                     status__in=('succeeded', 'new', 'accepted'),
                 ))
                 | Q(contributor__in=PeriodicParticipant.objects.filter(
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ))
             )
             succeeded_deadline_contributions = TimeContribution.objects.filter(
@@ -66,7 +66,7 @@ def run(*args):
                 contributor__in=DeadlineParticipant.objects.filter(
                     registration__status__in=('accepted', 'new'),
                     status__in=('succeeded', 'new', 'accepted'),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
 
@@ -79,7 +79,7 @@ def run(*args):
                 contributor__in=ScheduleParticipant.objects.filter(
                     registration__status__in=('accepted', 'new'),
                     status__in=('succeeded', 'new', 'accepted', 'scheduled', 'unscheduled'),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
             succeeded_team_schedule_contributions = TimeContribution.objects.filter(
@@ -92,7 +92,7 @@ def run(*args):
                     team_member__status__in=('active',),
                     team_member__team__status__in=('succeeded', 'scheduled', 'accepted'),
                     status__in=('succeeded', 'new', 'accepted', 'scheduled'),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
             succeeded_contributions = (
@@ -114,7 +114,7 @@ def run(*args):
                     registration__status__in=('accepted', 'new'),
                     status__in=('new', 'succeeded', 'accepted'),
                     activity__status__in=(
-                        'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                        'draft', 'submitted', 'needs_work', 'open', 'registration_closed', 'new', 'full', 'succeeded',
                     ),
                 ),
             )
@@ -126,7 +126,7 @@ def run(*args):
                     registration__status__in=('accepted', 'new'),
                     status__in=('new', 'accepted', 'succeeded'),
                     activity__status__in=(
-                        'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                        'draft', 'submitted', 'needs_work', 'open', 'registration_closed', 'new', 'full', 'succeeded',
                     ),
                 ),
             )
@@ -140,7 +140,7 @@ def run(*args):
                     registration__status__in=('accepted', 'new'),
                     status__in=('new', 'succeeded', 'accepted'),
                     activity__status__in=(
-                        'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                        'draft', 'submitted', 'needs_work', 'open', 'registration_closed', 'new', 'full', 'succeeded',
                     ),
                 ),
             )
@@ -155,7 +155,7 @@ def run(*args):
                     registration__status__in=('accepted', 'new'),
                     status__in=('new', 'succeeded', 'accepted', 'scheduled', 'unscheduled'),
                     activity__status__in=(
-                        'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                        'draft', 'submitted', 'needs_work', 'open', 'registration_closed', 'new', 'full', 'succeeded',
                     ),
                 ),
             )
@@ -170,7 +170,7 @@ def run(*args):
                     team_member__team__status__in=('new', 'scheduled', 'accepted'),
                     status__in=('new', 'succeeded', 'accepted', 'scheduled'),
                     activity__status__in=(
-                        'draft', 'submitted', 'needs_work', 'open', 'new', 'full', 'succeeded',
+                        'draft', 'submitted', 'needs_work', 'open', 'registration_closed', 'new', 'full', 'succeeded',
                     ),
                 ),
             )
@@ -210,7 +210,7 @@ def run(*args):
                     status__in=('accepted', 'stopped'),
                     slot__status__in=('finished'),
                     registration__status__in=('accepted', 'stopped'),
-                    activity__status__in=('succeeded', 'open'),
+                    activity__status__in=('succeeded', 'open', 'registration_closed'),
                 ).exclude(
                     slot__isnull=True
                 ),
@@ -262,7 +262,7 @@ def run(*args):
                     user__isnull=False,
                     status__in=('accepted', 'registered', 'succeeded'),
                     registration__status__in=('accepted',),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
 
@@ -272,7 +272,7 @@ def run(*args):
                     user__isnull=False,
                     status__in=('accepted', 'succeeded', 'registered'),
                     registration__status__in=('accepted',),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
             failed_periodic_contributions = TimeContribution.objects.filter(
@@ -281,7 +281,7 @@ def run(*args):
                     user__isnull=False,
                     status__in=('accepted', 'stopped'),
                     registration__status__in=('accepted', 'stopped'),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
 
@@ -292,7 +292,7 @@ def run(*args):
                     user__isnull=False,
                     status__in=('accepted', 'stopped'),
                     registration__status__in=('accepted', 'stopped'),
-                    activity__status__in=('open', 'succeeded'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded'),
                 ),
             )
             failed_schedule_team_contributions = TimeContribution.objects.filter(
@@ -302,7 +302,7 @@ def run(*args):
                     user__isnull=False,
                     status__in=('accepted', 'stopped'),
                     registration__status__in=('accepted', 'stopped'),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                     team_member__status__in=('active',),
                     team_member__team__status__in=('succeeded', 'scheduled'),
                 ),
@@ -329,7 +329,7 @@ def run(*args):
                 status='failed',
                 contributor__in=DateParticipant.objects.filter(
                     status__in=('new',),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
                 slot_participant__status__in=('registered',),
             )
@@ -339,7 +339,7 @@ def run(*args):
                     user__isnull=False,
                     status__in=('new',),
                     registration__status__in=('new',),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
             failed_periodic_contributions_new = TimeContribution.objects.filter(
@@ -348,7 +348,7 @@ def run(*args):
                     user__isnull=False,
                     status__in=('accepted', 'stopped'),
                     registration__status__in=('new',),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
 
@@ -359,7 +359,7 @@ def run(*args):
                     user__isnull=False,
                     status__in=('accepted', 'stopped'),
                     registration__status__in=('new',),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
             failed_schedule_team_contributions_new = TimeContribution.objects.filter(
@@ -369,7 +369,7 @@ def run(*args):
                     user__isnull=False,
                     status__in=('accepted', 'stopped'),
                     registration__status__in=('new',),
-                    activity__status__in=('open', 'succeeded', 'full'),
+                    activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                     team_member__status__in=('active',),
                     team_member__team__status__in=('new', 'succeeded', 'scheduled'),
                 ),

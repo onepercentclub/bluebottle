@@ -619,13 +619,6 @@ class BlockSerializer(PolymorphicModelSerializer):
 def get_content_items(obj, attribute):
     """
     Return the content items of a placeholder field, tolerating a missing placeholder.
-
-    ``fluent_contents`` raises ``Placeholder.DoesNotExist`` from the field
-    descriptor when the placeholder row was never created for an object, instead
-    of returning an empty placeholder. A CMS page without any content is a
-    legitimate state -- and these are public, unauthenticated endpoints -- so
-    treat it as "no blocks" rather than letting it take the endpoint down with a
-    500. See BB-30127.
     """
     try:
         placeholder = getattr(obj, attribute)

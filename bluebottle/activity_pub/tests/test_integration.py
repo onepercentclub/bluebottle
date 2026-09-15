@@ -56,6 +56,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicActivityFactory,
     ScheduleActivityFactory,
     ScheduleParticipantFactory,
+    ScheduleRegistrationFactory,
     TeamFactory,
     TeamMemberFactory,
 )
@@ -878,6 +879,10 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     expected_participant_status = 'accepted'
     removed_status = 'removed'
 
+    def join(self):
+        registration = ScheduleRegistrationFactory.create(activity=self.adopted)
+        self.participant = registration.participants.get()
+
     def create(self, **kwargs):
         super().create(
             location=GeolocationFactory.create(country=self.country),
@@ -897,6 +902,10 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.assertEqual(self.synced_participant.status, 'new')
         self.assertEqual(self.synced_participant.registration.status, 'new')
 
+    def test_join(self):
+        super().test_join()
+        self.synced_participant = ScheduleParticipantFactory._meta.model.objects.get()
+
     def test_schedule(self):
         self.test_join()
 
@@ -905,8 +914,12 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_participant.slot.location = GeolocationFactory.create(country=self.country)
         self.synced_participant.slot.save()
 
+        print(self.synced_participant.slot.duration)
+
         with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()
+            print(self.participant.slot.duration)
+            __import__('ipdb').set_trace()
             self.assertEqual(
                 self.participant.status, 'scheduled'
             )
@@ -955,6 +968,8 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.assertEqual(
             self.synced_participant.participants.get().slot, self.model.slots.first()
         )
+
+        print(self.synced_participant.participants.get().slot.start)
 
         with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()

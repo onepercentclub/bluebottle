@@ -390,7 +390,7 @@ class SendRemoveEffect(Effect):
     template = 'admin/activity_pub/send_remove_effect.html'
 
     def post_save(self, **kwargs):
-        activity = self.instance.slot if getattr(self.instance, 'slot') else self.instance.activity
+        activity = self.instance.slot if hasattr(self.instance, 'slot') else self.instance.activity
         if self.instance.remote_user:
             actor = self.instance.remote_user.origin
             object = activity.activity_pub_model

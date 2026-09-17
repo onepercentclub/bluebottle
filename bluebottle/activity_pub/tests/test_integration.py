@@ -914,12 +914,8 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_participant.slot.location = GeolocationFactory.create(country=self.country)
         self.synced_participant.slot.save()
 
-        print(self.synced_participant.slot.duration)
-
         with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()
-            print(self.participant.slot.duration)
-            __import__('ipdb').set_trace()
             self.assertEqual(
                 self.participant.status, 'scheduled'
             )
@@ -969,8 +965,6 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.synced_participant.participants.get().slot, self.model.slots.first()
         )
 
-        print(self.synced_participant.participants.get().slot.start)
-
         with LocalTenant(self.other_tenant):
             self.participant.refresh_from_db()
             self.assertEqual(
@@ -1019,6 +1013,11 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def test_next_slot(self):
         self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(
+                PeriodicParticipant.objects.count(), 1
+            )
 
         self.model.slots.first().states.finish(save=True)
 

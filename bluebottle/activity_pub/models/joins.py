@@ -8,11 +8,7 @@ from bluebottle.activity_pub.models.base import ActivityPubModel
 from bluebottle.activity_pub.models.events import GoodDeed, CollectCampaign, DoGoodEvent, SubEvent
 from bluebottle.activity_pub.models.activities import Activity
 
-
-def get_subclasses(cls):
-    for subclass in cls.__subclasses__():
-        yield from get_subclasses(subclass)
-        yield subclass
+from bluebottle.utils.utils import get_subclasses
 
 
 class Join(Activity):
@@ -35,7 +31,7 @@ class Join(Activity):
         super().__init__(*args, **kwargs)
 
         for subclass in get_subclasses(BaseJoin):
-            if subclass.can_transition(self.object):
+            if subclass.matches(self.object):
                 self.__class__ = subclass
 
         self.contributor_model = import_string(self.__class__.contributor_model)
@@ -43,7 +39,7 @@ class Join(Activity):
 
 class BaseJoin(Join):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return False
 
     def save(self, *args, **kwargs):
@@ -90,7 +86,7 @@ class BaseJoin(Join):
 
 class DeedJoin(BaseJoin):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return isinstance(object, GoodDeed)
 
     class Meta:
@@ -101,7 +97,7 @@ class DeedJoin(BaseJoin):
 
 class CollectCampaignJoin(BaseJoin):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return isinstance(object, CollectCampaign)
 
     class Meta:
@@ -134,7 +130,7 @@ class RegistrationJoin(BaseJoin):
 
 class DeadlineJoin(RegistrationJoin):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return isinstance(object, DoGoodEvent) and object.activity_type == 'DeadlineActivity'
 
     class Meta:
@@ -146,7 +142,7 @@ class DeadlineJoin(RegistrationJoin):
 
 class PeriodicJoin(RegistrationJoin):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return isinstance(object, DoGoodEvent) and object.activity_type == 'PeriodicActivity'
 
     class Meta:
@@ -162,7 +158,7 @@ class PeriodicJoin(RegistrationJoin):
 
 class DateJoin(RegistrationJoin):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return isinstance(object, DoGoodEvent) and object.activity_type == 'DateActivity'
 
     class Meta:
@@ -174,7 +170,7 @@ class DateJoin(RegistrationJoin):
 
 class ScheduleJoin(RegistrationJoin):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return isinstance(object, DoGoodEvent) and object.activity_type == 'ScheduleActivity'
 
     class Meta:
@@ -231,7 +227,7 @@ class SlotJoin(BaseJoin):
 
 class PeriodicSlotJoin(SlotJoin):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return (
             isinstance(object, SubEvent) and object.parent.activity_type == 'PeriodicActivity'
         )
@@ -242,10 +238,26 @@ class PeriodicSlotJoin(SlotJoin):
     contributor_model = 'bluebottle.time_based.models.PeriodicParticipant'
     registration_model = 'bluebottle.time_based.models.PeriodicRegistration'
 
+    def apply(self):
+        """
+        The supplier creates the slot and adds the user to that slot.
+        This will adopt that event for the local user
+        """
+        if not self.object.is_local:
+            slot = adapter.adopt(self.object)
+
+            __import__('ipdb').set_trace()
+            self.contributor_model.objects.create(
+                activity=self.object.parent.adopted,
+                slot=slot,
+                registration=self.registration,
+                user=self.actor.origin,
+            )
+
 
 class ScheduleSlotJoin(SlotJoin):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return (
             isinstance(object, SubEvent) and object.parent.activity_type == 'ScheduleActivity'
         )
@@ -259,7 +271,7 @@ class ScheduleSlotJoin(SlotJoin):
 
 class DateSlotJoin(SlotJoin):
     @classmethod
-    def can_transition(cls, object):
+    def matches(cls, object):
         return (
             isinstance(object, SubEvent) and object.parent.activity_type == 'DateActivity'
         )

@@ -269,7 +269,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 CreateRegistrationEffect,
                 CreateTimeContributionEffect,
                 CreatePreparationTimeContributionEffect,
-                SendJoinEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
                     conditions=[
@@ -305,7 +304,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
-                SendJoinEffect,
                 NotificationEffect(
                     ParticipantAddedNotification,
                     conditions=[participant_is_active]

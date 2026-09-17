@@ -231,6 +231,7 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(
                     DeadlineUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
+                SendJoinEffect
             ]
         ),
         TransitionTrigger(
@@ -247,6 +248,7 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
                 ),
+                SendJoinEffect,
             ],
         ),
         TransitionTrigger(

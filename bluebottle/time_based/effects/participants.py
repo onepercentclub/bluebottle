@@ -99,10 +99,6 @@ class CreateScheduleContributionEffect(Effect):
                 )
 
             else:
-                # The participant has no (scheduled) slot yet, so there is no
-                # known end date. Leaving `end` empty keeps the contribution out
-                # of TimeContributionFinishedTask, which would otherwise succeed
-                # it as soon as the fabricated end date passed. See BB-30016.
                 contribution = TimeContribution(
                     contributor=self.instance,
                     contribution_type=ContributionTypeChoices.period,

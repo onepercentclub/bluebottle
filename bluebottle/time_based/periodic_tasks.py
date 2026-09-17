@@ -3,8 +3,8 @@ from datetime import date, timedelta
 from django.db.models import DateTimeField, ExpressionWrapper, F, fields
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from bluebottle.activities.periodic_tasks import UnpublishedActivitiesReminderTask
 
+from bluebottle.activities.periodic_tasks import UnpublishedActivitiesReminderTask
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
@@ -111,12 +111,6 @@ class SlotFinishedTask(ModelPeriodicTask):
 class TimeContributionFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
-        # (Team)ScheduleParticipants use the status 'accepted' to mean
-        # *unscheduled*: the person takes part, but has not been given a slot
-        # yet. Their contribution is succeeded when their slot finishes (or when
-        # the activity itself succeeds), never by a contribution end date
-        # passing. Succeeding those here produced false 'succeeded' rows in the
-        # contributions report. See BB-30016.
         return self.model.objects.filter(
             end__lt=timezone.now(),
             status='new',

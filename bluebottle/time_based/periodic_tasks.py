@@ -15,6 +15,8 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     PeriodicSlot,
     ScheduleActivity,
+    ScheduleParticipant,
+    TeamScheduleParticipant,
     TimeContribution,
     DateActivitySlot,
     ScheduleSlot,
@@ -109,10 +111,24 @@ class SlotFinishedTask(ModelPeriodicTask):
 class TimeContributionFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
+        # (Team)ScheduleParticipants use the status 'accepted' to mean
+        # *unscheduled*: the person takes part, but has not been given a slot
+        # yet. Their contribution is succeeded when their slot finishes (or when
+        # the activity itself succeeds), never by a contribution end date
+        # passing. Succeeding those here produced false 'succeeded' rows in the
+        # contributions report. See BB-30016.
         return self.model.objects.filter(
             end__lt=timezone.now(),
             status='new',
             contributor__status__in=('accepted', 'stopped')
+        ).exclude(
+            contributor__in=ScheduleParticipant.objects.exclude(
+                status__in=('scheduled', 'succeeded')
+            )
+        ).exclude(
+            contributor__in=TeamScheduleParticipant.objects.exclude(
+                status__in=('scheduled', 'succeeded')
+            )
         )
 
     effects = [

@@ -362,7 +362,23 @@ class HomePageAdmin(CMSNestedPlaceholderFieldAdmin, TranslatableAdmin, Singleton
 
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, BasePlatformSettingsAdmin):
-    readonly_fields = ['terminated_info', 'organization']
+    readonly_fields = [
+        'terminated_info',
+        'organization',
+        'color_contrast_panel',
+        'action_text_color',
+        'alternative_link_color',
+        'action_on_tint_color',
+        'description_text_color',
+        'description_on_background_color',
+        'description_on_tint_color',
+    ]
+
+    class Media:
+        css = {
+            'all': ('admin/css/platform_color_contrast.css',)
+        }
+        js = ('admin/js/platform_color_contrast.js',)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
@@ -395,8 +411,9 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
                 {
                     'fields': (
                         'logo', 'favicon',
-                        'action_color', 'action_text_color', 'alternative_link_color',
-                        'description_color', 'description_text_color',
+                        'action_color',
+                        'description_color',
+                        'color_contrast_panel',
                         'footer_color', 'footer_text_color',
                         'title_font', 'body_font'
                     )
@@ -416,6 +433,51 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
             fieldsets[0][1]['fields'] = fieldsets[0][1]['fields'] + ('terminated_info',)
 
         return fieldsets
+
+    def color_contrast_panel(self, obj):
+        return mark_safe(
+            '<div id="platform-color-contrast-panel" class="platform-color-contrast">'
+            '  <p class="platform-color-contrast__intro">How these colours will look on the platform</p>'
+            '  <div class="platform-color-contrast__groups">'
+            '    <div class="platform-color-contrast__group">'
+            '      <h3 class="platform-color-contrast__heading">Action</h3>'
+            '      <div class="platform-color-contrast__swatches">'
+            '        <div class="platform-color-contrast__swatch" data-preview="action-solid">'
+            '          <span class="platform-color-contrast__sample">Aa</span>'
+            '          <span class="platform-color-contrast__caption">Solid fill</span>'
+            '        </div>'
+            '        <div class="platform-color-contrast__swatch" data-preview="action-text">'
+            '          <span class="platform-color-contrast__sample">Aa</span>'
+            '          <span class="platform-color-contrast__caption">Text on white</span>'
+            '        </div>'
+            '        <div class="platform-color-contrast__swatch" data-preview="action-tint">'
+            '          <span class="platform-color-contrast__sample">Aa</span>'
+            '          <span class="platform-color-contrast__caption">Tint + text</span>'
+            '        </div>'
+            '      </div>'
+            '    </div>'
+            '    <div class="platform-color-contrast__group">'
+            '      <h3 class="platform-color-contrast__heading">Description</h3>'
+            '      <div class="platform-color-contrast__swatches">'
+            '        <div class="platform-color-contrast__swatch" data-preview="description-solid">'
+            '          <span class="platform-color-contrast__sample">Aa</span>'
+            '          <span class="platform-color-contrast__caption">Solid fill</span>'
+            '        </div>'
+            '        <div class="platform-color-contrast__swatch" data-preview="description-text">'
+            '          <span class="platform-color-contrast__sample">Aa</span>'
+            '          <span class="platform-color-contrast__caption">Text on white</span>'
+            '        </div>'
+            '        <div class="platform-color-contrast__swatch" data-preview="description-tint">'
+            '          <span class="platform-color-contrast__sample">Aa</span>'
+            '          <span class="platform-color-contrast__caption">Tint + text</span>'
+            '        </div>'
+            '      </div>'
+            '    </div>'
+            '  </div>'
+            '</div>'
+        )
+
+    color_contrast_panel.short_description = _('Colour preview')
 
     def terminated_info(self, obj):
         active_members = Member.objects.filter(is_active=True)

@@ -738,14 +738,21 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     action_text_color = ColorField(
         _('Action text colour'), null=True, blank=True,
         help_text=_(
-            'If the action colour is quite light, you could set this to a darker colour for better contrast'
+            'Automatically set to white or dark grey so text stays readable on the action colour'
         )
     )
     alternative_link_color = ColorField(
-        _('Alternative link colour'), null=True, blank=True,
+        _('Action text on white'), null=True, blank=True,
         default=None,
         help_text=_(
-            'If the action colour is quite light, you can set this colour to use for text links'
+            'Automatically darkened so the action colour stays readable as text on white or grey'
+        )
+    )
+    action_on_tint_color = ColorField(
+        _('Action text on tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a light tint of the action colour'
         )
     )
 
@@ -768,7 +775,21 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     description_text_color = ColorField(
         _('Description text colour'), null=True, blank=True,
         help_text=_(
-            'If the description colour is quite light, you could set this to a darker colour for better contrast'
+            'Automatically set to white or dark grey so text stays readable on the description colour'
+        )
+    )
+    description_on_background_color = ColorField(
+        _('Description text on white'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so the description colour stays readable as text on white or grey'
+        )
+    )
+    description_on_tint_color = ColorField(
+        _('Description text on tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a light tint of the description colour'
         )
     )
     footer_color = ColorField(
@@ -863,6 +884,10 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     def save(self, *args, **kwargs):
+        from bluebottle.cms.utils.color_contrast import apply_on_colors
+
+        apply_on_colors(self)
+
         if self.share_activities and not self.organization_id:
             tenant = connection.tenant
             self.organization = Organization.objects.create(

@@ -14,6 +14,7 @@ from bluebottle.time_based.models import (
     PeriodicRegistration,
     ScheduleParticipant,
     ScheduleRegistration,
+    ScheduleSlot,
     TeamScheduleParticipant,
     TeamScheduleRegistration,
     DateActivitySlot, RegisteredDateParticipant
@@ -127,10 +128,15 @@ class RegisteredDateParticipantSerializer(ParticipantSerializer):
 
 class ScheduleParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('schedule-participant-detail', view_args=('pk',))
-    registration = ResourceRelatedField(queryset=ScheduleRegistration.objects.all())
+    registration = ResourceRelatedField(
+        queryset=ScheduleRegistration.objects.all(), required=False
+    )
+    slot = ResourceRelatedField(
+        queryset=ScheduleSlot.objects.all(), required=False
+    )
 
     class Meta(ParticipantSerializer.Meta):
-        fields = ParticipantSerializer.Meta.fields + ("slot",)
+        fields = ParticipantSerializer.Meta.fields + ("slot", "contributions")
         model = ScheduleParticipant
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
@@ -222,9 +228,13 @@ class DateParticipantTransitionSerializer(ParticipantTransitionSerializer):
     included_serializers = {
         'resource': 'bluebottle.time_based.serializers.DateParticipantSerializer',
         'resource.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+        'resource.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        included_resources = ParticipantTransitionSerializer.JSONAPIMeta.included_resources + [
+            'resource.slot',
+        ]
         resource_name = 'contributors/time-based/date-participant-transitions'
 
 

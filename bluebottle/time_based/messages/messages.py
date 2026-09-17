@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from urllib.parse import urlencode
+
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone
@@ -111,30 +113,6 @@ class DeadlineChangedNotification(TransitionMessage):
             context['end'] = pgettext('platform-email', 'runs indefinitely')
 
         return context
-
-
-class ReminderSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
-    """
-    Reminder notification for a single date activity
-    """
-    subject = pgettext('platform-email', 'The activity "{title}" will take place in a few days!')
-    template = 'messages/reminder_single_date'
-    send_once = True
-    context = {
-        'title': 'title',
-    }
-
-    @property
-    def action_link(self):
-        return self.obj.get_absolute_url()
-
-    action_title = pgettext('platform-email', 'View activity')
-
-    def get_recipients(self):
-        """participants that signed up"""
-        return [
-            participant.user for participant in self.obj.accepted_participants
-        ]
 
 
 class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
@@ -808,9 +786,8 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
         context['slot'] = get_slot_info(self.obj.slot)
         settings = InitiativePlatformSettings.load()
         context['hour_registration'] = (
-            settings.hour_registration != 'none'
+            settings.hour_registration != 'disabled'
             and self.obj.activity.hour_registration_data
-            or settings.hour_registration_data
         )
         return context
 
@@ -845,9 +822,8 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
         context['slot'] = get_slot_info(self.obj.slot)
         settings = InitiativePlatformSettings.load()
         context['hour_registration'] = (
-            settings.hour_registration != 'none'
+            settings.hour_registration != 'disabled'
             and self.obj.activity.hour_registration_data
-            or settings.hour_registration_data
         )
         return context
 
@@ -964,3 +940,80 @@ class SlotCancelledNotification(TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('platform-email', 'View this activity')
+
+
+class SpotOpenedNotification(TransitionMessage):
+    """
+    A spot opened on a previously full activity or date slot.
+    Interested members are notified on a first-come, first-served basis.
+    """
+    subject = pgettext(
+        'platform-email',
+        'A spot has opened up for an activity on {site_name}.'
+    )
+    template = 'messages/spot_opened'
+    action_title = pgettext('platform-email', 'View activity')
+
+    @property
+    def action_link(self):
+        url = self.obj.get_absolute_url()
+        separator = '&' if '?' in url else '?'
+        return '{}{}{}'.format(url, separator, urlencode({'spotOpened': 'true'}))
+
+    def get_recipients(self):
+        """interested members"""
+        if isinstance(self.obj, DateActivitySlot):
+            interests = self.obj.interests.all()
+        else:
+            interests = self.obj.interests.filter(slot__isnull=True)
+        return [interest.user for interest in interests]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if isinstance(self.obj, DateActivitySlot):
+            activity = self.obj.activity
+            slot_info = get_slot_info(self.obj)
+            if slot_info:
+                slot_info = dict(slot_info)
+                slot_info['online_meeting_url'] = None
+                context['slots'] = [slot_info]
+            else:
+                context['slots'] = []
+            context['is_online'] = self.obj.is_online
+            location = self.obj.location if not self.obj.is_online else None
+        else:
+            activity = self.obj
+            context['slots'] = []
+            context['is_online'] = getattr(activity, 'is_online', None)
+            location = getattr(activity, 'location', None)
+            if context['is_online']:
+                location = None
+        context['title'] = activity.title
+        context['location'] = location.formatted_address if location else None
+        return context
+
+
+class InterestRegisteredNotification(TransitionMessage):
+    """
+    A member joined the interested list for a full activity or date slot.
+    """
+    subject = pgettext(
+        'platform-email',
+        "You'll be notified if a spot opens up for {title}"
+    )
+    template = 'messages/interest_registered'
+    context = {'title': 'activity.title'}
+    action_title = pgettext('platform-email', 'View activity')
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    def get_recipients(self):
+        return [self.obj.user]
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        activity = self.obj.activity
+        context['title'] = activity.title
+        return context

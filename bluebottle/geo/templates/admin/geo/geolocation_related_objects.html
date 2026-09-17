@@ -1,0 +1,13 @@
+<div style="display: inline-block;">
+    <ul style="margin: 0; padding: 0; list-style: none;">
+        {% for item in related %}
+            <li>
+                <a href="{{ item.url }}?{{ item.filter_param }}={{ object_id }}"
+                   style="display: grid; grid-template-columns: 3ch 1fr; column-gap: 0.75em; align-items: baseline;">
+                    <span style="text-align: right; font-variant-numeric: tabular-nums;">{{ item.count }}</span>
+                    <span>{{ item.label }}</span>
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>

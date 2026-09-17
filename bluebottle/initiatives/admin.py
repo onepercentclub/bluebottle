@@ -1,5 +1,7 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
+from django import forms
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
@@ -15,10 +17,11 @@ from bluebottle.initiatives.models import (
     Initiative,
     InitiativePlatformSettings,
     InitiativeSearchFilter,
-    Theme,
+    Theme, ActivityCardLocationChoices,
 )
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.offices.admin import RegionManagerAdminMixin
+from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import (
@@ -303,12 +306,48 @@ class InitiativeSearchFilterInline(SortableTabularInline):
         return format_html('<div style="font-size: 20px">⠿</div>')
 
 
+class InitiativePlatformSettingsForm(forms.ModelForm):
+    class Meta:
+        model = InitiativePlatformSettings
+        fields = '__all__'
+        widgets = {
+            'hour_registration': forms.RadioSelect,
+        }
+
+    available_office_restrictions = forms.MultipleChoiceField(
+        choices=OfficeRestrictionChoices.choices,
+        widget=forms.CheckboxSelectMultiple(),
+        label=_('Available work location restrictions')
+    )
+
+    card_location_display = forms.ChoiceField(
+        choices=ActivityCardLocationChoices.choices,
+        widget=forms.RadioSelect,
+        label=_('Activity card location'),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if (
+            'default_office_restriction' in cleaned_data and
+            'available_office_restrictions' in cleaned_data and
+            cleaned_data['default_office_restriction'] not in cleaned_data['available_office_restrictions']
+        ):
+            raise ValidationError({
+                'default_office_restriction': 'Value not available'
+            })
+
+        return cleaned_data
+
+
 @admin.register(InitiativePlatformSettings)
 class InitiativePlatformSettingsAdmin(
     NonSortableParentAdmin, BasePlatformSettingsAdmin
 ):
     inlines = [ActivitySearchFilterInline, InitiativeSearchFilterInline]
     readonly_fields = ['terms_of_service_help_text']
+    form = InitiativePlatformSettingsForm
 
     def terms_of_service_help_text(self, obj):
         return admin_info_box(_(
@@ -332,7 +371,9 @@ class InitiativePlatformSettingsAdmin(
                 "fields": (
                     "enable_office_regions",
                     "enable_office_restrictions",
+                    "available_office_restrictions",
                     "default_office_restriction",
+                    "allow_disable_office_filter",
                 )
             },
         ),
@@ -357,6 +398,7 @@ class InitiativePlatformSettingsAdmin(
                     "enable_matching_emails",
                     "include_full_activities",
                     "restrict_updates",
+                    "card_location_display",
                 )
             },
         ),

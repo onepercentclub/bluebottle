@@ -27,7 +27,7 @@ install_requires = [
     'cffi>=1.15.1',
     'bcrypt==3.2.0',
     'beautifulsoup4==4.12.2',
-    'celery==5.6.1',
+    'celery==5.6.3',
     'clamd==1.0.2',
     'defusedxml==0.6.0',
     'django-admin-inline-paginator==0.4.0',

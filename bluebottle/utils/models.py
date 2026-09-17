@@ -14,10 +14,10 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
-from memoize import memoize
 from parler.models import TranslatableModel
 from solo.models import SingletonModel
 
+from bluebottle.utils.cache import memoize
 from bluebottle.utils.managers import (
     SortableTranslatableManager,
     PublishedManager

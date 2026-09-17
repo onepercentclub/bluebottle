@@ -53,6 +53,7 @@ bluebottle/settings/local.py
 bluebottle/settings/secrets.py
 
 mails/++
+mails/*
 
 # Misc stuff
 data

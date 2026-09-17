@@ -733,6 +733,31 @@ class TimeBasedRegistrationTransitionListAPITestCase:
         self.registration.refresh_from_db()
         self.assertEqual(self.defaults['resource'].status, 'accepted')
 
+    def test_accept_manager(self):
+        mail.outbox = []
+        self.perform_create(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.registration.refresh_from_db()
+        self.assertEqual(self.registration.status, 'accepted')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been selected for the activity "{}"'.format(
+                self.activity.title
+            ),
+        )
+
+    def test_accept_no_mail(self):
+        mail.outbox = []
+        self.defaults["send_email"] = False
+        self.perform_create(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.registration.refresh_from_db()
+        self.assertEqual(self.registration.status, 'accepted')
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_accept_yourself(self):
         self.perform_create(user=self.registration.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)

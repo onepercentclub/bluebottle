@@ -97,7 +97,7 @@ def get_menu_items(context):
                     "has_perms": True,
                     "current": False,
                 }
-                for segment_type in SegmentType.objects.all()
+                for segment_type in SegmentType.objects.prefetch_related('translations')
             ]
 
     for group in list(groups):

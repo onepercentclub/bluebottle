@@ -162,7 +162,7 @@ class GrantFundForm(forms.ModelForm):
         fields = '__all__'
         help_texts = {
             'total_debit': _("The total amount of money that has been added to this fund over time."),
-            'balance': _("The amount you can still use for new grants, pending payments are already deducted."),
+            'balance': _("The amount you can still use for new grants, pending payments have not been deducted."),
             'total_pending': _("Amount for approved applications waiting to be paid out."),
             'total_credit': _("The total amount that has been paid out from this fund."),
             'pending_applications': _("Grant applications that are submitted or approved, but not yet paid out."),
@@ -557,7 +557,7 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         if request.user.is_superuser:
             fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
 
-        if SegmentType.objects.count():
+        if SegmentType.objects.exists():
             fieldsets.append(
                 (
                     _("Segments"),

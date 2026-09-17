@@ -1,5 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activities.forms import ActivityRejectedForm, ActivityAcceptedForm, ActivityNeedsWorkForm, \
+    ActivityCancelledForm, ActivityRestoredForm
 from bluebottle.activities.models import EffortContribution, Organizer
 from bluebottle.fsm.state import (
     EmptyState,
@@ -211,6 +213,7 @@ class ActivityStateMachine(ModelStateMachine):
             "not appear on the search page in the frontend. The activity will still "
             "be available in the back office and appear in your reporting."
         ),
+        form=ActivityRejectedForm,
         automatic=False,
         permission=can_approve,
     )
@@ -263,6 +266,7 @@ class ActivityStateMachine(ModelStateMachine):
         ],
         open,
         name=_("Approve"),
+        form=ActivityAcceptedForm,
         automatic=False,
         permission=can_approve,
         description=_(
@@ -280,6 +284,7 @@ class ActivityStateMachine(ModelStateMachine):
             "Inform the activity manager of the changes required. "
             "The activity manager will then be able to edit and resubmit the activity."
         ),
+        form=ActivityNeedsWorkForm,
         conditions=[],
         automatic=False,
         permission=can_approve,
@@ -301,6 +306,7 @@ class ActivityStateMachine(ModelStateMachine):
             "The activity will still be visible in the back office "
             "and appear in your reporting."
         ),
+        form=ActivityCancelledForm,
         description_front_end=_(
             "The activity ends and people no longer register. All current participants will fail too."
         ),
@@ -337,6 +343,7 @@ class ActivityStateMachine(ModelStateMachine):
             "The activity will be set to the status ‘Needs work’. "
             "Then you can make changes to the activity and submit it again."
         ),
+        form=ActivityRestoredForm,
         automatic=False,
         permission=is_owner,
     )

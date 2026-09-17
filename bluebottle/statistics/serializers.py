@@ -8,7 +8,7 @@ from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.statistics.models import (
     BaseStatistic, DatabaseStatistic, ManualStatistic, ImpactStatistic
 )
@@ -37,7 +37,7 @@ class BaseStatisticSerializer(ModelSerializer):
 
         current_user = get_current_user()
 
-        if 'filter[type]' in params and current_user:
+        if 'filter[type]' in params and current_user and isinstance(current_user, Member):
             if (
                 params['filter[type]'] == 'office_region' and
                 current_user.location and

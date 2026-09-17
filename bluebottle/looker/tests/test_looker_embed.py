@@ -1,5 +1,3 @@
-from future import standard_library
-standard_library.install_aliases()
 import json
 import mock
 import time
@@ -17,7 +15,9 @@ from bluebottle.test.utils import BluebottleTestCase
     'bluebottle.looker.utils.get_current_host',
     return_value='goodup.com'
 )
-@override_settings(LOOKER_SECRET='123456')
+@override_settings(
+    LOOKER_SECRET='123456'
+)
 class LookerEmbedDashboardTest(BluebottleTestCase):
     """
     Test main admin dashboard
@@ -61,6 +61,10 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
         self.assertEqual(
             json.loads(query['user_attributes'][0])['tenant'], 'test'
         )
+
+        self.assertEqual(
+            json.loads(query['user_attributes'][0])['language'], 'en'
+        )
         self.assertEqual(
             int(query['session_length'][0]), settings.LOOKER_SESSION_LENGTH
         )
@@ -70,6 +74,16 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
         self.assertEqual(
             json.loads(query['models'][0]), list(LookerSSOEmbed.models)
         )
+
+    def test_default_langauge(self, get_current_host):
+        with mock.patch('bluebottle.looker.utils.get_default_language', return_value='nl'):
+            embed = LookerSSOEmbed(self.user, 'look', 1)
+            url = urlparse(embed.url)
+            query = parse_qs(url.query)
+
+            self.assertEqual(
+                json.loads(query['user_attributes'][0])['language'], 'nl'
+            )
 
     @override_settings(LOOKER_HOST='looker.example.com')
     def test_host_in_settings(self, get_current_host):

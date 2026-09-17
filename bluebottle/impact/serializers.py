@@ -4,7 +4,7 @@ from rest_framework_json_api.relations import PolymorphicResourceRelatedField, R
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivitySerializer
+from bluebottle.activities.serializers.serializers import ActivitySerializer
 from bluebottle.impact.models import ImpactType, ImpactGoal
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField
 

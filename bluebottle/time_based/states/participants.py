@@ -514,7 +514,7 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
 
 @register(PeriodicParticipant)
 class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
-    pass
+    withdraw = None
 
 
 @register(DateParticipant)

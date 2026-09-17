@@ -322,7 +322,7 @@ class SupportersExportView(PrivateFileView):
 
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
-        filename = re.sub("[^\w\s\d]+", '-', activity.title)
+        filename = re.sub(r"[^\w\s\d]+", '-', activity.title)
         filename = 'participants for {}.xlsx'.format(filename)
 
         sheet = []

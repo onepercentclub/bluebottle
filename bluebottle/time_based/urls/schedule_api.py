@@ -1,3 +1,4 @@
+from bluebottle.time_based.views.participants import ScheduleParticipantList
 from django.urls import path
 from django.urls import re_path
 
@@ -10,6 +11,7 @@ from bluebottle.time_based.views import (
     ScheduleParticipantExportView,
     TeamScheduleParticipantExportView,
     ScheduleRelatedParticipantList,
+    ScheduleRelatedInterestList,
     ScheduleParticipantDetail,
 
     ScheduleSlotListView,
@@ -95,6 +97,11 @@ urlpatterns = [
         name='schedule-participants'
     ),
     path(
+        '/<int:activity_id>/interests',
+        ScheduleRelatedInterestList.as_view(),
+        name='schedule-interests'
+    ),
+    path(
         '/participants/transitions',
         ScheduleParticipantTransitionList.as_view(),
         name='schedule-participant-transitions'
@@ -103,6 +110,11 @@ urlpatterns = [
         '/participants/<int:pk>',
         ScheduleParticipantDetail.as_view(),
         name="schedule-participant-detail"
+    ),
+    path(
+        '/participants',
+        ScheduleParticipantList.as_view(),
+        name='schedule-participant-create'
     ),
 
     path(

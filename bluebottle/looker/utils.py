@@ -1,6 +1,7 @@
 from future import standard_library
 
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.utils.models import get_default_language
 
 standard_library.install_aliases()
 import base64
@@ -18,7 +19,6 @@ from django.conf import settings
 from django.db import connection
 
 from bluebottle.analytics.models import AnalyticsPlatformSettings
-from bluebottle.clients import properties
 from bluebottle.utils.utils import get_current_host
 
 
@@ -97,7 +97,7 @@ class LookerSSOEmbed(object):
                 'tenant': schema_name,
                 'fiscal_month_offset': member_settings.fiscal_month_offset,
                 'user_base': analytics_settings.user_base,
-                'language': properties.LANGUAGE_CODE,
+                'language': get_default_language(),
                 'region_manager': subregions,
             }),
             ('force_logout_login', True),

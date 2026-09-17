@@ -7,7 +7,8 @@ from bluebottle.time_based.views import (
     PeriodicRelatedRegistrationList, PeriodicRegistrationList, PeriodicRegistrationTransitionList,
     PeriodicRegistrationDetail,
     PeriodicParticipantTransitionList, PeriodicParticipantExportView,
-    PeriodicRelatedParticipantList, PeriodicParticipantDetail
+    PeriodicRelatedParticipantList, PeriodicParticipantDetail,
+    PeriodicRelatedInterestList,
 )
 
 urlpatterns = [
@@ -52,6 +53,11 @@ urlpatterns = [
         '/<int:activity_id>/participants',
         PeriodicRelatedParticipantList.as_view(),
         name='periodic-participants'
+    ),
+    path(
+        '/<int:activity_id>/interests',
+        PeriodicRelatedInterestList.as_view(),
+        name='periodic-interests'
     ),
     path(
         '/participants/transitions',

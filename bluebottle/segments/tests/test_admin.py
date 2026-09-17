@@ -1,4 +1,8 @@
+import re
+
 from django.contrib.admin.sites import AdminSite
+from django.db import connection, reset_queries
+from django.test.utils import override_settings
 from django.urls import reverse
 
 from bluebottle.segments.admin import SegmentAdmin
@@ -36,6 +40,52 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Segments')
         self.assertContains(response, 'Department:')
 
+    def test_activity_segment_admin_uses_autocomplete(self):
+        segment_type = SegmentTypeFactory.create(name="Department")
+        segments = SegmentFactory.create_batch(30, segment_type=segment_type)
+        activity = DateActivityFactory.create()
+        activity.segments.add(segments[0])
+
+        activity_url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
+        response = self.client.get(activity_url)
+        content = response.content.decode()
+
+        self.assertIn('admin-autocomplete', content)
+        self.assertIn(f'segment_type={segment_type.id}', content)
+
+        field_name = segment_type.field_name
+        match = re.search(
+            rf'<select[^>]*name="{re.escape(field_name)}"[^>]*>(.*?)</select>',
+            content,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(match, f'Segment select for {field_name} not found')
+        select_html = match.group(0)
+        self.assertIn('admin-autocomplete', select_html)
+        self.assertIn(f'value="{segments[0].id}"', select_html)
+        self.assertNotIn(f'value="{segments[1].id}"', select_html)
+
+    def test_segment_autocomplete_filters_by_type(self):
+        type_a = SegmentTypeFactory.create(name='Type A')
+        type_b = SegmentTypeFactory.create(name='Type B')
+        segment_a = SegmentFactory.create(name='SharedName A', segment_type=type_a)
+        segment_b = SegmentFactory.create(name='SharedName B', segment_type=type_b)
+
+        url = reverse('admin:autocomplete')
+        response = self.client.get(url, {
+            'app_label': 'activities',
+            'model_name': 'activity',
+            'field_name': 'segments',
+            'term': 'SharedName',
+            'segment_type': type_a.id,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        ids = {result['id'] for result in payload['results']}
+        self.assertIn(str(segment_a.id), ids)
+        self.assertNotIn(str(segment_b.id), ids)
+
     def test_segment_admin(self):
         segment_type = SegmentTypeFactory.create(name='Job title')
         SegmentFactory.create_batch(5, segment_type=segment_type)
@@ -70,6 +120,39 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         self.assertEqual(segment.email_domains, ['test.com', 'test2.com'])
 
 
+@override_settings(DEBUG=True)
+class ActivityAdminSegmentQueryTest(BluebottleAdminTestCase):
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def test_change_view_does_not_query_all_segments(self):
+        self.client.force_login(self.superuser)
+        segment_type = SegmentTypeFactory.create(name="Department")
+        segments = SegmentFactory.create_batch(100, segment_type=segment_type)
+        activity = DateActivityFactory.create()
+        activity.segments.add(segments[0])
+
+        url = reverse("admin:time_based_dateactivity_change", args=(activity.id,))
+        self.client.get(url)
+
+        reset_queries()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        segment_queries = [
+            q for q in connection.queries
+            if "segments_segment" in q["sql"].lower()
+            and "segmenttype" not in q["sql"].lower()
+            and "segment_manager" not in q["sql"].lower()
+        ]
+        self.assertLess(len(segment_queries), 10, segment_queries)
+
+        content = response.content.decode()
+        self.assertIn("admin-autocomplete", content)
+        self.assertNotIn(f'value="{segments[1].id}"', content)
+
+
 class TestSegmentTypeAdmin(BluebottleAdminTestCase):
 
     extra_environ = {}
@@ -84,7 +167,6 @@ class TestSegmentTypeAdmin(BluebottleAdminTestCase):
 
     def test_required_segment_types_no_segments(self):
         member_settings_url = reverse('admin:members_memberplatformsettings_change')
-        print(member_settings_url)
         page = self.app.get(member_settings_url)
         self.assertFalse('Mark segment types as required' in page.text)
         department = SegmentTypeFactory.create(name='Department')
@@ -107,6 +189,109 @@ class TestSegmentTypeAdmin(BluebottleAdminTestCase):
         self.assertTrue(page.forms[1]['form-1-required'].checked)
         page = self.app.get(member_settings_url)
         self.assertFalse('no segment types are marked as required' in page.text)
+
+    def test_can_save_new_language_without_segment_translations(self):
+        """
+        Saving a SegmentType translation must not fail when child segments
+        only exist in another language (empty required inline names).
+        """
+        segment_type = SegmentTypeFactory.create(name='Theme', slug='themas')
+        segment_type.set_current_language('en')
+        segment_type.name = 'Theme'
+        segment_type.save()
+
+        segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Loneliness',
+            slug='loneliness',
+        )
+        segment.set_current_language('en')
+        segment.name = 'Loneliness'
+        segment.save()
+
+        self.assertFalse(segment_type.has_translation('nl'))
+        self.assertFalse(segment.has_translation('nl'))
+
+        url = reverse(
+            'admin:segments_segmenttype_change',
+            args=(segment_type.id,),
+        )
+        page = self.app.get(url, {'language': 'nl'})
+        form = page.forms[1]
+
+        # Inline name is prefilled from the English fallback.
+        self.assertEqual(form['segments-0-name'].value, 'Loneliness')
+
+        form['name'] = 'Thema'
+        response = form.submit()
+        self.assertEqual(response.status_code, 302, response.text)
+
+        segment_type.refresh_from_db()
+        self.assertTrue(segment_type.has_translation('nl'))
+        segment_type.set_current_language('nl')
+        self.assertEqual(segment_type.name, 'Thema')
+        # Shared slug must not be overwritten by translated-name prepopulation.
+        self.assertEqual(segment_type.slug, 'themas')
+
+        # Unchanged inline names are not written as new translations; parler
+        # falls back to the existing English name, which is the intended UX
+        # when only translating the segment type label.
+        segment.refresh_from_db()
+        self.assertFalse(segment.has_translation('nl'))
+        self.assertEqual(
+            segment.safe_translation_getter('name', language_code='nl', any_language=True),
+            'Loneliness',
+        )
+
+        segment_type.set_current_language('en')
+        self.assertEqual(segment_type.name, 'Theme')
+        segment.set_current_language('en')
+        self.assertEqual(segment.name, 'Loneliness')
+
+    def test_changing_dutch_leaves_english_unchanged(self):
+        """
+        Editing Dutch translations must create/update NL only and leave EN as-is.
+        """
+        segment_type = SegmentTypeFactory.create(name='Theme', slug='themas')
+        segment_type.set_current_language('en')
+        segment_type.name = 'Theme'
+        segment_type.save()
+
+        segment = SegmentFactory.create(
+            segment_type=segment_type,
+            name='Loneliness',
+            slug='loneliness',
+        )
+        segment.set_current_language('en')
+        segment.name = 'Loneliness'
+        segment.save()
+
+        url = reverse(
+            'admin:segments_segmenttype_change',
+            args=(segment_type.id,),
+        )
+        page = self.app.get(url, {'language': 'nl'})
+        form = page.forms[1]
+
+        self.assertEqual(form['segments-0-name'].value, 'Loneliness')
+
+        form['name'] = 'Thema'
+        form['segments-0-name'] = 'Eenzaamheid'
+        response = form.submit()
+        self.assertEqual(response.status_code, 302, response.text)
+
+        segment_type.refresh_from_db()
+        segment.refresh_from_db()
+
+        segment_type.set_current_language('nl')
+        self.assertEqual(segment_type.name, 'Thema')
+        segment.set_current_language('nl')
+        self.assertEqual(segment.name, 'Eenzaamheid')
+
+        segment_type.set_current_language('en')
+        self.assertEqual(segment_type.name, 'Theme')
+        segment.set_current_language('en')
+        self.assertEqual(segment.name, 'Loneliness')
 
 
 class TestMemberSegmentAdmin(BluebottleAdminTestCase):

@@ -5,7 +5,9 @@ services:
     working_dir: /source 
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
-    container_name: bluebottle 
+    container_name: bluebottle
+    environment:
+      - DJANGO_SETTINGS_MODULE=bluebottle.settings.testing_local
     depends_on:
       elasticsearch:
         condition: service_started

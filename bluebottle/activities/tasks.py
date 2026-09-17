@@ -134,21 +134,32 @@ def get_matching_activities(user):
     ).order_by(preserved)
 
 
-@app.task
+@app.task(ack_late=False)
+def recommend_user(tenant, user):
+    with LocalTenant(tenant, clear_tenant=True):
+        try:
+            activities = get_matching_activities(user)
+
+            if activities:
+                notification = MatchingActivitiesNotification(user)
+                notification.compose_and_send(activities=activities)
+        except Exception as e:
+            logger.error(e)
+
+
+@app.task(ack_late=False)
+def recommend_tenant(tenant):
+    with LocalTenant(tenant, clear_tenant=True):
+        settings = InitiativePlatformSettings.load()
+        if settings.enable_matching_emails:
+            for user in Member.objects.filter(subscribed=True):
+                recommend_user(tenant, user)
+
+
+@app.task(ack_late=False)
 def recommend():
     for tenant in Client.objects.all():
-        with LocalTenant(tenant, clear_tenant=True):
-            settings = InitiativePlatformSettings.load()
-            if settings.enable_matching_emails:
-                for user in Member.objects.filter(subscribed=True):
-                    try:
-                        activities = get_matching_activities(user)
-
-                        if activities:
-                            notification = MatchingActivitiesNotification(user)
-                            notification.compose_and_send(activities=activities)
-                    except Exception as e:
-                        logger.error(e)
+        recommend_tenant.apply_async(args=[tenant])
 
 
 @app.task
@@ -166,11 +177,11 @@ def do_good_hours_reminder():
                 notification = None
                 if settings.reminder_q1 and today == q1:
                     notification = DoGoodHoursReminderQ1Notification(settings)
-                if settings.reminder_q2 and today == q2:
+                elif settings.reminder_q2 and today == q2:
                     notification = DoGoodHoursReminderQ2Notification(settings)
-                if settings.reminder_q3 and today == q3:
+                elif settings.reminder_q3 and today == q3:
                     notification = DoGoodHoursReminderQ3Notification(settings)
-                if settings.reminder_q4 and today == q4:
+                elif settings.reminder_q4 and today == q4:
                     notification = DoGoodHoursReminderQ4Notification(settings)
 
                 if notification:

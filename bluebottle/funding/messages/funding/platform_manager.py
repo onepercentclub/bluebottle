@@ -1,7 +1,8 @@
-from django.conf import settings
 from django.utils.translation import pgettext_lazy as pgettext
 
-from bluebottle.members.models import Member
+from bluebottle.activities.messages.reviewer import get_reviewers_for_activity
+from bluebottle.funding.models import Funding
+from bluebottle.grant_management.models import GrantApplication
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -19,13 +20,25 @@ class LivePayoutAccountMarkedIncomplete(TransitionMessage):
 
     def get_recipients(self):
         """platform support email addresses"""
-        members = []
-        for email in settings.SUPPORT_EMAIL_ADDRESSES:
-            member, _c = Member.objects.get_or_create(email=email)
-            members.append(member)
-        for member in Member.objects.filter(submitted_initiative_notifications=True).all():
-            members.append(member)
-        return members
+        recipients = []
+
+        campaigns = Funding.objects.filter(
+            bank_account__connect_account=self.obj,
+            status__in=['open', 'on_hold']
+        ).all()
+
+        for campaign in campaigns:
+            recipients = recipients + get_reviewers_for_activity(campaign)
+
+        applications = GrantApplication.objects.filter(
+            bank_account__connect_account=self.obj,
+            status__in=['granted']
+        )
+
+        for application in applications:
+            recipients = recipients + get_reviewers_for_activity(application)
+
+        return list(set(recipients))
 
 
 class LivePublicPayoutAccountMarkedIncomplete(LivePayoutAccountMarkedIncomplete):

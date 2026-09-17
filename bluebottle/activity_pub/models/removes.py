@@ -1,17 +1,20 @@
 from bluebottle.activity_pub.models.transitions import Transition
 from bluebottle.activity_pub.models.events import DoGoodEvent, SubEvent
 
+from bluebottle.utils.utils import get_subclasses
+
 
 class Remove(Transition):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if isinstance(self.object, DoGoodEvent) and self.object.activity_type == 'PeriodicActivity':
-            self.__class__ = RegistrationRemove
-        if isinstance(self.object, SubEvent):
-            if self.object.parent.activity_type == 'DateActivity':
-                self.__class__ = DateSlotRemove
-            else:
-                self.__class__ = ScheduleSlotRemove
+
+        for subclass in get_subclasses(self.__class__):
+            if subclass.matches(self.object):
+                self.__class__ = subclass
+
+    @classmethod
+    def matches(cls, object):
+        return False
 
     @property
     def local_contributor(self):
@@ -53,6 +56,10 @@ class Remove(Transition):
 
 
 class RegistrationRemove(Remove):
+    @classmethod
+    def matches(cls, object):
+        return isinstance(object, DoGoodEvent) and object.activity_type == 'PeriodicActivity'
+
     class Meta:
         proxy = True
 
@@ -75,6 +82,10 @@ class SlotRemove(Remove):
 
 
 class DateSlotRemove(Remove):
+    @classmethod
+    def matches(cls, object):
+        return isinstance(object, SubEvent) and object.parent.activity_type == 'DateActivity'
+
     class Meta:
         proxy = True
 
@@ -94,6 +105,10 @@ class DateSlotRemove(Remove):
 
 
 class ScheduleSlotRemove(Remove):
+    @classmethod
+    def matches(cls, object):
+        return isinstance(object, SubEvent) and not object.parent.activity_type == 'DateActivity'
+
     class Meta:
         proxy = True
 

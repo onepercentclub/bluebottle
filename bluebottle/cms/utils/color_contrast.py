@@ -1,11 +1,15 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 import wcag_contrast_ratio as contrast
 from PIL import ImageColor
 from django.utils.translation import gettext_lazy as _
 
 PAGE_BACKGROUND = '#FFFFFF'
+WHITE = '#FFFFFF'
+DARK_NEUTRAL = '#4A4A4A'
+PALE_GREY = '#EEEEEE'
+TINT_AMOUNT = 90
 
 
 @dataclass(frozen=True)
@@ -39,7 +43,141 @@ def _normalize_hex(value: Optional[str]) -> Optional[str]:
         return None
     if not value.startswith('#'):
         value = f'#{value}'
-    return value
+    if len(value) == 4:
+        value = '#' + ''.join(channel * 2 for channel in value[1:])
+    return value.upper()
+
+
+def _round_channel(value: float) -> int:
+    return max(0, min(255, int(value + 0.5)))
+
+
+def _hex_from_rgb(red: int, green: int, blue: int) -> str:
+    return f'#{red:02X}{green:02X}{blue:02X}'
+
+
+def mix_with_white(hex_color: Optional[str], amount: int) -> Optional[str]:
+    hex_color = _normalize_hex(hex_color)
+    if not hex_color:
+        return None
+    red, green, blue = ImageColor.getcolor(hex_color, 'RGB')
+    weight = amount / 100.0
+    return _hex_from_rgb(
+        _round_channel((255 - red) * weight + red),
+        _round_channel((255 - green) * weight + green),
+        _round_channel((255 - blue) * weight + blue),
+    )
+
+
+def mix_with_black(hex_color: Optional[str], amount: int) -> Optional[str]:
+    hex_color = _normalize_hex(hex_color)
+    if not hex_color:
+        return None
+    red, green, blue = ImageColor.getcolor(hex_color, 'RGB')
+    keep = 1 - (amount / 100.0)
+    return _hex_from_rgb(
+        _round_channel(red * keep),
+        _round_channel(green * keep),
+        _round_channel(blue * keep),
+    )
+
+
+def ensure_contrast(foreground: Optional[str], background: Optional[str]) -> Optional[str]:
+    foreground = _normalize_hex(foreground)
+    background = _normalize_hex(background)
+    if not foreground or not background:
+        return None
+
+    try:
+        if contrast.passes_AA(contrast_ratio(foreground, background), large=False):
+            return foreground
+    except ValueError:
+        return None
+
+    low = 1
+    high = 100
+    best = None
+    while low <= high:
+        mid = (low + high) // 2
+        candidate = mix_with_black(foreground, mid)
+        if contrast.passes_AA(contrast_ratio(candidate, background), large=False):
+            best = candidate
+            high = mid - 1
+        else:
+            low = mid + 1
+
+    return best or DARK_NEUTRAL
+
+
+def ensure_contrast_on_surfaces(
+    foreground: Optional[str],
+    backgrounds: Sequence[str],
+) -> Optional[str]:
+    result = _normalize_hex(foreground)
+    if not result:
+        return None
+    for background in backgrounds:
+        result = ensure_contrast(result, background)
+        if not result:
+            return None
+    return result
+
+
+def choose_on_color(background: Optional[str]) -> Optional[str]:
+    background = _normalize_hex(background)
+    if not background:
+        return None
+
+    try:
+        white_ratio = contrast_ratio(WHITE, background)
+        dark_ratio = contrast_ratio(DARK_NEUTRAL, background)
+    except ValueError:
+        return None
+    passing = []
+    if contrast.passes_AA(white_ratio, large=False):
+        passing.append((white_ratio, WHITE))
+    if contrast.passes_AA(dark_ratio, large=False):
+        passing.append((dark_ratio, DARK_NEUTRAL))
+
+    candidates = passing or [(white_ratio, WHITE), (dark_ratio, DARK_NEUTRAL)]
+    return max(candidates, key=lambda item: item[0])[1]
+
+
+def _apply_brand_patterns(settings, brand_color, text_attr, on_background_attr, on_tint_attr):
+    on_color = choose_on_color(brand_color)
+    if on_color:
+        setattr(settings, text_attr, on_color)
+
+    on_background = ensure_contrast_on_surfaces(brand_color, [WHITE, PALE_GREY])
+    if on_background:
+        setattr(settings, on_background_attr, on_background)
+
+    tint = mix_with_white(brand_color, TINT_AMOUNT)
+    on_tint = ensure_contrast(brand_color, tint) if tint else None
+    if on_tint:
+        setattr(settings, on_tint_attr, on_tint)
+
+
+def apply_on_colors(settings) -> None:
+    action = getattr(settings, 'action_color', None)
+    if action:
+        _apply_brand_patterns(
+            settings,
+            action,
+            'action_text_color',
+            'alternative_link_color',
+            'action_on_tint_color',
+        )
+
+    description = getattr(settings, 'description_color', None)
+    if description:
+        _apply_brand_patterns(
+            settings,
+            description,
+            'description_text_color',
+            'description_on_background_color',
+            'description_on_tint_color',
+        )
 
 
 def _evaluate_pair(pair_id: str, label: str, foreground: Optional[str], background: Optional[str]) -> Optional[PairResult]:

@@ -1,15 +1,13 @@
 (function () {
     'use strict';
 
-    var PAGE_BACKGROUND = '#FFFFFF';
+    var WHITE = '#FFFFFF';
+    var DARK_NEUTRAL = '#4A4A4A';
+    var PALE_GREY = '#EEEEEE';
+    var TINT_AMOUNT = 90;
     var FIELD_IDS = {
         actionColor: 'id_action_color',
-        actionTextColor: 'id_action_text_color',
-        alternativeLinkColor: 'id_alternative_link_color',
-        descriptionColor: 'id_description_color',
-        descriptionTextColor: 'id_description_text_color',
-        footerColor: 'id_footer_color',
-        footerTextColor: 'id_footer_text_color'
+        descriptionColor: 'id_description_color'
     };
 
     function normalizeHex(value) {
@@ -40,15 +38,29 @@
         return Math.pow((value + 0.055) / 1.055, 2.4);
     }
 
-    function relativeLuminance(hex) {
+    function parseRgb(hex) {
         var normalized = normalizeHex(hex);
-        var r = parseInt(normalized.slice(1, 3), 16);
-        var g = parseInt(normalized.slice(3, 5), 16);
-        var b = parseInt(normalized.slice(5, 7), 16);
+        return {
+            r: parseInt(normalized.slice(1, 3), 16),
+            g: parseInt(normalized.slice(3, 5), 16),
+            b: parseInt(normalized.slice(5, 7), 16)
+        };
+    }
+
+    function hexFromRgb(r, g, b) {
+        function pad(value) {
+            var hex = Math.round(Math.max(0, Math.min(255, value))).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }
+        return ('#' + pad(r) + pad(g) + pad(b)).toUpperCase();
+    }
+
+    function relativeLuminance(hex) {
+        var rgb = parseRgb(hex);
         return (
-            0.2126 * channelToLinear(r) +
-            0.7152 * channelToLinear(g) +
-            0.0722 * channelToLinear(b)
+            0.2126 * channelToLinear(rgb.r) +
+            0.7152 * channelToLinear(rgb.g) +
+            0.0722 * channelToLinear(rgb.b)
         );
     }
 
@@ -64,6 +76,76 @@
         return ratio >= 4.5;
     }
 
+    function mixWithWhite(hex, amount) {
+        var rgb = parseRgb(hex);
+        var weight = amount / 100;
+        return hexFromRgb(
+            (255 - rgb.r) * weight + rgb.r,
+            (255 - rgb.g) * weight + rgb.g,
+            (255 - rgb.b) * weight + rgb.b
+        );
+    }
+
+    function mixWithBlack(hex, amount) {
+        var rgb = parseRgb(hex);
+        var keep = 1 - amount / 100;
+        return hexFromRgb(rgb.r * keep, rgb.g * keep, rgb.b * keep);
+    }
+
+    function chooseOnColor(background) {
+        background = normalizeHex(background);
+        if (!background) {
+            return null;
+        }
+        var whiteRatio = contrastRatio(WHITE, background);
+        var darkRatio = contrastRatio(DARK_NEUTRAL, background);
+        var whitePass = passesAa(whiteRatio);
+        var darkPass = passesAa(darkRatio);
+        if (whitePass && !darkPass) {
+            return WHITE;
+        }
+        if (darkPass && !whitePass) {
+            return DARK_NEUTRAL;
+        }
+        return whiteRatio >= darkRatio ? WHITE : DARK_NEUTRAL;
+    }
+
+    function ensureContrast(foreground, background) {
+        foreground = normalizeHex(foreground);
+        background = normalizeHex(background);
+        if (!foreground || !background) {
+            return null;
+        }
+        if (passesAa(contrastRatio(foreground, background))) {
+            return foreground;
+        }
+        var low = 1;
+        var high = 100;
+        var best = null;
+        while (low <= high) {
+            var mid = Math.floor((low + high) / 2);
+            var candidate = mixWithBlack(foreground, mid);
+            if (passesAa(contrastRatio(candidate, background))) {
+                best = candidate;
+                high = mid - 1;
+            } else {
+                low = mid + 1;
+            }
+        }
+        return best || DARK_NEUTRAL;
+    }
+
+    function ensureContrastOnSurfaces(foreground, backgrounds) {
+        var result = normalizeHex(foreground);
+        if (!result) {
+            return null;
+        }
+        backgrounds.forEach(function (background) {
+            result = ensureContrast(result, background);
+        });
+        return result;
+    }
+
     function fieldValue(fieldId) {
         var input = document.getElementById(fieldId);
         if (!input) {
@@ -72,85 +154,38 @@
         return normalizeHex(input.value);
     }
 
-    function linkColor() {
-        return fieldValue(FIELD_IDS.alternativeLinkColor) || fieldValue(FIELD_IDS.actionColor);
+    function applySwatch(name, background, color) {
+        var root = document.querySelector('[data-preview="' + name + '"]');
+        if (!root) {
+            return;
+        }
+        var sample = root.querySelector('.platform-color-contrast__sample');
+        if (!sample) {
+            return;
+        }
+        sample.style.backgroundColor = background || '#f5f5f5';
+        sample.style.color = color || '#666666';
     }
 
-    function setPairState(pairId, foreground, background) {
-        var row = document.querySelector('[data-contrast-pair="' + pairId + '"]');
-        if (!row) {
+    function previewBrand(prefix, brand) {
+        if (!brand) {
+            applySwatch(prefix + '-solid', null, null);
+            applySwatch(prefix + '-text', WHITE, null);
+            applySwatch(prefix + '-tint', null, null);
             return;
         }
-        var ratioEl = row.querySelector('[data-contrast-ratio]');
-        var badgeEl = row.querySelector('[data-contrast-badge]');
-        var hintEl = row.querySelector('[data-contrast-hint]');
-
-        if (!foreground || !background) {
-            row.classList.remove('is-pass', 'is-fail');
-            row.classList.add('is-skipped');
-            if (ratioEl) {
-                ratioEl.textContent = '—';
-            }
-            if (badgeEl) {
-                badgeEl.textContent = 'Not set';
-            }
-            if (hintEl) {
-                hintEl.hidden = true;
-            }
-            return;
-        }
-
-        var ratio = contrastRatio(foreground, background);
-        var passes = passesAa(ratio);
-        row.classList.remove('is-skipped', 'is-pass', 'is-fail');
-        row.classList.add(passes ? 'is-pass' : 'is-fail');
-        if (ratioEl) {
-            ratioEl.textContent = ratio.toFixed(1) + ':1';
-        }
-        if (badgeEl) {
-            badgeEl.textContent = passes ? 'Pass AA' : 'Fail AA';
-        }
-        if (hintEl) {
-            hintEl.hidden = passes;
-        }
-    }
-
-    function applyFilledPreview(selector, background, color) {
-        var el = document.querySelector(selector);
-        if (!el) {
-            return;
-        }
-        el.style.backgroundColor = background || '#f5f5f5';
-        el.style.color = color || '#666666';
-    }
-
-    function applyLinkPreview(color) {
-        var el = document.querySelector('.platform-color-contrast__link');
-        if (!el) {
-            return;
-        }
-        el.style.backgroundColor = PAGE_BACKGROUND;
-        el.style.color = color || '#666666';
+        var onSolid = chooseOnColor(brand);
+        var onBackground = ensureContrastOnSurfaces(brand, [WHITE, PALE_GREY]);
+        var tint = mixWithWhite(brand, TINT_AMOUNT);
+        var onTint = ensureContrast(brand, tint);
+        applySwatch(prefix + '-solid', brand, onSolid);
+        applySwatch(prefix + '-text', WHITE, onBackground);
+        applySwatch(prefix + '-tint', tint, onTint);
     }
 
     function update() {
-        var actionColor = fieldValue(FIELD_IDS.actionColor);
-        var actionText = fieldValue(FIELD_IDS.actionTextColor);
-        var descriptionColor = fieldValue(FIELD_IDS.descriptionColor);
-        var descriptionText = fieldValue(FIELD_IDS.descriptionTextColor);
-        var footerColor = fieldValue(FIELD_IDS.footerColor);
-        var footerText = fieldValue(FIELD_IDS.footerTextColor);
-        var link = linkColor();
-
-        setPairState('action', actionText, actionColor);
-        setPairState('description', descriptionText, descriptionColor);
-        setPairState('footer', footerText, footerColor);
-        setPairState('link', link, PAGE_BACKGROUND);
-
-        applyFilledPreview('.platform-color-contrast__button', actionColor, actionText);
-        applyFilledPreview('.platform-color-contrast__description', descriptionColor, descriptionText);
-        applyFilledPreview('.platform-color-contrast__footer', footerColor, footerText);
-        applyLinkPreview(link);
+        previewBrand('action', fieldValue(FIELD_IDS.actionColor));
+        previewBrand('description', fieldValue(FIELD_IDS.descriptionColor));
     }
 
     function bind() {

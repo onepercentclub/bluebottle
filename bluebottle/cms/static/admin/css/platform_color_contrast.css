@@ -1,106 +1,53 @@
 .platform-color-contrast {
-    margin-top: 0.5rem;
-    max-width: 42rem;
+    margin-top: 0.25rem;
+    max-width: 44rem;
 }
 
-.platform-color-contrast__pairs {
-    display: grid;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.platform-color-contrast__pair {
-    align-items: center;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    display: grid;
-    gap: 0.5rem;
-    grid-template-columns: 7rem 4.5rem auto 1fr;
-    padding: 0.5rem 0.75rem;
-}
-
-.platform-color-contrast__pair.is-pass {
-    border-color: #8bc48b;
-    background: #f3faf3;
-}
-
-.platform-color-contrast__pair.is-fail {
-    border-color: #e0a0a0;
-    background: #fff6f6;
-}
-
-.platform-color-contrast__pair.is-skipped {
-    background: #fafafa;
-    color: #666;
-}
-
-.platform-color-contrast__label {
-    font-weight: 600;
-}
-
-.platform-color-contrast__ratio {
-    font-family: monospace;
-}
-
-.platform-color-contrast__badge {
-    border-radius: 3px;
-    display: inline-block;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.15rem 0.4rem;
-    text-transform: uppercase;
-}
-
-.platform-color-contrast__pair.is-pass .platform-color-contrast__badge {
-    background: #d8f0d8;
-    color: #1f6b1f;
-}
-
-.platform-color-contrast__pair.is-fail .platform-color-contrast__badge {
-    background: #f8d4d4;
-    color: #8a1f1f;
-}
-
-.platform-color-contrast__pair.is-skipped .platform-color-contrast__badge {
-    background: #ececec;
+.platform-color-contrast__intro {
     color: #555;
+    margin: 0 0 0.75rem;
 }
 
-.platform-color-contrast__hint {
-    color: #8a1f1f;
+.platform-color-contrast__groups {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.platform-color-contrast__heading {
     font-size: 0.85rem;
-    grid-column: 1 / -1;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
 }
 
-.platform-color-contrast__preview {
+.platform-color-contrast__swatches {
     display: grid;
     gap: 0.75rem;
-    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.platform-color-contrast__button,
-.platform-color-contrast__description,
-.platform-color-contrast__link,
-.platform-color-contrast__footer {
-    align-items: center;
+.platform-color-contrast__swatch {
     border: 1px solid #ddd;
     border-radius: 4px;
+    overflow: hidden;
+}
+
+.platform-color-contrast__sample {
+    align-items: center;
+    background: #f5f5f5;
+    color: #666;
     display: flex;
+    font-size: 1.35rem;
+    font-weight: 700;
     justify-content: center;
-    min-height: 2.75rem;
-    padding: 0.5rem 0.75rem;
+    min-height: 3.25rem;
+}
+
+.platform-color-contrast__caption {
+    background: #fafafa;
+    border-top: 1px solid #eee;
+    color: #555;
+    display: block;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.4rem;
     text-align: center;
-}
-
-.platform-color-contrast__button,
-.platform-color-contrast__description {
-    font-weight: 600;
-}
-
-.platform-color-contrast__link {
-    text-decoration: underline;
-}
-
-.platform-color-contrast__footer {
-    grid-column: 1 / -1;
 }

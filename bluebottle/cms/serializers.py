@@ -34,6 +34,15 @@ from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedFi
 from bluebottle.utils.models import get_default_language
 
 
+def get_staff_admin_url(obj):
+    user = get_current_user()
+    if user and user.is_authenticated and (user.is_staff or user.is_superuser):
+        return reverse(
+            'admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name),
+            args=[obj.pk]
+        )
+
+
 class QuoteSerializer(ModelSerializer):
     image = SorlImageField('100x100', crop='center')
 
@@ -674,13 +683,20 @@ class HomeSerializer(BaseCMSSerializer):
 
 class PageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    admin_url = serializers.SerializerMethodField()
 
     def get_blocks(self, obj):
         return obj.content.contentitems.all()
 
+    def get_admin_url(self, obj):
+        return get_staff_admin_url(obj)
+
     class Meta(BaseCMSSerializer.Meta):
         model = Page
-        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
+        fields = BaseCMSSerializer.Meta.fields + (
+            'title', 'show_title', 'full_page', 'slug', 'admin_url'
+        )
+        meta_fields = ('admin_url',)
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'pages'
@@ -688,6 +704,7 @@ class PageSerializer(BaseCMSSerializer):
 
 class PlatformPageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    admin_url = serializers.SerializerMethodField()
 
     def get_blocks(self, obj):
         blocks = obj.body.contentitems.all().translated()
@@ -697,9 +714,15 @@ class PlatformPageSerializer(BaseCMSSerializer):
         default_language = get_default_language()
         return obj.body.contentitems.all().translated(default_language)
 
+    def get_admin_url(self, obj):
+        return get_staff_admin_url(obj)
+
     class Meta(BaseCMSSerializer.Meta):
         model = Page
-        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
+        fields = BaseCMSSerializer.Meta.fields + (
+            'title', 'show_title', 'full_page', 'slug', 'admin_url'
+        )
+        meta_fields = ('admin_url',)
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'pages'

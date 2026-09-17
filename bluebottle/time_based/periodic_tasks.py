@@ -36,11 +36,11 @@ class TimeBasedActivityRegistrationDeadlinePassedTask(ModelPeriodicTask):
     def get_queryset(self):
         return self.model.objects.filter(
             registration_deadline__lte=date.today(),
-            status__in=['open']
+            status__in=['open', 'full']
         )
 
     effects = [
-        TransitionEffect(TimeBasedStateMachine.lock, conditions=[
+        TransitionEffect(TimeBasedStateMachine.close_registration, conditions=[
             has_participants
         ]),
         TransitionEffect(TimeBasedStateMachine.expire, conditions=[
@@ -49,16 +49,16 @@ class TimeBasedActivityRegistrationDeadlinePassedTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return str(_("Lock an activity when the registration date has passed."))
+        return str(_("Close registration when the registration date has passed."))
 
 
 class DateActivityFinishedTask(ModelPeriodicTask):
 
     def get_queryset(self):
         return self.model.objects.filter(
-            status__in=['open', 'full']
+            status__in=['open', 'full', 'registration_closed']
         ).exclude(
-            slots__status__in=['open', 'full', 'running']
+            slots__status__in=['open', 'full', 'registration_closed', 'running']
         )
 
     effects = [
@@ -79,7 +79,7 @@ class SlotStartedTask(ModelPeriodicTask):
     def get_queryset(self):
         return self.model.objects.filter(
             start__lte=timezone.now(),
-            status__in=['open', 'full']
+            status__in=['open', 'full', 'registration_closed']
         )
 
     effects = [
@@ -95,7 +95,7 @@ class SlotFinishedTask(ModelPeriodicTask):
     def get_queryset(self):
         return self.model.objects.filter(
             start__lt=ExpressionWrapper(timezone.now() - F('duration'), output_field=DateTimeField()),
-            status__in=['open', 'full', 'running']
+            status__in=['open', 'full', 'registration_closed', 'running']
         )
 
     effects = [
@@ -129,8 +129,8 @@ class DateActivitySlotReminderTask(ModelPeriodicTask):
         slots = DateActivitySlot.objects.filter(
             start__lte=timezone.now() + timedelta(hours=25),
             start__gt=timezone.now() + timedelta(hours=20),
-            status__in=['open', 'full'],
-            activity__status__in=['open', 'full']
+            status__in=['open', 'full', 'registration_closed'],
+            activity__status__in=['open', 'full', 'registration_closed']
         )
         return slots
 
@@ -147,7 +147,7 @@ class DateActivitySlotReminderTask(ModelPeriodicTask):
 class ActivityFinishedTask(ModelPeriodicTask):
     def get_queryset(self):
         return self.model.objects.filter(
-            deadline__lte=date.today(), status__in=["open", "full"]
+            deadline__lte=date.today(), status__in=["open", "full", "registration_closed"]
         )
 
     effects = [

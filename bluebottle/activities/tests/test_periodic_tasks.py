@@ -175,6 +175,32 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         self.run_task(self.q1)
         self.assertEqual(len(mail.outbox), 0, "Reminder mail should not be send again.")
 
+    def test_reminder_q1_not_resent_when_previous_message_pending(self):
+        """
+        If a previous run saved Message rows but died before setting `sent`
+        (or before SMTP finished), a retry must not mail again.
+        """
+        from bluebottle.notifications.models import Message
+        from django.contrib.contenttypes.models import ContentType
+
+        settings = MemberPlatformSettings.load()
+        for user in [self.moderate_user, self.passive_user, self.tempted_user]:
+            Message.objects.create(
+                recipient=user,
+                template='messages/matching/reminder-q1',
+                subject='pending',
+                content_type=ContentType.objects.get_for_model(settings),
+                object_id=settings.pk,
+                sent=None,
+            )
+
+        mail.outbox = []
+        self.run_task(self.q1)
+        self.assertEqual(
+            len(mail.outbox), 0,
+            "Reminder mail should not be sent again when a pending Message exists."
+        )
+
     def test_reminder_fiscal_q1(self):
         settings = MemberPlatformSettings.load()
         settings.fiscal_month_offset = -4

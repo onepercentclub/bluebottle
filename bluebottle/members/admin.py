@@ -111,7 +111,7 @@ class MemberCreationForm(MemberForm):
         # but it sets a nicer error message than the ORM.
         email = self.cleaned_data["email"]
         try:
-            Member._default_manager.get(email=email)
+            Member._default_manager.get(email__iexact=email)
         except Member.DoesNotExist:
             return email
         raise forms.ValidationError(self.error_messages['duplicate_email'])

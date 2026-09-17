@@ -2,7 +2,7 @@ from builtins import object, str
 
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.fields import GenericRelation
-from django.core.exceptions import ValidationError
+from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models
 from django.db.models import Max
 from django.db.models.deletion import SET_NULL
@@ -98,7 +98,13 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     slug = models.SlugField(_("slug"), max_length=100, default="new")
 
     pitch = models.TextField(
-        _("pitch"), help_text=_("Pitch your smart idea in one sentence"), blank=True
+        _("pitch"),
+        help_text=_(
+            "Pitch your smart idea in one sentence. Max: %(chars)s characters."
+        )
+        % {"chars": 350},
+        blank=True,
+        max_length=350,
     )
     story = QuillField(_("story"), blank=True)
 
@@ -315,6 +321,18 @@ def get_search_filters(filters):
         return []
 
 
+def get_office_restriction_values():
+    return list(OfficeRestrictionChoices.values.keys())
+
+
+class ActivityCardLocationChoices(models.TextChoices):
+    NEIGHBOURHOOD = 'neighbourhood', _('Neighbourhood')
+    NEIGHBOURHOOD_CITY = 'neighbourhood_city', _('Neighbourhood + city')
+    CITY = 'city', _('City')
+    CITY_REGION = 'city_region', _('City + region')
+    CITY_COUNTRY = 'city_country', _('City + country')
+
+
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
@@ -335,10 +353,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
 
     HOUR_REGISTRATION_OPTIONS = (
         ("disabled", _("Disable")),
-        ("per_activity", _("Unique per activity")),
-        ("generic", _("Same for all activities")),
+        ("per_activity", _("Enable")),
     )
-
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
@@ -431,15 +447,27 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     enable_office_regions = models.BooleanField(
+        _('Enable work location regions'),
         default=False, help_text=_("Allow admins to add (sub)regions to their work location.")
     )
 
     enable_office_restrictions = models.BooleanField(
+        _('Enable work location restrictions'),
         default=False,
         help_text=_(
             "Allow activity managers to specify work location restrictions on activities."
         ),
     )
+
+    available_office_restrictions = ArrayField(
+        models.CharField(
+            max_length=200,
+            choices=OfficeRestrictionChoices.choices
+        ),
+        verbose_name=_('Available work location restrictions'),
+        default=get_office_restriction_values
+    )
+
     default_office_restriction = models.CharField(
         _("Default work location restriction"),
         default=OfficeRestrictionChoices.all,
@@ -447,6 +475,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
         blank=True,
         null=True,
         max_length=100,
+    )
+
+    allow_disable_office_filter = models.BooleanField(
+        _("Allow members to see all activities"),
+        default=True,
+        help_text=_(
+            "Members can choose to view activities outside their work location"
+        ),
     )
 
     enable_multiple_dates = models.BooleanField(
@@ -488,8 +524,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
         max_length=400,
         blank=True, null=True,
         help_text=_(
-            "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, "
-            "this code or link will be used for every activity and can’t be changed."
+            "Enter a default code or URL for hour registration. "
+            "This will be used as the default for all activities, but can be changed per activity."
         )
     )
 
@@ -499,6 +535,17 @@ class InitiativePlatformSettings(BasePlatformSettings):
         help_text=_(
             "Review initiatives and activities. Activities created within an initiative will not "
             "need to be reviewed. Crowdfunding activities will always need to be reviewed"
+        ),
+    )
+
+    card_location_display = models.CharField(
+        _('Activity card location'),
+        max_length=32,
+        choices=ActivityCardLocationChoices.choices,
+        default=ActivityCardLocationChoices.CITY_COUNTRY,
+        help_text=_(
+            'Choose how locations appear on activity cards. '
+            'Activity detail pages always show the full location.'
         ),
     )
 
@@ -522,17 +569,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
         verbose_name_plural = _("Activity & initiative settings")
         verbose_name = _("Activity & initiative settings")
 
-    def clean(self):
-        if self.hour_registration == "generic" and not self.hour_registration_data:
-            raise ValidationError({
-                "hour_registration_data": _(
-                    "Hour registration data is required when 'generic' hour registration is selected."
-                )
-            })
-
 
 class SearchFilter(SortableMixin, models.Model):
-
     settings = models.ForeignKey(
         InitiativePlatformSettings,
         related_name="search_filters",

@@ -57,6 +57,22 @@ def get_translated_list(obj, field='name'):
     return data
 
 
+def get_translated_country_list(country):
+    data = []
+    current_language = country._current_language
+
+    for lang in Language.objects.all():
+        country.set_current_language(lang.full_code)
+        data.append({
+            'id': country.pk,
+            'name': country.name,
+            'code': country.alpha2_code or '',
+            'language': lang.full_code,
+        })
+    country._current_language = current_language
+    return data
+
+
 def get_translated_segments(segment):
     data = []
     current_language = segment._current_language
@@ -111,6 +127,7 @@ class InitiativeDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'code': fields.KeywordField(),
             'language': fields.KeywordField(),
         }
     )
@@ -255,6 +272,7 @@ class InitiativeDocument(Document):
                     'open',
                     'partially_funded',
                     'full',
+                    'registration_closed',
                     'running'
                 )
             )
@@ -289,22 +307,16 @@ class InitiativeDocument(Document):
     def prepare_country(self, instance):
         countries = []
         if instance.place and instance.place.country:
-            countries.append({
-                'id': instance.place.country.pk,
-                'name': instance.place.country.name,
-            })
-
-        if instance.place and instance.place.country:
-            countries += get_translated_list(instance.place.country)
+            countries += get_translated_country_list(instance.place.country)
 
         for activity in instance.activities.filter(
                 status__in=['open', 'succeeded', 'full', 'partially_funded']
         ):
             if activity.office_location and activity.office_location.country:
-                countries += get_translated_list(activity.office_location.country)
+                countries += get_translated_country_list(activity.office_location.country)
 
-            elif hasattr(activity, 'place') and instance.place and activity.place.country:
-                countries += get_translated_list(activity.place.country)
+            elif hasattr(activity, 'place') and activity.place and activity.place.country:
+                countries += get_translated_country_list(activity.place.country)
 
         return deduplicate(countries)
 

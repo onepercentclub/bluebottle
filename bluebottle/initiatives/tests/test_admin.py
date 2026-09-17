@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from builtins import str
+
 from django.contrib.admin.sites import AdminSite
 from django.contrib.messages import get_messages
 from django.core import mail
@@ -89,7 +90,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'You are about to')
-        self.assertContains(response, 'Send e-mail notifications')
+        self.assertContains(response, 'Send email notifications')
 
         # Confirm should change status
         response = self.app.post(self.approve_url, {
@@ -109,7 +110,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'You are about to')
-        self.assertContains(response, 'Send e-mail')
+        self.assertContains(response, 'Send email')
 
         # Confirm should change status
         response = self.app.post(self.approve_url, {

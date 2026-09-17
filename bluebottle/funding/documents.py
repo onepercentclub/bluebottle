@@ -3,9 +3,14 @@ from datetime import datetime
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import ActivityDocument, activity
+from bluebottle.activities.documents import (
+    ActivityDocument,
+    activity,
+    geofeatures_for_geolocation,
+    locality_from_geolocation,
+)
 from bluebottle.funding.models import Funding, Donor
-from bluebottle.initiatives.documents import deduplicate, get_translated_list
+from bluebottle.initiatives.documents import deduplicate, get_translated_country_list
 
 SCORE_MAP = {
     'open': 1,
@@ -45,30 +50,39 @@ class FundingDocument(ActivityDocument):
     def prepare_location(self, instance):
         locations = []
         if hasattr(instance, 'impact_location') and instance.impact_location:
-            country = instance.impact_location.country
+            impact_location = instance.impact_location
+            country = impact_location.country
+            geofeature = impact_location.geofeature
             locations.append({
-                'id': instance.impact_location.id,
-                'name': instance.impact_location.formatted_address,
-                'locality': instance.impact_location.locality,
+                'id': impact_location.id,
+                'name': (
+                    geofeature.place_name if geofeature else impact_location.formatted_address
+                ),
+                'locality': locality_from_geolocation(impact_location),
                 'country_code': country.alpha2_code if country else None,
                 'country': country.name if country else None,
                 'type': 'location'
             })
         elif instance.initiative and instance.initiative.place:
-            if instance.initiative.place.country:
-                country = instance.initiative.place.country
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'country_code': country.alpha2_code if country else None,
-                    'country': country.name if country else None,
-                    'type': 'impact_location'
-                })
-            else:
-                locations.append({
-                    'locality': instance.initiative.place.locality,
-                    'type': 'impact_location'
-                })
+            place = instance.initiative.place
+            country = place.country
+            geofeature = place.geofeature
+            locations.append({
+                'id': place.id,
+                'name': (
+                    geofeature.place_name if geofeature else place.formatted_address
+                ),
+                'locality': locality_from_geolocation(place),
+                'country_code': country.alpha2_code if country else None,
+                'country': country.name if country else None,
+                'type': 'impact_location',
+            })
         return locations
+
+    def prepare_geofeature(self, instance):
+        if instance.impact_location and instance.impact_location.geofeatures.exists():
+            return geofeatures_for_geolocation(instance.impact_location)
+        return super().prepare_geofeature(instance)
 
     def prepare_position(self, instance):
         positions = []
@@ -85,7 +99,7 @@ class FundingDocument(ActivityDocument):
     def prepare_country(self, instance):
         countries = super().prepare_country(instance)
         if instance.impact_location and instance.impact_location.country:
-            countries += get_translated_list(instance.impact_location.country)
+            countries += get_translated_country_list(instance.impact_location.country)
 
         return deduplicate(countries)
 

@@ -1,19 +1,26 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.updates.models import AudienceChoices
+from bluebottle.updates.utils import get_active_contributor_users
 
 
 class UpdateMessage(TransitionMessage):
     class Meta:
         abstract = True
 
+    delay = 10
+
     @property
     def action_link(self):
-        return self.obj.activity.get_absolute_url()
+        return self.obj.activity.get_absolute_url() + '#posts'
 
     context = {
         'title': 'activity.title',
-        'author': 'author.short_name'
+        'author': 'author.short_name',
+        'message': 'message.html',
+        'update_type': 'update_type',
+        'has_media': 'has_media',
     }
 
 
@@ -24,13 +31,15 @@ class FollowersNotification(UpdateMessage):
     def get_recipients(self):
         """followers of the activity"""
         activity = self.obj.activity
-        follows = activity.follows.filter(
-            user__campaign_notifications=True
-        ).exclude(
-            user__in=(self.obj.author, self.obj.activity.owner)
-        )
+        exclude = (self.obj.author, self.obj.activity.owner)
 
-        return [follow.user for follow in follows]
+        if self.obj.audience == AudienceChoices.contributors:
+            return get_active_contributor_users(activity, exclude=exclude)
+
+        follows = activity.followers.filter(user__campaign_notifications=True).exclude(user__in=exclude)
+
+        recipients = [follow.user for follow in follows]
+        return recipients
 
 
 class OwnerNotification(UpdateMessage):

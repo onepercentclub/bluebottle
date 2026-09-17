@@ -1,16 +1,20 @@
-{% extends "base.mail.html" %}
+{% extends "mails/messages/update_base.html" %}
 {% load i18n %}
 
-{% block content %}
+{% block message %}
     {% blocktrans context 'platform-email' %}
-        Hi {{ recipient_name }},
-        <br/>
-        <br/>
         {{ author}} posted a comment to '{{ title }}'.
     {% endblocktrans %}
+    <br/><br/>
+    <div class="message-box">
+        {{ message|safe }}
+    </div>
+    {% if has_media %}
+        <br/><br/>
+        <span class="subtle-text">
+        {% blocktrans context 'platform-email' %}
+            This post includes media or files, view them in the full post.
+        {% endblocktrans %}
+        </span>
+    {% endif %}
 {% endblock %}
-
-{% block action %}
-    <a href="{{ action_link }}"
-       class="action-email">{% blocktrans context 'platform-email' %}View message{% endblocktrans %}</a>
-{% endblock %}`

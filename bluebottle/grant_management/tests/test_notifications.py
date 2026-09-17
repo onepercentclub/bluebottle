@@ -1,3 +1,5 @@
+from django.contrib.auth.models import Group
+
 from djmoney.money import Money
 
 from bluebottle.activities.messages.activity_manager import TermsOfServiceNotification
@@ -180,8 +182,10 @@ class GrantPayoutNotificationTestCase(NotificationTestCase):
 
     def test_payout_ready_for_approval_notification_non_staff_reviewer(self):
         reviewer = BlueBottleUserFactory.create(
-            submitted_initiative_notifications=True
+            submitted_initiative_notifications=True,
+            is_staff=False,
         )
+        reviewer.groups.add(Group.objects.get(name='Staff'))
         self.message_class = PayoutReadyForApprovalMessage
         self.create()
         self.assertIn(reviewer, self.message.get_recipients())

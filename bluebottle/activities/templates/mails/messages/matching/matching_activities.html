@@ -92,7 +92,9 @@
     </table>
 {% endblock %}
 
-{% block unsubscribe %}
-    {% trans "Don't want to receive this monthly update anymore? Unsubscribe" context "platform-email" %}
-    <a href="{{site}}/member/profile"> {% trans "via your profile page." context "platform-email" %}
-{% endblock %}`
+{% block end_message %}
+    {% message_url opt_out_link as account_url %}
+    {% blocktrans context "platform-email" %}
+      Don't want to receive these updates? Unsubscribe via the <a href="{{account_url}}">'My account'</a> page.
+    {% endblocktrans %}
+{% endblock %}

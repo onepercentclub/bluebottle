@@ -1,0 +1,22 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'platform-email' %}You've asked to be notified if a spot opens up for:{% endblocktrans %}
+    </p>
+    <p>
+        <b>{{ title }}</b>
+    </p>
+    <p>
+        {% blocktrans context 'platform-email' %}If a spot becomes available, we'll send you an email. Spots are first-come, first-served.{% endblocktrans %}
+    </p>
+{% endblock %}
+
+{% block end_message %}
+    <p>
+        <em>
+            {% blocktrans context 'platform-email' %}Changed your mind? You can withdraw your interest at any time on the activity page.{% endblocktrans %}
+        </em>
+    </p>
+{% endblock %}

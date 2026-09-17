@@ -1182,11 +1182,27 @@ a.footer:visited {
     color: #888 !important;
 }
 
+div.message-box {
+    border-radius: 4px;
+    border: 1px solid #DBDBDB;
+    background: #F6F6F6;
+    padding: 12px;
+    position: relative;
+}
+
 div.info-box {
     background-color: #E6F0FA;
     color: #0066CC;
     padding: 12px 12px 12px 44px;
     position: relative;
+}
+
+.subtle-text {
+    color: #929292;
+    font-size: 16px;
+    font-style: italic;
+    font-weight: 400;
+    line-height: 24px;
 }
 
 a.link {

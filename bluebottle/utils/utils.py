@@ -52,6 +52,8 @@ sanitizer = Sanitizer({
 
 
 def clean_html(content):
+    if not content:
+        return ''
     return sanitizer.sanitize(content)
 
 

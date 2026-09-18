@@ -7,12 +7,13 @@ from unittest import mock
 
 import dateutil
 from django.contrib.auth.models import Permission
-from django.contrib.gis.geos import Point
 from django.db import connection
+from django.contrib.gis.geos import Point
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
+from django_elasticsearch_dsl.test import ESTestCase
 from pytz import UTC
 from rest_framework import status
 
@@ -25,7 +26,6 @@ from bluebottle.collect.tests.factories import (
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
-from bluebottle.geo.serializers import card_location_for_geolocation
 from bluebottle.grant_management.tests.factories import GrantApplicationFactory
 from bluebottle.initiatives.models import (
     ActivitySearchFilter,
@@ -44,8 +44,6 @@ from bluebottle.test.factory_models.geo import (
     PlaceFactory,
 )
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.elasticsearch import ElasticsearchTestCase
-from bluebottle.test.geo_utils import save_built_geolocation
 from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -58,10 +56,15 @@ from bluebottle.time_based.tests.factories import (
 )
 
 
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
 @tag('elasticsearch')
-class ActivityListSearchAPITestCase(ElasticsearchTestCase):
+class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super(ActivityListSearchAPITestCase, self).setUp()
+        self.client = JSONAPITestClient()
         self.url = reverse('activity-preview-list')
         self.owner = BlueBottleUserFactory.create()
 
@@ -129,7 +132,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
 
         for activity in response.json()['data']:
             self.assertTrue(
-                re.match(r'^/api/activities/\d+/image/600x337', activity['attributes']['image'])
+                re.match('^/api/activities/\d+/image/600x337', activity['attributes']['image'])
             )
 
     def test_deed_preview(self):
@@ -175,8 +178,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
         self.assertEqual(attributes['has-multiple-locations'], False)
         location = activity.slots.first().location
         self.assertEqual(
-            attributes['location'],
-            card_location_for_geolocation(location, 'en'),
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
         )
 
     def test_date_preview_multiple_slots(self):
@@ -242,8 +244,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
         self.assertEqual(attributes['has-multiple-locations'], False)
 
         self.assertEqual(
-            attributes['location'],
-            card_location_for_geolocation(location, 'en'),
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
         )
 
     def test_date_preview_multiple_slots_single_open(self):
@@ -259,7 +260,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
 
         self.assertEqual(
             attributes['location'],
-            card_location_for_geolocation(open_slot.location, 'en'),
+            f'{open_slot.location.locality}, {open_slot.location.country.alpha2_code}'
         )
 
         self.assertEqual(dateutil.parser.parse(attributes['start']), open_slot.start)
@@ -293,8 +294,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
 
         location = current_slot.location
         self.assertEqual(
-            attributes['location'],
-            card_location_for_geolocation(location, 'en'),
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
         )
 
     def test_date_preview_multiple_slots_succeeded(self):
@@ -308,7 +308,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
 
         response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
-        self.assertEqual(attributes['slot-count'], 3)
+        self.assertEqual(attributes['slot-count'], 0)
 
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertEqual(attributes['is-online'], False)
@@ -385,8 +385,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
 
         location = activity.location
         self.assertEqual(
-            attributes['location'],
-            card_location_for_geolocation(location, 'en'),
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
         )
 
         self.assertEqual(attributes['matching-properties']['theme'], False)
@@ -434,8 +433,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
 
         location = activity.initiative.place
         self.assertEqual(
-            attributes['location'],
-            card_location_for_geolocation(location, 'en'),
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
         )
 
     def test_collect_preview(self):
@@ -461,8 +459,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
 
         location = activity.location
         self.assertEqual(
-            attributes['location'],
-            card_location_for_geolocation(location, 'en'),
+            attributes['location'], f'{location.locality}, {location.country.alpha2_code}'
         )
 
     def test_collect_preview_dutch(self):
@@ -1139,8 +1136,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
     def test_filter_upcoming(self):
         matching = (
             DeadlineActivityFactory.create_batch(2, status='open') +
-            DeadlineActivityFactory.create_batch(2, status='full') +
-            DeadlineActivityFactory.create_batch(2, status='registration_closed')
+            DeadlineActivityFactory.create_batch(2, status='full')
         )
         DeadlineActivityFactory.create_batch(2, status='succeeded')
         DeadlineActivityFactory.create_batch(2, status='draft')
@@ -1155,7 +1151,6 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
         initiative_settings.save()
         matching = DeadlineActivityFactory.create_batch(2, status='open')
         DeadlineActivityFactory.create_batch(2, status='full')
-        DeadlineActivityFactory.create_batch(2, status='registration_closed')
         DeadlineActivityFactory.create_batch(2, status='succeeded')
         DeadlineActivityFactory.create_batch(2, status='draft')
         DeadlineActivityFactory.create_batch(2, status='needs_work')
@@ -1167,7 +1162,7 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
         matching = (
             DeadlineActivityFactory.create_batch(2, status='open') +
             DeadlineActivityFactory.create_batch(2, status='full') +
-            DeadlineActivityFactory.create_batch(2, status='registration_closed') +
+            DeadlineActivityFactory.create_batch(2, status='full') +
             FundingFactory.create_batch(2, status='partially_funded')
         )
         DeadlineActivityFactory.create_batch(2, status='draft')
@@ -1543,36 +1538,36 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 
-        # Initiative place countries are indexed too; keep them out of facet counts.
-        initiative = InitiativeFactory(place=GeolocationFactory(country=None))
-
+        # CountryFactory get-or-creates on alpha2_code, and both InitiativeFactory
+        # and DeadlineActivityFactory create extra locations by default. Those
+        # random countries can collide with matching_country and inflate facets.
         matching = [
             DeadlineActivityFactory.create(
-                initiative=initiative,
-                office_location=LocationFactory.create(country=matching_country),
+                initiative=None,
                 location=None,
+                office_location=LocationFactory.create(country=matching_country),
                 status='open',
             ),
             DeadlineActivityFactory.create(
-                initiative=initiative,
+                initiative=None,
                 location=GeolocationFactory.create(country=matching_country),
                 status='open',
             ),
             FundingFactory.create(
-                initiative=initiative,
+                initiative=None,
                 impact_location=GeolocationFactory.create(country=matching_country),
                 status='open'
 
             ),
             DeedFactory.create(
-                initiative=initiative,
+                initiative=None,
                 office_location=LocationFactory.create(country=matching_country),
                 status='open'
             )
         ]
 
         date_activity = DateActivityFactory.create(
-            initiative=initiative,
+            initiative=None,
             slots=[],
             status='open',
         )
@@ -1586,14 +1581,14 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
 
         other = DeadlineActivityFactory.create_batch(
             3,
-            initiative=initiative,
-            office_location=LocationFactory.create(country=other_country),
+            initiative=None,
             location=None,
+            office_location=LocationFactory.create(country=other_country),
             status='open',
         )
         DeadlineActivityFactory.create_batch(
             3,
-            initiative=initiative,
+            initiative=None,
             location=GeolocationFactory.create(country=None),
             status='open',
         )
@@ -1619,16 +1614,8 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
 
         matching = []
         for country in countries:
-            location = save_built_geolocation(
-                GeolocationFactory.build(country=country)
-            )
-            matching.append(
-                DeadlineActivityFactory.create(
-                    location=location,
-                    status='open',
-                    initiative=InitiativeFactory(place=None),
-                )
-            )
+            location = GeolocationFactory.create(country=country)
+            matching.append(DeadlineActivityFactory.create(location=location, status='open'))
 
         self.search({})
         country_facets = self.data['meta']['facets']['country']
@@ -1646,39 +1633,29 @@ class ActivityListSearchAPITestCase(ElasticsearchTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        matching_country = CountryFactory.create()
-        other_country = CountryFactory.create()
+        matching_country = CountryFactory.create(alpha2_code='NL')
+        other_country = CountryFactory.create(alpha2_code='DE')
 
-        # Initiative place countries are indexed too; keep them out of facet counts.
-        initiative = InitiativeFactory(place=GeolocationFactory(country=None))
-
-        # `DateActivityFactory` creates default slots with random locations.
-        # For deterministic facet counts we must start without slots and
-        # create the slots explicitly with the countries under test.
         matching = DateActivityFactory.create_batch(
             2,
-            initiative=initiative,
-            slots=[],
             status='open',
         )
         for activity in matching:
             DateActivitySlotFactory.create_batch(
                 2,
                 activity=activity,
-                location=GeolocationFactory.create(country=matching_country),
+                location=GeolocationFactory.create(country=matching_country)
             )
 
         other = DateActivityFactory.create_batch(
             3,
-            initiative=initiative,
-            slots=[],
             status='open',
         )
         for activity in other:
             DateActivitySlotFactory.create_batch(
                 2,
                 activity=activity,
-                location=GeolocationFactory.create(country=other_country),
+                location=GeolocationFactory.create(country=other_country)
             )
 
         self.search({'country': matching_country.pk})

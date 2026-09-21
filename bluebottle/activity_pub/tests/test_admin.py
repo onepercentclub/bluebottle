@@ -7,9 +7,9 @@ from django.core.files import File
 from django.urls import reverse
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.admin import FollowerAdmin
+from bluebottle.activity_pub.admin import FollowerAdmin, PublishedActivityAdmin
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Accept, Follower, Following, Recipient
+from bluebottle.activity_pub.models import Accept, Follower, Following, PublishedActivity, Recipient
 from bluebottle.activity_pub.tests.factories import OrganizationFactory
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -206,3 +206,14 @@ class ActivityPubAdminTestCase(BluebottleAdminTestCase):
         follower.refresh_from_db()
         self.assertEqual(follower.publish_mode, 'automatic')
         self.assertTrue(Accept.objects.filter(object=follower).exists())
+
+    def test_shared_activities_adopted_column_counts_accepts(self):
+        activity = self.create_published_activity(self.create_follower())
+        event = activity.activity_pub_model
+        Accept.objects.create(actor=self.create_remote_actor(), object=event)
+        Accept.objects.create(actor=self.create_remote_actor(), object=event)
+
+        admin = PublishedActivityAdmin(PublishedActivity, AdminSite())
+        self.assertNotIn('adopted', admin.list_display)
+        self.assertIsNone(event.adopted)
+        self.assertEqual(admin.adopted_count(event), 2)

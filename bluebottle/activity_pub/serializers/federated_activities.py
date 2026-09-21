@@ -5,6 +5,7 @@ from io import BytesIO
 import pytz
 import requests
 from django.contrib.gis.geos import Point
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.db import connection
 from django.urls import reverse
@@ -70,10 +71,15 @@ class ImageSerializer(FederatedObjectBaseSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if self.instance.origin.iri != validated_data['id']:
+        try:
+            origin = instance.origin
+        except ObjectDoesNotExist:
+            origin = None
+
+        if origin is None or origin.iri != validated_data.get('id'):
             return self.create(validated_data)
-        else:
-            return super().update(instance, validated_data)
+
+        return super().update(instance, validated_data)
 
     class Meta:
         model = Image

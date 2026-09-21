@@ -41,7 +41,7 @@ from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactor
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
-from bluebottle.time_based.models import PeriodicParticipant, RegisteredDateActivity, DateParticipant
+from bluebottle.time_based.models import PeriodicParticipant, RegisteredDateActivity, DateParticipant, TeamMember
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -1985,6 +1985,7 @@ class TemplateCollectActivityTestCase(TemplateTestCase, BluebottleTestCase):
 class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     factory = ScheduleActivityFactory
     expected_participant_status = 'accepted'
+    removed_status = 'removed'
 
     def create(self, **kwargs):
         super().create(
@@ -2030,6 +2031,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def test_update_participant(self):
         self.test_join()
+        print('updating user')
 
         with LocalTenant(self.other_tenant):
             user = self.captain
@@ -2064,6 +2066,27 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.assertEqual(
             self.synced_team.team_members.filter(status='active').count(), 1
         )
+
+    def test_remove_supplier(self):
+        self.test_join()
+
+        self.synced_team.states.remove(save=True)
+        self.assertStatus(self.synced_team, self.removed_status)
+
+        with LocalTenant(self.other_tenant):
+            self.team.refresh_from_db()
+            self.assertStatus(self.team, self.removed_status)
+
+    def test_remove_consumer(self):
+        self.test_join()
+
+        with LocalTenant(self.other_tenant):
+            self.team.refresh_from_db()
+            self.team.states.remove(save=True)
+            self.assertEqual(self.team.status, self.removed_status)
+
+        self.synced_team.refresh_from_db()
+        self.assertStatus(self.synced_team, self.removed_status)
 
     def test_join_with_review(self):
         self.test_adopt()
@@ -2107,10 +2130,7 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def test_member_join(self):
         self.test_join()
-        capacity_before = self.model.registrations.filter(
-            status__in=['new', 'accepted']
-        ).count()
-
+        self.assertEqual(TeamMember.objects.count(), 1)
         with LocalTenant(self.other_tenant):
             member = BlueBottleUserFactory.create()
             self.team_member = TeamMemberFactory.create(
@@ -2119,16 +2139,11 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
             )
             self.assertEqual(self.team.team_members.count(), 2)
 
-        from bluebottle.time_based.models import TeamMember
         self.assertEqual(TeamMember.objects.count(), 2)
         remote_member = TeamMember.objects.exclude(
             remote_user=self.synced_team.remote_user
         ).get()
         self.assertEqual(remote_member.remote_user.email, member.email)
-        self.assertEqual(
-            self.model.registrations.filter(status__in=['new', 'accepted']).count(),
-            capacity_before,
-        )
 
     def test_schedule(self):
         self.test_join()

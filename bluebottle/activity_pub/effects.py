@@ -345,6 +345,26 @@ class SendJoinSlotEffect(Effect):
         return str(_('Notify source platform of join'))
 
 
+class SendJoinTeamSlotEffect(SendJoinSlotEffect):
+    """
+    Send a Join activity to the source platform when a user is schedule for a team slot.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+
+    def post_save(self, **kwargs):
+        Join.objects.create(
+            actor=self.instance.team.origin,
+            object=adapter.sync(self.instance)
+        )
+
+    @property
+    def is_valid(self):
+        return self.instance.team.remote_user is not None
+
+    def __str__(self):
+        return str(_('Notify source platform of join'))
+
+
 class SendJoinDateSlotEffect(Effect):
     """
     Send a Join activity to the source platform when a user joins a synced deed.
@@ -408,7 +428,24 @@ class SendRemoveEffect(Effect):
         )
 
     def __str__(self):
-        return str(_('Notify source platform of leave'))
+        return str(_('Notify source platform of remove'))
+
+
+class SendRemoveTeamEffect(SendRemoveEffect):
+    """
+    Send a remove activity to the other platform when a user is removed an activity
+    """
+    template = 'admin/activity_pub/send_remove_effect.html'
+
+    def post_save(self, **kwargs):
+        if self.instance.remote_user:
+            actor = self.instance.origin
+            object = self.instance.activity.activity_pub_model
+        else:
+            actor = self.instance.activity_pub_model
+            object = self.instance.activity.origin
+
+        Remove.objects.create(actor=actor, object=object)
 
 
 def team_activity_is_synced(effect):
@@ -439,15 +476,17 @@ class SendTeamJoinEffect(Effect):
     conditions = [team_activity_is_synced, team_captain_is_local]
 
     def post_save(self, **kwargs):
-        registration = self.instance.registration
-        if registration:
-            adapter.sync(registration)
+        Join.objects.create(
+            actor=adapter.sync(self.instance),
+            object=self.instance.activity.origin,
+            motivation=self.instance.registration.answer
+        )
 
     def __str__(self):
         return str(_('Notify source platform of team join'))
 
 
-class SendAddToTeamEffect(Effect):
+class SendTeamMemberJoinEffect(Effect):
     """
     Sync a TeamMember as an Add activity to the supplier.
     """
@@ -455,7 +494,10 @@ class SendAddToTeamEffect(Effect):
     conditions = [team_member_activity_is_synced, team_member_is_local, team_member_is_not_captain]
 
     def post_save(self, **kwargs):
-        adapter.sync(self.instance)
+        Join.objects.create(
+            actor=adapter.sync(self.instance.user),
+            object=self.instance.team.activity_pub_model
+        )
 
     def __str__(self):
         return str(_('Notify source platform of team member add'))
@@ -470,7 +512,7 @@ class SendTeamLeaveEffect(Effect):
 
     def post_save(self, **kwargs):
         Leave.objects.create(
-            actor=self.instance.user.activity_pub_model,
+            actor=self.instance.activity_pub_model,
             object=self.instance.activity.origin,
         )
 
@@ -527,10 +569,16 @@ class SendAcceptEffect(Effect):
     conditions = [participant_is_not_local, remote_user_has_origin]
 
     def post_save(self, **kwargs):
-        join = Join.objects.filter(
-            actor=self.instance.remote_user.origin,
-            object=self.instance.activity.activity_pub_model
-        ).latest('pk')
+        if self.instance.activity.team_activity == 'teams':
+            join = Join.objects.filter(
+                actor__team__captain=self.instance.remote_user.origin,
+                object=self.instance.activity.activity_pub_model
+            ).latest('pk')
+        else:
+            join = Join.objects.filter(
+                actor=self.instance.remote_user.origin,
+                object=self.instance.activity.activity_pub_model
+            ).latest('pk')
         Accept.objects.create(
             actor=get_platform_actor(),
             object=join
@@ -548,10 +596,17 @@ class SendRejectEffect(Effect):
     conditions = [participant_is_not_local, remote_user_has_origin]
 
     def post_save(self, **kwargs):
-        join = Join.objects.filter(
-            actor=self.instance.remote_user.origin,
-            object=self.instance.activity.activity_pub_model
-        ).latest('pk')
+        if self.instance.activity.team_activity == 'teams':
+            join = Join.objects.filter(
+                actor__team__captain=self.instance.remote_user.origin,
+                object=self.instance.activity.activity_pub_model
+            ).latest('pk')
+        else:
+            join = Join.objects.filter(
+                actor=self.instance.remote_user.origin,
+                object=self.instance.activity.activity_pub_model
+            ).latest('pk')
+
         Reject.objects.create(
             actor=get_platform_actor(),
             object=join

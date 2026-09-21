@@ -1,9 +1,8 @@
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django.utils.module_loading import import_string
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.models.actors import Organization
+from bluebottle.activity_pub.models.actors import Organization, Team
 from bluebottle.activity_pub.models.base import ActivityPubModel
 from bluebottle.activity_pub.models.events import GoodDeed, CollectCampaign, DoGoodEvent, SubEvent
 from bluebottle.activity_pub.models.activities import Activity
@@ -16,14 +15,6 @@ class Join(Activity):
     """Sent by a follower when a user joins an Event"""
     object = models.ForeignKey(ActivityPubModel, on_delete=models.CASCADE)
     motivation = models.TextField(null=True, blank=True)
-    instrument = models.ForeignKey(
-        'activity_pub.Team',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='joins',
-        help_text=_('Team used when joining a team-schedule activity.'),
-    )
 
     platform = models.ForeignKey(Organization, null=True, on_delete=models.CASCADE)
 
@@ -31,15 +22,18 @@ class Join(Activity):
         super().__init__(*args, **kwargs)
 
         for subclass in get_subclasses(BaseJoin):
-            if subclass.matches(self.object):
+            if subclass.matches(self.object, self.actor):
                 self.__class__ = subclass
+
+        if self.__class__ == Join:
+            raise TypeError(f'Cannot find proxy model for: {self.object}, {self.actor}')
 
         self.contributor_model = import_string(self.__class__.contributor_model)
 
 
 class BaseJoin(Join):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return False
 
     def save(self, *args, **kwargs):
@@ -47,8 +41,6 @@ class BaseJoin(Join):
 
         if not self.is_local:
             # The join is from a non-local platform. Adopt the actor
-            adapter.adopt(self.actor)
-
             if self.contributor:
                 # There already is a contributor. Reapply that contributor
                 self.reapply()
@@ -61,11 +53,14 @@ class BaseJoin(Join):
 
     @property
     def contributor(self):
+        adapter.adopt(self.actor)
+
         return self.contributor_model.objects.filter(
             activity=self.object.origin, remote_user=self.actor.adopted
         ).first()
 
     def reapply(self):
+        __import__('ipdb').set_trace()
         self.contributor.states.reapply(save=True)
 
     def apply(self):
@@ -86,7 +81,7 @@ class BaseJoin(Join):
 
 class DeedJoin(BaseJoin):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return isinstance(object, GoodDeed)
 
     class Meta:
@@ -97,7 +92,7 @@ class DeedJoin(BaseJoin):
 
 class CollectCampaignJoin(BaseJoin):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return isinstance(object, CollectCampaign)
 
     class Meta:
@@ -130,7 +125,7 @@ class RegistrationJoin(BaseJoin):
 
 class DeadlineJoin(RegistrationJoin):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return isinstance(object, DoGoodEvent) and object.activity_type == 'DeadlineActivity'
 
     class Meta:
@@ -142,7 +137,7 @@ class DeadlineJoin(RegistrationJoin):
 
 class PeriodicJoin(RegistrationJoin):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return isinstance(object, DoGoodEvent) and object.activity_type == 'PeriodicActivity'
 
     class Meta:
@@ -158,7 +153,7 @@ class PeriodicJoin(RegistrationJoin):
 
 class DateJoin(RegistrationJoin):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return isinstance(object, DoGoodEvent) and object.activity_type == 'DateActivity'
 
     class Meta:
@@ -170,14 +165,97 @@ class DateJoin(RegistrationJoin):
 
 class ScheduleJoin(RegistrationJoin):
     @classmethod
-    def matches(cls, object):
-        return isinstance(object, DoGoodEvent) and object.activity_type == 'ScheduleActivity'
+    def matches(cls, object, actor):
+        return (
+            isinstance(object, DoGoodEvent) and
+            not object.is_team_activity and
+            object.activity_type == 'ScheduleActivity'
+        )
 
     class Meta:
         proxy = True
 
     registration_model = 'bluebottle.time_based.models.ScheduleRegistration'
     contributor_model = 'bluebottle.time_based.models.ScheduleParticipant'
+
+
+class TeamJoin(BaseJoin):
+    @classmethod
+    def matches(cls, object, actor):
+        return isinstance(actor, Team)
+
+    @property
+    def contributor(self):
+        """ Return the remote contributor, since the Join was created by the consumer"""
+        adapter.adopt(self.actor.captain)
+
+        if self.actor.adopted:
+            return self.actor.adopted
+
+    def apply(self):
+        """ Instead of creating a participant, we create a registration"""
+        self.actor.refresh_from_db()
+        registration_model = import_string(self.registration_model)
+        registration = registration_model.objects.create(
+            activity=self.object.origin,
+            remote_user=self.actor.captain.adopted,
+            answer=self.motivation
+        )
+        adapter.adopt(self.actor, activity=registration.activity)
+
+    def reapply(self):
+        self.contributor.states.rejoin(save=True)
+
+    class Meta:
+        proxy = True
+
+    registration_model = 'bluebottle.time_based.models.TeamScheduleRegistration'
+    contributor_model = 'bluebottle.time_based.models.Team'
+
+
+class TeamMemberJoin(BaseJoin):
+    @classmethod
+    def matches(cls, object, actor):
+        return isinstance(object, Team)
+
+    @property
+    def default_recipients(self):
+        if not self.actor.is_local:
+            yield self.actor.source
+        else:
+            yield self.object.origin.activity.origin.source
+
+    @property
+    def contributor(self):
+        """ Return the remote contributor, since the Join was created by the consumer"""
+        adapter.adopt(self.actor)
+
+        return self.contributor_model.objects.filter(
+            team=self.object.adopted,
+            remote_user=self.actor.adopted
+        ).first()
+
+    def apply(self):
+        """ Instead of creating a participant, we create a registration"""
+        self.actor.refresh_from_db()
+
+        self.contributor_model.objects.create(
+            team=self.object.adopted,
+            remote_user=self.actor.adopted
+        )
+
+    def reapply(self):
+        if self.contributor.status == 'withdrawn':
+            self.contributor.states.reapply(save=True)
+        elif self.contributor.status == 'rejected':
+            self.contributor.states.accept(save=True)
+        else:
+            self.contributor.states.readd(save=True)
+
+    class Meta:
+        proxy = True
+
+    contributor_model = 'bluebottle.time_based.models.TeamMember'
 
 
 class SlotJoin(BaseJoin):
@@ -196,6 +274,7 @@ class SlotJoin(BaseJoin):
         """
         if not self.object.is_local:
             slot = adapter.adopt(self.object)
+            __import__('ipdb').set_trace()
 
             try:
                 # Try to see if a contributor exists without a slot and update that
@@ -227,7 +306,7 @@ class SlotJoin(BaseJoin):
 
 class PeriodicSlotJoin(SlotJoin):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return (
             isinstance(object, SubEvent) and object.parent.activity_type == 'PeriodicActivity'
         )
@@ -246,7 +325,6 @@ class PeriodicSlotJoin(SlotJoin):
         if not self.object.is_local:
             slot = adapter.adopt(self.object)
 
-            __import__('ipdb').set_trace()
             self.contributor_model.objects.create(
                 activity=self.object.parent.adopted,
                 slot=slot,
@@ -257,9 +335,10 @@ class PeriodicSlotJoin(SlotJoin):
 
 class ScheduleSlotJoin(SlotJoin):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return (
-            isinstance(object, SubEvent) and object.parent.activity_type == 'ScheduleActivity'
+            isinstance(object, SubEvent) and object.parent.activity_type == 'ScheduleActivity' and
+            not isinstance(actor, Team)
         )
 
     class Meta:
@@ -269,9 +348,40 @@ class ScheduleSlotJoin(SlotJoin):
     registration_model = 'bluebottle.time_based.models.ScheduleRegistration'
 
 
+class TeamScheduleSlotJoin(SlotJoin):
+    contributor = None
+
+    @classmethod
+    def matches(cls, object, actor):
+        return (
+            isinstance(object, SubEvent) and object.parent.activity_type == 'ScheduleActivity' and
+            isinstance(actor, Team)
+        )
+
+    @property
+    def default_recipients(self):
+        if not self.actor.is_local:
+            yield self.actor.captain.source
+        else:
+            yield self.object.parent.source
+
+    def apply(self):
+        """
+        The supplier creates the slot and adds the team to that slot.
+        This will adopt the slot and add the team to it.
+        """
+        if not self.object.is_local:
+            adapter.adopt(self.object, team=self.actor.origin)
+
+    class Meta:
+        proxy = True
+
+    contributor_model = 'bluebottle.time_based.models.TeamScheduleParticipant'
+
+
 class DateSlotJoin(SlotJoin):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return (
             isinstance(object, SubEvent) and object.parent.activity_type == 'DateActivity'
         )

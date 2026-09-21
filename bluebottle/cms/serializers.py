@@ -3,7 +3,7 @@ from builtins import object
 from django.db.models import Q
 from django.urls import reverse
 from django_tools.middlewares.ThreadLocal import get_current_user
-from fluent_contents.models import ContentItem
+from fluent_contents.models import ContentItem, Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
@@ -616,6 +616,18 @@ class BlockSerializer(PolymorphicModelSerializer):
     }
 
 
+def get_content_items(obj, attribute):
+    """
+    Return the content items of a placeholder field, tolerating a missing placeholder.
+    """
+    try:
+        placeholder = getattr(obj, attribute)
+    except Placeholder.DoesNotExist:
+        return ContentItem.objects.none()
+
+    return placeholder.contentitems.all()
+
+
 class BaseCMSSerializer(ModelSerializer):
     blocks = PolymorphicSerializerMethodResourceRelatedField(
         BlockSerializer,
@@ -627,11 +639,14 @@ class BaseCMSSerializer(ModelSerializer):
     content_attribute = 'content'
 
     def get_blocks(self, obj):
-        blocks = obj.content.contentitems.all().translated()
+        items = get_content_items(obj, self.content_attribute)
+
+        blocks = items.translated()
         if blocks.exists():
             return blocks
+
         default_language = get_default_language()
-        return obj.content.contentitems.all().translated(default_language)
+        return items.translated(default_language)
 
     class Meta(object):
         fields = ('id', 'blocks')
@@ -676,7 +691,7 @@ class PageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
     def get_blocks(self, obj):
-        return obj.content.contentitems.all()
+        return get_content_items(obj, self.content_attribute)
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page
@@ -689,13 +704,7 @@ class PageSerializer(BaseCMSSerializer):
 class PlatformPageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
-    def get_blocks(self, obj):
-        blocks = obj.body.contentitems.all().translated()
-        if blocks.exists():
-            return blocks
-
-        default_language = get_default_language()
-        return obj.body.contentitems.all().translated(default_language)
+    content_attribute = 'body'
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page
@@ -713,7 +722,7 @@ class NewsItemSerializer(BaseCMSSerializer):
     content_attribute = 'contents'
 
     def get_blocks(self, obj):
-        return obj.contents.contentitems.all()
+        return get_content_items(obj, self.content_attribute)
 
     class Meta(BaseCMSSerializer.Meta):
         model = NewsItem

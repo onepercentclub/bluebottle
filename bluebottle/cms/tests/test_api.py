@@ -451,6 +451,21 @@ class PageTestCase(BluebottleTestCase):
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
         self.url = reverse('page-detail', args=(self.page.slug, ))
 
+    def test_page_without_placeholder(self):
+        """
+        A page whose 'blog_contents' placeholder row was never created should
+        return an empty block list instead of a 500. See BB-30127.
+        """
+        self.placeholder.delete()
+
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()['data']
+        self.assertEqual(data['attributes']['title'], self.page.title)
+        self.assertEqual(data['relationships']['blocks']['data'], [])
+
     def test_page(self):
         RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
         TextItem.objects.create_for_placeholder(self.placeholder, text='<p>Test content</p>')
@@ -530,6 +545,21 @@ class PlatformPageTestCase(BluebottleTestCase):
         self.page = PlatformPageFactory.create(title='Start your activity')
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
         self.url = reverse('platform-page-detail', args=(self.page.slug, ))
+
+    def test_page_without_placeholder(self):
+        """
+        A platform page whose 'blog_contents' placeholder row was never created
+        should return an empty block list instead of a 500. See BB-30127.
+        """
+        self.placeholder.delete()
+
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()['data']
+        self.assertEqual(data['attributes']['title'], self.page.title)
+        self.assertEqual(data['relationships']['blocks']['data'], [])
 
     def test_page(self):
         RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')

@@ -1,8 +1,6 @@
 from django.db import models
 
 from bluebottle.activity_pub.models.activities import Activity
-from bluebottle.activity_pub.models.actors import Team
-from bluebottle.activity_pub.models.events import SubEvent, DoGoodEvent
 from bluebottle.fsm.state import TransitionNotPossible
 
 

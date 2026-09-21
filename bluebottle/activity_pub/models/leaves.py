@@ -59,25 +59,25 @@ class TeamLeave(Leave):
         proxy = True
 
     @property
-    def default_recipients(self):
-        return self.object.activity.source
+    def contributor(self):
+        return self.actor.adopted
 
 
 class TeamMemberLeave(Leave):
     @classmethod
     def matches(self, object, actor):
-        return (
-            isinstance(object, DoGoodEvent) and
-            object.activity_type == 'ScheduleActivity' and
-            isinstance(actor, Team)
-        )
+        return isinstance(object, Team)
 
     class Meta:
         proxy = True
 
     @property
     def default_recipients(self):
-        return self.object.activity.source
+        yield self.object.origin.activity.origin.source
+
+    @property
+    def contributor(self):
+        return self.object.adopted.team_members.get(remote_user=self.actor.adopted)
 
 
 class SlotParticipantLeave(Leave):

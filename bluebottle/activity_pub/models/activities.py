@@ -286,8 +286,13 @@ class Accept(Activity):
         super().save(*args, **kwargs)
 
         if created and not self.is_local and isinstance(self.object, Join):
+            if self.object.object.adopted.team_activity == 'teams':
+                user = self.object.actor.captain.origin
+            else:
+                user = self.object.actor.origin
+
             registration = Registration.objects.get(
-                user=self.object.actor.origin, activity=self.object.object.adopted
+                user=user, activity=self.object.object.adopted
             )
             try:
                 registration.states.accept(save=True)
@@ -324,9 +329,15 @@ class Reject(Activity):
             return
 
         if isinstance(self.object, Join):
-            registration = Registration.objects.get(
-                user=self.object.actor.origin, activity=self.object.object.adopted
-            )
+            if isinstance(self.object.actor, Team):
+                registration = Registration.objects.get(
+                    user=self.object.actor.captain.origin,
+                    activity=self.object.object.adopted
+                )
+            else:
+                registration = Registration.objects.get(
+                    user=self.object.actor.origin, activity=self.object.object.adopted
+                )
             registration.states.reject(save=True)
         elif isinstance(self.object, (Event, SubEvent)):
             self._unadopt()
@@ -419,40 +430,10 @@ class Update(Activity):
                 for recipient in join.recipients.all():
                     recipients.add(recipient.actor)
 
+            for join in Join.objects.filter(actor__team__captain=self.object):
+                recipients.add(join.object.source)
+
             for recipient in recipients:
                 yield recipient
         else:
             raise TypeError(f'Cannot create Update for {self.object}')
-
-
-class Add(Activity):
-    """Add a Person to a Team (team member join on the local platform)."""
-    object = models.ForeignKey(
-        Person,
-        on_delete=models.CASCADE,
-        related_name='added_by',
-    )
-    target = models.ForeignKey(
-        Team,
-        on_delete=models.CASCADE,
-        related_name='adds',
-    )
-    platform = models.ForeignKey(Organization, null=True, on_delete=models.CASCADE)
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-        if not self.is_local:
-            adapter.adopt(self)
-
-    @property
-    def default_recipients(self):
-        if not self.actor.is_local:
-            yield self.actor
-            return
-
-        event = self.target.attributed_to
-        if event:
-            create = event.create_set.first()
-            if create and not create.actor.is_local:
-                yield create.actor

@@ -150,6 +150,9 @@ class Team(Actor):
     """
     Federated team for team-schedule activities. Maps to time_based.Team.
     """
+    name = models.CharField(max_length=300)
+    summary = models.TextField(null=True, blank=True)
+
     captain = models.ForeignKey(
         Person,
         null=True,

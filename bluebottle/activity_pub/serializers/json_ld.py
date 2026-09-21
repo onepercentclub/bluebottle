@@ -24,7 +24,6 @@ from bluebottle.activity_pub.models import (
     Join,
     Leave,
     Remove,
-    Add,
     Team,
     Organization,
     GoodDeed,
@@ -113,6 +112,21 @@ class OrganizationSerializer(BaseActivityPubSerializer):
             'image', 'icon', 'preferred_username'
         )
         model = Organization
+
+
+class TeamSerializer(BaseActivityPubSerializer):
+    type = TypeField('Team')
+    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    summary = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    captain = RelatedResourceField(
+        type='Person', allow_null=True, required=False, include=True
+    )
+
+    class Meta(BaseActivityPubSerializer.Meta):
+        model = Team
+        fields = BaseActivityPubSerializer.Meta.fields + (
+            'name', 'summary', 'captain',
+        )
 
 
 class AddressSerializer(BaseActivityPubSerializer):
@@ -287,7 +301,7 @@ class SubEventSerializer(BaseActivityPubSerializer):
     capacity = serializers.IntegerField(required=False, allow_null=True)
 
     parent = RelatedParentField(allow_null=True)
-    team = RelatedTeamField(allow_null=True, required=False)
+    team = RelatedResourceField(type='Team', allow_null=True, include=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = SubEvent
@@ -519,52 +533,16 @@ class JoinSerializer(BaseActivitySerializer):
         )
     )
     motivation = serializers.CharField(required=False, allow_null=True)
-    instrument = RelatedResourceField(
-        type='Team', allow_null=True, required=False, include=True
-    )
 
     class Meta(BaseActivitySerializer.Meta):
         model = Join
-        fields = BaseActivitySerializer.Meta.fields + ('motivation', 'instrument')
+        fields = BaseActivitySerializer.Meta.fields + ('motivation', )
 
     def create(self, validated_data):
         if 'request' in self.context:
             validated_data['platform'] = self.context['request'].auth
 
         return super().create(validated_data)
-
-
-class AddSerializer(BaseActivitySerializer):
-    type = TypeField('Add')
-    object = RelatedResourceField(type='Person', include=True)
-    target = RelatedResourceField(type='Team', include=True)
-
-    class Meta(BaseActivitySerializer.Meta):
-        model = Add
-        fields = BaseActivitySerializer.Meta.fields + ('target',)
-
-    def create(self, validated_data):
-        if 'request' in self.context:
-            validated_data['platform'] = self.context['request'].auth
-        return super().create(validated_data)
-
-
-class TeamSerializer(BaseActivityPubSerializer):
-    type = TypeField('Team')
-    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    summary = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    attributed_to = RelatedResourceField(
-        type='DoGoodEvent', allow_null=True, required=False
-    )
-    captain = RelatedResourceField(
-        type='Person', allow_null=True, required=False, include=True
-    )
-
-    class Meta(BaseActivityPubSerializer.Meta):
-        model = Team
-        fields = BaseActivityPubSerializer.Meta.fields + (
-            'name', 'summary', 'attributed_to', 'captain',
-        )
 
 
 class TransitionSerializer(BaseActivitySerializer):

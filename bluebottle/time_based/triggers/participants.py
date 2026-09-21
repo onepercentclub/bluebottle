@@ -6,7 +6,8 @@ from bluebottle.activities.triggers import (
     ContributorTriggers
 )
 from bluebottle.activity_pub.effects import (
-    SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect, SendJoinDateSlotEffect, SyncRelatedEvent, SendRemoveEffect
+    SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect,
+    SendJoinDateSlotEffect, SyncRelatedEvent, SendRemoveEffect
 )
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -1148,7 +1149,6 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.schedule,
             effects=[
-                SendJoinSlotEffect,
                 SyncRelatedEvent,
             ],
         ),

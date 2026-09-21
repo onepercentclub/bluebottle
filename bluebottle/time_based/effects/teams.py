@@ -18,12 +18,6 @@ class CreateTeamRegistrationEffect(Effect):
         raise ValueError(f'No registration defined for activity model {self.instance.activity.__class__.__name__}')
 
     def post_save(self, **kwargs):
-        if not self.instance.remote_user and not self.instance.user:
-            raise ValueError(
-                'Team must have a captain identity (user or remote_user) '
-                'before creating a registration'
-            )
-
         registration_model = self.get_registration_model()
         filters = {'activity': self.instance.activity}
         if self.instance.remote_user:
@@ -91,6 +85,9 @@ class CreateTeamSlotEffect(Effect):
     def without_slot(self):
         return not self.instance.pk or not self.instance.slots.exists()
 
+    def is_local(self):
+        return not hasattr(self.instance.activity, 'origin')
+
     def get_slot_model(self):
         if isinstance(self.instance.activity, ScheduleActivity):
             return TeamScheduleSlot
@@ -108,9 +105,7 @@ class CreateTeamSlotEffect(Effect):
             team=self.instance
         )
 
-    conditions = [
-        without_slot
-    ]
+    conditions = [without_slot, is_local]
 
 
 class CreateTeamMemberSlotParticipantsEffect(Effect):

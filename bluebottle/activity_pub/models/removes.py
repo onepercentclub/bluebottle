@@ -1,5 +1,6 @@
 from bluebottle.activity_pub.models.transitions import Transition
 from bluebottle.activity_pub.models.events import DoGoodEvent, SubEvent
+from bluebottle.activity_pub.models.actors import Team
 
 from bluebottle.utils.utils import get_subclasses
 
@@ -9,11 +10,11 @@ class Remove(Transition):
         super().__init__(*args, **kwargs)
 
         for subclass in get_subclasses(self.__class__):
-            if subclass.matches(self.object):
+            if subclass.matches(self.object, self.actor):
                 self.__class__ = subclass
 
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return False
 
     @property
@@ -41,6 +42,7 @@ class Remove(Transition):
 
     @property
     def local_recipients(self):
+        __import__('ipdb').set_trace()
         yield self.actor.source
 
     @property
@@ -57,7 +59,7 @@ class Remove(Transition):
 
 class RegistrationRemove(Remove):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return isinstance(object, DoGoodEvent) and object.activity_type == 'PeriodicActivity'
 
     class Meta:
@@ -83,7 +85,7 @@ class SlotRemove(Remove):
 
 class DateSlotRemove(Remove):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return isinstance(object, SubEvent) and object.parent.activity_type == 'DateActivity'
 
     class Meta:
@@ -106,7 +108,7 @@ class DateSlotRemove(Remove):
 
 class ScheduleSlotRemove(Remove):
     @classmethod
-    def matches(cls, object):
+    def matches(cls, object, actor):
         return isinstance(object, SubEvent) and not object.parent.activity_type == 'DateActivity'
 
     class Meta:
@@ -125,3 +127,28 @@ class ScheduleSlotRemove(Remove):
             scheduleparticipant__slot=self.object.adopted,
             user=self.actor.origin
         )
+
+
+class TeamRemove(Remove):
+    @classmethod
+    def matches(cls, object, actor):
+        return isinstance(actor, Team)
+
+    class Meta:
+        proxy = True
+
+    @property
+    def local_contributor(self):
+        return self.actor.adopted
+
+    @property
+    def remote_contributor(self):
+        return self.actor.origin
+
+    @property
+    def local_recipients(self):
+        yield self.actor.captain.source
+
+    @property
+    def remote_recipients(self):
+        yield self.object.source

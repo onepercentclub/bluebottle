@@ -73,3 +73,28 @@ def timedelta_to_iso(td):
         parts.extend(time_parts)
 
     return sign + ''.join(parts)
+
+
+def resource_iri(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        return value.get('id') or value.get('iri')
+    return None
+
+
+def platform_may_modify_event(platform, event):
+    from bluebottle.activity_pub.models import Create, Follow
+
+    if platform is None or event is None:
+        return False
+    if Create.objects.filter(object=event, recipients__actor=platform).exists():
+        return True
+    for create in event.create_set.all():
+        if Follow.objects.filter(actor=platform, object=create.actor).exists():
+            return True
+        if Follow.objects.filter(actor=create.actor, object=platform).exists():
+            return True
+    return False

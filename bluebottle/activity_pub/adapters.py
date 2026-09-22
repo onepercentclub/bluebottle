@@ -23,6 +23,8 @@ class JSONLDAdapter():
 
     def adopt(self, instance, **kwargs):
         from bluebottle.activity_pub.models import Transition
+        from bluebottle.fsm.state import TransitionNotPossible
+        from bluebottle.time_based.models import PeriodicRegistration
 
         serializer = FederatedObjectSerializer(
             data=ActivityPubSerializer(instance=instance).data
@@ -33,6 +35,12 @@ class JSONLDAdapter():
         serializer.is_valid(raise_exception=True)
 
         result = serializer.save(**kwargs)
+
+        if isinstance(result, PeriodicRegistration) and result.status == 'stopped':
+            try:
+                result.states.start(save=True)
+            except TransitionNotPossible:
+                pass
 
         try:
             # Re-run all transitions that might have happened before the model was adopted

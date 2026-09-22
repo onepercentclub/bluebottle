@@ -10,6 +10,7 @@ from bluebottle.time_based.effects import LockFilledSlotsEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
+    CreateCurrentPeriodicParticipantEffect,
     AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
 )
 from bluebottle.time_based.messages import (
@@ -402,6 +403,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                CreateCurrentPeriodicParticipantEffect,
                 SendJoinEffect,
                 SyncRelatedEvent
             ],

@@ -6,7 +6,11 @@ from bluebottle.activity_pub.views import ActivityPubPermission, InboxPermission
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 
+from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.models import Create, Recipient, Team as ActivityPubTeam
 from bluebottle.activity_pub.tests.factories import FollowFactory, OrganizationFactory
+from bluebottle.time_based.tests.factories import ScheduleActivityFactory, TeamFactory
 
 
 class PermissionTestCase(BluebottleTestCase):
@@ -156,4 +160,55 @@ class InboxPermissionTestCase(PermissionTestCase):
 
         self.assertFalse(
             self.permission.has_permission(self.request(data={'type': 'Create'}))
+        )
+
+    def test_post_join_followed_unknown_object(self):
+        with mock.patch(
+            'bluebottle.activity_pub.adapters.adapter.publish',
+        ):
+            FollowFactory.create(object=self.actor)
+
+        self.assertTrue(
+            self.permission.has_permission(
+                self.request(
+                    data={'type': 'Join', 'object': 'https://example.com/unknown'},
+                    actor=self.actor,
+                )
+            )
+        )
+
+    def test_post_join_authorized_recipient(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = ['supplier', 'consumer']
+        site_settings.save()
+
+        other = OrganizationFactory.create()
+        with mock.patch(
+            'bluebottle.activity_pub.adapters.adapter.publish',
+        ):
+            FollowFactory.create(object=self.actor)
+            FollowFactory.create(object=other)
+
+        activity = ScheduleActivityFactory.create(team_activity='teams')
+        adapter.sync(activity)
+        team = TeamFactory.create(activity=activity)
+        event = activity.activity_pub_model
+        ap_team = ActivityPubTeam.objects.create(
+            iri=f'https://consumer.example/teams/{team.pk}',
+            adopted=team,
+        )
+        create = event.create_set.first()
+        if create is None:
+            create = Create.objects.create(object=event, actor=OrganizationFactory.create())
+        Recipient.objects.get_or_create(activity=create, actor=self.actor)
+
+        join_data = {
+            'type': 'Join',
+            'object': {'id': ap_team.iri},
+        }
+        self.assertTrue(
+            self.permission.has_permission(self.request(data=join_data, actor=self.actor))
+        )
+        self.assertFalse(
+            self.permission.has_permission(self.request(data=join_data, actor=other))
         )

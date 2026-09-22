@@ -75,6 +75,33 @@ class CreateInitialPeriodicParticipantEffect(Effect):
         return not self.instance.participants.exists()
 
 
+class CreateCurrentPeriodicParticipantEffect(Effect):
+    title = _("Create participant for the current periodic slot")
+    template = "admin/create_participant.html"
+
+    def _current_slot(self):
+        slots = self.instance.activity.slots
+        return slots.filter(status="running").last() or slots.last()
+
+    def post_save(self, **kwargs):
+        slot = self._current_slot()
+        if slot is None:
+            return
+        self.instance.participants.create(
+            activity=self.instance.activity,
+            user=self.instance.user,
+            remote_user=self.instance.remote_user,
+            registration=self.instance,
+            slot=slot,
+        )
+
+    def is_valid(self):
+        slot = self._current_slot()
+        if slot is None:
+            return False
+        return not self.instance.participants.filter(slot=slot).exists()
+
+
 class AdjustInitialPeriodicParticipantEffect(Effect):
     title = _("Adjust initial periodic participant and connect to slot")
     template = "admin/adjust_participant.html"

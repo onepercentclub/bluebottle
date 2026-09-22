@@ -395,29 +395,29 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         self.task = data_retention_contribution_task
 
     def test_data_retention_dont_delete_without_settings(self):
-        self.assertEqual(Contributor.objects.count(), 14)
-        self.assertEqual(Contribution.objects.count(), 14)
-        self.assertEqual(Registration.objects.count(), 8)
+        self.assertEqual(Contributor.objects.count(), 12)
+        self.assertEqual(Contribution.objects.count(), 12)
+        self.assertEqual(Registration.objects.count(), 6)
         self.task()
-        self.assertEqual(Contributor.objects.count(), 14)
-        self.assertEqual(Contribution.objects.count(), 14)
-        self.assertEqual(Registration.objects.count(), 8)
+        self.assertEqual(Contributor.objects.count(), 12)
+        self.assertEqual(Contribution.objects.count(), 12)
+        self.assertEqual(Registration.objects.count(), 6)
 
     def test_data_retention_clean_up(self):
         member_settings = MemberPlatformSettings.load()
         member_settings.retention_delete = 10
         member_settings.retention_anonymize = 6
         member_settings.save()
-        self.assertEqual(Contributor.objects.count(), 14)
-        self.assertEqual(Contribution.objects.count(), 14)
-        self.assertEqual(Registration.objects.count(), 8)
+        self.assertEqual(Contributor.objects.count(), 12)
+        self.assertEqual(Contribution.objects.count(), 12)
+        self.assertEqual(Registration.objects.count(), 6)
         self.task()
-        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 8)
+        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 6)
         self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 2)
         self.activity1.refresh_from_db()
         self.assertEqual(self.activity1.deleted_successful_contributors, 0)
         self.activity2.refresh_from_db()
         self.assertEqual(self.activity2.deleted_successful_contributors, 1)
-        self.assertEqual(Contribution.objects.count(), 14)
-        self.assertEqual(Contributor.objects.count(), 10)
-        self.assertEqual(Registration.objects.count(), 3)
+        self.assertEqual(Contribution.objects.count(), 12)
+        self.assertEqual(Contributor.objects.count(), 8)
+        self.assertEqual(Registration.objects.count(), 1)

@@ -2,6 +2,7 @@ import inflection
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from rest_framework import serializers, relations
+from rest_framework.utils import model_meta
 
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context, expand_iri
@@ -218,8 +219,18 @@ class FederatedObjectBaseSerializer(
 
         return super().to_internal_value(data)
 
+    def save(self, **kwargs):
+        if self.instance is None:
+            iri = self.validated_data.get('id')
+            origin = ActivityPubModel.objects.from_iri(iri) if iri else None
+            adopted = getattr(origin, 'adopted', None)
+            if adopted is not None:
+                self.instance = adopted
+        return super().save(**kwargs)
+
     def create(self, validated_data):
         iri = validated_data.pop('id', None)
+        validated_data.pop('type', None)
 
         for field in self.fields.values():
             if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):
@@ -238,7 +249,30 @@ class FederatedObjectBaseSerializer(
 
                         validated_data[field.source] = field.create(field_data)
 
-        result = super().create(validated_data)
+        get_queryset = getattr(type(self), 'get_queryset', None)
+        model_class = self.get_queryset().model if get_queryset else self.Meta.model
+        info = model_meta.get_field_info(model_class)
+        many_to_many_names = {
+            field_name for field_name, relation_info in info.relations.items()
+            if relation_info.to_many
+        }
+        allowed = {field.name for field in model_class._meta.fields} | many_to_many_names
+        create_kwargs = {
+            key: value for key, value in validated_data.items()
+            if key in allowed
+        }
+
+        if model_class is self.Meta.model:
+            result = super().create(create_kwargs)
+        else:
+            many_to_many = {}
+            for field_name in many_to_many_names:
+                if field_name in create_kwargs:
+                    many_to_many[field_name] = create_kwargs.pop(field_name)
+            result = model_class._default_manager.create(**create_kwargs)
+            for field_name, value in many_to_many.items():
+                getattr(result, field_name).set(value)
+
         origin = ActivityPubModel.objects.from_iri(iri)
         if origin and hasattr(origin, 'adopted'):
             origin.adopted = result
@@ -248,6 +282,7 @@ class FederatedObjectBaseSerializer(
 
     def update(self, instance, validated_data):
         validated_data.pop('id', None)
+        validated_data.pop('type', None)
 
         for name, field in self.fields.items():
             if isinstance(field, (FederatedObjectSerializer, FederatedObjectBaseSerializer)):

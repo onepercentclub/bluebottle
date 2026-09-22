@@ -1,7 +1,6 @@
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.time_based.models import ScheduleActivity, TeamScheduleRegistration, TeamMember, TeamScheduleSlot
 
 
@@ -38,21 +37,15 @@ class CreateTeamRegistrationEffect(Effect):
                 activity=self.instance.activity,
                 user=self.instance.user,
                 remote_user=self.instance.remote_user,
+                answer=self.options.get('answer'),
             )
             trigger_options = {}
             if self.instance.user_id:
                 trigger_options['user'] = self.instance.user
             registration.execute_triggers(**trigger_options)
 
-            # Local activities end accepted; adopted wait for supplier Accept.
-            is_local = not getattr(self.instance.activity, 'is_adopted', False)
-            if is_local:
-                if registration.status == 'new':
-                    try:
-                        registration.states.auto_accept(save=False)
-                    except TransitionNotPossible:
-                        registration.status = 'accepted'
-            else:
+            # Adopted activities wait for the supplier Accept of the Join.
+            if getattr(self.instance.activity, 'is_adopted', False):
                 registration.status = 'new'
 
             registration.save()

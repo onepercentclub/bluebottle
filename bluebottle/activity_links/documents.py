@@ -2,11 +2,21 @@ from django.utils.timezone import now
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
-from bluebottle.activities.documents import ActivityDocument, activity
+from bluebottle.activities.documents import (
+    ActivityDocument,
+    activity,
+    locality_from_geolocation,
+)
 from bluebottle.activity_links.models import LinkedDeed, LinkedFunding, LinkedActivity, LinkedDateActivity, \
     LinkedCollectCampaign, LinkedDeadlineActivity, LinkedPeriodicActivity, LinkedScheduleActivity, \
-    LinkedGrantApplication
-from bluebottle.initiatives.documents import get_translated_country_list
+    LinkedGrantApplication, LinkedDateSlot
+from bluebottle.initiatives.documents import deduplicate, get_translated_country_list
+from bluebottle.time_based.documents import (
+    deduplicate_locations,
+    deduplicate_positions,
+    slot_location_entry,
+    unique_slot_geolocations,
+)
 from bluebottle.utils.documents import TextField
 from bluebottle.utils.models import get_default_language
 
@@ -19,7 +29,17 @@ class LinkedActivityDocument(ActivityDocument):
     link = fields.KeywordField()
 
     def get_queryset(self):
-        return self.django.model._default_manager.all()
+        queryset = self.django.model._default_manager.all()
+        if any(field.name == 'location' for field in self.django.model._meta.fields):
+            queryset = queryset.select_related(
+                'location',
+                'location__country',
+                'location__geofeature',
+            ).prefetch_related(
+                'location__geofeatures',
+                'location__geofeatures__translations',
+            )
+        return queryset
 
     def prepare_is_local(self, instance):
         return False
@@ -75,9 +95,6 @@ class LinkedActivityDocument(ActivityDocument):
     def prepare_capacity(self, instance):
         return None
 
-    def prepare_position(self, instance):
-        return []
-
     def prepare_start(self, instance):
         return []
 
@@ -106,6 +123,9 @@ class LinkedActivityDocument(ActivityDocument):
         return []
 
     def prepare_country(self, instance):
+        location = getattr(instance, 'location', None)
+        if location and location.country:
+            return get_translated_country_list(location.country)
         return []
 
     def prepare_expertise(self, instance):
@@ -115,9 +135,21 @@ class LinkedActivityDocument(ActivityDocument):
         return []
 
     def prepare_location(self, instance):
-        return []
+        location = getattr(instance, 'location', None)
+        if not location:
+            return []
+        return [slot_location_entry(
+            location,
+            location_hint=getattr(instance, 'location_hint', None),
+        )]
 
     def prepare_geofeature(self, instance):
+        return []
+
+    def prepare_position(self, instance):
+        location = getattr(instance, 'location', None)
+        if location and location.position:
+            return [{'lat': location.position.y, 'lon': location.position.x}]
         return []
 
     def prepare_office(self, instance):
@@ -257,25 +289,6 @@ class LinkedFundingDocument(LinkedActivityDocument):
             return None
         return self.prepare_amount(instance.donated)
 
-    def prepare_country(self, instance):
-        countries = []
-        if instance.location and instance.location.country:
-            countries += get_translated_country_list(instance.location.country)
-        return countries
-
-    def prepare_location(self, instance):
-        locations = []
-        if hasattr(instance, 'location') and instance.location and instance.location.geofeature:
-            locations.append({
-                'id': instance.location.id,
-                'name': instance.location.geofeature.place_name,
-                'locality': instance.location.geofeature.name,
-                'country_code': instance.location.country.alpha2_code if instance.location.country else None,
-                'country': instance.location.country.name if instance.location.country else None,
-                'type': 'location'
-            })
-        return locations
-
 
 @registry.register_document
 @activity.doc_type
@@ -313,32 +326,13 @@ class LinkedGrantApplicationDocument(LinkedActivityDocument):
             return None
         return self.prepare_amount(instance.target)
 
-    def prepare_country(self, instance):
-        countries = []
-        if instance.location and instance.location.country:
-            countries += get_translated_country_list(instance.location.country)
-        return countries
-
-    def prepare_location(self, instance):
-        locations = []
-        if hasattr(instance, 'location') and instance.location and instance.location.geofeature:
-            locations.append({
-                'id': instance.location.id,
-                'name': instance.location.geofeature.place_name,
-                'locality': instance.location.geofeature.name,
-                'country_code': instance.location.country.alpha2_code if instance.location.country else None,
-                'country': instance.location.country.name if instance.location.country else None,
-                'type': 'location'
-            })
-        return locations
-
 
 @registry.register_document
 @activity.doc_type
 class LinkedDateActivityDocument(LinkedActivityDocument):
     class Django:
         model = LinkedDateActivity
-        related_models = ()
+        related_models = (LinkedDateSlot,)
 
     slots = fields.NestedField(properties={
         'id': fields.KeywordField(),
@@ -346,55 +340,86 @@ class LinkedDateActivityDocument(LinkedActivityDocument):
         'title': TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
-        'locality': fields.KeywordField(attr='location.locality'),
-        'formatted_address': fields.KeywordField(attr='location.formatted_address'),
-        'country_code': fields.KeywordField(attr='location.country.alpha2_code'),
-        'country': fields.KeywordField(attr='location.country.name'),
+        'location_hint': fields.KeywordField(),
+        'locality': fields.KeywordField(),
+        'formatted_address': fields.KeywordField(),
+        'country_code': fields.KeywordField(),
+        'country': fields.KeywordField(),
         'is_online': fields.BooleanField(),
+        'location_id': fields.LongField(),
     })
+
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related(
+            'slots',
+            'slots__location',
+            'slots__location__country',
+            'slots__location__geofeature',
+            'slots__location__geofeatures',
+            'slots__location__geofeatures__translations',
+        )
+
+    def get_instances_from_related(self, related_instance):
+        if isinstance(related_instance, LinkedDateSlot):
+            return related_instance.activity
 
     def prepare_is_online(self, instance):
         return False
 
     def prepare_slots(self, instance):
-        return [
-            {
-                'id': slot.id,
+        slots = []
+        for slot in instance.slots.all():
+            location = slot.location
+            if location:
+                country = location.country
+                locality = locality_from_geolocation(location)
+                formatted_address = (
+                    location.geofeature.place_name
+                    if location.geofeature else location.formatted_address
+                )
+                location_id = location.id
+            else:
+                country = None
+                locality = None
+                formatted_address = None
+                location_id = None
+            slots.append({
+                'id': str(slot.pk),
                 'status': slot.status,
                 'title': '',
                 'start': slot.start,
                 'end': slot.end,
-                'locality': slot.location.locality if slot.location else None,
-                'formatted_address': slot.location.formatted_address if slot.location else None,
-                'country_code': slot.location.country.alpha2_code if slot.location and slot.location.country else None,
-                'country': slot.location.country.name if slot.location and slot.location.country else None,
+                'location_hint': None,
+                'locality': locality,
+                'formatted_address': formatted_address,
+                'country': country.name if country else None,
+                'country_code': country.alpha2_code if country else None,
                 'is_online': False,
-            }
-            for slot in instance.slots.all()
-        ]
+                'location_id': location_id,
+            })
+        return slots
 
     def prepare_location(self, instance):
-        locations = []
-        locations += [
-            {
-                'name': slot.location.geofeature.place_name,
-                'locality': slot.location.geofeature.name,
-                'country_code': slot.location.country.alpha2_code,
-                'country': slot.location.country.name,
-                'type': 'location'
-
-            }
-            for slot in instance.slots.all()
-            if slot.location and slot.location.geofeature
+        locations = [
+            slot_location_entry(geolocation)
+            for geolocation in unique_slot_geolocations(instance.slots.all())
         ]
-        return locations
+        return deduplicate_locations(locations)
 
     def prepare_country(self, instance):
         countries = []
-        for slot in instance.slots.all():
-            if slot.location and slot.location.country:
-                countries += get_translated_country_list(slot.location.country)
-        return countries
+        for geolocation in unique_slot_geolocations(instance.slots.all()):
+            if geolocation.country:
+                countries += get_translated_country_list(geolocation.country)
+        return deduplicate(countries)
+
+    def prepare_position(self, instance):
+        positions = [
+            {'lat': geolocation.position.y, 'lon': geolocation.position.x}
+            for geolocation in unique_slot_geolocations(instance.slots.all())
+            if geolocation.position
+        ]
+        return deduplicate_positions(positions)
 
     def prepare_start(self, instance):
         return [slot.start for slot in instance.slots.all()]
@@ -455,25 +480,6 @@ class LinkedDeadlineActivityDocument(LinkedActivityDocument):
         model = LinkedDeadlineActivity
         related_models = ()
 
-    def prepare_location(self, instance):
-        locations = [
-            {
-                'name': instance.location.geofeature.place_name,
-                'locality': instance.location.geofeature.name,
-                'country_code': instance.location.country.alpha2_code,
-                'country': instance.location.country.name,
-                'type': 'location'
-
-            }
-        ] if instance.location_id and instance.location.geofeature else []
-        return locations
-
-    def prepare_country(self, instance):
-        countries = []
-        if instance.location and instance.location.country:
-            countries += get_translated_country_list(instance.location.country)
-        return countries
-
     def prepare_start(self, instance):
         return [instance.start]
 
@@ -531,25 +537,6 @@ class LinkedScheduleActivityDocument(LinkedActivityDocument):
         model = LinkedScheduleActivity
         related_models = ()
 
-    def prepare_location(self, instance):
-        locations = [
-            {
-                'name': instance.location.geofeature.place_name,
-                'locality': instance.location.geofeature.name,
-                'country_code': instance.location.country.alpha2_code,
-                'country': instance.location.country.name,
-                'type': 'location'
-
-            }
-        ] if instance.location_id and instance.location.geofeature else []
-        return locations
-
-    def prepare_country(self, instance):
-        countries = []
-        if instance.location and instance.location.country:
-            countries += get_translated_country_list(instance.location.country)
-        return countries
-
     def prepare_start(self, instance):
         return [instance.start]
 
@@ -606,25 +593,6 @@ class LinkedPeriodicActivityDocument(LinkedActivityDocument):
     class Django:
         model = LinkedPeriodicActivity
         related_models = ()
-
-    def prepare_location(self, instance):
-        locations = [
-            {
-                'name': instance.location.geofeature.place_name,
-                'locality': instance.location.geofeature.name,
-                'country_code': instance.location.country.alpha2_code,
-                'country': instance.location.country.name,
-                'type': 'location'
-
-            }
-        ] if instance.location_id and instance.location.geofeature else []
-        return locations
-
-    def prepare_country(self, instance):
-        countries = []
-        if instance.location and instance.location.country:
-            countries += get_translated_country_list(instance.location.country)
-        return countries
 
     def prepare_start(self, instance):
         return [instance.start]

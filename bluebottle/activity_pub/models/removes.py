@@ -42,7 +42,6 @@ class Remove(Transition):
 
     @property
     def local_recipients(self):
-        __import__('ipdb').set_trace()
         yield self.actor.source
 
     @property

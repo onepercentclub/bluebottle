@@ -60,7 +60,6 @@ class BaseJoin(Join):
         ).first()
 
     def reapply(self):
-        __import__('ipdb').set_trace()
         self.contributor.states.reapply(save=True)
 
     def apply(self):
@@ -274,7 +273,6 @@ class SlotJoin(BaseJoin):
         """
         if not self.object.is_local:
             slot = adapter.adopt(self.object)
-            __import__('ipdb').set_trace()
 
             try:
                 # Try to see if a contributor exists without a slot and update that

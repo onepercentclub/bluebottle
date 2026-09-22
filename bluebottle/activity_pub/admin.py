@@ -382,7 +382,7 @@ class FollowingAddForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     def clean(self):
-        super().clean()
+        result = super().clean()
         if 'platform_url' in self.cleaned_data:
             try:
                 url = client.get(self.cleaned_data['platform_url'])
@@ -417,6 +417,20 @@ class FollowingAddForm(forms.ModelForm):
                     'platform_url': _("Error creating Follow relationship: %s") % str(error)
                 })
 
+        if (
+            len(result['automatic_adoption_activity_types']) > 0 and
+            result['adoption_type'] in ('template', 'sync', ) and
+            not result['default_owner']
+        ):
+            raise ValidationError({
+                'default_owner': _(
+                    'If automatic adoption is enabled, default owner is required. Without a default owner, '
+                    'it is impossible to create the activities'
+                )
+            })
+
+        return result
+
 
 class FollowingAdminForm(forms.ModelForm):
     adoption_type = forms.ChoiceField(
@@ -433,6 +447,23 @@ class FollowingAdminForm(forms.ModelForm):
         help_text=_("This person will be the activity manager of the activities that are adopted."),
         required=False
     )
+
+    def clean(self):
+        result = super().clean()
+
+        if (
+            len(result['automatic_adoption_activity_types']) > 0 and
+            result['adoption_type'] in ('template', 'sync', ) and
+            not result['default_owner']
+        ):
+            raise ValidationError({
+                'default_owner': _(
+                    'If automatic adoption is enabled, default owner is required. Without a default owner, '
+                    'it is impossible to create the activities'
+                )
+            })
+
+        return result
 
     class Meta:
         model = Following

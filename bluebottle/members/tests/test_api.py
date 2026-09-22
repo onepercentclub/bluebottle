@@ -1135,6 +1135,27 @@ class RefreshTokenTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['id'], self.user.pk)
 
+    def test_refresh_preserves_impersonation_claims(self):
+        impersonator = BlueBottleUserFactory.create()
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+        payload = jwt_payload_handler(self.user)
+        payload['exp'] = datetime.utcnow() + properties.JWT_EXPIRATION_DELTA - timedelta(minutes=35)
+        payload['orig_iat'] = timegm((datetime.now() - timedelta(minutes=35)).utctimetuple())
+        payload['impersonated'] = True
+        payload['impersonator'] = impersonator.pk
+        token = "JWT {0}".format(jwt_encode_handler(payload))
+
+        response = self.client.get(self.url, token=token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_token = response['Refresh-Token'].split(' ', 1)[1]
+        decoded = jwt.decode(
+            new_token, algorithms='HS256', options=dict(verify_signature=False)
+        )
+        self.assertTrue(decoded['impersonated'])
+        self.assertEqual(decoded['impersonator'], impersonator.pk)
+
 
 class UserAPITestCase(BluebottleTestCase):
 
@@ -1370,6 +1391,21 @@ class CurrentMemberAPITestCase(APITestCase):
         self.assertAttribute('first-name')
         self.assertAttribute('last-name')
         self.assertMeta('permissions')
+
+    def test_get_impersonated(self):
+        impersonator = BlueBottleUserFactory.create()
+        token = self.user.get_jwt_token(impersonator=impersonator)
+        self.response = self.client.get(
+            self.url,
+            HTTP_AUTHORIZATION="JWT {0}".format(token)
+        )
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTrue(self.response.json()['data']['meta']['impersonated'])
+
+    def test_get_not_impersonated(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertFalse(self.response.json()['data']['meta']['impersonated'])
 
     def test_get_logged_out(self):
         self.perform_get()

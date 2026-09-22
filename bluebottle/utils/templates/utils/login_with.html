@@ -9,10 +9,11 @@
 {% block script %}
 
     <script>
-        var token = "{{ token }}";
-        var link = "{{ link }}";
+        var token = "{{ token|escapejs }}";
+        var originalToken = "{{ original_token|default:''|escapejs }}";
+        var link = "{{ link|escapejs }}";
 
-        function storeToken(token) {
+        function storeToken(token, originalToken) {
             // Create fallback for localStorage
             var authStorage;
             try {
@@ -31,10 +32,12 @@
                     }
                 };
             }
-            // Store jwtToken
+            if (originalToken) {
+                authStorage['originalJwtToken'] = originalToken;
+            }
             authStorage['jwtToken'] = token;
         }
-        storeToken(token);
+        storeToken(token, originalToken);
         // Redirect to deep link
         location.href = link;
 

@@ -39,6 +39,70 @@ form .aligned p.file-upload + p.help {
     text-align: right;
 }
 
+body:has(#djhj) {
+    padding-bottom: 4rem;
+}
+
+.djhj {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    z-index: 1100;
+    margin: 0;
+    width: 100%;
+}
+
+.djhj .djhj-notification {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: #7a0000;
+    color: #fff;
+    font-weight: 400;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+    box-shadow: none;
+}
+
+.djhj .djhj-message,
+.djhj .djhj-actions {
+    width: auto;
+    padding: 0;
+}
+
+.djhj .djhj-message em {
+    font-style: italic;
+    font-weight: 700;
+}
+
+.djhj .djhj-notification a,
+.djhj .djhj-notification button {
+    color: #fff;
+}
+
+.djhj .djhj-button {
+    background: transparent;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.25em 0.75em;
+}
+
+.djhj .djhj-button:hover {
+    background: #8f0000;
+}
+
+.djhj .djhj-button:active {
+    background: #660000;
+}
+
 #branding-menu {
     background: url("/static/assets/admin/images/goodup_icon.jpg");
     background-size: 100%;

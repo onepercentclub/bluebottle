@@ -37,6 +37,8 @@ urlpatterns = [
     ),
     path('admin/', include(tf_urls)),
 
+    path('admin/hijack/', include('hijack.urls')),
+
     # Django JET URLS
     path('admin/jet/', include('jet.urls', 'jet')),
     path('admin/jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),

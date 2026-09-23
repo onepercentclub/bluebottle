@@ -493,7 +493,7 @@ class SyncTestCase(ActivityPubTestCase):
         self.assertTrue(accept)
 
     def join(self):
-        self.participant = self.participant_factory.create(activity=self.adopted)
+        self.participant = self.participant_factory.create(activity=self.adopted, user=self.adopted.owner)
 
     def test_join(self):
         self.test_adopt()

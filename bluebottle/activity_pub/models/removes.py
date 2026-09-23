@@ -20,15 +20,15 @@ class Remove(Transition):
 
     @property
     def local_contributor(self):
-        return self.object.origin.contributors.get(
+        return self.object.origin.contributors.not_instance_of(Organizer).get(
             remote_user=self.actor.adopted
-        ).not_instance_of(Organizer)
+        )
 
     @property
     def remote_contributor(self):
-        return self.object.adopted.contributors.get(
+        return self.object.adopted.contributors.not_instance_of(Organizer).get(
             user=self.actor.origin
-        ).not_instance_of(Organizer)
+        )
 
     @property
     def contributor(self):
@@ -101,17 +101,17 @@ class DateSlotRemove(Remove):
 
     @property
     def local_contributor(self):
-        return self.object.parent.origin.contributors.get(
+        return self.object.parent.origin.contributors.not_instance_of(Organizer).get(
             dateparticipant__slot=self.object.origin,
             remote_user=self.actor.adopted
-        ).not_instance_of(Organizer)
+        )
 
     @property
     def remote_contributor(self):
-        return self.object.parent.adopted.contributors.get(
+        return self.object.parent.adopted.contributors.not_instance_of(Organizer).get(
             dateparticipant__slot=self.object.adopted,
             user=self.actor.origin
-        ).not_instance_of(Organizer)
+        )
 
 
 class ScheduleSlotRemove(Remove):
@@ -124,17 +124,17 @@ class ScheduleSlotRemove(Remove):
 
     @property
     def local_contributor(self):
-        return self.object.parent.origin.contributors.get(
+        return self.object.parent.origin.contributors.not_instance_of(Organizer).get(
             scheduleparticipant__slot=self.object.origin,
             remote_user=self.actor.adopted
-        ).not_instance_of(Organizer)
+        )
 
     @property
     def remote_contributor(self):
-        return self.object.parent.adopted.contributors.get(
+        return self.object.parent.adopted.contributors.not_instance_of(Organizer).get(
             scheduleparticipant__slot=self.object.adopted,
             user=self.actor.origin
-        ).not_instance_of(Organizer)
+        )
 
     @property
     def remote_recipients(self):

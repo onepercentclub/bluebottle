@@ -1,4 +1,5 @@
 from django.db import models
+from django.test.runner import ipdb
 from django.utils.module_loading import import_string
 
 from bluebottle.activity_pub.adapters import adapter

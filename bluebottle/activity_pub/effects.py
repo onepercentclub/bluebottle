@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
+import ipdb
 
 from bluebottle.activity_links.models import LinkedActivity
 from bluebottle.activity_pub.adapters import adapter
@@ -380,7 +381,7 @@ class SendJoinDateSlotEffect(Effect):
 
     @property
     def is_valid(self):
-        return self.instance.remote_user is None
+        return self.instance.remote_user is None and hasattr(self.instance.user, 'activity_pub_model')
 
     def __str__(self):
         return str(_('Notify source platform of join'))

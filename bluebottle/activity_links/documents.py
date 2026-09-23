@@ -62,6 +62,10 @@ class LinkedActivityDocument(ActivityDocument):
         return instance.link
 
     def prepare_is_online(self, instance):
+        return False
+        location = getattr(instance, 'location', None)
+        if location:
+            return False
         return True
 
     def prepare_is_upcoming(self, instance):

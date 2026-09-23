@@ -54,6 +54,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
         poll = Poll()
         poll.set_current_language('en')
         poll.title = 'Favourite colour'
+        poll.status = 'open'
         poll.save()
         PollContent.objects.create_for_placeholder(placeholder, poll=poll)
         ImagePlainTextItem.objects.create_for_placeholder(placeholder, title='Intro')

@@ -220,7 +220,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_date_preview_multiple_slots_single_location(self):
         activity = DateActivityFactory.create(status='open', slots=[])
-        location = GeolocationFactory.create()
+        location = GeolocationFactory.create(with_geofeatures=True)
         DateActivitySlotFactory.create_batch(3, activity=activity, location=location)
         response = self.client.get(self.url, user=self.owner, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
@@ -308,7 +308,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
         attributes = response.json()['data'][0]['attributes']
-        self.assertEqual(attributes['slot-count'], 0)
+        self.assertEqual(attributes['slot-count'], 3)
 
         self.assertEqual(attributes['has-multiple-locations'], True)
         self.assertEqual(attributes['is-online'], False)

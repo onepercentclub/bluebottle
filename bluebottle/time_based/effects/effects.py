@@ -5,6 +5,7 @@ from django.db.models import F
 from django.template.loader import render_to_string
 from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
+import ipdb
 
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.follow.models import unfollow
@@ -358,16 +359,17 @@ class CreateNextSlotEffect(Effect):
 class CreatePeriodicParticipantsEffect(Effect):
 
     def post_save(self):
-        for registration in self.instance.activity.registrations.filter(
-            status="accepted"
-        ):
-            PeriodicParticipant.objects.create(
-                user=registration.user,
-                remote_user=registration.remote_user,
-                slot=self.instance,
-                activity=self.instance.activity,
-                registration=registration,
-            )
+        if not hasattr(self.instance.activity, 'origin'):
+            for registration in self.instance.activity.registrations.filter(
+                status="accepted",
+            ):
+                PeriodicParticipant.objects.create(
+                    remote_user=registration.remote_user,
+                    user=registration.user,
+                    slot=self.instance,
+                    activity=self.instance.activity,
+                    registration=registration,
+                )
 
 
 class RescheduleScheduleSlotContributions(Effect):

@@ -5,6 +5,8 @@ from io import BytesIO
 import pytz
 import requests
 from django.contrib.gis.geos import Point
+from django.core.exceptions import ObjectDoesNotExist
+
 from django.core.files import File
 from django.db import connection
 from django.urls import reverse

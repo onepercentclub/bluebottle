@@ -1,5 +1,4 @@
 from django.db import models
-from django.test.runner import ipdb
 from django.utils.module_loading import import_string
 
 from bluebottle.activity_pub.adapters import adapter
@@ -61,6 +60,7 @@ class BaseJoin(Join):
         ).first()
 
     def reapply(self):
+        __import__('ipdb').set_trace()
         self.contributor.states.reapply(save=True)
 
     def apply(self):
@@ -395,7 +395,7 @@ class DateSlotJoin(SlotJoin):
     def contributor(self):
         """ Return the remote contributor, since the Join was created by the consumer"""
         return self.contributor_model.objects.filter(
-            activity=self.object.parent.origin, remote_user=self.actor.adopted
+            activity=self.object.parent.origin, remote_user=self.actor.adopted, slot=self.object.origin
         ).first()
 
     @property

@@ -5,7 +5,6 @@ from django.db.models import F
 from django.template.loader import render_to_string
 from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
-import ipdb
 
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.follow.models import unfollow

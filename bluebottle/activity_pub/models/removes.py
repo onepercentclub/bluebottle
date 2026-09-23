@@ -1,3 +1,4 @@
+from bluebottle.activities.models import Organizer
 from bluebottle.activity_pub.models.transitions import Transition
 from bluebottle.activity_pub.models.events import DoGoodEvent, SubEvent
 from bluebottle.activity_pub.models.actors import Team
@@ -19,11 +20,15 @@ class Remove(Transition):
 
     @property
     def local_contributor(self):
-        return self.object.origin.contributors.get(remote_user=self.actor.adopted)
+        return self.object.origin.contributors.get(
+            remote_user=self.actor.adopted
+        ).not_instance_of(Organizer)
 
     @property
     def remote_contributor(self):
-        return self.object.adopted.contributors.get(user=self.actor.origin)
+        return self.object.adopted.contributors.get(
+            user=self.actor.origin
+        ).not_instance_of(Organizer)
 
     @property
     def contributor(self):
@@ -99,14 +104,14 @@ class DateSlotRemove(Remove):
         return self.object.parent.origin.contributors.get(
             dateparticipant__slot=self.object.origin,
             remote_user=self.actor.adopted
-        )
+        ).not_instance_of(Organizer)
 
     @property
     def remote_contributor(self):
         return self.object.parent.adopted.contributors.get(
             dateparticipant__slot=self.object.adopted,
             user=self.actor.origin
-        )
+        ).not_instance_of(Organizer)
 
 
 class ScheduleSlotRemove(Remove):
@@ -122,14 +127,14 @@ class ScheduleSlotRemove(Remove):
         return self.object.parent.origin.contributors.get(
             scheduleparticipant__slot=self.object.origin,
             remote_user=self.actor.adopted
-        )
+        ).not_instance_of(Organizer)
 
     @property
     def remote_contributor(self):
         return self.object.parent.adopted.contributors.get(
             scheduleparticipant__slot=self.object.adopted,
             user=self.actor.origin
-        )
+        ).not_instance_of(Organizer)
 
     @property
     def remote_recipients(self):

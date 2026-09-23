@@ -2,8 +2,6 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from urllib.parse import urlparse
 
-import unittest
-
 import httmock
 import mock
 from django.core.files import File

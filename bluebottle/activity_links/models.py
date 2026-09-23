@@ -6,7 +6,7 @@ from polymorphic.models import PolymorphicModel, PolymorphicManager
 
 from bluebottle.activity_pub.serializers import ActivityPubSerializer
 from bluebottle.activity_pub.models import (
-    Follow, Create, Start, Finish, Cancel, Follow, Create
+    Follow, Create, Start, Finish, Cancel
 )
 from bluebottle.files.fields import ImageField
 from bluebottle.fsm.state import TransitionNotPossible

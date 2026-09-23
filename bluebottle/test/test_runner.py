@@ -161,57 +161,55 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         # Set local explicitely so test also run on OSX
         locale.setlocale(locale.LC_ALL, 'en_GB.UTF-8')
 
-        connection.set_schema_to_public()
+        if kwargs['aliases']:
+            connection.set_schema_to_public()
 
-        tenant2, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test2.localhost",
-            name="Test Too",
-            schema_name="test2",
-            client_name="test2",
-        )
-
-        connection.set_tenant(tenant2)
-        self.init_projects()
-
-        connection.set_schema_to_public()
-
-        tenant, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test.localhost",
-            name="Test",
-            schema_name="test",
-            client_name="test",
-        )
-
-        connection.set_tenant(tenant)
-        self.init_projects()
-
-        try:
-            backend, _created = ExchangeBackend.objects.get_or_create(
-                base_currency='USD',
-                name='openexchangerates.org'
+            tenant2, _created = get_tenant_model().objects.get_or_create(
+                domain_url="test2.localhost",
+                name="Test Too",
+                schema_name="test2",
+                client_name="test2",
             )
-            Rate.objects.update_or_create(backend=backend, currency='USD', defaults={'value': 1})
-            Rate.objects.update_or_create(backend=backend, currency='EUR', defaults={'value': 1.5})
-            Rate.objects.update_or_create(backend=backend, currency='XOF', defaults={'value': 1000})
-            Rate.objects.update_or_create(backend=backend, currency='NGN', defaults={'value': 500})
-            Rate.objects.update_or_create(backend=backend, currency='UGX', defaults={'value': 5000})
-            Rate.objects.update_or_create(backend=backend, currency='KES', defaults={'value': 100})
-        except IntegrityError:
-            pass
 
-        # Single process: set up ES indices before returning so no tests run until they are ready.
-        if parallel <= 1:
-            _setup_es_indices()
+            connection.set_tenant(tenant2)
+            self.init_projects()
 
-        if parallel > 1:
-            for index in range(parallel):
-                connection.creation.clone_test_db(
-                    suffix=index + 1,
-                    verbosity=self.verbosity,
-                    keepdb=self.keepdb,
+            connection.set_schema_to_public()
+
+            tenant, _created = get_tenant_model().objects.get_or_create(
+                domain_url="test.localhost",
+                name="Test",
+                schema_name="test",
+                client_name="test",
+            )
+
+            connection.set_tenant(tenant)
+            self.init_projects()
+
+            try:
+                backend, _created = ExchangeBackend.objects.get_or_create(
+                    base_currency='USD',
+                    name='openexchangerates.org'
                 )
+                Rate.objects.update_or_create(backend=backend, currency='USD', defaults={'value': 1})
+                Rate.objects.update_or_create(backend=backend, currency='EUR', defaults={'value': 1.5})
+                Rate.objects.update_or_create(backend=backend, currency='XOF', defaults={'value': 1000})
+                Rate.objects.update_or_create(backend=backend, currency='NGN', defaults={'value': 500})
+                Rate.objects.update_or_create(backend=backend, currency='UGX', defaults={'value': 5000})
+                Rate.objects.update_or_create(backend=backend, currency='KES', defaults={'value': 100})
+            except IntegrityError:
+                pass
+
+            # Single process: set up ES indices before returning so no tests run until they are ready.
+            if parallel <= 1:
+                _setup_es_indices()
+
+            if parallel > 1:
+                for index in range(parallel):
+                    connection.creation.clone_test_db(
+                        suffix=index + 1,
+                        verbosity=self.verbosity,
+                        keepdb=self.keepdb,
+                    )
 
         return result
-
-    def run_checks(self, *args, **kwargs):
-        return

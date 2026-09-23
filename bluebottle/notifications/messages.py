@@ -103,8 +103,11 @@ class TransitionMessage(object):
     def get_content_text(self, recipient):
         return to_text.handle(self.get_content_html(recipient))
 
+    def get_actual_recipients(self):
+        return [recipient for recipient in self.get_recipients() if recipient]
+
     def get_first_recipient(self):
-        recipients = list(filter(None, self.get_recipients()))
+        recipients = list(filter(None, self.get_actual_recipients()))
         return recipients[0] if recipients else None
 
     def get_message_block_html(self, recipient=None):
@@ -206,7 +209,7 @@ class TransitionMessage(object):
     def get_messages(self, **base_context):
         custom_message = self.options.get('custom_message', '')
         custom_template = self.get_message_template()
-        recipients = list(set(self.get_recipients()))
+        recipients = list(set(self.get_actual_recipients()))
         for recipient in filter(None, recipients):
             with translation.override(recipient.primary_language):
                 if self.send_once and self.already_send(recipient):

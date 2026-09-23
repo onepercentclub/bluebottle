@@ -358,16 +358,17 @@ class CreateNextSlotEffect(Effect):
 class CreatePeriodicParticipantsEffect(Effect):
 
     def post_save(self):
-        for registration in self.instance.activity.registrations.filter(
-            status="accepted"
-        ):
-            PeriodicParticipant.objects.create(
-                user=registration.user,
-                remote_user=registration.remote_user,
-                slot=self.instance,
-                activity=self.instance.activity,
-                registration=registration,
-            )
+        if not hasattr(self.instance.activity, 'origin'):
+            for registration in self.instance.activity.registrations.filter(
+                status="accepted",
+            ):
+                PeriodicParticipant.objects.create(
+                    remote_user=registration.remote_user,
+                    user=registration.user,
+                    slot=self.instance,
+                    activity=self.instance.activity,
+                    registration=registration,
+                )
 
 
 class RescheduleScheduleSlotContributions(Effect):

@@ -77,10 +77,6 @@ class SlotRemove(Remove):
     class Meta:
         proxy = True
 
-    @property
-    def remote_recipients(self):
-        yield self.object.parent.source
-
 
 class DateSlotRemove(Remove):
     @classmethod
@@ -89,6 +85,14 @@ class DateSlotRemove(Remove):
 
     class Meta:
         proxy = True
+
+    @property
+    def local_recipients(self):
+        yield self.actor.slot.source
+
+    @property
+    def remote_recipients(self):
+        yield self.object.parent.source
 
     @property
     def local_contributor(self):
@@ -126,6 +130,10 @@ class ScheduleSlotRemove(Remove):
             scheduleparticipant__slot=self.object.adopted,
             user=self.actor.origin
         )
+
+    @property
+    def remote_recipients(self):
+        yield self.object.parent.source
 
 
 class TeamRemove(Remove):

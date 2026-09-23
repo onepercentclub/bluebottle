@@ -494,6 +494,13 @@ class FederatedGrantApplicationSerializer(BaseFederatedActivitySerializer):
             )
         return super().create(validated_data)
 
+    def update(self, instance, validated_data):
+        if validated_data.get('target'):
+            validated_data['target'] = Money(
+                **validated_data['target']
+            )
+        return super().update(instance, validated_data)
+
 
 class EventAttendanceModeField(serializers.Field):
     def __init__(self, *args, **kwargs):

@@ -66,7 +66,7 @@ class SAMLLoginView(View):
 
         target_url = auth.target_url or "/"
 
-        if target_url and re.match('^\/\w\w\/admin', target_url):
+        if target_url and re.match(r'^/\w\w/admin', target_url):
             # Admin login:
             # Log user in using cookies and redirect directly
             login(request, user)

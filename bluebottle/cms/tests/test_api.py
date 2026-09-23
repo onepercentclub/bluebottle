@@ -32,6 +32,35 @@ from bluebottle.test.factory_models.pages import PageFactory, PlatformPageFactor
 from bluebottle.test.utils import BluebottleTestCase, APITestCase
 
 
+class PageAdminUrlApiTestsMixin(object):
+    admin_change_url_name = None
+
+    def _page_meta(self, user=None):
+        extra = {}
+        if user:
+            extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
+        response = self.client.get(self.url, **extra)
+        self.assertEqual(response.status_code, 200)
+        return response.json()['data'].get('meta') or {}
+
+    def test_admin_url_anonymous(self):
+        self.assertFalse(self._page_meta().get('admin-url'))
+
+    def test_admin_url_regular_user(self):
+        user = BlueBottleUserFactory.create()
+        self.assertFalse(self._page_meta(user).get('admin-url'))
+
+    def test_admin_url_staff(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        expected = reverse(self.admin_change_url_name, args=(self.page.pk,))
+        self.assertEqual(self._page_meta(staff).get('admin-url'), expected)
+
+    def test_admin_url_superuser(self):
+        admin = BlueBottleUserFactory.create(is_superuser=True)
+        expected = reverse(self.admin_change_url_name, args=(self.page.pk,))
+        self.assertEqual(self._page_meta(admin).get('admin-url'), expected)
+
+
 class NewsItemTestCase(BluebottleTestCase):
     """
     Test the news cms endpoint.
@@ -439,10 +468,11 @@ class HomeTestCase(APITestCase):
         self.assertEqual(response.status_code, 403)
 
 
-class PageTestCase(BluebottleTestCase):
+class PageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
     """
     Test the page cms endpoint.
     """
+    admin_change_url_name = 'admin:pages_page_change'
 
     def setUp(self):
         super(PageTestCase, self).setUp()
@@ -450,6 +480,21 @@ class PageTestCase(BluebottleTestCase):
         self.page = PageFactory.create(language='en', slug='about', title='About us')
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
         self.url = reverse('page-detail', args=(self.page.slug, ))
+
+    def test_page_without_placeholder(self):
+        """
+        A page whose 'blog_contents' placeholder row was never created should
+        return an empty block list instead of a 500. See BB-30127.
+        """
+        self.placeholder.delete()
+
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()['data']
+        self.assertEqual(data['attributes']['title'], self.page.title)
+        self.assertEqual(data['relationships']['blocks']['data'], [])
 
     def test_page(self):
         RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
@@ -521,7 +566,8 @@ class PageTestCase(BluebottleTestCase):
         self.assertEqual(data['attributes']['title'], 'Over ons')
 
 
-class PlatformPageTestCase(BluebottleTestCase):
+class PlatformPageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
+    admin_change_url_name = 'admin:pages_platformpage_change'
 
     def setUp(self):
         super(PlatformPageTestCase, self).setUp()
@@ -530,6 +576,21 @@ class PlatformPageTestCase(BluebottleTestCase):
         self.page = PlatformPageFactory.create(title='Start your activity')
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
         self.url = reverse('platform-page-detail', args=(self.page.slug, ))
+
+    def test_page_without_placeholder(self):
+        """
+        A platform page whose 'blog_contents' placeholder row was never created
+        should return an empty block list instead of a 500. See BB-30127.
+        """
+        self.placeholder.delete()
+
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()['data']
+        self.assertEqual(data['attributes']['title'], self.page.title)
+        self.assertEqual(data['relationships']['blocks']['data'], [])
 
     def test_page(self):
         RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')

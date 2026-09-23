@@ -45,7 +45,7 @@ class CollectActivityFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)
     collect_type = factory.SubFactory(CollectTypeFactory)
-    location = factory.SubFactory(GeolocationFactory)
+    location = factory.SubFactory(GeolocationFactory, with_geofeatures=True)
     start = factory.Faker('future_date', end_date="+20d", tzinfo=UTC)
     end = factory.Faker('future_date', end_date="+2d", tzinfo=UTC)
     theme = factory.SubFactory(ThemeFactory)

@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.utils.timezone import now
 
 from bluebottle.activity_pub.effects import SendJoinTeamSlotEffect, SyncEffect, SyncSlotEffect, UnpublishAdoptionEffect
@@ -19,7 +21,8 @@ from bluebottle.time_based.effects.slots import (
     CreateTeamSlotParticipantsEffect, SetContributionsStartEffect, LockActivityEffect
 )
 from bluebottle.time_based.messages import (
-    ChangedMultipleDateNotification, ChangedSingleDateNotification, SlotCancelledNotification
+    ChangedMultipleDateNotification, ChangedSingleDateNotification, SlotCancelledNotification,
+    SpotOpenedNotification,
 )
 from bluebottle.time_based.messages.teams import UserTeamDetailsChangedNotification, \
     CaptainTeamDetailsChangedNotification
@@ -38,6 +41,14 @@ from bluebottle.time_based.states import (
     TimeContributionStateMachine, ParticipantStateMachine
 )
 from bluebottle.time_based.states.participants import DateParticipantStateMachine
+
+
+def activity_registration_deadline_is_not_passed(effect):
+    """
+    Activity registration deadline hasn't passed (checked via the slot's activity).
+    """
+    deadline = effect.instance.activity.registration_deadline
+    return not (deadline and deadline <= date.today())
 
 
 @register(PeriodicSlot)
@@ -418,7 +429,7 @@ def activity_has_no_upcoming_slots(effect):
     """
     return effect.instance.activity.slots.exclude(
         pk=effect.instance.pk
-    ).filter(status__in=['open', 'full']).count() == 0
+    ).filter(status__in=['open', 'full', 'registration_closed']).count() == 0
 
 
 def activity_is_finished(effect):
@@ -431,7 +442,7 @@ def activity_is_finished(effect):
         effect.instance.activity.slots.exclude(
             pk=effect.instance.pk
         ).filter(
-            status__in=['open', 'full']
+            status__in=['open', 'full', 'registration_closed']
         ).count() == 0
     )
     return result
@@ -524,9 +535,30 @@ class DateActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             DateActivitySlotStateMachine.unlock,
             effects=[
+                NotificationEffect(
+                    SpotOpenedNotification,
+                    conditions=[activity_registration_deadline_is_not_passed],
+                ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.reopen,
+                ),
+            ],
+        ),
+
+        TransitionTrigger(
+            DateActivitySlotStateMachine.reopen,
+            effects=[
+                NotificationEffect(
+                    SpotOpenedNotification,
+                    conditions=[
+                        activity_registration_deadline_is_not_passed,
+                        slot_is_not_full,
+                    ],
+                ),
+                TransitionEffect(
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[slot_is_full]
                 ),
             ],
         ),

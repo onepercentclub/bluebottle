@@ -60,7 +60,6 @@ class BaseJoin(Join):
         ).first()
 
     def reapply(self):
-        __import__('ipdb').set_trace()
         self.contributor.states.reapply(save=True)
 
     def apply(self):

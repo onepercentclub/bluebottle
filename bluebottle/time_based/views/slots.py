@@ -17,7 +17,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.serializers import (
     DateActivitySlotSerializer, ScheduleSlotSerializer, TeamScheduleSlotSerializer
 )
-from bluebottle.time_based.views.mixins import BaseSlotIcalView
+from bluebottle.time_based.views.mixins import BaseSlotIcalView, prefetch_my_interests
 from bluebottle.utils.permissions import (
     OneOf,
     ResourcePermission,
@@ -89,7 +89,7 @@ class RelatedDateSlotListView(JsonApiViewMixin, ListAPIView):
         except (ValueError, TypeError):
             pass
 
-        return queryset
+        return prefetch_my_interests(queryset, self.request.user)
 
 
 class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
@@ -104,6 +104,9 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [TenantConditionalOpenClose]
     queryset = DateActivitySlot.objects.all()
     serializer_class = DateActivitySlotSerializer
+
+    def get_queryset(self):
+        return prefetch_my_interests(super().get_queryset(), self.request.user)
 
 
 class ScheduleSlotListView(JsonApiViewMixin, CreateAPIView):

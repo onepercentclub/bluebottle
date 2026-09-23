@@ -21,7 +21,7 @@ from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import (
     AdoptionTypeChoices, Follow, Accept, Event, Place,
-    Recipient, RepetitionModeChoices, Reject
+    Recipient, RepetitionModeChoices, GoodDeed, Reject
 )
 from bluebottle.activity_pub.tasks import publish_to_recipient
 from bluebottle.clients.models import Client
@@ -61,6 +61,13 @@ from bluebottle.time_based.tests.factories import (
     TeamFactory,
     TeamMemberFactory,
 )
+
+_real_geolocation_save = Geolocation.save
+
+
+def _geolocation_save_skip_mapbox(self, *args, **kwargs):
+    kwargs['skip_mapbox_sync'] = True
+    return _real_geolocation_save(self, *args, **kwargs)
 
 
 class ActivityPubClient(TestClient):
@@ -371,7 +378,9 @@ class TemplateTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with httmock.HTTMock(image_mock):
-                with mock.patch.object(Geolocation, 'update_location'):
+                with mock.patch.object(
+                    Geolocation, 'save', _geolocation_save_skip_mapbox
+                ):
                     self.adopted = adapter.adopt(self.event, owner=request.user)
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
@@ -400,7 +409,9 @@ class TemplateTestCase(ActivityPubTestCase):
             self.event = Event.objects.get()
 
             with httmock.HTTMock(image_mock):
-                with mock.patch.object(Geolocation, 'update_location'):
+                with mock.patch.object(
+                    Geolocation, 'save', _geolocation_save_skip_mapbox
+                ):
                     self.adopted = adapter.adopt(self.event)
                     self.assertEqual(self.adopted.owner, follow.default_owner)
 
@@ -465,7 +476,9 @@ class SyncTestCase(ActivityPubTestCase):
             request.user = BlueBottleUserFactory.create()
 
             with httmock.HTTMock(image_mock):
-                with mock.patch.object(Geolocation, 'update_location'):
+                with mock.patch.object(
+                    Geolocation, 'save', _geolocation_save_skip_mapbox
+                ):
                     self.adopted = adapter.adopt(self.event, owner=request.user)
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
@@ -579,7 +592,6 @@ class SyncTestCase(ActivityPubTestCase):
             Accept.objects.filter(object=self.model.activity_pub_model).exists()
         )
 
-    @unittest.expectedFailure
     def test_restore_and_reapprove(self):
         self.test_cancel_adoption()
 
@@ -1093,6 +1105,15 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
     def test_link_manual_succeeded(self):
         self.test_accept()
 
+        with LocalTenant(self.other_tenant):
+            follow = Follow.objects.get()
+            follow.automatic_adoption_activity_types = []
+            follow.save()
+
+        @httmock.urlmatch(netloc='test.localhost')
+        def image_mock(url, request):
+            return self.mock_response
+
         with httmock.HTTMock(image_mock):
             self.create(status='succeeded')
 
@@ -1101,6 +1122,11 @@ class LinkDeedTestCase(LinkTestCase, BluebottleTestCase):
             Recipient.objects.create(actor=self.follow.actor, activity=publish)
 
         with LocalTenant(self.other_tenant):
+            event = GoodDeed.objects.get()
+
+            with httmock.HTTMock(image_mock):
+                adapter.link(event)
+
             link = LinkedActivity.objects.get()
             self.assertEqual(link.status, 'succeeded')
 
@@ -1717,7 +1743,9 @@ class TemplateDateActivityTestCase(TemplateTestCase, BluebottleTestCase):
 
         self.create = create
         self.test_publish = lambda: ActivityPubTestCase.test_publish(self)
-        with mock.patch.object(Geolocation, 'update_location'):
+        with mock.patch.object(
+            Geolocation, 'save', _geolocation_save_skip_mapbox
+        ):
             TemplateTestCase.test_adopt(self)
         with LocalTenant(self.other_tenant):
             self.assertEqual(self.adopted.slots.count(), 1)
@@ -1837,7 +1865,9 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.submit()
 
         self.create = create
-        with mock.patch.object(Geolocation, 'update_location'):
+        with mock.patch.object(
+            Geolocation, 'save', _geolocation_save_skip_mapbox
+        ):
             self.test_join()
 
     def test_sync_shared_slot_location(self):

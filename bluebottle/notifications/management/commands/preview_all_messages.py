@@ -38,7 +38,7 @@ from bluebottle.deeds.models import DeedParticipant
 from bluebottle.funding.models import Payout
 from bluebottle.initiatives.models import Theme
 from bluebottle.notifications.messages import TransitionMessage
-from bluebottle.time_based.models import DateParticipant, DateActivitySlot
+from bluebottle.time_based.models import DateParticipant, DateActivitySlot, Interest
 
 # Import all message modules
 MESSAGE_MODULES = {
@@ -83,6 +83,7 @@ TRIGGER_MODULES = [
     'bluebottle.time_based.triggers.teams',
     'bluebottle.time_based.triggers.contributions',
     'bluebottle.time_based.triggers.activities',
+    'bluebottle.time_based.triggers.interests',
     'bluebottle.grant_management.triggers',
 ]
 
@@ -188,6 +189,30 @@ def analyze_triggers():
 
                     message_triggers[message_class_name].append(trigger_info)
 
+            model_created_pattern = r'ModelCreatedTrigger\s*\(\s*effects=\[(.*?)\]'
+            model_created_matches = re.finditer(model_created_pattern, source_code, re.DOTALL)
+
+            for match in model_created_matches:
+                effects_block = match.group(1)
+
+                notification_matches = re.finditer(notification_pattern, effects_block)
+
+                for notif_match in notification_matches:
+                    message_class_name = notif_match.group(1).strip()
+
+                    trigger_info = {
+                        'transition': 'created',
+                        'state_machine': 'ModelCreated',
+                        'module': trigger_module_path.split('.')[-1],
+                        'full_module': trigger_module_path,
+                        'conditions': []
+                    }
+
+                    if message_class_name not in message_triggers:
+                        message_triggers[message_class_name] = []
+
+                    message_triggers[message_class_name].append(trigger_info)
+
         except Exception as e:
             print(f"Warning: Could not analyze {trigger_module_path}: {e}")
             continue
@@ -249,23 +274,47 @@ class MockMember:
         self.email = "jane.doe@example.com"
         self.primary_language = language
         self.favourite_themes = Theme.objects.none()
+        self.skills = Theme.objects.none()
+        self.place = None
+        self.location = None
 
 
 class MockQueryset:
 
     def __init__(self, elements=None):
-        if not elements:
-            elements = []
-        self.elements = elements
+        self.elements = elements or []
+
+    def _clone(self, elements):
+        return MockQueryset(elements)
 
     def first(self):
-        return self.elements[0]
+        return self.elements[0] if self.elements else None
 
     def last(self):
-        return self.elements[-1]
+        return self.elements[-1] if self.elements else None
 
     def count(self):
         return len(self.elements)
+
+    def all(self):
+        return self._clone(self.elements)
+
+    def filter(self, **kwargs):
+        # SpotOpenedNotification only filters interests by slot; keep this
+        # minimal rather than mimicking the full Django ORM lookup API.
+        elements = self.elements
+        if kwargs.get('slot__isnull') is True:
+            elements = [element for element in elements if element.slot is None]
+        elif 'slot' in kwargs:
+            slot = kwargs['slot']
+            elements = [element for element in elements if element.slot == slot]
+        return self._clone(elements)
+
+    def select_related(self, *args):
+        return self._clone(self.elements)
+
+    def __iter__(self):
+        return iter(self.elements)
 
 
 class MockActivity:
@@ -290,12 +339,26 @@ class MockActivity:
         self.hour_registration_data = None
         self.even_data = None
         self.period = 'weeks'
+        self.is_online = True
+        self.location = None
+        self.interests = MockQueryset([MockInterest(language, activity=self)])
 
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/details/deed/{self.id}/{self.slug}"
 
     def get_admin_url(self):
         return f"https://example.goodup.com/en/admin/activities/deed/{self.id}/{self.slug}"
+
+
+class MockInterest:
+    """Mock Interest object for interest notifications"""
+
+    def __init__(self, language='en', slot=None, activity=None):
+        self.id = 999
+        self.pk = 999
+        self.user = MockMember(language)
+        self.activity = activity
+        self.slot = slot
 
 
 class MockParticipant:
@@ -363,6 +426,8 @@ class MockSlot:
         self.is_online = True
         self.online_meeting_url = "https://example.goodup.com/en/meeting/vzzbxx"
         self.location_hint = ""
+        interest = MockInterest(language, slot=self, activity=self.activity)
+        self.interests = MockQueryset([interest])
 
     @property
     def owner(self):
@@ -664,8 +729,9 @@ def get_mock_object_for_message(message_class, language='en'):
     # Try to use real database objects when available
     try:
         # Check module name first for better matching
-        if 'Matching' in class_name:
-            return MockQueryset([MockActivity(language)])
+        if class_name == 'MatchingActivitiesNotification':
+            # Notification object is the recipient (member), not activities.
+            return MockMember(language)
 
         if 'updates' in module_name:
             from bluebottle.updates.models import Update
@@ -702,6 +768,16 @@ def get_mock_object_for_message(message_class, language='en'):
             return MockGrantApplication(language)
 
         if 'time_based' in module_name:
+            if 'Interest' in class_name:
+                try:
+                    obj = Interest.objects.filter().first()
+                    if obj:
+                        return obj
+                except Exception:
+                    pass
+                activity = MockActivity(language)
+                return MockInterest(language, activity=activity)
+
             # Check for specific time-based types
             if 'Participant' in class_name or 'participant' in module_name:
                 from bluebottle.time_based.models import DateParticipant, PeriodParticipant
@@ -811,6 +887,47 @@ def discover_message_classes(module_path):
         return []
 
 
+def matching_activities_preview_context():
+    """Sample context for MatchingActivitiesNotification mail previews."""
+    return {
+        'count': 3,
+        'profile_incomplete': True,
+        'opt_out_link': '/member/profile?tab=notifications',
+        'activities': [
+            {
+                'title': 'Clean up the local park',
+                'url': 'https://example.goodup.com/en/activities/details/deed/123/clean-up-the-local-park',
+                'image': '/static/assets/news/default-blog-image.png',
+                'expertise': 'Gardening',
+                'theme': 'Environment',
+                'is_online': False,
+                'location': 'Amsterdam',
+                'when': '24 May 2026 10:00 - 13:00',
+            },
+            {
+                'title': 'Teach coding to kids',
+                'url': 'https://example.goodup.com/en/activities/details/deed/124/teach-coding',
+                'image': '/static/assets/news/default-blog-image.png',
+                'expertise': 'Teaching',
+                'theme': 'Education',
+                'is_online': True,
+                'location': None,
+                'when': '1 Jun 2026 14:00 - 16:00',
+            },
+            {
+                'title': 'Community kitchen volunteer',
+                'url': 'https://example.goodup.com/en/activities/details/deed/125/community-kitchen',
+                'image': '/static/assets/news/default-blog-image.png',
+                'expertise': None,
+                'theme': 'Social inclusion',
+                'is_online': False,
+                'location': 'Rotterdam',
+                'when': 'starts immediately - runs indefinitely',
+            },
+        ],
+    }
+
+
 def preview_message(message_class_name, message_class, language='en', output_format='html', verbose=False):
     """Generate preview for a single message"""
     if verbose:
@@ -829,7 +946,10 @@ def preview_message(message_class_name, message_class, language='en', output_for
         print(f"Using: {mock_obj.__class__.__name__} ({obj_type})")
     # Create message instance
     try:
-        message_instance = message_class(mock_obj)
+        preview_options = {}
+        if message_class_name == 'MatchingActivitiesNotification':
+            preview_options['context'] = matching_activities_preview_context()
+        message_instance = message_class(mock_obj, **preview_options)
     except Exception as e:
         print(f"❌ Could not instantiate {message_class_name}: {e}")
         return None

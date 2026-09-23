@@ -586,6 +586,35 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
 
+    def _admin_url(self, user=None):
+        response = self.client.get(self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return response.json()['data']['meta'].get('admin-url')
+
+    def test_admin_url_anonymous(self):
+        self.assertIsNone(self._admin_url())
+
+    def test_admin_url_owner(self):
+        self.assertIsNone(self._admin_url(self.owner))
+
+    def test_admin_url_staff(self):
+        expected = reverse(
+            'admin:initiatives_initiative_change', args=(self.initiative.pk,)
+        )
+        self.assertEqual(
+            self._admin_url(BlueBottleUserFactory.create(is_staff=True)),
+            expected
+        )
+
+    def test_admin_url_superuser(self):
+        expected = reverse(
+            'admin:initiatives_initiative_change', args=(self.initiative.pk,)
+        )
+        self.assertEqual(
+            self._admin_url(BlueBottleUserFactory.create(is_superuser=True)),
+            expected
+        )
+
     def test_get_story_safe(self):
         self.initiative.story = json.dumps({
             'html': (

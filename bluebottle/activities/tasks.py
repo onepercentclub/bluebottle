@@ -134,21 +134,32 @@ def get_matching_activities(user):
     ).order_by(preserved)
 
 
-@app.task
+@app.task(ack_late=False)
+def recommend_user(tenant, user):
+    with LocalTenant(tenant, clear_tenant=True):
+        try:
+            activities = get_matching_activities(user)
+
+            if activities:
+                notification = MatchingActivitiesNotification(user)
+                notification.compose_and_send(activities=activities)
+        except Exception as e:
+            logger.error(e)
+
+
+@app.task(ack_late=False)
+def recommend_tenant(tenant):
+    with LocalTenant(tenant, clear_tenant=True):
+        settings = InitiativePlatformSettings.load()
+        if settings.enable_matching_emails:
+            for user in Member.objects.filter(subscribed=True):
+                recommend_user(tenant, user)
+
+
+@app.task(ack_late=False)
 def recommend():
     for tenant in Client.objects.all():
-        with LocalTenant(tenant, clear_tenant=True):
-            settings = InitiativePlatformSettings.load()
-            if settings.enable_matching_emails:
-                for user in Member.objects.filter(subscribed=True):
-                    try:
-                        activities = get_matching_activities(user)
-
-                        if activities:
-                            notification = MatchingActivitiesNotification(user)
-                            notification.compose_and_send(activities=activities)
-                    except Exception as e:
-                        logger.error(e)
+        recommend_tenant.apply_async(args=[tenant])
 
 
 @app.task

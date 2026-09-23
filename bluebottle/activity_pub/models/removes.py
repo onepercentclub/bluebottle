@@ -88,7 +88,7 @@ class DateSlotRemove(Remove):
 
     @property
     def local_recipients(self):
-        yield self.actor.slot.source
+        yield self.actor.source
 
     @property
     def remote_recipients(self):

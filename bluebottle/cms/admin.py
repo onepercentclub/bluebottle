@@ -371,7 +371,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
                 _('Contact'),
                 {
                     'fields': (
-                        'contact_email', 'contact_phone', 'terminated'
+                        'platform_name', 'contact_email', 'contact_phone', 'terminated'
                     )
                 }
             ),

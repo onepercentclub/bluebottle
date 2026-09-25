@@ -103,13 +103,18 @@ class ChooseOnColorTestCase(SimpleTestCase):
             contrast_ratio(DARK_NEUTRAL, '#0055AA'),
         )
 
+    def test_mid_blue_uses_dark_neutral(self):
+        self.assertEqual(choose_on_color('#3C96DC'), DARK_NEUTRAL)
+        self.assertTrue(passes_aa(DARK_NEUTRAL, '#3C96DC'))
+        self.assertFalse(passes_aa(WHITE, '#3C96DC'))
+
     def test_neither_passes_uses_higher_contrast(self):
-        self.assertEqual(choose_on_color('#888888'), WHITE)
-        self.assertFalse(passes_aa(WHITE, '#888888'))
-        self.assertFalse(passes_aa(DARK_NEUTRAL, '#888888'))
+        self.assertEqual(choose_on_color('#777777'), WHITE)
+        self.assertFalse(passes_aa(WHITE, '#777777'))
+        self.assertFalse(passes_aa(DARK_NEUTRAL, '#777777'))
         self.assertGreater(
-            contrast_ratio(WHITE, '#888888'),
-            contrast_ratio(DARK_NEUTRAL, '#888888'),
+            contrast_ratio(WHITE, '#777777'),
+            contrast_ratio(DARK_NEUTRAL, '#777777'),
         )
 
     def test_missing_fill_returns_none(self):
@@ -138,18 +143,26 @@ class ApplyOnColorsTestCase(SimpleTestCase):
         self.assertEqual(settings.action_text_color, DARK_NEUTRAL)
         self.assertEqual(settings.description_text_color, WHITE)
 
-    def test_leaves_text_color_when_fill_is_missing(self):
+    def test_clears_derived_colours_when_fill_is_missing(self):
         class Settings:
             action_color = None
             action_text_color = '#EEEEEE'
+            alternative_link_color = '#112233'
+            action_on_tint_color = '#445566'
             description_color = ''
             description_text_color = '#123456'
+            description_on_background_color = '#654321'
+            description_on_tint_color = '#ABCDEF'
 
         settings = Settings()
         apply_on_colors(settings)
 
-        self.assertEqual(settings.action_text_color, '#EEEEEE')
-        self.assertEqual(settings.description_text_color, '#123456')
+        self.assertIsNone(settings.action_text_color)
+        self.assertIsNone(settings.alternative_link_color)
+        self.assertIsNone(settings.action_on_tint_color)
+        self.assertIsNone(settings.description_text_color)
+        self.assertIsNone(settings.description_on_background_color)
+        self.assertIsNone(settings.description_on_tint_color)
 
 
 class EnsureContrastTestCase(SimpleTestCase):
@@ -174,8 +187,10 @@ class EnsureContrastTestCase(SimpleTestCase):
 
 class TintTestCase(SimpleTestCase):
 
-    def test_tint_ninety_matches_tinycolor_mix(self):
+    def test_tint_stops_match_tinycolor_mix(self):
+        self.assertEqual(mix_with_white('#3C96DC', 95), '#F5FAFD')
         self.assertEqual(mix_with_white('#3C96DC', 90), '#ECF5FC')
+        self.assertEqual(mix_with_white('#3C96DC', 80), '#D8EAF8')
 
     def test_tint_white_stays_white(self):
         self.assertEqual(mix_with_white('#FFFFFF', 90), '#FFFFFF')
@@ -201,12 +216,20 @@ class ApplyPatternColorsTestCase(SimpleTestCase):
         self.assertTrue(passes_aa(settings.alternative_link_color, WHITE))
         self.assertTrue(passes_aa(settings.alternative_link_color, PALE_GREY))
         self.assertTrue(
+            passes_aa(settings.action_on_tint_100_color, mix_with_white('#FFFF00', 95))
+        )
+        self.assertTrue(
             passes_aa(settings.action_on_tint_color, mix_with_white('#FFFF00', 90))
+        )
+        self.assertTrue(
+            passes_aa(settings.action_on_tint_300_color, mix_with_white('#FFFF00', 80))
         )
 
         self.assertEqual(settings.description_text_color, WHITE)
         self.assertEqual(settings.description_on_background_color, '#281E50')
+        self.assertEqual(settings.description_on_tint_100_color, '#281E50')
         self.assertEqual(settings.description_on_tint_color, '#281E50')
+        self.assertEqual(settings.description_on_tint_300_color, '#281E50')
 
     def test_pale_action_blue_is_darkened_for_text_and_tint(self):
         class Settings:
@@ -225,5 +248,11 @@ class ApplyPatternColorsTestCase(SimpleTestCase):
         self.assertTrue(passes_aa(settings.alternative_link_color, WHITE))
         self.assertTrue(passes_aa(settings.alternative_link_color, PALE_GREY))
         self.assertTrue(
+            passes_aa(settings.action_on_tint_100_color, mix_with_white('#3C96DC', 95))
+        )
+        self.assertTrue(
             passes_aa(settings.action_on_tint_color, mix_with_white('#3C96DC', 90))
+        )
+        self.assertTrue(
+            passes_aa(settings.action_on_tint_300_color, mix_with_white('#3C96DC', 80))
         )

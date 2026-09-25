@@ -7,8 +7,25 @@ def backfill_accessible_colours(apps, schema_editor):
     settings = SitePlatformSettings.objects.first()
     if not settings:
         return
-    from bluebottle.cms.utils.color_contrast import apply_on_colors
-    apply_on_colors(settings)
+    from bluebottle.cms.utils.color_contrast import _apply_brand_patterns
+    action = getattr(settings, 'action_color', None)
+    if action:
+        _apply_brand_patterns(
+            settings,
+            action,
+            'action_text_color',
+            'alternative_link_color',
+            {200: 'action_on_tint_color'},
+        )
+    description = getattr(settings, 'description_color', None)
+    if description:
+        _apply_brand_patterns(
+            settings,
+            description,
+            'description_text_color',
+            'description_on_background_color',
+            {200: 'description_on_tint_color'},
+        )
     settings.save()
 
 

@@ -748,11 +748,25 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             'Automatically darkened so the action colour stays readable as text on white or grey'
         )
     )
+    action_on_tint_100_color = ColorField(
+        _('Action text on light tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a lighter tint of the action colour'
+        )
+    )
     action_on_tint_color = ColorField(
         _('Action text on tint'), null=True, blank=True,
         default=None,
         help_text=_(
             'Automatically darkened so text stays readable on a light tint of the action colour'
+        )
+    )
+    action_on_tint_300_color = ColorField(
+        _('Action text on strong tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a stronger tint of the action colour'
         )
     )
 
@@ -785,11 +799,25 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             'Automatically darkened so the description colour stays readable as text on white or grey'
         )
     )
+    description_on_tint_100_color = ColorField(
+        _('Description text on light tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a lighter tint of the description colour'
+        )
+    )
     description_on_tint_color = ColorField(
         _('Description text on tint'), null=True, blank=True,
         default=None,
         help_text=_(
             'Automatically darkened so text stays readable on a light tint of the description colour'
+        )
+    )
+    description_on_tint_300_color = ColorField(
+        _('Description text on strong tint'), null=True, blank=True,
+        default=None,
+        help_text=_(
+            'Automatically darkened so text stays readable on a stronger tint of the description colour'
         )
     )
     footer_color = ColorField(

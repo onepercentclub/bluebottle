@@ -7,9 +7,13 @@ from django.utils.translation import gettext_lazy as _
 
 PAGE_BACKGROUND = '#FFFFFF'
 WHITE = '#FFFFFF'
-DARK_NEUTRAL = '#4A4A4A'
+DARK_NEUTRAL = '#2A2A2A'
 PALE_GREY = '#EEEEEE'
-TINT_AMOUNT = 90
+TINT_STOPS = {
+    100: 95,
+    200: 90,
+    300: 80,
+}
 
 
 @dataclass(frozen=True)
@@ -143,7 +147,7 @@ def choose_on_color(background: Optional[str]) -> Optional[str]:
     return max(candidates, key=lambda item: item[0])[1]
 
 
-def _apply_brand_patterns(settings, brand_color, text_attr, on_background_attr, on_tint_attr):
+def _apply_brand_patterns(settings, brand_color, text_attr, on_background_attr, tint_attrs):
     on_color = choose_on_color(brand_color)
     if on_color:
         setattr(settings, text_attr, on_color)
@@ -152,10 +156,20 @@ def _apply_brand_patterns(settings, brand_color, text_attr, on_background_attr, 
     if on_background:
         setattr(settings, on_background_attr, on_background)
 
-    tint = mix_with_white(brand_color, TINT_AMOUNT)
-    on_tint = ensure_contrast(brand_color, tint) if tint else None
-    if on_tint:
-        setattr(settings, on_tint_attr, on_tint)
+    for stop, amount in TINT_STOPS.items():
+        attr = tint_attrs.get(stop)
+        if not attr:
+            continue
+        tint = mix_with_white(brand_color, amount)
+        on_tint = ensure_contrast(brand_color, tint) if tint else None
+        if on_tint:
+            setattr(settings, attr, on_tint)
+
+
+def _clear_derived_fields(settings, fields) -> None:
+    for attr in fields:
+        if hasattr(settings, attr):
+            setattr(settings, attr, None)
 
 
 def apply_on_colors(settings) -> None:
@@ -166,7 +180,22 @@ def apply_on_colors(settings) -> None:
             action,
             'action_text_color',
             'alternative_link_color',
-            'action_on_tint_color',
+            {
+                100: 'action_on_tint_100_color',
+                200: 'action_on_tint_color',
+                300: 'action_on_tint_300_color',
+            },
+        )
+    else:
+        _clear_derived_fields(
+            settings,
+            (
+                'action_text_color',
+                'alternative_link_color',
+                'action_on_tint_100_color',
+                'action_on_tint_color',
+                'action_on_tint_300_color',
+            ),
         )
 
     description = getattr(settings, 'description_color', None)
@@ -176,7 +205,22 @@ def apply_on_colors(settings) -> None:
             description,
             'description_text_color',
             'description_on_background_color',
-            'description_on_tint_color',
+            {
+                100: 'description_on_tint_100_color',
+                200: 'description_on_tint_color',
+                300: 'description_on_tint_300_color',
+            },
+        )
+    else:
+        _clear_derived_fields(
+            settings,
+            (
+                'description_text_color',
+                'description_on_background_color',
+                'description_on_tint_100_color',
+                'description_on_tint_color',
+                'description_on_tint_300_color',
+            ),
         )
 
 

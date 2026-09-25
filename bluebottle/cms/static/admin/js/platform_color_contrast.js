@@ -2,7 +2,7 @@
     'use strict';
 
     var WHITE = '#FFFFFF';
-    var DARK_NEUTRAL = '#4A4A4A';
+    var DARK_NEUTRAL = '#2A2A2A';
     var PALE_GREY = '#EEEEEE';
     var TINT_AMOUNT = 90;
     var FIELD_IDS = {

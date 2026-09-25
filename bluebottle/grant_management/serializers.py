@@ -1,4 +1,5 @@
 from builtins import object
+
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField,
@@ -17,9 +18,7 @@ from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import BankAccount
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding_stripe.models import StripePayoutAccount
-
 from bluebottle.geo.models import Geolocation
-
 from bluebottle.grant_management.models import (
     GrantApplication, GrantDonor, GrantFund, GrantPayout,
 )

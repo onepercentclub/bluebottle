@@ -7,7 +7,12 @@ from bluebottle.activities.serializers.preview import (
     ActivityPreviewSlottedLocationSerializer,
 )
 from bluebottle.activities.serializers.serializers import ActivityPreviewSerializer
+from bluebottle.activities.utils import ResourceRolesField
+from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.offices.tests.factories import LocationFactory, OfficeSubRegionFactory
+from bluebottle.segments.tests.factories import SegmentFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -321,3 +326,81 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
 
         self.assertEqual(serializer.to_representation(activity), 'Netherlands')
         self.assertFalse(serializer.has_multiple_unresolved_locations(activity))
+
+
+class ResourceRolesFieldTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.activity = DeedFactory.create()
+
+    def _roles(self, user):
+        request = RequestFactory().get('/')
+        request.user = user
+        field = ResourceRolesField()
+        field._context = {'request': request}
+        return field.to_representation(self.activity)
+
+    def test_other_user_has_no_roles(self):
+        self.assertEqual(
+            self._roles(BlueBottleUserFactory.create()),
+            {'manager': False, 'reviewer': False},
+        )
+
+    def test_owner_is_manager(self):
+        self.assertEqual(
+            self._roles(self.activity.owner),
+            {'manager': True, 'reviewer': False},
+        )
+
+    def test_activity_manager_is_manager(self):
+        manager = BlueBottleUserFactory.create()
+        self.activity.initiative.activity_managers.add(manager)
+
+        self.assertEqual(
+            self._roles(manager),
+            {'manager': True, 'reviewer': False},
+        )
+
+    def test_staff_is_reviewer(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+
+        self.assertEqual(
+            self._roles(staff),
+            {'manager': False, 'reviewer': True},
+        )
+
+    def test_superuser_is_reviewer(self):
+        superuser = BlueBottleUserFactory.create(is_superuser=True)
+
+        self.assertEqual(
+            self._roles(superuser),
+            {'manager': False, 'reviewer': True},
+        )
+
+    def test_staff_subregion_manager_only_reviews_matching_region(self):
+        managed = OfficeSubRegionFactory.create()
+        other = OfficeSubRegionFactory.create()
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        staff.subregion_manager.add(managed)
+        self.activity.office_location = LocationFactory.create(subregion=other)
+        self.activity.save()
+
+        self.assertFalse(self._roles(staff)['reviewer'])
+
+        self.activity.office_location = LocationFactory.create(subregion=managed)
+        self.activity.save()
+
+        self.assertTrue(self._roles(staff)['reviewer'])
+
+    def test_staff_segment_manager_only_reviews_matching_segment(self):
+        managed = SegmentFactory.create()
+        other = SegmentFactory.create()
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        staff.segment_manager.add(managed)
+        self.activity.segments.add(other)
+
+        self.assertFalse(self._roles(staff)['reviewer'])
+
+        self.activity.segments.add(managed)
+
+        self.assertTrue(self._roles(staff)['reviewer'])

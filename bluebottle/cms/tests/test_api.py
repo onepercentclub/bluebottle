@@ -11,7 +11,7 @@ from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 
 from bluebottle.cms.models import (
-    QuotesContent, PeopleContent,
+    QuotesContent, PeopleContent, PollContent,
     HomePage, SlidesContent, SitePlatformSettings,
     LinksContent, StepsContent, HomepageStatisticsContent, LogosContent,
     CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
@@ -31,6 +31,37 @@ from bluebottle.test.factory_models.cms import (
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory, PlatformPageFactory
 from bluebottle.test.utils import BluebottleTestCase, APITestCase
+from bluebottle.voting.models import Poll
+from bluebottle.voting.tests.factories import PollOptionFactory, PollVoteFactory
+
+
+class PageAdminUrlApiTestsMixin(object):
+    admin_change_url_name = None
+
+    def _page_meta(self, user=None):
+        extra = {}
+        if user:
+            extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
+        response = self.client.get(self.url, **extra)
+        self.assertEqual(response.status_code, 200)
+        return response.json()['data'].get('meta') or {}
+
+    def test_admin_url_anonymous(self):
+        self.assertFalse(self._page_meta().get('admin-url'))
+
+    def test_admin_url_regular_user(self):
+        user = BlueBottleUserFactory.create()
+        self.assertFalse(self._page_meta(user).get('admin-url'))
+
+    def test_admin_url_staff(self):
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        expected = reverse(self.admin_change_url_name, args=(self.page.pk,))
+        self.assertEqual(self._page_meta(staff).get('admin-url'), expected)
+
+    def test_admin_url_superuser(self):
+        admin = BlueBottleUserFactory.create(is_superuser=True)
+        expected = reverse(self.admin_change_url_name, args=(self.page.pk,))
+        self.assertEqual(self._page_meta(admin).get('admin-url'), expected)
 
 
 class NewsItemTestCase(BluebottleTestCase):
@@ -227,6 +258,70 @@ class HomeTestCase(APITestCase):
             quote['attributes']['email'],
             'test@example.com'
         )
+
+    def test_poll(self):
+        poll = Poll()
+        poll.set_current_language('en')
+        poll.title = 'Favourite colour'
+        poll.subtitle = 'Pick one'
+        poll.save()
+        block = PollContent.objects.create_for_placeholder(
+            self.placeholder, poll=poll
+        )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': str(block.pk), 'type': 'pages/blocks/poll'}
+        )
+
+        poll_block = get_include(response, 'pages/blocks/poll')
+        self.assertNotIn('title', poll_block['attributes'])
+        self.assertNotIn('sub-title', poll_block['attributes'])
+        self.assertEqual(
+            poll_block['relationships']['poll']['data'],
+            {'id': str(poll.pk), 'type': 'polls'}
+        )
+
+        included_poll = get_include(response, 'polls')
+        self.assertEqual(included_poll['attributes']['title'], 'Favourite colour')
+        self.assertEqual(included_poll['attributes']['subtitle'], 'Pick one')
+        self.assertEqual(included_poll['attributes']['votes-cast'], 0)
+        self.assertEqual(included_poll['relationships']['my-vote']['data'], None)
+
+    def test_poll_closed_includes_results(self):
+        poll = Poll()
+        poll.set_current_language('en')
+        poll.title = 'Favourite colour'
+        poll.subtitle = 'Pick one'
+        poll.status = 'closed'
+        poll.save()
+        winner = PollOptionFactory.create(poll=poll, title='Blue')
+        other = PollOptionFactory.create(poll=poll, title='Green')
+        PollVoteFactory.create_batch(2, poll=poll, option=winner)
+        PollVoteFactory.create(poll=poll, option=other)
+        PollContent.objects.create_for_placeholder(
+            self.placeholder, poll=poll
+        )
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+        included_poll = get_include(response, 'polls')
+        self.assertEqual(included_poll['attributes']['status'], 'closed')
+        self.assertEqual(included_poll['attributes']['votes-cast'], 3)
+
+        options = {
+            included['attributes']['title']: included['attributes']
+            for included in response.json()['included']
+            if included['type'] == 'polls/options'
+        }
+        self.assertEqual(options['Blue']['votes'], 2)
+        self.assertTrue(options['Blue']['winner'])
+        self.assertEqual(options['Green']['votes'], 1)
+        self.assertFalse(options['Green']['winner'])
 
     def test_logos(self):
         block = LogosContent.objects.create_for_placeholder(self.placeholder)
@@ -440,10 +535,11 @@ class HomeTestCase(APITestCase):
         self.assertEqual(response.status_code, 403)
 
 
-class PageTestCase(BluebottleTestCase):
+class PageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
     """
     Test the page cms endpoint.
     """
+    admin_change_url_name = 'admin:pages_page_change'
 
     def setUp(self):
         super(PageTestCase, self).setUp()
@@ -537,7 +633,8 @@ class PageTestCase(BluebottleTestCase):
         self.assertEqual(data['attributes']['title'], 'Over ons')
 
 
-class PlatformPageTestCase(BluebottleTestCase):
+class PlatformPageTestCase(PageAdminUrlApiTestsMixin, BluebottleTestCase):
+    admin_change_url_name = 'admin:pages_platformpage_change'
 
     def setUp(self):
         super(PlatformPageTestCase, self).setUp()

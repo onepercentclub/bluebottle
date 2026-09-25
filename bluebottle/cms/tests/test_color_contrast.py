@@ -243,7 +243,7 @@ class ApplyPatternColorsTestCase(SimpleTestCase):
         settings = Settings()
         apply_on_colors(settings)
 
-        self.assertEqual(settings.action_text_color, WHITE)
+        self.assertEqual(settings.action_text_color, DARK_NEUTRAL)
         self.assertNotEqual(settings.alternative_link_color, '#3C96DC')
         self.assertTrue(passes_aa(settings.alternative_link_color, WHITE))
         self.assertTrue(passes_aa(settings.alternative_link_color, PALE_GREY))

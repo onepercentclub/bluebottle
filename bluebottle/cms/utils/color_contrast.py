@@ -224,7 +224,12 @@ def apply_on_colors(settings) -> None:
         )
 
 
-def _evaluate_pair(pair_id: str, label: str, foreground: Optional[str], background: Optional[str]) -> Optional[PairResult]:
+def _evaluate_pair(
+    pair_id: str,
+    label: str,
+    foreground: Optional[str],
+    background: Optional[str],
+) -> Optional[PairResult]:
     foreground = _normalize_hex(foreground)
     background = _normalize_hex(background)
     if not foreground or not background:

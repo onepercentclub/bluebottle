@@ -95,6 +95,33 @@ def run(*args):
                     activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
                 ),
             )
+
+            unscheduled_schedule_contributions = TimeContribution.objects.filter(
+                status='succeeded',
+                contributor__in=ScheduleParticipant.objects.filter(
+                    activity__team_activity='individuals',
+                    user__isnull=False,
+                    status__in=('new', 'accepted', 'unscheduled'),
+                    registration__status__in=('accepted', 'new'),
+                    activity__status__in=('open', 'registration_closed', 'full'),
+                ),
+            )
+            unscheduled_team_schedule_contributions = TimeContribution.objects.filter(
+                status='succeeded',
+                contributor__in=TeamScheduleParticipant.objects.filter(
+                    activity__team_activity='teams',
+                    user__isnull=False,
+                    status__in=('new', 'accepted', 'unscheduled'),
+                    team_member__status__in=('active',),
+                    team_member__team__status__in=('accepted',),
+                    activity__status__in=('open', 'registration_closed', 'full'),
+                ),
+            )
+            succeeded_should_be_new = (
+                unscheduled_schedule_contributions |
+                unscheduled_team_schedule_contributions
+            )
+
             succeeded_contributions = (
                 succeeded_date_contributions |
                 succeeded_periodic_contributions |
@@ -400,6 +427,7 @@ def run(*args):
                 registrations_without_participant.count() or
                 date_participants_without_registration.count() or
                 new_should_be_failed.count() or
+                succeeded_should_be_new.count() or
                 new_succeeded_collect_contributions.count()
             )
             if errors:
@@ -429,6 +457,11 @@ def run(*args):
                     print(f'new but should be failed: {new_should_be_failed.count()}')
                     if verbose:
                         print(f'IDs: {" ".join([str(c.id) for c in new_should_be_failed])}')
+                if succeeded_should_be_new.count():
+                    print(f'succeeded but should be new (never scheduled): '
+                          f'{succeeded_should_be_new.count()}')
+                    if verbose:
+                        print(f'IDs: {" ".join([str(c.id) for c in succeeded_should_be_new])}')
                 if new_should_be_succeeded.count():
                     print(f'new but should be succeeded: {new_should_be_succeeded.count()}')
                     if verbose:
@@ -501,6 +534,14 @@ def run(*args):
                     failed_collect_contributions.update(status='succeeded')
                     failed_contributions_new.update(status='new')
                     new_succeeded_collect_contributions.update(status='succeeded')
+
+                    unscheduled_ids = list(
+                        succeeded_should_be_new.values_list('id', flat=True)
+                    )
+                    TimeContribution.objects.filter(
+                        id__in=unscheduled_ids
+                    ).update(status='new')
+
                     for registration in registrations_without_participant.all():
                         slot = registration.activity.slots.last()
                         participant = DateParticipant(

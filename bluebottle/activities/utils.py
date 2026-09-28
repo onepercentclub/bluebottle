@@ -258,7 +258,7 @@ class BaseActivitySerializer(ModelSerializer):
 
     answers = PolymorphicResourceRelatedField(
         ActivityAnswerSerializer,
-        queryset=ActivityAnswer.objects.all(),
+        read_only=True,
         many=True
     )
 

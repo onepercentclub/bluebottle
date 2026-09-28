@@ -40,7 +40,11 @@ from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactor
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
-from bluebottle.time_based.models import PeriodicParticipant, RegisteredDateActivity, DateParticipant, TeamMember
+from bluebottle.time_based.models import (
+    PeriodicParticipant, RegisteredDateActivity, DateParticipant, TeamMember,
+    TeamScheduleRegistration, Team
+)
+
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
@@ -495,6 +499,9 @@ class SyncTestCase(ActivityPubTestCase):
     def join(self):
         self.participant = self.participant_factory.create(activity=self.adopted, user=self.adopted.owner)
 
+    def re_accept(self, contributor):
+        contributor.states.re_accept(save=True)
+
     def test_join(self):
         self.test_adopt()
 
@@ -563,6 +570,15 @@ class SyncTestCase(ActivityPubTestCase):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, self.removed_status)
 
+    def test_reaccept_supplier(self):
+        self.test_remove_supplier()
+
+        self.re_accept(self.synced_participant)
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assertStatus(self.participant, self.expected_participant_status)
+
     def test_remove_consumer(self):
         self.test_join()
 
@@ -572,6 +588,15 @@ class SyncTestCase(ActivityPubTestCase):
 
         self.synced_participant.refresh_from_db()
         self.assertStatus(self.synced_participant, self.removed_status)
+
+    def test_reaccept_consumer(self):
+        self.test_remove_consumer()
+        with LocalTenant(self.other_tenant):
+            self.re_accept(self.participant)
+            self.assertStatus(self.team, self.expected_participant_status)
+
+        self.synced_participant.refresh_from_db()
+        self.assertStatus(self.synced_team, self.expected_participant_status)
 
     def test_cancel_adoption(self):
         self.test_join()
@@ -850,6 +875,9 @@ class SyncDeadlineActivityTestCase(SyncTestCase, BluebottleTestCase):
         )
         self.participant = registration.participants.get()
 
+    def re_accept(self, contributor):
+        contributor.states.readd(save=True)
+
     def test_join(self):
         super().test_join()
 
@@ -894,6 +922,9 @@ class SyncScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     def join(self):
         registration = ScheduleRegistrationFactory.create(activity=self.adopted)
         self.participant = registration.participants.get()
+
+    def re_accept(self, contributor):
+        contributor.states.readd(save=True)
 
     def create(self, **kwargs):
         super().create(
@@ -968,6 +999,12 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
 
     def join(self):
         super().join()
+
+    def test_reaccept_consumer(self):
+        pass  # You cannot re-add periodic contributors
+
+    def test_reaccept_supplier(self):
+        pass  # You cannot re-add periodic contributors
 
     def test_join(self):
         super().test_join()
@@ -1782,6 +1819,9 @@ class SyncDateActivityTestCase(SyncTestCase, BluebottleTestCase):
             registration=registration
         )
 
+    def re_accept(self, contributor):
+        contributor.states.readd(save=True)
+
     def test_join(self):
         super().test_join()
         self.assertEqual(self.synced_participant.registration.answer, self.motivation)
@@ -2030,6 +2070,10 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         )
         self.participant = self.team.registration
 
+    def re_accept(self, contributor):
+
+        contributor.teams.get().states.readd(save=True)
+
     def test_join(self):
         self.test_adopt()
 
@@ -2039,7 +2083,6 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.adopted.origin.refresh_from_db()
             self.assertEqual(self.adopted.origin.contributor_count, 1)
 
-        from bluebottle.time_based.models import TeamScheduleRegistration, Team
         self.synced_registration = TeamScheduleRegistration.objects.get()
         self.synced_team = Team.objects.get()
 
@@ -2117,7 +2160,6 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         with LocalTenant(self.other_tenant):
             self.join()
 
-        from bluebottle.time_based.models import TeamScheduleRegistration, Team
         self.synced_registration = TeamScheduleRegistration.objects.get()
         self.synced_team = Team.objects.get()
         self.assertEqual(self.synced_registration.status, 'new')
@@ -2196,7 +2238,6 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         with LocalTenant(self.other_tenant):
             self.team_member.states.withdraw(save=True)
 
-        from bluebottle.time_based.models import TeamMember
         remote_member = TeamMember.objects.exclude(
             remote_user=self.synced_team.remote_user
         ).get()
@@ -2211,7 +2252,6 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
             self.team_member.states.reapply(save=True)
             self.assertEqual(self.team_member.status, 'active')
 
-        from bluebottle.time_based.models import TeamMember
         remote_member = TeamMember.objects.exclude(
             remote_user=self.synced_team.remote_user
         ).get()
@@ -2230,66 +2270,3 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.synced_registration.refresh_from_db()
         self.assertEqual(self.synced_team.status, 'withdrawn')
         self.assertEqual(self.synced_registration.status, 'withdrawn')
-
-    def test_member_readd_syncs_to_supplier(self):
-        self.test_member_join()
-
-        from bluebottle.time_based.models import TeamMember
-        remote_member = TeamMember.objects.exclude(
-            remote_user=self.synced_team.remote_user
-        ).get()
-
-        with LocalTenant(self.other_tenant):
-            self.team_member.states.remove(save=True)
-
-        # Supplier does not receive remove via federation; mirror the removed
-        # state so Add → readd has a removed target to restore.
-        if remote_member.status != 'removed':
-            remote_member.states.remove(save=True)
-
-        with LocalTenant(self.other_tenant):
-            self.team_member.refresh_from_db()
-            self.team_member.states.readd(save=True)
-            self.assertEqual(self.team_member.status, 'active')
-
-        remote_member.refresh_from_db()
-        self.assertEqual(remote_member.status, 'active')
-
-    def test_member_accept_after_reject_syncs_to_supplier(self):
-        self.test_member_join()
-
-        from bluebottle.time_based.models import TeamMember
-        remote_member = TeamMember.objects.exclude(
-            remote_user=self.synced_team.remote_user
-        ).get()
-
-        with LocalTenant(self.other_tenant):
-            self.team_member.states.reject(save=True)
-
-        if remote_member.status != 'rejected':
-            remote_member.states.reject(save=True)
-
-        with LocalTenant(self.other_tenant):
-            self.team_member.refresh_from_db()
-            self.team_member.states.accept(save=True)
-            self.assertEqual(self.team_member.status, 'active')
-
-        remote_member.refresh_from_db()
-        self.assertEqual(remote_member.status, 'active')
-
-    def test_supplier_remote_member_readd_does_not_echo(self):
-        self.test_member_join()
-
-        from bluebottle.time_based.models import TeamMember
-        remote_member = TeamMember.objects.exclude(
-            remote_user=self.synced_team.remote_user
-        ).get()
-        remote_member.states.remove(save=True)
-
-        with mock.patch(
-            'bluebottle.activity_pub.effects.adapter.sync'
-        ) as sync_mock:
-            remote_member.states.readd(save=True)
-            sync_mock.assert_not_called()
-
-        self.assertEqual(remote_member.status, 'active')

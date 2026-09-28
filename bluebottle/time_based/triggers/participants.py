@@ -6,8 +6,8 @@ from bluebottle.activities.triggers import (
     ContributorTriggers
 )
 from bluebottle.activity_pub.effects import (
-    SendJoinEffect, SendLeaveEffect, SendJoinSlotEffect,
-    SendJoinDateSlotEffect, SyncRelatedEvent, SendRemoveEffect
+    SendJoinEffect, SendSupplierJoinEffect, SendLeaveEffect, SendJoinSlotEffect, SendSupplierJoinSlotEffect,
+    SendJoinDateSlotEffect, SendSupplierJoinDateSlotEffect, SyncRelatedEvent, SendRemoveEffect
 )
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
@@ -148,6 +148,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                     "contributions",
                     ContributionStateMachine.fail,
                 ),
+                SendLeaveEffect
             ],
         ),
         TransitionTrigger(
@@ -342,11 +343,10 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             RegistrationParticipantStateMachine.readd,
             effects=[
                 SendJoinEffect,
+                SendSupplierJoinEffect,
+                SyncRelatedEvent,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
-                    conditions=[
-                        registration_is_accepted,
-                    ],
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -658,7 +658,6 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 CreateScheduleContributionEffect,
                 CreateRegistrationEffect,
                 CreateScheduleSlotEffect,
-                SendJoinSlotEffect,
                 SyncRelatedEvent,
                 TransitionEffect(
                     ScheduleParticipantStateMachine.add,
@@ -823,6 +822,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                SendJoinSlotEffect,
+                SendSupplierJoinSlotEffect
             ],
         ),
         TransitionTrigger(
@@ -960,6 +961,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 TransitionEffect(
                     ScheduleParticipantStateMachine.unschedule, conditions=[has_no_slot]
                 ),
+                SendJoinSlotEffect,
             ],
         ),
     ]
@@ -1475,6 +1477,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             DateParticipantStateMachine.readd,
             effects=[
                 SendJoinDateSlotEffect,
+                SendSupplierJoinDateSlotEffect,
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(
                     DateParticipantStateMachine.accept,

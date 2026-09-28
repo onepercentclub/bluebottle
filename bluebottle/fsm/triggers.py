@@ -17,12 +17,13 @@ class TriggerManager(object):
 
 
 class BoundTrigger(object):
-    def __init__(self, instance, trigger):
+    def __init__(self, instance, trigger, **options):
         self.instance = instance
         self.trigger = trigger
+        self.options = options
 
     def execute(self, previous_effects, **options):
-        return self.trigger.execute(self.instance, previous_effects, **options)
+        return self.trigger.execute(self.instance, previous_effects, **dict(**options, **self.options))
 
 
 @python_2_unicode_compatible
@@ -118,13 +119,13 @@ class TransitionTrigger(Trigger):
 
 
 @receiver(pre_state_transition)
-def transition_trigger(sender, instance, transition, **kwargs):
+def transition_trigger(sender, instance, transition, signal, **kwargs):
     if issubclass(sender, TriggerMixin):
         instance._transitions.append(transition)
         if hasattr(instance, 'triggers'):
             for trigger in instance.triggers.triggers:
                 if isinstance(trigger, TransitionTrigger) and trigger.transition == transition:
-                    instance._triggers.append(BoundTrigger(instance, trigger))
+                    instance._triggers.append(BoundTrigger(instance, trigger, **kwargs))
 
 
 def register(model_cls):

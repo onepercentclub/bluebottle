@@ -1,11 +1,15 @@
 from django.db import models
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.module_loading import import_string
+
+from bluebottle.activities.models import Organizer
 
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models.actors import Organization, Team
 from bluebottle.activity_pub.models.base import ActivityPubModel
 from bluebottle.activity_pub.models.events import GoodDeed, CollectCampaign, DoGoodEvent, SubEvent
 from bluebottle.activity_pub.models.activities import Activity
+
 
 from bluebottle.utils.utils import get_subclasses
 
@@ -52,22 +56,41 @@ class BaseJoin(Join):
         proxy = True
 
     @property
-    def contributor(self):
-        adapter.adopt(self.actor)
+    def local_contributor(self):
+        return self.object.origin.contributors.not_instance_of(Organizer).get(
+            remote_user=self.actor.adopted
+        )
 
-        return self.contributor_model.objects.filter(
-            activity=self.object.origin, remote_user=self.actor.adopted
-        ).first()
+    @property
+    def remote_contributor(self):
+        return self.object.adopted.contributors.not_instance_of(Organizer).get(
+            user=self.actor.origin
+        )
+
+    @property
+    def contributor(self):
+        try:
+            if self.object.is_local:
+                return self.local_contributor
+            else:
+                return self.remote_contributor
+        except ObjectDoesNotExist:
+            pass
 
     def reapply(self):
-        self.contributor.states.reapply(save=True)
+        if self.contributor.status == 'withdrawn':
+            self.contributor.states.reapply(save=True, local=True)
+        elif self.contributor.status == 'removed':
+            self.contributor.states.readd(save=True, local=True)
+        else:
+            self.contributor.states.re_accept(save=True, local=True)
 
     def apply(self):
         """Create a new contributor for the activity"""
-        self.actor.refresh_from_db()
+        actor = adapter.adopt(self.actor)
         self.contributor_model.objects.create(
             activity=self.object.origin,
-            remote_user=self.actor.adopted
+            remote_user=actor
         )
 
     @property
@@ -113,11 +136,11 @@ class RegistrationJoin(BaseJoin):
 
     def apply(self):
         """ Instead of creating a participant, we create a registration"""
-        self.actor.refresh_from_db()
+        actor = adapter.adopt(self.actor)
         registration_model = import_string(self.registration_model)
         registration_model.objects.create(
             activity=self.object.origin,
-            remote_user=self.actor.adopted,
+            remote_user=actor,
             answer=self.motivation
         )
 
@@ -144,7 +167,7 @@ class PeriodicJoin(RegistrationJoin):
 
     def reapply(self):
         """For periodic activities re-joining an activity means we have to start the registration again"""
-        self.registration.states.start(save=True)
+        self.registration.states.start(save=True, local=True)
 
     registration_model = 'bluebottle.time_based.models.PeriodicRegistration'
     contributor_model = 'bluebottle.time_based.models.PeriodicParticipant'
@@ -184,26 +207,41 @@ class TeamJoin(BaseJoin):
         return isinstance(actor, Team)
 
     @property
-    def contributor(self):
+    def remote_contributor(self):
         """ Return the remote contributor, since the Join was created by the consumer"""
         adapter.adopt(self.actor.captain)
+        return self.actor.adopted
 
-        if self.actor.adopted:
-            return self.actor.adopted
+    @property
+    def local_contributor(self):
+        """ Return the local contributor, since the Join was created by the supplier"""
+        adapter.adopt(self.actor.captain)
+
+        return self.actor.adopted
 
     def apply(self):
         """ Instead of creating a participant, we create a registration"""
-        self.actor.refresh_from_db()
+        remote_user = adapter.adopt(self.actor.captain)
         registration_model = import_string(self.registration_model)
         registration = registration_model.objects.create(
             activity=self.object.origin,
-            remote_user=self.actor.captain.adopted,
+            remote_user=remote_user,
             answer=self.motivation
         )
         adapter.adopt(self.actor, activity=registration.activity)
 
     def reapply(self):
-        self.contributor.states.rejoin(save=True)
+        if self.contributor.status == 'removed':
+            self.contributor.states.readd(save=True, local=True)
+        else:
+            self.contributor.states.rejoin(save=True, local=True)
+
+    @property
+    def default_recipients(self):
+        if not self.actor.is_local:
+            yield self.actor.adopted.activity.activity_pub_model.source
+        else:
+            yield self.object.source
 
     class Meta:
         proxy = True
@@ -225,10 +263,14 @@ class TeamMemberJoin(BaseJoin):
             yield self.object.origin.activity.origin.source
 
     @property
-    def contributor(self):
-        """ Return the remote contributor, since the Join was created by the consumer"""
-        adapter.adopt(self.actor)
+    def local_contributor(self):
+        return self.contributor_model.objects.filter(
+            team=self.object.origin,
+            user=self.actor.origin
+        ).first()
 
+    @property
+    def remote_contributor(self):
         return self.contributor_model.objects.filter(
             team=self.object.adopted,
             remote_user=self.actor.adopted
@@ -236,20 +278,20 @@ class TeamMemberJoin(BaseJoin):
 
     def apply(self):
         """ Instead of creating a participant, we create a registration"""
-        self.actor.refresh_from_db()
+        remote_user = adapter.adopt(self.actor)
 
         self.contributor_model.objects.create(
             team=self.object.adopted,
-            remote_user=self.actor.adopted
+            remote_user=remote_user
         )
 
     def reapply(self):
         if self.contributor.status == 'withdrawn':
-            self.contributor.states.reapply(save=True)
+            self.contributor.states.reapply(save=True, local=True)
         elif self.contributor.status == 'rejected':
-            self.contributor.states.accept(save=True)
+            self.contributor.states.accept(save=True, local=True)
         else:
-            self.contributor.states.readd(save=True)
+            self.contributor.states.readd(save=True, local=True)
 
     class Meta:
         proxy = True
@@ -315,6 +357,15 @@ class PeriodicSlotJoin(SlotJoin):
     contributor_model = 'bluebottle.time_based.models.PeriodicParticipant'
     registration_model = 'bluebottle.time_based.models.PeriodicRegistration'
 
+    @property
+    def remote_contributor(self):
+        slot = adapter.adopt(self.object)
+
+        return self.object.parent.adopted.contributors.not_instance_of(Organizer).get(
+            user=self.actor.origin,
+            periodicparticipant__slot=slot
+        )
+
     def apply(self):
         """
         The supplier creates the slot and adds the user to that slot.
@@ -344,6 +395,22 @@ class ScheduleSlotJoin(SlotJoin):
 
     contributor_model = 'bluebottle.time_based.models.ScheduleParticipant'
     registration_model = 'bluebottle.time_based.models.ScheduleRegistration'
+
+    @property
+    def remote_contributor(self):
+        slot = adapter.adopt(self.object)
+
+        return self.object.parent.adopted.contributors.not_instance_of(Organizer).get(
+            user=self.actor.origin,
+            scheduleparticipant__slot=slot
+        )
+
+    @property
+    def local_contributor(self):
+        return self.object.parent.origin.contributors.not_instance_of(Organizer).get(
+            user=self.actor.origin,
+            scheduleparticipant__slot=self.object.origin
+        )
 
 
 class TeamScheduleSlotJoin(SlotJoin):
@@ -391,10 +458,15 @@ class DateSlotJoin(SlotJoin):
     registration_model = 'bluebottle.time_based.models.DateRegistration'
 
     @property
-    def contributor(self):
-        """ Return the remote contributor, since the Join was created by the consumer"""
-        return self.contributor_model.objects.filter(
-            activity=self.object.parent.origin, remote_user=self.actor.adopted, slot=self.object.origin
+    def local_contributor(self):
+        return self.object.parent.origin.contributors.filter(
+            remote_user=self.actor.adopted, dateparticipant__slot=self.object.origin
+        ).first()
+
+    @property
+    def remote_contributor(self):
+        return self.object.parent.adopted.contributors.filter(
+            user=self.actor.origin, dateparticipant__slot=self.object.adopted
         ).first()
 
     @property

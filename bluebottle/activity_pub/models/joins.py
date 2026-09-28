@@ -57,6 +57,7 @@ class BaseJoin(Join):
 
     @property
     def local_contributor(self):
+        self.actor.refresh_from_db()
         return self.object.origin.contributors.not_instance_of(Organizer).get(
             remote_user=self.actor.adopted
         )
@@ -71,6 +72,7 @@ class BaseJoin(Join):
     def contributor(self):
         try:
             if self.object.is_local:
+                adapter.adopt(self.actor)
                 return self.local_contributor
             else:
                 return self.remote_contributor

@@ -23,7 +23,7 @@ class BoundTrigger(object):
         self.options = options
 
     def execute(self, previous_effects, **options):
-        return self.trigger.execute(self.instance, previous_effects, **dict(**options, **self.options))
+        return self.trigger.execute(self.instance, previous_effects, **{**options, **self.options})
 
 
 @python_2_unicode_compatible

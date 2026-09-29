@@ -423,7 +423,11 @@ class Update(Activity):
 
         elif isinstance(self.object, Organization):
             for follow in self.object.activities.instance_of(Follow):
-                yield follow.object
+                yield follow.object.actor
+
+            for accept in self.object.activities.instance_of(Accept):
+                yield accept.object.actor
+
         elif isinstance(self.object, Person):
             recipients = set()
             for join in self.object.activities.all().instance_of(Join):

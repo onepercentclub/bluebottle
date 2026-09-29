@@ -39,9 +39,7 @@ class Remove(Transition):
 
     def transition(self):
         contributor = self.contributor
-        contributor.states.remove()
-        contributor.execute_triggers(ap_prevent_recursion=True)
-        contributor.save()
+        contributor.states.remove(save=True, local=True)
 
         return True
 

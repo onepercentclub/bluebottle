@@ -8,6 +8,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.activity_pub.effects import (
     SendTeamJoinEffect,
+    SendSupplierTeamJoinEffect,
     SendTeamMemberJoinEffect,
     SendTeamLeaveEffect,
     SendTeamMemberLeaveEffect,
@@ -131,6 +132,8 @@ class TeamTriggers(TriggerManager):
                     "slots",
                     TeamScheduleSlotStateMachine.restore,
                 ),
+                SendTeamJoinEffect,
+                SendSupplierTeamJoinEffect,
             ],
         ),
         TransitionTrigger(
@@ -196,6 +199,7 @@ class TeamTriggers(TriggerManager):
                     RegistrationStateMachine.restore,
                 ),
                 SendTeamJoinEffect,
+                SendSupplierTeamJoinEffect,
                 SyncRelatedEvent,
             ]
         ),

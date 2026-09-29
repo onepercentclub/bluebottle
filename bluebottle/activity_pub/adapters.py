@@ -22,8 +22,6 @@ class JSONLDAdapter():
         client.post(actor.inbox.iri, data=data)
 
     def adopt(self, instance, **kwargs):
-        from bluebottle.activity_pub.models import Transition
-
         serializer = FederatedObjectSerializer(
             data=ActivityPubSerializer(instance=instance).data
         )
@@ -31,8 +29,14 @@ class JSONLDAdapter():
             serializer.instance = instance.adopted
 
         serializer.is_valid(raise_exception=True)
-
         result = serializer.save(**kwargs)
+
+        self.perform_retro_active_transitions(instance)
+
+        return result
+
+    def perform_retro_active_transitions(self, instance):
+        from bluebottle.activity_pub.models import Transition
 
         try:
             # Re-run all transitions that might have happened before the model was adopted
@@ -40,8 +44,6 @@ class JSONLDAdapter():
                 transition.save()
         except ValueError:
             pass
-
-        return result
 
     def link(self, instance, **kwargs):
         from bluebottle.activity_links.serializers import LinkedActivitySerializer
@@ -51,7 +53,11 @@ class JSONLDAdapter():
             instance=instance.link
         )
         serializer.is_valid(raise_exception=True)
-        return serializer.save(**kwargs)
+        result = serializer.save(**kwargs)
+
+        self.perform_retro_active_transitions(instance)
+
+        return result
 
     def sync(self, model):
         serializer = ActivityPubSerializer(

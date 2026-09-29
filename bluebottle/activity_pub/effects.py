@@ -318,7 +318,31 @@ class SendJoinEffect(Effect):
 
     @property
     def is_valid(self):
-        return super().is_valid
+        return not self.options.get('local') and super().is_valid
+
+    def __str__(self):
+        return str(_('Notify source platform of join'))
+
+
+class SendSupplierJoinEffect(Effect):
+    """
+    Send a Join activity to the consumer platform when a user is added to the activity again.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+
+    def post_save(self, **kwargs):
+        Join.objects.create(
+            actor=self.instance.remote_user.origin,
+            object=self.instance.activity.activity_pub_model,
+        )
+
+    @property
+    def is_valid(self):
+        return (
+            not self.options.get('local') and
+            hasattr(self.instance.activity, 'activity_pub_model') and
+            self.instance.remote_user is not None
+        )
 
     def __str__(self):
         return str(_('Notify source platform of join'))
@@ -339,7 +363,34 @@ class SendJoinSlotEffect(Effect):
 
     @property
     def is_valid(self):
-        return self.instance.remote_user is not None
+        return (
+            not self.options.get('local') and
+            self.instance.remote_user is not None
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of join'))
+
+
+class SendSupplierJoinSlotEffect(Effect):
+    """
+    Send a Join activity to the source platform when a user joins a synced deed.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+
+    def post_save(self, **kwargs):
+        if self.instance.slot:
+            Join.objects.create(
+                actor=self.instance.user.activity_pub_model,
+                object=self.instance.slot.origin
+            )
+
+    @property
+    def is_valid(self):
+        return (
+            not self.options.get('local') and
+            hasattr(self.instance.activity, 'origin')
+        )
 
     def __str__(self):
         return str(_('Notify source platform of join'))
@@ -380,7 +431,37 @@ class SendJoinDateSlotEffect(Effect):
 
     @property
     def is_valid(self):
-        return self.instance.remote_user is None and hasattr(self.instance.user, 'activity_pub_model')
+        return (
+
+            not self.options.get('local') and
+            self.instance.remote_user is None and
+            hasattr(self.instance.user, 'activity_pub_model')
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of join'))
+
+
+class SendSupplierJoinDateSlotEffect(Effect):
+    """
+    Send a Join activity to the source platform when a user joins a synced deed.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+
+    def post_save(self, **kwargs):
+        if self.instance.slot:
+            Join.objects.create(
+                actor=self.instance.remote_user.origin,
+                object=self.instance.slot.activity_pub_model
+            )
+
+    @property
+    def is_valid(self):
+        return (
+            not self.options.get('local') and
+            self.instance.remote_user is not None
+            and hasattr(self.instance.activity, 'activity_pub_model')
+        )
 
     def __str__(self):
         return str(_('Notify source platform of join'))
@@ -410,10 +491,14 @@ class SendRemoveEffect(Effect):
     template = 'admin/activity_pub/send_remove_effect.html'
 
     def post_save(self, **kwargs):
-        activity = self.instance.slot if hasattr(self.instance, 'slot') else self.instance.activity
+        activity = (
+            self.instance.slot
+            if hasattr(self.instance, 'slot') and self.instance.slot else
+            self.instance.activity
+        )
         if self.instance.remote_user:
             actor = self.instance.remote_user.origin
-            object = activity.activity_pub_model
+            object = adapter.sync(activity)
         else:
             actor = self.instance.user.activity_pub_model
             object = activity.origin
@@ -423,7 +508,7 @@ class SendRemoveEffect(Effect):
     @property
     def is_valid(self):
         return (
-            not self.options.get('ap_prevent_recursion') and
+            not self.options.get('local') and
             (self.instance.remote_user is not None or self.instance.activity.origin is not None)
         )
 
@@ -473,7 +558,6 @@ class SendTeamJoinEffect(Effect):
     Sync team registration as a Join (with nested Team) to the supplier.
     """
     template = 'admin/activity_pub/send_join_effect.html'
-    conditions = [team_activity_is_synced, team_captain_is_local]
 
     def post_save(self, **kwargs):
         Join.objects.create(
@@ -485,13 +569,47 @@ class SendTeamJoinEffect(Effect):
     def __str__(self):
         return str(_('Notify source platform of team join'))
 
+    @property
+    def is_valid(self):
+        return (
+            not self.options.get('local') and
+            getattr(self.instance.activity, 'origin', None) and
+            self.instance.remote_user is None and
+            self.instance.user is not None
+        )
+
+
+class SendSupplierTeamJoinEffect(Effect):
+    """
+    Sync team registration as a Join (with nested Team) to the consumer.
+    """
+    template = 'admin/activity_pub/send_join_effect.html'
+    conditions = [team_activity_is_synced, team_captain_is_local]
+
+    def post_save(self, **kwargs):
+        Join.objects.create(
+            actor=self.instance.origin,
+            object=self.instance.activity.activity_pub_model,
+        )
+
+    def __str__(self):
+        return str(_('Notify source platform of team join'))
+
+    @property
+    def is_valid(self):
+        return (
+            not self.options.get('local') and
+            getattr(self.instance.activity, 'activity_pub_model', None) and
+            self.instance.user is None and
+            self.instance.user is None
+        )
+
 
 class SendTeamMemberJoinEffect(Effect):
     """
     Sync a TeamMember as an Add activity to the supplier.
     """
     template = 'admin/activity_pub/send_join_effect.html'
-    conditions = [team_member_activity_is_synced, team_member_is_local, team_member_is_not_captain]
 
     def post_save(self, **kwargs):
         Join.objects.create(
@@ -501,6 +619,16 @@ class SendTeamMemberJoinEffect(Effect):
 
     def __str__(self):
         return str(_('Notify source platform of team member add'))
+
+    @property
+    def is_valid(self):
+        return (
+            not self.options.get('local') and
+            self.instance.remote_user is None and
+            self.instance.user is not None and
+            not self.instance.is_captain and
+            getattr(self.instance.team.activity, 'origin', None) is not None
+        )
 
 
 class SendTeamLeaveEffect(Effect):

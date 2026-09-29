@@ -36,6 +36,8 @@ class Join(Activity):
 
 
 class BaseJoin(Join):
+    readd_transition = 'readd'
+
     @classmethod
     def matches(cls, object, actor):
         return False
@@ -82,10 +84,8 @@ class BaseJoin(Join):
     def reapply(self):
         if self.contributor.status == 'withdrawn':
             self.contributor.states.reapply(save=True, local=True)
-        elif self.contributor.status == 'removed':
-            self.contributor.states.readd(save=True, local=True)
         else:
-            self.contributor.states.re_accept(save=True, local=True)
+            getattr(self.contributor.states, self.readd_transition)(save=True, local=True)
 
     def apply(self):
         """Create a new contributor for the activity"""
@@ -104,6 +104,8 @@ class BaseJoin(Join):
 
 
 class DeedJoin(BaseJoin):
+    readd_transition = 're_accept'
+
     @classmethod
     def matches(cls, object, actor):
         return isinstance(object, GoodDeed)
@@ -115,6 +117,8 @@ class DeedJoin(BaseJoin):
 
 
 class CollectCampaignJoin(BaseJoin):
+    readd_transition = 're_accept'
+
     @classmethod
     def matches(cls, object, actor):
         return isinstance(object, CollectCampaign)
@@ -306,8 +310,6 @@ class TeamMemberJoin(BaseJoin):
     def reapply(self):
         if self.contributor.status == 'withdrawn':
             self.contributor.states.reapply(save=True, local=True)
-        elif self.contributor.status == 'rejected':
-            self.contributor.states.accept(save=True, local=True)
         else:
             self.contributor.states.readd(save=True, local=True)
 

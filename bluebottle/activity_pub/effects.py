@@ -572,6 +572,7 @@ class SendTeamJoinEffect(Effect):
     @property
     def is_valid(self):
         return (
+            not self.options.get('local') and
             getattr(self.instance.activity, 'origin', None) and
             self.instance.remote_user is None and
             self.instance.user is not None
@@ -597,6 +598,7 @@ class SendSupplierTeamJoinEffect(Effect):
     @property
     def is_valid(self):
         return (
+            not self.options.get('local') and
             getattr(self.instance.activity, 'activity_pub_model', None) and
             self.instance.user is None and
             self.instance.user is None
@@ -608,7 +610,6 @@ class SendTeamMemberJoinEffect(Effect):
     Sync a TeamMember as an Add activity to the supplier.
     """
     template = 'admin/activity_pub/send_join_effect.html'
-    conditions = [team_member_activity_is_synced, team_member_is_local, team_member_is_not_captain]
 
     def post_save(self, **kwargs):
         Join.objects.create(
@@ -618,6 +619,16 @@ class SendTeamMemberJoinEffect(Effect):
 
     def __str__(self):
         return str(_('Notify source platform of team member add'))
+
+    @property
+    def is_valid(self):
+        return (
+            not self.options.get('local') and
+            self.instance.remote_user is None and
+            self.instance.user is not None and
+            not self.instance.is_captain and
+            getattr(self.instance.team.activity, 'origin', None) is not None
+        )
 
 
 class SendTeamLeaveEffect(Effect):

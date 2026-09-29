@@ -57,6 +57,7 @@ class BaseJoin(Join):
 
     @property
     def local_contributor(self):
+        adapter.adopt(self.actor)
         self.actor.refresh_from_db()
         return self.object.origin.contributors.not_instance_of(Organizer).get(
             remote_user=self.actor.adopted
@@ -72,7 +73,6 @@ class BaseJoin(Join):
     def contributor(self):
         try:
             if self.object.is_local:
-                adapter.adopt(self.actor)
                 return self.local_contributor
             else:
                 return self.remote_contributor
@@ -171,8 +171,21 @@ class PeriodicJoin(RegistrationJoin):
         """For periodic activities re-joining an activity means we have to start the registration again"""
         self.registration.states.start(save=True, local=True)
 
+    @property
+    def local_contributor(self):
+        adapter.adopt(self.actor)
+        self.actor.refresh_from_db()
+        return self.object.origin.registrations.get(
+            remote_user=self.actor.adopted
+        )
+
+    def remote_contributor(self):
+        return self.object.adopted.registrations.get(
+            user=self.actor.origin
+        )
+
     registration_model = 'bluebottle.time_based.models.PeriodicRegistration'
-    contributor_model = 'bluebottle.time_based.models.PeriodicParticipant'
+    contributor_model = 'bluebottle.time_based.models.PeriodicRegistration'
 
 
 class DateJoin(RegistrationJoin):
@@ -217,6 +230,7 @@ class TeamJoin(BaseJoin):
     @property
     def local_contributor(self):
         """ Return the local contributor, since the Join was created by the supplier"""
+
         adapter.adopt(self.actor.captain)
 
         return self.actor.adopted
@@ -230,6 +244,7 @@ class TeamJoin(BaseJoin):
             remote_user=remote_user,
             answer=self.motivation
         )
+
         adapter.adopt(self.actor, activity=registration.activity)
 
     def reapply(self):
@@ -266,6 +281,7 @@ class TeamMemberJoin(BaseJoin):
 
     @property
     def local_contributor(self):
+        adapter.adopt(self.actor)
         return self.contributor_model.objects.filter(
             team=self.object.origin,
             user=self.actor.origin
@@ -409,6 +425,7 @@ class ScheduleSlotJoin(SlotJoin):
 
     @property
     def local_contributor(self):
+        adapter.adopt(self.actor)
         return self.object.parent.origin.contributors.not_instance_of(Organizer).get(
             user=self.actor.origin,
             scheduleparticipant__slot=self.object.origin
@@ -461,6 +478,7 @@ class DateSlotJoin(SlotJoin):
 
     @property
     def local_contributor(self):
+        adapter.adopt(self.actor)
         return self.object.parent.origin.contributors.filter(
             remote_user=self.actor.adopted, dateparticipant__slot=self.object.origin
         ).first()

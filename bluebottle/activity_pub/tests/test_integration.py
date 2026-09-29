@@ -452,7 +452,7 @@ class SyncTestCase(ActivityPubTestCase):
         self.assertTrue(self.follow.actor.adopted)
 
     def test_sync_organization(self):
-        self.test_follow()
+        self.test_accept()
 
         with LocalTenant(self.other_tenant):
             site_settings = SitePlatformSettings.load()
@@ -467,6 +467,23 @@ class SyncTestCase(ActivityPubTestCase):
         self.assertEqual(
             actor.adopted.name, 'New name'
         )
+
+    def test_sync_organization_supplier(self):
+        self.test_accept()
+
+        site_settings = SitePlatformSettings.load()
+        organization = site_settings.organization
+
+        with httmock.HTTMock(image_mock):
+            organization.name = 'New name'
+            organization.save()
+
+        with LocalTenant(self.other_tenant):
+            actor = Accept.objects.get().actor
+            actor.refresh_from_db()
+            self.assertEqual(
+                actor.adopted.name, 'New name'
+            )
 
     def test_adopt(self):
         self.test_publish()
@@ -579,6 +596,15 @@ class SyncTestCase(ActivityPubTestCase):
             self.participant.refresh_from_db()
             self.assertStatus(self.participant, self.expected_participant_status)
 
+    def test_reaccept_consumer(self):
+        self.test_remove_consumer()
+        with LocalTenant(self.other_tenant):
+            self.re_accept(self.participant)
+            self.assertStatus(self.participant, self.expected_participant_status)
+
+        self.synced_participant.refresh_from_db()
+        self.assertStatus(self.synced_participant, self.expected_participant_status)
+
     def test_remove_consumer(self):
         self.test_join()
 
@@ -588,15 +614,6 @@ class SyncTestCase(ActivityPubTestCase):
 
         self.synced_participant.refresh_from_db()
         self.assertStatus(self.synced_participant, self.removed_status)
-
-    def test_reaccept_consumer(self):
-        self.test_remove_consumer()
-        with LocalTenant(self.other_tenant):
-            self.re_accept(self.participant)
-            self.assertStatus(self.team, self.expected_participant_status)
-
-        self.synced_participant.refresh_from_db()
-        self.assertStatus(self.synced_team, self.expected_participant_status)
 
     def test_cancel_adoption(self):
         self.test_join()
@@ -1034,7 +1051,7 @@ class SyncPeriodicActivityTestCase(SyncTestCase, BluebottleTestCase):
         self.assertEqual(self.synced_participant.participants.get().status, 'new')
 
     def test_leave(self):
-        self.test_join()
+        self.test_next_slot()
 
         with LocalTenant(self.other_tenant):
             self.participant.states.stop(save=True)
@@ -2073,6 +2090,24 @@ class SyncTeamScheduleActivityTestCase(SyncTestCase, BluebottleTestCase):
     def re_accept(self, contributor):
 
         contributor.teams.get().states.readd(save=True)
+
+    def test_reaccept_supplier(self):
+        self.test_remove_supplier()
+
+        self.re_accept(self.synced_participant)
+
+        with LocalTenant(self.other_tenant):
+            self.participant.refresh_from_db()
+            self.assertStatus(self.participant, self.expected_participant_status)
+
+    def test_reaccept_consumer(self):
+        self.test_remove_consumer()
+        with LocalTenant(self.other_tenant):
+            self.re_accept(self.participant)
+            self.assertStatus(self.team, self.expected_participant_status)
+
+        self.synced_participant.refresh_from_db()
+        self.assertStatus(self.synced_team, self.expected_participant_status)
 
     def test_join(self):
         self.test_adopt()

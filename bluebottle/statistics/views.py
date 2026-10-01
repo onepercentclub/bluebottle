@@ -1,3 +1,5 @@
+from rest_framework.permissions import IsAuthenticated
+
 from bluebottle.statistics.models import BaseStatistic, DatabaseStatistic, ImpactStatistic
 from bluebottle.statistics.renderers import StatisticsRenderer
 from bluebottle.statistics.serializers import StatisticSerializer, OldStatisticSerializer, UserStatisticSerializer
@@ -32,7 +34,9 @@ class StatisticList(JsonApiViewMixin, ListAPIView):
 
 class UserStatisticList(JsonApiViewMixin, ListAPIView):
     serializer_class = UserStatisticSerializer
-    permission_classes = [TenantConditionalOpenClose, ]
+    # These figures are per-member, so an anonymous caller gets a 401 rather
+    # than platform-wide totals presented as their own.
+    permission_classes = [TenantConditionalOpenClose, IsAuthenticated]
     renderer_classes = (StatisticsRenderer, )
 
     def get_queryset(self, *args, **kwargs):

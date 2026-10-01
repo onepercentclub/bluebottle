@@ -1,7 +1,9 @@
 
 import datetime
 from builtins import str
+from unittest.mock import patch
 
+from django.contrib.auth.models import AnonymousUser
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -15,6 +17,7 @@ from bluebottle.impact.tests.factories import (
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.statistics.serializers import UserStatisticSerializer
 from bluebottle.statistics.tests.factories import (
     DatabaseStatisticFactory, ManualStatisticFactory, ImpactStatisticFactory
 )
@@ -347,3 +350,40 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         self.assertEqual(len(data), 4)
         self.assertEqual(data[0]['attributes']['value']['amount'], 105)
         self.assertEqual(data[1]['attributes']['value'], 6.0)
+
+    def test_get_anonymous(self):
+        """BB-30187: an anonymous caller must not reach the ORM.
+
+        AnonymousUser used to be passed straight into
+        Statistics.donated_total's `.filter(user=...)`, which raised
+        TypeError: Field 'id' expected a number but got <AnonymousUser>.
+        """
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_anonymous_user_is_not_passed_to_statistics(self):
+        """The guard sits at the serializer boundary, so it covers every
+        statistic type rather than only the first one evaluated."""
+        serializer = UserStatisticSerializer()
+
+        with patch(
+            'bluebottle.statistics.serializers.get_current_user',
+            return_value=AnonymousUser(),
+        ):
+            self.assertIsNone(serializer.get_user())
+
+        with patch(
+            'bluebottle.statistics.serializers.get_current_user',
+            return_value=None,
+        ):
+            self.assertIsNone(serializer.get_user())
+
+    def test_authenticated_user_is_still_passed_to_statistics(self):
+        serializer = UserStatisticSerializer()
+
+        with patch(
+            'bluebottle.statistics.serializers.get_current_user',
+            return_value=self.user,
+        ):
+            self.assertEqual(serializer.get_user(), self.user)

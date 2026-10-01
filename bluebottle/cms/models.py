@@ -756,7 +756,7 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
 
     accessible_colours = models.BooleanField(
         _('Accessible colours'),
-        help_text=_('Make sure the colours are WACG compliant. You should save settings for this to take effect.'),
+        help_text=_('Make sure the colours are WCAG compliant. You should save settings for this to take effect.'),
         default=False,
     )
 

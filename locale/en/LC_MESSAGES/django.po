@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-25 11:22+0200\n"
+"POT-Creation-Date: 2026-10-01 12:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,11 +33,6 @@ msgstr ""
 #: bluebottle/time_based/admin.py:1028 bluebottle/time_based/admin.py:1109
 #: bluebottle/time_based/admin.py:1110 bluebottle/time_based/admin.py:1454
 msgid "Edit"
-msgstr ""
-
-#: bluebottle/activities/admin.py:169 bluebottle/activities/models.py:402
-#: bluebottle/activities/models.py:500 bluebottle/time_based/admin.py:553
-msgid "Anonymous"
 msgstr ""
 
 #: bluebottle/activities/admin.py:221 bluebottle/activities/admin.py:344
@@ -170,7 +165,7 @@ msgstr ""
 msgid "Information"
 msgstr ""
 
-#: bluebottle/activities/admin.py:867 bluebottle/cms/admin.py:423
+#: bluebottle/activities/admin.py:867 bluebottle/cms/admin.py:432
 #: bluebottle/settings/admin_dashboard.py:166
 msgid "GoodUp Connect"
 msgstr ""
@@ -693,7 +688,8 @@ msgstr ""
 
 #: bluebottle/activities/models.py:121 bluebottle/activity_links/models.py:57
 #: bluebottle/activity_pub/admin.py:833 bluebottle/cms/models.py:53
-#: bluebottle/cms/utils/color_contrast.py:262 bluebottle/funding/models.py:350
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:31
+#: bluebottle/cms/utils/color_contrast.py:309 bluebottle/funding/models.py:350
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
 #: bluebottle/grant_management/models.py:489
 msgid "Description"
@@ -788,6 +784,10 @@ msgstr ""
 #: bluebottle/activities/models.py:393 bluebottle/activities/models.py:456
 #: bluebottle/funding/models.py:600 bluebottle/time_based/models.py:1130
 msgid "Contributions"
+msgstr ""
+
+#: bluebottle/activities/models.py:402 bluebottle/activities/models.py:500
+msgid "Anonymous"
 msgstr ""
 
 #: bluebottle/activities/models.py:408
@@ -2172,7 +2172,7 @@ msgstr ""
 #: bluebottle/activity_pub/admin.py:840 bluebottle/cms/models.py:211
 #: bluebottle/cms/models.py:234 bluebottle/cms/models.py:527
 #: bluebottle/cms/models.py:608 bluebottle/cms/models.py:646
-#: bluebottle/cms/models.py:987 bluebottle/cms/models.py:1047
+#: bluebottle/cms/models.py:1016 bluebottle/cms/models.py:1076
 #: bluebottle/pages/models.py:109 bluebottle/pages/models.py:167
 #: bluebottle/pages/models.py:200
 msgid "Image"
@@ -2348,7 +2348,7 @@ msgid "Template"
 msgstr ""
 
 #: bluebottle/activity_pub/models.py:430 bluebottle/cms/models.py:149
-#: bluebottle/cms/models.py:542 bluebottle/cms/utils/color_contrast.py:281
+#: bluebottle/cms/models.py:542 bluebottle/cms/utils/color_contrast.py:328
 msgid "Link"
 msgstr ""
 
@@ -3597,24 +3597,24 @@ msgstr ""
 msgid "First save to edit this group"
 msgstr ""
 
-#: bluebottle/cms/admin.py:386
+#: bluebottle/cms/admin.py:383
 msgid "Contact"
 msgstr ""
 
-#: bluebottle/cms/admin.py:394
+#: bluebottle/cms/admin.py:391
 #: bluebottle/common/templates/widget/widget.html:57
 msgid "Powered by"
 msgstr ""
 
-#: bluebottle/cms/admin.py:402
+#: bluebottle/cms/admin.py:399
 msgid "Metadata"
 msgstr ""
 
-#: bluebottle/cms/admin.py:410
+#: bluebottle/cms/admin.py:407
 msgid "Styling"
 msgstr ""
 
-#: bluebottle/cms/admin.py:480
+#: bluebottle/cms/admin.py:452
 msgid "Colour preview"
 msgstr ""
 
@@ -3995,225 +3995,293 @@ msgid ""
 msgstr ""
 
 #: bluebottle/cms/models.py:758
-msgid "Action colour"
+msgid "Accessible colours"
 msgstr ""
 
-#: bluebottle/cms/models.py:760
-msgid "Colour for action buttons and links"
+#: bluebottle/cms/models.py:759
+msgid ""
+"Make sure the colours are WACG compliant. You should save settings for this "
+"to take effect."
 msgstr ""
 
 #: bluebottle/cms/models.py:764
-msgid "Action text colour"
+msgid "Action colour"
 msgstr ""
 
 #: bluebottle/cms/models.py:766
+msgid "Colour for action buttons and links"
+msgstr ""
+
+#: bluebottle/cms/models.py:770
+msgid "Adjusted action colour"
+msgstr ""
+
+#: bluebottle/cms/models.py:772
+msgid ""
+"Darkened when white or dark text would not be readable on the action colour"
+msgstr ""
+
+#: bluebottle/cms/models.py:776
+msgid "Action text colour"
+msgstr ""
+
+#: bluebottle/cms/models.py:778
 msgid ""
 "Automatically set to white or dark grey so text stays readable on the action "
 "colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:770
+#: bluebottle/cms/models.py:782
 msgid "Action text on white"
 msgstr ""
 
-#: bluebottle/cms/models.py:773
+#: bluebottle/cms/models.py:785
 msgid ""
 "Automatically darkened so the action colour stays readable as text on white "
 "or grey"
 msgstr ""
 
-#: bluebottle/cms/models.py:777
+#: bluebottle/cms/models.py:789
 msgid "Action text on light tint"
 msgstr ""
 
-#: bluebottle/cms/models.py:780
+#: bluebottle/cms/models.py:792
 msgid ""
 "Automatically darkened so text stays readable on a lighter tint of the "
 "action colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:784
+#: bluebottle/cms/models.py:796
 msgid "Action text on tint"
 msgstr ""
 
-#: bluebottle/cms/models.py:787
+#: bluebottle/cms/models.py:799
 msgid ""
 "Automatically darkened so text stays readable on a light tint of the action "
 "colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:791
+#: bluebottle/cms/models.py:803
 msgid "Action text on strong tint"
 msgstr ""
 
-#: bluebottle/cms/models.py:794
+#: bluebottle/cms/models.py:806
 msgid ""
 "Automatically darkened so text stays readable on a stronger tint of the "
 "action colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:799
+#: bluebottle/cms/models.py:811
 msgid "Terminated"
 msgstr ""
 
-#: bluebottle/cms/models.py:801
+#: bluebottle/cms/models.py:813
 msgid "Is the platform terminated?"
 msgstr ""
 
-#: bluebottle/cms/models.py:809
+#: bluebottle/cms/models.py:821
 msgid "Description colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:811
+#: bluebottle/cms/models.py:823
 msgid "Colour for descriptive and secondary buttons"
 msgstr ""
 
-#: bluebottle/cms/models.py:815
+#: bluebottle/cms/models.py:827
+msgid "Adjusted description colour"
+msgstr ""
+
+#: bluebottle/cms/models.py:829
+msgid ""
+"Darkened when white or dark text would not be readable on the description "
+"colour"
+msgstr ""
+
+#: bluebottle/cms/models.py:833
 msgid "Description text colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:817
+#: bluebottle/cms/models.py:835
 msgid ""
 "Automatically set to white or dark grey so text stays readable on the "
 "description colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:821
+#: bluebottle/cms/models.py:839
 msgid "Description text on white"
 msgstr ""
 
-#: bluebottle/cms/models.py:824
+#: bluebottle/cms/models.py:842
 msgid ""
 "Automatically darkened so the description colour stays readable as text on "
 "white or grey"
 msgstr ""
 
-#: bluebottle/cms/models.py:828
+#: bluebottle/cms/models.py:846
 msgid "Description text on light tint"
 msgstr ""
 
-#: bluebottle/cms/models.py:831
+#: bluebottle/cms/models.py:849
 msgid ""
 "Automatically darkened so text stays readable on a lighter tint of the "
 "description colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:835
+#: bluebottle/cms/models.py:853
 msgid "Description text on tint"
 msgstr ""
 
-#: bluebottle/cms/models.py:838
+#: bluebottle/cms/models.py:856
 msgid ""
 "Automatically darkened so text stays readable on a light tint of the "
 "description colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:842
+#: bluebottle/cms/models.py:860
 msgid "Description text on strong tint"
 msgstr ""
 
-#: bluebottle/cms/models.py:845
+#: bluebottle/cms/models.py:863
 msgid ""
 "Automatically darkened so text stays readable on a stronger tint of the "
 "description colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:849
+#: bluebottle/cms/models.py:867
 msgid "Footer colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:852
+#: bluebottle/cms/models.py:870
 msgid "Colour for platform footer"
 msgstr ""
 
-#: bluebottle/cms/models.py:856
+#: bluebottle/cms/models.py:874
 msgid "Footer text colour"
 msgstr ""
 
-#: bluebottle/cms/models.py:858
+#: bluebottle/cms/models.py:876
 msgid ""
 "If the footer colour is quite light, you could set this to a darker colour "
 "for better contrast"
 msgstr ""
 
-#: bluebottle/cms/models.py:863
+#: bluebottle/cms/models.py:881
 msgid "Footer banner"
 msgstr ""
 
-#: bluebottle/cms/models.py:864
+#: bluebottle/cms/models.py:882
 msgid "Banner shown just above the footer"
 msgstr ""
 
-#: bluebottle/cms/models.py:875
+#: bluebottle/cms/models.py:893
 msgid "Title font"
 msgstr ""
 
-#: bluebottle/cms/models.py:877
+#: bluebottle/cms/models.py:895
 msgid "Font to use for titles. Should be .woff2 type"
 msgstr ""
 
-#: bluebottle/cms/models.py:883
+#: bluebottle/cms/models.py:901
 msgid "Body font"
 msgstr ""
 
-#: bluebottle/cms/models.py:885
+#: bluebottle/cms/models.py:903
 msgid ""
 "Font to use for paragraph texts. Should be .woff2 type. Deprecated: Do not "
 "override body font for new tenants"
 msgstr ""
 
-#: bluebottle/cms/models.py:935
+#: bluebottle/cms/models.py:953
 msgid "Slug of the start initiative page"
 msgstr ""
 
-#: bluebottle/cms/models.py:958 bluebottle/cms/models.py:959
+#: bluebottle/cms/models.py:987 bluebottle/cms/models.py:988
 msgid "site platform settings"
 msgstr ""
 
-#: bluebottle/cms/models.py:971 bluebottle/cms/models.py:972
+#: bluebottle/cms/models.py:1000 bluebottle/cms/models.py:1001
 msgid "Plain Text"
 msgstr ""
 
-#: bluebottle/cms/models.py:999 bluebottle/cms/models.py:1059
+#: bluebottle/cms/models.py:1028 bluebottle/cms/models.py:1088
 msgid "Video URL"
 msgstr ""
 
-#: bluebottle/cms/models.py:1017 bluebottle/pages/models.py:120
+#: bluebottle/cms/models.py:1046 bluebottle/pages/models.py:120
 #: bluebottle/pages/models.py:210
 msgid "Left"
 msgstr ""
 
-#: bluebottle/cms/models.py:1018 bluebottle/pages/models.py:121
+#: bluebottle/cms/models.py:1047 bluebottle/pages/models.py:121
 #: bluebottle/pages/models.py:211
 msgid "Right"
 msgstr ""
 
-#: bluebottle/cms/models.py:1022
+#: bluebottle/cms/models.py:1051
 msgid "1:2 (Text twice as wide)"
 msgstr ""
 
-#: bluebottle/cms/models.py:1023 bluebottle/pages/models.py:126
+#: bluebottle/cms/models.py:1052 bluebottle/pages/models.py:126
 msgid "1:1 (Equal width)"
 msgstr ""
 
-#: bluebottle/cms/models.py:1024
+#: bluebottle/cms/models.py:1053
 msgid "2:1 (Media twice as wide)"
 msgstr ""
 
-#: bluebottle/cms/models.py:1027 bluebottle/pages/models.py:130
+#: bluebottle/cms/models.py:1056 bluebottle/pages/models.py:130
 msgid "Picture placement"
 msgstr ""
 
-#: bluebottle/cms/models.py:1028 bluebottle/pages/models.py:131
+#: bluebottle/cms/models.py:1057 bluebottle/pages/models.py:131
 msgid "Picture / Text ratio"
 msgstr ""
 
-#: bluebottle/cms/models.py:1032 bluebottle/cms/models.py:1033
+#: bluebottle/cms/models.py:1061 bluebottle/cms/models.py:1062
 msgid "Text + Media"
 msgstr ""
 
-#: bluebottle/cms/models.py:1069 bluebottle/cms/models.py:1070
+#: bluebottle/cms/models.py:1098 bluebottle/cms/models.py:1099
 msgid "Image or video"
+msgstr ""
+
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:3
+msgid "How these colours will look on the platform"
+msgstr ""
+
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:6
+#: bluebottle/cms/utils/color_contrast.py:300
+msgid "Action"
+msgstr ""
+
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:10
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:35
+msgid "Solid fill"
+msgstr ""
+
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:15
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:40
+msgid "Text on white"
+msgstr ""
+
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:20
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:45
+msgid "Tint + text"
+msgstr ""
+
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:25
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:50
+msgid "Tint dark + text"
+msgstr ""
+
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:57
+msgid "* These colours were adjusted so they stay readable for everyone."
+msgstr ""
+
+#: bluebottle/cms/templates/admin/cms/color_contrast_panel.html:60
+msgid ""
+"* For some people these colours are not very well readable due to the lack "
+"of contrast. Please toggle Accessible colours."
 msgstr ""
 
 #: bluebottle/cms/templates/admin/cms/preview/activities.html:3
@@ -4237,11 +4305,7 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: bluebottle/cms/utils/color_contrast.py:253
-msgid "Action"
-msgstr ""
-
-#: bluebottle/cms/utils/color_contrast.py:271
+#: bluebottle/cms/utils/color_contrast.py:318
 msgid "Footer"
 msgstr ""
 
@@ -10230,8 +10294,8 @@ msgstr ""
 
 #: bluebottle/pages/admin.py:220
 msgid ""
-"You are trying to create a platform page. Please do so at <a href=\"{}"
-"\">Platform pages</a>."
+"You are trying to create a platform page. Please do so at <a "
+"href=\"{}\">Platform pages</a>."
 msgstr ""
 
 #: bluebottle/pages/admin.py:283
@@ -10455,8 +10519,8 @@ msgid ""
 "If checked, the redirect-from and redirect-to fields will also be processed "
 "using regular expressions when matching incoming requests.<br>Example: "
 "<strong>/projects/.* -> /#!/projects</strong> will redirect everyone "
-"visiting a page starting with /projects/<br>Example: <strong>/projects/(.*) "
-"-> /#!/projects/$1</strong> will turn /projects/myproject into /#!/projects/"
+"visiting a page starting with /projects/<br>Example: <strong>/projects/(.*) -"
+"> /#!/projects/$1</strong> will turn /projects/myproject into /#!/projects/"
 "myproject<br><br>Invalid regular expressions will be ignored."
 msgstr ""
 
@@ -10726,35 +10790,38 @@ msgstr ""
 msgid "Manage Reporting"
 msgstr ""
 
-#: bluebottle/settings/testing.py:443
+#: bluebottle/settings/local.py:338 bluebottle/settings/testing.py:443
+#: tenants/rhi-magnesia/settings.py:25 tenants/rhi-magnesita/settings.py:25
+#: tenants/shell-grant-management/settings.py:26
 msgid "English"
 msgstr ""
 
-#: bluebottle/settings/testing.py:444
+#: bluebottle/settings/local.py:339 bluebottle/settings/testing.py:444
+#: tenants/essent/settings.py:26 tenants/shell-grant-management/settings.py:25
 msgid "Dutch"
 msgstr ""
 
-#: bluebottle/settings/testing.py:445
+#: bluebottle/settings/local.py:340 bluebottle/settings/testing.py:445
 msgid "French"
 msgstr ""
 
-#: bluebottle/settings/testing.py:446
+#: bluebottle/settings/local.py:341 bluebottle/settings/testing.py:446
 msgid "Spanish"
 msgstr ""
 
-#: bluebottle/settings/testing.py:447
+#: bluebottle/settings/local.py:342 bluebottle/settings/testing.py:447
 msgid "German"
 msgstr ""
 
-#: bluebottle/settings/testing.py:448
+#: bluebottle/settings/local.py:343 bluebottle/settings/testing.py:448
 msgid "Portuguese"
 msgstr ""
 
-#: bluebottle/settings/testing.py:449
+#: bluebottle/settings/local.py:344 bluebottle/settings/testing.py:449
 msgid "Hungarian"
 msgstr ""
 
-#: bluebottle/settings/testing.py:450
+#: bluebottle/settings/local.py:345 bluebottle/settings/testing.py:450
 msgid "Bulgarian"
 msgstr ""
 
@@ -12189,6 +12256,11 @@ msgstr ""
 
 #: bluebottle/time_based/models.py:1992
 msgid "end date and time"
+msgstr ""
+
+#: bluebottle/time_based/models.py:2046
+#, python-brace-format
+msgid "Slot {start}"
 msgstr ""
 
 #: bluebottle/time_based/models.py:2091

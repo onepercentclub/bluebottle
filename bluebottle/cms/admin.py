@@ -422,6 +422,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
                         'description_color',
                         'description_text_color',
                         'alternative_link_color',
+                        'color_contrast_panel',
                         'footer_color', 'footer_text_color',
                         'title_font', 'body_font'
                     )
@@ -443,7 +444,10 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
         return fieldsets
 
     def color_contrast_panel(self, obj):
-        return mark_safe(render_to_string('admin/cms/color_contrast_panel.html'))
+        return mark_safe(render_to_string(
+            'admin/cms/color_contrast_panel.html',
+            {'accessible': obj.accessible_colours},
+        ))
 
     color_contrast_panel.short_description = _('Colour preview')
 

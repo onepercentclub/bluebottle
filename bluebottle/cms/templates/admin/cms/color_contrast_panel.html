@@ -1,5 +1,5 @@
 {% load i18n %}
-<div id="platform-color-contrast-panel" class="platform-color-contrast">
+<div id="platform-color-contrast-panel" class="platform-color-contrast" data-accessible="{{ accessible|yesno:'true,false' }}">
     <p class="platform-color-contrast__intro">{% trans "How these colours will look on the platform" %}</p>
     <div class="platform-color-contrast__groups">
         <div class="platform-color-contrast__group">
@@ -53,7 +53,10 @@
             </div>
         </div>
     </div>
-    <p class="platform-color-contrast__disclaimer" hidden>
+    <p class="platform-color-contrast__disclaimer" data-disclaimer="adjusted" hidden>
         {% trans "* These colours were adjusted so they stay readable for everyone." %}
+    </p>
+    <p class="platform-color-contrast__disclaimer" data-disclaimer="contrast" hidden>
+        {% trans "* For some people these colours are not very well readable due to the lack of contrast. Please toggle Accessible colours." %}
     </p>
 </div>

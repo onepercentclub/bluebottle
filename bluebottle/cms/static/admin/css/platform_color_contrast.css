@@ -11,6 +11,7 @@
 .platform-color-contrast__groups {
     display: grid;
     gap: 1.25rem;
+    width: 600px
 }
 
 .platform-color-contrast__heading {

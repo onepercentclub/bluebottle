@@ -9,7 +9,11 @@
     var TINT_300_AMOUNT = 80;
     var FIELD_IDS = {
         actionColor: 'id_action_color',
-        descriptionColor: 'id_description_color'
+        actionTextColor: 'id_action_text_color',
+        descriptionColor: 'id_description_color',
+        descriptionTextColor: 'id_description_text_color',
+        alternativeLinkColor: 'id_alternative_link_color',
+        accessibleColours: 'id_accessible_colours'
     };
 
     function normalizeHex(value) {
@@ -197,6 +201,50 @@
         }
     }
 
+    function accessibleEnabled() {
+        var input = document.getElementById(FIELD_IDS.accessibleColours);
+        if (input) {
+            return input.checked;
+        }
+        var panel = document.getElementById('platform-color-contrast-panel');
+        return Boolean(panel && panel.getAttribute('data-accessible') === 'true');
+    }
+
+    function failsContrast(foreground, background) {
+        if (!foreground || !background) {
+            return false;
+        }
+        return !passesAa(contrastRatio(foreground, background));
+    }
+
+    function showDisclaimer(kind, visible) {
+        var note = document.querySelector('[data-disclaimer="' + kind + '"]');
+        if (note) {
+            note.hidden = !visible;
+        }
+    }
+
+    function previewBrandRaw(prefix, brand, textColor, onWhiteColor) {
+        if (!brand) {
+            applySwatch(prefix + '-solid', null, null, false);
+            applySwatch(prefix + '-text', WHITE, null, false);
+            applySwatch(prefix + '-tint', null, null, false);
+            applySwatch(prefix + '-tint-300', null, null, false);
+            return false;
+        }
+        var tint = mixWithWhite(brand, TINT_AMOUNT);
+        var tint300 = mixWithWhite(brand, TINT_300_AMOUNT);
+        var solidLow = failsContrast(textColor, brand);
+        var textLow = failsContrast(onWhiteColor, WHITE);
+        var tintLow = failsContrast(brand, tint);
+        var tint300Low = failsContrast(brand, tint300);
+        applySwatch(prefix + '-solid', brand, textColor, solidLow);
+        applySwatch(prefix + '-text', WHITE, onWhiteColor, textLow);
+        applySwatch(prefix + '-tint', tint, brand, tintLow);
+        applySwatch(prefix + '-tint-300', tint300, brand, tint300Low);
+        return solidLow || textLow || tintLow || tint300Low;
+    }
+
     function previewBrand(prefix, brand) {
         if (!brand) {
             applySwatch(prefix + '-solid', null, null, false);
@@ -221,12 +269,29 @@
     }
 
     function update() {
-        var actionAltered = previewBrand('action', fieldValue(FIELD_IDS.actionColor));
-        var descriptionAltered = previewBrand('description', fieldValue(FIELD_IDS.descriptionColor));
-        var note = document.querySelector('.platform-color-contrast__disclaimer');
-        if (note) {
-            note.hidden = !(actionAltered || descriptionAltered);
+        var accessible = accessibleEnabled();
+        var actionFlagged;
+        var descriptionFlagged;
+        if (accessible) {
+            actionFlagged = previewBrand('action', fieldValue(FIELD_IDS.actionColor));
+            descriptionFlagged = previewBrand('description', fieldValue(FIELD_IDS.descriptionColor));
+        } else {
+            actionFlagged = previewBrandRaw(
+                'action',
+                fieldValue(FIELD_IDS.actionColor),
+                fieldValue(FIELD_IDS.actionTextColor),
+                fieldValue(FIELD_IDS.alternativeLinkColor)
+            );
+            descriptionFlagged = previewBrandRaw(
+                'description',
+                fieldValue(FIELD_IDS.descriptionColor),
+                fieldValue(FIELD_IDS.descriptionTextColor),
+                fieldValue(FIELD_IDS.descriptionColor)
+            );
         }
+        var flagged = actionFlagged || descriptionFlagged;
+        showDisclaimer('adjusted', accessible && flagged);
+        showDisclaimer('contrast', !accessible && flagged);
     }
 
     function bind() {

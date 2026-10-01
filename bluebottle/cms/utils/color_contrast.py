@@ -9,10 +9,9 @@ PAGE_BACKGROUND = '#FFFFFF'
 WHITE = '#FFFFFF'
 DARK_NEUTRAL = '#2A2A2A'
 PALE_GREY = '#EEEEEE'
+DARK_TEXT_RATIO = 7
 TINT_STOPS = {
-    100: 95,
     200: 90,
-    300: 80,
 }
 
 
@@ -127,6 +126,36 @@ def ensure_contrast_on_surfaces(
     return result
 
 
+def ensure_readable_fill(fill: Optional[str]) -> Optional[str]:
+    fill = _normalize_hex(fill)
+    if not fill:
+        return None
+
+    try:
+        if passes_aa(WHITE, fill) or contrast_ratio(DARK_NEUTRAL, fill) >= DARK_TEXT_RATIO:
+            return fill
+    except ValueError:
+        return None
+
+    low = 1
+    high = 100
+    best = None
+    while low <= high:
+        mid = (low + high) // 2
+        candidate = mix_with_black(fill, mid)
+        try:
+            readable = bool(candidate) and passes_aa(WHITE, candidate)
+        except ValueError:
+            readable = False
+        if readable:
+            best = candidate
+            high = mid - 1
+        else:
+            low = mid + 1
+
+    return best or '#000000'
+
+
 def choose_on_color(background: Optional[str]) -> Optional[str]:
     background = _normalize_hex(background)
     if not background:
@@ -147,8 +176,19 @@ def choose_on_color(background: Optional[str]) -> Optional[str]:
     return max(candidates, key=lambda item: item[0])[1]
 
 
-def _apply_brand_patterns(settings, brand_color, text_attr, on_background_attr, tint_attrs):
-    on_color = choose_on_color(brand_color)
+def _apply_brand_patterns(
+    settings,
+    brand_color,
+    text_attr,
+    on_background_attr,
+    tint_attrs,
+    adjusted_attr,
+):
+    adjusted = ensure_readable_fill(brand_color)
+    if adjusted:
+        setattr(settings, adjusted_attr, adjusted)
+
+    on_color = choose_on_color(adjusted)
     if on_color:
         setattr(settings, text_attr, on_color)
 
@@ -156,12 +196,13 @@ def _apply_brand_patterns(settings, brand_color, text_attr, on_background_attr, 
     if on_background:
         setattr(settings, on_background_attr, on_background)
 
+    source = adjusted or brand_color
     for stop, amount in TINT_STOPS.items():
         attr = tint_attrs.get(stop)
         if not attr:
             continue
-        tint = mix_with_white(brand_color, amount)
-        on_tint = ensure_contrast(brand_color, tint) if tint else None
+        tint = mix_with_white(source, amount)
+        on_tint = ensure_contrast(source, tint) if tint else None
         if on_tint:
             setattr(settings, attr, on_tint)
 
@@ -181,10 +222,9 @@ def apply_on_colors(settings) -> None:
             'action_text_color',
             'alternative_link_color',
             {
-                100: 'action_on_tint_100_color',
                 200: 'action_on_tint_color',
-                300: 'action_on_tint_300_color',
             },
+            'action_color_adjusted',
         )
     else:
         _clear_derived_fields(
@@ -192,9 +232,8 @@ def apply_on_colors(settings) -> None:
             (
                 'action_text_color',
                 'alternative_link_color',
-                'action_on_tint_100_color',
                 'action_on_tint_color',
-                'action_on_tint_300_color',
+                'action_color_adjusted',
             ),
         )
 
@@ -206,10 +245,9 @@ def apply_on_colors(settings) -> None:
             'description_text_color',
             'description_on_background_color',
             {
-                100: 'description_on_tint_100_color',
                 200: 'description_on_tint_color',
-                300: 'description_on_tint_300_color',
             },
+            'description_color_adjusted',
         )
     else:
         _clear_derived_fields(
@@ -217,9 +255,8 @@ def apply_on_colors(settings) -> None:
             (
                 'description_text_color',
                 'description_on_background_color',
-                'description_on_tint_100_color',
                 'description_on_tint_color',
-                'description_on_tint_300_color',
+                'description_color_adjusted',
             ),
         )
 
@@ -252,7 +289,7 @@ def evaluate_platform_colors(settings) -> List[PairResult]:
         'action',
         str(_('Action')),
         getattr(settings, 'action_text_color', None),
-        getattr(settings, 'action_color', None),
+        getattr(settings, 'action_color_adjusted', None) or getattr(settings, 'action_color', None),
     )
     if action:
         pairs.append(action)
@@ -261,7 +298,7 @@ def evaluate_platform_colors(settings) -> List[PairResult]:
         'description',
         str(_('Description')),
         getattr(settings, 'description_text_color', None),
-        getattr(settings, 'description_color', None),
+        getattr(settings, 'description_color_adjusted', None) or getattr(settings, 'description_color', None),
     )
     if description:
         pairs.append(description)

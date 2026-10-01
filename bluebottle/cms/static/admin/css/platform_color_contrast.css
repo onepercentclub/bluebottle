@@ -11,10 +11,10 @@
 .platform-color-contrast__groups {
     display: grid;
     gap: 1.25rem;
+    width: 600px
 }
 
 .platform-color-contrast__heading {
-    font-size: 0.85rem;
     font-weight: 600;
     margin: 0 0 0.5rem;
 }
@@ -22,7 +22,7 @@
 .platform-color-contrast__swatches {
     display: grid;
     gap: 0.75rem;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
 }
 
 .platform-color-contrast__swatch {
@@ -50,4 +50,14 @@
     font-size: 0.75rem;
     padding: 0.35rem 0.4rem;
     text-align: center;
+}
+
+.platform-color-contrast__mark {
+    font-weight: 700;
+}
+
+.platform-color-contrast__disclaimer {
+    font-size: 0.85714rem;
+    margin: 0.75rem 0 0;
+    color: #9b9b9b;
 }

@@ -3,11 +3,23 @@
 
     var WHITE = '#FFFFFF';
     var DARK_NEUTRAL = '#2A2A2A';
+    var DARK_TEXT_RATIO = 7;
     var PALE_GREY = '#EEEEEE';
-    var TINT_AMOUNT = 90;
+    var TINT_STOPS = {
+        action: [
+            { id: 'tint-200', amount: 90 }
+        ],
+        description: [
+            { id: 'tint-200', amount: 90 }
+        ]
+    };
     var FIELD_IDS = {
         actionColor: 'id_action_color',
-        descriptionColor: 'id_description_color'
+        actionTextColor: 'id_action_text_color',
+        descriptionColor: 'id_description_color',
+        descriptionTextColor: 'id_description_text_color',
+        alternativeLinkColor: 'id_alternative_link_color',
+        accessibleColours: 'id_accessible_colours'
     };
 
     function normalizeHex(value) {
@@ -154,7 +166,31 @@
         return normalizeHex(input.value);
     }
 
-    function applySwatch(name, background, color) {
+    function ensureReadableFill(fill) {
+        fill = normalizeHex(fill);
+        if (!fill) {
+            return null;
+        }
+        if (passesAa(contrastRatio(WHITE, fill)) || contrastRatio(DARK_NEUTRAL, fill) >= DARK_TEXT_RATIO) {
+            return fill;
+        }
+        var low = 1;
+        var high = 100;
+        var best = null;
+        while (low <= high) {
+            var mid = Math.floor((low + high) / 2);
+            var candidate = mixWithBlack(fill, mid);
+            if (passesAa(contrastRatio(WHITE, candidate))) {
+                best = candidate;
+                high = mid - 1;
+            } else {
+                low = mid + 1;
+            }
+        }
+        return best || '#000000';
+    }
+
+    function applySwatch(name, background, color, altered) {
         var root = document.querySelector('[data-preview="' + name + '"]');
         if (!root) {
             return;
@@ -165,27 +201,108 @@
         }
         sample.style.backgroundColor = background || '#f5f5f5';
         sample.style.color = color || '#666666';
+        var mark = root.querySelector('.platform-color-contrast__mark');
+        if (mark) {
+            mark.hidden = !altered;
+        }
+    }
+
+    function accessibleEnabled() {
+        var input = document.getElementById(FIELD_IDS.accessibleColours);
+        if (input) {
+            return input.checked;
+        }
+        var panel = document.getElementById('platform-color-contrast-panel');
+        return Boolean(panel && panel.getAttribute('data-accessible') === 'true');
+    }
+
+    function failsContrast(foreground, background) {
+        if (!foreground || !background) {
+            return false;
+        }
+        return !passesAa(contrastRatio(foreground, background));
+    }
+
+    function showDisclaimer(kind, visible) {
+        var note = document.querySelector('[data-disclaimer="' + kind + '"]');
+        if (note) {
+            note.hidden = !visible;
+        }
+    }
+
+    function clearPreview(prefix) {
+        applySwatch(prefix + '-solid', null, null, false);
+        applySwatch(prefix + '-text', WHITE, null, false);
+        TINT_STOPS[prefix].forEach(function (stop) {
+            applySwatch(prefix + '-' + stop.id, null, null, false);
+        });
+    }
+
+    function previewBrandRaw(prefix, brand, textColor, onWhiteColor) {
+        if (!brand) {
+            clearPreview(prefix);
+            return false;
+        }
+        var solidLow = failsContrast(textColor, brand);
+        var textLow = failsContrast(onWhiteColor, WHITE);
+        var tintLow = false;
+        applySwatch(prefix + '-solid', brand, textColor, solidLow);
+        applySwatch(prefix + '-text', WHITE, onWhiteColor, textLow);
+        TINT_STOPS[prefix].forEach(function (stop) {
+            var tint = mixWithWhite(brand, stop.amount);
+            var low = failsContrast(brand, tint);
+            applySwatch(prefix + '-' + stop.id, tint, brand, low);
+            tintLow = tintLow || low;
+        });
+        return solidLow || textLow || tintLow;
     }
 
     function previewBrand(prefix, brand) {
         if (!brand) {
-            applySwatch(prefix + '-solid', null, null);
-            applySwatch(prefix + '-text', WHITE, null);
-            applySwatch(prefix + '-tint', null, null);
-            return;
+            clearPreview(prefix);
+            return false;
         }
-        var onSolid = chooseOnColor(brand);
+        var fill = ensureReadableFill(brand);
+        var onSolid = chooseOnColor(fill);
         var onBackground = ensureContrastOnSurfaces(brand, [WHITE, PALE_GREY]);
-        var tint = mixWithWhite(brand, TINT_AMOUNT);
-        var onTint = ensureContrast(brand, tint);
-        applySwatch(prefix + '-solid', brand, onSolid);
-        applySwatch(prefix + '-text', WHITE, onBackground);
-        applySwatch(prefix + '-tint', tint, onTint);
+        var fillAdjusted = fill !== brand;
+        var tintAdjusted = false;
+        applySwatch(prefix + '-solid', fill, onSolid, fillAdjusted);
+        applySwatch(prefix + '-text', WHITE, onBackground, onBackground !== brand);
+        TINT_STOPS[prefix].forEach(function (stop) {
+            var tint = mixWithWhite(fill, stop.amount);
+            var onTint = ensureContrast(fill, tint);
+            var altered = fillAdjusted || onTint !== brand;
+            applySwatch(prefix + '-' + stop.id, tint, onTint, altered);
+            tintAdjusted = tintAdjusted || altered;
+        });
+        return fillAdjusted || onBackground !== brand || tintAdjusted;
     }
 
     function update() {
-        previewBrand('action', fieldValue(FIELD_IDS.actionColor));
-        previewBrand('description', fieldValue(FIELD_IDS.descriptionColor));
+        var accessible = accessibleEnabled();
+        var actionFlagged;
+        var descriptionFlagged;
+        if (accessible) {
+            actionFlagged = previewBrand('action', fieldValue(FIELD_IDS.actionColor));
+            descriptionFlagged = previewBrand('description', fieldValue(FIELD_IDS.descriptionColor));
+        } else {
+            actionFlagged = previewBrandRaw(
+                'action',
+                fieldValue(FIELD_IDS.actionColor),
+                fieldValue(FIELD_IDS.actionTextColor),
+                fieldValue(FIELD_IDS.alternativeLinkColor)
+            );
+            descriptionFlagged = previewBrandRaw(
+                'description',
+                fieldValue(FIELD_IDS.descriptionColor),
+                fieldValue(FIELD_IDS.descriptionTextColor),
+                fieldValue(FIELD_IDS.descriptionColor)
+            );
+        }
+        var flagged = actionFlagged || descriptionFlagged;
+        showDisclaimer('adjusted', accessible && flagged);
+        showDisclaimer('contrast', !accessible && flagged);
     }
 
     function bind() {

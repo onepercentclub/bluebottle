@@ -16,7 +16,7 @@ from bluebottle.cms.models import (
     LinksContent, StepsContent, HomepageStatisticsContent, LogosContent,
     CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
 )
-from bluebottle.cms.utils.color_contrast import contrast_ratio, mix_with_white
+from bluebottle.cms.utils.color_contrast import contrast_ratio, mix_with_white, passes_aa
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
 from bluebottle.members.models import MemberPlatformSettings
@@ -826,6 +826,7 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
 
     def test_computes_readable_text_colors_on_save(self):
         settings = SitePlatformSettings.objects.create(
+            accessible_colours=True,
             action_color='#FFFF00',
             action_text_color='#FFFFFF',
             description_color='#281E50',
@@ -847,42 +848,47 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertTrue(settings.action_on_tint_color)
         self.assertGreaterEqual(
             contrast_ratio(
-                settings.action_on_tint_100_color,
-                mix_with_white('#FFFF00', 95),
-            ),
-            4.5,
-        )
-        self.assertGreaterEqual(
-            contrast_ratio(
                 settings.action_on_tint_color,
                 mix_with_white('#FFFF00', 90),
             ),
             4.5,
         )
-        self.assertGreaterEqual(
-            contrast_ratio(
-                settings.action_on_tint_300_color,
-                mix_with_white('#FFFF00', 80),
-            ),
-            4.5,
-        )
-        self.assertEqual(settings.description_on_tint_100_color.upper(), '#281E50')
         self.assertEqual(settings.description_on_tint_color.upper(), '#281E50')
-        self.assertEqual(settings.description_on_tint_300_color.upper(), '#281E50')
 
         response = self.client.get(reverse('settings'))
         content = response.data['platform']['content']
         self.assertEqual(content['action_text_color'].upper(), '#2A2A2A')
         self.assertEqual(content['alternative_link_color'].upper(), settings.alternative_link_color.upper())
-        self.assertEqual(content['action_on_tint_100_color'].upper(), settings.action_on_tint_100_color.upper())
         self.assertEqual(content['action_on_tint_color'].upper(), settings.action_on_tint_color.upper())
-        self.assertEqual(content['action_on_tint_300_color'].upper(), settings.action_on_tint_300_color.upper())
+        self.assertNotIn('action_on_tint_100_color', content)
+        self.assertNotIn('action_on_tint_300_color', content)
         self.assertEqual(content['description_on_background_color'].upper(), '#281E50')
-        self.assertEqual(content['description_on_tint_100_color'].upper(), '#281E50')
         self.assertEqual(content['description_on_tint_color'].upper(), '#281E50')
-        self.assertEqual(content['description_on_tint_300_color'].upper(), '#281E50')
+        self.assertNotIn('description_on_tint_100_color', content)
+        self.assertNotIn('description_on_tint_300_color', content)
 
         settings.action_color = '#000000'
         settings.save()
         settings.refresh_from_db()
         self.assertEqual(settings.action_text_color.upper(), '#FFFFFF')
+
+    def test_publishes_adjusted_fill_without_overwriting_the_chosen_colour(self):
+        settings = SitePlatformSettings.objects.create(
+            accessible_colours=True,
+            action_color='#777777',
+            description_color='#777777',
+        )
+        settings.refresh_from_db()
+
+        self.assertEqual(settings.action_color.upper(), '#777777')
+        self.assertEqual(settings.description_color.upper(), '#777777')
+        self.assertNotEqual(settings.action_color_adjusted.upper(), '#777777')
+        self.assertTrue(passes_aa('#FFFFFF', settings.action_color_adjusted))
+        self.assertTrue(passes_aa('#FFFFFF', settings.description_color_adjusted))
+
+        response = self.client.get(reverse('settings'))
+        content = response.data['platform']['content']
+        self.assertEqual(content['action_color'].upper(), settings.action_color_adjusted.upper())
+        self.assertEqual(content['description_color'].upper(), settings.description_color_adjusted.upper())
+        self.assertNotIn('action_color_adjusted', content)
+        self.assertNotIn('description_color_adjusted', content)

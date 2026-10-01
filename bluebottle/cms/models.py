@@ -754,10 +754,22 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         )
     )
 
+    accessible_colours = models.BooleanField(
+        _('Accessible colours'),
+        help_text=_('Make sure the colours are WCAG compliant. You should save settings for this to take effect.'),
+        default=False,
+    )
+
     action_color = ColorField(
         _('Action colour'), null=True, blank=True,
         help_text=_(
             'Colour for action buttons and links'
+        )
+    )
+    action_color_adjusted = ColorField(
+        _('Adjusted action colour'), null=True, blank=True,
+        help_text=_(
+            'Darkened when white or dark text would not be readable on the action colour'
         )
     )
     action_text_color = ColorField(
@@ -773,25 +785,11 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             'Automatically darkened so the action colour stays readable as text on white or grey'
         )
     )
-    action_on_tint_100_color = ColorField(
-        _('Action text on light tint'), null=True, blank=True,
-        default=None,
-        help_text=_(
-            'Automatically darkened so text stays readable on a lighter tint of the action colour'
-        )
-    )
     action_on_tint_color = ColorField(
         _('Action text on tint'), null=True, blank=True,
         default=None,
         help_text=_(
             'Automatically darkened so text stays readable on a light tint of the action colour'
-        )
-    )
-    action_on_tint_300_color = ColorField(
-        _('Action text on strong tint'), null=True, blank=True,
-        default=None,
-        help_text=_(
-            'Automatically darkened so text stays readable on a stronger tint of the action colour'
         )
     )
 
@@ -811,6 +809,12 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             'Colour for descriptive and secondary buttons'
         )
     )
+    description_color_adjusted = ColorField(
+        _('Adjusted description colour'), null=True, blank=True,
+        help_text=_(
+            'Darkened when white or dark text would not be readable on the description colour'
+        )
+    )
     description_text_color = ColorField(
         _('Description text colour'), null=True, blank=True,
         help_text=_(
@@ -824,25 +828,11 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             'Automatically darkened so the description colour stays readable as text on white or grey'
         )
     )
-    description_on_tint_100_color = ColorField(
-        _('Description text on light tint'), null=True, blank=True,
-        default=None,
-        help_text=_(
-            'Automatically darkened so text stays readable on a lighter tint of the description colour'
-        )
-    )
     description_on_tint_color = ColorField(
         _('Description text on tint'), null=True, blank=True,
         default=None,
         help_text=_(
             'Automatically darkened so text stays readable on a light tint of the description colour'
-        )
-    )
-    description_on_tint_300_color = ColorField(
-        _('Description text on strong tint'), null=True, blank=True,
-        default=None,
-        help_text=_(
-            'Automatically darkened so text stays readable on a stronger tint of the description colour'
         )
     )
     footer_color = ColorField(
@@ -939,7 +929,16 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     def save(self, *args, **kwargs):
         from bluebottle.cms.utils.color_contrast import apply_on_colors
 
-        apply_on_colors(self)
+        if self.accessible_colours:
+            apply_on_colors(self)
+        else:
+            self.action_color_adjusted = None
+            self.action_on_tint_text_color = self.action_color
+            self.action_on_tint_color = self.action_color
+
+            self.description_color_adjusted = None
+            self.description_on_background_color = self.description_color
+            self.description_on_tint_color = self.description_color
 
         if self.share_activities and not self.organization_id:
             tenant = connection.tenant

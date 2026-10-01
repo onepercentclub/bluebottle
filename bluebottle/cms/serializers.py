@@ -805,6 +805,14 @@ class NewsItemPreviewSerializer(ModelSerializer):
         resource_name = 'news-item-preview'
 
 
+def _published_brand_color(obj, original_attr, adjusted_attr):
+    if getattr(obj, 'accessible_colours', False):
+        adjusted = getattr(obj, adjusted_attr, None)
+        if adjusted:
+            return adjusted
+    return getattr(obj, original_attr, None)
+
+
 class FaviconsSerializer(serializers.Serializer):
     large = SorlImageField('194x194', source='*')
     small = SorlImageField('32x32', source='*')
@@ -812,6 +820,14 @@ class FaviconsSerializer(serializers.Serializer):
 
 class SitePlatformSettingsSerializer(serializers.ModelSerializer):
     favicons = FaviconsSerializer(source='favicon')
+    action_color = serializers.SerializerMethodField()
+    description_color = serializers.SerializerMethodField()
+
+    def get_action_color(self, obj):
+        return _published_brand_color(obj, 'action_color', 'action_color_adjusted')
+
+    def get_description_color(self, obj):
+        return _published_brand_color(obj, 'description_color', 'description_color_adjusted')
 
     class Meta(object):
         model = SitePlatformSettings
@@ -833,15 +849,11 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'action_color',
             'action_text_color',
             'alternative_link_color',
-            'action_on_tint_100_color',
             'action_on_tint_color',
-            'action_on_tint_300_color',
             'description_color',
             'description_text_color',
             'description_on_background_color',
-            'description_on_tint_100_color',
             'description_on_tint_color',
-            'description_on_tint_300_color',
             'footer_color',
             'footer_text_color',
             'title_font',

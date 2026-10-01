@@ -1,6 +1,7 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.options import IncorrectLookupParameters
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import translation
@@ -47,12 +48,23 @@ class InitiativeReviewerFilter(admin.SimpleListFilter):
         ]
 
     def queryset(self, request, queryset):
-        if self.value() == "me":
-            return queryset.filter(reviewer=request.user)
-        elif self.value():
-            return queryset.filter(reviewer__id=self.value())
-        else:
+        value = self.value()
+        if not value:
             return queryset
+        if value == "me":
+            return queryset.filter(reviewer=request.user)
+        try:
+            reviewer_id = int(value)
+        except (TypeError, ValueError):
+            # Anything non-numeric (a stale bookmark, a crawled link) would
+            # otherwise reach IntegerField.get_prep_value() inside
+            # ChangeList.__init__ and take the whole changelist down with a
+            # 500. IncorrectLookupParameters makes the admin redirect back to
+            # the unfiltered list instead.
+            raise IncorrectLookupParameters(
+                "Invalid reviewer id: {!r}".format(value)
+            )
+        return queryset.filter(reviewer__id=reviewer_id)
 
 
 class InitiativeCountryFilter(admin.SimpleListFilter):

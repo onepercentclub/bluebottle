@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from django.test.client import RequestFactory
+from elasticsearch_dsl.utils import AttrDict
 
 from bluebottle.activities.serializers.preview import (
     ActivityPreviewLocationSerializer,
@@ -321,3 +322,152 @@ class ActivityPreviewLocationTestCase(BluebottleTestCase):
 
         self.assertEqual(serializer.to_representation(activity), 'Netherlands')
         self.assertFalse(serializer.has_multiple_unresolved_locations(activity))
+
+
+class ActivityPreviewLocationWithoutCountryCodeTestCase(BluebottleTestCase):
+    """Regression tests for BB-30097.
+
+    Indexed activity documents are not guaranteed to carry every field: a
+    geofeature is only given a ``country_code`` when its geolocation has a
+    country, and documents indexed before a mapping change can lack the field
+    altogether. Reading such a field straight off the Elasticsearch ``AttrDict``
+    raised ``AttributeError: 'AttrDict' object has no attribute 'country_code'``
+    and turned /api/activities/search into a 500.
+    """
+
+    def setUp(self):
+        super().setUp()
+        settings = InitiativePlatformSettings.load()
+        settings.card_location_display = 'city_country'
+        settings.save()
+
+    def _geofeature(self, feature_type, name, **extra):
+        # Deliberately no 'country_code' key: mirrors prepare_geofeature, which
+        # only sets it when the geolocation has a country.
+        entry = {
+            'language': 'en',
+            'name': name,
+            'place_name': name,
+            'feature_type': feature_type,
+            'is_primary': False,
+            'country': 'Netherlands',
+        }
+        entry.update(extra)
+        return entry
+
+    def _document(self, **kwargs):
+        defaults = {
+            'type': 'deed',
+            'status': 'open',
+            'location': [
+                # No 'country_code' key, as in the stale BMW Group documents.
+                {'id': 42, 'locality': 'Ouddorp', 'type': 'location'}
+            ],
+            'geofeature': [
+                self._geofeature('place', 'Ouddorp'),
+                self._geofeature('country', 'Netherlands'),
+            ],
+            'country': [],
+        }
+        defaults.update(kwargs)
+        return AttrDict(defaults)
+
+    def _context(self):
+        return {'request': RequestFactory().get('/')}
+
+    def test_location_without_country_code_falls_back_to_country_name(self):
+        location = ActivityPreviewLocationSerializer(
+            context=self._context(),
+        ).to_representation(self._document())
+
+        self.assertEqual(location, 'Ouddorp, Netherlands')
+
+    def test_location_without_country_code_or_country(self):
+        # 'city_country' has nothing to pair the city with, so it yields no
+        # label at all -- but it must not raise.
+        document = self._document(
+            geofeature=[
+                self._geofeature('place', 'Ouddorp', country=None),
+            ],
+        )
+        location = ActivityPreviewLocationSerializer(
+            context=self._context(),
+        ).to_representation(document)
+
+        self.assertIsNone(location)
+
+    def test_location_entry_without_type_is_skipped(self):
+        document = self._document(location=[{'id': 42, 'locality': 'Ouddorp'}])
+        location = ActivityPreviewLocationSerializer(
+            context=self._context(),
+        ).to_representation(document)
+
+        self.assertIsNone(location)
+
+    def test_slotted_location_without_country_code(self):
+        document = self._document(
+            type='dateactivity',
+            slots=[
+                {
+                    'status': 'open',
+                    'start': '2026-08-01T10:00:00+00:00',
+                    'end': '2026-08-01T12:00:00+00:00',
+                    'is_online': False,
+                    'location_id': 42,
+                    'geofeatures': [],
+                }
+            ],
+        )
+        location = ActivityPreviewLocationSerializer(
+            context=self._context(),
+        ).to_representation(document)
+
+        self.assertEqual(location, 'Ouddorp, Netherlands')
+
+    def test_multiple_slot_locations_without_country_code(self):
+        document = self._document(
+            type='dateactivity',
+            geofeature=[],
+            location=[
+                {'id': 1, 'locality': 'Amsterdam', 'type': 'location'},
+                {'id': 2, 'locality': 'Haarlem', 'type': 'location'},
+            ],
+            slots=[
+                {
+                    'status': 'open',
+                    'start': '2026-08-01T10:00:00+00:00',
+                    'end': '2026-08-01T12:00:00+00:00',
+                    'is_online': False,
+                    'location_id': 1,
+                    'geofeatures': [
+                        self._geofeature('place', 'Amsterdam'),
+                        self._geofeature('region', 'North Holland'),
+                        self._geofeature('country', 'Netherlands'),
+                    ],
+                },
+                {
+                    'status': 'open',
+                    'start': '2026-08-02T10:00:00+00:00',
+                    'end': '2026-08-02T12:00:00+00:00',
+                    'is_online': False,
+                    'location_id': 2,
+                    'geofeatures': [
+                        self._geofeature('place', 'Haarlem'),
+                        self._geofeature('region', 'North Holland'),
+                        self._geofeature('country', 'Netherlands'),
+                    ],
+                },
+            ],
+        )
+        location = ActivityPreviewLocationSerializer(
+            context=self._context(),
+        ).to_representation(document)
+
+        self.assertEqual(location, 'North Holland, Netherlands')
+
+    def test_preview_serializer_get_location_without_country_code(self):
+        serializer = ActivityPreviewSerializer(context=self._context())
+
+        self.assertEqual(
+            serializer.get_location(self._document()), 'Ouddorp, Netherlands'
+        )

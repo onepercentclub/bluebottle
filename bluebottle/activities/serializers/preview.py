@@ -191,8 +191,8 @@ class ActivityPreviewSingleLocationSerializer(serializers.Serializer):
         locations = []
 
         for location_type in location_types:
-            for loc in activity.location:
-                if loc.type == location_type:
+            for loc in getattr(activity, 'location', None) or []:
+                if getattr(loc, 'type', None) == location_type:
                     locations.append(loc)
 
         if not locations:

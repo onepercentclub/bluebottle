@@ -826,6 +826,7 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
 
     def test_computes_readable_text_colors_on_save(self):
         settings = SitePlatformSettings.objects.create(
+            accessible_colours=True,
             action_color='#FFFF00',
             action_text_color='#FFFFFF',
             description_color='#281E50',

@@ -1,22 +1,22 @@
 from builtins import str
 
+import nested_admin
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.admin.contentitems import BaseContentItemInline
-import nested_admin
-
-from bluebottle.cms.fluent_admin import NestedContentItemFormSet, get_cms_content_item_inlines
+from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
 
+from bluebottle.cms.fluent_admin import NestedContentItemFormSet, get_cms_content_item_inlines
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
     Stat, Quote, Person, Step, Logo, ResultPage, HomePage, ContentLink,
@@ -366,10 +366,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
         'terminated_info',
         'organization',
         'color_contrast_panel',
-        'action_text_color',
-        'alternative_link_color',
         'action_on_tint_color',
-        'description_text_color',
         'description_on_background_color',
         'description_on_tint_color',
     ]
@@ -411,9 +408,20 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
                 {
                     'fields': (
                         'logo', 'favicon',
+                        'accessible_colours',
                         'action_color',
                         'description_color',
                         'color_contrast_panel',
+                        'footer_color', 'footer_text_color',
+                        'title_font', 'body_font'
+                    ) if obj.accessible_colours else (
+                        'logo', 'favicon',
+                        'accessible_colours',
+                        'action_color',
+                        'action_text_color',
+                        'description_color',
+                        'description_text_color',
+                        'alternative_link_color',
                         'footer_color', 'footer_text_color',
                         'title_font', 'body_font'
                     )
@@ -435,47 +443,7 @@ class SitePlatformSettingsAdmin(TranslatableLabelAdminMixin, TranslatableAdmin, 
         return fieldsets
 
     def color_contrast_panel(self, obj):
-        return mark_safe(
-            '<div id="platform-color-contrast-panel" class="platform-color-contrast">'
-            '  <p class="platform-color-contrast__intro">How these colours will look on the platform</p>'
-            '  <div class="platform-color-contrast__groups">'
-            '    <div class="platform-color-contrast__group">'
-            '      <h3 class="platform-color-contrast__heading">Action</h3>'
-            '      <div class="platform-color-contrast__swatches">'
-            '        <div class="platform-color-contrast__swatch" data-preview="action-solid">'
-            '          <span class="platform-color-contrast__sample">Aa</span>'
-            '          <span class="platform-color-contrast__caption">Solid fill</span>'
-            '        </div>'
-            '        <div class="platform-color-contrast__swatch" data-preview="action-text">'
-            '          <span class="platform-color-contrast__sample">Aa</span>'
-            '          <span class="platform-color-contrast__caption">Text on white</span>'
-            '        </div>'
-            '        <div class="platform-color-contrast__swatch" data-preview="action-tint">'
-            '          <span class="platform-color-contrast__sample">Aa</span>'
-            '          <span class="platform-color-contrast__caption">Tint + text</span>'
-            '        </div>'
-            '      </div>'
-            '    </div>'
-            '    <div class="platform-color-contrast__group">'
-            '      <h3 class="platform-color-contrast__heading">Description</h3>'
-            '      <div class="platform-color-contrast__swatches">'
-            '        <div class="platform-color-contrast__swatch" data-preview="description-solid">'
-            '          <span class="platform-color-contrast__sample">Aa</span>'
-            '          <span class="platform-color-contrast__caption">Solid fill</span>'
-            '        </div>'
-            '        <div class="platform-color-contrast__swatch" data-preview="description-text">'
-            '          <span class="platform-color-contrast__sample">Aa</span>'
-            '          <span class="platform-color-contrast__caption">Text on white</span>'
-            '        </div>'
-            '        <div class="platform-color-contrast__swatch" data-preview="description-tint">'
-            '          <span class="platform-color-contrast__sample">Aa</span>'
-            '          <span class="platform-color-contrast__caption">Tint + text</span>'
-            '        </div>'
-            '      </div>'
-            '    </div>'
-            '  </div>'
-            '</div>'
-        )
+        return mark_safe(render_to_string('admin/cms/color_contrast_panel.html'))
 
     color_contrast_panel.short_description = _('Colour preview')
 

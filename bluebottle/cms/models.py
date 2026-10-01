@@ -754,10 +754,22 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         )
     )
 
+    accessible_colours = models.BooleanField(
+        _('Accessible colours'),
+        help_text=_('Make sure the colours are WACG compliant.'),
+        default=False,
+    )
+
     action_color = ColorField(
         _('Action colour'), null=True, blank=True,
         help_text=_(
             'Colour for action buttons and links'
+        )
+    )
+    action_color_adjusted = ColorField(
+        _('Adjusted action colour'), null=True, blank=True,
+        help_text=_(
+            'Darkened when white or dark text would not be readable on the action colour'
         )
     )
     action_text_color = ColorField(
@@ -809,6 +821,12 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         _('Description colour'), null=True, blank=True,
         help_text=_(
             'Colour for descriptive and secondary buttons'
+        )
+    )
+    description_color_adjusted = ColorField(
+        _('Adjusted description colour'), null=True, blank=True,
+        help_text=_(
+            'Darkened when white or dark text would not be readable on the description colour'
         )
     )
     description_text_color = ColorField(
@@ -939,7 +957,18 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     def save(self, *args, **kwargs):
         from bluebottle.cms.utils.color_contrast import apply_on_colors
 
-        apply_on_colors(self)
+        if self.accessible_colours:
+            apply_on_colors(self)
+        else:
+            self.action_color_adjusted = None
+            self.action_on_tint_color = self.action_color
+            self.action_on_tint_text_color = self.action_color
+            self.action_on_tint_300_color = self.action_color
+
+            self.description_color_adjusted = None
+            self.description_on_background_color = self.description_color
+            self.description_on_tint_100_color = self.description_color
+            self.description_on_tint_300_color = self.description_color
 
         if self.share_activities and not self.organization_id:
             tenant = connection.tenant

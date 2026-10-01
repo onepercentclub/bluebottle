@@ -1,0 +1,59 @@
+{% load i18n %}
+<div id="platform-color-contrast-panel" class="platform-color-contrast">
+    <p class="platform-color-contrast__intro">{% trans "How these colours will look on the platform" %}</p>
+    <div class="platform-color-contrast__groups">
+        <div class="platform-color-contrast__group">
+            <p class="platform-color-contrast__heading">{% trans "Action" %}</p>
+            <div class="platform-color-contrast__swatches">
+                <div class="platform-color-contrast__swatch" data-preview="action-solid">
+                    <span class="platform-color-contrast__sample">Aa</span>
+                    <span class="platform-color-contrast__caption">{% trans "Solid fill" %}<span
+                            class="platform-color-contrast__mark" hidden>*</span></span>
+                </div>
+                <div class="platform-color-contrast__swatch" data-preview="action-text">
+                    <span class="platform-color-contrast__sample">Aa</span>
+                    <span class="platform-color-contrast__caption">{% trans "Text on white" %}<span
+                            class="platform-color-contrast__mark" hidden>*</span></span>
+                </div>
+                <div class="platform-color-contrast__swatch" data-preview="action-tint">
+                    <span class="platform-color-contrast__sample">Aa</span>
+                    <span class="platform-color-contrast__caption">{% trans "Tint + text" %}<span
+                            class="platform-color-contrast__mark" hidden>*</span></span>
+                </div>
+                <div class="platform-color-contrast__swatch" data-preview="action-tint-300">
+                    <span class="platform-color-contrast__sample">Aa</span>
+                    <span class="platform-color-contrast__caption">{% trans "Tint dark + text" %}<span
+                            class="platform-color-contrast__mark" hidden>*</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="platform-color-contrast__group">
+            <p class="platform-color-contrast__heading">{% trans "Description" %}</p>
+            <div class="platform-color-contrast__swatches">
+                <div class="platform-color-contrast__swatch" data-preview="description-solid">
+                    <span class="platform-color-contrast__sample">Aa</span>
+                    <span class="platform-color-contrast__caption">{% trans "Solid fill" %}<span
+                            class="platform-color-contrast__mark" hidden>*</span></span>
+                </div>
+                <div class="platform-color-contrast__swatch" data-preview="description-text">
+                    <span class="platform-color-contrast__sample">Aa</span>
+                    <span class="platform-color-contrast__caption">{% trans "Text on white" %}<span
+                            class="platform-color-contrast__mark" hidden>*</span></span>
+                </div>
+                <div class="platform-color-contrast__swatch" data-preview="description-tint">
+                    <span class="platform-color-contrast__sample">Aa</span>
+                    <span class="platform-color-contrast__caption">{% trans "Tint + text" %}<span
+                            class="platform-color-contrast__mark" hidden>*</span></span>
+                </div>
+                <div class="platform-color-contrast__swatch" data-preview="description-tint-300">
+                    <span class="platform-color-contrast__sample">Aa</span>
+                    <span class="platform-color-contrast__caption">{% trans "Tint dark + text" %}<span
+                            class="platform-color-contrast__mark" hidden>*</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <p class="platform-color-contrast__disclaimer" hidden>
+        {% trans "* These colours were adjusted so they stay readable for everyone." %}
+    </p>
+</div>

@@ -16,7 +16,7 @@ from bluebottle.cms.models import (
     LinksContent, StepsContent, HomepageStatisticsContent, LogosContent,
     CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
 )
-from bluebottle.cms.utils.color_contrast import contrast_ratio, mix_with_white
+from bluebottle.cms.utils.color_contrast import contrast_ratio, mix_with_white, passes_aa
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
 from bluebottle.members.models import MemberPlatformSettings
@@ -886,3 +886,24 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         settings.save()
         settings.refresh_from_db()
         self.assertEqual(settings.action_text_color.upper(), '#FFFFFF')
+
+    def test_publishes_adjusted_fill_without_overwriting_the_chosen_colour(self):
+        settings = SitePlatformSettings.objects.create(
+            accessible_colours=True,
+            action_color='#777777',
+            description_color='#777777',
+        )
+        settings.refresh_from_db()
+
+        self.assertEqual(settings.action_color.upper(), '#777777')
+        self.assertEqual(settings.description_color.upper(), '#777777')
+        self.assertNotEqual(settings.action_color_adjusted.upper(), '#777777')
+        self.assertTrue(passes_aa('#FFFFFF', settings.action_color_adjusted))
+        self.assertTrue(passes_aa('#FFFFFF', settings.description_color_adjusted))
+
+        response = self.client.get(reverse('settings'))
+        content = response.data['platform']['content']
+        self.assertEqual(content['action_color'].upper(), settings.action_color_adjusted.upper())
+        self.assertEqual(content['description_color'].upper(), settings.description_color_adjusted.upper())
+        self.assertNotIn('action_color_adjusted', content)
+        self.assertNotIn('description_color_adjusted', content)

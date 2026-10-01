@@ -1,6 +1,8 @@
 from django.test import TestCase
 
+from bluebottle.activities.models import Activity
 from bluebottle.deeds.models import Deed
+from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -95,3 +97,39 @@ class ActivitySegmentsTestCase(TestCase):
     def test_office_location_not_required(self):
         activity = DeadlineActivityFactory.create()
         self.assertFalse('office_location' in activity.required_fields)
+
+
+class ActivitySlugTestCase(TestCase):
+    """BB-30193: an auto-generated slug could overflow its column.
+
+    Activity.save() derives the slug from the title rather than taking it
+    through the serializer, so nothing validated its length. slugify can also
+    lengthen a string once non-ASCII characters are transliterated, which means
+    a title comfortably inside its own 255-character limit could still produce
+    a slug over 100 and fail the INSERT with
+    DataError: value too long for type character varying(100).
+    """
+
+    def test_long_title_produces_a_slug_that_fits(self):
+        max_length = Activity._meta.get_field('slug').max_length
+        activity = DeedFactory.create(title='a' * 255, slug='new')
+
+        self.assertLessEqual(len(activity.slug), max_length)
+        self.assertTrue(activity.slug.startswith('aaa'))
+
+    def test_transliterated_title_produces_a_slug_that_fits(self):
+        """Non-ASCII titles lengthen under slugify, so test them separately."""
+        max_length = Activity._meta.get_field('slug').max_length
+        activity = DeedFactory.create(title='ä' * 200, slug='new')
+
+        self.assertLessEqual(len(activity.slug), max_length)
+
+    def test_empty_title_still_falls_back_to_new(self):
+        activity = DeedFactory.create(title='', slug='new')
+
+        self.assertEqual(activity.slug, 'new')
+
+    def test_short_title_is_not_truncated(self):
+        activity = DeedFactory.create(title='A normal title', slug='new')
+
+        self.assertEqual(activity.slug, 'a-normal-title')

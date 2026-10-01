@@ -11,6 +11,8 @@ from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from geopy.distance import distance, lonlat
 from moneyed import Money
+from django.core.validators import MaxLengthValidator
+from django.db.models import QuerySet
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
@@ -216,8 +218,52 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
 
 
 # This can't be in serializers because of circular imports
+def is_editable_draft(instance):
+    """True when the serializer is bound to a single unpublished activity.
+
+    DRF's many_init hands the child serializer the same positional args as the
+    ListSerializer, so on a list endpoint `instance` is the page's list of
+    activities rather than one activity. Reading `.status` off that raised
+    `AttributeError: 'list' object has no attribute 'status'` for any non-empty
+    page (an empty page short-circuited on `not instance`, which is why it
+    looked intermittent). A list is never a single draft being edited.
+    """
+    if instance is None:
+        return True
+    if isinstance(instance, (list, tuple, QuerySet)):
+        return False
+    return getattr(instance, 'status', None) in ('draft', 'needs_work')
+
+
+def relax_validation_for_draft(fields):
+    """Let an incomplete draft be saved without dropping integrity checks.
+
+    A draft is saved field by field while the user fills the form in, so
+    required/blank/null are relaxed. Wiping `validators` wholesale also removed
+    MaxLengthValidator, though, and a value that *is* present still has to fit
+    its column -- an over-long title sailed through validation and failed on the
+    INSERT with `DataError: value too long for type character varying(255)` and
+    a 500 instead of a field-level 400 (BB-30249).
+    """
+    for field in fields.values():
+        field.allow_blank = True
+        field.validators = [
+            validator for validator in field.validators
+            if isinstance(validator, MaxLengthValidator)
+        ]
+        field.allow_null = True
+        field.required = False
+
+
+# Declaring `title` explicitly drops the max_length ModelSerializer would have
+# taken from the model field, so DRF stopped validating the length and an
+# over-long title reached Postgres as a DataError instead of a 400. Read it off
+# the model so the two cannot drift apart.
+TITLE_MAX_LENGTH = Activity._meta.get_field('title').max_length
+
+
 class BaseActivitySerializer(ModelSerializer):
-    title = serializers.CharField()
+    title = serializers.CharField(max_length=TITLE_MAX_LENGTH)
     description = RichTextField()
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
@@ -286,12 +332,8 @@ class BaseActivitySerializer(ModelSerializer):
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
 
-        if not instance or instance.status in ('draft', 'needs_work'):
-            for key in self.fields:
-                self.fields[key].allow_blank = True
-                self.fields[key].validators = []
-                self.fields[key].allow_null = True
-                self.fields[key].required = False
+        if is_editable_draft(instance):
+            relax_validation_for_draft(self.fields)
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)
@@ -447,7 +489,9 @@ class BaseActivitySerializer(ModelSerializer):
 
 
 class BaseActivityListSerializer(ModelSerializer):
-    title = serializers.CharField(allow_blank=True, required=False)
+    title = serializers.CharField(
+        allow_blank=True, required=False, max_length=TITLE_MAX_LENGTH
+    )
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
@@ -515,7 +559,9 @@ class BaseActivityListSerializer(ModelSerializer):
 
 
 class BaseTinyActivitySerializer(ModelSerializer):
-    title = serializers.CharField(allow_blank=True, required=False)
+    title = serializers.CharField(
+        allow_blank=True, required=False, max_length=TITLE_MAX_LENGTH
+    )
     slug = serializers.CharField(read_only=True)
 
     class Meta(object):
@@ -537,7 +583,7 @@ class BaseTinyActivitySerializer(ModelSerializer):
 
 class ActivitySubmitSerializer(ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(required=True, queryset=Member.objects.all())
-    title = serializers.CharField(required=True)
+    title = serializers.CharField(required=True, max_length=TITLE_MAX_LENGTH)
     description = serializers.CharField(
         required=True,
         error_messages={

@@ -14,7 +14,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='siteplatformsettings',
             name='accessible_colours',
-            field=models.BooleanField(default=False, help_text='Make sure the colours are WACG compliant.', verbose_name='Accesible colours'),
+            field=models.BooleanField(default=False,
+                                      help_text='Make sure the colours are WCAG compliant. You should save settings for this to take effect.',
+                                      verbose_name='Accesible colours'),
         ),
         migrations.AlterField(
             model_name='siteplatformsettings',

@@ -5,8 +5,14 @@
     var DARK_NEUTRAL = '#2A2A2A';
     var DARK_TEXT_RATIO = 7;
     var PALE_GREY = '#EEEEEE';
-    var TINT_AMOUNT = 90;
-    var TINT_300_AMOUNT = 80;
+    var TINT_STOPS = {
+        action: [
+            { id: 'tint-200', amount: 90 }
+        ],
+        description: [
+            { id: 'tint-200', amount: 90 }
+        ]
+    };
     var FIELD_IDS = {
         actionColor: 'id_action_color',
         actionTextColor: 'id_action_text_color',
@@ -224,48 +230,53 @@
         }
     }
 
+    function clearPreview(prefix) {
+        applySwatch(prefix + '-solid', null, null, false);
+        applySwatch(prefix + '-text', WHITE, null, false);
+        TINT_STOPS[prefix].forEach(function (stop) {
+            applySwatch(prefix + '-' + stop.id, null, null, false);
+        });
+    }
+
     function previewBrandRaw(prefix, brand, textColor, onWhiteColor) {
         if (!brand) {
-            applySwatch(prefix + '-solid', null, null, false);
-            applySwatch(prefix + '-text', WHITE, null, false);
-            applySwatch(prefix + '-tint', null, null, false);
-            applySwatch(prefix + '-tint-300', null, null, false);
+            clearPreview(prefix);
             return false;
         }
-        var tint = mixWithWhite(brand, TINT_AMOUNT);
-        var tint300 = mixWithWhite(brand, TINT_300_AMOUNT);
         var solidLow = failsContrast(textColor, brand);
         var textLow = failsContrast(onWhiteColor, WHITE);
-        var tintLow = failsContrast(brand, tint);
-        var tint300Low = failsContrast(brand, tint300);
+        var tintLow = false;
         applySwatch(prefix + '-solid', brand, textColor, solidLow);
         applySwatch(prefix + '-text', WHITE, onWhiteColor, textLow);
-        applySwatch(prefix + '-tint', tint, brand, tintLow);
-        applySwatch(prefix + '-tint-300', tint300, brand, tint300Low);
-        return solidLow || textLow || tintLow || tint300Low;
+        TINT_STOPS[prefix].forEach(function (stop) {
+            var tint = mixWithWhite(brand, stop.amount);
+            var low = failsContrast(brand, tint);
+            applySwatch(prefix + '-' + stop.id, tint, brand, low);
+            tintLow = tintLow || low;
+        });
+        return solidLow || textLow || tintLow;
     }
 
     function previewBrand(prefix, brand) {
         if (!brand) {
-            applySwatch(prefix + '-solid', null, null, false);
-            applySwatch(prefix + '-text', WHITE, null, false);
-            applySwatch(prefix + '-tint', null, null, false);
-            applySwatch(prefix + '-tint-300', null, null, false);
+            clearPreview(prefix);
             return false;
         }
         var fill = ensureReadableFill(brand);
         var onSolid = chooseOnColor(fill);
         var onBackground = ensureContrastOnSurfaces(brand, [WHITE, PALE_GREY]);
-        var tint = mixWithWhite(fill, TINT_AMOUNT);
-        var onTint = ensureContrast(fill, tint);
-        var tint300 = mixWithWhite(fill, TINT_300_AMOUNT);
-        var onTint300 = ensureContrast(fill, tint300);
         var fillAdjusted = fill !== brand;
+        var tintAdjusted = false;
         applySwatch(prefix + '-solid', fill, onSolid, fillAdjusted);
         applySwatch(prefix + '-text', WHITE, onBackground, onBackground !== brand);
-        applySwatch(prefix + '-tint', tint, onTint, fillAdjusted || onTint !== brand);
-        applySwatch(prefix + '-tint-300', tint300, onTint300, fillAdjusted || onTint300 !== brand);
-        return fillAdjusted || onBackground !== brand || onTint !== brand || onTint300 !== brand;
+        TINT_STOPS[prefix].forEach(function (stop) {
+            var tint = mixWithWhite(fill, stop.amount);
+            var onTint = ensureContrast(fill, tint);
+            var altered = fillAdjusted || onTint !== brand;
+            applySwatch(prefix + '-' + stop.id, tint, onTint, altered);
+            tintAdjusted = tintAdjusted || altered;
+        });
+        return fillAdjusted || onBackground !== brand || tintAdjusted;
     }
 
     function update() {

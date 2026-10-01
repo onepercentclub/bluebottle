@@ -2,15 +2,6 @@ import colorfield.fields
 from django.db import migrations
 
 
-def backfill_adjusted_colours(apps, schema_editor):
-    SitePlatformSettings = apps.get_model('cms', 'SitePlatformSettings')
-    settings = SitePlatformSettings.objects.first()
-    if not settings or not settings.accessible_colours:
-        return
-    from bluebottle.cms.utils.color_contrast import apply_on_colors
-    apply_on_colors(settings)
-    settings.save()
-
 
 class Migration(migrations.Migration):
 
@@ -45,5 +36,4 @@ class Migration(migrations.Migration):
                 verbose_name='Adjusted description colour',
             ),
         ),
-        migrations.RunPython(backfill_adjusted_colours, migrations.RunPython.noop),
     ]

@@ -225,20 +225,12 @@ class ApplyPatternColorsTestCase(SimpleTestCase):
         self.assertTrue(passes_aa(settings.alternative_link_color, WHITE))
         self.assertTrue(passes_aa(settings.alternative_link_color, PALE_GREY))
         self.assertTrue(
-            passes_aa(settings.action_on_tint_100_color, mix_with_white(settings.action_color_adjusted, 95))
-        )
-        self.assertTrue(
             passes_aa(settings.action_on_tint_color, mix_with_white(settings.action_color_adjusted, 90))
-        )
-        self.assertTrue(
-            passes_aa(settings.action_on_tint_300_color, mix_with_white(settings.action_color_adjusted, 80))
         )
 
         self.assertEqual(settings.description_text_color, WHITE)
         self.assertEqual(settings.description_on_background_color, '#281E50')
-        self.assertEqual(settings.description_on_tint_100_color, '#281E50')
         self.assertEqual(settings.description_on_tint_color, '#281E50')
-        self.assertEqual(settings.description_on_tint_300_color, '#281E50')
 
     def test_pale_action_blue_is_darkened_for_text_and_tint(self):
         class Settings:
@@ -260,13 +252,7 @@ class ApplyPatternColorsTestCase(SimpleTestCase):
         self.assertTrue(passes_aa(settings.alternative_link_color, WHITE))
         self.assertTrue(passes_aa(settings.alternative_link_color, PALE_GREY))
         self.assertTrue(
-            passes_aa(settings.action_on_tint_100_color, mix_with_white(settings.action_color_adjusted, 95))
-        )
-        self.assertTrue(
             passes_aa(settings.action_on_tint_color, mix_with_white(settings.action_color_adjusted, 90))
-        )
-        self.assertTrue(
-            passes_aa(settings.action_on_tint_300_color, mix_with_white(settings.action_color_adjusted, 80))
         )
 
 
@@ -321,11 +307,5 @@ class ReadableFillTestCase(SimpleTestCase):
             passes_aa(
                 settings.action_on_tint_color,
                 mix_with_white(settings.action_color_adjusted, 90),
-            )
-        )
-        self.assertTrue(
-            passes_aa(
-                settings.action_on_tint_300_color,
-                mix_with_white(settings.action_color_adjusted, 80),
             )
         )

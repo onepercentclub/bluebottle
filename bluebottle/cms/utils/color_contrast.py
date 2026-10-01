@@ -11,9 +11,7 @@ DARK_NEUTRAL = '#2A2A2A'
 PALE_GREY = '#EEEEEE'
 DARK_TEXT_RATIO = 7
 TINT_STOPS = {
-    100: 95,
     200: 90,
-    300: 80,
 }
 
 
@@ -224,9 +222,7 @@ def apply_on_colors(settings) -> None:
             'action_text_color',
             'alternative_link_color',
             {
-                100: 'action_on_tint_100_color',
                 200: 'action_on_tint_color',
-                300: 'action_on_tint_300_color',
             },
             'action_color_adjusted',
         )
@@ -236,9 +232,7 @@ def apply_on_colors(settings) -> None:
             (
                 'action_text_color',
                 'alternative_link_color',
-                'action_on_tint_100_color',
                 'action_on_tint_color',
-                'action_on_tint_300_color',
                 'action_color_adjusted',
             ),
         )
@@ -251,9 +245,7 @@ def apply_on_colors(settings) -> None:
             'description_text_color',
             'description_on_background_color',
             {
-                100: 'description_on_tint_100_color',
                 200: 'description_on_tint_color',
-                300: 'description_on_tint_300_color',
             },
             'description_color_adjusted',
         )
@@ -263,9 +255,7 @@ def apply_on_colors(settings) -> None:
             (
                 'description_text_color',
                 'description_on_background_color',
-                'description_on_tint_100_color',
                 'description_on_tint_color',
-                'description_on_tint_300_color',
                 'description_color_adjusted',
             ),
         )

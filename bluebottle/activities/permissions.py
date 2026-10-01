@@ -151,10 +151,7 @@ class CanExportTeamParticipantsPermission(IsOwner):
         return True
 
 
-def user_can_review_activity(user, activity):
-    if not user.has_perm('activities.api_review_activity'):
-        return False
-
+def user_matches_review_scope(user, activity):
     has_subregions = user.subregion_manager.exists()
     has_segments = user.segment_manager.exists()
 
@@ -183,3 +180,10 @@ def user_can_review_activity(user, activity):
             return True
 
     return False
+
+
+def user_can_review_activity(user, activity):
+    if not user.has_perm('activities.api_review_activity'):
+        return False
+
+    return user_matches_review_scope(user, activity)

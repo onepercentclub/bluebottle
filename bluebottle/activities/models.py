@@ -302,7 +302,8 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
             # 100-character slug column and fail the INSERT (BB-30193).
             slug = slugify(self.title) if self.title else ""
             if slug:
-                self.slug = slug[:self._meta.get_field("slug").max_length]
+                max_length = self._meta.get_field("slug").max_length
+                self.slug = slug[:max_length].rstrip("-") or "new"
             else:
                 self.slug = "new"
 

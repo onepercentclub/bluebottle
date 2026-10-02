@@ -384,7 +384,7 @@ class FundingSerializer(BaseActivitySerializer):
                 raise ValidationError(
                     {'target': _('Target cannot be changed after the funding has been published.')}
                 )
-            deadline_new = data['deadline'].date() if data['deadline'] else None
+            deadline_new = data['deadline'].date() if getattr(data, 'deadline', None) else None
             deadline_old = self.instance.deadline.date() if self.instance.deadline else None
             if deadline_new and deadline_new != deadline_old:
                 raise ValidationError(

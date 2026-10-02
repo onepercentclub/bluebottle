@@ -255,14 +255,28 @@ def get_buckets():
         new_succeeded_schedule_team_contributions
     )
 
+    unfinished_date_slot = (
+        Q(slot__isnull=True) |
+        Q(slot__status__in=('draft', 'open', 'full', 'registration_closed', 'running'))
+    )
+    unfinished_slot = (
+        Q(slot__isnull=True) |
+        Q(slot__status__in=('new', 'scheduled', 'running'))
+    )
+
+    accepted_date_participants = DateParticipant.objects.filter(
+        user__isnull=False,
+        status__in=('accepted', 'registered', 'succeeded'),
+        registration__status__in=('accepted',),
+        activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
+    )
     failed_date_contributions = TimeContribution.objects.filter(
         status='failed',
-        contributor__in=DateParticipant.objects.filter(
-            user__isnull=False,
-            status__in=('accepted', 'registered', 'succeeded'),
-            registration__status__in=('accepted',),
-            activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
-        ),
+        contributor__in=accepted_date_participants.exclude(unfinished_date_slot),
+    )
+    failed_date_contributions_unfinished = TimeContribution.objects.filter(
+        status='failed',
+        contributor__in=accepted_date_participants.filter(unfinished_date_slot),
     )
 
     failed_deadline_contributions = TimeContribution.objects.filter(
@@ -274,25 +288,35 @@ def get_buckets():
             activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
         ),
     )
+    accepted_periodic_participants = PeriodicParticipant.objects.filter(
+        user__isnull=False,
+        status__in=('accepted', 'stopped'),
+        registration__status__in=('accepted', 'stopped'),
+        activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
+    )
     failed_periodic_contributions = TimeContribution.objects.filter(
         status='failed',
-        contributor__in=PeriodicParticipant.objects.filter(
-            user__isnull=False,
-            status__in=('accepted', 'stopped'),
-            registration__status__in=('accepted', 'stopped'),
-            activity__status__in=('open', 'registration_closed', 'succeeded', 'full'),
-        ),
+        contributor__in=accepted_periodic_participants.exclude(unfinished_slot),
+    )
+    failed_periodic_contributions_unfinished = TimeContribution.objects.filter(
+        status='failed',
+        contributor__in=accepted_periodic_participants.filter(unfinished_slot),
     )
 
+    accepted_schedule_participants = ScheduleParticipant.objects.filter(
+        activity__team_activity='individuals',
+        user__isnull=False,
+        status__in=('accepted', 'stopped'),
+        registration__status__in=('accepted', 'stopped'),
+        activity__status__in=('open', 'registration_closed', 'succeeded'),
+    )
     failed_schedule_contributions = TimeContribution.objects.filter(
         status='failed',
-        contributor__in=ScheduleParticipant.objects.filter(
-            activity__team_activity='individuals',
-            user__isnull=False,
-            status__in=('accepted', 'stopped'),
-            registration__status__in=('accepted', 'stopped'),
-            activity__status__in=('open', 'registration_closed', 'succeeded'),
-        ),
+        contributor__in=accepted_schedule_participants.exclude(unfinished_slot),
+    )
+    failed_schedule_contributions_unfinished = TimeContribution.objects.filter(
+        status='failed',
+        contributor__in=accepted_schedule_participants.filter(unfinished_slot),
     )
     failed_schedule_team_contributions = TimeContribution.objects.filter(
         status='failed',
@@ -379,7 +403,10 @@ def get_buckets():
         failed_deadline_contributions_new |
         failed_periodic_contributions_new |
         failed_schedule_contributions_new |
-        failed_schedule_team_contributions_new
+        failed_schedule_team_contributions_new |
+        failed_date_contributions_unfinished |
+        failed_periodic_contributions_unfinished |
+        failed_schedule_contributions_unfinished
     )
 
     registrations_without_participant = DateRegistration.objects.filter(

@@ -111,7 +111,7 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
         output = self.run_script()
 
         self.assertIn('### Tenant Test:', output)
-        self.assertIn('failed or new but should be succeeded: 1', output)
+        self.assertIn('failed but should be new: 1', output)
         self.assertIn("Add '--script-args=fix'", output)
         self.assertStatus(contribution, 'failed')
 
@@ -126,14 +126,39 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
 
     # Date activities
 
-    def test_date_failed_contribution_with_future_slot_is_set_to_succeeded(self):
+    def test_date_failed_contribution_with_future_slot_is_set_to_new(self):
         """
-        Known bug (BB-30168): the slot is still in the future, so the contribution
-        should become 'new', not 'succeeded'.
+        The slot is still in the future, so the contribution should
+        become 'new', not 'succeeded'.
         """
         participant = self.create_date_participant()
         contribution = self.contribution(participant)
         self.assertTrue(contribution.start > now())
+        self.force_status(contribution, 'failed')
+
+        output = self.run_script('fix')
+
+        self.assertIn('failed but should be new: 1', output)
+        self.assertStatus(contribution, 'new')
+
+    def test_date_failed_contribution_with_running_slot_is_set_to_new(self):
+        participant = self.create_date_participant()
+        self.force_status(participant.slot, 'running')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'failed')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+
+    def test_date_failed_contribution_with_cancelled_slot_is_set_to_succeeded(self):
+        """
+        Unchanged by BB-30168, which only covers slots that have not finished yet.
+        Probably wrong as well: the contribution should most likely stay 'failed'.
+        """
+        participant = self.create_date_participant()
+        self.force_status(participant.slot, 'cancelled')
+        contribution = self.contribution(participant)
         self.force_status(contribution, 'failed')
 
         self.run_script('fix')
@@ -253,15 +278,40 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
 
     # Schedule activities
 
-    def test_schedule_failed_contribution_unscheduled_slot_is_set_to_succeeded(self):
+    def test_schedule_failed_contribution_unscheduled_slot_is_set_to_new(self):
         """
-        Known bug (BB-30168): the participant has not been scheduled yet,
-        so the contribution should become 'new', not 'succeeded'.
+        The participant has not been scheduled yet, so the
+        contribution should become 'new', not 'succeeded'.
         """
         participant = self.register(
             self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
         )
         self.assertStatus(participant, 'accepted')
+        self.assertStatus(participant.slot, 'new')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'failed')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+
+    def test_schedule_failed_contribution_without_slot_is_set_to_new(self):
+        participant = self.register(
+            self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
+        )
+        type(participant).objects.filter(pk=participant.pk).update(slot=None)
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'failed')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+
+    def test_schedule_failed_contribution_finished_slot_is_set_to_succeeded(self):
+        participant = self.register(
+            self.create_activity(ScheduleActivityFactory), ScheduleRegistrationFactory
+        )
+        self.force_status(participant.slot, 'finished')
         contribution = self.contribution(participant)
         self.force_status(contribution, 'failed')
 
@@ -271,14 +321,29 @@ class IncorrectContributionsScriptTestCase(BluebottleTestCase):
 
     # Periodic activities
 
-    def test_periodic_failed_contribution_open_activity_is_set_to_succeeded(self):
+    def test_periodic_failed_contribution_unfinished_slot_is_set_to_new(self):
         """
-        Known bug (BB-30168): the script does not look at the slot at all.
+        The slot has not finished yet, so the contribution should
+        become 'new', not 'succeeded'.
         """
         participant = self.register(
             self.create_activity(PeriodicActivityFactory), PeriodicRegistrationFactory
         )
         self.force_status(participant, 'accepted')
+        self.force_status(participant.slot, 'running')
+        contribution = self.contribution(participant)
+        self.force_status(contribution, 'failed')
+
+        self.run_script('fix')
+
+        self.assertStatus(contribution, 'new')
+
+    def test_periodic_failed_contribution_finished_slot_is_set_to_succeeded(self):
+        participant = self.register(
+            self.create_activity(PeriodicActivityFactory), PeriodicRegistrationFactory
+        )
+        self.force_status(participant, 'accepted')
+        self.force_status(participant.slot, 'finished')
         contribution = self.contribution(participant)
         self.force_status(contribution, 'failed')
 

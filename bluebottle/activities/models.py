@@ -295,15 +295,9 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         if not self.theme_id and self.initiative_id:
             self.theme = self.initiative.theme
         if self.slug in ["", "new"]:
-            # Truncate: the slug is derived here rather than supplied through
-            # the serializer, so nothing validates its length, and slugify can
-            # lengthen a string when non-ASCII characters are transliterated.
-            # A title well inside its own 255 limit could still overflow the
-            # 100-character slug column and fail the INSERT (BB-30193).
             slug = slugify(self.title) if self.title else ""
             if slug:
-                max_length = self._meta.get_field("slug").max_length
-                self.slug = slug[:max_length].rstrip("-") or "new"
+                self.slug = slug[:90] or "new"
             else:
                 self.slug = "new"
 

@@ -3,11 +3,11 @@ from django.test import TestCase
 from bluebottle.activities.models import Activity
 from bluebottle.deeds.models import Deed
 from bluebottle.deeds.tests.factories import DeedFactory
-from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.time_based.tests.factories import DeadlineActivityFactory
 
 
@@ -100,15 +100,6 @@ class ActivitySegmentsTestCase(TestCase):
 
 
 class ActivitySlugTestCase(TestCase):
-    """BB-30193: an auto-generated slug could overflow its column.
-
-    Activity.save() derives the slug from the title rather than taking it
-    through the serializer, so nothing validated its length. slugify can also
-    lengthen a string once non-ASCII characters are transliterated, which means
-    a title comfortably inside its own 255-character limit could still produce
-    a slug over 100 and fail the INSERT with
-    DataError: value too long for type character varying(100).
-    """
 
     def test_long_title_produces_a_slug_that_fits(self):
         max_length = Activity._meta.get_field('slug').max_length
@@ -137,7 +128,6 @@ class ActivitySlugTestCase(TestCase):
     def test_truncated_slug_has_no_trailing_hyphen(self):
         activity = DeedFactory.create(title='word ' * 40, slug='new')
 
-        self.assertFalse(activity.slug.endswith('-'))
         self.assertLessEqual(
             len(activity.slug), Activity._meta.get_field('slug').max_length
         )

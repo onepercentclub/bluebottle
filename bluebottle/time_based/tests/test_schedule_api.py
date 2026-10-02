@@ -64,15 +64,6 @@ class ScheduleActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestC
         }
 
     def test_create_over_long_title_returns_400(self):
-        """BB-30249: an over-long title reached Postgres as a DataError.
-
-        BaseActivitySerializer declares `title` explicitly, which dropped the
-        max_length ModelSerializer would have taken from the model field. Nothing
-        validated the length, so the INSERT into the activities_activity parent
-        table (title is its only varchar(255) column) failed with
-        DataError: value too long for type character varying(255) and the whole
-        request 500'd instead of returning a field error.
-        """
         self.defaults['title'] = 'ü' * 300
 
         self.perform_create(user=self.defaults['initiative'].owner)

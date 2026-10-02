@@ -18,6 +18,7 @@ from elasticsearch_dsl.query import (
     Terms,
 )
 from pytz import UTC
+from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.documents import activity
 from bluebottle.categories.models import Category
@@ -385,21 +386,43 @@ class ActivityDateRangeFacet(Facet):
     def get_values(self, data, filter_values):
         return []
 
-    def get_value_filter(self, filter_value):
-        start, end = filter_value.split(",")
-        start = dateutil.parser.parse(start)
-        end = dateutil.parser.parse(end)
+    def parse_bound(self, value):
+        value = value.strip()
+        if not value:
+            return None
+        try:
+            return dateutil.parser.parse(value)
+        except (ValueError, OverflowError):
+            raise ValidationError(
+                {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
+            )
 
-        if start.astimezone(UTC) >= now():
-            return Range(
-                _expand__to_dot=False, **{"duration": {"gte": start, "lt": end}}
+    def get_value_filter(self, filter_value):
+        bounds = filter_value.split(",")
+        if len(bounds) != 2:
+            raise ValidationError(
+                {"filter[date]": _("Enter a date range as two ISO-8601 datetimes separated by a comma.")}
             )
-        else:
-            return Q(
-                "nested",
-                path="dates",
-                query=Q("range", **{"dates.end": {"gt": start, "lt": end}}),
-            )
+
+        start, end = (self.parse_bound(bound) for bound in bounds)
+
+        if start is None and end is None:
+            return MatchAll()
+
+        if start and start.astimezone(UTC) >= now():
+            duration = {}
+            if start:
+                duration["gte"] = start
+            if end:
+                duration["lt"] = end
+            return Range(_expand__to_dot=False, **{"duration": duration})
+
+        dates = {}
+        if start:
+            dates["gt"] = start
+        if end:
+            dates["lt"] = end
+        return Q("nested", path="dates", query=Q("range", **{"dates.end": dates}))
 
 
 class UntranslatedModelFacet(ModelFacet):

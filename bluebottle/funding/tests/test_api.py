@@ -2109,17 +2109,6 @@ class IbanCheckTestCase(FundingStripeMixin, APITestCase):
 
 
 class FundingDeadlineValidationTestCase(BluebottleTestCase):
-    """BB-30178: PATCH with a null deadline 500'd.
-
-    FundingSerializer.validate() guarded on key presence but not on value:
-    `'deadline' in data and data['deadline'].date() != ...`. DRF puts the key
-    in validated_data whenever the client sends it, and `deadline` is
-    allow_null=True, so the front-end editor round-tripping `deadline: null`
-    produced AttributeError: 'NoneType' object has no attribute 'date'.
-
-    The stored side had the same hazard: a published funding with no deadline
-    crashed identically on the first legitimate deadline update.
-    """
 
     def setUp(self):
         super(FundingDeadlineValidationTestCase, self).setUp()

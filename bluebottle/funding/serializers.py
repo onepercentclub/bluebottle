@@ -272,17 +272,6 @@ class TinyFundingSerializer(BaseTinyActivitySerializer):
         resource_name = 'activities/fundings'
 
 
-def _deadline_date(value):
-    """Date part of a deadline, or None when it is unset.
-
-    `deadline` is `allow_null=True, required=False`, so the front end round-trips
-    `deadline: null` for an activity with no deadline and the key is present with
-    a None value. Comparing the two dates directly raised AttributeError on both
-    the incoming and the stored side.
-    """
-    return value.date() if value else None
-
-
 class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
     amount_raised = MoneySerializer(read_only=True)
@@ -390,14 +379,14 @@ class FundingSerializer(BaseActivitySerializer):
         Ignore changes to target and deadline when status is not 'draft' or 'needs_work'
         """
         if self.instance and self.instance.status not in ['draft', 'needs_work']:
-            # Remove target and deadline from data if they're being changed
+            # Send a warning if target or deadline is being changed on live campaign
             if 'target' in data and data['target'] != self.instance.target:
                 raise ValidationError(
                     {'target': _('Target cannot be changed after the funding has been published.')}
                 )
-            if 'deadline' in data and _deadline_date(data['deadline']) != _deadline_date(
-                self.instance.deadline
-            ):
+            deadline_new = data['deadline'].date() if data['deadline'] else None
+            deadline_old = self.instance.deadline.date() if self.instance.deadline else None
+            if deadline_new != deadline_old:
                 raise ValidationError(
                     {'deadline': _('Deadline cannot be changed after the funding has been published.')}
                 )

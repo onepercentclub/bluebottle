@@ -7,8 +7,8 @@ from unittest import mock
 
 import dateutil
 from django.contrib.auth.models import Permission
-from django.db import connection
 from django.contrib.gis.geos import Point
+from django.db import connection
 from django.test import tag
 from django.test.utils import override_settings
 from django.urls import reverse
@@ -1639,6 +1639,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching = DateActivityFactory.create_batch(
             2,
             status='open',
+            initiative=None,
         )
         for activity in matching:
             DateActivitySlotFactory.create_batch(
@@ -1650,6 +1651,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other = DateActivityFactory.create_batch(
             3,
             status='open',
+            initiative=None,
         )
         for activity in other:
             DateActivitySlotFactory.create_batch(

@@ -437,7 +437,9 @@ class SpotOpenedNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Good news, a spot has opened up for the activity:')
         self.assertBodyContains('Save the world!')
         self.assertBodyContains('first-come, first-served')
-        self.assertBodyContains("If you're no longer interested, you don't need to do anything.")
+        self.assertBodyContains(
+            'Changed your mind? You can withdraw your interest at any time on the activity page.'
+        )
         self.assertActionLink(self.obj.get_absolute_url() + '?spotOpened=true')
         self.assertActionTitle('View activity')
 

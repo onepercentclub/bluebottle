@@ -1,0 +1,29 @@
+# Ruff replaces flake8 for linting and adds formatting.
+# Rules mirror the old .flake8 so the switch is not also a rule change.
+
+line-length = 120
+target-version = "py311"
+
+exclude = [
+    "**/*local.py",
+    "**/secrets.py",
+    "**/migrations/*",
+    "**/scim_data/*",
+    "**/node_modules/*",
+    "docs",
+    "build",
+    "tenants",
+    "env",
+]
+
+[lint]
+select = ["E", "W", "F"]
+ignore = [
+    "E731",  # lambda assignment
+    "E402",  # imports not at top of file
+    "W605",  # invalid escape sequence
+]
+
+[format]
+# The codebase is ~73% single-quoted; this keeps the reformat diff small.
+quote-style = "single"

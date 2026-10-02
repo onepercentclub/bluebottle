@@ -14,7 +14,9 @@ from rest_framework_json_api.relations import (
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity, Organizer
-from bluebottle.activities.utils import BaseActivitySerializer
+from bluebottle.activities.utils import (
+    BaseActivitySerializer, is_editable_draft, relax_validation_for_draft
+)
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.geo.serializers import activity_geolocation_display
@@ -73,12 +75,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
 
-        if not instance or instance.status in ('draft', 'needs_work'):
-            for key in self.fields:
-                self.fields[key].allow_blank = True
-                self.fields[key].validators = []
-                self.fields[key].allow_null = True
-                self.fields[key].required = False
+        if is_editable_draft(instance):
+            relax_validation_for_draft(self.fields)
 
         self.fields['permissions'] = ResourcePermissionField(self.detail_view_name, view_args=('pk',))
 

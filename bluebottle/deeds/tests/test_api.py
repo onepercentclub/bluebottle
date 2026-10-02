@@ -23,7 +23,7 @@ from bluebottle.scim.models import SCIMPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import APITestCase
+from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 
 
 class DeedsListViewAPITestCase(APITestCase):
@@ -1047,3 +1047,36 @@ class DeedParticipantDetailViewAPITestCase(APITestCase):
             self.perform_get()
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
+class DeedListNonEmptyTestCase(BluebottleTestCase):
+    """BB-30125: GET /api/deeds 500'd whenever the page was not empty.
+
+    DeedListView is a ListCreateAPIView using DeedSerializer for both verbs, so
+    on a GET the child serializer is constructed with the page's list of deeds.
+    Its __init__ read `.status` off that list:
+
+        AttributeError: 'list' object has no attribute 'status'
+
+    An empty page short-circuited on `not instance` and returned fine, which is
+    why the failure looked intermittent rather than total.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.client = JSONAPITestClient()
+        self.url = reverse('deed-list')
+        self.user = BlueBottleUserFactory()
+
+    def test_list_with_results_does_not_crash(self):
+        initiative = InitiativeFactory.create(status='approved')
+        DeedFactory.create_batch(3, initiative=initiative, owner=initiative.owner)
+
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_empty_list_still_works(self):
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

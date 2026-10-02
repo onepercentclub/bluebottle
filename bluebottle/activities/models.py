@@ -295,8 +295,9 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         if not self.theme_id and self.initiative_id:
             self.theme = self.initiative.theme
         if self.slug in ["", "new"]:
-            if self.title and slugify(self.title):
-                self.slug = slugify(self.title)
+            slug = slugify(self.title) if self.title else ""
+            if slug:
+                self.slug = slug[:90] or "new"
             else:
                 self.slug = "new"
 
